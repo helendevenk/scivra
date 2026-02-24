@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable(
@@ -550,7 +551,10 @@ export const experimentProgress = pgTable(
     experimentId: text('experiment_id').notNull(),
     completedChallenges: text('completed_challenges'),
     totalTimeSpent: integer('total_time_spent').notNull().default(0),
+    sessionsCount: integer('sessions_count').notNull().default(0),
+    lastParameters: text('last_parameters'), // JSON string
     lastAccessedAt: timestamp('last_accessed_at').defaultNow().notNull(),
+    firstUsedAt: timestamp('first_used_at').defaultNow().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
@@ -571,5 +575,98 @@ export const anonymousUsage = pgTable(
   },
   (table) => [
     index('idx_anon_usage_session').on(table.sessionId),
+  ]
+);
+
+// ─── Compliance & Usage tables (ported from v1, adapted to v2 conventions) ───
+
+export const userComplianceProfile = pgTable(
+  'user_compliance_profile',
+  {
+    userId: text('user_id')
+      .primaryKey()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    ageGroup: text('age_group').notNull().default('unknown'),
+    countryCode: text('country_code'),
+    privacyPolicyVersion: text('privacy_policy_version'),
+    termsVersion: text('terms_version'),
+    termsAcceptedAt: timestamp('terms_accepted_at'),
+    marketingConsentAt: timestamp('marketing_consent_at'),
+    parentalConsentAt: timestamp('parental_consent_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  }
+);
+
+export const dailyUsage = pgTable(
+  'daily_usage',
+  {
+    id: text('id').primaryKey(),
+    keyType: text('key_type').notNull(), // 'user' | 'session'
+    keyValue: text('key_value').notNull(),
+    experimentId: text('experiment_id').notNull(), // experiment slug
+    usageDate: text('usage_date').notNull(), // 'YYYY-MM-DD'
+    usedSeconds: integer('used_seconds').notNull().default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    unique('uq_daily_usage_key').on(
+      table.keyType,
+      table.keyValue,
+      table.experimentId,
+      table.usageDate
+    ),
+    index('idx_daily_usage_lookup').on(table.keyType, table.keyValue, table.usageDate),
+    index('idx_daily_usage_experiment').on(table.experimentId),
+  ]
+);
+
+export const consentEvent = pgTable(
+  'consent_event',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+    sessionId: text('session_id'),
+    eventType: text('event_type').notNull(), // 'privacy_accept' | 'terms_accept' | 'cookie_accept' | 'cookie_reject' | 'age_gate'
+    policyVersion: text('policy_version'),
+    regionCode: text('region_code'),
+    ipHash: text('ip_hash'),
+    userAgentHash: text('user_agent_hash'),
+    metadata: text('metadata'), // JSON string
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_consent_event_user').on(table.userId),
+    index('idx_consent_event_created').on(table.createdAt),
+  ]
+);
+
+export const privacyRequest = pgTable(
+  'privacy_request',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    requestType: text('request_type').notNull(), // 'export' | 'delete'
+    status: text('status').notNull().default('pending'), // 'pending' | 'processing' | 'completed' | 'rejected'
+    metadata: text('metadata'), // JSON string
+    requestedAt: timestamp('requested_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_privacy_request_user').on(table.userId),
+    index('idx_privacy_request_status').on(table.status),
   ]
 );
