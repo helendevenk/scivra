@@ -60,3 +60,44 @@ export function buildWebsiteJsonLd(input: {
     url: input.siteUrl,
   };
 }
+
+/**
+ * Build JSON-LD structured data for a learning path detail page.
+ */
+export function buildLearningPathJsonLd(input: {
+  title: string;
+  description: string;
+  slug: string;
+  level: string;
+  category: string;
+  nodeCount: number;
+  siteUrl: string;
+  locale: string;
+}): Record<string, unknown> {
+  const { title, description, slug, level, category, nodeCount, siteUrl, locale } = input;
+  const url = `${siteUrl.replace(/\/+$/, '')}/${locale}/learn/${slug}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: title,
+    description,
+    url,
+    provider: {
+      '@type': 'Organization',
+      name: 'NeonPhysics',
+      url: siteUrl,
+    },
+    educationalLevel: mapDifficultyToLevel(level),
+    about: {
+      '@type': 'Thing',
+      name: category,
+    },
+    numberOfCredits: nodeCount,
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'online',
+      courseWorkload: `${nodeCount} lessons`,
+    },
+  };
+}

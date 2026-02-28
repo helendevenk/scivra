@@ -50,4 +50,9 @@ export const localeMessagesPaths = [
   'activity/sidebar',
   'activity/ai-tasks',
   'activity/chats',
+  'upg',
+  'gallery',
+  'user-dashboard',
+  'learn',
+  'admin/learning-paths',
 ];

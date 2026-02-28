@@ -1,11 +1,13 @@
 import {
   boolean,
+  foreignKey,
   index,
   integer,
   pgTable,
   text,
   timestamp,
   unique,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable(
@@ -668,5 +670,251 @@ export const privacyRequest = pgTable(
   (table) => [
     index('idx_privacy_request_user').on(table.userId),
     index('idx_privacy_request_status').on(table.status),
+  ]
+);
+
+// ─── UPG (Universal Principle Generator) tables ───
+
+export const upgGeneration = pgTable(
+  'upg_generation',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+    prompt: text('prompt').notNull(),
+    promptHash: text('prompt_hash').notNull(),
+    language: text('language').notNull(), // 'zh' | 'en'
+    category: text('category'), // physics/chemistry/biology/math/astronomy/engineering/other
+    htmlContent: text('html_content'), // V0.1: stored in DB; V0.2: migrate to R2
+    htmlUrl: text('html_url'), // V0.2: R2 URL
+    htmlSize: integer('html_size'), // bytes, hard limit 200KB
+    model: text('model').notNull(),
+    provider: text('provider').notNull().default('openrouter'),
+    inputTokens: integer('input_tokens').default(0),
+    outputTokens: integer('output_tokens').default(0),
+    costUsd: integer('cost_usd').default(0), // cost in cents
+    costCredits: integer('cost_credits').default(0),
+    creditId: text('credit_id'),
+    status: text('status').notNull(), // pending/generating/completed/failed
+    errorMessage: text('error_message'),
+    isPublic: boolean('is_public').default(false),
+    viewCount: integer('view_count').default(0),
+    shareCount: integer('share_count').default(0),
+    downloadCount: integer('download_count').default(0),
+    // Gallery social attributes
+    likeCount: integer('like_count').default(0),
+    forkCount: integer('fork_count').default(0),
+    featured: boolean('featured').default(false),
+    tags: text('tags').array(), // TEXT[], AI auto-extract + user editable
+    forkedFrom: text('forked_from'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    index('idx_upg_generation_user').on(table.userId),
+    index('idx_upg_generation_status').on(table.status),
+    index('idx_upg_generation_prompt_hash').on(table.promptHash),
+    index('idx_upg_generation_public_created').on(
+      table.isPublic,
+      table.createdAt
+    ),
+    index('idx_upg_generation_featured_created').on(
+      table.featured,
+      table.createdAt
+    ),
+    foreignKey({
+      columns: [table.forkedFrom],
+      foreignColumns: [table.id],
+    }).onDelete('set null'),
+  ]
+);
+
+export const upgReport = pgTable(
+  'upg_report',
+  {
+    id: text('id').primaryKey(),
+    generationId: text('generation_id')
+      .notNull()
+      .references(() => upgGeneration.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    reportType: text('report_type').notNull(), // inaccurate/broken/inappropriate/other
+    content: text('content'),
+    status: text('status').notNull().default('pending'), // pending/reviewed/resolved
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_upg_report_generation').on(table.generationId),
+    index('idx_upg_report_user').on(table.userId),
+  ]
+);
+
+export const upgDailyQuota = pgTable(
+  'upg_daily_quota',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    usageDate: text('usage_date').notNull(), // 'YYYY-MM-DD'
+    scene: varchar('scene', { length: 50 }).notNull().default('upg-generate'),
+    generationCount: integer('generation_count').default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    unique('uq_upg_daily_quota_user_date_scene').on(
+      table.userId,
+      table.usageDate,
+      table.scene
+    ),
+    index('idx_upg_daily_quota_user_date_scene').on(
+      table.userId,
+      table.usageDate,
+      table.scene
+    ),
+  ]
+);
+
+// ─── Gallery: Likes ───
+
+export const upgLike = pgTable(
+  'upg_like',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    generationId: text('generation_id')
+      .notNull()
+      .references(() => upgGeneration.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    unique('uq_upg_like_user_generation').on(table.userId, table.generationId),
+    index('idx_upg_like_generation_created').on(
+      table.generationId,
+      table.createdAt
+    ),
+    index('idx_upg_like_user_created').on(table.userId, table.createdAt),
+  ]
+);
+
+// ─── Experiment Metadata (Phase 2 placeholder, built now to batch migration) ───
+
+// ─── Learning Path tables ───
+
+export const learningPath = pgTable(
+  'learning_path',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').unique().notNull(),
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    descriptionEn: text('description_en').notNull(),
+    descriptionZh: text('description_zh').notNull(),
+    category: text('category').notNull(),
+    level: text('level').notNull(),
+    coverImage: text('cover_image'),
+    isPublished: boolean('is_published').default(false),
+    nodeCount: integer('node_count').default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_learning_path_published_category').on(
+      table.isPublished,
+      table.category
+    ),
+  ]
+);
+
+export const learningPathNode = pgTable(
+  'learning_path_node',
+  {
+    id: text('id').primaryKey(),
+    pathId: text('path_id')
+      .notNull()
+      .references(() => learningPath.id, { onDelete: 'cascade' }),
+    orderIndex: integer('order_index').notNull(),
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    descriptionEn: text('description_en').notNull(),
+    descriptionZh: text('description_zh').notNull(),
+    generationId: text('generation_id'),
+    experimentSlug: text('experiment_slug'),
+    quizQuestion: text('quiz_question').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    unique('uq_learning_path_node_path_order').on(
+      table.pathId,
+      table.orderIndex
+    ),
+  ]
+);
+
+export const learningPathProgress = pgTable(
+  'learning_path_progress',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    pathId: text('path_id')
+      .notNull()
+      .references(() => learningPath.id, { onDelete: 'cascade' }),
+    currentNode: integer('current_node').default(0),
+    completed: boolean('completed').default(false),
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    unique('uq_learning_path_progress_user_path').on(
+      table.userId,
+      table.pathId
+    ),
+    index('idx_learning_path_progress_user').on(table.userId),
+  ]
+);
+
+// ─── Experiment Metadata (Phase 2 placeholder, built now to batch migration) ───
+
+export const experimentMetadata = pgTable(
+  'experiment_metadata',
+  {
+    id: text('id').primaryKey(),
+    generationId: text('generation_id')
+      .notNull()
+      .unique()
+      .references(() => upgGeneration.id, { onDelete: 'cascade' }),
+    category: text('category'), // mechanics/optics/thermodynamics/electromagnetism/modern_physics
+    level: text('level'), // beginner/intermediate/advanced
+    orderIndex: integer('order_index').default(0),
+    promotedAt: timestamp('promoted_at'),
+    promotedBy: text('promoted_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_experiment_metadata_category').on(table.category),
   ]
 );
