@@ -24,40 +24,11 @@ import {
 } from '@/shared/lib/upg/constants';
 import { getUuid } from '@/shared/lib/hash';
 import { createHash } from 'crypto';
-
-// --- Anonymous rate limiter (in-memory, IP-based, 1/day) ---
-const anonymousUsage = new Map<string, number>(); // IP hash -> timestamp (day start)
-
-function getToday(): number {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-}
-
-function cleanExpiredAnonymous() {
-  const today = getToday();
-  for (const [key, dayStart] of anonymousUsage) {
-    if (dayStart < today) {
-      anonymousUsage.delete(key);
-    }
-  }
-}
-
-// Clean up once per hour
-let lastCleanup = 0;
-function maybeCleanup() {
-  const now = Date.now();
-  if (now - lastCleanup > 3600_000) {
-    lastCleanup = now;
-    cleanExpiredAnonymous();
-  }
-}
+import { checkRateLimit, acquireLock, releaseLock } from '@/shared/lib/redis';
 
 function hashIp(ip: string): string {
   return createHash('sha256').update(ip).digest('hex').slice(0, 16);
 }
-
-// --- Concurrency lock (per-user in-memory Set) ---
-const activeUsers = new Set<string>();
 
 export async function POST(request: Request) {
   let lockKey: string | null = null;
@@ -82,20 +53,21 @@ export async function POST(request: Request) {
     const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     if (!userId) {
-      // Anonymous: IP-based, 1/day
-      maybeCleanup();
+      // Anonymous: IP-based, 1/day (Redis-backed)
       const forwarded = request.headers.get('x-forwarded-for');
       const realIp = request.headers.get('x-real-ip');
       const ip = forwarded?.split(',')[0]?.trim() || realIp || 'unknown';
       const ipHash = hashIp(ip);
-      const today = getToday();
 
-      if (anonymousUsage.get(ipHash) === today) {
+      const { allowed, remaining } = await checkRateLimit(
+        `upg:anon:${ipHash}`,
+        1, // 1 generation per day
+        86400 // 24 hours
+      );
+
+      if (!allowed) {
         return respErr('Anonymous users can generate once per day. Please sign in for more.');
       }
-
-      // Mark usage upfront (will be set after success, but check is here)
-      // We'll set it after success below
     } else {
       // Logged-in user: check daily quota
       const sub = await getCurrentSubscription(userId);
@@ -116,15 +88,16 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. Concurrency lock
+    // 5. Concurrency lock (Redis-backed distributed lock)
     const forwarded2 = request.headers.get('x-forwarded-for');
     const realIp2 = request.headers.get('x-real-ip');
     const anonIp = forwarded2?.split(',')[0]?.trim() || realIp2 || 'unknown';
-    lockKey = userId || `anon-${hashIp(anonIp)}`;
-    if (activeUsers.has(lockKey)) {
+    lockKey = userId ? `upg:lock:${userId}` : `upg:lock:anon-${hashIp(anonIp)}`;
+
+    const lockAcquired = await acquireLock(lockKey, 300); // 5 minutes TTL
+    if (!lockAcquired) {
       return respErr('A generation is already in progress. Please wait.');
     }
-    activeUsers.add(lockKey);
 
     // 6. AI generation
     const model = selectModel();
@@ -207,13 +180,8 @@ export async function POST(request: Request) {
 
     if (userId) {
       await incrementDailyQuota(userId, todayStr);
-    } else {
-      // Mark anonymous usage
-      const forwarded = request.headers.get('x-forwarded-for');
-      const realIp = request.headers.get('x-real-ip');
-      const ip = forwarded?.split(',')[0]?.trim() || realIp || 'unknown';
-      anonymousUsage.set(hashIp(ip), getToday());
     }
+    // Anonymous usage is already tracked by Redis rate limiter
 
     return respData({
       id: generation.id,
@@ -252,9 +220,9 @@ export async function POST(request: Request) {
 
     return respErr(e.message || 'Generation failed');
   } finally {
-    // Release concurrency lock
+    // Release distributed lock
     if (lockKey) {
-      activeUsers.delete(lockKey);
+      await releaseLock(lockKey);
     }
   }
 }
