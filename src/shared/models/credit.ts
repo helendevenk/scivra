@@ -365,3 +365,41 @@ export async function grantCreditsForNewUser(user: User) {
 
   return newCredit;
 }
+
+/**
+ * Refund credits (e.g., when AI generation fails)
+ * Creates a GRANT transaction to return credits to the user
+ */
+export async function refundCredits({
+  userId,
+  credits,
+  scene,
+  description,
+  relatedCreditId,
+}: {
+  userId: string;
+  credits: number;
+  scene?: string;
+  description?: string;
+  relatedCreditId?: string; // ID of the original consume transaction
+}) {
+  const newCredit: NewCredit = {
+    id: getUuid(),
+    userId,
+    userEmail: '', // Will be filled by trigger if needed
+    orderNo: '',
+    subscriptionNo: '',
+    transactionNo: getSnowId(),
+    transactionType: CreditTransactionType.GRANT,
+    transactionScene: scene || CreditTransactionScene.GIFT,
+    credits,
+    remainingCredits: credits,
+    description: description || `Refund: ${credits} credits`,
+    expiresAt: null, // Refunded credits don't expire
+    status: CreditStatus.ACTIVE,
+    metadata: relatedCreditId ? JSON.stringify({ relatedCreditId }) : undefined,
+  };
+
+  await createCredit(newCredit);
+  return newCredit;
+}

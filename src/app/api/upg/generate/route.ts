@@ -1,6 +1,6 @@
 import { respData, respErr } from '@/shared/lib/resp';
 import { getUserInfo } from '@/shared/models/user';
-import { getRemainingCredits, consumeCredits } from '@/shared/models/credit';
+import { getRemainingCredits, consumeCredits, refundCredits } from '@/shared/models/credit';
 import {
   createUpgGeneration,
   NewUpgGeneration,
@@ -144,50 +144,75 @@ export async function POST(request: Request) {
     const promptHash = createHash('sha256').update(prompt).digest('hex');
     const htmlSize = new TextEncoder().encode(htmlContent).length;
     let creditId: string | null = null;
+    let creditsConsumed = false;
 
-    if (userId) {
-      const creditResult = await consumeCredits({
+    try {
+      // Consume credits first (atomic operation)
+      if (userId) {
+        const creditResult = await consumeCredits({
+          userId,
+          credits: creditsToConsume,
+          scene: isRegenerate ? 'upg-regenerate' : 'upg-generate',
+          description: `UPG ${isRegenerate ? 'regeneration' : 'generation'}: ${prompt.slice(0, 50)}`,
+        });
+        creditId = creditResult?.id ?? null;
+        creditsConsumed = true;
+      }
+
+      // Create generation record
+      const generationData: NewUpgGeneration = {
+        id: getUuid(),
         userId,
-        credits: creditsToConsume,
-        scene: isRegenerate ? 'upg-regenerate' : 'upg-generate',
-        description: `UPG ${isRegenerate ? 'regeneration' : 'generation'}: ${prompt.slice(0, 50)}`,
+        prompt,
+        promptHash,
+        language,
+        htmlContent,
+        htmlSize,
+        model,
+        provider: 'openrouter',
+        inputTokens: aiResult.inputTokens,
+        outputTokens: aiResult.outputTokens,
+        costCredits: userId ? creditsToConsume : 0,
+        creditId,
+        status: 'completed',
+        isPublic: false,
+        viewCount: 0,
+        shareCount: 0,
+        downloadCount: 0,
+      };
+
+      const generation = await createUpgGeneration(generationData);
+
+      // Increment daily quota
+      if (userId) {
+        await incrementDailyQuota(userId, todayStr);
+      }
+      // Anonymous usage is already tracked by Redis rate limiter
+
+      return respData({
+        id: generation.id,
+        status: generation.status,
+        htmlContent: generation.htmlContent,
       });
-      creditId = creditResult?.id ?? null;
+    } catch (dbError: any) {
+      // If database operations fail after credits consumed, refund them
+      if (creditsConsumed && userId && creditId) {
+        try {
+          await refundCredits({
+            userId,
+            credits: creditsToConsume,
+            scene: 'upg-refund',
+            description: `Refund due to generation failure: ${dbError.message?.slice(0, 100)}`,
+            relatedCreditId: creditId,
+          });
+          console.log(`Refunded ${creditsToConsume} credits to user ${userId} due to error`);
+        } catch (refundError: any) {
+          console.error('Failed to refund credits:', refundError);
+          // Log this critical error but don't throw - user already got error response
+        }
+      }
+      throw dbError; // Re-throw to be caught by outer catch
     }
-
-    const generationData: NewUpgGeneration = {
-      id: getUuid(),
-      userId,
-      prompt,
-      promptHash,
-      language,
-      htmlContent,
-      htmlSize,
-      model,
-      provider: 'openrouter',
-      inputTokens: aiResult.inputTokens,
-      outputTokens: aiResult.outputTokens,
-      costCredits: userId ? creditsToConsume : 0,
-      creditId,
-      status: 'completed',
-      isPublic: false,
-      viewCount: 0,
-      shareCount: 0,
-      downloadCount: 0,
-    };
-
-    const generation = await createUpgGeneration(generationData);
-
-    if (userId) {
-      await incrementDailyQuota(userId, todayStr);
-    }
-    // Anonymous usage is already tracked by Redis rate limiter
-
-    return respData({
-      id: generation.id,
-      status: generation.status,
-      htmlContent: generation.htmlContent,
-    });
   } catch (e: any) {
     console.error('UPG generate failed:', e);
 
