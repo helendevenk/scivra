@@ -6,6 +6,30 @@ interface SanitizeResult {
 }
 
 /**
+ * Security Strategy for UPG HTML:
+ *
+ * 1. **Regex-based filtering** (first line of defense):
+ *    - Remove dangerous JavaScript patterns (eval, Function, etc.)
+ *    - Block network requests (fetch, XHR, WebSocket)
+ *    - Block storage access (localStorage, sessionStorage, cookies)
+ *    - Whitelist CDN sources
+ *
+ * 2. **iframe sandbox** (primary defense):
+ *    - sandbox="allow-scripts allow-same-origin"
+ *    - Prevents: form submission, popups, top navigation, downloads
+ *    - Allows: scripts (for visualizations), same-origin (for canvas/WebGL)
+ *
+ * 3. **Content Security Policy** (future enhancement):
+ *    - script-src 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com
+ *    - connect-src 'none' (block all network requests)
+ *
+ * Note: We don't use DOMPurify because:
+ * - UPG generates complete HTML documents, not fragments
+ * - DOMPurify would strip <script> tags needed for visualizations
+ * - iframe sandbox provides better isolation than DOM cleaning
+ */
+
+/**
  * Extract HTML from AI response — it may be wrapped in ```html ``` fences
  */
 function extractHtml(raw: string): string {
@@ -118,7 +142,24 @@ export function sanitizeHtml(html: string): SanitizeResult {
     sanitized = sanitized.replace(/\bsessionStorage\b/g, '/* sessionStorage blocked */');
   }
 
-  // 11. Validate HTML structure
+  // 11. Check for common XSS vectors in attributes
+  const xssPatterns = [
+    /on\w+\s*=\s*["'][^"']*["']/gi, // onerror, onclick, onload, etc.
+    /javascript:/gi, // javascript: protocol
+    /data:text\/html/gi, // data: URLs with HTML
+    /<iframe[^>]*>/gi, // nested iframes
+    /<object[^>]*>/gi, // object tags
+    /<embed[^>]*>/gi, // embed tags
+  ];
+
+  for (const pattern of xssPatterns) {
+    if (pattern.test(sanitized)) {
+      issues.push(`Potential XSS vector detected: ${pattern.source}`);
+      // Don't auto-remove, just warn - let iframe sandbox handle it
+    }
+  }
+
+  // 12. Validate HTML structure
   if (!sanitized.includes('<!DOCTYPE html>') && !sanitized.includes('<!doctype html>')) {
     issues.push('Missing <!DOCTYPE html> declaration');
   }

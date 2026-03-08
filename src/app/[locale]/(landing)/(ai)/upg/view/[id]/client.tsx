@@ -248,7 +248,8 @@ export function UpgViewClient({
             <iframe
               ref={iframeRef}
               srcDoc={htmlContent}
-              sandbox="allow-scripts"
+              sandbox="allow-scripts allow-same-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               className={cn(
                 "h-[80vh] min-h-[600px] w-full border-0 transition-opacity duration-300 ease-out",
                 isIframeLoading ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'

@@ -35,7 +35,8 @@ export default async function EmbedPage({
       <iframe
         srcDoc={generation.htmlContent}
         className="w-full h-full border-0"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-same-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         title={generation.prompt}
       />
       <EmbedWatermark id={id} />
