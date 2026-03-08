@@ -68,7 +68,7 @@ export default async function LearnDetailPage({ params }: Props) {
     progress = await getOrCreateProgress(user.id, path.id);
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://neonphysics.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://seephysics.com';
   const title = locale === 'zh' ? path.titleZh : path.titleEn;
   const description = locale === 'zh' ? path.descriptionZh : path.descriptionEn;
   const jsonLd = buildLearningPathJsonLd({

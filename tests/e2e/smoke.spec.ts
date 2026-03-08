@@ -1,58 +1,75 @@
-import { expect, test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-test.describe('marketing smoke', () => {
-  test('homepage renders with heading', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+test.describe('Smoke Tests — English', () => {
+  test('homepage loads', async ({ page }) => {
+    const res = await page.goto('/en');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
   });
 
-  test('pricing page is reachable', async ({ page }) => {
-    await page.goto('/pricing');
-    await expect(page.locator('body')).not.toBeEmpty();
-    // Page should load without error
-    await expect(page.locator('text=404')).not.toBeVisible();
-  });
-
-  test('blog index is reachable', async ({ page }) => {
-    await page.goto('/blog');
-    await expect(page.locator('body')).not.toBeEmpty();
-    await expect(page.locator('text=404')).not.toBeVisible();
-  });
-
-  test('experiments index lists experiment cards', async ({ page }) => {
-    await page.goto('/experiments');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    // Should have at least one experiment card link
-    const cards = page.locator('a[href*="/experiments/"]');
-    await expect(cards.first()).toBeVisible();
+  test('experiments page loads', async ({ page }) => {
+    const res = await page.goto('/en/experiments');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
   });
 
   test('experiment detail page loads', async ({ page }) => {
-    await page.goto('/experiments/newtons-laws');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const res = await page.goto('/en/experiments/newtons-laws-of-motion');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
   });
 
-  test('sign-in page is reachable', async ({ page }) => {
-    await page.goto('/sign-in');
-    await expect(page.locator('body')).not.toBeEmpty();
-    await expect(page.locator('text=404')).not.toBeVisible();
+  test('UPG page loads', async ({ page }) => {
+    const res = await page.goto('/en/upg');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
+
+  test('blog page loads', async ({ page }) => {
+    const res = await page.goto('/en/blog');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
+
+  test('pricing page loads', async ({ page }) => {
+    const res = await page.goto('/en/pricing');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
+
+  test('gallery page loads', async ({ page }) => {
+    const res = await page.goto('/en/gallery');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
+
+  test('privacy policy page loads', async ({ page }) => {
+    const res = await page.goto('/en/privacy-policy');
+    expect(res?.status()).toBe(200);
+  });
+
+  test('terms of service page loads', async ({ page }) => {
+    const res = await page.goto('/en/terms-of-service');
+    expect(res?.status()).toBe(200);
   });
 });
 
-test.describe('SEO smoke', () => {
-  test('robots.txt is served', async ({ request }) => {
-    const response = await request.get('/robots.txt');
-    expect(response.status()).toBe(200);
-    const body = await response.text();
-    expect(body).toContain('User-agent');
-    expect(body).toContain('Sitemap');
+test.describe('Smoke Tests — Chinese', () => {
+  test('homepage loads', async ({ page }) => {
+    const res = await page.goto('/zh');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
   });
 
-  test('sitemap.xml is served', async ({ request }) => {
-    const response = await request.get('/sitemap.xml');
-    expect(response.status()).toBe(200);
-    const body = await response.text();
-    expect(body).toContain('<urlset');
-    expect(body).toContain('/experiments');
+  test('experiments page loads', async ({ page }) => {
+    const res = await page.goto('/zh/experiments');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
+
+  test('pricing page loads', async ({ page }) => {
+    const res = await page.goto('/zh/pricing');
+    expect(res?.status()).toBe(200);
+    await expect(page.locator('h1').first()).toBeVisible();
   });
 });

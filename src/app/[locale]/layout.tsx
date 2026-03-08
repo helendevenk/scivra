@@ -5,6 +5,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { routing } from '@/core/i18n/config';
 import { ThemeProvider } from '@/core/theme/provider';
 import { ErrorBoundary } from '@/shared/blocks/common';
+import { CookieConsentBanner } from '@/shared/blocks/legal/CookieConsentBanner';
 import { Toaster } from '@/shared/components/ui/sonner';
 import { AppContextProvider } from '@/shared/contexts/app';
 import { getMetadata } from '@/shared/lib/seo';
@@ -30,6 +31,7 @@ export default async function LocaleLayout({
       <ThemeProvider>
         <AppContextProvider>
           <ErrorBoundary>{children}</ErrorBoundary>
+          <CookieConsentBanner />
           <Toaster position="top-center" richColors />
         </AppContextProvider>
       </ThemeProvider>

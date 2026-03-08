@@ -1,5 +1,5 @@
 /**
- * NeonPhysics - Projectile Motion Physics Engine
+ * SeePhysics - Projectile Motion Physics Engine
  * Pure functions for projectile motion calculations (no air resistance).
  */
 

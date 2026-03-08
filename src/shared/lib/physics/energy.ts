@@ -1,5 +1,5 @@
 /**
- * NeonPhysics - Energy Conservation Physics Engine
+ * SeePhysics - Energy Conservation Physics Engine
  * Pure functions for energy conservation calculations (roller coaster).
  */
 

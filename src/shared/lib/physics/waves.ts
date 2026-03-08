@@ -1,5 +1,5 @@
 /**
- * NeonPhysics - Waves Physics Engine
+ * SeePhysics - Waves Physics Engine
  * Pure functions for wave and electromagnetic calculations.
  */
 

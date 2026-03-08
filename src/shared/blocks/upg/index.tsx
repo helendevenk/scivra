@@ -1,0 +1,1 @@
+export { UpgGenerator } from './UpgGenerator';

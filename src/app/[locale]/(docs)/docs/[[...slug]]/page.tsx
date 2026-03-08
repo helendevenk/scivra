@@ -11,7 +11,6 @@ import {
 import { source } from '@/core/docs/source';
 
 export const revalidate = 86400;
-export const dynamic = 'force-static';
 export const dynamicParams = true;
 
 export default async function DocsContentPage(props: {

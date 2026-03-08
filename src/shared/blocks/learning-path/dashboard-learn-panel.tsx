@@ -36,7 +36,7 @@ export function DashboardLearnPanel() {
         const { paths: allPaths, progress } = json.data;
         if (!progress || progress.length === 0) return;
 
-        const progressMap = new Map(
+        const progressMap = new Map<string, any>(
           progress.map((p: any) => [p.pathId, p])
         );
 

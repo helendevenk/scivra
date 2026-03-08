@@ -7,6 +7,8 @@ export type {
   ComplianceRepository,
 } from './service';
 
+export { createDrizzleComplianceRepository } from './repository';
+
 export {
   processDataRetention,
   DEFAULT_ANONYMOUS_RETENTION_DAYS,

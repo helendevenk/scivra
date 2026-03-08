@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import { Link } from '@/core/i18n/navigation';
 import { Brand as BrandType } from '@/shared/types/blocks/common';
 
@@ -11,7 +9,7 @@ export function BrandLogo({ brand }: { brand: BrandType }) {
       className={`flex items-center space-x-2 ${brand.className}`}
     >
       {brand.logo && (
-        <Image
+        <img
           src={brand.logo.src}
           alt={brand.title ? '' : brand.logo.alt || ''}
           width={brand.logo.width || 100}
