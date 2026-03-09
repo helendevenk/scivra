@@ -918,3 +918,47 @@ export const experimentMetadata = pgTable(
     index('idx_experiment_metadata_category').on(table.category),
   ]
 );
+
+// ─── Learning Statistics (Phase 3: Education Features) ───
+
+export const learningStats = pgTable(
+  'learning_stats',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .unique()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    
+    // UPG generation stats
+    upgsGenerated: integer('upgs_generated').default(0).notNull(),
+    upgsPublished: integer('upgs_published').default(0).notNull(),
+    upgsLiked: integer('upgs_liked').default(0).notNull(),
+    
+    // Experiment stats
+    experimentsStarted: integer('experiments_started').default(0).notNull(),
+    experimentsCompleted: integer('experiments_completed').default(0).notNull(),
+    
+    // Time tracking (in minutes)
+    studyMinutes: integer('study_minutes').default(0).notNull(),
+    
+    // Engagement
+    lastActiveAt: timestamp('last_active_at').defaultNow().notNull(),
+    streakDays: integer('streak_days').default(0).notNull(),
+    longestStreak: integer('longest_streak').default(0).notNull(),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_learning_stats_user_id').on(table.userId),
+    index('idx_learning_stats_last_active').on(table.lastActiveAt),
+  ]
+);
+
+export type LearningStats = typeof learningStats.$inferSelect;
+export type NewLearningStats = typeof learningStats.$inferInsert;
