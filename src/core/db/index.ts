@@ -54,7 +54,6 @@ export function db() {
     client = postgres(databaseUrl, {
       prepare: false,
       max: Number(envConfigs.db_max_connections) || 5, // Maximum connections in pool (default 5)
-      min: 2, // Minimum connections to maintain
       idle_timeout: 30, // Idle connection timeout (seconds)
       connect_timeout: 10, // Connection timeout (seconds)
     });
