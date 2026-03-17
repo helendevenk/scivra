@@ -55,6 +55,34 @@ export function checkQuality(html: string): QualityResult {
     }
   }
 
+  // 6. Three.js initialization checks (prevent black screen)
+  const hasSceneInit = /new\s+THREE\.Scene\s*\(/.test(html);
+  if (!hasSceneInit) {
+    issues.push('Missing THREE.Scene initialization — 3D will not render');
+  }
+
+  const hasRendererInit = /new\s+THREE\.WebGLRenderer/.test(html);
+  if (!hasRendererInit) {
+    issues.push('Missing THREE.WebGLRenderer — 3D will not render');
+  }
+
+  const hasAnimationLoop =
+    /requestAnimationFrame/.test(html) ||
+    /setAnimationLoop/.test(html);
+  if (!hasAnimationLoop) {
+    issues.push('Missing animation loop (requestAnimationFrame or setAnimationLoop)');
+  }
+
+  const hasResizeHandler = /addEventListener\s*\(\s*['"]resize['"]/.test(html);
+  if (!hasResizeHandler) {
+    issues.push('Missing window resize handler — layout will break on resize');
+  }
+
+  const hasPixelRatio = /setPixelRatio/.test(html);
+  if (!hasPixelRatio) {
+    issues.push('Missing setPixelRatio — rendering will be blurry on high-DPI screens');
+  }
+
   return {
     passed: issues.length === 0,
     issues,
