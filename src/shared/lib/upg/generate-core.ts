@@ -13,6 +13,13 @@ import {
 } from '@/shared/models/upg_generation';
 import { getUuid } from '@/shared/lib/hash';
 import { createHash } from 'crypto';
+import { moderateInput, moderateOutput } from '@/shared/lib/moderation/content-moderator';
+import { createModerationRecord } from '@/shared/models/content_moderation';
+import {
+  injectPerformanceCode,
+  injectPerformanceUI,
+  injectMobileOptimization,
+} from '@/shared/lib/performance/performance-template';
 
 export interface GenerateCoreParams {
   prompt: string;
@@ -49,6 +56,67 @@ export async function generateCore(
   const systemPrompt = getSystemPrompt();
   const userPrompt = buildUserPrompt(prompt, language);
   const promptHash = createHash('sha256').update(prompt).digest('hex');
+  const generationId = existingGenerationId || getUuid();
+
+  // 0. Input moderation (Phase 0.6)
+  const inputModerationResult = moderateInput(prompt);
+  if (!inputModerationResult.passed) {
+    // Input moderation failed - reject immediately
+    const failedData: NewUpgGeneration = {
+      id: generationId,
+      userId,
+      prompt,
+      promptHash,
+      language,
+      model,
+      provider: 'openrouter',
+      inputTokens: 0,
+      outputTokens: 0,
+      costCredits: 0,
+      status: 'failed',
+      errorMessage: inputModerationResult.reason || 'Input moderation failed',
+      isPublic: false,
+      viewCount: 0,
+      shareCount: 0,
+      downloadCount: 0,
+      ...extraFields,
+    };
+
+    if (existingGenerationId) {
+      await updateUpgGeneration(existingGenerationId, failedData);
+    } else {
+      await createUpgGeneration(failedData);
+    }
+
+    // Record moderation result
+    await createModerationRecord({
+      generationId,
+      checkType: 'input',
+      status: inputModerationResult.status,
+      reason: inputModerationResult.reason,
+      matchedKeywords: inputModerationResult.matchedKeywords || [],
+    });
+
+    return {
+      id: generationId,
+      status: 'failed',
+      htmlContent: null,
+      errorMessage: inputModerationResult.reason || 'Input moderation failed',
+      inputTokens: 0,
+      outputTokens: 0,
+    };
+  }
+
+  // Record input moderation result (passed or pending)
+  if (inputModerationResult.status === 'pending') {
+    await createModerationRecord({
+      generationId,
+      checkType: 'input',
+      status: 'pending',
+      reason: inputModerationResult.reason,
+      matchedKeywords: inputModerationResult.matchedKeywords || [],
+    });
+  }
 
   // 1. AI generation
   const aiResult = await callOpenRouter({
@@ -58,11 +126,21 @@ export async function generateCore(
   });
 
   // 2. Post-processing
-  const { sanitized: htmlContent } = sanitizeHtml(aiResult.html);
+  let { sanitized: htmlContent } = sanitizeHtml(aiResult.html);
+
+  // 2.1 Inject performance optimization code (Phase 0.5)
+  htmlContent = injectPerformanceCode(htmlContent);
+  htmlContent = injectMobileOptimization(htmlContent);
+  htmlContent = injectPerformanceUI(htmlContent);
+
   const qualityResult = checkQuality(htmlContent);
 
+  // Log warnings for debugging (non-blocking)
+  if (qualityResult.warnings.length > 0) {
+    console.warn(`[UPG] Quality warnings for "${prompt.slice(0, 50)}": ${qualityResult.warnings.join('; ')}`);
+  }
+
   const htmlSize = new TextEncoder().encode(htmlContent).length;
-  const generationId = existingGenerationId || getUuid();
 
   if (!qualityResult.passed) {
     // Quality check failed
@@ -103,7 +181,69 @@ export async function generateCore(
     };
   }
 
-  // 3. Success: store completed generation
+  // 3. Output moderation (Phase 0.6)
+  const outputModerationResult = moderateOutput(htmlContent);
+  if (!outputModerationResult.passed) {
+    // Output moderation failed - reject
+    const failedData: NewUpgGeneration = {
+      id: generationId,
+      userId,
+      prompt,
+      promptHash,
+      language,
+      htmlContent,
+      htmlSize,
+      model,
+      provider: 'openrouter',
+      inputTokens: aiResult.inputTokens,
+      outputTokens: aiResult.outputTokens,
+      costCredits: 0,
+      status: 'failed',
+      errorMessage: outputModerationResult.reason || 'Output moderation failed',
+      isPublic: false,
+      viewCount: 0,
+      shareCount: 0,
+      downloadCount: 0,
+      ...extraFields,
+    };
+
+    if (existingGenerationId) {
+      await updateUpgGeneration(existingGenerationId, failedData);
+    } else {
+      await createUpgGeneration(failedData);
+    }
+
+    // Record moderation result
+    await createModerationRecord({
+      generationId,
+      checkType: 'output',
+      status: outputModerationResult.status,
+      reason: outputModerationResult.reason,
+      matchedKeywords: [],
+    });
+
+    return {
+      id: generationId,
+      status: 'failed',
+      htmlContent: null,
+      errorMessage: outputModerationResult.reason || 'Output moderation failed',
+      inputTokens: aiResult.inputTokens,
+      outputTokens: aiResult.outputTokens,
+    };
+  }
+
+  // Record output moderation result (passed or pending)
+  if (outputModerationResult.status === 'pending') {
+    await createModerationRecord({
+      generationId,
+      checkType: 'output',
+      status: 'pending',
+      reason: outputModerationResult.reason,
+      matchedKeywords: [],
+    });
+  }
+
+  // 4. Success: store completed generation
   const successData: NewUpgGeneration = {
     id: generationId,
     userId,

@@ -10,9 +10,55 @@
 
 export function getThreejsCorePrompt(): string {
   return `
+## MANDATORY HTML SKELETON (COPY THIS EXACTLY — DO NOT SKIP OR MODIFY THE STRUCTURE)
+
+Every generated HTML file MUST start with this exact skeleton. Fill in the [PLACEHOLDERS] with your content.
+Omitting any part of this skeleton is a CRITICAL ERROR that causes black screens.
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="[LANGUAGE]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[TOPIC TITLE]</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"><\/script>
+  <style>
+    /* [YOUR CSS HERE — must include :root variables from Visual Design System] */
+  </style>
+</head>
+<body>
+  <!-- [YOUR HTML STRUCTURE HERE — must follow five-zone layout] -->
+  <script>
+  'use strict';
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // [YOUR THREE.JS + INTERACTION CODE HERE]
+    } catch (e) {
+      const c = document.getElementById('canvas-container');
+      if (c) c.innerHTML = '<p style="color:#EF4444;padding:2rem;font-size:1.2rem;">3D initialization failed: ' + e.message + '</p>';
+      console.error(e);
+    }
+  });
+  <\/script>
+</body>
+</html>
+\`\`\`
+
+## ORBITCONTROLS — IRON RULE
+
+**NEVER write your own camera rotation/zoom/pan code.** OrbitControls is already loaded via the mandatory \`<script>\` tag above.
+
+- Access it as: \`new THREE.OrbitControls(camera, renderer.domElement)\`
+- It is ALREADY available as a global — do NOT import it, do NOT copy-paste its source code, do NOT implement trackball/arcball yourself.
+- If you write ANY custom mouse/touch camera control code instead of using OrbitControls, the output is REJECTED.
+
 ## THREE.JS SCENE INITIALIZATION (MANDATORY TEMPLATE)
 
-Every 3D scene MUST follow this exact initialization pattern. Deviating causes black screens.
+Inside the try-catch block, follow this exact initialization pattern:
 
 \`\`\`javascript
 // === MANDATORY SCENE SETUP ===
@@ -33,7 +79,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
-// OrbitControls (loaded via script tag)
+// OrbitControls — MUST use the library loaded via script tag
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -51,9 +97,9 @@ window.addEventListener('resize', () => {
 // MANDATORY: Animation loop (auto-pauses in background tabs)
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
-  const delta = clock.getDelta();
-  controls.update();
-  updateScene(delta); // your update function
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update(); // REQUIRED when enableDamping = true
+  updateScene(delta); // your physics/animation update function
   renderer.render(scene, camera);
 });
 \`\`\`
