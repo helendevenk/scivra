@@ -27,6 +27,7 @@ export function getSystemPrompt(): string {
 4. ALWAYS call \`renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))\`.
 5. NEVER create new Vector3/Matrix4/Object3D inside the animation loop — pre-allocate and reuse.
 6. ALWAYS add at least 3 lights (see Three-Point Lighting below). Objects are invisible without light.
+7. Scene background MUST be dark slate blue (0x0f172a), NEVER pure black (0x000000 or 0x0a0a0f). Pure black kills contrast — grid lines, axes, and dim objects become invisible.
 
 ## PERFORMANCE OPTIMIZATION (MANDATORY)
 - Detect device: \`navigator.hardwareConcurrency\` + WebGL renderer info → high/medium/low quality tier

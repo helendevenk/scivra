@@ -14,10 +14,10 @@ export function getVisualDesignPrompt(): string {
 
 \`\`\`css
 :root {
-  /* Background */
-  --bg-primary: #0a0a0f;
-  --bg-card: rgba(255, 255, 255, 0.08);
-  --bg-panel: rgba(22, 78, 99, 0.7);
+  /* Background — NOT pure black. Use dark slate so 3D objects have contrast */
+  --bg-primary: #0f172a;
+  --bg-card: rgba(255, 255, 255, 0.10);
+  --bg-panel: rgba(22, 78, 99, 0.75);
 
   /* Text */
   --text-primary: #F8FAFC;
@@ -25,8 +25,8 @@ export function getVisualDesignPrompt(): string {
   --text-muted: #94A3B8;
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.10);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.18);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-blur: blur(10px);
   --glass-radius: 12px;

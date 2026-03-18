@@ -64,7 +64,9 @@ Inside the try-catch block, follow this exact initialization pattern:
 // === MANDATORY SCENE SETUP ===
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a0f);
+// IMPORTANT: Use dark slate blue (#0f172a), NOT pure black (#000000 or #0a0a0f).
+// Pure black kills contrast — grid lines, axes, and dim objects become invisible.
+scene.background = new THREE.Color(0x0f172a);
 
 const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
 camera.position.set(0, 5, 15);
@@ -85,6 +87,11 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.minDistance = 2;
 controls.maxDistance = 50;
+
+// MANDATORY: Ground grid for spatial reference (skip only for astronomy/space scenes)
+const gridHelper = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b);
+gridHelper.position.y = 0;
+scene.add(gridHelper);
 
 // MANDATORY: Resize handler
 window.addEventListener('resize', () => {
@@ -145,8 +152,8 @@ const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
 backLight.position.set(0, 5, -10);
 scene.add(backLight);
 
-// Ambient (base illumination)
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+// Ambient (base illumination — 0.5 ensures objects are visible even in shadows)
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 \`\`\`
 
