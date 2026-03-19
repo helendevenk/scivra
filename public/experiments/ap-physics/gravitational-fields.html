@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gravitational Fields & Orbital Mechanics — NeonPhysics AP Physics 1</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(168,85,247,.08));border-bottom:1px solid rgba(99,102,241,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative;background:#020409}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:240px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .metric-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
+    .metric-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-indigo{color:#818cf8} .val-violet{color:#c084fc} .val-sky{color:#38bdf8} .val-amber{color:#fbbf24} .val-red{color:#f87171}
+    .orbit-type{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;text-align:center}
+    .orbit-circular{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .orbit-elliptical{background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc}
+    .orbit-escape{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#818cf8;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(99,102,241,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#818cf8;cursor:pointer}
+    .formula-box{background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .btn-row{display:flex;gap:8px;margin-top:8px}
+    .btn{padding:8px 0;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;flex:1;text-align:center}
+    .btn-primary{background:#6366f1;color:#fff}
+    .btn-primary:hover{background:#4f46e5}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .kepler-check{display:flex;align-items:center;gap:8px;font-size:11px;color:#64748b;margin-top:6px}
+    .kepler-dot{width:8px;height:8px;border-radius:50%}
+    .k-green{background:#22c55e} .k-gray{background:#475569}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Gravitational Fields &amp; Orbital Mechanics</h1>
+  <p class="subtitle">Kepler's laws, satellite orbits, and escape velocity</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Speed</div>
+          <div class="metric-val val-indigo" id="speedDisplay">7.9 km/s</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Altitude</div>
+          <div class="metric-val val-sky" id="altDisplay">0 km</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Orbital Period</div>
+          <div class="metric-val val-amber" id="periodDisplay">— min</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">v_circ</div>
+          <div class="metric-val val-violet" id="vcircDisplay">7.9 km/s</div>
+        </div>
+      </div>
+      <div class="orbit-type orbit-circular" id="orbitType">CIRCULAR ORBIT</div>
+      <div class="kepler-check">
+        <span class="kepler-dot k-green" id="k2dot"></span>
+        <span id="k2text">Kepler's 2nd: equal areas — tracking</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Launch Parameters</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Launch Speed (v)</span>
+          <span class="param-val" id="launchSpeedVal">7.9 km/s</span>
+        </div>
+        <input type="range" id="launchSpeed" min="1" max="15" step="0.1" value="7.9">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Launch Angle (θ)</span>
+          <span class="param-val" id="launchAngleVal">0°</span>
+        </div>
+        <input type="range" id="launchAngle" min="0" max="90" step="1" value="0">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="launchSatellite()">Launch ↗</button>
+        <button class="btn btn-ghost" onclick="resetSim()">Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Planet Mass (Pro Feature)</div>
+      <div class="ap-lock" style="padding:10px">
+        <div class="ap-lock-title" style="margin-bottom:2px">Planet Mass × Earth</div>
+        <div class="ap-lock-desc">Explore gravity on Mars, Jupiter, and custom worlds.</div>
+        <button class="ap-lock-btn">Unlock Pro →</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Reference Speeds</div>
+      <div style="font-size:11px;color:#64748b;line-height:2">
+        <div style="display:flex;justify-content:space-between"><span>v_circular</span><span style="color:#86efac">≈ 7.9 km/s</span></div>
+        <div style="display:flex;justify-content:space-between"><span>v_escape</span><span style="color:#f87171">≈ 11.2 km/s</span></div>
+        <div style="display:flex;justify-content:space-between"><span>v_esc / v_circ</span><span style="color:#a5b4fc">= √2 ≈ 1.414</span></div>
+        <div style="display:flex;justify-content:space-between"><span>g at surface</span><span style="color:#fbbf24">9.8 m/s²</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div id="f1"></div>
+        <div class="formula-desc">Newton's law of universal gravitation</div>
+      </div>
+      <div class="formula-box">
+        <div id="f2"></div>
+        <div class="formula-desc">Circular orbital velocity</div>
+      </div>
+      <div class="formula-box">
+        <div id="f3"></div>
+        <div class="formula-desc">Escape velocity (= √2 × v_circ)</div>
+      </div>
+      <div class="formula-box">
+        <div id="f4"></div>
+        <div class="formula-desc">Kepler's 3rd law (T² ∝ a³)</div>
+      </div>
+      <div class="formula-box">
+        <div id="f5"></div>
+        <div class="formula-desc">Total orbital energy (negative = bound)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 AP Exam Mode</div>
+        <div class="ap-lock-desc">4 problems including elliptical orbit period calculation using Kepler's 3rd law.</div>
+        <button class="ap-lock-btn">Unlock with AP Season Pass →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants (scaled for simulation) ─────────────────────────────────────────
+const G = 6.674e-11;
+const M_EARTH = 5.972e24;
+const R_EARTH_real = 6.371e6; // meters
+const V_CIRC = Math.sqrt(G * M_EARTH / R_EARTH_real); // ~7900 m/s
+const V_ESC = Math.sqrt(2 * G * M_EARTH / R_EARTH_real); // ~11200 m/s
+
+// Sim scale: 1 unit = 500 km, Earth radius = 6371/500 ≈ 12.7 units
+const SCALE = 500e3;
+const R_EARTH_sim = R_EARTH_real / SCALE; // ~12.7
+
+// ── Scene ─────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvasWrap');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020409);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+camera.position.set(0, 30, 60);
+camera.lookAt(0, 0, 0);
+
+const controls = typeof THREE.OrbitControls !== 'undefined'
+  ? new THREE.OrbitControls(camera, renderer.domElement)
+  : null;
+if (controls) { controls.enableDamping = true; controls.dampingFactor = 0.06; }
+
+// Stars
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(3000);
+for (let i = 0; i < 1000; i++) {
+  starPos[i * 3] = (Math.random() - 0.5) * 800;
+  starPos[i * 3 + 1] = (Math.random() - 0.5) * 800;
+  starPos[i * 3 + 2] = (Math.random() - 0.5) * 800;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, sizeAttenuation: true })));
+
+// Ambient + light
+scene.add(new THREE.AmbientLight(0x112233, 1.0));
+const sunLight = new THREE.PointLight(0xffeedd, 3, 500);
+sunLight.position.set(60, 20, 30);
+scene.add(sunLight);
+
+// Earth
+const earthGeo = new THREE.SphereGeometry(R_EARTH_sim, 48, 32);
+const earthMat = new THREE.MeshPhongMaterial({ color: 0x1a4b7a, emissive: 0x051525, shininess: 30, specular: 0x224466 });
+const earth = new THREE.Mesh(earthGeo, earthMat);
+scene.add(earth);
+
+// Atmosphere glow
+const atmGeo = new THREE.SphereGeometry(R_EARTH_sim * 1.07, 32, 32);
+const atmMat = new THREE.MeshBasicMaterial({ color: 0x1e88e5, transparent: true, opacity: 0.08, side: THREE.FrontSide });
+scene.add(new THREE.Mesh(atmGeo, atmMat));
+
+// Satellite
+const satGeo = new THREE.SphereGeometry(0.4, 12, 12);
+const satMat = new THREE.MeshPhongMaterial({ color: 0xfbbf24, emissive: 0x3a2000, shininess: 60 });
+const satellite = new THREE.Mesh(satGeo, satMat);
+scene.add(satellite);
+
+// Orbit trail
+const TRAIL_LEN = 300;
+const trailPos = new Float32Array(TRAIL_LEN * 3);
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+trailGeo.setDrawRange(0, 0);
+const trailLine = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0x818cf8, opacity: 0.5, transparent: true }));
+scene.add(trailLine);
+
+// ── Physics state ─────────────────────────────────────────────────────────────
+let launchSpeed_kms = 7.9;
+let launchAngle_deg = 0;
+let simActive = false;
+
+// Satellite state in sim units
+let sat = { x: 0, y: 0, vx: 0, vy: 0 };
+let trailIdx = 0, trailCount = 0;
+let orbitTime = 0;
+const SIM_DT = 0.005; // sim time step (scaled seconds)
+const REAL_DT_PER_FRAME = 60; // sim steps per render frame
+
+function launchSatellite() {
+  const v_ms = launchSpeed_kms * 1000;
+  const angle_rad = (launchAngle_deg * Math.PI) / 180;
+
+  // Start at Earth surface, horizontal
+  sat.x = R_EARTH_sim;
+  sat.y = 0;
+  // Velocity in sim units per sim time step — need careful scaling
+  // vx (tangential up), vy (radial) in sim units/sec
+  const v_sim = v_ms / SCALE; // units/second in real time
+  sat.vx = -Math.sin(angle_rad) * v_sim * -1; // tangential = vertical in our frame
+  sat.vy = Math.cos(angle_rad) * v_sim;       // radial
+
+  // Actually: launch from (R,0) horizontally means vy=v, vx=0 for pure tangential
+  sat.vx = 0;
+  sat.vy = v_sim;
+  // With angle: rotate the velocity
+  const cos_a = Math.cos(angle_rad), sin_a = Math.sin(angle_rad);
+  const vx0 = 0 * cos_a - v_sim * sin_a;
+  const vy0 = 0 * sin_a + v_sim * cos_a;
+  sat.vx = vx0;
+  sat.vy = vy0;
+
+  satellite.position.set(sat.x, 0, sat.y);
+  satellite.visible = true;
+  trailIdx = 0; trailCount = 0;
+  simActive = true;
+  orbitTime = 0;
+}
+
+function resetSim() {
+  simActive = false;
+  satellite.visible = false;
+  trailCount = 0;
+  trailGeo.setDrawRange(0, 0);
+  document.getElementById('orbitType').className = 'orbit-type orbit-circular';
+  document.getElementById('orbitType').textContent = 'CIRCULAR ORBIT';
+  document.getElementById('altDisplay').textContent = '0 km';
+  document.getElementById('periodDisplay').textContent = '— min';
+}
+
+function updatePhysics(dt_real) {
+  if (!simActive) return;
+  // Real time dt → sim steps
+  const steps = REAL_DT_PER_FRAME;
+  const dt = SIM_DT; // sim-time step (in "scaled seconds")
+  const GM_sim = G * M_EARTH / (SCALE * SCALE * SCALE); // in sim units
+
+  for (let i = 0; i < steps; i++) {
+    const r2 = sat.x * sat.x + sat.y * sat.y;
+    const r = Math.sqrt(r2);
+    if (r < R_EARTH_sim * 0.9) { simActive = false; return; } // crashed
+    if (r > 500) { simActive = false; return; } // escaped
+
+    const ax = -GM_sim * sat.x / (r2 * r) * (SCALE * SCALE); // back to m/s^2
+    const ay = -GM_sim * sat.y / (r2 * r) * (SCALE * SCALE);
+    // ... this gets complex. Use simpler scaled approach:
+    // F/m = GM/r^2, in sim units: a = GM/(SCALE^3) / r_sim^2 * SCALE
+    // Let's just use: a_sim = G*M / (r_real^2) / SCALE, r_real = r_sim * SCALE
+    const r_real = r * SCALE;
+    const a_real = G * M_EARTH / (r_real * r_real); // m/s^2
+    const a_sim = a_real / SCALE; // sim units / s^2
+
+    const ax2 = -a_sim * sat.x / r;
+    const ay2 = -a_sim * sat.y / r;
+    sat.vx += ax2 * dt;
+    sat.vy += ay2 * dt;
+    sat.x += sat.vx * dt;
+    sat.y += sat.vy * dt;
+    orbitTime += dt;
+  }
+
+  satellite.position.set(sat.x, 0, sat.y);
+
+  // Trail
+  trailPos[trailIdx * 3] = sat.x;
+  trailPos[trailIdx * 3 + 1] = 0;
+  trailPos[trailIdx * 3 + 2] = sat.y;
+  trailIdx = (trailIdx + 1) % TRAIL_LEN;
+  trailCount = Math.min(trailCount + 1, TRAIL_LEN);
+  trailGeo.attributes.position.needsUpdate = true;
+  trailGeo.setDrawRange(0, trailCount);
+
+  // Metrics
+  const r_real2 = Math.sqrt(sat.x * sat.x + sat.y * sat.y) * SCALE;
+  const v_real = Math.sqrt(sat.vx * sat.vx + sat.vy * sat.vy) * SCALE; // m/s
+  const alt_km = Math.round((r_real2 - R_EARTH_real) / 1000);
+  const v_circ_here = Math.sqrt(G * M_EARTH / r_real2);
+
+  document.getElementById('speedDisplay').textContent = (v_real / 1000).toFixed(2) + ' km/s';
+  document.getElementById('altDisplay').textContent = Math.max(0, alt_km) + ' km';
+  document.getElementById('vcircDisplay').textContent = (v_circ_here / 1000).toFixed(2) + ' km/s';
+
+  const v_ms = launchSpeed_kms * 1000;
+  const vesc_here = Math.sqrt(2 * G * M_EARTH / r_real2);
+  let orbitClass, orbitText;
+  if (v_ms >= vesc_here * 0.99) {
+    orbitClass = 'orbit-escape'; orbitText = 'ESCAPE TRAJECTORY';
+  } else if (Math.abs(v_ms - v_circ_here) / v_circ_here < 0.02) {
+    orbitClass = 'orbit-circular'; orbitText = 'CIRCULAR ORBIT';
+    const T_s = 2 * Math.PI * r_real2 / v_ms;
+    document.getElementById('periodDisplay').textContent = Math.round(T_s / 60) + ' min';
+  } else {
+    orbitClass = 'orbit-elliptical'; orbitText = 'ELLIPTICAL ORBIT';
+  }
+  const orbitEl = document.getElementById('orbitType');
+  orbitEl.className = 'orbit-type ' + orbitClass;
+  orbitEl.textContent = orbitText;
+}
+
+// ── UI bindings ────────────────────────────────────────────────────────────────
+document.getElementById('launchSpeed').addEventListener('input', function() {
+  launchSpeed_kms = parseFloat(this.value);
+  document.getElementById('launchSpeedVal').textContent = launchSpeed_kms.toFixed(1) + ' km/s';
+  const v_circ = V_CIRC / 1000;
+  const v_esc = V_ESC / 1000;
+  document.getElementById('vcircDisplay').textContent = v_circ.toFixed(2) + ' km/s';
+});
+document.getElementById('launchAngle').addEventListener('input', function() {
+  launchAngle_deg = parseFloat(this.value);
+  document.getElementById('launchAngleVal').textContent = launchAngle_deg + '°';
+});
+
+// ── Animation ─────────────────────────────────────────────────────────────────
+satellite.visible = false;
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  earth.rotation.y += 0.002;
+  updatePhysics(dt);
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+// ── Resize ─────────────────────────────────────────────────────────────────────
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(wrap);
+resize();
+
+// ── KaTeX ──────────────────────────────────────────────────────────────────────
+const formulas = [
+  { id: 'f1', latex: 'F = G\\dfrac{m_1 m_2}{r^2}' },
+  { id: 'f2', latex: 'v_{circ} = \\sqrt{\\dfrac{GM}{r}}' },
+  { id: 'f3', latex: 'v_{esc} = \\sqrt{\\dfrac{2GM}{r}}' },
+  { id: 'f4', latex: 'T^2 = \\dfrac{4\\pi^2}{GM}a^3' },
+  { id: 'f5', latex: 'E_{orbit} = -\\dfrac{GMm}{2a}' },
+];
+formulas.forEach(f => {
+  if (window.katex) katex.render(f.latex, document.getElementById(f.id), { throwOnError: false, displayMode: false });
+});
+
+animate();
+</script>
+</body>
+</html>

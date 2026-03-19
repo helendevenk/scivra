@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Systems — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(56,189,248,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#7dd3fc;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#38bdf8;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);color:#7dd3fc;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:0.68rem;transition:all 0.2s}
+    button:hover{background:rgba(56,189,248,0.3)}
+    button.active{background:rgba(56,189,248,0.4);border-color:#38bdf8}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#38bdf8;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(56,189,248,0.3);color:#7dd3fc}
+    #wx-label{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);font-size:1rem;font-weight:700;color:#7dd3fc;text-shadow:0 0 10px rgba(56,189,248,0.6);pointer-events:none;text-align:center}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="wx-label">Cold Front<br><span style="font-size:0.65rem;color:#94a3b8">Dense cold air pushes under warm air — heavy rain</span></div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Weather Systems <span class="badge">MS Earth Science</span></h1>
+      <p>Air masses, fronts, pressure systems, and storm formation</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-cold" class="active" onclick="setFront('cold')">🔵 Cold Front</button>
+        <button id="btn-warm" onclick="setFront('warm')">🔴 Warm Front</button>
+        <button id="btn-hurricane" onclick="setFront('hurricane')">🌀 Hurricane</button>
+      </div>
+      <div class="slider-row">
+        <label>Temp Difference <span id="T-val">15 °C</span></label>
+        <input type="range" id="T-slider" min="0" max="30" step="1" value="15">
+      </div>
+      <div class="slider-row">
+        <label>Ocean Temp <span id="OT-val">27 °C</span></label>
+        <input type="range" id="OT-slider" min="20" max="35" step="1" value="27">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#7dd3fc;margin-bottom:4px;font-weight:600">Weather Data</div>
+      <div class="data-row">Front Type <span class="data-val" id="d-type">Cold Front</span></div>
+      <div class="data-row">Precipitation <span class="data-val" id="d-precip">Heavy Rain</span></div>
+      <div class="data-row">Pressure Trend <span class="data-val" id="d-pres">Falling</span></div>
+      <div class="data-row">Wind Speed <span class="data-val" id="d-wind">High</span></div>
+      <div class="data-row">Hurricane Cat <span class="data-val" id="d-hurr">—</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#7dd3fc;margin-bottom:4px;font-weight:600">Atmospheric Dynamics</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let frontType='cold', tempDiff=15, oceanTemp=27;
+let scene,camera,renderer,particles=[],cycloneRings=[];
+
+const frontData={
+  cold:{label:'Cold Front',sub:'Dense cold air pushes under warm air — heavy rain',precip:'Heavy Rain',pres:'Falling',wind:'High',hurr:'—'},
+  warm:{label:'Warm Front',sub:'Warm air glides over cold — steady drizzle',precip:'Steady Drizzle',pres:'Rising',wind:'Moderate',hurr:'—'},
+  hurricane:{label:'Hurricane',sub:'Warm ocean fuels rotating storm — eye forms',precip:'Torrential',pres:'Very Low',wind:'Extreme',hurr:'>3'}
+};
+
+function setFront(f){
+  frontType=f;
+  ['cold','warm','hurricane'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',x===f));
+  const fd=frontData[f];
+  document.getElementById('wx-label').innerHTML=fd.label+'<br><span style="font-size:0.65rem;color:#94a3b8">'+fd.sub+'</span>';
+  document.getElementById('d-type').textContent=fd.label;
+  document.getElementById('d-precip').textContent=fd.precip;
+  document.getElementById('d-pres').textContent=fd.pres;
+  document.getElementById('d-wind').textContent=fd.wind;
+  document.getElementById('d-hurr').textContent=fd.hurr;
+  buildScene();
+}
+
+function buildScene(){
+  while(scene.children.length) scene.remove(scene.children[0]);
+  particles=[]; cycloneRings=[];
+  scene.add(new THREE.AmbientLight(0xffffff,0.4));
+  const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(5,10,5); scene.add(dl);
+
+  if(frontType==='cold'||frontType==='warm'){
+    // ground
+    const gnd=new THREE.Mesh(new THREE.PlaneGeometry(20,10),new THREE.MeshStandardMaterial({color:frontType==='cold'?0x0c4a6e:0x78350f}));
+    gnd.rotation.x=-Math.PI/2; gnd.position.y=-4; scene.add(gnd);
+    // cold air mass (blue, left)
+    const cold=new THREE.Mesh(new THREE.BoxGeometry(9,5,6),new THREE.MeshStandardMaterial({color:0x1e40af,transparent:true,opacity:0.25}));
+    cold.position.set(-4,-1.5,0); scene.add(cold);
+    // warm air mass (red/orange, right)
+    const warm=new THREE.Mesh(new THREE.BoxGeometry(9,5,6),new THREE.MeshStandardMaterial({color:0xef4444,transparent:true,opacity:0.2}));
+    warm.position.set(4,frontType==='cold'?0:1,0); scene.add(warm);
+    // front boundary
+    if(frontType==='cold'){
+      // steep boundary
+      const front=new THREE.Mesh(new THREE.BoxGeometry(0.15,6,6),new THREE.MeshStandardMaterial({color:0x3b82f6,transparent:true,opacity:0.5}));
+      front.position.set(-0.5,0,0); front.rotation.z=-0.2; scene.add(front);
+    } else {
+      // gentle slope boundary
+      const front=new THREE.Mesh(new THREE.PlaneGeometry(12,6),new THREE.MeshStandardMaterial({color:0xef4444,transparent:true,opacity:0.3,side:THREE.DoubleSide}));
+      front.rotation.z=0.35; front.position.set(-1,0.5,0); scene.add(front);
+    }
+    // rain/precipitation particles
+    const nRain=frontType==='cold'?40:20;
+    for(let i=0;i<nRain;i++){
+      const pm=new THREE.Mesh(new THREE.SphereGeometry(0.07,5,5),new THREE.MeshBasicMaterial({color:frontType==='cold'?0x93c5fd:0xbfdbfe}));
+      pm.position.set(-2+(Math.random()-0.5)*4,2+Math.random()*4,(Math.random()-0.5)*4);
+      particles.push({mesh:pm,vel:new THREE.Vector3((frontType==='cold'?-0.01:0),-(0.04+Math.random()*0.02),0)}); scene.add(pm);
+    }
+    // air flow arrows (using simple mesh)
+    for(let i=0;i<6;i++){
+      const arrow=new THREE.ArrowHelper(
+        new THREE.Vector3(frontType==='cold'?1:1,frontType==='cold'?0.5:-0.2,0).normalize(),
+        new THREE.Vector3(-5+i*2,-2+Math.random()*3,0),1.5,
+        frontType==='cold'?0x3b82f6:0xef4444,0.3,0.15
+      );
+      scene.add(arrow);
+    }
+  } else {
+    // hurricane: ocean surface + spiral bands
+    const ocean=new THREE.Mesh(new THREE.PlaneGeometry(20,16),new THREE.MeshStandardMaterial({color:0x0c4a6e}));
+    ocean.rotation.x=-Math.PI/2; ocean.position.y=-3; scene.add(ocean);
+    // hurricane bands (torus rings rotating)
+    const cat=oceanTemp>=32?5:oceanTemp>=29?4:oceanTemp>=27?3:oceanTemp>=26?2:1;
+    document.getElementById('d-hurr').textContent='Cat '+cat;
+    const nBands=cat+2;
+    for(let i=1;i<=nBands;i++){
+      const r=i*1.3;
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(r,0.25,8,32),new THREE.MeshStandardMaterial({color:0x0ea5e9,transparent:true,opacity:0.3+i*0.05,emissive:0x0ea5e9,emissiveIntensity:0.2}));
+      ring.rotation.x=Math.PI/2; ring.position.y=-0.5; scene.add(ring);
+      cycloneRings.push({mesh:ring,speed:0.02*(nBands-i+1),radius:r});
+    }
+    // eye (clear center)
+    const eye=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,3,16),new THREE.MeshStandardMaterial({color:0x0f172a,transparent:true,opacity:0.6}));
+    eye.position.y=0; scene.add(eye);
+    // cloud particles
+    for(let i=0;i<50;i++){
+      const angle=Math.random()*Math.PI*2;
+      const r=0.8+Math.random()*6;
+      const pm=new THREE.Mesh(new THREE.SphereGeometry(0.2,6,6),new THREE.MeshBasicMaterial({color:0xe2e8f0,transparent:true,opacity:0.6}));
+      pm.position.set(Math.cos(angle)*r,-0.5+Math.random()*2,Math.sin(angle)*r);
+      const spd=0.02+0.01/r;
+      particles.push({mesh:pm,angle,r,spd,y:pm.position.y}); scene.add(pm);
+    }
+  }
+}
+
+function initScene(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100); camera.position.set(0,5,16); camera.lookAt(0,0,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  buildScene();
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  animate();
+}
+
+let t3=0;
+function animate(){
+  requestAnimationFrame(animate); t3+=0.016;
+  if(frontType==='hurricane'){
+    particles.forEach(p=>{
+      p.angle+=p.spd;
+      p.mesh.position.x=Math.cos(p.angle)*p.r;
+      p.mesh.position.z=Math.sin(p.angle)*p.r;
+      p.mesh.position.y=p.y+Math.sin(t3*2+p.angle)*0.1;
+    });
+    cycloneRings.forEach(r=>{ r.mesh.rotation.z+=r.speed*0.016; });
+    // camera slow orbit
+    camera.position.x=Math.sin(t3*0.05)*2;
+    camera.position.z=16+Math.cos(t3*0.05)*2;
+    camera.lookAt(0,0,0);
+  } else {
+    particles.forEach(p=>{
+      p.mesh.position.addScaledVector(p.vel,1);
+      if(p.mesh.position.y<-3.5){ p.mesh.position.y=4; p.mesh.position.x=-2+(Math.random()-0.5)*4; }
+    });
+  }
+  renderer.render(scene,camera);
+}
+
+document.getElementById('T-slider').addEventListener('input',function(){tempDiff=+this.value;document.getElementById('T-val').textContent=tempDiff+' °C';});
+document.getElementById('OT-slider').addEventListener('input',function(){oceanTemp=+this.value;document.getElementById('OT-val').textContent=oceanTemp+' °C';if(frontType==='hurricane')buildScene();});
+
+katex.render('P = F/A \\quad \\text{High P} \\to \\text{fair} \\quad \\text{Low P} \\to \\text{storms}', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{Coriolis: CCW in N.Hemi.} \\quad \\text{Hurricane: T}_{ocean} \\ge 26°C', document.getElementById('kx-2'),{throwOnError:false});
+
+initScene(); setFront('cold');
+</script>
+</body>
+</html>

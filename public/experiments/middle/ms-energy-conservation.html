@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Energy Conservation — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(34,197,94,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#86efac;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#22c55e;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#86efac;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:0.68rem;transition:all 0.2s}
+    button:hover{background:rgba(34,197,94,0.3)}
+    button.active{background:rgba(34,197,94,0.4);border-color:#22c55e}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#4ade80;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(34,197,94,0.3);color:#86efac}
+    #energy-bar{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:22px;display:flex;flex-direction:column;gap:3px;align-items:center;pointer-events:none}
+    .ebar-label{font-size:0.55rem;color:#94a3b8;text-align:center;line-height:1.2}
+    .ebar-track{width:14px;height:100px;background:rgba(255,255,255,0.05);border-radius:4px;position:relative;overflow:hidden}
+    .ebar-fill{position:absolute;bottom:0;width:100%;border-radius:4px;transition:height 0.1s}
+    #pe-fill{background:linear-gradient(to top,#3b82f6,#93c5fd)}
+    #ke-fill{background:linear-gradient(to top,#ef4444,#fca5a5)}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="energy-bar">
+  <div class="ebar-label">PE</div>
+  <div class="ebar-track"><div class="ebar-fill" id="pe-fill" style="height:100%"></div></div>
+  <div class="ebar-label">KE</div>
+  <div class="ebar-track"><div class="ebar-fill" id="ke-fill" style="height:0%"></div></div>
+</div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Energy Conservation <span class="badge">MS Physics</span></h1>
+      <p>Potential energy converts to kinetic energy — total stays constant</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-pendulum" class="active" onclick="setMode('pendulum')">⊙ Pendulum</button>
+        <button id="btn-roller" onclick="setMode('roller')">⛰ Roller Coaster</button>
+        <button id="btn-bounce" onclick="setMode('bounce')">◎ Bouncing Ball</button>
+      </div>
+      <div class="slider-row">
+        <label>Height / Amplitude <span id="h-val">3 m</span></label>
+        <input type="range" id="h-slider" min="1" max="6" step="0.5" value="3">
+      </div>
+      <div class="slider-row">
+        <label>Mass <span id="m-val">2 kg</span></label>
+        <input type="range" id="m-slider" min="0.5" max="5" step="0.5" value="2">
+      </div>
+      <div class="btn-row">
+        <button onclick="resetSim()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#86efac;margin-bottom:4px;font-weight:600">Energy Data</div>
+      <div class="data-row">Mode <span class="data-val" id="d-mode">Pendulum</span></div>
+      <div class="data-row">Height h <span class="data-val" id="d-h">3.00 m</span></div>
+      <div class="data-row">PE = mgh <span class="data-val" id="d-pe">58.8 J</span></div>
+      <div class="data-row">KE = ½mv² <span class="data-val" id="d-ke">0.0 J</span></div>
+      <div class="data-row">Total E <span class="data-val" id="d-tot">58.8 J</span></div>
+      <div class="data-row">Speed v <span class="data-val" id="d-v">0.00 m/s</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#86efac;margin-bottom:4px;font-weight:600">Conservation of Energy</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const g=9.8;
+let mode='pendulum', H=3, M=2;
+let scene,camera,renderer,ball,pivot,rod,ground;
+let theta=null, omega=0, ballY=0, ballVY=0, rollerT=0;
+
+function setMode(m){
+  mode=m;
+  ['pendulum','roller','bounce'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',x===m));
+  document.getElementById('d-mode').textContent=m.charAt(0).toUpperCase()+m.slice(1);
+  resetSim();
+}
+
+function resetSim(){
+  theta=null; omega=0; ballY=0; ballVY=0; rollerT=0;
+  buildScene();
+}
+
+function buildScene(){
+  while(scene.children.length) scene.remove(scene.children[0]);
+  scene.add(new THREE.AmbientLight(0xffffff,0.6));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,10,5); scene.add(dl);
+  // ground
+  ground=new THREE.Mesh(new THREE.PlaneGeometry(20,6),new THREE.MeshStandardMaterial({color:0x1e293b}));
+  ground.rotation.x=-Math.PI/2; ground.position.y=-5; scene.add(ground);
+  const gh=new THREE.GridHelper(20,20,0x22c55e,0x14532d); gh.position.y=-5; scene.add(gh);
+  // ball
+  ball=new THREE.Mesh(new THREE.SphereGeometry(0.3,16,16),new THREE.MeshStandardMaterial({color:0x22c55e,emissive:0x14532d,emissiveIntensity:0.3,metalness:0.3}));
+  scene.add(ball);
+  if(mode==='pendulum'){
+    pivot=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8),new THREE.MeshStandardMaterial({color:0x64748b}));
+    pivot.position.set(0,3,0); scene.add(pivot);
+    rod=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1),new THREE.MeshStandardMaterial({color:0x94a3b8}));
+    scene.add(rod);
+    theta=H/3; // angle from height
+    ball.position.set(Math.sin(theta)*H,-3+Math.cos(theta)*H,0);
+  } else if(mode==='roller'){
+    // draw track as curve
+    const pts=[];
+    for(let i=0;i<=60;i++){const x=-8+i*0.27;pts.push(new THREE.Vector3(x,trackY(x),-0.5));}
+    const curve=new THREE.CatmullRomCurve3(pts);
+    const tgeo=new THREE.TubeGeometry(curve,80,0.07,8,false);
+    const track=new THREE.Mesh(tgeo,new THREE.MeshStandardMaterial({color:0x64748b}));
+    scene.add(track);
+    rollerT=0; const px=-8; const py=trackY(px);
+    ball.position.set(px,py+0.3,0);
+  } else {
+    ball.position.set(0,-5+H+0.3,0);
+    ballY=H; ballVY=0;
+  }
+}
+
+function trackY(x){
+  // roller coaster shape: hill at -6, valley at -2, hill at 2, descent
+  return -5+H*Math.exp(-((x+6)**2)/4)+H*0.5*Math.exp(-((x-2)**2)/3)-H*0.2;
+}
+
+function initScene(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100);
+  camera.position.set(0,1,16); camera.lookAt(0,-1,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  buildScene();
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  animate();
+}
+
+let t3=0, dt=0.016;
+function animate(){
+  requestAnimationFrame(animate); t3+=dt;
+  const E0=M*g*H; // total energy = initial PE
+  let h=0, v=0;
+
+  if(mode==='pendulum'){
+    if(theta===null) theta=H/3;
+    const L=H; // pendulum length approximated
+    omega+=-g/L*Math.sin(theta)*dt;
+    theta+=omega*dt;
+    const bx=Math.sin(theta)*L, by=-3+Math.cos(theta)*L;
+    ball.position.set(bx,by,0);
+    h=Math.max(0,by-(-3)); // height above lowest point
+    v=Math.abs(omega*L);
+    // update rod
+    if(rod){
+      const mx=bx/2, my=(by+3)/2;
+      rod.position.set(mx,my,0);
+      rod.scale.y=L;
+      rod.rotation.z=-theta;
+    }
+  } else if(mode==='roller'){
+    // move along track by energy conservation
+    rollerT+=(dt*1.5);
+    const x=-8+rollerT*0.27*60;
+    if(x<8){
+      const ty=trackY(x);
+      ball.position.set(x,ty+0.3,0);
+      h=Math.max(0,ty+5-trackY(-8)-0.3); // height relative to lowest
+      const hNow=ty+5;
+      const hStart=trackY(-8)+5+H;
+      const KE=Math.max(0,M*g*(hStart-hNow));
+      v=Math.sqrt(2*KE/M);
+    } else {
+      rollerT=0;
+    }
+  } else {
+    // bouncing ball
+    ballVY-=g*dt;
+    ballY+=ballVY*dt;
+    if(ballY<=0){ ballY=0; ballVY=Math.abs(ballVY)*0.98; }
+    ball.position.set(0,-5+ballY+0.3,0);
+    h=ballY; v=Math.abs(ballVY);
+  }
+
+  const PE=M*g*h, KE=Math.max(0,E0-PE), tot=E0;
+  v=v||Math.sqrt(2*KE/M);
+  document.getElementById('d-h').textContent=h.toFixed(2)+' m';
+  document.getElementById('d-pe').textContent=PE.toFixed(1)+' J';
+  document.getElementById('d-ke').textContent=KE.toFixed(1)+' J';
+  document.getElementById('d-tot').textContent=tot.toFixed(1)+' J';
+  document.getElementById('d-v').textContent=v.toFixed(2)+' m/s';
+  const pePct=Math.min(100,PE/E0*100), kePct=Math.min(100,KE/E0*100);
+  document.getElementById('pe-fill').style.height=pePct+'%';
+  document.getElementById('ke-fill').style.height=kePct+'%';
+  renderer.render(scene,camera);
+}
+
+document.getElementById('h-slider').addEventListener('input',function(){H=+this.value;document.getElementById('h-val').textContent=H+' m';document.getElementById('d-tot').textContent=(M*g*H).toFixed(1)+' J';resetSim();});
+document.getElementById('m-slider').addEventListener('input',function(){M=+this.value;document.getElementById('m-val').textContent=M+' kg';resetSim();});
+
+katex.render('E_{total} = PE + KE = mgh + \\frac{1}{2}mv^2 = \\text{const}', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('v_{max} = \\sqrt{2gh} \\quad \\text{(at lowest point, all PE → KE)}', document.getElementById('kx-2'),{throwOnError:false});
+
+initScene();
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Reactions — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(6,182,212,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#67e8f9;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#06b6d4;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.4);color:#67e8f9;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:0.68rem;transition:all 0.2s}
+    button:hover{background:rgba(6,182,212,0.3)}
+    button.active{background:rgba(6,182,212,0.4);border-color:#06b6d4}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#22d3ee;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(6,182,212,0.3);color:#67e8f9}
+    #rxn-label{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:1rem;font-weight:700;color:#67e8f9;text-shadow:0 0 10px rgba(6,182,212,0.6);pointer-events:none;text-align:center}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="rxn-label">2H₂ + O₂ → 2H₂O<br><span style="font-size:0.65rem;color:#94a3b8">Synthesis — exothermic</span></div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Chemical Reactions <span class="badge">MS Chemistry</span></h1>
+      <p>Reactants combine to form products — mass is always conserved</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-synthesis" class="active" onclick="setRxn('synthesis')">⊕ Synthesis</button>
+        <button id="btn-decomp" onclick="setRxn('decomp')">⊖ Decomposition</button>
+        <button id="btn-combustion" onclick="setRxn('combustion')">🔥 Combustion</button>
+        <button id="btn-precipitate" onclick="setRxn('precipitate')">⬇ Precipitate</button>
+      </div>
+      <div class="slider-row">
+        <label>Temperature <span id="T-val">300 K</span></label>
+        <input type="range" id="T-slider" min="200" max="1000" step="10" value="300">
+      </div>
+      <div class="slider-row">
+        <label>Concentration <span id="C-val">1.0×</span></label>
+        <input type="range" id="C-slider" min="0.2" max="3" step="0.2" value="1">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#67e8f9;margin-bottom:4px;font-weight:600">Reaction Data</div>
+      <div class="data-row">Reaction Type <span class="data-val" id="d-type">Synthesis</span></div>
+      <div class="data-row">Energy Type <span class="data-val" id="d-energy">Exothermic</span></div>
+      <div class="data-row">Reactant Mass <span class="data-val" id="d-rMass">36 g</span></div>
+      <div class="data-row">Product Mass <span class="data-val" id="d-pMass">36 g</span></div>
+      <div class="data-row">Reaction Rate <span class="data-val" id="d-rate">Medium</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#67e8f9;margin-bottom:4px;font-weight:600">Conservation of Mass</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const reactions={
+  synthesis:{label:'2H₂ + O₂ → 2H₂O',sub:'Synthesis — exothermic',type:'Synthesis',energy:'Exothermic',rMass:'36 g',pMass:'36 g',
+    reactantColors:[0x3b82f6,0xef4444],productColor:0x06b6d4,particleCount:12},
+  decomp:{label:'2H₂O → 2H₂ + O₂',sub:'Decomposition — endothermic',type:'Decomposition',energy:'Endothermic',rMass:'36 g',pMass:'36 g',
+    reactantColors:[0x06b6d4],productColor:0x3b82f6,particleCount:10},
+  combustion:{label:'CH₄ + 2O₂ → CO₂ + 2H₂O',sub:'Combustion — highly exothermic',type:'Combustion',energy:'Exothermic',rMass:'80 g',pMass:'80 g',
+    reactantColors:[0xf59e0b,0xef4444],productColor:0x6b7280,particleCount:16},
+  precipitate:{label:'Pb²⁺ + 2I⁻ → PbI₂↓',sub:'Double displacement — precipitate forms',type:'Precipitation',energy:'Exothermic (slight)',rMass:'461 g',pMass:'461 g',
+    reactantColors:[0xfbbf24,0xa855f7],productColor:0xfde047,particleCount:14}
+};
+let currentRxn='synthesis', T=300, C=1.0;
+let scene,camera,renderer,particles=[],flameParticles=[];
+
+function setRxn(r){
+  currentRxn=r;
+  ['synthesis','decomp','combustion','precipitate'].forEach(x=>{
+    const btn=document.getElementById('btn-'+x);
+    if(btn) btn.classList.toggle('active',x===r);
+  });
+  const rx=reactions[r];
+  document.getElementById('rxn-label').innerHTML=rx.label+'<br><span style="font-size:0.65rem;color:#94a3b8">'+rx.sub+'</span>';
+  document.getElementById('d-type').textContent=rx.type;
+  document.getElementById('d-energy').textContent=rx.energy;
+  document.getElementById('d-rMass').textContent=rx.rMass;
+  document.getElementById('d-pMass').textContent=rx.pMass;
+  buildScene();
+}
+
+function buildScene(){
+  while(scene.children.length) scene.remove(scene.children[0]);
+  particles=[]; flameParticles=[];
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(5,8,5); scene.add(dl);
+  const rx=reactions[currentRxn];
+  // beaker outline (wireframe box)
+  const beakerGeo=new THREE.BoxGeometry(8,5,3);
+  const beaker=new THREE.Mesh(beakerGeo,new THREE.MeshStandardMaterial({color:0x94a3b8,transparent:true,opacity:0.08,wireframe:false}));
+  beaker.position.y=-0.5; scene.add(beaker);
+  const beakerWire=new THREE.Mesh(beakerGeo,new THREE.MeshBasicMaterial({color:0x475569,wireframe:true}));
+  beakerWire.position.y=-0.5; scene.add(beakerWire);
+  // reactant particles (left side)
+  const n=Math.round(rx.particleCount*C);
+  for(let i=0;i<n;i++){
+    const col=rx.reactantColors[i%rx.reactantColors.length];
+    const pm=new THREE.Mesh(new THREE.SphereGeometry(0.22,10,10),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.3}));
+    pm.position.set(-2.5+(Math.random()-0.5)*2,(Math.random()-0.5)*3,(Math.random()-0.5)*1.5);
+    const vx=0.015+Math.random()*0.01*(T/300), vy=(Math.random()-0.5)*0.02, vz=(Math.random()-0.5)*0.01;
+    particles.push({mesh:pm,vel:new THREE.Vector3(vx,vy,vz),reacted:false,col}); scene.add(pm);
+  }
+  // divider
+  const divider=new THREE.Mesh(new THREE.BoxGeometry(0.08,4,3),new THREE.MeshBasicMaterial({color:0x06b6d4,transparent:true,opacity:0.4}));
+  divider.position.x=0; scene.add(divider);
+  // product zone indicator
+  const prodZone=new THREE.Mesh(new THREE.BoxGeometry(3.8,4.8,2.8),new THREE.MeshStandardMaterial({color:rx.productColor,transparent:true,opacity:0.04}));
+  prodZone.position.set(2,0,0); scene.add(prodZone);
+}
+
+function initScene(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100); camera.position.set(0,2,14); camera.lookAt(0,0,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  buildScene();
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  animate();
+}
+
+let t3=0;
+function animate(){
+  requestAnimationFrame(animate); t3+=0.016;
+  const rate=C*(T/300)*0.008;
+  const rx=reactions[currentRxn];
+  let reacted=0;
+  particles.forEach(p=>{
+    if(!p.reacted){
+      p.mesh.position.addScaledVector(p.vel,1+rate*5);
+      // bounce in left chamber
+      if(p.mesh.position.x>-0.2){
+        // reaction! change to product
+        p.reacted=true;
+        p.mesh.material.color.setHex(rx.productColor);
+        p.mesh.material.emissive.setHex(rx.productColor);
+        p.vel.x=-p.vel.x*0.5;
+        p.mesh.position.x=0.5+(Math.random()*2.5);
+        // flash
+        p.mesh.material.emissiveIntensity=1;
+        setTimeout(()=>{if(p.mesh.material) p.mesh.material.emissiveIntensity=0.3;},200);
+      }
+      if(Math.abs(p.mesh.position.y)>2.2) p.vel.y*=-1;
+      if(Math.abs(p.mesh.position.z)>1.3) p.vel.z*=-1;
+      if(p.mesh.position.x<-3.8){ p.vel.x*=-1; }
+    } else {
+      // product particle wanders right side
+      p.mesh.position.x+=(Math.sin(t3+p.mesh.position.y)*0.005);
+      p.mesh.position.y+=(Math.cos(t3*0.7+p.mesh.position.z)*0.006);
+      if(p.mesh.position.x>3.8) p.mesh.position.x=3.8;
+      if(p.mesh.position.x<0.1) p.mesh.position.x=0.1;
+      if(Math.abs(p.mesh.position.y)>2.2) p.mesh.position.y*=0.95;
+      reacted++;
+    }
+  });
+  // reset when all reacted
+  if(reacted===particles.length && particles.length>0){
+    setTimeout(()=>buildScene(),1500);
+  }
+  // update rate display
+  const rateLabel=rate<0.006?'Slow':rate<0.012?'Medium':'Fast';
+  document.getElementById('d-rate').textContent=rateLabel;
+  renderer.render(scene,camera);
+}
+
+document.getElementById('T-slider').addEventListener('input',function(){T=+this.value;document.getElementById('T-val').textContent=T+' K';buildScene();});
+document.getElementById('C-slider').addEventListener('input',function(){C=+this.value;document.getElementById('C-val').textContent=C.toFixed(1)+'×';buildScene();});
+
+katex.render('\\text{Reactants} \\to \\text{Products} \\quad m_{in} = m_{out}', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{Exo: releases heat} \\quad \\text{Endo: absorbs heat}', document.getElementById('kx-2'),{throwOnError:false});
+
+initScene(); setRxn('synthesis');
+</script>
+</body>
+</html>

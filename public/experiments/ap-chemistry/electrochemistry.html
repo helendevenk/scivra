@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electrochemistry — NeonPhysics AP Chemistry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(234,179,8,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#fde047;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:230px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#eab308;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.4);color:#fde047;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(234,179,8,0.3)}
+    button.active{background:rgba(234,179,8,0.4);border-color:#eab308}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#facc15;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:420px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(234,179,8,0.3);color:#fde047}
+    #volt-display{font-size:2rem;font-weight:700;text-align:center;color:#fde047;text-shadow:0 0 12px rgba(234,179,8,0.7);margin:4px 0}
+    .cell-label{position:absolute;font-size:0.65rem;color:#94a3b8;pointer-events:none}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Electrochemistry <span class="badge">AP Chem</span></h1>
+      <p>Galvanic & electrolytic cells, Nernst equation, Faraday's laws</p>
+    </div>
+    <div class="panel controls">
+      <div style="font-size:0.7rem;color:#94a3b8;margin-bottom:2px">Anode Metal:</div>
+      <div class="btn-row">
+        <button class="active" id="btn-aZn" onclick="setAnode('Zn')">Zn (−0.76 V)</button>
+        <button id="btn-aFe" onclick="setAnode('Fe')">Fe (−0.44 V)</button>
+        <button id="btn-aCu" onclick="setAnode('Cu')">Cu (+0.34 V)</button>
+      </div>
+      <div style="font-size:0.7rem;color:#94a3b8;margin:4px 0 2px">Cathode Metal:</div>
+      <div class="btn-row">
+        <button class="active" id="btn-cCu" onclick="setCathode('Cu')">Cu (+0.34 V)</button>
+        <button id="btn-cAg" onclick="setCathode('Ag')">Ag (+0.80 V)</button>
+        <button id="btn-cAu" onclick="setCathode('Au')">Au (+1.50 V)</button>
+      </div>
+      <div class="slider-row" style="margin-top:4px">
+        <label>Ion Concentration <span id="conc-val">1.0 mol/L</span></label>
+        <input type="range" id="conc-slider" min="0.01" max="2" step="0.01" value="1.0">
+      </div>
+      <div class="btn-row">
+        <button id="btn-mode-g" class="active" onclick="setMode('galvanic')">⚡ Galvanic</button>
+        <button id="btn-mode-e" onclick="setMode('electrolytic')">🔌 Electrolytic</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div id="volt-display">E = 1.10 V</div>
+      <div class="data-row">E°(cathode) <span class="data-val" id="d-Ec">+0.34 V</span></div>
+      <div class="data-row">E°(anode) <span class="data-val" id="d-Ea">-0.76 V</span></div>
+      <div class="data-row">E°cell <span class="data-val" id="d-Ecell">+1.10 V</span></div>
+      <div class="data-row">E (Nernst) <span class="data-val" id="d-Enernst">—</span></div>
+      <div class="data-row">ΔG°cell <span class="data-val" id="d-dG">-212 kJ</span></div>
+      <div class="data-row">n (electrons) <span class="data-val" id="d-n">2</span></div>
+      <div class="data-row">Mode <span class="data-val" id="d-mode">Galvanic</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.7rem;color:#fde047;margin-bottom:6px;font-weight:600">Electrochemistry Equations</div>
+      <div class="katex-wrap" id="kx-1"></div>
+      <div class="katex-wrap" id="kx-2"></div>
+      <div class="katex-wrap" id="kx-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const metals={
+  Zn:{E0:-0.76,color:0x8888aa,n:2,name:'Zn'},
+  Fe:{E0:-0.44,color:0x886644,n:2,name:'Fe'},
+  Cu:{E0:+0.34,color:0xcc8833,n:2,name:'Cu'},
+  Ag:{E0:+0.80,color:0xcccccc,n:1,name:'Ag'},
+  Au:{E0:+1.50,color:0xffd700,n:3,name:'Au'}
+};
+let anodeMetal='Zn',cathodeMetal='Cu',conc=1.0,mode='galvanic';
+
+function E0cell(){ return metals[cathodeMetal].E0-metals[anodeMetal].E0; }
+function nElec(){ return Math.min(metals[anodeMetal].n,metals[cathodeMetal].n); }
+function Enernst(){
+  const E0=E0cell();
+  const n=nElec();
+  const R=8.314,T=298,F=96485;
+  const Q=conc; // simplified Q = [anode ion]/[cathode ion] = conc
+  return E0-(R*T/(n*F))*Math.log(Q);
+}
+function deltaG(){ return -nElec()*96485*E0cell()/1000; }
+
+function updateData(){
+  const E0=E0cell(), n=nElec(), En=Enernst(), dG=deltaG();
+  const E=mode==='galvanic'?En:E0;
+  document.getElementById('volt-display').textContent='E = '+(E>=0?'+':'')+E.toFixed(3)+' V';
+  document.getElementById('volt-display').style.color=E>0?'#22c55e':E<0?'#ef4444':'#fde047';
+  document.getElementById('d-Ec').textContent=(metals[cathodeMetal].E0>=0?'+':'')+metals[cathodeMetal].E0.toFixed(2)+' V';
+  document.getElementById('d-Ea').textContent=(metals[anodeMetal].E0>=0?'+':'')+metals[anodeMetal].E0.toFixed(2)+' V';
+  document.getElementById('d-Ecell').textContent=(E0>=0?'+':'')+E0.toFixed(2)+' V';
+  document.getElementById('d-Enernst').textContent=(En>=0?'+':'')+En.toFixed(3)+' V';
+  document.getElementById('d-dG').textContent=(dG<=0?'':'+')+(dG).toFixed(0)+' kJ';
+  document.getElementById('d-n').textContent=n;
+  document.getElementById('d-mode').textContent=mode==='galvanic'?'Galvanic (spontaneous)':'Electrolytic (driven)';
+}
+
+function setAnode(m){
+  anodeMetal=m;
+  document.querySelectorAll('[id^=btn-a]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-a'+m).classList.add('active');
+  rebuildScene(); updateData();
+}
+function setCathode(m){
+  cathodeMetal=m;
+  document.querySelectorAll('[id^=btn-c]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-c'+m).classList.add('active');
+  rebuildScene(); updateData();
+}
+function setMode(m){
+  mode=m;
+  document.getElementById('btn-mode-g').classList.toggle('active',m==='galvanic');
+  document.getElementById('btn-mode-e').classList.toggle('active',m==='electrolytic');
+  electronDir=m==='galvanic'?1:-1;
+  updateData();
+}
+
+document.getElementById('conc-slider').addEventListener('input',function(){
+  conc=+this.value;
+  document.getElementById('conc-val').textContent=conc.toFixed(2)+' mol/L';
+  updateData();
+});
+
+// 3D visualization
+let scene,camera,renderer;
+let anodeElectrode,cathodeElectrode,saltBridgeMesh;
+let electrons=[],ions=[];
+let electronDir=1;
+
+function initScene(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,4,16);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  rebuildScene();
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+  animate();
+}
+
+function rebuildScene(){
+  // clear electrodes/electrons/ions
+  [anodeElectrode,cathodeElectrode,saltBridgeMesh].forEach(m=>{if(m)scene.remove(m);});
+  electrons.forEach(e=>scene.remove(e.mesh)); electrons=[];
+  ions.forEach(i=>scene.remove(i.mesh)); ions=[];
+
+  // Beakers
+  const beakerGeo=new THREE.CylinderGeometry(2.2,2.2,4,32,1,true);
+  const beakerMat=new THREE.MeshBasicMaterial({color:0x3b82f6,opacity:0.15,transparent:true,side:THREE.DoubleSide});
+  const leftBeaker=new THREE.Mesh(beakerGeo,beakerMat.clone()); leftBeaker.position.set(-5,0,0); scene.add(leftBeaker);
+  const rightBeaker=new THREE.Mesh(beakerGeo,beakerMat.clone()); rightBeaker.position.set(5,0,0); scene.add(rightBeaker);
+  // anode electrode (left)
+  const rodGeo=new THREE.CylinderGeometry(0.25,0.25,5,16);
+  anodeElectrode=new THREE.Mesh(rodGeo,new THREE.MeshStandardMaterial({color:metals[anodeMetal].color,metalness:0.7,roughness:0.3}));
+  anodeElectrode.position.set(-5,0.5,0); scene.add(anodeElectrode);
+  // cathode electrode (right)
+  cathodeElectrode=new THREE.Mesh(rodGeo.clone(),new THREE.MeshStandardMaterial({color:metals[cathodeMetal].color,metalness:0.7,roughness:0.3}));
+  cathodeElectrode.position.set(5,0.5,0); scene.add(cathodeElectrode);
+  // salt bridge
+  const sbGeo=new THREE.TorusGeometry(5,0.15,8,32,Math.PI);
+  saltBridgeMesh=new THREE.Mesh(sbGeo,new THREE.MeshStandardMaterial({color:0xaaaaaa,roughness:0.5}));
+  saltBridgeMesh.rotation.z=Math.PI/2; saltBridgeMesh.position.y=3; scene.add(saltBridgeMesh);
+  // external wire
+  const wirePts=[new THREE.Vector3(-5,3.5,0),new THREE.Vector3(-5,5,0),new THREE.Vector3(5,5,0),new THREE.Vector3(5,3.5,0)];
+  const wireCurve=new THREE.CatmullRomCurve3(wirePts);
+  const wireGeo=new THREE.TubeGeometry(wireCurve,20,0.08,8,false);
+  const wireMesh=new THREE.Mesh(wireGeo,new THREE.MeshStandardMaterial({color:0xffcc00,roughness:0.4}));
+  scene.add(wireMesh);
+  // labels (sprites)
+  addLabel(-5,-3.5,metals[anodeMetal].name+' Anode (−)',0xff4444);
+  addLabel(5,-3.5,metals[cathodeMetal].name+' Cathode (+)',0x44ff44);
+  // electrons on wire
+  const eGeo=new THREE.SphereGeometry(0.12,8,8);
+  for(let i=0;i<8;i++){
+    const em=new THREE.Mesh(eGeo,new THREE.MeshStandardMaterial({color:0x60a5fa,emissive:0x3b82f6,emissiveIntensity:0.8}));
+    electrons.push({mesh:em,t:i/8,on:'wire'}); scene.add(em);
+  }
+  // ions
+  const iGeo=new THREE.SphereGeometry(0.1,8,8);
+  for(let i=0;i<12;i++){
+    const isPos=i<6;
+    const im=new THREE.Mesh(iGeo,new THREE.MeshStandardMaterial({color:isPos?0xff6633:0x3366ff,roughness:0.4}));
+    im.position.set((Math.random()-0.5)*3.5,Math.random()*3-1.5,0);
+    im.position.x+=(isPos?-5:5);
+    const vx=(isPos?0.02:-0.02)*(mode==='galvanic'?1:-1);
+    ions.push({mesh:im,vel:new THREE.Vector3(vx,0,0),isPos,side:isPos?'left':'right'});
+    scene.add(im);
+  }
+  updateData();
+}
+
+function addLabel(x,y,text,color){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=48;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#'+color.toString(16).padStart(6,'0');
+  ctx.font='bold 20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,128,24);
+  const tex=new THREE.CanvasTexture(cv);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex}));
+  sp.scale.set(4,0.75,1); sp.position.set(x,y,0);
+  scene.add(sp);
+}
+
+const wirePath=[[-5,5],[-3,5],[0,5],[3,5],[5,5]]; // wire x positions at y=5
+function getWirePos(t){
+  // t 0→1 along the top wire
+  const x=-5+t*10;
+  return new THREE.Vector3(x,5,0);
+}
+
+let animT=0;
+function animate(){
+  requestAnimationFrame(animate);
+  animT+=0.01;
+  // move electrons along wire
+  electrons.forEach(e=>{
+    e.t=(e.t+0.004*electronDir+1)%1;
+    const pos=getWirePos(e.t);
+    e.mesh.position.copy(pos);
+  });
+  // move ions in beakers / salt bridge
+  ions.forEach(ion=>{
+    ion.mesh.position.addScaledVector(ion.vel,1);
+    if(Math.abs(ion.mesh.position.x-(ion.side==='left'?-5:5))>2.2) ion.vel.x*=-1;
+    if(Math.abs(ion.mesh.position.y)>2) ion.vel.y*=-1;
+  });
+  // pulsate electrodes
+  const scaleA=1+(anodeMetal!==cathodeMetal&&mode==='galvanic'?0.05*Math.sin(animT*2):0);
+  anodeElectrode.scale.x=scaleA; anodeElectrode.scale.z=scaleA;
+  renderer.render(scene,camera);
+}
+
+katex.render('E°_{cell} = E°_{cathode} - E°_{anode} \\quad (\\Delta G = -nFE°)', document.getElementById('kx-1'), {throwOnError:false});
+katex.render('E = E° - \\frac{RT}{nF}\\ln Q \\quad (\\text{Nernst})', document.getElementById('kx-2'), {throwOnError:false});
+katex.render('m = \\frac{MIt}{nF} \\quad (\\text{Faraday\'s law})', document.getElementById('kx-3'), {throwOnError:false});
+
+initScene();
+</script>
+</body>
+</html>

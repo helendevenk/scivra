@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Harmonic Motion — NeonPhysics AP Physics 1</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(99,102,241,.08));border-bottom:1px solid rgba(59,130,246,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff;letter-spacing:-.3px}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative;background:#070b14}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay-stats{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.85);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:14px 18px;min-width:200px;backdrop-filter:blur(8px)}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:8px}
+    .stat-row:last-child{margin-bottom:0}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .stat-value{font-size:13px;font-weight:600;color:#e2e8f0;font-variant-numeric:tabular-nums}
+    .stat-value.accent{color:#60a5fa}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;display:flex;flex-direction:column}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#60a5fa;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;outline:none;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .energy-bar-wrap{margin-top:4px}
+    .energy-bar-label{display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-bottom:4px}
+    .energy-bar-track{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;display:flex}
+    .energy-ek{height:100%;background:#3b82f6;transition:width .05s linear;border-radius:4px 0 0 4px}
+    .energy-ep{height:100%;background:#8b5cf6;transition:width .05s linear;border-radius:0 4px 4px 0}
+    .btn-row{display:flex;gap:8px;margin-top:4px}
+    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#3b82f6;color:#fff}
+    .btn-primary:hover{background:#2563eb}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .katex{font-size:.9em!important}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac">FREE</span>
+  </div>
+  <h1>Simple Harmonic Motion</h1>
+  <p class="subtitle">Springs, pendulums, and the beauty of oscillation</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay-stats">
+      <div class="stat-row"><span class="stat-label">Position x</span><span class="stat-value accent" id="statX">0.00 m</span></div>
+      <div class="stat-row"><span class="stat-label">Velocity v</span><span class="stat-value" id="statV">0.00 m/s</span></div>
+      <div class="stat-row"><span class="stat-label">Period T</span><span class="stat-value accent" id="statT">1.40 s</span></div>
+      <div class="stat-row"><span class="stat-label">Freq f</span><span class="stat-value" id="statF">0.71 Hz</span></div>
+      <div class="stat-row"><span class="stat-label">ω</span><span class="stat-value" id="statW">4.47 rad/s</span></div>
+      <div style="margin-top:10px">
+        <div class="energy-bar-label"><span>Kinetic (Ek)</span><span>Potential (Ep)</span></div>
+        <div class="energy-bar-track">
+          <div class="energy-ek" id="ekBar" style="width:0%"></div>
+          <div class="energy-ep" id="epBar" style="width:100%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Spring Constant k</span><span class="param-val" id="vk">20 N/m</span></div>
+        <input type="range" id="sk" min="1" max="100" value="20" step="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Mass m</span><span class="param-val" id="vm">1.0 kg</span></div>
+        <input type="range" id="sm" min="0.1" max="10" value="1" step="0.1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Amplitude A</span><span class="param-val" id="va">0.50 m</span></div>
+        <input type="range" id="sa" min="0.1" max="2" value="0.5" step="0.05">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnPlay">⏸ Pause</button>
+        <button class="btn btn-ghost" id="btnReset">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div id="f1"></div>
+        <div class="formula-desc">Period — independent of amplitude!</div>
+      </div>
+      <div class="formula-box">
+        <div id="f2"></div>
+        <div class="formula-desc">Position vs time</div>
+      </div>
+      <div class="formula-box">
+        <div id="f3"></div>
+        <div class="formula-desc">Total energy (conserved)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 3 AP Problems Locked</div>
+        <div class="ap-lock-desc">Upgrade to Pro to access AP Physics 1 exam-style questions with full solutions and AI explanations.</div>
+        <button class="ap-lock-btn">Unlock with Pro →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────
+let k=20, m=1, A=0.5;
+let t=0, running=true;
+
+// ─── Three.js setup ──────────────────────────────────────────────────
+const wrap = document.getElementById('canvasWrap');
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x070b14);
+scene.fog = new THREE.FogExp2(0x070b14, 0.04);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(0, 2, 8);
+camera.lookAt(0,0,0);
+
+const controls = typeof THREE.OrbitControls !== 'undefined'
+  ? new THREE.OrbitControls(camera, renderer.domElement) : null;
+if(controls){ controls.enableDamping=true; controls.dampingFactor=0.08; }
+
+// ─── Lighting ────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x334466, 0.8));
+const dirLight = new THREE.DirectionalLight(0x6699ff, 1.2);
+dirLight.position.set(5,8,5);
+scene.add(dirLight);
+const ptLight = new THREE.PointLight(0x3b82f6, 2, 15);
+ptLight.position.set(0,3,3);
+scene.add(ptLight);
+
+// ─── Ceiling / mount ─────────────────────────────────────────────────
+const ceilMat = new THREE.MeshStandardMaterial({color:0x1e3a5f,metalness:.6,roughness:.4});
+const ceil = new THREE.Mesh(new THREE.BoxGeometry(4,0.1,1.5), ceilMat);
+ceil.position.set(0,3.5,0);
+scene.add(ceil);
+
+// ─── Spring (line segments) ───────────────────────────────────────────
+const COILS = 18;
+const springGeo = new THREE.BufferGeometry();
+const springPts = [];
+for(let i=0;i<=COILS*8;i++){
+  const frac = i/(COILS*8);
+  springPts.push(0.3*Math.cos(i*Math.PI*2/8), 0, 0.3*Math.sin(i*Math.PI*2/8));
+}
+springGeo.setAttribute('position', new THREE.Float32BufferAttribute(springPts,3));
+const springMat = new THREE.LineBasicMaterial({color:0x60a5fa, linewidth:2});
+const springMesh = new THREE.Line(springGeo, springMat);
+scene.add(springMesh);
+
+// ─── Mass (glowing sphere) ────────────────────────────────────────────
+const massMat = new THREE.MeshStandardMaterial({
+  color:0x3b82f6, emissive:0x1d4ed8, emissiveIntensity:.4,
+  metalness:.3, roughness:.5
+});
+const massMesh = new THREE.Mesh(new THREE.SphereGeometry(0.35,32,32), massMat);
+scene.add(massMesh);
+
+// ─── Glow ring around mass ────────────────────────────────────────────
+const glowMat = new THREE.MeshStandardMaterial({
+  color:0x93c5fd, emissive:0x93c5fd, emissiveIntensity:.6,
+  transparent:true, opacity:.25, side:THREE.BackSide
+});
+const glowMesh = new THREE.Mesh(new THREE.SphereGeometry(0.42,32,32), glowMat);
+massMesh.add(glowMesh);
+
+// ─── Equilibrium marker ───────────────────────────────────────────────
+const eqMat = new THREE.LineDashedMaterial({color:0x334466,dashSize:.15,gapSize:.1});
+const eqPts = [new THREE.Vector3(-2,0,0), new THREE.Vector3(2,0,0)];
+const eqLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(eqPts), eqMat);
+eqLine.computeLineDistances();
+scene.add(eqLine);
+
+// ─── Trajectory trail ─────────────────────────────────────────────────
+const TRAIL_LEN = 120;
+const trailPositions = new Float32Array(TRAIL_LEN*3);
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions,3));
+const trailMat = new THREE.LineBasicMaterial({color:0x3b82f6,transparent:true,opacity:.35});
+const trail = new THREE.Line(trailGeo, trailMat);
+scene.add(trail);
+let trailIdx = 0, trailFull = false;
+
+// ─── Grid ─────────────────────────────────────────────────────────────
+const grid = new THREE.GridHelper(20, 20, 0x1a2540, 0x0f1a2e);
+grid.position.y = -3;
+scene.add(grid);
+
+// ─── Axis labels (canvas texture) ────────────────────────────────────
+function makeLabel(text, color='#94a3b8'){
+  const cv = document.createElement('canvas'); cv.width=128; cv.height=64;
+  const cx = cv.getContext('2d');
+  cx.fillStyle='rgba(0,0,0,0)';
+  cx.font='bold 28px sans-serif'; cx.fillStyle=color; cx.textAlign='center';
+  cx.fillText(text,64,42);
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:.8}));
+  sp.scale.set(1.2,.6,1);
+  return sp;
+}
+const eqLabel = makeLabel('x = 0');
+eqLabel.position.set(2.2, 0.4, 0);
+scene.add(eqLabel);
+
+// ─── Helper: rebuild spring geometry ─────────────────────────────────
+function updateSpring(massY){
+  const top = 3.5, bot = massY + 0.35;
+  const len = top - bot;
+  const pts = [];
+  for(let i=0;i<=COILS*8;i++){
+    const frac = i/(COILS*8);
+    const y = top - frac*len;
+    const r = 0.22;
+    pts.push(r*Math.cos(i*Math.PI*2/8), y, r*Math.sin(i*Math.PI*2/8));
+  }
+  springGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts,3));
+  springGeo.attributes.position.needsUpdate = true;
+}
+
+// ─── Physics update ───────────────────────────────────────────────────
+function getOmega(){ return Math.sqrt(k/m); }
+function getX(){ return A * Math.cos(getOmega()*t); }
+function getV(){ return -A * getOmega() * Math.sin(getOmega()*t); }
+
+function updateStats(x,v){
+  const omega = getOmega();
+  const T = (2*Math.PI/omega);
+  document.getElementById('statX').textContent = x.toFixed(3)+' m';
+  document.getElementById('statV').textContent = v.toFixed(3)+' m/s';
+  document.getElementById('statT').textContent = T.toFixed(3)+' s';
+  document.getElementById('statF').textContent = (1/T).toFixed(3)+' Hz';
+  document.getElementById('statW').textContent = omega.toFixed(3)+' rad/s';
+  const Ek = 0.5*m*v*v;
+  const Ep = 0.5*k*x*x;
+  const Et = 0.5*k*A*A;
+  const ekPct = Math.round(Ek/Et*100);
+  const epPct = 100-ekPct;
+  document.getElementById('ekBar').style.width = ekPct+'%';
+  document.getElementById('epBar').style.width = epPct+'%';
+}
+
+// ─── Render loop ──────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if(running) t += dt;
+
+  const x = getX();
+  const v = getV();
+  const massY = x; // equilibrium at y=0
+
+  massMesh.position.set(0, massY, 0);
+  massMesh.rotation.y += 0.01;
+  updateSpring(massY);
+
+  // trail
+  trailPositions[trailIdx*3] = 0;
+  trailPositions[trailIdx*3+1] = massY;
+  trailPositions[trailIdx*3+2] = 0;
+  trailIdx = (trailIdx+1) % TRAIL_LEN;
+  trailGeo.attributes.position.needsUpdate = true;
+  trailGeo.setDrawRange(0, trailFull ? TRAIL_LEN : trailIdx);
+  if(trailIdx===0) trailFull = true;
+
+  // point light follows mass
+  ptLight.position.set(0, massY+1, 3);
+  massMat.emissiveIntensity = 0.3 + 0.3*Math.abs(x/A);
+
+  updateStats(x,v);
+  if(controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+// ─── Resize ───────────────────────────────────────────────────────────
+function resize(){
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+animate();
+
+// ─── Controls ─────────────────────────────────────────────────────────
+function setParam(key, val, labelId, unit){
+  if(key==='k') k=val;
+  if(key==='m') m=val;
+  if(key==='A') A=val;
+  document.getElementById(labelId).textContent = val.toFixed(key==='m'?1:0)+' '+unit;
+  t=0; // reset phase on param change
+}
+document.getElementById('sk').addEventListener('input',e=>setParam('k',+e.target.value,'vk','N/m'));
+document.getElementById('sm').addEventListener('input',e=>setParam('m',+e.target.value,'vm','kg'));
+document.getElementById('sa').addEventListener('input',e=>setParam('A',+e.target.value,'va','m'));
+
+const btnPlay = document.getElementById('btnPlay');
+btnPlay.addEventListener('click',()=>{
+  running=!running;
+  btnPlay.textContent = running ? '⏸ Pause' : '▶ Play';
+});
+document.getElementById('btnReset').addEventListener('click',()=>{t=0;trailIdx=0;trailFull=false;running=true;btnPlay.textContent='⏸ Pause';});
+
+// ─── KaTeX formulas ───────────────────────────────────────────────────
+katex.render('T = 2\\pi\\sqrt{\\dfrac{m}{k}}', document.getElementById('f1'), {throwOnError:false});
+katex.render('x(t) = A\\cos(\\omega t)', document.getElementById('f2'), {throwOnError:false});
+katex.render('E = \\tfrac{1}{2}kA^2', document.getElementById('f3'), {throwOnError:false});
+</script>
+</body>
+</html>

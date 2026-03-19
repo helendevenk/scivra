@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atomic Structure & Electron Configuration — NeonPhysics AP Chemistry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#93c5fd;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:230px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#3b82f6;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#93c5fd;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(59,130,246,0.3)}
+    button.active{background:rgba(59,130,246,0.4);border-color:#3b82f6}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#60a5fa;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(59,130,246,0.3);color:#93c5fd}
+    #config-display{font-size:0.65rem;color:#60a5fa;font-family:monospace;margin-top:4px;word-break:break-all;background:rgba(0,0,0,0.3);padding:4px 6px;border-radius:3px}
+    #spectrum-canvas{width:100%;height:30px;border-radius:4px;margin-top:6px;display:block}
+    .element-symbol{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);text-align:center;pointer-events:none}
+    .element-symbol .sym{font-size:3rem;font-weight:700;color:#93c5fd;text-shadow:0 0 20px rgba(59,130,246,0.8)}
+    .element-symbol .num{font-size:0.9rem;color:#94a3b8}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div class="element-symbol" id="el-label">
+  <div class="sym" id="el-sym">C</div>
+  <div class="num" id="el-num">Z = 6</div>
+</div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Atomic Structure <span class="badge">AP Chem</span></h1>
+      <p>Electron configuration, orbitals, emission spectra</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Atomic Number (Z) <span id="Z-val">6</span></label>
+        <input type="range" id="Z-slider" min="1" max="36" step="1" value="6">
+      </div>
+      <div class="slider-row">
+        <label>Excitation Level <span id="n-val">n=2</span></label>
+        <input type="range" id="n-slider" min="1" max="6" step="1" value="2">
+      </div>
+      <div class="btn-row">
+        <button id="btn-excite" onclick="exciteElectron()">⚡ Excite e⁻</button>
+        <button id="btn-emit" onclick="emitPhoton()">💫 Emit Photon</button>
+      </div>
+      <div id="config-display" id="config">1s²2s²2p²</div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#93c5fd;margin-bottom:4px;font-weight:600">Atomic Data</div>
+      <div class="data-row">Element <span class="data-val" id="d-el">Carbon (C)</span></div>
+      <div class="data-row">Z (protons) <span class="data-val" id="d-Z">6</span></div>
+      <div class="data-row">Valence e⁻ <span class="data-val" id="d-val">4</span></div>
+      <div class="data-row">Emission λ <span class="data-val" id="d-lam">—</span></div>
+      <div class="data-row">Photon E <span class="data-val" id="d-E">—</span></div>
+      <canvas id="spectrum-canvas" width="200" height="30"></canvas>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.7rem;color:#93c5fd;margin-bottom:6px;font-weight:600">Quantum Model</div>
+      <div class="katex-wrap" id="kx-1"></div>
+      <div class="katex-wrap" id="kx-2"></div>
+      <div class="katex-wrap" id="kx-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const elements=[null,
+  {sym:'H',name:'Hydrogen',config:'1s¹',valence:1},
+  {sym:'He',name:'Helium',config:'1s²',valence:2},
+  {sym:'Li',name:'Lithium',config:'[He]2s¹',valence:1},
+  {sym:'Be',name:'Beryllium',config:'[He]2s²',valence:2},
+  {sym:'B',name:'Boron',config:'[He]2s²2p¹',valence:3},
+  {sym:'C',name:'Carbon',config:'[He]2s²2p²',valence:4},
+  {sym:'N',name:'Nitrogen',config:'[He]2s²2p³',valence:5},
+  {sym:'O',name:'Oxygen',config:'[He]2s²2p⁴',valence:6},
+  {sym:'F',name:'Fluorine',config:'[He]2s²2p⁵',valence:7},
+  {sym:'Ne',name:'Neon',config:'[He]2s²2p⁶',valence:8},
+  {sym:'Na',name:'Sodium',config:'[Ne]3s¹',valence:1},
+  {sym:'Mg',name:'Magnesium',config:'[Ne]3s²',valence:2},
+  {sym:'Al',name:'Aluminum',config:'[Ne]3s²3p¹',valence:3},
+  {sym:'Si',name:'Silicon',config:'[Ne]3s²3p²',valence:4},
+  {sym:'P',name:'Phosphorus',config:'[Ne]3s²3p³',valence:5},
+  {sym:'S',name:'Sulfur',config:'[Ne]3s²3p⁴',valence:6},
+  {sym:'Cl',name:'Chlorine',config:'[Ne]3s²3p⁵',valence:7},
+  {sym:'Ar',name:'Argon',config:'[Ne]3s²3p⁶',valence:8},
+  {sym:'K',name:'Potassium',config:'[Ar]4s¹',valence:1},
+  {sym:'Ca',name:'Calcium',config:'[Ar]4s²',valence:2},
+  {sym:'Sc',name:'Scandium',config:'[Ar]3d¹4s²',valence:3},
+  {sym:'Ti',name:'Titanium',config:'[Ar]3d²4s²',valence:4},
+  {sym:'V',name:'Vanadium',config:'[Ar]3d³4s²',valence:5},
+  {sym:'Cr',name:'Chromium',config:'[Ar]3d⁵4s¹',valence:6},
+  {sym:'Mn',name:'Manganese',config:'[Ar]3d⁵4s²',valence:5},
+  {sym:'Fe',name:'Iron',config:'[Ar]3d⁶4s²',valence:4},
+  {sym:'Co',name:'Cobalt',config:'[Ar]3d⁷4s²',valence:3},
+  {sym:'Ni',name:'Nickel',config:'[Ar]3d⁸4s²',valence:2},
+  {sym:'Cu',name:'Copper',config:'[Ar]3d¹⁰4s¹',valence:1},
+  {sym:'Zn',name:'Zinc',config:'[Ar]3d¹⁰4s²',valence:2},
+  {sym:'Ga',name:'Gallium',config:'[Ar]3d¹⁰4s²4p¹',valence:3},
+  {sym:'Ge',name:'Germanium',config:'[Ar]3d¹⁰4s²4p²',valence:4},
+  {sym:'As',name:'Arsenic',config:'[Ar]3d¹⁰4s²4p³',valence:5},
+  {sym:'Se',name:'Selenium',config:'[Ar]3d¹⁰4s²4p⁴',valence:6},
+  {sym:'Br',name:'Bromine',config:'[Ar]3d¹⁰4s²4p⁵',valence:7},
+  {sym:'Kr',name:'Krypton',config:'[Ar]3d¹⁰4s²4p⁶',valence:8}
+];
+
+let Z=6, excLevel=2, scene, camera, renderer, controls;
+let orbitMeshes=[], electronMeshes=[], nucleusMesh;
+let excitedElectron=null, exciteTimer=0;
+
+function getE(n){ return -13.6/(n*n); }
+function wavelengthFromTransition(n1,n2){
+  const dE=Math.abs(getE(n1)-getE(n2));
+  const lambda=1240/dE; // nm (hc/E in eV)
+  return lambda;
+}
+function wavelengthToRGB(lam){
+  let r=0,g=0,b=0;
+  if(lam>=380&&lam<440){r=(440-lam)/60;b=1;}
+  else if(lam<490){r=0;g=(lam-440)/50;b=1;}
+  else if(lam<510){g=1;b=(510-lam)/20;}
+  else if(lam<580){r=(lam-510)/70;g=1;b=0;}
+  else if(lam<645){r=1;g=(645-lam)/65;}
+  else if(lam<=780){r=1;}
+  return [r,g,b];
+}
+
+function initScene(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,0,12);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  const pl=new THREE.PointLight(0x3b82f6,0.5,20); pl.position.set(0,0,0); scene.add(pl);
+  buildAtom();
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+  animate();
+}
+
+function buildAtom(){
+  orbitMeshes.forEach(m=>scene.remove(m));
+  electronMeshes.forEach(m=>scene.remove(m));
+  orbitMeshes=[]; electronMeshes=[];
+  if(nucleusMesh) scene.remove(nucleusMesh);
+  // nucleus
+  const nGeo=new THREE.SphereGeometry(0.35+Z*0.02,24,24);
+  const nMat=new THREE.MeshStandardMaterial({color:0xff4433,emissive:0xff2211,emissiveIntensity:0.4});
+  nucleusMesh=new THREE.Mesh(nGeo,nMat);
+  scene.add(nucleusMesh);
+  // shells
+  const shells=[2,8,18,18]; // max per shell
+  let remaining=Z;
+  for(let n=1;n<=4&&remaining>0;n++){
+    const r=1.5+n*1.3;
+    const ringGeo=new THREE.TorusGeometry(r,0.04,8,64);
+    const ringMat=new THREE.MeshBasicMaterial({color:0x3b82f6,opacity:0.25,transparent:true});
+    const ring=new THREE.Mesh(ringGeo,ringMat);
+    ring.rotation.x=Math.PI/2+Math.random()*0.5-0.25;
+    ring.rotation.z=Math.random()*0.5-0.25;
+    orbitMeshes.push(ring);
+    scene.add(ring);
+    const inShell=Math.min(remaining,shells[n-1]);
+    remaining-=inShell;
+    for(let e=0;e<inShell;e++){
+      const angle=(e/inShell)*Math.PI*2;
+      const eGeo=new THREE.SphereGeometry(0.12,12,12);
+      const eMat=new THREE.MeshStandardMaterial({color:0x60a5fa,emissive:0x3b82f6,emissiveIntensity:0.6});
+      const em=new THREE.Mesh(eGeo,eMat);
+      electronMeshes.push({mesh:em,n,r,angle,speed:0.8/n,baseColor:0x60a5fa});
+      scene.add(em);
+    }
+  }
+  updateElementDisplay();
+}
+
+function updateElementDisplay(){
+  const el=elements[Z];
+  document.getElementById('el-sym').textContent=el.sym;
+  document.getElementById('el-num').textContent='Z = '+Z;
+  document.getElementById('config-display').textContent=el.config;
+  document.getElementById('d-el').textContent=el.name+' ('+el.sym+')';
+  document.getElementById('d-Z').textContent=Z;
+  document.getElementById('d-val').textContent=el.valence;
+}
+
+function exciteElectron(){
+  // pick a random electron in outer shell
+  if(electronMeshes.length===0) return;
+  const idx=electronMeshes.length-1;
+  const e=electronMeshes[idx];
+  excitedElectron=e;
+  e.mesh.material.color.set(0xfbbf24);
+  e.mesh.material.emissive.set(0xfbbf24);
+  e.mesh.material.emissiveIntensity=1.2;
+  e.n=Math.min(e.n+1,6);
+  e.r=1.5+e.n*1.3;
+  exciteTimer=120;
+}
+
+function emitPhoton(){
+  if(!excitedElectron) return;
+  const n1=excitedElectron.n;
+  const n2=Math.max(1,n1-1);
+  const lam=wavelengthFromTransition(n1,n2);
+  document.getElementById('d-lam').textContent=lam.toFixed(0)+' nm';
+  const dE=Math.abs(getE(n1)-getE(n2));
+  document.getElementById('d-E').textContent=dE.toFixed(2)+' eV';
+  drawSpectrum(lam);
+  // spawn photon
+  const [r,g,b]=wavelengthToRGB(lam);
+  const pGeo=new THREE.SphereGeometry(0.08,8,8);
+  const pMat=new THREE.MeshBasicMaterial({color:new THREE.Color(r,g,b)});
+  const pm=new THREE.Mesh(pGeo,pMat);
+  pm.position.copy(excitedElectron.mesh.position);
+  scene.add(pm);
+  const dir=pm.position.clone().normalize();
+  let life=40;
+  const pAnim=()=>{ life--; pm.position.addScaledVector(dir,0.2); pm.material.opacity=life/40; if(life>0) requestAnimationFrame(pAnim); else scene.remove(pm); };
+  pAnim();
+  // return electron
+  excitedElectron.n=Math.max(excitedElectron.n-1,1);
+  excitedElectron.r=1.5+excitedElectron.n*1.3;
+  excitedElectron.mesh.material.color.set(0x60a5fa);
+  excitedElectron.mesh.material.emissive.set(0x3b82f6);
+  excitedElectron.mesh.material.emissiveIntensity=0.6;
+  excitedElectron=null;
+}
+
+function drawSpectrum(lam){
+  const cv=document.getElementById('spectrum-canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  // rainbow background
+  for(let x=0;x<W;x++){
+    const wl=380+(x/W)*400;
+    const [r,g,b]=wavelengthToRGB(wl);
+    ctx.fillStyle=`rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+    ctx.fillRect(x,0,1,H);
+  }
+  // emission line
+  const x=((lam-380)/400)*W;
+  ctx.strokeStyle='white';
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+}
+
+let t3=0;
+function animate(){
+  requestAnimationFrame(animate);
+  t3+=0.016;
+  controls.update();
+  electronMeshes.forEach(e=>{
+    e.angle+=e.speed*0.016;
+    e.mesh.position.set(Math.cos(e.angle)*e.r,0,Math.sin(e.angle)*e.r);
+    // tilt
+    const orb=orbitMeshes[e.n-1];
+    if(orb) e.mesh.position.applyEuler(orb.rotation);
+  });
+  if(nucleusMesh) nucleusMesh.rotation.y+=0.01;
+  renderer.render(scene,camera);
+}
+
+document.getElementById('Z-slider').addEventListener('input',function(){
+  Z=+this.value;
+  document.getElementById('Z-val').textContent=Z;
+  buildAtom();
+});
+document.getElementById('n-slider').addEventListener('input',function(){
+  excLevel=+this.value;
+  document.getElementById('n-val').textContent='n='+excLevel;
+});
+
+katex.render('E_n = -\\frac{13.6\\,\\text{eV}}{n^2}', document.getElementById('kx-1'), {throwOnError:false});
+katex.render('\\Delta E = hf = \\frac{hc}{\\lambda}', document.getElementById('kx-2'), {throwOnError:false});
+katex.render('\\text{Aufbau: }1s\\,2s\\,2p\\,3s\\,3p\\,4s\\,3d\\,4p\\cdots', document.getElementById('kx-3'), {throwOnError:false,displayMode:false});
+
+initScene();
+</script>
+</body>
+</html>

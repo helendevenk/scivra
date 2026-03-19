@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plate Tectonics — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(234,179,8,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#fde047;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#eab308;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.4);color:#fde047;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:0.68rem;transition:all 0.2s}
+    button:hover{background:rgba(234,179,8,0.3)}
+    button.active{background:rgba(234,179,8,0.4);border-color:#eab308}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:190px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#facc15;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:380px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(234,179,8,0.3);color:#fde047}
+    #boundary-label{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-size:1.1rem;font-weight:700;color:#fde047;text-shadow:0 0 10px rgba(234,179,8,0.6);pointer-events:none;text-align:center}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="boundary-label" id="bl">Convergent Boundary<br><span style="font-size:0.7rem;color:#94a3b8">Plates colliding — mountains forming</span></div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Plate Tectonics <span class="badge">MS Earth Sci</span></h1>
+      <p>Convergent, divergent, and transform plate boundaries</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-conv" class="active" onclick="setBoundary('convergent')">↔ Convergent</button>
+        <button id="btn-div" onclick="setBoundary('divergent')">↕ Divergent</button>
+        <button id="btn-trans" onclick="setBoundary('transform')">↻ Transform</button>
+      </div>
+      <div class="slider-row">
+        <label>Plate Speed <span id="spd-val">2 cm/yr</span></label>
+        <input type="range" id="spd-slider" min="0.1" max="15" step="0.1" value="2">
+      </div>
+      <div class="slider-row">
+        <label>Animation Speed <span id="anim-val">5×</span></label>
+        <input type="range" id="anim-slider" min="1" max="20" step="1" value="5">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#fde047;margin-bottom:4px;font-weight:600">Tectonics Data</div>
+      <div class="data-row">Boundary Type <span class="data-val" id="d-type">Convergent</span></div>
+      <div class="data-row">Plate Speed <span class="data-val" id="d-spd">2 cm/yr</span></div>
+      <div class="data-row">Feature Forming <span class="data-val" id="d-feat">Mountains</span></div>
+      <div class="data-row">Earthquake Risk <span class="data-val" id="d-quake">High</span></div>
+      <div class="data-row">Volcano Risk <span class="data-val" id="d-volc">High</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#fde047;margin-bottom:4px;font-weight:600">Plate Tectonics</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const boundaries={
+  convergent:{label:'Convergent Boundary',sub:'Plates colliding — mountains forming',feat:'Mountains/Trench',quake:'High',volc:'High',color:0xef4444},
+  divergent:{label:'Divergent Boundary',sub:'Plates separating — rift/ridge forming',feat:'Rift Valley/Ridge',quake:'Moderate',volc:'High (basalt)',color:0x22c55e},
+  transform:{label:'Transform Boundary',sub:'Plates sliding past — earthquakes',feat:'Strike-slip Fault',quake:'Very High',volc:'Low',color:0xf97316}
+};
+let currentBoundary='convergent', plateSpeed=2, animSpeed=5;
+let scene,camera,renderer,plate1,plate2,mountain,particles=[];
+
+function setBoundary(b){
+  currentBoundary=b;
+  ['convergent','divergent','transform'].forEach(x=>document.getElementById('btn-'+x.slice(0,4)).classList.toggle('active',x===b));
+  const bd=boundaries[b];
+  document.getElementById('boundary-label').innerHTML=bd.label+'<br><span style="font-size:0.7rem;color:#94a3b8">'+bd.sub+'</span>';
+  document.getElementById('d-type').textContent=bd.label.replace(' Boundary','');
+  document.getElementById('d-feat').textContent=bd.feat;
+  document.getElementById('d-quake').textContent=bd.quake;
+  document.getElementById('d-volc').textContent=bd.volc;
+  buildScene();
+}
+
+function buildScene(){
+  while(scene.children.length) scene.remove(scene.children[0]);
+  particles=[];
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  const bd=boundaries[currentBoundary];
+  // two plates
+  plate1=new THREE.Mesh(new THREE.BoxGeometry(8,0.8,5),new THREE.MeshStandardMaterial({color:0x6b7280,roughness:0.8}));
+  plate1.position.set(-4.5,-1,0); scene.add(plate1);
+  plate2=new THREE.Mesh(new THREE.BoxGeometry(8,0.8,5),new THREE.MeshStandardMaterial({color:0x4b5563,roughness:0.8}));
+  plate2.position.set(4.5,-1,0); scene.add(plate2);
+  // mantle
+  const mantle=new THREE.Mesh(new THREE.BoxGeometry(20,1,5),new THREE.MeshStandardMaterial({color:0xf97316,emissive:0xff3300,emissiveIntensity:0.2}));
+  mantle.position.y=-2; scene.add(mantle);
+  // boundary feature
+  if(currentBoundary==='convergent'){
+    mountain=new THREE.Mesh(new THREE.ConeGeometry(1.2,3,16),new THREE.MeshStandardMaterial({color:0x94a3b8,roughness:0.9}));
+    mountain.position.set(0,1,0); scene.add(mountain);
+  } else if(currentBoundary==='divergent'){
+    const rift=new THREE.Mesh(new THREE.BoxGeometry(1.5,2,5),new THREE.MeshStandardMaterial({color:0xf97316,emissive:0xff3300,emissiveIntensity:0.5}));
+    rift.position.y=-1.5; scene.add(rift);
+  }
+  // mantle convection particles
+  for(let i=0;i<20;i++){
+    const pm=new THREE.Mesh(new THREE.SphereGeometry(0.08,6,6),new THREE.MeshBasicMaterial({color:0xff6633}));
+    pm.position.set((Math.random()-0.5)*15,-1.5+Math.random()*0.8,(Math.random()-0.5)*4);
+    const vx=(Math.random()-0.5)*0.03, vy=Math.random()*0.02;
+    particles.push({mesh:pm,vel:new THREE.Vector3(vx,vy,0)}); scene.add(pm);
+  }
+}
+
+function initScene(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100); camera.position.set(0,4,14);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  buildScene();
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  animate();
+}
+
+let t3=0;
+function animate(){
+  requestAnimationFrame(animate); t3+=0.016*animSpeed;
+  const spd=plateSpeed*0.001*animSpeed;
+  if(plate1&&plate2){
+    if(currentBoundary==='convergent'){ plate1.position.x=-4.5+Math.min(spd*t3,1.5); plate2.position.x=4.5-Math.min(spd*t3,1.5); if(mountain) mountain.scale.y=1+Math.min(spd*t3,1.5)*0.5; }
+    else if(currentBoundary==='divergent'){ plate1.position.x=-4.5-spd*t3*0.5; plate2.position.x=4.5+spd*t3*0.5; }
+    else { plate1.position.z=Math.sin(t3*0.05)*0.3; plate2.position.z=-Math.sin(t3*0.05)*0.3; }
+  }
+  particles.forEach(p=>{
+    p.mesh.position.addScaledVector(p.vel,1);
+    if(Math.abs(p.mesh.position.x)>8) p.vel.x*=-1;
+    if(p.mesh.position.y>-0.5||p.mesh.position.y<-2.5) p.vel.y*=-1;
+  });
+  renderer.render(scene,camera);
+}
+
+document.getElementById('spd-slider').addEventListener('input',function(){ plateSpeed=+this.value; document.getElementById('spd-val').textContent=plateSpeed+' cm/yr'; document.getElementById('d-spd').textContent=plateSpeed+' cm/yr'; });
+document.getElementById('anim-slider').addEventListener('input',function(){ animSpeed=+this.value; document.getElementById('anim-val').textContent=animSpeed+'×'; });
+
+katex.render('\\text{2-10 cm/yr} \\approx \\text{fingernail growth rate}', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{Convergent}\\to\\text{mountains/trench} \\quad \\text{Divergent}\\to\\text{rift/ridge}', document.getElementById('kx-2'),{throwOnError:false});
+
+initScene(); setBoundary('convergent');
+</script>
+</body>
+</html>

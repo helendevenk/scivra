@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newton's Three Laws of Motion — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#93c5fd;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#3b82f6;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#93c5fd;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:0.68rem;transition:all 0.2s}
+    button:hover{background:rgba(59,130,246,0.3)}
+    button.active{background:rgba(59,130,246,0.4);border-color:#3b82f6}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:180px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#60a5fa;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(59,130,246,0.3);color:#93c5fd}
+    #fbd{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;text-align:center}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Newton's 3 Laws <span class="badge">MS Physics</span></h1>
+      <p>Inertia, F=ma, and action-reaction — the foundations of classical mechanics</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-l1" onclick="setLaw(1)">Law 1: Inertia</button>
+        <button id="btn-l2" class="active" onclick="setLaw(2)">Law 2: F=ma</button>
+        <button id="btn-l3" onclick="setLaw(3)">Law 3: Reaction</button>
+      </div>
+      <div class="slider-row">
+        <label>Applied Force <span id="F-val">20 N</span></label>
+        <input type="range" id="F-slider" min="0" max="100" step="5" value="20">
+      </div>
+      <div class="slider-row">
+        <label>Mass <span id="M-val">10 kg</span></label>
+        <input type="range" id="M-slider" min="1" max="50" step="1" value="10">
+      </div>
+      <div class="slider-row">
+        <label>Friction (μ) <span id="mu-val">0.20</span></label>
+        <input type="range" id="mu-slider" min="0" max="0.8" step="0.05" value="0.2">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#93c5fd;margin-bottom:4px;font-weight:600">Force Analysis</div>
+      <div class="data-row">Applied Force F <span class="data-val" id="d-F">20 N</span></div>
+      <div class="data-row">Friction f <span class="data-val" id="d-f">19.6 N</span></div>
+      <div class="data-row">Net Force Fₙ <span class="data-val" id="d-Fn">0.4 N</span></div>
+      <div class="data-row">Acceleration a <span class="data-val" id="d-a">0.04 m/s²</span></div>
+      <div class="data-row">Velocity v <span class="data-val" id="d-v">0 m/s</span></div>
+      <div class="data-row">Law <span class="data-val" id="d-law">2nd</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#93c5fd;margin-bottom:4px;font-weight:600">Newton's Laws</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+      <div class="kx" id="kx-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentLaw=2, F=20, M=10, mu=0.2, vel=0, pos=0;
+let scene,camera,renderer,box,forceArrow,frictionArrow,ground;
+
+function setLaw(n){
+  currentLaw=n;
+  [1,2,3].forEach(i=>document.getElementById('btn-l'+i).classList.toggle('active',i===n));
+  document.getElementById('d-law').textContent=n+'nd'.replace('1nd','st').replace('3nd','rd');
+  vel=0; pos=0;
+  if(box) box.position.x=-4;
+}
+
+function calcForces(){
+  const N=M*9.8;
+  const friction=mu*N;
+  const Fnet=F-friction;
+  const a=Fnet/M;
+  return {friction, Fnet, a};
+}
+
+function updateUI(){
+  const {friction,Fnet,a}=calcForces();
+  document.getElementById('d-F').textContent=F+' N';
+  document.getElementById('d-f').textContent=friction.toFixed(1)+' N';
+  document.getElementById('d-Fn').textContent=Fnet.toFixed(1)+' N';
+  document.getElementById('d-a').textContent=a.toFixed(2)+' m/s²';
+  document.getElementById('d-v').textContent=vel.toFixed(2)+' m/s';
+}
+
+function initScene(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100);
+  camera.position.set(0,3,12);
+  camera.lookAt(0,0,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene.add(new THREE.AmbientLight(0xffffff,0.6));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,10,5); scene.add(dl);
+  // ground
+  ground=new THREE.Mesh(new THREE.PlaneGeometry(20,4),new THREE.MeshStandardMaterial({color:0x1e293b}));
+  ground.rotation.x=-Math.PI/2; ground.position.y=-1; scene.add(ground);
+  // grid lines
+  const gHelper=new THREE.GridHelper(20,20,0x3b82f6,0x1e3a5f);
+  gHelper.position.y=-1; scene.add(gHelper);
+  // box
+  box=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.5,1.5),new THREE.MeshStandardMaterial({color:0x3b82f6,roughness:0.4,metalness:0.2}));
+  box.position.set(-4,-0.25,0); scene.add(box);
+  // force arrow
+  forceArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),2,0x22c55e,0.4,0.2);
+  scene.add(forceArrow);
+  // friction arrow
+  frictionArrow=new THREE.ArrowHelper(new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,0),1,0xef4444,0.3,0.15);
+  scene.add(frictionArrow);
+  window.addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+  animate();
+}
+
+let t3=0;
+function animate(){
+  requestAnimationFrame(animate);
+  t3+=0.016;
+  const {friction,Fnet,a}=calcForces();
+  if(currentLaw===2){
+    vel+=a*0.016;
+    pos+=vel*0.016;
+    if(Math.abs(pos)>6){ pos=-pos*0.1; vel*=-0.3; }
+    box.position.x=-4+pos*0.8;
+    box.rotation.y=t3*0.5;
+    forceArrow.position.copy(box.position).addScaledVector(new THREE.Vector3(1,0,0),0);
+    forceArrow.setLength(Math.max(0.3,F/20));
+    frictionArrow.position.copy(box.position).addScaledVector(new THREE.Vector3(-1,0,0),0);
+    frictionArrow.setLength(Math.max(0.2,friction/20));
+    vel*=0.995;
+  } else if(currentLaw===1){
+    // constant velocity if F=0, else show inertia
+    vel=F>0?(F/M*0.1):(vel*0.999);
+    box.position.x=-4+((t3*vel*0.5)%12);
+    box.rotation.y=t3;
+  } else {
+    // law 3: two boxes
+    box.position.x=Math.cos(t3*0.5)*2;
+    box.rotation.y=t3;
+  }
+  vel=isNaN(vel)?0:vel;
+  document.getElementById('d-v').textContent=Math.abs(vel).toFixed(2)+' m/s';
+  renderer.render(scene,camera);
+}
+
+document.getElementById('F-slider').addEventListener('input',function(){F=+this.value;document.getElementById('F-val').textContent=F+' N';updateUI();});
+document.getElementById('M-slider').addEventListener('input',function(){M=+this.value;document.getElementById('M-val').textContent=M+' kg';updateUI();});
+document.getElementById('mu-slider').addEventListener('input',function(){mu=+this.value;document.getElementById('mu-val').textContent=mu.toFixed(2);updateUI();});
+
+katex.render('\\text{1st: } v=\\text{const if }\\sum F=0', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{2nd: } a = \\frac{F_{net}}{m} = \\frac{F-f}{m}', document.getElementById('kx-2'),{throwOnError:false});
+katex.render('\\text{3rd: } F_{AB} = -F_{BA}', document.getElementById('kx-3'),{throwOnError:false});
+
+initScene(); updateUI();
+</script>
+</body>
+</html>

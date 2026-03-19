@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluid Statics & Bernoulli's Principle — NeonPhysics AP Physics 2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(59,130,246,.08));border-bottom:1px solid rgba(6,182,212,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(6,182,212,.2);border:1px solid rgba(6,182,212,.4);color:#67e8f9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative;background:#040d18}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:250px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .metric-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
+    .metric-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-cyan{color:#22d3ee} .val-blue{color:#60a5fa} .val-green{color:#34d399} .val-amber{color:#fbbf24} .val-red{color:#f87171}
+    .force-bar{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:7px;padding:8px 12px}
+    .force-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+    .force-label{color:#64748b}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#22d3ee;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(6,182,212,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#06b6d4;cursor:pointer}
+    .mode-row{display:flex;gap:8px;margin-bottom:14px}
+    .mode-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+    .mode-btn.active{background:rgba(6,182,212,.2);border-color:rgba(6,182,212,.5);color:#67e8f9}
+    .float-indicator{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;margin-top:6px}
+    .fi-float{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#86efac}
+    .fi-sink{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171}
+    .fi-neutral{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);color:#67e8f9}
+    .formula-box{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .speed-compare{display:flex;gap:8px;margin-top:6px}
+    .speed-box{flex:1;background:rgba(255,255,255,.04);border-radius:6px;padding:8px;text-align:center}
+    .speed-label{font-size:10px;color:#64748b;margin-bottom:4px}
+    .speed-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Fluid Statics &amp; Bernoulli's Principle</h1>
+  <p class="subtitle">Buoyancy, pressure, and why planes fly</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Buoyant Force</div>
+          <div class="metric-val val-cyan" id="fbDisplay">9.81 N</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Object Weight</div>
+          <div class="metric-val val-blue" id="weightDisplay">7.85 N</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Net Force</div>
+          <div class="metric-val val-green" id="netForceDisplay">+1.96 N</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Submerged %</div>
+          <div class="metric-val val-amber" id="subDisplay">80.0%</div>
+        </div>
+      </div>
+      <div class="float-indicator fi-float" id="floatIndicator">
+        🚀 FLOATING — ρ_obj &lt; ρ_fluid
+      </div>
+      <div class="force-bar" style="margin-top:8px">
+        <div class="force-row">
+          <span class="force-label">Hydrostatic P = ρgh</span>
+          <span class="metric-val val-cyan" id="pressureDisplay">0 Pa</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Mode</div>
+      <div class="mode-row">
+        <div class="mode-btn active" id="modeBuoy" onclick="setMode('buoyancy')">Buoyancy</div>
+        <div class="mode-btn" id="modeBern" onclick="setMode('bernoulli')">Bernoulli (Pro)</div>
+      </div>
+    </div>
+
+    <div class="section" id="buoySection">
+      <div class="section-title">Buoyancy Parameters</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Object Density (ρ_obj)</span>
+          <span class="param-val" id="objDensityVal">800 kg/m³</span>
+        </div>
+        <input type="range" id="objDensity" min="100" max="3000" step="50" value="800">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Fluid Density (ρ_fluid)</span>
+          <span class="param-val" id="fluidDensityVal">1000 kg/m³</span>
+        </div>
+        <input type="range" id="fluidDensity" min="500" max="2000" step="50" value="1000">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Object Volume (V)</span>
+          <span class="param-val" id="volumeVal">1.0 ×10⁻³ m³</span>
+        </div>
+        <input type="range" id="volume" min="0.1" max="5" step="0.1" value="1">
+      </div>
+    </div>
+
+    <div class="section" id="bernSection" style="display:none">
+      <div class="section-title">Bernoulli — Pipe Flow (Pro)</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 Bernoulli Mode</div>
+        <div class="ap-lock-desc">Constrict a pipe and watch fluid speed up and pressure drop — the physics behind airplane wings.</div>
+        <button class="ap-lock-btn">Unlock Pro →</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+
+      <div class="formula-box">
+        <div id="f1"></div>
+        <div class="formula-desc">Archimedes' buoyancy force</div>
+      </div>
+      <div class="formula-box">
+        <div id="f2"></div>
+        <div class="formula-desc">Hydrostatic pressure at depth h</div>
+      </div>
+      <div class="formula-box">
+        <div id="f3"></div>
+        <div class="formula-desc">Bernoulli's equation (energy conservation)</div>
+      </div>
+      <div class="formula-box">
+        <div id="f4"></div>
+        <div class="formula-desc">Continuity equation (mass conservation)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Fluid Presets</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button onclick="setFluid(1000)" style="padding:5px 10px;border-radius:5px;border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.1);color:#67e8f9;font-size:11px;cursor:pointer">Water</button>
+        <button onclick="setFluid(1025)" style="padding:5px 10px;border-radius:5px;border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.1);color:#67e8f9;font-size:11px;cursor:pointer">Sea Water</button>
+        <button onclick="setFluid(13600)" style="padding:5px 10px;border-radius:5px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.1);color:#fbbf24;font-size:11px;cursor:pointer">Mercury</button>
+        <button onclick="setFluid(800)" style="padding:5px 10px;border-radius:5px;border:1px solid rgba(148,163,184,.3);background:rgba(148,163,184,.08);color:#94a3b8;font-size:11px;cursor:pointer">Oil</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 AP Exam Mode</div>
+        <div class="ap-lock-desc">4 problems including Bernoulli pressure calculation in a constricted pipe.</div>
+        <button class="ap-lock-btn">Unlock with AP Season Pass →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Scene ─────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvasWrap');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+camera.position.set(0, 4, 12);
+camera.lookAt(0, 0, 0);
+
+const controls = typeof THREE.OrbitControls !== 'undefined'
+  ? new THREE.OrbitControls(camera, renderer.domElement)
+  : null;
+if (controls) { controls.enableDamping = true; controls.dampingFactor = 0.08; }
+
+scene.add(new THREE.AmbientLight(0x223344, 1.5));
+const dirLight = new THREE.DirectionalLight(0x67e8f9, 2.5);
+dirLight.position.set(5, 8, 5);
+scene.add(dirLight);
+
+// ── Container (tank) ─────────────────────────────────────────────────────────
+const TANK_W = 5, TANK_H = 6, TANK_D = 3;
+const tankMat = new THREE.MeshPhongMaterial({ color: 0x1e3a5f, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+const tankWalls = [
+  { pos: [-TANK_W/2, 0, 0], size: [0.1, TANK_H, TANK_D] },
+  { pos: [ TANK_W/2, 0, 0], size: [0.1, TANK_H, TANK_D] },
+  { pos: [0, -TANK_H/2, 0], size: [TANK_W, 0.1, TANK_D] },
+  { pos: [0, 0, -TANK_D/2], size: [TANK_W, TANK_H, 0.1] },
+];
+tankWalls.forEach(w => {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(...w.size), tankMat);
+  mesh.position.set(...w.pos);
+  scene.add(mesh);
+});
+
+// Fluid (water box)
+const FLUID_LEVEL = 2.2; // half-height of fluid
+const fluidGeo = new THREE.BoxGeometry(TANK_W - 0.2, FLUID_LEVEL * 2, TANK_D - 0.2);
+const fluidMat = new THREE.MeshPhongMaterial({ color: 0x0369a1, transparent: true, opacity: 0.45, shininess: 80 });
+const fluidMesh = new THREE.Mesh(fluidGeo, fluidMat);
+fluidMesh.position.y = -TANK_H/2 + FLUID_LEVEL + 0.1;
+scene.add(fluidMesh);
+
+// Fluid surface shimmer
+const surfaceGeo = new THREE.PlaneGeometry(TANK_W - 0.2, TANK_D - 0.2, 8, 8);
+const surfaceMat = new THREE.MeshPhongMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.3, shininess: 120 });
+const fluidSurface = new THREE.Mesh(surfaceGeo, surfaceMat);
+fluidSurface.rotation.x = -Math.PI / 2;
+fluidSurface.position.y = -TANK_H/2 + FLUID_LEVEL * 2 + 0.1;
+scene.add(fluidSurface);
+
+// Pressure depth lines
+const depthLineMat = new THREE.LineBasicMaterial({ color: 0x0e7490, opacity: 0.5, transparent: true });
+for (let d = 0.5; d < FLUID_LEVEL * 2; d += 0.5) {
+  const y = -TANK_H/2 + d + 0.1;
+  const pts = [new THREE.Vector3(-TANK_W/2 + 0.1, y, TANK_D/2 - 0.1), new THREE.Vector3(TANK_W/2 - 0.1, y, TANK_D/2 - 0.1)];
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), depthLineMat));
+}
+
+// ── Object ────────────────────────────────────────────────────────────────────
+const OBJ_R = 0.5;
+const objGeo = new THREE.SphereGeometry(OBJ_R, 32, 32);
+const objMat = new THREE.MeshPhongMaterial({ color: 0xfb923c, emissive: 0x2a1000, shininess: 60 });
+const objMesh = new THREE.Mesh(objGeo, objMat);
+scene.add(objMesh);
+
+// Force arrows
+const arrowUp = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 1, 0x22d3ee, 0.25, 0.12);
+const arrowDown = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(0,0,0), 1, 0xf87171, 0.25, 0.12);
+scene.add(arrowUp, arrowDown);
+
+// ── State & physics ───────────────────────────────────────────────────────────
+let rho_obj = 800, rho_fluid = 1000, volume_L = 1; // volume in L (×10⁻³ m³)
+let mode = 'buoyancy';
+const g = 9.81;
+const SURFACE_Y = -TANK_H/2 + FLUID_LEVEL * 2 + 0.1;
+
+function calcBuoyancy() {
+  const V_m3 = volume_L * 1e-3;
+  const mass = rho_obj * V_m3;
+  const weight = mass * g;
+  const Fb_max = rho_fluid * g * V_m3;
+
+  let Fb, submergedFrac, objY;
+
+  if (rho_obj <= rho_fluid) {
+    // Floating: equilibrium when buoyancy = weight
+    submergedFrac = rho_obj / rho_fluid;
+    Fb = weight;
+    // Object center: SURFACE_Y - (1 - submergedFrac) * OBJ_R * 2 + OBJ_R
+    // Simplified: object floats with bottom at fluid surface minus submerged height
+    const subHeight = submergedFrac * OBJ_R * 2;
+    objY = SURFACE_Y - subHeight + OBJ_R;
+  } else {
+    // Sinking: fully submerged, resting on bottom
+    submergedFrac = 1.0;
+    Fb = Fb_max;
+    objY = -TANK_H/2 + OBJ_R + 0.1;
+  }
+
+  const netForce = Fb - weight;
+  const depth = Math.max(0, SURFACE_Y - (objY - OBJ_R));
+  const pressure = rho_fluid * g * depth;
+
+  return { weight, Fb, netForce, submergedFrac, objY, pressure };
+}
+
+function updateBuoyancyDisplay() {
+  const { weight, Fb, netForce, submergedFrac, objY, pressure } = calcBuoyancy();
+
+  objMesh.position.set(0, objY, 0);
+
+  arrowUp.position.set(0, objY, 0);
+  arrowUp.setLength(Math.min(Fb / 10, 2.5), 0.25, 0.12);
+
+  arrowDown.position.set(0, objY, 0);
+  arrowDown.setLength(Math.min(weight / 10, 2.5), 0.25, 0.12);
+
+  document.getElementById('fbDisplay').textContent = Fb.toFixed(2) + ' N';
+  document.getElementById('weightDisplay').textContent = weight.toFixed(2) + ' N';
+  document.getElementById('netForceDisplay').textContent = (netForce >= 0 ? '+' : '') + netForce.toFixed(2) + ' N';
+  document.getElementById('subDisplay').textContent = (submergedFrac * 100).toFixed(1) + '%';
+  document.getElementById('pressureDisplay').textContent = Math.round(pressure) + ' Pa';
+
+  const fi = document.getElementById('floatIndicator');
+  if (netForce > 0.5) {
+    fi.className = 'float-indicator fi-float';
+    fi.textContent = '🚀 FLOATING — ρ_obj < ρ_fluid';
+  } else if (netForce < -0.5) {
+    fi.className = 'float-indicator fi-sink';
+    fi.textContent = '⬇️ SINKING — ρ_obj > ρ_fluid';
+  } else {
+    fi.className = 'float-indicator fi-neutral';
+    fi.textContent = '⚖️ NEUTRAL — ρ_obj = ρ_fluid';
+  }
+
+  // Update fluid color based on density
+  const t = (rho_fluid - 500) / 1500;
+  fluidMat.color.setHex(t > 0.8 ? 0x4a3700 : (rho_fluid > 1200 ? 0x1e4a7a : 0x0369a1));
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeBuoy').classList.toggle('active', m === 'buoyancy');
+  document.getElementById('modeBern').classList.toggle('active', m === 'bernoulli');
+  document.getElementById('buoySection').style.display = m === 'buoyancy' ? '' : 'none';
+  document.getElementById('bernSection').style.display = m === 'bernoulli' ? '' : 'none';
+  objMesh.visible = m === 'buoyancy';
+  arrowUp.visible = m === 'buoyancy';
+  arrowDown.visible = m === 'buoyancy';
+}
+
+function setFluid(density) {
+  rho_fluid = Math.min(density, 2000);
+  document.getElementById('fluidDensity').value = rho_fluid;
+  document.getElementById('fluidDensityVal').textContent = rho_fluid + ' kg/m³';
+  updateBuoyancyDisplay();
+}
+
+// ── Sliders ────────────────────────────────────────────────────────────────────
+document.getElementById('objDensity').addEventListener('input', function() {
+  rho_obj = parseFloat(this.value);
+  document.getElementById('objDensityVal').textContent = rho_obj + ' kg/m³';
+  updateBuoyancyDisplay();
+});
+document.getElementById('fluidDensity').addEventListener('input', function() {
+  rho_fluid = parseFloat(this.value);
+  document.getElementById('fluidDensityVal').textContent = rho_fluid + ' kg/m³';
+  updateBuoyancyDisplay();
+});
+document.getElementById('volume').addEventListener('input', function() {
+  volume_L = parseFloat(this.value);
+  document.getElementById('volumeVal').textContent = volume_L.toFixed(1) + ' ×10⁻³ m³';
+  const scale = Math.cbrt(volume_L);
+  objMesh.scale.setScalar(scale);
+  updateBuoyancyDisplay();
+});
+
+// ── Animation ─────────────────────────────────────────────────────────────────
+let t = 0;
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  t += dt;
+  // Gentle surface wave
+  const surfVerts = fluidSurface.geometry.attributes.position;
+  for (let i = 0; i < surfVerts.count; i++) {
+    const x = surfVerts.getX(i);
+    const z = surfVerts.getZ(i);
+    surfVerts.setY(i, Math.sin(x * 0.8 + t * 1.2) * 0.04 + Math.sin(z * 1.1 + t * 0.9) * 0.03);
+  }
+  surfVerts.needsUpdate = true;
+
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+// ── Resize ─────────────────────────────────────────────────────────────────────
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(wrap);
+resize();
+
+// ── KaTeX ──────────────────────────────────────────────────────────────────────
+const formulas = [
+  { id: 'f1', latex: 'F_b = \\rho_{fluid}\\, g\\, V_{sub}' },
+  { id: 'f2', latex: 'P = P_0 + \\rho g h' },
+  { id: 'f3', latex: 'P_1 + \\tfrac{1}{2}\\rho v_1^2 = P_2 + \\tfrac{1}{2}\\rho v_2^2' },
+  { id: 'f4', latex: 'A_1 v_1 = A_2 v_2' },
+];
+formulas.forEach(f => {
+  if (window.katex) katex.render(f.latex, document.getElementById(f.id), { throwOnError: false });
+});
+
+updateBuoyancyDisplay();
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reaction Kinetics & Arrhenius — NeonPhysics AP Chemistry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#fdba74;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:230px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#f97316;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);color:#fdba74;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(249,115,22,0.3)}
+    button.active{background:rgba(249,115,22,0.4);border-color:#f97316}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:190px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#fb923c;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(249,115,22,0.3);color:#fdba74}
+    #chart-canvas{width:100%;height:90px;border-radius:4px;background:rgba(0,0,0,0.3);margin-top:6px;display:block}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Reaction Kinetics <span class="badge">AP Chem</span></h1>
+      <p>Arrhenius equation, activation energy, Maxwell-Boltzmann</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Temperature (T) <span id="T-val">400 K</span></label>
+        <input type="range" id="T-slider" min="200" max="800" step="10" value="400">
+      </div>
+      <div class="slider-row">
+        <label>Activation Energy (Ea) <span id="Ea-val">50 kJ/mol</span></label>
+        <input type="range" id="Ea-slider" min="20" max="120" step="5" value="50">
+      </div>
+      <div class="slider-row">
+        <label>Concentration [A] <span id="conc-val">1.0 mol/L</span></label>
+        <input type="range" id="conc-slider" min="0.1" max="3.0" step="0.1" value="1.0">
+      </div>
+      <div class="btn-row">
+        <button id="btn-cat" onclick="addCatalyst()">⚗ Add Catalyst</button>
+        <button id="btn-reset" onclick="resetCatalyst()">↺ Remove</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#fdba74;margin-bottom:6px;font-weight:600">Kinetics Data</div>
+      <div class="data-row">Temperature <span class="data-val" id="d-T">400 K</span></div>
+      <div class="data-row">Rate const k <span class="data-val" id="d-k">—</span></div>
+      <div class="data-row">Reaction Rate <span class="data-val" id="d-rate">—</span></div>
+      <div class="data-row">Half-life t₁/₂ <span class="data-val" id="d-t12">—</span></div>
+      <div class="data-row">Active fraction <span class="data-val" id="d-frac">—</span></div>
+      <canvas id="chart-canvas" width="190" height="90"></canvas>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.7rem;color:#fdba74;margin-bottom:6px;font-weight:600">Arrhenius & Rate Laws</div>
+      <div class="katex-wrap" id="kx-1"></div>
+      <div class="katex-wrap" id="kx-2"></div>
+      <div class="katex-wrap" id="kx-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const R=8.314;
+let T=400,Ea=50000,conc=1.0,A0=1e6,catalystOn=false;
+
+function k(){ return A0*Math.exp(-Ea/(R*T)); }
+function rate(){ return k()*conc; }
+function t12(){ return Math.log(2)/k(); }
+function activeFrac(){ return Math.exp(-Ea/(R*T)); }
+
+function updateData(){
+  document.getElementById('d-T').textContent=T+' K';
+  const kv=k();
+  document.getElementById('d-k').textContent=kv.toExponential(2)+' s⁻¹';
+  document.getElementById('d-rate').textContent=rate().toExponential(2)+' mol/L·s';
+  const t=t12();
+  document.getElementById('d-t12').textContent=t<1?t.toFixed(3)+'s':t.toFixed(1)+'s';
+  document.getElementById('d-frac').textContent=(activeFrac()*100).toExponential(2)+'%';
+  drawMaxwellBoltzmann();
+}
+
+function drawMaxwellBoltzmann(){
+  const cv=document.getElementById('chart-canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(249,115,22,0.08)';
+  ctx.fillRect(0,0,W,H);
+  // Maxwell-Boltzmann: f(E) ∝ sqrt(E)*exp(-E/kT)
+  const kB=1.38e-23;
+  const kT=kB*T;
+  const Emax=8*kT;
+  let maxY=0;
+  const pts=[];
+  for(let i=0;i<W;i++){
+    const E=Emax*i/W;
+    const fE=Math.sqrt(E)*Math.exp(-E/kT);
+    pts.push(fE);
+    if(fE>maxY) maxY=fE;
+  }
+  // draw distribution
+  ctx.beginPath();
+  for(let i=0;i<W;i++){
+    const y=H-5-(pts[i]/maxY)*(H-10);
+    if(i===0) ctx.moveTo(i,y); else ctx.lineTo(i,y);
+  }
+  ctx.strokeStyle='#f97316';
+  ctx.lineWidth=2;
+  ctx.stroke();
+  // shade active fraction above Ea
+  const EaJ=Ea;
+  const EaX=Math.min(W-1,(EaJ/Emax)*W);
+  ctx.beginPath();
+  for(let i=Math.floor(EaX);i<W;i++){
+    const y=H-5-(pts[i]/maxY)*(H-10);
+    if(i===Math.floor(EaX)) ctx.moveTo(i,y); else ctx.lineTo(i,y);
+  }
+  ctx.lineTo(W,H-5);
+  ctx.lineTo(Math.floor(EaX),H-5);
+  ctx.closePath();
+  ctx.fillStyle='rgba(251,191,36,0.3)';
+  ctx.fill();
+  // Ea vertical line
+  ctx.beginPath();
+  ctx.moveTo(EaX,0);
+  ctx.lineTo(EaX,H);
+  ctx.strokeStyle='#fbbf24';
+  ctx.setLineDash([3,3]);
+  ctx.lineWidth=1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24';
+  ctx.font='9px sans-serif';
+  ctx.fillText('Ea',EaX+2,10);
+}
+
+// 3D particle simulation
+let scene,camera,renderer,particles=[];
+const NUM=80;
+
+function init3D(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,0,12);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8);
+  dl.position.set(5,8,5);
+  scene.add(dl);
+  // container box wireframe
+  const boxGeo=new THREE.BoxGeometry(10,8,8);
+  const boxEdges=new THREE.EdgesGeometry(boxGeo);
+  const boxLine=new THREE.LineSegments(boxEdges,new THREE.LineBasicMaterial({color:0xf97316,opacity:0.3,transparent:true}));
+  scene.add(boxLine);
+  // particles
+  const geo=new THREE.SphereGeometry(0.2,12,12);
+  for(let i=0;i<NUM;i++){
+    const isA=i<NUM/2;
+    const mat=new THREE.MeshStandardMaterial({color:isA?0xff6633:0x3366ff,emissive:isA?0x441100:0x001144,roughness:0.5});
+    const m=new THREE.Mesh(geo,mat);
+    m.position.set((Math.random()-0.5)*9,(Math.random()-0.5)*7,(Math.random()-0.5)*7);
+    const speed=0.02+Math.random()*0.04;
+    const dir=new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize();
+    particles.push({mesh:m,vel:dir.multiplyScalar(speed),isA});
+    scene.add(m);
+  }
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+  animate3D();
+}
+
+let flash=[];
+function animate3D(){
+  requestAnimationFrame(animate3D);
+  const speedMult=0.5+(T-200)/600*2.5+(catalystOn?1.5:0);
+  const collideProb=(k()/1e4)*conc*0.01;
+  particles.forEach(p=>{
+    p.mesh.position.addScaledVector(p.vel,speedMult);
+    ['x','y','z'].forEach((ax,i)=>{
+      const bounds=[4.5,3.5,3.5];
+      if(Math.abs(p.mesh.position[ax])>bounds[i]){
+        p.vel[ax]*=-1;
+      }
+    });
+  });
+  // collision detection simplified
+  for(let i=0;i<particles.length;i+=2){
+    const pa=particles[i], pb=particles[i+1];
+    const dist=pa.mesh.position.distanceTo(pb.mesh.position);
+    if(dist<0.6 && Math.random()<collideProb){
+      // flash reaction
+      const fGeo=new THREE.SphereGeometry(0.4,8,8);
+      const fMat=new THREE.MeshStandardMaterial({color:0xfbbf24,emissive:0xfbbf24,emissiveIntensity:2,transparent:true,opacity:1});
+      const fm=new THREE.Mesh(fGeo,fMat);
+      fm.position.copy(pa.mesh.position).lerp(pb.mesh.position,0.5);
+      scene.add(fm);
+      flash.push({mesh:fm,life:15});
+    }
+  }
+  flash=flash.filter(f=>{
+    f.life--;
+    f.mesh.material.opacity=f.life/15;
+    f.mesh.scale.setScalar(1+0.1*(15-f.life));
+    if(f.life<=0){ scene.remove(f.mesh); return false; }
+    return true;
+  });
+  renderer.render(scene,camera);
+}
+
+function addCatalyst(){
+  catalystOn=true;
+  Ea=20000;
+  document.getElementById('btn-cat').classList.add('active');
+  document.getElementById('Ea-slider').value=20;
+  document.getElementById('Ea-val').textContent='20 kJ/mol';
+  updateData();
+}
+function resetCatalyst(){
+  catalystOn=false;
+  Ea=50000;
+  document.getElementById('btn-cat').classList.remove('active');
+  document.getElementById('Ea-slider').value=50;
+  document.getElementById('Ea-val').textContent='50 kJ/mol';
+  updateData();
+}
+
+document.getElementById('T-slider').addEventListener('input',function(){
+  T=+this.value;
+  document.getElementById('T-val').textContent=T+' K';
+  document.getElementById('d-T').textContent=T+' K';
+  updateData();
+});
+document.getElementById('Ea-slider').addEventListener('input',function(){
+  Ea=+this.value*1000;
+  document.getElementById('Ea-val').textContent=this.value+' kJ/mol';
+  updateData();
+});
+document.getElementById('conc-slider').addEventListener('input',function(){
+  conc=+this.value;
+  document.getElementById('conc-val').textContent=conc.toFixed(1)+' mol/L';
+  updateData();
+});
+
+katex.render('k = Ae^{-E_a/RT} \\quad (\\text{Arrhenius})', document.getElementById('kx-1'), {throwOnError:false});
+katex.render('t_{1/2} = \\frac{\\ln 2}{k} \\quad (\\text{1st order})', document.getElementById('kx-2'), {throwOnError:false});
+katex.render('\\text{rate} = k[A]^m[B]^n', document.getElementById('kx-3'), {throwOnError:false});
+
+init3D();
+updateData();
+</script>
+</body>
+</html>

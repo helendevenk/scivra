@@ -4,7 +4,10 @@ export type PhysicsCategory =
   | "waves"
   | "electricity"
   | "modern"
-  | "thermodynamics";
+  | "thermodynamics"
+  | "biology"
+  | "chemistry"
+  | "earth"; // NEW: earth & space science
 
 /** Subscription tier */
 export type Tier = "free" | "pro" | "max";
@@ -13,7 +16,7 @@ export type Tier = "free" | "pro" | "max";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 /** Release wave */
-export type Wave = 1 | 2 | 3 | 4;
+export type Wave = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Adjustable parameter for an experiment */
 export interface Parameter {

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Molecular Bonding & VSEPR — NeonPhysics AP Chemistry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#67e8f9;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:220px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap}
+    button{background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.4);color:#67e8f9;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(6,182,212,0.3)}
+    button.active{background:rgba(6,182,212,0.4);border-color:#06b6d4}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#22d3ee;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(6,182,212,0.3);color:#67e8f9}
+    .mol-btn{font-size:0.68rem;padding:4px 8px}
+    #mol-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-80%);background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);border-radius:6px;padding:8px 14px;text-align:center;pointer-events:none}
+    #mol-label h2{font-size:1rem;color:#67e8f9;margin-bottom:2px}
+    #mol-label p{font-size:0.68rem;color:#94a3b8}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="mol-label">
+  <h2 id="mol-name">H₂O</h2>
+  <p id="mol-shape">Bent — 104.5°</p>
+</div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Molecular Bonding & VSEPR <span class="badge">AP Chem</span></h1>
+      <p>Lewis structures, electron geometry, dipole moments</p>
+    </div>
+    <div class="panel controls">
+      <div style="font-size:0.7rem;color:#94a3b8;margin-bottom:4px">Select Molecule:</div>
+      <div class="btn-row">
+        <button class="mol-btn active" id="btn-h2o" onclick="loadMol('h2o')">H₂O</button>
+        <button class="mol-btn" id="btn-ch4" onclick="loadMol('ch4')">CH₄</button>
+        <button class="mol-btn" id="btn-nh3" onclick="loadMol('nh3')">NH₃</button>
+      </div>
+      <div class="btn-row" style="margin-top:4px">
+        <button class="mol-btn" id="btn-co2" onclick="loadMol('co2')">CO₂</button>
+        <button class="mol-btn" id="btn-bf3" onclick="loadMol('bf3')">BF₃</button>
+        <button class="mol-btn" id="btn-sf6" onclick="loadMol('sf6')">SF₆</button>
+      </div>
+      <div class="btn-row" style="margin-top:6px">
+        <button id="btn-dipole" onclick="toggleDipole()">⇌ Dipole OFF</button>
+        <button id="btn-rotate" class="active" onclick="toggleRotate()">↻ Rotate ON</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#67e8f9;margin-bottom:6px;font-weight:600">Molecule Info</div>
+      <div class="data-row">Formula <span class="data-val" id="d-formula">H₂O</span></div>
+      <div class="data-row">Geometry <span class="data-val" id="d-geo">Bent</span></div>
+      <div class="data-row">Bond Angle <span class="data-val" id="d-angle">104.5°</span></div>
+      <div class="data-row">Dipole Moment <span class="data-val" id="d-dipole">1.85 D</span></div>
+      <div class="data-row">Lone Pairs <span class="data-val" id="d-lp">2</span></div>
+      <div class="data-row">Polarity <span class="data-val" id="d-polar">Polar</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.7rem;color:#67e8f9;margin-bottom:6px;font-weight:600">VSEPR Theory</div>
+      <div class="katex-wrap" id="kx-1"></div>
+      <div class="katex-wrap" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const molecules = {
+  h2o: {
+    name:'H₂O', shape:'Bent — 104.5°', geo:'Bent', angle:'104.5°', dipole:'1.85 D', lp:'2', polar:'Polar',
+    atoms:[
+      {el:'O',color:0xe05050,r:0.45,pos:[0,0,0]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[-0.9,-0.7,0]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[0.9,-0.7,0]}
+    ],
+    bonds:[[0,1],[0,2]],
+    dipoleDir:[0,1,0]
+  },
+  ch4: {
+    name:'CH₄', shape:'Tetrahedral — 109.5°', geo:'Tetrahedral', angle:'109.5°', dipole:'0 D', lp:'0', polar:'Nonpolar',
+    atoms:[
+      {el:'C',color:0x606060,r:0.42,pos:[0,0,0]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[0.9,0.9,0.9]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[-0.9,-0.9,0.9]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[0.9,-0.9,-0.9]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[-0.9,0.9,-0.9]}
+    ],
+    bonds:[[0,1],[0,2],[0,3],[0,4]],
+    dipoleDir:null
+  },
+  nh3: {
+    name:'NH₃', shape:'Trigonal Pyramidal — 107°', geo:'Trig. Pyramidal', angle:'107°', dipole:'1.46 D', lp:'1', polar:'Polar',
+    atoms:[
+      {el:'N',color:0x5090e0,r:0.42,pos:[0,0,0]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[-0.9,-0.6,0.5]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[0.9,-0.6,0.5]},
+      {el:'H',color:0xf0f0f0,r:0.28,pos:[0,-0.6,-1.0]}
+    ],
+    bonds:[[0,1],[0,2],[0,3]],
+    dipoleDir:[0,1,0]
+  },
+  co2: {
+    name:'CO₂', shape:'Linear — 180°', geo:'Linear', angle:'180°', dipole:'0 D', lp:'0', polar:'Nonpolar',
+    atoms:[
+      {el:'C',color:0x606060,r:0.42,pos:[0,0,0]},
+      {el:'O',color:0xe05050,r:0.40,pos:[-1.3,0,0]},
+      {el:'O',color:0xe05050,r:0.40,pos:[1.3,0,0]}
+    ],
+    bonds:[[0,1],[0,2]],
+    dipoleDir:null
+  },
+  bf3: {
+    name:'BF₃', shape:'Trigonal Planar — 120°', geo:'Trig. Planar', angle:'120°', dipole:'0 D', lp:'0', polar:'Nonpolar',
+    atoms:[
+      {el:'B',color:0xd4aa70,r:0.38,pos:[0,0,0]},
+      {el:'F',color:0x50e050,r:0.38,pos:[1.3,0,0]},
+      {el:'F',color:0x50e050,r:0.38,pos:[-0.65,1.12,0]},
+      {el:'F',color:0x50e050,r:0.38,pos:[-0.65,-1.12,0]}
+    ],
+    bonds:[[0,1],[0,2],[0,3]],
+    dipoleDir:null
+  },
+  sf6: {
+    name:'SF₆', shape:'Octahedral — 90°', geo:'Octahedral', angle:'90°', dipole:'0 D', lp:'0', polar:'Nonpolar',
+    atoms:[
+      {el:'S',color:0xf0c040,r:0.45,pos:[0,0,0]},
+      {el:'F',color:0x50e050,r:0.35,pos:[1.6,0,0]},
+      {el:'F',color:0x50e050,r:0.35,pos:[-1.6,0,0]},
+      {el:'F',color:0x50e050,r:0.35,pos:[0,1.6,0]},
+      {el:'F',color:0x50e050,r:0.35,pos:[0,-1.6,0]},
+      {el:'F',color:0x50e050,r:0.35,pos:[0,0,1.6]},
+      {el:'F',color:0x50e050,r:0.35,pos:[0,0,-1.6]}
+    ],
+    bonds:[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6]],
+    dipoleDir:null
+  }
+};
+
+let scene,camera,renderer,controls,molGroup,dipoleArrow;
+let showDipole=false, autoRotate=true, currentMol='h2o';
+
+function init(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,2,6);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;
+  controls.dampingFactor=0.08;
+  scene.add(new THREE.AmbientLight(0xffffff,0.6));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8);
+  dl.position.set(5,8,5);
+  scene.add(dl);
+  const pl=new THREE.PointLight(0x06b6d4,0.5,20);
+  pl.position.set(-3,3,3);
+  scene.add(pl);
+  molGroup=new THREE.Group();
+  scene.add(molGroup);
+  loadMol('h2o');
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+  animate();
+}
+
+function clearMol(){
+  while(molGroup.children.length) molGroup.remove(molGroup.children[0]);
+}
+
+function makeBond(a,b){
+  const dir=new THREE.Vector3().subVectors(b,a);
+  const len=dir.length();
+  const mid=new THREE.Vector3().addVectors(a,b).multiplyScalar(0.5);
+  const geo=new THREE.CylinderGeometry(0.08,0.08,len,12);
+  const mat=new THREE.MeshStandardMaterial({color:0xaaaaaa,metalness:0.3,roughness:0.5});
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.position.copy(mid);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  molGroup.add(mesh);
+}
+
+function loadMol(id){
+  clearMol();
+  currentMol=id;
+  const m=molecules[id];
+  document.getElementById('mol-name').textContent=m.name;
+  document.getElementById('mol-shape').textContent=m.shape;
+  document.getElementById('d-formula').textContent=m.name;
+  document.getElementById('d-geo').textContent=m.geo;
+  document.getElementById('d-angle').textContent=m.angle;
+  document.getElementById('d-dipole').textContent=m.dipole;
+  document.getElementById('d-lp').textContent=m.lp;
+  document.getElementById('d-polar').textContent=m.polar;
+  document.querySelectorAll('.mol-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+id).classList.add('active');
+  const positions=[];
+  m.atoms.forEach((a,i)=>{
+    const geo=new THREE.SphereGeometry(a.r,32,32);
+    const mat=new THREE.MeshStandardMaterial({color:a.color,metalness:0.2,roughness:0.5});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(...a.pos);
+    molGroup.add(mesh);
+    positions.push(new THREE.Vector3(...a.pos));
+    // element label sprite
+    const cv=document.createElement('canvas');
+    cv.width=64;cv.height=64;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(a.el,32,32);
+    const tex=new THREE.CanvasTexture(cv);
+    const sm=new THREE.SpriteMaterial({map:tex,depthTest:false});
+    const sp=new THREE.Sprite(sm);
+    sp.scale.set(0.4,0.4,1);
+    sp.position.set(...a.pos);
+    molGroup.add(sp);
+  });
+  m.bonds.forEach(([i,j])=>makeBond(positions[i],positions[j]));
+  if(showDipole && m.dipoleDir) addDipoleArrow(m);
+}
+
+function addDipoleArrow(m){
+  if(!m.dipoleDir) return;
+  const dir=new THREE.Vector3(...m.dipoleDir).normalize();
+  const arr=new THREE.ArrowHelper(dir,new THREE.Vector3(0,0,0),2,0xf59e0b,0.4,0.2);
+  molGroup.add(arr);
+}
+
+function toggleDipole(){
+  showDipole=!showDipole;
+  document.getElementById('btn-dipole').textContent='⇌ Dipole '+(showDipole?'ON':'OFF');
+  loadMol(currentMol);
+}
+
+function toggleRotate(){
+  autoRotate=!autoRotate;
+  const btn=document.getElementById('btn-rotate');
+  btn.textContent='↻ Rotate '+(autoRotate?'ON':'OFF');
+  btn.classList.toggle('active',autoRotate);
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRotate) molGroup.rotation.y+=0.008;
+  controls.update();
+  renderer.render(scene,camera);
+}
+
+// KaTeX formulas
+katex.render('\\mu = q \\cdot d \\quad (\\text{dipole moment, Debye})', document.getElementById('kx-1'), {throwOnError:false});
+katex.render('\\text{AX}_mE_n: \\text{ }m\\text{ bonds, }n\\text{ lone pairs} \\to \\text{geometry}', document.getElementById('kx-2'), {throwOnError:false});
+
+init();
+</script>
+</body>
+</html>

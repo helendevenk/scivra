@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave Interference — NeonPhysics AP Physics 1</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(236,72,153,.1),rgba(168,85,247,.08));border-bottom:1px solid rgba(236,72,153,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(236,72,153,.2);border:1px solid rgba(236,72,153,.4);color:#f9a8d4;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(236,72,153,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:210px}
+    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .pink{color:#f472b6} .violet{color:#c084fc} .green{color:#4ade80}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .mode-row{display:flex;gap:8px;margin-bottom:14px}
+    .mode-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:10px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+    .mode-btn.active{background:rgba(236,72,153,.2);border-color:rgba(236,72,153,.5);color:#f9a8d4}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#f472b6;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(236,72,153,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ec4899;cursor:pointer}
+    .btn-row{display:flex;gap:8px;margin-top:4px}
+    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#ec4899;color:#fff}
+    .btn-primary:hover{background:#db2777}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .formula-box{background:rgba(236,72,153,.06);border:1px solid rgba(236,72,153,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .legend-row{display:flex;gap:12px;margin-top:8px}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+    .legend-dot{width:10px;height:6px;border-radius:3px}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Wave Interference</h1>
+  <p class="subtitle">Superposition, standing waves, and double-slit patterns</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row"><span class="stat-label">Wavelength λ</span><span class="stat-value pink" id="statL">0.50 m</span></div>
+      <div class="stat-row"><span class="stat-label">Frequency f</span><span class="stat-value violet" id="statF">—</span></div>
+      <div class="stat-row"><span class="stat-label">Wave Speed v</span><span class="stat-value" id="statV">—</span></div>
+      <div class="stat-row"><span class="stat-label">Nodes visible</span><span class="stat-value green" id="statN">—</span></div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div>constructive</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1e293b;border:1px solid #334155"></div>destructive</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Mode</div>
+      <div class="mode-row">
+        <div class="mode-btn active" id="modeTwo" onclick="setMode('two')">Two Sources</div>
+        <div class="mode-btn" id="modeStand" onclick="setMode('standing')">Standing Wave</div>
+      </div>
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Wavelength λ</span><span class="param-val" id="vL">0.50 m</span></div>
+        <input type="range" id="sL" min="0.1" max="2" value="0.5" step="0.05">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Amplitude A</span><span class="param-val" id="vA">0.50</span></div>
+        <input type="range" id="sA" min="0.1" max="1" value="0.5" step="0.05">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Source Separation d</span><span class="param-val" id="vD">1.50 m</span></div>
+        <input type="range" id="sD" min="0.5" max="4" value="1.5" step="0.1">
+      </div>
+      <div class="param-row" id="harmonicRow" style="display:none">
+        <div class="param-label"><span class="param-name">Harmonic n</span><span class="param-val" id="vN">1</span></div>
+        <input type="range" id="sN" min="1" max="6" value="1" step="1">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnPause">⏸ Pause</button>
+        <button class="btn btn-ghost" id="btnReset">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Constructive interference condition</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Destructive interference condition</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Standing wave harmonics</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 3 AP Problems Locked</div>
+        <div class="ap-lock-desc">Upgrade to Pro to access AP Physics 1 wave interference problems with full solutions.</div>
+        <button class="ap-lock-btn">Unlock with Pro →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────
+let lambda=0.5, amp=0.5, d=1.5, harmonic=1;
+let mode='two', t=0, running=true;
+const WAVE_SPEED=2.0; // m/s
+const GRID=80;
+
+// ─── Three.js ─────────────────────────────────────────────────────────
+const wrap=document.getElementById('canvasWrap');
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x060810);
+const camera=new THREE.PerspectiveCamera(50,1,0.1,100);
+camera.position.set(0,8,10);
+camera.lookAt(0,0,0);
+const controls=typeof THREE.OrbitControls!=='undefined'
+  ?new THREE.OrbitControls(camera,renderer.domElement):null;
+if(controls){controls.enableDamping=true;controls.dampingFactor=0.08;}
+
+scene.add(new THREE.AmbientLight(0x223344,0.5));
+const dl=new THREE.DirectionalLight(0xaabbff,.8); dl.position.set(5,10,5); scene.add(dl);
+
+// ─── Wave surface mesh ────────────────────────────────────────────────
+const SIZE=10;
+const geo=new THREE.PlaneGeometry(SIZE,SIZE,GRID-1,GRID-1);
+geo.rotateX(-Math.PI/2);
+const positions=geo.attributes.position;
+const N=positions.count;
+
+// color buffer
+const colors=new Float32Array(N*3);
+geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+
+const mat=new THREE.MeshStandardMaterial({
+  vertexColors:true,
+  wireframe:false,
+  side:THREE.DoubleSide,
+  roughness:.8,
+  metalness:.1
+});
+const mesh=new THREE.Mesh(geo,mat);
+scene.add(mesh);
+
+// source markers
+const srcMat=new THREE.MeshStandardMaterial({color:0xf472b6,emissive:0xbe185d,emissiveIntensity:.6});
+const src1=new THREE.Mesh(new THREE.SphereGeometry(.15,16,16),srcMat);
+const src2=new THREE.Mesh(new THREE.SphereGeometry(.15,16,16),srcMat);
+const pl1=new THREE.PointLight(0xf472b6,3,6);
+const pl2=new THREE.PointLight(0xa855f7,3,6);
+scene.add(src1,src2,pl1,pl2);
+
+function updateSourcePositions(){
+  src1.position.set(-d/2,0,0);
+  src2.position.set(d/2,0,0);
+  pl1.position.set(-d/2,1,0);
+  pl2.position.set(d/2,1,0);
+  if(mode==='standing') src2.visible=false;
+  else src2.visible=true;
+}
+
+// ─── Wave computation ─────────────────────────────────────────────────
+const k=()=>2*Math.PI/lambda;
+const omega=()=>k()*WAVE_SPEED;
+
+function waveHeight(x,z,time){
+  if(mode==='two'){
+    const r1=Math.sqrt((x+d/2)**2+z**2)+.001;
+    const r2=Math.sqrt((x-d/2)**2+z**2)+.001;
+    const y1=amp*Math.cos(k()*r1-omega()*time)/Math.max(1,r1*.5);
+    const y2=amp*Math.cos(k()*r2-omega()*time)/Math.max(1,r2*.5);
+    return y1+y2;
+  } else {
+    // standing wave: y = A sin(n pi x/L) cos(omega t)
+    const L=SIZE;
+    const kn=harmonic*Math.PI/L;
+    return amp*Math.sin(kn*(x+L/2))*Math.cos(harmonic*Math.PI*WAVE_SPEED/L*time);
+  }
+}
+
+function countNodes(){
+  if(mode==='standing') return harmonic+1;
+  const maxM=Math.floor(d/(lambda));
+  return maxM*2+1;
+}
+
+function updateStats(){
+  const f=WAVE_SPEED/lambda;
+  document.getElementById('statL').textContent=lambda.toFixed(2)+' m';
+  document.getElementById('statF').textContent=f.toFixed(2)+' Hz';
+  document.getElementById('statV').textContent=WAVE_SPEED.toFixed(1)+' m/s';
+  document.getElementById('statN').textContent=countNodes().toString();
+}
+
+// ─── Color mapping ────────────────────────────────────────────────────
+function heightToColor(y,maxY,r,g,b){
+  const norm=Math.max(-1,Math.min(1,y/maxY));
+  if(norm>0){
+    // positive: pink/white
+    return [.94-.3*norm,.29+.5*norm,.6+.4*norm];
+  } else {
+    // negative: dark blue
+    const t=-norm;
+    return [.06*t,.08+.1*t,.3+.2*t];
+  }
+}
+
+// ─── Update mesh ──────────────────────────────────────────────────────
+function updateMesh(time){
+  let maxH=0;
+  const tmp=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const x=positions.getX(i), z=positions.getZ(i);
+    const h=waveHeight(x,z,time);
+    tmp[i]=h;
+    if(Math.abs(h)>maxH) maxH=Math.abs(h);
+  }
+  maxH=Math.max(maxH,.01);
+  for(let i=0;i<N;i++){
+    positions.setY(i,tmp[i]);
+    const [r,g,b]=heightToColor(tmp[i],maxH);
+    colors[i*3]=r; colors[i*3+1]=g; colors[i*3+2]=b;
+  }
+  positions.needsUpdate=true;
+  geo.attributes.color.needsUpdate=true;
+  geo.computeVertexNormals();
+}
+
+// ─── Render loop ──────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+updateSourcePositions();
+updateStats();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.033);
+  if(running) t+=dt;
+  updateMesh(t);
+  if(controls) controls.update();
+  renderer.render(scene,camera);
+}
+function resize(){
+  const w=wrap.clientWidth,h=wrap.clientHeight;
+  renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize); resize(); animate();
+
+// ─── Mode ─────────────────────────────────────────────────────────────
+function setMode(m){
+  mode=m;
+  document.getElementById('modeTwo').classList.toggle('active',m==='two');
+  document.getElementById('modeStand').classList.toggle('active',m==='standing');
+  document.getElementById('harmonicRow').style.display=m==='standing'?'block':'none';
+  updateSourcePositions(); updateStats(); t=0;
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────
+document.getElementById('sL').addEventListener('input',e=>{
+  lambda=+e.target.value;
+  document.getElementById('vL').textContent=lambda.toFixed(2)+' m';
+  updateStats();
+});
+document.getElementById('sA').addEventListener('input',e=>{
+  amp=+e.target.value;
+  document.getElementById('vA').textContent=amp.toFixed(2);
+});
+document.getElementById('sD').addEventListener('input',e=>{
+  d=+e.target.value;
+  document.getElementById('vD').textContent=d.toFixed(2)+' m';
+  updateSourcePositions(); updateStats();
+});
+document.getElementById('sN').addEventListener('input',e=>{
+  harmonic=+e.target.value;
+  document.getElementById('vN').textContent=harmonic;
+  updateStats(); t=0;
+});
+
+document.getElementById('btnPause').addEventListener('click',function(){
+  running=!running; this.textContent=running?'⏸ Pause':'▶ Play';
+});
+document.getElementById('btnReset').addEventListener('click',()=>{t=0;});
+
+// ─── KaTeX ────────────────────────────────────────────────────────────
+katex.render('\\Delta r=m\\lambda\\quad(m=0,\\pm1,\\pm2,\\ldots)',document.getElementById('f1'),{throwOnError:false});
+katex.render('\\Delta r=\\left(m+\\tfrac{1}{2}\\right)\\lambda',document.getElementById('f2'),{throwOnError:false});
+katex.render('f_n=\\dfrac{nv}{2L}',document.getElementById('f3'),{throwOnError:false});
+</script>
+</body>
+</html>

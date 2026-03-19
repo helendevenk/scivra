@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光的传播 - 交互式科学实验</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="/lib/orbit-controls.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .title-bar {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .title-bar h1 { font-size: 2.5em; color: #3B82F6; margin-bottom: 10px; }
+        .title-bar p { font-size: 1.2em; opacity: 0.8; }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .canvas-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        #canvas { width: 100%; height: 500px; border-radius: 8px; }
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .control-group { margin-bottom: 25px; }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #3B82F6;
+            font-weight: 600;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #3B82F6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .value-display {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+        .formula-section, .quiz-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .formula-section h2, .quiz-section h2 { color: #3B82F6; margin-bottom: 20px; }
+        .formula-item {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .knowledge-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        .card h3 { color: #3B82F6; margin-bottom: 10px; }
+        .question { margin-bottom: 30px; }
+        .question h3 { margin-bottom: 15px; }
+        .options { display: grid; gap: 10px; }
+        .option {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .option:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        .option.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10B981;
+        }
+        .option.incorrect {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #EF4444;
+        }
+        .feedback {
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .feedback.show { display: block; }
+        .feedback.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10B981;
+        }
+        .feedback.incorrect {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+        }
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            #canvas { height: 50vh; }
+            .title-bar h1 { font-size: 1.8em; }
+        }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.5); border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-bar">
+            <h1>💡 光的传播</h1>
+            <p>探索光的直线传播、反射和折射现象</p>
+        </div>
+
+        <div class="main-content">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div class="control-panel">
+                <h2 style="color: #3B82F6; margin-bottom: 20px;">控制面板</h2>
+
+                <div class="control-group">
+                    <label>光源强度: <span class="value-display" id="intensityValue">1.0</span></label>
+                    <input type="range" id="intensitySlider" min="0.1" max="2" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label>镜子角度 (度): <span class="value-display" id="mirrorAngleValue">45</span></label>
+                    <input type="range" id="mirrorAngleSlider" min="0" max="90" step="5" value="45">
+                </div>
+
+                <div class="control-group">
+                    <label>物体透明度: <span class="value-display" id="opacityValue">0.5</span></label>
+                    <input type="range" id="opacitySlider" min="0" max="1" step="0.1" value="0.5">
+                </div>
+
+                <div class="control-group">
+                    <label>光束数量: <span class="value-display" id="raysValue">5</span></label>
+                    <input type="range" id="raysSlider" min="1" max="10" step="1" value="5">
+                </div>
+            </div>
+        </div>
+
+        <div class="formula-section">
+            <h2>📐 核心公式</h2>
+            <div class="formula-item">
+                <h3>反射定律</h3>
+                <div id="formula1"></div>
+                <p style="margin-top: 10px;">入射角等于反射角。光线遇到镜面会按照这个规律反射。</p>
+            </div>
+            <div class="formula-item">
+                <h3>折射定律（斯涅尔定律）</h3>
+                <div id="formula2"></div>
+                <p style="margin-top: 10px;">光从一种介质进入另一种介质时，会发生折射。n 是折射率。</p>
+            </div>
+        </div>
+
+        <div class="knowledge-cards">
+            <div class="card">
+                <h3>📏 直线传播</h3>
+                <p>光在同一种均匀介质中沿直线传播。这就是为什么我们能看到影子。</p>
+            </div>
+            <div class="card">
+                <h3>🪞 反射</h3>
+                <p>光遇到镜面会反射。入射角等于反射角，这是反射定律。</p>
+            </div>
+            <div class="card">
+                <h3>🌊 折射</h3>
+                <p>光从空气进入水或玻璃时，会改变传播方向，这叫折射。</p>
+            </div>
+            <div class="card">
+                <h3>🔍 透明与不透明</h3>
+                <p>透明物体让光通过，不透明物体阻挡光，半透明物体部分通过光。</p>
+            </div>
+            <div class="card">
+                <h3>🌈 光的颜色</h3>
+                <p>白光由七种颜色组成。通过三棱镜可以把白光分解成彩虹色。</p>
+            </div>
+        </div>
+
+        <div class="quiz-section">
+            <h2>🎓 知识测验</h2>
+
+            <div class="question">
+                <h3>问题 1: 光在同一种均匀介质中如何传播？</h3>
+                <div class="options">
+                    <div class="option" data-question="1" data-answer="A">A. 沿直线传播</div>
+                    <div class="option" data-question="1" data-answer="B">B. 沿曲线传播</div>
+                    <div class="option" data-question="1" data-answer="C">C. 随机传播</div>
+                    <div class="option" data-question="1" data-answer="D">D. 螺旋传播</div>
+                </div>
+                <div class="feedback" id="feedback1"></div>
+            </div>
+
+            <div class="question">
+                <h3>问题 2: 根据反射定律，入射角和反射角的关系是什么？</h3>
+                <div class="options">
+                    <div class="option" data-question="2" data-answer="A">A. 入射角等于反射角</div>
+                    <div class="option" data-question="2" data-answer="B">B. 入射角大于反射角</div>
+                    <div class="option" data-question="2" data-answer="C">C. 入射角小于反射角</div>
+                    <div class="option" data-question="2" data-answer="D">D. 没有关系</div>
+                </div>
+                <div class="feedback" id="feedback2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        const config = {
+            antialias: true,
+            pixelRatio: Math.min(window.devicePixelRatio, 2),
+            targetFPS: 60,
+            maxParticles: 100,
+            geometryDetail: 'medium'
+        };
+
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0f);
+
+        const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        camera.position.set(0, 5, 10);
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: config.antialias,
+            alpha: true
+        });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setPixelRatio(config.pixelRatio);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffff00, 1, 100);
+        pointLight.position.set(-5, 3, 0);
+        scene.add(pointLight);
+
+        // Light source
+        const lightGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+        const lightMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const lightSource = new THREE.Mesh(lightGeometry, lightMaterial);
+        lightSource.position.copy(pointLight.position);
+        scene.add(lightSource);
+
+        // Mirror
+        const mirrorGeometry = new THREE.PlaneGeometry(4, 4);
+        const mirrorMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcccccc,
+            metalness: 0.9,
+            roughness: 0.1
+        });
+        const mirror = new THREE.Mesh(mirrorGeometry, mirrorMaterial);
+        mirror.position.set(2, 2, 0);
+        scene.add(mirror);
+
+        // Transparent object
+        const objectGeometry = new THREE.BoxGeometry(1.5, 1.5, 0.5);
+        const objectMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3B82F6,
+            transparent: true,
+            opacity: 0.5
+        });
+        const transparentObject = new THREE.Mesh(objectGeometry, objectMaterial);
+        transparentObject.position.set(0, 2, -2);
+        scene.add(transparentObject);
+
+        // Light rays
+        const rayMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+        const rays = [];
+
+        function createRays(count) {
+            rays.forEach(ray => scene.remove(ray));
+            rays.length = 0;
+
+            for (let i = 0; i < count; i++) {
+                const points = [];
+                const angle = (i - count / 2) * 0.1;
+                points.push(lightSource.position.clone());
+                points.push(new THREE.Vector3(
+                    lightSource.position.x + 10 * Math.cos(angle),
+                    lightSource.position.y + 10 * Math.sin(angle),
+                    0
+                ));
+
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const ray = new THREE.Line(geometry, rayMaterial);
+                scene.add(ray);
+                rays.push(ray);
+            }
+        }
+
+        createRays(5);
+
+        let intensity = 1;
+        let mirrorAngle = 45;
+        let opacity = 0.5;
+        let rayCount = 5;
+
+        document.getElementById('intensitySlider').addEventListener('input', (e) => {
+            intensity = parseFloat(e.target.value);
+            document.getElementById('intensityValue').textContent = intensity.toFixed(1);
+            pointLight.intensity = intensity;
+        });
+
+        document.getElementById('mirrorAngleSlider').addEventListener('input', (e) => {
+            mirrorAngle = parseFloat(e.target.value);
+            document.getElementById('mirrorAngleValue').textContent = mirrorAngle;
+            mirror.rotation.z = mirrorAngle * Math.PI / 180;
+        });
+
+        document.getElementById('opacitySlider').addEventListener('input', (e) => {
+            opacity = parseFloat(e.target.value);
+            document.getElementById('opacityValue').textContent = opacity.toFixed(1);
+            objectMaterial.opacity = opacity;
+        });
+
+        document.getElementById('raysSlider').addEventListener('input', (e) => {
+            rayCount = parseInt(e.target.value);
+            document.getElementById('raysValue').textContent = rayCount;
+            createRays(rayCount);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        katex.render('\\theta_i = \\theta_r', document.getElementById('formula1'), {
+            displayMode: true,
+            throwOnError: false
+        });
+
+        katex.render('n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2', document.getElementById('formula2'), {
+            displayMode: true,
+            throwOnError: false
+        });
+
+        const correctAnswers = { '1': 'A', '2': 'A' };
+        const explanations = {
+            '1': {
+                'A': '✅ 正确！光在同一种均匀介质中沿直线传播。',
+                'B': '❌ 错误。光不会沿曲线传播，除非介质不均匀。',
+                'C': '❌ 错误。光的传播是有规律的，不是随机的。',
+                'D': '❌ 错误。光不会螺旋传播。'
+            },
+            '2': {
+                'A': '✅ 正确！这就是反射定律：入射角等于反射角。',
+                'B': '❌ 错误。入射角和反射角相等，不是大于。',
+                'C': '❌ 错误。入射角和反射角相等，不是小于。',
+                'D': '❌ 错误。它们有明确的关系：相等。'
+            }
+        };
+
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function() {
+                const question = this.dataset.question;
+                const answer = this.dataset.answer;
+                const feedback = document.getElementById('feedback' + question);
+                const options = document.querySelectorAll(`[data-question="${question}"]`);
+
+                options.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                    if (opt.dataset.answer === correctAnswers[question]) {
+                        opt.classList.add('correct');
+                    } else if (opt === this) {
+                        opt.classList.add('incorrect');
+                    }
+                });
+
+                feedback.textContent = explanations[question][answer];
+                feedback.classList.add('show');
+                feedback.classList.add(answer === correctAnswers[question] ? 'correct' : 'incorrect');
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meiosis & Genetic Variation — NeonPhysics AP Biology</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#fcd34d;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:220px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#f59e0b;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#fcd34d;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(245,158,11,0.3)}
+    button.active{background:rgba(245,158,11,0.4);border-color:#f59e0b}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#fbbf24;font-weight:600;font-family:monospace}
+    .phase-display{min-width:200px}
+    .phase-name{font-size:1rem;font-weight:700;color:#fcd34d;text-align:center}
+    .phase-desc{font-size:0.67rem;color:#94a3b8;text-align:center;margin-top:4px;line-height:1.3}
+    .formula-panel{flex:1;max-width:380px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .gamete-display{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+    .gamete{width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,0.3)}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(245,158,11,0.3);color:#fcd34d}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Meiosis <span class="badge">AP Bio</span></h1>
+      <p>Two divisions producing 4 haploid gametes with crossing over & independent assortment</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Crossover events <span id="co-val">1</span></label>
+        <input type="range" id="co-slider" min="0" max="3" step="1" value="1">
+      </div>
+      <div class="slider-row">
+        <label>Homolog pairs (n) <span id="hp-val">3</span></label>
+        <input type="range" id="hp-slider" min="2" max="6" step="1" value="3">
+      </div>
+      <div class="btn-row">
+        <button id="btn-play" class="active">⏸ Pause</button>
+        <button id="btn-reset">↺ Reset</button>
+        <button id="btn-fast">⏩ Fast</button>
+      </div>
+    </div>
+    <div class="panel phase-display">
+      <div class="phase-name" id="phase-name">Prophase I</div>
+      <div class="phase-desc" id="phase-desc">Homologs pair as bivalents; crossing over at chiasmata</div>
+      <div class="gamete-display" id="gamete-display"></div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#fcd34d;margin-bottom:6px;font-weight:600">Meiosis Data</div>
+      <div class="data-row">Phase <span class="data-val" id="d-phase">Prophase I</span></div>
+      <div class="data-row">Division <span class="data-val" id="d-div">Meiosis I</span></div>
+      <div class="data-row">Cells produced <span class="data-val" id="d-cells">1</span></div>
+      <div class="data-row">Ploidy (current) <span class="data-val" id="d-ploidy">2n</span></div>
+      <div class="data-row">Crossovers <span class="data-val" id="d-co">0</span></div>
+      <div class="data-row">Unique gametes possible <span class="data-val" id="d-combos">8</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.72rem;color:#fcd34d;margin-bottom:6px;font-weight:600">Variation Equations</div>
+      <div class="katex-wrap" id="f1"></div>
+      <div class="katex-wrap" id="f2"></div>
+      <div class="katex-wrap" id="f3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const W=innerWidth,H=innerHeight;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x080a14);
+const camera=new THREE.PerspectiveCamera(55,W/H,0.1,200);camera.position.set(0,0,24);
+let controls;if(window.OrbitControls){controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;}
+scene.add(new THREE.AmbientLight(0x2a2000,0.8));
+const dl=new THREE.DirectionalLight(0xddaa44,1.2);dl.position.set(5,10,8);scene.add(dl);
+scene.add(new THREE.PointLight(0xf59e0b,1.5,40));
+
+const CHR_COLORS=[0xef4444,0x3b82f6,0x22c55e,0xf59e0b,0xa855f7,0xec4899];
+const PHASES=['prophase1','metaphase1','anaphase1','telophase1','prophase2','metaphase2','anaphase2','telophase2','gametes'];
+const PHASE_INFO={
+  prophase1:{name:'Prophase I',desc:'Homologs pair (synapsis), crossing over at chiasmata',div:'Meiosis I',ploidy:'2n',cells:'1'},
+  metaphase1:{name:'Metaphase I',desc:'Bivalents align at equatorial plate (independent assortment)',div:'Meiosis I',ploidy:'2n',cells:'1'},
+  anaphase1:{name:'Anaphase I',desc:'Homologs separate to opposite poles (homologs, not chromatids)',div:'Meiosis I',ploidy:'2n→n',cells:'1'},
+  telophase1:{name:'Telophase I',desc:'Two haploid cells form (each with sister chromatids intact)',div:'Meiosis I',ploidy:'n',cells:'2'},
+  prophase2:{name:'Prophase II',desc:'Chromosomes condense again in each haploid cell',div:'Meiosis II',ploidy:'n',cells:'2'},
+  metaphase2:{name:'Metaphase II',desc:'Chromosomes align individually at plate in each cell',div:'Meiosis II',ploidy:'n',cells:'2'},
+  anaphase2:{name:'Anaphase II',desc:'Sister chromatids separate — like mitosis anaphase',div:'Meiosis II',ploidy:'n',cells:'2'},
+  telophase2:{name:'Telophase II',desc:'Four haploid daughter cells form with unique chromosome combinations',div:'Meiosis II',ploidy:'n',cells:'4'},
+  gametes:{name:'Gametes',desc:'4 unique haploid gametes — ready for fertilization!',div:'Complete',ploidy:'n',cells:'4'}
+};
+
+let state={phase:0,phaseProgress:0,playing:true,speed:1,crossovers:1,homologPairs:3,crossoversDone:0,time:0};
+const PHASE_DUR=3.0;
+
+// Main cell group
+const cellGroup=new THREE.Group();scene.add(cellGroup);
+const cellMat=new THREE.MeshStandardMaterial({color:0x1a1500,transparent:true,opacity:0.25,side:THREE.DoubleSide});
+const cellMesh=new THREE.Mesh(new THREE.SphereGeometry(5,32,32),cellMat);cellGroup.add(cellMesh);
+
+// Chromosomes group
+const chrGroup=new THREE.Group();cellGroup.add(chrGroup);
+let homologs=[];
+
+function buildHomologs(){
+  while(chrGroup.children.length)chrGroup.remove(chrGroup.children[0]);
+  homologs=[];
+  for(let i=0;i<state.homologPairs;i++){
+    const color1=CHR_COLORS[i%CHR_COLORS.length];
+    const color2=CHR_COLORS[i%CHR_COLORS.length]; // same homolog same color, different shades
+    const geo=new THREE.CapsuleGeometry?new THREE.CapsuleGeometry(0.18,0.6,4,8):new THREE.CylinderGeometry(0.18,0.18,0.7,8);
+    const m1=new THREE.MeshStandardMaterial({color:color1,roughness:0.3,emissive:color1,emissiveIntensity:0.2});
+    const m2=new THREE.MeshStandardMaterial({color:color2,roughness:0.3,metalness:0.4,emissive:color2,emissiveIntensity:0.3});
+    const chrA=new THREE.Mesh(geo,m1);
+    const chrB=new THREE.Mesh(geo,m2);
+    chrGroup.add(chrA,chrB);
+    homologs.push({A:chrA,B:chrB,color:color1,idx:i,crossed:false});
+  }
+}
+
+// Daughter cells (shown in later phases)
+const dCellGroup=new THREE.Group();scene.add(dCellGroup);
+
+function buildDaughterCells(show,positions){
+  while(dCellGroup.children.length)dCellGroup.remove(dCellGroup.children[0]);
+  if(!show)return;
+  positions.forEach(pos=>{
+    const dc=new THREE.Mesh(new THREE.SphereGeometry(2.5,16,16),new THREE.MeshStandardMaterial({color:0x1a1500,transparent:true,opacity:0.2,side:THREE.DoubleSide}));
+    dc.position.set(pos.x,pos.y,pos.z);dCellGroup.add(dc);
+  });
+}
+
+function positionChromosomes(phaseIdx,t){
+  const n=homologs.length;
+  switch(phaseIdx){
+    case 0:// prophase1 — bivalent formation
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;
+        const r=1.5;
+        h.A.position.set(Math.cos(angle)*r+0.2,0,Math.sin(angle)*r);
+        h.B.position.set(Math.cos(angle)*r-0.2,0,Math.sin(angle)*r);
+        if(state.crossovers>0&&!h.crossed&&Math.random()<0.01){h.crossed=true;state.crossoversDone++;}
+        h.A.material.emissiveIntensity=h.crossed?0.8:0.2;
+      });break;
+    case 1:// metaphase1 — bivalents at equator
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;const r=2.5;
+        h.A.position.lerp(new THREE.Vector3(Math.cos(angle)*r,0.4,Math.sin(angle)*r),0.08);
+        h.B.position.lerp(new THREE.Vector3(Math.cos(angle)*r,-0.4,Math.sin(angle)*r),0.08);
+      });break;
+    case 2:// anaphase1 — homologs separate
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;const r=2;
+        h.A.position.lerp(new THREE.Vector3(Math.cos(angle)*r,t*3.5,Math.sin(angle)*r),0.08);
+        h.B.position.lerp(new THREE.Vector3(Math.cos(angle)*r,-t*3.5,Math.sin(angle)*r),0.08);
+      });break;
+    case 3:// telophase1 — two cells
+      buildDaughterCells(t>0.5,[{x:0,y:3,z:0},{x:0,y:-3,z:0}]);
+      cellMesh.scale.y=1+t*0.5;cellMesh.scale.x=0.9;
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;
+        h.A.position.set(Math.cos(angle)*1,3.5,Math.sin(angle)*1);
+        h.B.position.set(Math.cos(angle)*1,-3.5,Math.sin(angle)*1);
+      });break;
+    case 4:// prophase2
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;
+        h.A.position.set(Math.cos(angle)*0.8,3.5,Math.sin(angle)*0.8);
+        h.B.position.set(Math.cos(angle)*0.8,-3.5,Math.sin(angle)*0.8);
+      });break;
+    case 5:// metaphase2
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;const r=1.5;
+        h.A.position.lerp(new THREE.Vector3(Math.cos(angle)*r,3.5,Math.sin(angle)*r),0.08);
+        h.B.position.lerp(new THREE.Vector3(Math.cos(angle)*r,-3.5,Math.sin(angle)*r),0.08);
+      });break;
+    case 6:// anaphase2 — sister chromatids separate
+      homologs.forEach((h,i)=>{
+        const angle=(i/n)*Math.PI*2;
+        h.A.position.lerp(new THREE.Vector3(Math.cos(angle+0.3)*1.5,3.5+t*1.5,Math.sin(angle)*1.5),0.08);
+        h.B.position.lerp(new THREE.Vector3(Math.cos(angle-0.3)*1.5,-3.5-t*1.5,Math.sin(angle)*1.5),0.08);
+      });break;
+    case 7:case 8:// telophase2 + gametes
+      buildDaughterCells(true,[{x:-4,y:4,z:0},{x:4,y:4,z:0},{x:-4,y:-4,z:0},{x:4,y:-4,z:0}]);
+      homologs.forEach((h,i)=>{
+        const n2=homologs.length;const a=(i/n2)*Math.PI*2;
+        h.A.position.set(-4+Math.cos(a),4,Math.sin(a));h.A.scale.setScalar(0.8);
+        h.B.position.set(-4+Math.cos(a),-4,Math.sin(a));h.B.scale.setScalar(0.8);
+      });
+      // Show gamete circles in UI
+      updateGametesUI();
+      break;
+  }
+}
+
+function updateGametesUI(){
+  const el=document.getElementById('gamete-display');el.innerHTML='';
+  const colors=['#ef4444','#3b82f6','#22c55e','#f59e0b'];
+  for(let i=0;i<4;i++){
+    const d=document.createElement('div');d.className='gamete';d.style.background=colors[i%colors.length]+'55';d.style.borderColor=colors[i%colors.length];
+    el.appendChild(d);
+  }
+}
+
+function updateUI(){
+  const pname=PHASES[Math.min(state.phase,PHASES.length-1)];
+  const info=PHASE_INFO[pname]||PHASE_INFO.prophase1;
+  document.getElementById('phase-name').textContent=info.name;
+  document.getElementById('phase-desc').textContent=info.desc;
+  document.getElementById('d-phase').textContent=info.name;
+  document.getElementById('d-div').textContent=info.div;
+  document.getElementById('d-cells').textContent=info.cells;
+  document.getElementById('d-ploidy').textContent=info.ploidy;
+  document.getElementById('d-co').textContent=state.crossoversDone;
+  document.getElementById('d-combos').textContent=Math.pow(2,state.homologPairs).toString();
+}
+
+buildHomologs();
+
+// Controls
+document.getElementById('co-slider').addEventListener('input',e=>{state.crossovers=parseInt(e.target.value);document.getElementById('co-val').textContent=state.crossovers;});
+document.getElementById('hp-slider').addEventListener('input',e=>{state.homologPairs=parseInt(e.target.value);document.getElementById('hp-val').textContent=state.homologPairs;buildHomologs();});
+document.getElementById('btn-play').addEventListener('click',()=>{state.playing=!state.playing;document.getElementById('btn-play').textContent=state.playing?'⏸ Pause':'▶ Play';document.getElementById('btn-play').classList.toggle('active',state.playing);});
+document.getElementById('btn-fast').addEventListener('click',()=>{state.speed=state.speed===1?3:1;document.getElementById('btn-fast').classList.toggle('active',state.speed>1);});
+document.getElementById('btn-reset').addEventListener('click',()=>{state.phase=0;state.phaseProgress=0;state.crossoversDone=0;homologs.forEach(h=>{h.crossed=false;h.A.material.emissiveIntensity=0.2;});cellMesh.scale.setScalar(1);buildDaughterCells(false,[]);buildHomologs();});
+
+katex.render('2n \\xrightarrow{\\text{Meiosis I + II}} 4 \\times n \\;\\text{(unique gametes)}',document.getElementById('f1'),{throwOnError:false});
+katex.render('2^n \\text{ combos from independent assortment (n = homolog pairs)}',document.getElementById('f2'),{throwOnError:false});
+katex.render('\\text{Crossing over: } \\text{map distance (cM)} = \\text{recombination freq} \\times 100',document.getElementById('f3'),{throwOnError:false});
+
+const grid=new THREE.GridHelper(40,20,0x1a1500,0x1a1500);grid.position.y=-8;scene.add(grid);
+
+let clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();state.time+=dt;
+  if(state.playing){
+    state.phaseProgress+=dt*state.speed/PHASE_DUR;
+    if(state.phaseProgress>=1){state.phaseProgress=0;state.phase=Math.min(state.phase+1,PHASES.length-1);}
+    positionChromosomes(state.phase,state.phaseProgress);
+    updateUI();
+  }
+  cellGroup.rotation.y+=0.003;
+  if(controls)controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photosynthesis: Light & Calvin Cycle — NeonPhysics AP Biology</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#050a0a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(5,10,10,0.88);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#6ee7b7;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:220px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#10b981;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#6ee7b7;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(16,185,129,0.3)}
+    button.active{background:rgba(16,185,129,0.4);border-color:#10b981}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:170px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#34d399;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .stage-indicator{min-width:160px;text-align:center}
+    .stage-name{font-size:1rem;font-weight:700;color:#6ee7b7}
+    .stage-desc{font-size:0.66rem;color:#94a3b8;margin-top:4px;line-height:1.3}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(16,185,129,0.3);color:#6ee7b7}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:0.65rem;color:#94a3b8}
+    .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Photosynthesis <span class="badge">AP Bio</span></h1>
+      <p>Light reactions (thylakoid) → Calvin cycle (stroma)</p>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Photon (hν)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Water (H₂O)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>CO₂</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>ATP/NADPH</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e5e7eb"></div>O₂</div>
+      </div>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Light Intensity <span id="light-val">500</span> μmol/m²/s</label>
+        <input type="range" id="light-slider" min="0" max="2000" step="100" value="500">
+      </div>
+      <div class="slider-row">
+        <label>CO₂ Concentration <span id="co2-val">400</span> ppm</label>
+        <input type="range" id="co2-slider" min="100" max="1500" step="50" value="400">
+      </div>
+      <div class="btn-row">
+        <button id="btn-light-rx" class="active">Light Reactions</button>
+        <button id="btn-calvin">Calvin Cycle</button>
+        <button id="btn-reset">↺ Reset</button>
+      </div>
+    </div>
+    <div class="panel stage-indicator">
+      <div class="stage-name" id="stage-name">Light Reactions</div>
+      <div class="stage-desc" id="stage-desc">PSII & PSI capture photons, split H₂O, produce ATP + NADPH</div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#6ee7b7;margin-bottom:6px;font-weight:600">Output Molecules</div>
+      <div class="data-row">ATP produced <span class="data-val" id="d-atp">0</span></div>
+      <div class="data-row">NADPH produced <span class="data-val" id="d-nadph">0</span></div>
+      <div class="data-row">O₂ released <span class="data-val" id="d-o2">0</span></div>
+      <div class="data-row">CO₂ fixed <span class="data-val" id="d-co2f">0</span></div>
+      <div class="data-row">G3P made <span class="data-val" id="d-g3p">0</span></div>
+      <div class="data-row">Rate <span class="data-val" id="d-rate">0</span> μmol/s</div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.72rem;color:#6ee7b7;margin-bottom:6px;font-weight:600">Photosynthesis Equations</div>
+      <div class="katex-wrap" id="f1"></div>
+      <div class="katex-wrap" id="f2"></div>
+      <div class="katex-wrap" id="f3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const W=innerWidth,H=innerHeight;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x050a0a);
+const camera=new THREE.PerspectiveCamera(55,W/H,0.1,200);camera.position.set(0,2,22);
+let controls;if(window.OrbitControls){controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;}
+scene.add(new THREE.AmbientLight(0x0a2010,0.8));
+const dl=new THREE.DirectionalLight(0x88ffaa,1.2);dl.position.set(5,10,8);scene.add(dl);
+const sl=new THREE.PointLight(0xffd700,3,30);sl.position.set(-8,8,5);scene.add(sl);
+
+// Chloroplast
+const cpGroup=new THREE.Group();scene.add(cpGroup);
+const outerGeo=new THREE.SphereGeometry(4,24,16);outerGeo.scale(1.5,1,1);
+const outerMat=new THREE.MeshStandardMaterial({color:0x064e3b,transparent:true,opacity:0.35,side:THREE.DoubleSide});
+const outerMesh=new THREE.Mesh(outerGeo,outerMat);cpGroup.add(outerMesh);
+
+// Thylakoid stacks (grana)
+const thylakoidGroup=new THREE.Group();cpGroup.add(thylakoidGroup);
+for(let g=0;g<3;g++){
+  const gx=(g-1)*2.5;
+  for(let d=0;d<4;d++){
+    const thy=new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.8,0.12,12),new THREE.MeshStandardMaterial({color:0x065f46,emissive:0x022c22,emissiveIntensity:0.4}));
+    thy.rotation.x=Math.PI/2;thy.position.set(gx,(d-1.5)*0.2,0);thylakoidGroup.add(thy);
+  }
+}
+
+// Stroma region label (circle)
+const stGeo=new THREE.CircleGeometry(1.5,24);
+const stMat=new THREE.MeshStandardMaterial({color:0x0a4a20,transparent:true,opacity:0.2,side:THREE.DoubleSide});
+const stroma=new THREE.Mesh(stGeo,stMat);stroma.position.set(3,0,0);stroma.rotation.y=Math.PI/2;cpGroup.add(stroma);
+
+// Particles
+const MAX_P=80;
+const pGeo=new THREE.BufferGeometry();
+const pPos=new Float32Array(MAX_P*3);const pCol=new Float32Array(MAX_P*3);
+for(let i=0;i<MAX_P;i++)pPos[i*3]=100;
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute('color',new THREE.BufferAttribute(pCol,3));
+const pMat=new THREE.PointsMaterial({size:0.28,vertexColors:true,transparent:true,opacity:0.9});
+const pts=new THREE.Points(pGeo,pMat);scene.add(pts);
+let pool=Array.from({length:MAX_P},(_,i)=>({x:100,y:0,z:0,vx:0,vy:0,vz:0,life:0,maxLife:2,type:'photon',index:i}));
+let pIdx=0;
+const TYPE_COLORS={photon:[1,0.85,0.1],water:[0.37,0.64,1],co2:[0.95,0.44,0.44],atp:[0.13,0.76,0.4],o2:[0.9,0.95,0.95],g3p:[0.55,0.85,0.55]};
+
+function spawn(x,y,z,type){
+  const p=pool[pIdx%MAX_P];pIdx++;
+  p.x=x;p.y=y;p.z=z;p.type=type;p.life=0;p.maxLife=1.5+Math.random();
+  const jitter=()=>(Math.random()-0.5)*1.5;
+  p.vx=jitter();p.vy=jitter()+0.2;p.vz=jitter();
+}
+
+let state={light:500,co2:400,mode:'light',time:0,atp:0,nadph:0,o2:0,co2fixed:0,g3p:0,spawnTimer:0};
+
+function computeRate(){
+  const lightFactor=Math.min(1,state.light/800);
+  const co2Factor=Math.min(1,state.co2/400);
+  return lightFactor*(state.mode==='light'?1:co2Factor)*3;
+}
+
+function updateParticles(dt){
+  const pos=pGeo.attributes.position.array;const col=pGeo.attributes.color.array;
+  state.spawnTimer+=dt;
+  const rate=computeRate();
+  if(state.spawnTimer>1/Math.max(0.1,rate)){
+    state.spawnTimer=0;
+    const jit=()=>(Math.random()-0.5)*3;
+    if(state.mode==='light'){
+      spawn(-6+Math.random()*4,jit(),jit(),'photon');
+      spawn(jit(),-0.5,jit(),'water');
+      spawn(jit(),1.5,jit(),'atp');
+      spawn(-4+Math.random()*6,2,jit(),'o2');
+      state.atp++;state.nadph++;state.o2++;
+    }else{
+      spawn(jit(),jit(),jit(),'co2');
+      spawn(jit(),jit(),jit(),'atp');
+      spawn(jit(),1,jit(),'g3p');
+      state.co2fixed++;state.g3p++;
+    }
+  }
+
+  pool.forEach(p=>{
+    p.life+=dt;if(p.life>p.maxLife)return;
+    p.x+=p.vx*dt*1.5;p.y+=p.vy*dt*1.5;p.z+=p.vz*dt*1.5;
+    pos[p.index*3]=p.x;pos[p.index*3+1]=p.y;pos[p.index*3+2]=p.z;
+    const c=TYPE_COLORS[p.type]||[1,1,1];const fade=1-p.life/p.maxLife;
+    col[p.index*3]=c[0]*fade;col[p.index*3+1]=c[1]*fade;col[p.index*3+2]=c[2]*fade;
+  });
+  pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;
+}
+
+function updateUI(){
+  const rate=computeRate();
+  document.getElementById('d-atp').textContent=state.atp;
+  document.getElementById('d-nadph').textContent=state.nadph;
+  document.getElementById('d-o2').textContent=state.o2;
+  document.getElementById('d-co2f').textContent=state.co2fixed;
+  document.getElementById('d-g3p').textContent=state.g3p;
+  document.getElementById('d-rate').textContent=rate.toFixed(1);
+  sl.intensity=1+state.light/500*2;
+}
+
+// Controls
+document.getElementById('light-slider').addEventListener('input',e=>{state.light=parseInt(e.target.value);document.getElementById('light-val').textContent=state.light;updateUI();});
+document.getElementById('co2-slider').addEventListener('input',e=>{state.co2=parseInt(e.target.value);document.getElementById('co2-val').textContent=state.co2;updateUI();});
+document.getElementById('btn-light-rx').addEventListener('click',()=>{state.mode='light';document.getElementById('btn-light-rx').classList.add('active');document.getElementById('btn-calvin').classList.remove('active');document.getElementById('stage-name').textContent='Light Reactions';document.getElementById('stage-desc').textContent='PSII & PSI capture photons, split H₂O, produce ATP + NADPH';});
+document.getElementById('btn-calvin').addEventListener('click',()=>{state.mode='calvin';document.getElementById('btn-calvin').classList.add('active');document.getElementById('btn-light-rx').classList.remove('active');document.getElementById('stage-name').textContent='Calvin Cycle';document.getElementById('stage-desc').textContent='RuBisCO fixes CO₂ onto RuBP → G3P → glucose (stroma)';});
+document.getElementById('btn-reset').addEventListener('click',()=>{state.atp=0;state.nadph=0;state.o2=0;state.co2fixed=0;state.g3p=0;});
+
+katex.render('6\\text{CO}_2+6\\text{H}_2\\text{O}+h\\nu\\to\\text{C}_6\\text{H}_{12}\\text{O}_6+6\\text{O}_2',document.getElementById('f1'),{throwOnError:false});
+katex.render('\\text{Light: }2\\text{H}_2\\text{O}\\xrightarrow{h\\nu}\\text{O}_2+4\\text{H}^++4e^-\\;|\\;\\text{NADP}^++\\text{H}^+\\to\\text{NADPH}',document.getElementById('f2'),{throwOnError:false});
+katex.render('\\text{Calvin: }3\\text{CO}_2+9\\text{ATP}+6\\text{NADPH}\\to\\text{G3P}',document.getElementById('f3'),{throwOnError:false});
+
+const grid=new THREE.GridHelper(40,20,0x051505,0x051505);grid.position.y=-6;scene.add(grid);
+
+let clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();state.time+=dt;
+  updateParticles(dt);
+  cpGroup.rotation.y+=0.003;
+  thylakoidGroup.children.forEach((t,i)=>t.material.emissiveIntensity=0.2+Math.sin(state.time*2+i)*0.2*state.light/1000);
+  if(controls)controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>

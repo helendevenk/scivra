@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acid-Base pH & Titration — NeonPhysics AP Chemistry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(20,184,166,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#5eead4;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:230px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#14b8a6;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(20,184,166,0.15);border:1px solid rgba(20,184,166,0.4);color:#5eead4;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(20,184,166,0.3)}
+    button.active{background:rgba(20,184,166,0.4);border-color:#14b8a6}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#2dd4bf;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:420px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(20,184,166,0.3);color:#5eead4}
+    #titration-canvas{width:100%;height:90px;border-radius:4px;background:rgba(0,0,0,0.3);margin-top:6px;display:block}
+    #ph-meter{font-size:2.2rem;font-weight:700;text-align:center;margin:4px 0;text-shadow:0 0 10px currentColor}
+    .ph-bar{height:8px;border-radius:4px;margin-top:4px;transition:background 0.5s}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Acid-Base pH & Titration <span class="badge">AP Chem</span></h1>
+      <p>Strong/weak acids, titration curve, Henderson-Hasselbalch</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button class="active" id="btn-hcl" onclick="setAcid('hcl')">HCl (strong)</button>
+        <button id="btn-hac" onclick="setAcid('hac')">CH₃COOH (weak)</button>
+        <button id="btn-h2s" onclick="setAcid('h2s')">H₂SO₄ (diprotic)</button>
+      </div>
+      <div class="slider-row">
+        <label>Acid Concentration <span id="ac-val">0.10 mol/L</span></label>
+        <input type="range" id="ac-slider" min="0.001" max="1" step="0.001" value="0.1">
+      </div>
+      <div class="slider-row">
+        <label>NaOH Added (titration) <span id="naoh-val">0 mL</span></label>
+        <input type="range" id="naoh-slider" min="0" max="50" step="0.5" value="0">
+      </div>
+      <div class="slider-row">
+        <label>Conjugate Base [A⁻] (buffer) <span id="buf-val">0 mol/L</span></label>
+        <input type="range" id="buf-slider" min="0" max="0.5" step="0.05" value="0">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div id="ph-meter" style="color:#22c55e">pH 2.00</div>
+      <div class="ph-bar" id="ph-bar" style="background:linear-gradient(90deg,#ef4444 2%,#22c55e)"></div>
+      <div class="data-row" style="margin-top:6px">Acid Type <span class="data-val" id="d-acid">HCl (strong)</span></div>
+      <div class="data-row">[H⁺] <span class="data-val" id="d-h">0.10 M</span></div>
+      <div class="data-row">[OH⁻] <span class="data-val" id="d-oh">—</span></div>
+      <div class="data-row">Equivalence Pt <span class="data-val" id="d-eq">25.0 mL</span></div>
+      <canvas id="titration-canvas" width="200" height="90"></canvas>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.7rem;color:#5eead4;margin-bottom:6px;font-weight:600">Acid-Base Equations</div>
+      <div class="katex-wrap" id="kx-1"></div>
+      <div class="katex-wrap" id="kx-2"></div>
+      <div class="katex-wrap" id="kx-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const Ka_HAc=1.8e-5;
+let acidType='hcl', acidConc=0.1, naohVol=0, bufferConc=0;
+
+function calcPH(){
+  const acidVol=25; // mL fixed
+  const naohConc=0.1; // M fixed
+  const molesAcid=acidConc*acidVol/1000;
+  const molesBase=naohConc*naohVol/1000;
+  const totalVol=(acidVol+naohVol)/1000;
+  let pH;
+  if(acidType==='hcl'){
+    if(naohVol===0){
+      pH=-Math.log10(acidConc+bufferConc*0);
+    } else if(molesBase<molesAcid){
+      const excessAcid=(molesAcid-molesBase)/totalVol;
+      pH=-Math.log10(excessAcid);
+    } else if(Math.abs(molesBase-molesAcid)<1e-6){
+      pH=7;
+    } else {
+      const excessBase=(molesBase-molesAcid)/totalVol;
+      const pOH=-Math.log10(excessBase);
+      pH=14-pOH;
+    }
+    if(bufferConc>0 && naohVol===0){
+      // with conjugate base for buffer
+      pH=4.74+Math.log10(bufferConc/acidConc);
+    }
+  } else if(acidType==='hac'){
+    if(naohVol===0){
+      if(bufferConc>0){
+        pH=4.74+Math.log10(bufferConc/acidConc);
+      } else {
+        const x=Math.sqrt(Ka_HAc*acidConc);
+        pH=-Math.log10(x);
+      }
+    } else if(molesBase<molesAcid){
+      // buffer region
+      const molesHAc=molesAcid-molesBase;
+      const molesAc=molesBase;
+      pH=4.74+Math.log10(molesAc/molesHAc);
+    } else if(Math.abs(molesBase-molesAcid)<1e-6){
+      // equivalence: hydrolysis of acetate
+      const cAc=molesAcid/totalVol;
+      const Kb=1e-14/Ka_HAc;
+      const oh=Math.sqrt(Kb*cAc);
+      pH=14-(-Math.log10(oh));
+    } else {
+      const excessBase=(molesBase-molesAcid)/totalVol;
+      pH=14-(-Math.log10(excessBase));
+    }
+  } else { // h2so4
+    const cH=naohVol===0?acidConc*2:Math.max(1e-7,(acidConc*2*acidVol/1000-molesBase)/totalVol);
+    pH=-Math.log10(Math.max(1e-14,cH));
+  }
+  return Math.max(0,Math.min(14,pH));
+}
+
+function phToColor(ph){
+  if(ph<4) return `hsl(${ph*15},90%,50%)`;
+  if(ph<7) return `hsl(${30+ph*8},85%,50%)`;
+  if(ph<8) return `hsl(130,80%,45%)`;
+  return `hsl(${200+(ph-8)*10},80%,50%)`;
+}
+
+function updateAll(){
+  const pH=calcPH();
+  const phmEl=document.getElementById('ph-meter');
+  phmEl.textContent='pH '+pH.toFixed(2);
+  const col=phToColor(pH);
+  phmEl.style.color=col;
+  // ph bar: position = pH/14
+  const pct=(pH/14)*100;
+  document.getElementById('ph-bar').style.background=`linear-gradient(90deg,${col} ${pct}%,rgba(255,255,255,0.1) ${pct}%)`;
+  const h=Math.pow(10,-pH);
+  const oh=1e-14/h;
+  document.getElementById('d-h').textContent=h.toExponential(2)+' M';
+  document.getElementById('d-oh').textContent=oh.toExponential(2)+' M';
+  drawTitration(pH);
+  updateSolution(pH);
+}
+
+let titrationHistory=[];
+function drawTitration(currentPH){
+  const cv=document.getElementById('titration-canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(20,184,166,0.06)'; ctx.fillRect(0,0,W,H);
+  // draw titration curve by computing pH at each point
+  ctx.beginPath();
+  for(let v=0;v<=50;v+=0.5){
+    const tmpNaoh=naohVol; naohVol=v;
+    const ph=calcPH();
+    naohVol=tmpNaoh;
+    const x=(v/50)*W;
+    const y=H-5-(ph/14)*(H-10);
+    v===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle='#14b8a6'; ctx.lineWidth=1.5; ctx.stroke();
+  // current position
+  const cx=(naohVol/50)*W;
+  const cy=H-5-(currentPH/14)*(H-10);
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2);
+  ctx.fillStyle='#fbbf24'; ctx.fill();
+  // equivalence line
+  const eqX=(25/50)*W;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(eqX,0); ctx.lineTo(eqX,H);
+  ctx.strokeStyle='rgba(251,191,36,0.5)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24'; ctx.font='8px sans-serif'; ctx.fillText('Eq pt',eqX+2,10);
+  // labels
+  ctx.fillStyle='#94a3b8'; ctx.font='8px sans-serif';
+  ctx.fillText('0 mL',2,H-2); ctx.fillText('50 mL',W-30,H-2);
+  ctx.fillText('pH 14',2,12); ctx.fillText('pH 0',2,H-12);
+}
+
+function setAcid(id){
+  acidType=id;
+  document.querySelectorAll('.btn-row button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+id).classList.add('active');
+  const names={hcl:'HCl (strong)',hac:'CH₃COOH (weak)',h2s:'H₂SO₄ (diprotic)'};
+  document.getElementById('d-acid').textContent=names[id];
+  naohVol=0; document.getElementById('naoh-slider').value=0; document.getElementById('naoh-val').textContent='0 mL';
+  updateAll();
+}
+
+// 3D beaker simulation
+let scene,camera,renderer,hParticles=[],ohParticles=[];
+function initScene(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,2,12);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  // beaker outline
+  const beakerGeo=new THREE.CylinderGeometry(3,3,6,32,1,true);
+  const beakerEdge=new THREE.EdgesGeometry(beakerGeo);
+  const beakerLine=new THREE.LineSegments(beakerEdge,new THREE.LineBasicMaterial({color:0x14b8a6,opacity:0.4,transparent:true}));
+  beakerLine.position.y=-1;
+  scene.add(beakerLine);
+  // particles
+  const sGeo=new THREE.SphereGeometry(0.12,8,8);
+  for(let i=0;i<60;i++){
+    const isH=i<40;
+    const mat=new THREE.MeshStandardMaterial({color:isH?0xff4433:0x3366ff,roughness:0.4});
+    const m=new THREE.Mesh(sGeo,mat);
+    m.position.set((Math.random()-0.5)*5,(Math.random()-0.5)*4+0.5,(Math.random()-0.5)*5);
+    const v=new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize().multiplyScalar(0.025);
+    if(isH) hParticles.push({mesh:m,vel:v}); else ohParticles.push({mesh:m,vel:v});
+    scene.add(m);
+  }
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+  animate();
+}
+
+function updateSolution(pH){
+  // color particles by pH
+  const [r,g,b]=hexToRgb(phToColor(pH));
+  hParticles.forEach(p=>{ p.mesh.material.color.set(phToColor(pH)); });
+  const fracH=Math.max(0.05,Math.min(0.95,(7-pH)/7));
+  hParticles.forEach((p,i)=>{ p.mesh.visible=i<Math.floor(fracH*hParticles.length); });
+  ohParticles.forEach((p,i)=>{ p.mesh.visible=i<Math.floor((1-fracH)*ohParticles.length); });
+}
+function hexToRgb(css){return [1,1,1];} // placeholder
+
+function animate(){
+  requestAnimationFrame(animate);
+  [...hParticles,...ohParticles].forEach(p=>{
+    if(!p.mesh.visible) return;
+    p.mesh.position.addScaledVector(p.vel,1);
+    ['x','z'].forEach(ax=>{ if(Math.abs(p.mesh.position[ax])>2.5) p.vel[ax]*=-1; });
+    if(Math.abs(p.mesh.position.y)>2.5) p.vel.y*=-1;
+  });
+  renderer.render(scene,camera);
+}
+
+document.getElementById('ac-slider').addEventListener('input',function(){
+  acidConc=+this.value;
+  document.getElementById('ac-val').textContent=acidConc.toFixed(3)+' mol/L';
+  updateAll();
+});
+document.getElementById('naoh-slider').addEventListener('input',function(){
+  naohVol=+this.value;
+  document.getElementById('naoh-val').textContent=naohVol.toFixed(1)+' mL';
+  updateAll();
+});
+document.getElementById('buf-slider').addEventListener('input',function(){
+  bufferConc=+this.value;
+  document.getElementById('buf-val').textContent=bufferConc.toFixed(2)+' mol/L';
+  updateAll();
+});
+
+katex.render('\\text{pH} = -\\log[\\text{H}^+], \\; K_w=[\\text{H}^+][\\text{OH}^-]=10^{-14}', document.getElementById('kx-1'), {throwOnError:false});
+katex.render('\\text{pH} = \\text{p}K_a + \\log\\frac{[\\text{A}^-]}{[\\text{HA}]}', document.getElementById('kx-2'), {throwOnError:false});
+katex.render('K_a = \\frac{[\\text{H}^+][\\text{A}^-]}{[\\text{HA}]}, \\; \\text{p}K_a(\\text{HAc})=4.74', document.getElementById('kx-3'), {throwOnError:false});
+
+initScene();
+updateAll();
+</script>
+</body>
+</html>

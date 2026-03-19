@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorentz Force — NeonPhysics AP Physics 2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(20,184,166,.12),rgba(6,182,212,.08));border-bottom:1px solid rgba(20,184,166,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);color:#5eead4;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative;background:#060c12}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(6,10,20,.88);border:1px solid rgba(20,184,166,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:200px}
+    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:8px}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .teal{color:#2dd4bf} .cyan{color:#67e8f9} .yellow{color:#fde68a}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#2dd4bf;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(20,184,166,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#14b8a6;cursor:pointer}
+    .charge-row{display:flex;gap:8px;margin-bottom:14px}
+    .charge-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s}
+    .charge-btn.pos.active{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.5);color:#60a5fa}
+    .charge-btn.neg.active{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.5);color:#fca5a5}
+    .btn-row{display:flex;gap:8px;margin-top:4px}
+    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#14b8a6;color:#fff}
+    .btn-primary:hover{background:#0d9488}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .formula-box{background:rgba(20,184,166,.06);border:1px solid rgba(20,184,166,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .rhr-hint{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:10px;font-size:11px;color:#64748b;line-height:1.6}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Magnetic Force &amp; Lorentz Force</h1>
+  <p class="subtitle">Charged particles spiral through magnetic fields in 3D</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row"><span class="stat-label">Radius r</span><span class="stat-value teal" id="statR">—</span></div>
+      <div class="stat-row"><span class="stat-label">Period T</span><span class="stat-value cyan" id="statT">—</span></div>
+      <div class="stat-row"><span class="stat-label">Cyclotron ω</span><span class="stat-value teal" id="statW">—</span></div>
+      <div class="stat-row"><span class="stat-label">Speed |v|</span><span class="stat-value" id="statV">—</span></div>
+      <div class="stat-row"><span class="stat-label">KE (const)</span><span class="stat-value yellow" id="statKE">—</span></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Charge Sign</div>
+      <div class="charge-row">
+        <div class="charge-btn pos active" id="btnPos" onclick="setCharge(1)">+ Positive</div>
+        <div class="charge-btn neg" id="btnNeg" onclick="setCharge(-1)">− Negative</div>
+      </div>
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Magnetic Field B</span><span class="param-val" id="vB">1.0 T</span></div>
+        <input type="range" id="sB" min="0.1" max="5" value="1" step="0.1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Initial Speed v</span><span class="param-val" id="vV">1.0 ×10⁶ m/s</span></div>
+        <input type="range" id="sV" min="0.1" max="5" value="1" step="0.1">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnToggle">⏸ Pause</button>
+        <button class="btn btn-ghost" id="btnReset">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Lorentz force (always ⊥ to v)</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Cyclotron radius</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Period — independent of speed!</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Right-Hand Rule</div>
+      <div class="rhr-hint">
+        Point fingers along <strong style="color:#67e8f9">v</strong>, curl toward <strong style="color:#a3e635">B</strong> (upward).<br>
+        Your thumb points toward <strong style="color:#2dd4bf">F</strong> (for positive charge).<br>
+        Flip sign of charge → reverse rotation direction.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 3 AP Problems Locked</div>
+        <div class="ap-lock-desc">Upgrade to Pro to access AP Physics 2 magnetism problems with step-by-step solutions.</div>
+        <button class="ap-lock-btn">Unlock with Pro →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Constants & state ────────────────────────────────────────────────
+const MASS_PROTON = 1.67e-27;
+const CHARGE_E = 1.6e-19;
+let B=1.0, speed=1e6, chargeSign=1, running=true;
+
+// ─── Three.js ─────────────────────────────────────────────────────────
+const wrap=document.getElementById('canvasWrap');
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x060c12);
+const camera=new THREE.PerspectiveCamera(50,1,0.01,200);
+camera.position.set(6,4,8);
+camera.lookAt(0,0,0);
+const controls=typeof THREE.OrbitControls!=='undefined'
+  ?new THREE.OrbitControls(camera,renderer.domElement):null;
+if(controls){controls.enableDamping=true;controls.dampingFactor=0.08;}
+
+// ─── Lighting ────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x223344,0.7));
+const dl=new THREE.DirectionalLight(0x88ddff,1.0); dl.position.set(5,10,5); scene.add(dl);
+const ptL=new THREE.PointLight(0x14b8a6,4,20); scene.add(ptL);
+
+// ─── B field arrows (pointing up, z-axis) ────────────────────────────
+const bGrp=new THREE.Group();
+for(let x=-4;x<=4;x+=2){
+  for(let z=-4;z<=4;z+=2){
+    const arrow=new THREE.Mesh(
+      new THREE.ConeGeometry(.06,.35,8),
+      new THREE.MeshStandardMaterial({color:0xa3e635,emissive:0x4d7c0f,emissiveIntensity:.5})
+    );
+    arrow.position.set(x,-1.2,z);
+    const shaft=new THREE.Mesh(
+      new THREE.CylinderGeometry(.02,.02,.6,8),
+      new THREE.MeshStandardMaterial({color:0x4d7c0f})
+    );
+    shaft.position.set(x,-1.7,z);
+    bGrp.add(arrow,shaft);
+  }
+}
+scene.add(bGrp);
+
+// B label
+const bLabel=makeSprite('B (upward)',0xa3e635);
+bLabel.position.set(4.5,-1,4);
+scene.add(bLabel);
+
+function makeSprite(text,color){
+  const cv=document.createElement('canvas'); cv.width=128;cv.height=48;
+  const cx=cv.getContext('2d');
+  cx.font='bold 20px sans-serif';
+  cx.fillStyle='#'+color.toString(16).padStart(6,'0');
+  cx.textAlign='center'; cx.fillText(text,64,32);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));
+  sp.scale.set(2,.75,1);
+  return sp;
+}
+
+// ─── Grid ────────────────────────────────────────────────────────────
+const grid=new THREE.GridHelper(16,16,0x0f2030,0x0a1520);
+grid.position.y=-2;
+scene.add(grid);
+
+// ─── Particle ────────────────────────────────────────────────────────
+const partMat=new THREE.MeshStandardMaterial({color:0x3b82f6,emissive:0x1d4ed8,emissiveIntensity:.5,metalness:.3});
+const particle=new THREE.Mesh(new THREE.SphereGeometry(.18,24,24),partMat);
+scene.add(particle);
+const glow=new THREE.Mesh(new THREE.SphereGeometry(.28,24,24),
+  new THREE.MeshStandardMaterial({color:0x3b82f6,emissive:0x3b82f6,emissiveIntensity:.4,transparent:true,opacity:.2,side:THREE.BackSide}));
+particle.add(glow);
+
+// ─── Trail ────────────────────────────────────────────────────────────
+const TRAIL=400;
+const trailPts=new Float32Array(TRAIL*3);
+const trailGeo=new THREE.BufferGeometry();
+trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPts,3));
+const trailMat=new THREE.LineBasicMaterial({color:0x14b8a6,transparent:true,opacity:.5});
+const trailLine=new THREE.Line(trailGeo,trailMat);
+scene.add(trailLine);
+let tIdx=0,tFull=false;
+
+// ─── Velocity vector arrow ────────────────────────────────────────────
+const velArrow=new THREE.ArrowHelper(
+  new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1.5, 0x60a5fa, .3, .15
+);
+scene.add(velArrow);
+
+// ─── Simulation state ────────────────────────────────────────────────
+let pos=new THREE.Vector3(0,0,0);
+let vel=new THREE.Vector3(speed,0,0);
+const B_vec=new THREE.Vector3(0,1,0); // B along +y
+
+function resetParticle(){
+  pos.set(0,0,0); vel.set(speed,0,0);
+  tIdx=0; tFull=false; particle.position.copy(pos);
+  velArrow.position.copy(pos);
+}
+
+function calcRadius(){ return MASS_PROTON*speed/(CHARGE_E*B); }
+function calcPeriod(){ return 2*Math.PI*MASS_PROTON/(CHARGE_E*B); }
+function calcOmega(){ return CHARGE_E*B/MASS_PROTON; }
+
+function updateStats(){
+  const r=calcRadius(), T=calcPeriod(), omega=calcOmega();
+  document.getElementById('statR').textContent=(r*100).toFixed(3)+' cm';
+  document.getElementById('statT').textContent=(T*1e9).toFixed(2)+' ns';
+  document.getElementById('statW').textContent=(omega/1e6).toFixed(2)+'×10⁶ rad/s';
+  document.getElementById('statV').textContent=(speed/1e6).toFixed(2)+'×10⁶ m/s';
+  document.getElementById('statKE').textContent=(0.5*MASS_PROTON*speed*speed/CHARGE_E).toFixed(2)+' eV';
+}
+
+// ─── Render loop ──────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+updateStats(); resetParticle();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.016);
+  if(running){
+    // F = q(v × B), B is along +y
+    const F=new THREE.Vector3().crossVectors(vel,B_vec).multiplyScalar(chargeSign*CHARGE_E);
+    const acc=F.divideScalar(MASS_PROTON);
+    vel.addScaledVector(acc,dt);
+    // normalize to constant speed (avoid floating point drift)
+    vel.setLength(speed);
+    pos.addScaledVector(vel,dt);
+    // clamp to visible range
+    if(pos.length()>8) resetParticle();
+
+    particle.position.copy(pos);
+    ptL.position.copy(pos);
+
+    // update velocity arrow direction
+    velArrow.position.copy(pos);
+    const vdir=vel.clone().normalize();
+    velArrow.setDirection(vdir);
+    velArrow.setLength(Math.min(1.5,speed/5e5),.3,.12);
+
+    // trail
+    trailPts[tIdx*3]=pos.x; trailPts[tIdx*3+1]=pos.y; trailPts[tIdx*3+2]=pos.z;
+    tIdx=(tIdx+1)%TRAIL;
+    trailGeo.attributes.position.needsUpdate=true;
+    trailGeo.setDrawRange(0,tFull?TRAIL:tIdx);
+    if(tIdx===0) tFull=true;
+
+    // update particle color by charge
+    partMat.color.setHex(chargeSign>0?0x3b82f6:0xef4444);
+    partMat.emissive.setHex(chargeSign>0?0x1d4ed8:0x991b1b);
+  }
+  if(controls) controls.update();
+  renderer.render(scene,camera);
+}
+
+function resize(){
+  const w=wrap.clientWidth,h=wrap.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize); resize(); animate();
+
+// ─── Controls ─────────────────────────────────────────────────────────
+document.getElementById('sB').addEventListener('input',e=>{
+  B=+e.target.value; document.getElementById('vB').textContent=B.toFixed(1)+' T';
+  updateStats(); resetParticle();
+});
+document.getElementById('sV').addEventListener('input',e=>{
+  speed=+e.target.value*1e6; document.getElementById('vV').textContent=(speed/1e6).toFixed(1)+'×10⁶ m/s';
+  vel.setLength(speed); updateStats();
+});
+
+function setCharge(sign){
+  chargeSign=sign;
+  document.getElementById('btnPos').classList.toggle('active',sign>0);
+  document.getElementById('btnNeg').classList.toggle('active',sign<0);
+  resetParticle();
+}
+
+document.getElementById('btnToggle').addEventListener('click',function(){
+  running=!running; this.textContent=running?'⏸ Pause':'▶ Play';
+});
+document.getElementById('btnReset').addEventListener('click',resetParticle);
+
+// ─── KaTeX ────────────────────────────────────────────────────────────
+katex.render('\\vec{F}=q(\\vec{v}\\times\\vec{B})',document.getElementById('f1'),{throwOnError:false});
+katex.render('r=\\dfrac{mv}{|q|B}',document.getElementById('f2'),{throwOnError:false});
+katex.render('T=\\dfrac{2\\pi m}{|q|B}',document.getElementById('f3'),{throwOnError:false});
+</script>
+</body>
+</html>

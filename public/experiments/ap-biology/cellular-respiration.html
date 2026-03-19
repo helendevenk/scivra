@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cellular Respiration & ATP Synthesis — NeonPhysics AP Biology</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#86efac;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:220px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#22c55e;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#86efac;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(34,197,94,0.3)}
+    button.active{background:rgba(34,197,94,0.4);border-color:#22c55e}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:180px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#34d399;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:420px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .stage-display{min-width:180px}
+    .stage-name{font-size:1rem;font-weight:700;color:#86efac;text-align:center}
+    .stage-desc{font-size:0.68rem;color:#94a3b8;text-align:center;margin-top:4px;line-height:1.3}
+    .atp-bar{width:100%;height:10px;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden;margin-top:6px}
+    .atp-fill{height:100%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width 0.3s}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(34,197,94,0.3);color:#86efac}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:0.65rem;color:#94a3b8}
+    .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Cellular Respiration <span class="badge">AP Bio</span></h1>
+      <p>Glycolysis → Krebs Cycle → Electron Transport Chain → ATP</p>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Glucose</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Pyruvate</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>ATP</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>NADH</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>CO₂</div>
+      </div>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Glucose Input <span id="glc-val">5</span> mM</label>
+        <input type="range" id="glc-slider" min="1" max="20" step="1" value="5">
+      </div>
+      <div class="slider-row">
+        <label>Oxygen Level <span id="o2-val">100</span>%</label>
+        <input type="range" id="o2-slider" min="0" max="100" step="5" value="100">
+      </div>
+      <div class="btn-row">
+        <button id="btn-play" class="active">⏸ Pause</button>
+        <button id="btn-reset">↺ Reset</button>
+        <button id="btn-glyc" class="active">Glycolysis</button>
+        <button id="btn-krebs" class="active">Krebs</button>
+        <button id="btn-etc" class="active">ETC</button>
+      </div>
+    </div>
+    <div class="panel stage-display">
+      <div class="stage-name" id="stage-name">Glycolysis</div>
+      <div class="stage-desc" id="stage-desc">Glucose → 2 Pyruvate (cytoplasm)</div>
+      <div style="font-size:0.65rem;color:#94a3b8;margin-top:8px;text-align:center">Total ATP</div>
+      <div style="font-size:1.8rem;font-weight:700;color:#34d399;text-align:center" id="atp-count">0</div>
+      <div class="atp-bar"><div class="atp-fill" id="atp-bar" style="width:0%"></div></div>
+      <div style="font-size:0.6rem;color:#64748b;text-align:center;margin-top:2px">Max: 32 ATP</div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#86efac;margin-bottom:6px;font-weight:600">Metabolite Tracking</div>
+      <div class="data-row">Glucose consumed <span class="data-val" id="d-glc">0</span></div>
+      <div class="data-row">ATP (Glycolysis) <span class="data-val" id="d-atp-g">0</span></div>
+      <div class="data-row">ATP (Krebs) <span class="data-val" id="d-atp-k">0</span></div>
+      <div class="data-row">ATP (ETC) <span class="data-val" id="d-atp-e">0</span></div>
+      <div class="data-row">NADH total <span class="data-val" id="d-nadh">0</span></div>
+      <div class="data-row">CO₂ released <span class="data-val" id="d-co2">0</span></div>
+      <div class="data-row">Mode <span class="data-val" id="d-mode">Aerobic</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.72rem;color:#86efac;margin-bottom:6px;font-weight:600">Respiration Equations</div>
+      <div class="katex-wrap" id="f1"></div>
+      <div class="katex-wrap" id="f2"></div>
+      <div class="katex-wrap" id="f3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const W=innerWidth,H=innerHeight;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0e1a);
+const camera=new THREE.PerspectiveCamera(55,W/H,0.1,200);camera.position.set(0,2,25);
+let controls;if(window.OrbitControls){controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;}
+scene.add(new THREE.AmbientLight(0x334466,0.7));
+const dl=new THREE.DirectionalLight(0x66bb88,1.2);dl.position.set(5,10,8);scene.add(dl);
+
+let state={glucose:5,oxygen:100,playing:true,time:0,atpCount:0,phase:'glycolysis',phaseTimer:0};
+let particlePool=[];
+
+// Mitochondria mesh
+function makeMitochondria(x,y,z){
+  const g=new THREE.Group();
+  // outer membrane
+  const om=new THREE.Mesh(new THREE.SphereGeometry(2.5,16,12),new THREE.MeshStandardMaterial({color:0x1a4a2a,transparent:true,opacity:0.4,side:THREE.DoubleSide}));
+  g.add(om);
+  // inner membrane - cristae
+  for(let i=0;i<3;i++){
+    const cr=new THREE.Mesh(new THREE.TorusGeometry(1.2,0.1,8,16),new THREE.MeshStandardMaterial({color:0x22c55e,transparent:true,opacity:0.6}));
+    cr.position.x=(i-1)*0.6;cr.rotation.y=Math.PI/2;g.add(cr);
+  }
+  // matrix
+  const mat=new THREE.Mesh(new THREE.SphereGeometry(1.8,12,10),new THREE.MeshStandardMaterial({color:0x0f3020,transparent:true,opacity:0.6}));g.add(mat);
+  g.position.set(x,y,z);
+  return g;
+}
+
+const mitGroup=new THREE.Group();scene.add(mitGroup);
+mitGroup.add(makeMitochondria(0,0,0));
+
+// ATP synthase representation
+function makeATPSynthase(x,y,z){
+  const g=new THREE.Group();
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.5,8),new THREE.MeshStandardMaterial({color:0xfbbf24}));
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.15,8),new THREE.MeshStandardMaterial({color:0xf59e0b}));
+  base.position.y=-0.3;stem.position.y=0.1;g.add(stem,base);
+  g.position.set(x,y,z);return g;
+}
+const synthases=[];
+for(let i=0;i<4;i++){
+  const a=i/4*Math.PI*2;
+  const s=makeATPSynthase(Math.cos(a)*2,0,Math.sin(a)*2);
+  mitGroup.add(s);synthases.push(s);
+}
+
+// Particle system
+const MAX_PARTICLES=60;
+const pGeo=new THREE.BufferGeometry();
+const pPositions=new Float32Array(MAX_PARTICLES*3);
+const pColors=new Float32Array(MAX_PARTICLES*3);
+for(let i=0;i<MAX_PARTICLES;i++){pPositions[i*3]=100;pPositions[i*3+1]=100;pPositions[i*3+2]=100;}
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPositions,3));
+pGeo.setAttribute('color',new THREE.BufferAttribute(pColors,3));
+const pMat=new THREE.PointsMaterial({size:0.3,vertexColors:true,transparent:true,opacity:0.9});
+const particles=new THREE.Points(pGeo,pMat);scene.add(particles);
+
+particlePool=Array.from({length:MAX_PARTICLES},(_,i)=>({x:100,y:100,z:100,vx:0,vy:0,vz:0,life:0,maxLife:1,type:'glucose',index:i}));
+let pIdx=0;
+const PARTICLE_COLORS={glucose:[1,0.7,0.1],pyruvate:[1,0.5,0.1],atp:[0.13,0.76,0.4],nadh:[0.37,0.64,1],co2:[0.94,0.44,0.44]};
+
+function spawnParticle(x,y,z,type){
+  const p=particlePool[pIdx%MAX_PARTICLES];pIdx++;
+  p.x=x;p.y=y;p.z=z;p.type=type;p.life=0;p.maxLife=1.5;
+  const jitter=()=>(Math.random()-0.5)*2;
+  p.vx=jitter()*0.5;p.vy=jitter()*0.5+0.3;p.vz=jitter()*0.5;
+}
+
+// Glucose counters
+let glucoseCounter=0,atpGlyc=0,atpKrebs=0,atpETC=0,nadhTotal=0,co2Total=0;
+
+function updateParticles(dt){
+  const pos=pGeo.attributes.position.array;const col=pGeo.attributes.color.array;
+  particlePool.forEach(p=>{
+    p.life+=dt;if(p.life>p.maxLife)return;
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
+    pos[p.index*3]=p.x;pos[p.index*3+1]=p.y;pos[p.index*3+2]=p.z;
+    const c=PARTICLE_COLORS[p.type]||[1,1,1];
+    const fade=1-p.life/p.maxLife;
+    col[p.index*3]=c[0]*fade;col[p.index*3+1]=c[1]*fade;col[p.index*3+2]=c[2]*fade;
+  });
+  pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;
+}
+
+// Stages
+const STAGES=['glycolysis','pyruvate_oxidation','krebs','etc'];
+const STAGE_INFO={
+  glycolysis:{name:'Glycolysis',desc:'Glucose → 2 Pyruvate (cytoplasm) | Net: 2 ATP, 2 NADH'},
+  pyruvate_oxidation:{name:'Pyruvate Oxidation',desc:'Pyruvate → Acetyl-CoA + CO₂ (mitochondria)'},
+  krebs:{name:'Krebs Cycle',desc:'Acetyl-CoA → CO₂, ATP, NADH, FADH₂ (matrix)'},
+  etc:{name:'Electron Transport Chain',desc:'NADH/FADH₂ → H⁺ gradient → ATP synthase (inner membrane)'}
+};
+let stageTimer=0;let currentStage=0;
+
+function runStage(dt){
+  const aerobic=state.oxygen>20;
+  stageTimer+=dt*state.glucose*0.5;
+  if(stageTimer>1.5){
+    stageTimer=0;
+    // Spawn particles based on current stage
+    const jitter=()=>(Math.random()-0.5)*3;
+    switch(currentStage){
+      case 0:// glycolysis
+        spawnParticle(jitter(),jitter()+5,jitter(),'glucose');
+        spawnParticle(jitter(),jitter()+3,jitter(),'pyruvate');
+        spawnParticle(jitter(),jitter()+4,jitter(),'nadh');
+        atpGlyc+=2;nadhTotal+=2;glucoseCounter++;
+        break;
+      case 1:// pyruvate ox
+        spawnParticle(jitter(),jitter()+1,jitter(),'pyruvate');
+        spawnParticle(jitter(),jitter(),jitter(),'co2');
+        spawnParticle(jitter(),jitter(),jitter(),'nadh');
+        co2Total+=2;nadhTotal+=2;
+        break;
+      case 2:// krebs
+        spawnParticle(jitter(),jitter(),jitter(),'co2');
+        spawnParticle(jitter(),jitter(),jitter(),'nadh');
+        spawnParticle(jitter(),jitter(),jitter(),'atp');
+        atpKrebs+=2;co2Total+=4;nadhTotal+=6;
+        break;
+      case 3:// ETC
+        if(aerobic){
+          spawnParticle(jitter(),jitter(),jitter(),'atp');
+          spawnParticle(jitter(),jitter(),jitter(),'atp');
+          atpETC+=26;
+        }else{atpETC=0;}
+        break;
+    }
+    if(aerobic)currentStage=(currentStage+1)%4;else currentStage=0;
+  }
+  state.atpCount=atpGlyc+atpKrebs+atpETC;
+  const stageName=STAGE_INFO[STAGES[currentStage]];
+  document.getElementById('stage-name').textContent=stageName.name;
+  document.getElementById('stage-desc').textContent=stageName.desc;
+  document.getElementById('atp-count').textContent=state.atpCount;
+  document.getElementById('atp-bar').style.width=Math.min(100,state.atpCount/32*100)+'%';
+  document.getElementById('d-glc').textContent=glucoseCounter;
+  document.getElementById('d-atp-g').textContent=atpGlyc;
+  document.getElementById('d-atp-k').textContent=atpKrebs;
+  document.getElementById('d-atp-e').textContent=atpETC;
+  document.getElementById('d-nadh').textContent=nadhTotal;
+  document.getElementById('d-co2').textContent=co2Total;
+  document.getElementById('d-mode').textContent=aerobic?'Aerobic':'Anaerobic';
+}
+
+// Controls
+document.getElementById('glc-slider').addEventListener('input',e=>{state.glucose=parseInt(e.target.value);document.getElementById('glc-val').textContent=state.glucose;});
+document.getElementById('o2-slider').addEventListener('input',e=>{state.oxygen=parseInt(e.target.value);document.getElementById('o2-val').textContent=state.oxygen;});
+document.getElementById('btn-play').addEventListener('click',()=>{state.playing=!state.playing;document.getElementById('btn-play').textContent=state.playing?'⏸ Pause':'▶ Play';document.getElementById('btn-play').classList.toggle('active',state.playing);});
+document.getElementById('btn-reset').addEventListener('click',()=>{state.playing=true;state.atpCount=0;atpGlyc=0;atpKrebs=0;atpETC=0;nadhTotal=0;co2Total=0;glucoseCounter=0;currentStage=0;stageTimer=0;document.getElementById('btn-play').textContent='⏸ Pause';document.getElementById('btn-play').classList.add('active');});
+
+katex.render('\\text{C}_6\\text{H}_{12}\\text{O}_6+6\\text{O}_2 \\to 6\\text{CO}_2+6\\text{H}_2\\text{O}+30{-}32\\,\\text{ATP}',document.getElementById('f1'),{throwOnError:false});
+katex.render('\\text{Glycolysis: Net }2\\,\\text{ATP}\\;|\\;\\text{Krebs: }2\\,\\text{ATP}\\;|\\;\\text{ETC: }\\sim26{-}28\\,\\text{ATP}',document.getElementById('f2'),{throwOnError:false});
+katex.render('\\text{Anaerobic: only }2\\,\\text{ATP (glycolysis + fermentation)}',document.getElementById('f3'),{throwOnError:false});
+
+const grid=new THREE.GridHelper(40,20,0x112211,0x112211);grid.position.y=-8;scene.add(grid);
+
+let clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();state.time+=dt;
+  if(state.playing){
+    runStage(dt);
+    updateParticles(dt);
+    synthases.forEach((s,i)=>s.rotation.y+=dt*state.oxygen/100*2+0.1);
+    mitGroup.rotation.y+=0.004;
+  }
+  if(controls)controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>

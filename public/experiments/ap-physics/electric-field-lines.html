@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electric Field Lines — NeonPhysics AP Physics 2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(245,158,11,.07));border-bottom:1px solid rgba(251,146,60,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:200px}
+    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .orange{color:#fb923c} .red{color:#fca5a5} .blue{color:#60a5fa}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .charge-display{display:flex;gap:10px;margin-bottom:14px}
+    .charge-card{flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center}
+    .charge-card-title{font-size:10px;color:#64748b;margin-bottom:4px}
+    .charge-sphere{width:32px;height:32px;border-radius:50%;margin:6px auto;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+    .pos-sphere{background:rgba(59,130,246,.25);border:2px solid #3b82f6;color:#93c5fd}
+    .neg-sphere{background:rgba(239,68,68,.25);border:2px solid #ef4444;color:#fca5a5}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f97316;cursor:pointer}
+    .btn-row{display:flex;gap:8px;margin-top:4px}
+    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#f97316;color:#fff}
+    .btn-primary:hover{background:#ea580c}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .formula-box{background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .field-legend{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+    .legend-dot{width:10px;height:10px;border-radius:50%}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Electric Field Lines</h1>
+  <p class="subtitle">Visualize Coulomb's law and field superposition in 3D</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row"><span class="stat-label">q₁</span><span class="stat-value blue" id="statQ1">+5 nC</span></div>
+      <div class="stat-row"><span class="stat-label">q₂</span><span class="stat-value red" id="statQ2">-5 nC</span></div>
+      <div class="stat-row"><span class="stat-label">Separation d</span><span class="stat-value orange" id="statD">2.0 m</span></div>
+      <div class="stat-row"><span class="stat-label">Force F</span><span class="stat-value orange" id="statF">—</span></div>
+      <div class="field-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>+ charge</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>− charge</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div>field lines</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Charge Display</div>
+      <div class="charge-display">
+        <div class="charge-card">
+          <div class="charge-card-title">Charge 1</div>
+          <div class="charge-sphere pos-sphere" id="sphere1">+</div>
+          <div style="font-size:11px;color:#60a5fa" id="q1display">+5 nC</div>
+        </div>
+        <div class="charge-card">
+          <div class="charge-card-title">Charge 2</div>
+          <div class="charge-sphere neg-sphere" id="sphere2">−</div>
+          <div style="font-size:11px;color:#fca5a5" id="q2display">-5 nC</div>
+        </div>
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Charge 1 (q₁)</span><span class="param-val" id="vq1">+5 nC</span></div>
+        <input type="range" id="sq1" min="-10" max="10" value="5" step="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Charge 2 (q₂)</span><span class="param-val" id="vq2">-5 nC</span></div>
+        <input type="range" id="sq2" min="-10" max="10" value="-5" step="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Separation (d)</span><span class="param-val" id="vd">2.0 m</span></div>
+        <input type="range" id="sd" min="0.5" max="5" value="2" step="0.1">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnRedraw">↻ Redraw</button>
+        <button class="btn btn-ghost" id="btnReset">Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Electric field from point charge</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Coulomb's law (force)</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Superposition principle</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 3 AP Problems Locked</div>
+        <div class="ap-lock-desc">Upgrade to Pro to access AP Physics 2 electric field problems with detailed solutions.</div>
+        <button class="ap-lock-btn">Unlock with Pro →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────
+const ke = 8.99e9;
+let q1=5e-9, q2=-5e-9, sep=2.0;
+
+// ─── Three.js ─────────────────────────────────────────────────────────
+const wrap=document.getElementById('canvasWrap');
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x060a10);
+const camera=new THREE.PerspectiveCamera(50,1,0.1,100);
+camera.position.set(0,4,10);
+camera.lookAt(0,0,0);
+const controls=typeof THREE.OrbitControls!=='undefined'
+  ?new THREE.OrbitControls(camera,renderer.domElement):null;
+if(controls){controls.enableDamping=true;controls.dampingFactor=0.08;}
+
+scene.add(new THREE.AmbientLight(0x223344,0.8));
+const dl=new THREE.DirectionalLight(0xaabbff,1); dl.position.set(5,10,5); scene.add(dl);
+
+const grid=new THREE.GridHelper(20,20,0x0f1e30,0x09141e);
+grid.position.y=-2.5;
+scene.add(grid);
+
+// ─── Charge spheres ───────────────────────────────────────────────────
+const c1mat=new THREE.MeshStandardMaterial({color:0x3b82f6,emissive:0x1d4ed8,emissiveIntensity:.5,metalness:.3,roughness:.4});
+const c2mat=new THREE.MeshStandardMaterial({color:0xef4444,emissive:0x991b1b,emissiveIntensity:.5,metalness:.3,roughness:.4});
+const charge1=new THREE.Mesh(new THREE.SphereGeometry(.3,32,32),c1mat);
+const charge2=new THREE.Mesh(new THREE.SphereGeometry(.3,32,32),c2mat);
+const glow1=new THREE.Mesh(new THREE.SphereGeometry(.4,32,32),
+  new THREE.MeshStandardMaterial({color:0x3b82f6,emissive:0x3b82f6,emissiveIntensity:.4,transparent:true,opacity:.2,side:THREE.BackSide}));
+const glow2=new THREE.Mesh(new THREE.SphereGeometry(.4,32,32),
+  new THREE.MeshStandardMaterial({color:0xef4444,emissive:0xef4444,emissiveIntensity:.4,transparent:true,opacity:.2,side:THREE.BackSide}));
+charge1.add(glow1); charge2.add(glow2);
+scene.add(charge1,charge2);
+
+// ─── Field line group ─────────────────────────────────────────────────
+let lineGroup=new THREE.Group();
+scene.add(lineGroup);
+
+// ─── Compute E field at point ─────────────────────────────────────────
+function eField(px,py,pz){
+  const p1x=-sep/2,p2x=sep/2;
+  let ex=0,ey=0,ez=0;
+  for(const [qv,cx] of [[q1,p1x],[q2,p2x]]){
+    const dx=px-cx, dy=py, dz=pz;
+    const r2=dx*dx+dy*dy+dz*dz+1e-6;
+    const r3=Math.pow(r2,1.5);
+    const fac=ke*qv/r3;
+    ex+=fac*dx; ey+=fac*dy; ez+=fac*dz;
+  }
+  return [ex,ey,ez];
+}
+
+// ─── Trace one field line ─────────────────────────────────────────────
+function traceLine(sx,sy,sz,sign){
+  const pts=[];
+  let x=sx,y=sy,z=sz;
+  const ds=0.08;
+  for(let i=0;i<200;i++){
+    pts.push(new THREE.Vector3(x,y,z));
+    let [ex,ey,ez]=eField(x,y,z);
+    const mag=Math.sqrt(ex*ex+ey*ey+ez*ez)+1e-12;
+    x+=sign*ex/mag*ds; y+=sign*ey/mag*ds; z+=sign*ez/mag*ds;
+    if(Math.sqrt(x*x+y*y+z*z)>7) break;
+    // stop near negative charge
+    const dx2=x-sep/2, dx1=x+sep/2;
+    if(Math.sqrt(dx2*dx2+y*y+z*z)<.35||Math.sqrt(dx1*dx1+y*y+z*z)<.35) break;
+  }
+  return pts;
+}
+
+// ─── Draw field lines ─────────────────────────────────────────────────
+function drawFieldLines(){
+  // remove old
+  while(lineGroup.children.length) lineGroup.remove(lineGroup.children[0]);
+
+  const lineMat=new THREE.LineBasicMaterial({color:0xfb923c,transparent:true,opacity:.7});
+  const LINES=12;
+
+  // lines from q1 if positive
+  if(q1>0){
+    for(let i=0;i<LINES;i++){
+      const theta=Math.PI*i/LINES;
+      const phi=2*Math.PI*i/LINES;
+      const r=0.35;
+      const sx=-sep/2+r*Math.sin(theta)*Math.cos(phi);
+      const sy=r*Math.cos(theta);
+      const sz=r*Math.sin(theta)*Math.sin(phi);
+      const pts=traceLine(sx,sy,sz,1);
+      if(pts.length>2){
+        const g=new THREE.BufferGeometry().setFromPoints(pts);
+        lineGroup.add(new THREE.Line(g,lineMat));
+      }
+    }
+  }
+  // lines into q1 if negative
+  if(q1<0){
+    for(let i=0;i<LINES;i++){
+      const theta=Math.PI*i/LINES;
+      const phi=2*Math.PI*i/LINES;
+      const r=0.35;
+      const sx=-sep/2+r*Math.sin(theta)*Math.cos(phi);
+      const sy=r*Math.cos(theta);
+      const sz=r*Math.sin(theta)*Math.sin(phi);
+      const pts=traceLine(sx,sy,sz,-1);
+      if(pts.length>2){
+        const g=new THREE.BufferGeometry().setFromPoints(pts);
+        lineGroup.add(new THREE.Line(g,lineMat));
+      }
+    }
+  }
+  // lines from q2 if positive
+  if(q2>0){
+    for(let i=0;i<LINES;i++){
+      const theta=Math.PI*i/LINES;
+      const phi=2*Math.PI*i/LINES;
+      const r=0.35;
+      const sx=sep/2+r*Math.sin(theta)*Math.cos(phi);
+      const sy=r*Math.cos(theta);
+      const sz=r*Math.sin(theta)*Math.sin(phi);
+      const pts=traceLine(sx,sy,sz,1);
+      if(pts.length>2){
+        const g=new THREE.BufferGeometry().setFromPoints(pts);
+        lineGroup.add(new THREE.Line(g,lineMat));
+      }
+    }
+  }
+}
+
+function updatePositions(){
+  charge1.position.set(-sep/2,0,0);
+  charge2.position.set(sep/2,0,0);
+  // update sizes by charge magnitude
+  const s1=0.2+0.1*Math.abs(q1)/10e-9;
+  const s2=0.2+0.1*Math.abs(q2)/10e-9;
+  charge1.scale.setScalar(s1/.3);
+  charge2.scale.setScalar(s2/.3);
+  // colors by sign
+  c1mat.color.setHex(q1>=0?0x3b82f6:0xef4444);
+  c1mat.emissive.setHex(q1>=0?0x1d4ed8:0x991b1b);
+  c2mat.color.setHex(q2>=0?0x3b82f6:0xef4444);
+  c2mat.emissive.setHex(q2>=0?0x1d4ed8:0x991b1b);
+}
+
+function calcForce(){
+  const r=sep;
+  return ke*Math.abs(q1*q2)/(r*r);
+}
+
+function updateStats(){
+  document.getElementById('statQ1').textContent=(q1/1e-9).toFixed(0)+' nC';
+  document.getElementById('statQ2').textContent=(q2/1e-9).toFixed(0)+' nC';
+  document.getElementById('statD').textContent=sep.toFixed(1)+' m';
+  document.getElementById('statF').textContent=(calcForce()*1e6).toFixed(2)+'×10⁻⁶ N';
+  document.getElementById('q1display').textContent=(q1>=0?'+':'')+(q1/1e-9).toFixed(0)+' nC';
+  document.getElementById('q2display').textContent=(q2>=0?'+':'')+(q2/1e-9).toFixed(0)+' nC';
+}
+
+function redraw(){
+  updatePositions();
+  updateStats();
+  drawFieldLines();
+}
+
+// ─── Render loop ──────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+redraw();
+function animate(){
+  requestAnimationFrame(animate);
+  clock.getDelta();
+  charge1.rotation.y+=0.005; charge2.rotation.y-=0.005;
+  if(controls) controls.update();
+  renderer.render(scene,camera);
+}
+function resize(){
+  const w=wrap.clientWidth,h=wrap.clientHeight;
+  renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize); resize(); animate();
+
+// ─── Sliders ──────────────────────────────────────────────────────────
+document.getElementById('sq1').addEventListener('input',e=>{
+  q1=+e.target.value*1e-9;
+  document.getElementById('vq1').textContent=(q1>=0?'+':'')+(q1/1e-9).toFixed(0)+' nC';
+  updateStats(); updatePositions();
+});
+document.getElementById('sq2').addEventListener('input',e=>{
+  q2=+e.target.value*1e-9;
+  document.getElementById('vq2').textContent=(q2>=0?'+':'')+(q2/1e-9).toFixed(0)+' nC';
+  updateStats(); updatePositions();
+});
+document.getElementById('sd').addEventListener('input',e=>{
+  sep=+e.target.value;
+  document.getElementById('vd').textContent=sep.toFixed(1)+' m';
+  updateStats(); updatePositions();
+});
+document.getElementById('btnRedraw').addEventListener('click',redraw);
+document.getElementById('btnReset').addEventListener('click',()=>{
+  document.getElementById('sq1').value=5; q1=5e-9;
+  document.getElementById('sq2').value=-5; q2=-5e-9;
+  document.getElementById('sd').value=2; sep=2;
+  document.getElementById('vq1').textContent='+5 nC';
+  document.getElementById('vq2').textContent='-5 nC';
+  document.getElementById('vd').textContent='2.0 m';
+  redraw();
+});
+
+// ─── KaTeX ────────────────────────────────────────────────────────────
+katex.render('\\vec{E}=k_e\\dfrac{q}{r^2}\\hat{r}',document.getElementById('f1'),{throwOnError:false});
+katex.render('F=k_e\\dfrac{|q_1 q_2|}{r^2}',document.getElementById('f2'),{throwOnError:false});
+katex.render('\\vec{E}_{total}=\\sum_i\\vec{E}_i',document.getElementById('f3'),{throwOnError:false});
+</script>
+</body>
+</html>

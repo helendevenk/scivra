@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Machines - Interactive Experiment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        #canvas-container {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            min-height: 600px;
+        }
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .control-group {
+            margin-bottom: 25px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            cursor: pointer;
+        }
+        .control-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 0.95em;
+        }
+        .value-display {
+            display: inline-block;
+            float: right;
+            color: #4facfe;
+            font-weight: 600;
+        }
+        .formula-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .formula-section h2 {
+            color: #4facfe;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .formula-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 3px solid #4facfe;
+        }
+        .knowledge-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .knowledge-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .knowledge-card:hover {
+            transform: translateY(-5px);
+            border-color: #4facfe;
+        }
+        .knowledge-card h3 {
+            color: #4facfe;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        .knowledge-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        .quiz-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .quiz-section h2 {
+            color: #4facfe;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .quiz-question {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        .quiz-question h4 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .quiz-option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #4facfe;
+        }
+        .quiz-option.correct {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4caf50;
+        }
+        .quiz-option.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+        }
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .knowledge-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Machines</h1>
+        <p class="subtitle">Discover how simple machines make work easier</p>
+
+        <div class="main-content">
+            <div id="canvas-container"></div>
+
+            <div class="controls-panel">
+                <h3 style="color: #4facfe; margin-bottom: 20px;">Controls</h3>
+
+                <div class="control-group">
+                    <label>Machine Type</label>
+                    <select id="machine-type">
+                        <option value="lever">Lever</option>
+                        <option value="pulley">Pulley</option>
+                        <option value="inclined-plane">Inclined Plane</option>
+                        <option value="wheel-axle">Wheel and Axle</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Input Force (N)
+                        <span class="value-display" id="force-value">50</span>
+                    </label>
+                    <input type="range" id="input-force" min="10" max="200" value="50" step="5">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Load Mass (kg)
+                        <span class="value-display" id="mass-value">100</span>
+                    </label>
+                    <input type="range" id="load-mass" min="20" max="300" value="100" step="10">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Mechanical Advantage
+                        <span class="value-display" id="ma-value">2.0</span>
+                    </label>
+                    <input type="range" id="mech-advantage" min="1" max="5" value="2" step="0.5">
+                </div>
+
+                <div style="margin-top: 30px; padding: 15px; background: rgba(79, 172, 254, 0.1); border-radius: 8px; border-left: 3px solid #4facfe;">
+                    <div style="font-size: 0.9em; color: #b0b0b0; margin-bottom: 5px;">Output Force:</div>
+                    <div id="output-display" style="font-size: 1.3em; color: #4facfe; font-weight: 600;">100 N</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="formula-section">
+            <h2>Key Formulas</h2>
+            <div class="formula-item">
+                <strong>Mechanical Advantage:</strong> $MA = \frac{F_{out}}{F_{in}}$
+                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">where $F_{out}$ is output force, $F_{in}$ is input force</p>
+            </div>
+            <div class="formula-item">
+                <strong>Work:</strong> $W = F \times d$
+                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">where $W$ is work, $F$ is force, $d$ is distance</p>
+            </div>
+        </div>
+
+        <div class="knowledge-cards">
+            <div class="knowledge-card">
+                <h3>⚙️ What are Simple Machines?</h3>
+                <p>Simple machines are basic devices that make work easier by changing the direction or magnitude of a force. They are the building blocks of all complex machines.</p>
+            </div>
+            <div class="knowledge-card">
+                <h3>🔧 Lever</h3>
+                <p>A lever uses a fulcrum (pivot point) to multiply force. Examples: seesaw, crowbar, scissors. The farther from the fulcrum you push, the more force you get!</p>
+            </div>
+            <div class="knowledge-card">
+                <h3>🪢 Pulley</h3>
+                <p>A pulley uses a wheel and rope to lift heavy objects. Multiple pulleys can multiply your force, making it easier to lift heavy loads.</p>
+            </div>
+            <div class="knowledge-card">
+                <h3>📐 Inclined Plane</h3>
+                <p>A ramp that makes it easier to move objects to a higher position. You use less force but move the object over a longer distance. Examples: ramps, slides, stairs.</p>
+            </div>
+            <div class="knowledge-card">
+                <h3>🎡 Wheel and Axle</h3>
+                <p>A wheel attached to a rod (axle). Turning the wheel creates more force at the axle. Examples: doorknobs, steering wheels, screwdrivers.</p>
+            </div>
+        </div>
+
+        <div class="quiz-section">
+            <h2>Test Your Knowledge</h2>
+
+            <div class="quiz-question">
+                <h4>1. What does mechanical advantage tell us?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) How fast a machine works</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)">B) How much a machine multiplies force</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) How heavy a machine is</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) How much energy a machine uses</div>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>2. Which simple machine is a ramp an example of?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Lever</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">B) Pulley</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)">C) Inclined Plane</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Wheel and Axle</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Scene setup
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a);
+
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(0, 5, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0x4facfe, 1, 100);
+        pointLight.position.set(10, 10, 10);
+        scene.add(pointLight);
+
+        // Ground
+        const groundGeometry = new THREE.PlaneGeometry(30, 30);
+        const groundMaterial = new THREE.MeshPhongMaterial({
+            color: 0x1a1a2e,
+            side: THREE.DoubleSide
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -3;
+        scene.add(ground);
+
+        let currentMachine = null;
+        let inputForce = 50;
+        let loadMass = 100;
+        let mechAdvantage = 2.0;
+
+        function clearMachine() {
+            if (currentMachine) {
+                currentMachine.forEach(obj => scene.remove(obj));
+                currentMachine = null;
+            }
+        }
+
+        function createLever() {
+            clearMachine();
+            currentMachine = [];
+
+            // Fulcrum
+            const fulcrumGeometry = new THREE.ConeGeometry(0.5, 1, 4);
+            const fulcrumMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            const fulcrum = new THREE.Mesh(fulcrumGeometry, fulcrumMaterial);
+            fulcrum.position.y = 0;
+            scene.add(fulcrum);
+            currentMachine.push(fulcrum);
+
+            // Lever bar
+            const barGeometry = new THREE.BoxGeometry(10, 0.3, 0.5);
+            const barMaterial = new THREE.MeshPhongMaterial({ color: 0x4facfe });
+            const bar = new THREE.Mesh(barGeometry, barMaterial);
+            bar.position.y = 0.5;
+            scene.add(bar);
+            currentMachine.push(bar);
+
+            // Load
+            const loadGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const loadMaterial = new THREE.MeshPhongMaterial({ color: 0xe24a4a });
+            const load = new THREE.Mesh(loadGeometry, loadMaterial);
+            load.position.set(-4, 1, 0);
+            scene.add(load);
+            currentMachine.push(load);
+
+            // Force arrow
+            const arrowHelper = new THREE.ArrowHelper(
+                new THREE.Vector3(0, -1, 0),
+                new THREE.Vector3(4, 2, 0),
+                2,
+                0x4caf50,
+                0.5,
+                0.3
+            );
+            scene.add(arrowHelper);
+            currentMachine.push(arrowHelper);
+        }
+
+        function createPulley() {
+            clearMachine();
+            currentMachine = [];
+
+            // Pulley wheel
+            const wheelGeometry = new THREE.TorusGeometry(1, 0.2, 16, 32);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x4facfe });
+            const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheel.position.set(0, 4, 0);
+            wheel.rotation.x = Math.PI / 2;
+            scene.add(wheel);
+            currentMachine.push(wheel);
+
+            // Rope
+            const ropeGeometry = new THREE.CylinderGeometry(0.05, 0.05, 6, 8);
+            const ropeMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            const rope = new THREE.Mesh(ropeGeometry, ropeMaterial);
+            rope.position.set(0, 1, 0);
+            scene.add(rope);
+            currentMachine.push(rope);
+
+            // Load
+            const loadGeometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+            const loadMaterial = new THREE.MeshPhongMaterial({ color: 0xe24a4a });
+            const load = new THREE.Mesh(loadGeometry, loadMaterial);
+            load.position.set(0, -1.5, 0);
+            scene.add(load);
+            currentMachine.push(load);
+        }
+
+        function createInclinedPlane() {
+            clearMachine();
+            currentMachine = [];
+
+            // Ramp
+            const rampGeometry = new THREE.BoxGeometry(8, 0.3, 3);
+            const rampMaterial = new THREE.MeshPhongMaterial({ color: 0x4facfe });
+            const ramp = new THREE.Mesh(rampGeometry, rampMaterial);
+            ramp.position.set(0, 0, 0);
+            ramp.rotation.z = -Math.PI / 6;
+            scene.add(ramp);
+            currentMachine.push(ramp);
+
+            // Load
+            const loadGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const loadMaterial = new THREE.MeshPhongMaterial({ color: 0xe24a4a });
+            const load = new THREE.Mesh(loadGeometry, loadMaterial);
+            load.position.set(-2, -0.5, 0);
+            scene.add(load);
+            currentMachine.push(load);
+        }
+
+        function createWheelAxle() {
+            clearMachine();
+            currentMachine = [];
+
+            // Wheel
+            const wheelGeometry = new THREE.CylinderGeometry(2, 2, 0.3, 32);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x4facfe });
+            const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheel.rotation.z = Math.PI / 2;
+            scene.add(wheel);
+            currentMachine.push(wheel);
+
+            // Axle
+            const axleGeometry = new THREE.CylinderGeometry(0.3, 0.3, 3, 16);
+            const axleMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            const axle = new THREE.Mesh(axleGeometry, axleMaterial);
+            axle.rotation.z = Math.PI / 2;
+            scene.add(axle);
+            currentMachine.push(axle);
+
+            // Handle
+            const handleGeometry = new THREE.BoxGeometry(0.2, 1.5, 0.2);
+            const handleMaterial = new THREE.MeshPhongMaterial({ color: 0xe24a4a });
+            const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+            handle.position.set(0, 2, 0);
+            scene.add(handle);
+            currentMachine.push(handle);
+        }
+
+        function updateOutputForce() {
+            const outputForce = inputForce * mechAdvantage;
+            document.getElementById('output-display').textContent = outputForce.toFixed(0) + ' N';
+        }
+
+        // Controls
+        document.getElementById('machine-type').addEventListener('change', (e) => {
+            const type = e.target.value;
+            if (type === 'lever') createLever();
+            else if (type === 'pulley') createPulley();
+            else if (type === 'inclined-plane') createInclinedPlane();
+            else if (type === 'wheel-axle') createWheelAxle();
+        });
+
+        document.getElementById('input-force').addEventListener('input', (e) => {
+            inputForce = parseFloat(e.target.value);
+            document.getElementById('force-value').textContent = inputForce;
+            updateOutputForce();
+        });
+
+        document.getElementById('load-mass').addEventListener('input', (e) => {
+            loadMass = parseFloat(e.target.value);
+            document.getElementById('mass-value').textContent = loadMass;
+        });
+
+        document.getElementById('mech-advantage').addEventListener('input', (e) => {
+            mechAdvantage = parseFloat(e.target.value);
+            document.getElementById('ma-value').textContent = mechAdvantage.toFixed(1);
+            updateOutputForce();
+        });
+
+        // Quiz
+        function checkAnswer(element, isCorrect) {
+            const options = element.parentElement.children;
+            for (let option of options) {
+                option.style.pointerEvents = 'none';
+            }
+
+            if (isCorrect) {
+                element.classList.add('correct');
+            } else {
+                element.classList.add('incorrect');
+                for (let option of options) {
+                    if (option.textContent.includes('B)') || option.textContent.includes('C)')) {
+                        option.classList.add('correct');
+                    }
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (currentMachine && currentMachine.length > 0) {
+                currentMachine.forEach(obj => {
+                    if (obj.type === 'Mesh' && obj.geometry.type === 'TorusGeometry') {
+                        obj.rotation.z += 0.01;
+                    }
+                });
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // Render formulas
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ]
+            });
+        });
+
+        createLever();
+        updateOutputForce();
+        animate();
+    </script>
+</body>
+</html>

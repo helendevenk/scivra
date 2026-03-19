@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Equilibrium & Le Chatelier — NeonPhysics AP Chemistry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#d8b4fe;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:230px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#a855f7;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:#d8b4fe;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(168,85,247,0.3)}
+    button.active{background:rgba(168,85,247,0.4);border-color:#a855f7}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#c084fc;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(168,85,247,0.3);color:#d8b4fe}
+    #conc-canvas{width:100%;height:90px;border-radius:4px;background:rgba(0,0,0,0.3);margin-top:6px;display:block}
+    .qk-indicator{font-size:0.8rem;font-weight:700;margin-top:4px;padding:4px 8px;border-radius:4px;text-align:center}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Chemical Equilibrium <span class="badge">AP Chem</span></h1>
+      <p>Le Chatelier's Principle — A ⇌ B dynamic balance</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Initial [A] (reactant) <span id="A-val">1.0 mol/L</span></label>
+        <input type="range" id="A-slider" min="0.1" max="3.0" step="0.1" value="1.0">
+      </div>
+      <div class="slider-row">
+        <label>Temperature <span id="T-val">400 K</span></label>
+        <input type="range" id="T-slider" min="200" max="700" step="10" value="400">
+      </div>
+      <div class="btn-row">
+        <button id="btn-addA" onclick="stressAddA()">+ Add [A]</button>
+        <button id="btn-remB" onclick="stressRemB()">− Remove [B]</button>
+        <button id="btn-press" onclick="stressPress()">↑ Pressure</button>
+      </div>
+      <div class="btn-row">
+        <button id="btn-play" class="active" onclick="togglePlay()">⏸ Pause</button>
+        <button onclick="resetSim()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#d8b4fe;margin-bottom:4px;font-weight:600">Equilibrium State</div>
+      <div class="data-row">[A] reactant <span class="data-val" id="d-A">1.00</span></div>
+      <div class="data-row">[B] product <span class="data-val" id="d-B">0.00</span></div>
+      <div class="data-row">Q (reaction quotient) <span class="data-val" id="d-Q">0.00</span></div>
+      <div class="data-row">Kc (equilibrium) <span class="data-val" id="d-Kc">—</span></div>
+      <div class="data-row">Shift Direction <span class="data-val" id="d-shift">→ Forward</span></div>
+      <div class="qk-indicator" id="qk-bar">Q &lt; Kc → Forward →</div>
+      <canvas id="conc-canvas" width="200" height="90"></canvas>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.7rem;color:#d8b4fe;margin-bottom:6px;font-weight:600">Equilibrium Laws</div>
+      <div class="katex-wrap" id="kx-1"></div>
+      <div class="katex-wrap" id="kx-2"></div>
+      <div class="katex-wrap" id="kx-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let T=400, cA=1.0, cB=0.0, Kc=1.0, playing=true;
+let history=[];
+let t=0;
+
+function calcKc(){ return Math.exp(-1e4*(1/T-1/400)); }
+
+function step(){
+  Kc=calcKc();
+  const Q=cB>0?(cB/cA):0;
+  const diff=(Kc-Q)*0.003;
+  const dB=Math.min(diff, cA*0.01);
+  cA-=dB; cB+=dB;
+  if(cA<0.001) cA=0.001;
+  if(cB<0) cB=0;
+  t++;
+  if(history.length>200) history.shift();
+  history.push({A:cA, B:cB, t});
+  updateUI();
+}
+
+function updateUI(){
+  const Q=cA>0?cB/cA:0;
+  document.getElementById('d-A').textContent=cA.toFixed(3);
+  document.getElementById('d-B').textContent=cB.toFixed(3);
+  document.getElementById('d-Q').textContent=Q.toFixed(3);
+  document.getElementById('d-Kc').textContent=Kc.toFixed(3);
+  const eps=0.01;
+  let shift='≈ At Equilibrium';
+  let qkText='Q ≈ Kc — Equilibrium';
+  let qkColor='rgba(251,191,36,0.3)';
+  if(Q<Kc-eps){ shift='→ Forward'; qkText='Q < Kc → Forward →'; qkColor='rgba(168,85,247,0.3)'; }
+  if(Q>Kc+eps){ shift='← Reverse'; qkText='Q > Kc ← Reverse'; qkColor='rgba(239,68,68,0.3)'; }
+  document.getElementById('d-shift').textContent=shift;
+  const bar=document.getElementById('qk-bar');
+  bar.textContent=qkText;
+  bar.style.background=qkColor;
+  drawConc();
+  updateParticles();
+}
+
+function drawConc(){
+  const cv=document.getElementById('conc-canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(168,85,247,0.05)'; ctx.fillRect(0,0,W,H);
+  if(history.length<2) return;
+  const maxC=2.5;
+  ['A','B'].forEach((mol,mi)=>{
+    ctx.beginPath();
+    history.forEach((h,i)=>{
+      const x=i/history.length*W;
+      const y=H-5-(h[mol]/maxC)*(H-10);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=mi===0?'#a855f7':'#22c55e';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+  });
+  ctx.fillStyle='#a855f7'; ctx.font='8px sans-serif'; ctx.fillText('[A]',4,14);
+  ctx.fillStyle='#22c55e'; ctx.fillText('[B]',4,26);
+}
+
+function stressAddA(){ cA+=0.5; }
+function stressRemB(){ cB=Math.max(0,cB-0.3); }
+function stressPress(){ cA*=1.3; cB*=1.3; }
+function togglePlay(){
+  playing=!playing;
+  const btn=document.getElementById('btn-play');
+  btn.textContent=playing?'⏸ Pause':'▶ Play';
+  btn.classList.toggle('active',playing);
+}
+function resetSim(){
+  cA=+document.getElementById('A-slider').value;
+  cB=0; t=0; history=[];
+}
+
+document.getElementById('A-slider').addEventListener('input',function(){
+  cA=+this.value; cB=0; t=0; history=[];
+  document.getElementById('A-val').textContent=this.value+' mol/L';
+});
+document.getElementById('T-slider').addEventListener('input',function(){
+  T=+this.value;
+  document.getElementById('T-val').textContent=T+' K';
+});
+
+// 3D visualization
+let scene,camera,renderer,aParticles=[],bParticles=[];
+function init3D(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,0,14);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  // container
+  const box=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(12,8,8)),new THREE.LineBasicMaterial({color:0xa855f7,opacity:0.25,transparent:true}));
+  scene.add(box);
+  const geo=new THREE.SphereGeometry(0.2,10,10);
+  for(let i=0;i<80;i++){
+    const isA=i<40;
+    const mat=new THREE.MeshStandardMaterial({color:isA?0xa855f7:0x22c55e,roughness:0.4,emissiveIntensity:0.1,emissive:isA?0xa855f7:0x22c55e});
+    const m=new THREE.Mesh(geo,mat);
+    m.position.set((Math.random()-0.5)*11,(Math.random()-0.5)*7,(Math.random()-0.5)*7);
+    const vel=new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize().multiplyScalar(0.03);
+    if(isA) aParticles.push({mesh:m,vel}); else bParticles.push({mesh:m,vel});
+    if(isA) scene.add(m); // initially only A particles shown (B start invisible)
+    else { m.visible=false; scene.add(m); }
+  }
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+  animate3D();
+}
+
+function updateParticles(){
+  const fracB=cB/(cA+cB+0.001);
+  const showB=Math.floor(fracB*bParticles.length);
+  const showA=Math.floor((1-fracB)*aParticles.length);
+  aParticles.forEach((p,i)=>{ p.mesh.visible=i<showA; });
+  bParticles.forEach((p,i)=>{ p.mesh.visible=i<showB; });
+}
+
+function animate3D(){
+  requestAnimationFrame(animate3D);
+  if(playing) step();
+  [...aParticles,...bParticles].forEach(p=>{
+    if(!p.mesh.visible) return;
+    p.mesh.position.addScaledVector(p.vel,1);
+    ['x','y','z'].forEach((ax,i)=>{
+      const b=[5.5,3.5,3.5];
+      if(Math.abs(p.mesh.position[ax])>b[i]) p.vel[ax]*=-1;
+    });
+  });
+  renderer.render(scene,camera);
+}
+
+katex.render('K_c = \\frac{[\\text{B}]}{[\\text{A}]} \\quad (\\text{at equilibrium})', document.getElementById('kx-1'), {throwOnError:false});
+katex.render('Q < K_c \\to \\text{forward}; \\quad Q > K_c \\to \\text{reverse}', document.getElementById('kx-2'), {throwOnError:false});
+katex.render('K_p = K_c(RT)^{\\Delta n_g}', document.getElementById('kx-3'), {throwOnError:false});
+
+init3D();
+</script>
+</body>
+</html>

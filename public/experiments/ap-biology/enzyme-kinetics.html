@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enzyme Kinetics & Michaelis-Menten — NeonPhysics AP Biology</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:60%;height:100%}
+    #sidebar{position:absolute;top:0;right:0;width:40%;height:100%;display:flex;flex-direction:column;gap:10px;padding:14px;overflow-y:auto}
+    .panel{background:rgba(10,14,26,0.9);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:14px;backdrop-filter:blur(8px)}
+    h1{font-size:1rem;color:#d8b4fe;font-weight:700;margin-bottom:4px}
+    .slider-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#a855f7;height:4px}
+    button{background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:#d8b4fe;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;margin:3px;transition:all 0.2s}
+    button:hover{background:rgba(168,85,247,0.3)}
+    button.active{background:rgba(168,85,247,0.4);border-color:#a855f7}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#c084fc;font-weight:600;font-family:monospace}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    canvas#mm-chart{width:100%;border-radius:6px;background:rgba(0,0,0,0.4);display:block;margin-top:6px}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(168,85,247,0.3);color:#d8b4fe}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="sidebar">
+  <div class="panel">
+    <h1>Enzyme Kinetics <span class="badge">AP Bio</span></h1>
+    <p style="font-size:0.68rem;color:#94a3b8">Michaelis-Menten kinetics with inhibition</p>
+  </div>
+  <div class="panel">
+    <div style="font-size:0.75rem;color:#d8b4fe;font-weight:600;margin-bottom:8px">Parameters</div>
+    <div class="slider-row">
+      <label>Substrate [S] <span id="s-val">5</span> mM</label>
+      <input type="range" id="s-slider" min="0.1" max="50" step="0.5" value="5">
+    </div>
+    <div class="slider-row">
+      <label>Km <span id="km-val">5</span> mM</label>
+      <input type="range" id="km-slider" min="0.5" max="20" step="0.5" value="5">
+    </div>
+    <div class="slider-row">
+      <label>Vmax <span id="vmax-val">50</span> μmol/min</label>
+      <input type="range" id="vmax-slider" min="10" max="100" step="5" value="50">
+    </div>
+    <div style="font-size:0.7rem;color:#94a3b8;margin:6px 0 4px">Inhibitor Type</div>
+    <div>
+      <button id="inh-none" class="active" onclick="setInhibitor('none')">None</button>
+      <button id="inh-comp" onclick="setInhibitor('competitive')">Competitive</button>
+      <button id="inh-noncomp" onclick="setInhibitor('noncompetitive')">Non-comp</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div style="font-size:0.75rem;color:#d8b4fe;font-weight:600;margin-bottom:6px">Kinetic Data</div>
+    <div class="data-row">Velocity v <span class="data-val" id="d-v">0</span> μmol/min</div>
+    <div class="data-row">v/Vmax <span class="data-val" id="d-ratio">0%</span></div>
+    <div class="data-row">App. Km <span class="data-val" id="d-km">5</span> mM</div>
+    <div class="data-row">App. Vmax <span class="data-val" id="d-vmax">50</span> μmol/min</div>
+    <div class="data-row">ES complex rate <span class="data-val" id="d-es">0</span>/s</div>
+  </div>
+  <div class="panel">
+    <div style="font-size:0.75rem;color:#d8b4fe;font-weight:600;margin-bottom:4px">Michaelis-Menten Curve</div>
+    <canvas id="mm-chart" width="320" height="160"></canvas>
+  </div>
+  <div class="panel">
+    <div class="katex-wrap" id="f1"></div>
+    <div class="katex-wrap" id="f2"></div>
+  </div>
+</div>
+
+<script>
+// 3D view — enzyme active site + substrate docking
+const canvas3d=document.getElementById('canvas');
+const W=canvas3d.offsetWidth,H=canvas3d.offsetHeight;
+const renderer=new THREE.WebGLRenderer({canvas:canvas3d,antialias:true});
+renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x080c18);
+const camera=new THREE.PerspectiveCamera(55,W/H,0.1,200);camera.position.set(0,0,15);
+let controls;if(window.OrbitControls){controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;}
+scene.add(new THREE.AmbientLight(0x334466,0.8));
+const dl=new THREE.DirectionalLight(0xaa88ff,1.2);dl.position.set(5,10,8);scene.add(dl);
+scene.add(new THREE.PointLight(0xa855f7,2,30));
+
+// Enzyme (large blob)
+const enzymeGeo=new THREE.SphereGeometry(2,24,16);
+const enzymeMat=new THREE.MeshStandardMaterial({color:0x4c1d95,roughness:0.3,metalness:0.4,emissive:0x2e1065,emissiveIntensity:0.3});
+const enzyme=new THREE.Mesh(enzymeGeo,enzymeMat);
+scene.add(enzyme);
+
+// Active site pocket (indentation hint)
+const pocketGeo=new THREE.SphereGeometry(0.6,12,10);
+const pocketMat=new THREE.MeshStandardMaterial({color:0x7c3aed,roughness:0.2,emissive:0x5b21b6,emissiveIntensity:0.5});
+const pocket=new THREE.Mesh(pocketGeo,pocketMat);
+pocket.position.set(0,1.6,1.4);
+scene.add(pocket);
+
+// Substrate molecules (small spheres)
+let substrates=[];
+let inhibitorMeshes=[];
+let state={S:5,Km:5,Vmax:50,inhibitor:'none',time:0};
+const MAX_SUB=12;
+
+function spawnSubstrates(){
+  substrates.forEach(s=>scene.remove(s));substrates=[];
+  const count=Math.round(state.S/50*MAX_SUB)+2;
+  const mat=new THREE.MeshStandardMaterial({color:0xfbbf24,roughness:0.3,metalness:0.2,emissive:0xf59e0b,emissiveIntensity:0.3});
+  for(let i=0;i<count;i++){
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.22,10,8),mat.clone());
+    m.position.set((Math.random()-0.5)*8,(Math.random()-0.5)*8,(Math.random()-0.5)*8);
+    m.userData={vx:(Math.random()-0.5)*0.8,vy:(Math.random()-0.5)*0.8,vz:(Math.random()-0.5)*0.8,docked:false,dockTimer:0};
+    scene.add(m);substrates.push(m);
+  }
+}
+
+function spawnInhibitors(){
+  inhibitorMeshes.forEach(m=>scene.remove(m));inhibitorMeshes=[];
+  if(state.inhibitor==='none')return;
+  const color=state.inhibitor==='competitive'?0xef4444:0x06b6d4;
+  const mat=new THREE.MeshStandardMaterial({color,roughness:0.3,emissive:color,emissiveIntensity:0.3});
+  for(let i=0;i<4;i++){
+    const m=new THREE.Mesh(new THREE.DodecahedronGeometry(0.25,0),mat.clone());
+    m.position.set((Math.random()-0.5)*7,(Math.random()-0.5)*7,(Math.random()-0.5)*7);
+    m.userData={vx:(Math.random()-0.5)*0.5,vy:(Math.random()-0.5)*0.5,vz:(Math.random()-0.5)*0.5};
+    scene.add(m);inhibitorMeshes.push(m);
+  }
+}
+
+function computeKinetics(){
+  let appKm=state.Km,appVmax=state.Vmax;
+  const alpha=1+(state.inhibitor!=='none'?2:0);
+  if(state.inhibitor==='competitive')appKm=state.Km*alpha;
+  else if(state.inhibitor==='noncompetitive'){appVmax=state.Vmax/alpha;}
+  const v=appVmax*state.S/(appKm+state.S);
+  return{v,appKm,appVmax};
+}
+
+function updateDataUI(){
+  const{v,appKm,appVmax}=computeKinetics();
+  document.getElementById('d-v').textContent=v.toFixed(1);
+  document.getElementById('d-ratio').textContent=Math.round(v/state.Vmax*100)+'%';
+  document.getElementById('d-km').textContent=appKm.toFixed(1);
+  document.getElementById('d-vmax').textContent=appVmax.toFixed(1);
+  document.getElementById('d-es').textContent=Math.round(v*0.8);
+}
+
+function drawMM(){
+  const canvas=document.getElementById('mm-chart');
+  const ctx=canvas.getContext('2d');
+  const cw=canvas.width,ch=canvas.height;
+  ctx.clearRect(0,0,cw,ch);
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,cw,ch);
+
+  // Axes
+  ctx.strokeStyle='#475569';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(30,10);ctx.lineTo(30,ch-20);ctx.lineTo(cw-10,ch-20);ctx.stroke();
+
+  function drawCurve(Km,Vmax,color){
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();
+    for(let px=0;px<cw-40;px++){
+      const S=px/(cw-40)*60;
+      const v=Vmax*S/(Km+S);
+      const x=30+px;const y=ch-20-(v/state.Vmax*0.95)*(ch-30);
+      if(px===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }ctx.stroke();
+  }
+
+  // Base curve
+  drawCurve(state.Km,state.Vmax,'#a855f7');
+  // With inhibitor
+  if(state.inhibitor==='competitive')drawCurve(state.Km*3,state.Vmax,'#ef4444');
+  else if(state.inhibitor==='noncompetitive')drawCurve(state.Km,state.Vmax/3,'#06b6d4');
+
+  // Current point
+  const{v,appKm,appVmax}=computeKinetics();
+  const px=state.S/60*(cw-40);
+  const py=ch-20-(v/state.Vmax*0.95)*(ch-30);
+  ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(30+px,py,5,0,Math.PI*2);ctx.fill();
+
+  // Vmax line
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(30,ch-20-0.95*(ch-30));ctx.lineTo(cw-10,ch-20-0.95*(ch-30));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#94a3b8';ctx.font='9px monospace';ctx.fillText('Vmax',cw-38,ch-20-0.95*(ch-30)-2);
+  ctx.fillText('[S]',cw-24,ch-8);ctx.fillText('v',4,14);
+}
+
+function setInhibitor(type){
+  state.inhibitor=type;
+  ['none','comp','noncomp'].forEach(id=>document.getElementById('inh-'+id)?.classList.remove('active'));
+  const map={none:'inh-none',competitive:'inh-comp',noncompetitive:'inh-noncomp'};
+  document.getElementById(map[type])?.classList.add('active');
+  spawnInhibitors();updateDataUI();drawMM();
+}
+
+// Controls
+document.getElementById('s-slider').addEventListener('input',e=>{state.S=parseFloat(e.target.value);document.getElementById('s-val').textContent=state.S;spawnSubstrates();updateDataUI();drawMM();});
+document.getElementById('km-slider').addEventListener('input',e=>{state.Km=parseFloat(e.target.value);document.getElementById('km-val').textContent=state.Km;updateDataUI();drawMM();});
+document.getElementById('vmax-slider').addEventListener('input',e=>{state.Vmax=parseFloat(e.target.value);document.getElementById('vmax-val').textContent=state.Vmax;updateDataUI();drawMM();});
+
+katex.render('v = \\frac{V_{\\max}[S]}{K_m + [S]}',document.getElementById('f1'),{throwOnError:false,displayMode:false});
+katex.render('K_m = [S]\\text{ at }\\frac{1}{2}V_{\\max}\\text{ — substrate affinity}',document.getElementById('f2'),{throwOnError:false,displayMode:false});
+
+spawnSubstrates();updateDataUI();drawMM();
+
+let clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();state.time+=dt;
+  enzyme.rotation.y+=0.004;enzyme.rotation.x=Math.sin(state.time*0.3)*0.05;
+
+  substrates.forEach(s=>{
+    s.position.x+=s.userData.vx*dt*2;s.position.y+=s.userData.vy*dt*2;s.position.z+=s.userData.vz*dt*2;
+    if(Math.abs(s.position.x)>5)s.userData.vx*=-1;if(Math.abs(s.position.y)>5)s.userData.vy*=-1;if(Math.abs(s.position.z)>5)s.userData.vz*=-1;
+    // Dock near active site occasionally
+    const{v,appVmax}=computeKinetics();
+    const prob=v/appVmax;
+    if(!s.userData.docked&&Math.random()<prob*dt*2){
+      s.userData.docked=true;s.userData.dockTimer=0.5;
+      s.position.set(0,1.6,1.8);
+    }
+    if(s.userData.docked){
+      s.userData.dockTimer-=dt;
+      if(s.userData.dockTimer<=0){s.userData.docked=false;s.userData.vy=1;s.material.color.setHex(0x22c55e);setTimeout(()=>s.material.color.setHex(0xfbbf24),500);}
+    }
+  });
+  inhibitorMeshes.forEach(m=>{m.position.x+=m.userData.vx*dt*1.5;m.position.y+=m.userData.vy*dt*1.5;m.position.z+=m.userData.vz*dt*1.5;if(Math.abs(m.position.x)>5)m.userData.vx*=-1;if(Math.abs(m.position.y)>5)m.userData.vy*=-1;if(Math.abs(m.position.z)>5)m.userData.vz*=-1;m.rotation.x+=dt;});
+
+  if(controls)controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{const nW=canvas3d.offsetWidth;camera.aspect=nW/H;camera.updateProjectionMatrix();renderer.setSize(nW,H);});
+</script>
+</body>
+</html>

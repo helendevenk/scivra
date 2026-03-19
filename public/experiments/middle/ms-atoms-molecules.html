@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atoms & Periodic Table — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(168,85,247,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#d8b4fe;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#a855f7;height:4px;margin-top:2px}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#c084fc;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:380px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(168,85,247,0.3);color:#d8b4fe}
+    #elem-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-70%);text-align:center;pointer-events:none}
+    #elem-display .sym{font-size:2.5rem;font-weight:700;color:#d8b4fe;text-shadow:0 0 15px rgba(168,85,247,0.8)}
+    #elem-display .info{font-size:0.75rem;color:#94a3b8}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="elem-display">
+  <div class="sym" id="el-sym">C</div>
+  <div class="info" id="el-info">Carbon — Z=6, A=12</div>
+</div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Atoms & Periodic Table <span class="badge">MS Chem</span></h1>
+      <p>Build atoms — protons, neutrons, electrons, isotopes, ions</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Protons (Z) <span id="Z-val">6</span></label>
+        <input type="range" id="Z-slider" min="1" max="18" step="1" value="6">
+      </div>
+      <div class="slider-row">
+        <label>Neutrons (N) <span id="N-val">6</span></label>
+        <input type="range" id="N-slider" min="0" max="22" step="1" value="6">
+      </div>
+      <div class="slider-row">
+        <label>Electrons (e⁻) <span id="e-val">6</span></label>
+        <input type="range" id="e-slider" min="0" max="18" step="1" value="6">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#d8b4fe;margin-bottom:4px;font-weight:600">Atom Properties</div>
+      <div class="data-row">Element <span class="data-val" id="d-el">Carbon (C)</span></div>
+      <div class="data-row">Atomic Number Z <span class="data-val" id="d-Z">6</span></div>
+      <div class="data-row">Mass Number A <span class="data-val" id="d-A">12</span></div>
+      <div class="data-row">Charge <span class="data-val" id="d-charge">0 (neutral)</span></div>
+      <div class="data-row">Isotope <span class="data-val" id="d-iso">C-12</span></div>
+      <div class="data-row">Shell Config <span class="data-val" id="d-shells">2, 4</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#d8b4fe;margin-bottom:4px;font-weight:600">Atomic Structure</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const elements=[null,
+  {sym:'H',name:'Hydrogen'},{sym:'He',name:'Helium'},{sym:'Li',name:'Lithium'},
+  {sym:'Be',name:'Beryllium'},{sym:'B',name:'Boron'},{sym:'C',name:'Carbon'},
+  {sym:'N',name:'Nitrogen'},{sym:'O',name:'Oxygen'},{sym:'F',name:'Fluorine'},
+  {sym:'Ne',name:'Neon'},{sym:'Na',name:'Sodium'},{sym:'Mg',name:'Magnesium'},
+  {sym:'Al',name:'Aluminum'},{sym:'Si',name:'Silicon'},{sym:'P',name:'Phosphorus'},
+  {sym:'S',name:'Sulfur'},{sym:'Cl',name:'Chlorine'},{sym:'Ar',name:'Argon'}
+];
+const shellCaps=[2,8,8];
+function shellConfig(e){ let r=[],rem=e; for(let s=0;s<shellCaps.length&&rem>0;s++){const n=Math.min(rem,shellCaps[s]);r.push(n);rem-=n;}return r; }
+
+let Z=6,N=6,E=6;
+let scene,camera,renderer,controls,nucleusMesh,electrons=[];
+
+function update(){
+  const el=elements[Z]||{sym:'?',name:'Unknown'};
+  const A=Z+N, charge=Z-E;
+  const cfg=shellConfig(E);
+  document.getElementById('el-sym').textContent=el.sym+(charge>0?''+'+'.repeat(charge):charge<0?''+'-'.repeat(-charge):'');
+  document.getElementById('el-info').textContent=el.name+' — Z='+Z+', A='+A;
+  document.getElementById('d-el').textContent=el.name+' ('+el.sym+')';
+  document.getElementById('d-Z').textContent=Z;
+  document.getElementById('d-A').textContent=A;
+  document.getElementById('d-charge').textContent=charge===0?'0 (neutral)':(charge>0?'+'+charge:charge)+' ('+( charge>0?'cation':'anion')+')';
+  document.getElementById('d-iso').textContent=el.sym+'-'+A;
+  document.getElementById('d-shells').textContent=cfg.join(', ');
+  rebuildAtom(E,Z);
+}
+
+function initScene(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100); camera.position.set(0,0,12);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  controls=new THREE.OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  const pl=new THREE.PointLight(0xa855f7,0.6,20); scene.add(pl);
+  rebuildAtom(6,6);
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  animate();
+}
+
+function rebuildAtom(e,z){
+  electrons.forEach(m=>scene.remove(m.mesh)); electrons=[];
+  if(nucleusMesh) scene.remove(nucleusMesh);
+  // nucleus: size by mass
+  const nr=0.2+Math.sqrt(z+N)*0.08;
+  nucleusMesh=new THREE.Mesh(new THREE.SphereGeometry(nr,24,24),new THREE.MeshStandardMaterial({color:0xff3333,emissive:0xff1111,emissiveIntensity:0.4}));
+  scene.add(nucleusMesh);
+  // electron shells
+  const cfg=shellConfig(e);
+  cfg.forEach((eInShell,si)=>{
+    const r=1.5+(si+1)*1.4;
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,8,64),new THREE.MeshBasicMaterial({color:0xa855f7,opacity:0.2,transparent:true}));
+    ring.rotation.x=Math.PI/2+(si*0.3); ring.rotation.z=si*0.5;
+    scene.add(ring);
+    for(let i=0;i<eInShell;i++){
+      const angle=(i/eInShell)*Math.PI*2;
+      const em=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,10),new THREE.MeshStandardMaterial({color:0xa855f7,emissive:0xa855f7,emissiveIntensity:0.7}));
+      electrons.push({mesh:em,shell:si,r,angle,speed:0.9/(si+1),tilt:ring.rotation.clone()});
+      scene.add(em);
+    }
+  });
+}
+
+let t3=0;
+function animate(){
+  requestAnimationFrame(animate); t3+=0.016; controls.update();
+  electrons.forEach(e=>{
+    e.angle+=e.speed*0.016;
+    const x=Math.cos(e.angle)*e.r, z=Math.sin(e.angle)*e.r;
+    e.mesh.position.set(x,Math.sin(e.angle*0.5)*0.3*e.shell,z);
+  });
+  if(nucleusMesh) nucleusMesh.rotation.y+=0.01;
+  renderer.render(scene,camera);
+}
+
+document.getElementById('Z-slider').addEventListener('input',function(){Z=+this.value;document.getElementById('Z-val').textContent=Z;document.getElementById('N-slider').value=Z;N=Z;document.getElementById('N-val').textContent=N;document.getElementById('e-slider').value=Z;E=Z;document.getElementById('e-val').textContent=E;update();});
+document.getElementById('N-slider').addEventListener('input',function(){N=+this.value;document.getElementById('N-val').textContent=N;update();});
+document.getElementById('e-slider').addEventListener('input',function(){E=+this.value;document.getElementById('e-val').textContent=E;update();});
+
+katex.render('Z=\\text{protons} \\quad A=Z+N \\quad \\text{charge}=Z-e^-', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{Shells: }1\\text{st}\\le2 \\quad 2\\text{nd}\\le8 \\quad 3\\text{rd}\\le8', document.getElementById('kx-2'),{throwOnError:false});
+
+initScene(); update();
+</script>
+</body>
+</html>

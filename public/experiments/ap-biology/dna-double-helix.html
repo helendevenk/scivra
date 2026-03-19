@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNA Double Helix & Base Pairing — NeonPhysics AP Biology</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.1rem;color:#93c5fd;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:8px;min-width:220px}
+    .slider-row{display:flex;flex-direction:column;gap:3px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#3b82f6;height:4px}
+    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    button{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#93c5fd;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
+    button:hover{background:rgba(59,130,246,0.3)}
+    button.active{background:rgba(59,130,246,0.4);border-color:#3b82f6}
+    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:180px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#34d399;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:420px}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.75rem}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:#94a3b8}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    #mode-indicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(59,130,246,0.9);color:white;padding:8px 20px;border-radius:20px;font-size:0.85rem;pointer-events:none;opacity:0;transition:opacity 0.5s}
+    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(59,130,246,0.3);color:#93c5fd}
+    .pro-badge{background:rgba(234,179,8,0.2);color:#fbbf24}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>DNA Double Helix <span class="badge">AP Bio</span></h1>
+      <p>Watson-Crick double helix with base pairing and replication fork</p>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Adenine (A)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Thymine (T)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Guanine (G)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Cytosine (C)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>Sugar-Phosphate</div>
+      </div>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Rotation Speed <span id="rot-val">2</span> rpm</label>
+        <input type="range" id="rot-speed" min="0" max="10" step="0.5" value="2">
+      </div>
+      <div class="slider-row">
+        <label>Base Pairs <span id="bp-val">10</span></label>
+        <input type="range" id="bp-count" min="5" max="20" step="1" value="10">
+      </div>
+      <div class="btn-row">
+        <button id="btn-replicate">▶ Replication</button>
+        <button id="btn-reset">↺ Reset</button>
+        <button id="btn-labels">Labels</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.72rem;color:#93c5fd;margin-bottom:6px;font-weight:600">Molecular Data</div>
+      <div class="data-row">Base Pairs <span class="data-val" id="d-bp">10</span></div>
+      <div class="data-row">Helix Turns <span class="data-val" id="d-turns">1.0</span></div>
+      <div class="data-row">H-bonds (A-T) <span class="data-val" id="d-at">0</span></div>
+      <div class="data-row">H-bonds (G-C) <span class="data-val" id="d-gc">0</span></div>
+      <div class="data-row">Replication % <span class="data-val" id="d-rep">0%</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.72rem;color:#93c5fd;margin-bottom:6px;font-weight:600">Key Relationships</div>
+      <div class="katex-wrap" id="f1"></div>
+      <div class="katex-wrap" id="f2"></div>
+      <div class="katex-wrap" id="f3"></div>
+    </div>
+  </div>
+</div>
+<div id="mode-indicator"></div>
+
+<script>
+const W=window.innerWidth,H=window.innerHeight;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0a0e1a);
+scene.fog=new THREE.Fog(0x0a0e1a,30,80);
+const camera=new THREE.PerspectiveCamera(60,W/H,0.1,200);
+camera.position.set(0,0,18);
+
+let controls;
+if(window.OrbitControls){controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=0.05;}
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x334466,0.8));
+const dl=new THREE.DirectionalLight(0x6699ff,1.2);dl.position.set(10,15,10);scene.add(dl);
+const pl=new THREE.PointLight(0x3b82f6,2,40);pl.position.set(0,0,5);scene.add(pl);
+
+// Base colors
+const BASE_COLORS={A:0xef4444,T:0x3b82f6,G:0x22c55e,C:0xf59e0b};
+const BACKBONE_COLOR=0x94a3b8;
+const HBOND_COLOR_AT=0xfca5a5;
+const HBOND_COLOR_GC=0x86efac;
+const COMPLEMENT={A:'T',T:'A',G:'C',C:'G'};
+
+// State
+let state={
+  numBP:10,
+  rotSpeed:2,
+  replicating:false,
+  repProgress:0,
+  showLabels:false,
+  time:0,
+  sequence:[],
+  atCount:0,
+  gcCount:0
+};
+
+// Groups
+const helixGroup=new THREE.Group();scene.add(helixGroup);
+const strand1=new THREE.Group();
+const strand2=new THREE.Group();
+const hBonds=new THREE.Group();
+const labelsGroup=new THREE.Group();
+helixGroup.add(strand1,strand2,hBonds,labelsGroup);
+
+function randomBase(){return['A','T','G','C'][Math.floor(Math.random()*4)];}
+
+function buildHelix(){
+  // Clear
+  [strand1,strand2,hBonds,labelsGroup].forEach(g=>{while(g.children.length)g.remove(g.children[0]);});
+  state.sequence=[];state.atCount=0;state.gcCount=0;
+
+  const bpGeo=new THREE.SphereGeometry(0.25,12,12);
+  const backbone=new THREE.SphereGeometry(0.12,8,8);
+  const backboneMat=new THREE.MeshStandardMaterial({color:BACKBONE_COLOR,roughness:0.5,metalness:0.2});
+
+  const totalHeight=state.numBP*0.8;
+  const radius=1.5;
+  const twistPerBP=Math.PI*2/10; // 10 bp per turn
+
+  for(let i=0;i<state.numBP;i++){
+    const t=i/(state.numBP-1);
+    const angle=i*twistPerBP;
+    const y=(i-state.numBP/2)*0.8;
+
+    const base1=randomBase();
+    const base2=COMPLEMENT[base1];
+    state.sequence.push({b1:base1,b2:base2,y,angle});
+    if(base1==='A'||base1==='T')state.atCount++;else state.gcCount++;
+
+    // Strand 1 base
+    const m1=new THREE.MeshStandardMaterial({color:BASE_COLORS[base1],roughness:0.3,metalness:0.3,emissive:BASE_COLORS[base1],emissiveIntensity:0.15});
+    const s1m=new THREE.Mesh(bpGeo,m1);
+    s1m.position.set(Math.cos(angle)*radius,y,Math.sin(angle)*radius);
+    strand1.add(s1m);
+
+    // Strand 2 base (antiparallel, opposite side)
+    const m2=new THREE.MeshStandardMaterial({color:BASE_COLORS[base2],roughness:0.3,metalness:0.3,emissive:BASE_COLORS[base2],emissiveIntensity:0.15});
+    const s2m=new THREE.Mesh(bpGeo,m2);
+    s2m.position.set(Math.cos(angle+Math.PI)*radius,y,Math.sin(angle+Math.PI)*radius);
+    strand2.add(s2m);
+
+    // Hydrogen bond (stick connecting the two bases)
+    const p1=new THREE.Vector3(Math.cos(angle)*radius,y,Math.sin(angle)*radius);
+    const p2=new THREE.Vector3(Math.cos(angle+Math.PI)*radius,y,Math.sin(angle+Math.PI)*radius);
+    const mid=p1.clone().add(p2).multiplyScalar(0.5);
+    const len=p1.distanceTo(p2);
+    const hbGeo=new THREE.CylinderGeometry(0.04,0.04,len,6);
+    const hbColor=(base1==='A'||base1==='T')?HBOND_COLOR_AT:HBOND_COLOR_GC;
+    const hbMat=new THREE.MeshStandardMaterial({color:hbColor,roughness:0.8,transparent:true,opacity:0.7});
+    const hb=new THREE.Mesh(hbGeo,hbMat);
+    hb.position.copy(mid);
+    hb.lookAt(p2);hb.rotateX(Math.PI/2);
+    hBonds.add(hb);
+
+    // Backbone beads (sugar-phosphate)
+    if(i>0){
+      const prev=state.sequence[i-1];
+      const prevAngle=prev.angle;
+      const prevY=prev.y;
+      // Strand 1 backbone
+      const bp1=new THREE.Mesh(backbone,backboneMat);
+      bp1.position.set(
+        (Math.cos(angle)+Math.cos(prevAngle))*radius/2,
+        (y+prevY)/2,
+        (Math.sin(angle)+Math.sin(prevAngle))*radius/2
+      );
+      strand1.add(bp1);
+      // Strand 2 backbone
+      const bp2=new THREE.Mesh(backbone,backboneMat.clone());
+      bp2.position.set(
+        (Math.cos(angle+Math.PI)+Math.cos(prevAngle+Math.PI))*radius/2,
+        (y+prevY)/2,
+        (Math.sin(angle+Math.PI)+Math.sin(prevAngle+Math.PI))*radius/2
+      );
+      strand2.add(bp2);
+    }
+  }
+
+  updateDataDisplay();
+}
+
+// Replication state
+let repFork=0;
+const repStrand1New=new THREE.Group();
+const repStrand2New=new THREE.Group();
+helixGroup.add(repStrand1New,repStrand2New);
+
+function updateReplication(progress){
+  const bp=Math.floor(progress*state.numBP);
+  // Hide H-bonds above fork
+  hBonds.children.forEach((hb,i)=>{
+    if(i<bp)hb.material.opacity=0.05;
+    else hb.material.opacity=0.7;
+  });
+  document.getElementById('d-rep').textContent=Math.round(progress*100)+'%';
+}
+
+function updateDataDisplay(){
+  document.getElementById('d-bp').textContent=state.numBP;
+  document.getElementById('d-turns').textContent=(state.numBP/10).toFixed(1);
+  document.getElementById('d-at').textContent=state.atCount*2;
+  document.getElementById('d-gc').textContent=state.gcCount*3;
+  document.getElementById('d-rep').textContent='0%';
+}
+
+function showModeIndicator(msg){
+  const el=document.getElementById('mode-indicator');
+  el.textContent=msg;el.style.opacity=1;
+  setTimeout(()=>el.style.opacity=0,1500);
+}
+
+// Controls
+document.getElementById('rot-speed').addEventListener('input',e=>{
+  state.rotSpeed=parseFloat(e.target.value);
+  document.getElementById('rot-val').textContent=state.rotSpeed;
+});
+document.getElementById('bp-count').addEventListener('input',e=>{
+  state.numBP=parseInt(e.target.value);
+  document.getElementById('bp-val').textContent=state.numBP;
+  buildHelix();
+});
+document.getElementById('btn-replicate').addEventListener('click',()=>{
+  state.replicating=!state.replicating;
+  if(!state.replicating){state.repProgress=0;updateReplication(0);hBonds.children.forEach(h=>h.material.opacity=0.7);}
+  document.getElementById('btn-replicate').textContent=state.replicating?'⏹ Stop':'▶ Replication';
+  document.getElementById('btn-replicate').classList.toggle('active',state.replicating);
+  showModeIndicator(state.replicating?'Replication Mode':'Helix Mode');
+});
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  state.replicating=false;state.repProgress=0;
+  document.getElementById('btn-replicate').textContent='▶ Replication';
+  document.getElementById('btn-replicate').classList.remove('active');
+  hBonds.children.forEach(h=>h.material.opacity=0.7);
+  buildHelix();
+});
+document.getElementById('btn-labels').addEventListener('click',()=>{
+  state.showLabels=!state.showLabels;
+  document.getElementById('btn-labels').classList.toggle('active',state.showLabels);
+});
+
+// KaTeX formulas
+katex.render('\\text{A} \\equiv \\text{T} \\;(2\\,H\\text{-bonds}), \\quad \\text{G} \\equiv \\text{C} \\;(3\\,H\\text{-bonds})',document.getElementById('f1'),{throwOnError:false,displayMode:false});
+katex.render('5\'\\to 3\' \\parallel 3\'\\to 5\'\\;\\text{(antiparallel strands)}',document.getElementById('f2'),{throwOnError:false,displayMode:false});
+katex.render('\\text{Semi-conservative replication: each daughter has 1 original strand}',document.getElementById('f3'),{throwOnError:false,displayMode:false});
+
+// Grid helper
+const grid=new THREE.GridHelper(40,20,0x1a2744,0x1a2744);grid.position.y=-8;scene.add(grid);
+
+// Build initial helix
+buildHelix();
+
+// Raycaster for clicking
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+document.getElementById('canvas').addEventListener('click',e=>{
+  mouse.x=(e.clientX/W)*2-1;
+  mouse.y=-(e.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects([...strand1.children,...strand2.children],false);
+  if(hits.length>0){
+    const obj=hits[0].object;
+    obj.scale.setScalar(1.8);
+    setTimeout(()=>obj.scale.setScalar(1),400);
+  }
+});
+
+// Animate
+let clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();
+  state.time+=dt;
+
+  helixGroup.rotation.y+=state.rotSpeed*dt*Math.PI/30;
+
+  if(state.replicating){
+    state.repProgress=Math.min(1,state.repProgress+dt*0.3);
+    updateReplication(state.repProgress);
+    if(state.repProgress>=1){state.replicating=false;document.getElementById('btn-replicate').textContent='▶ Replication';document.getElementById('btn-replicate').classList.remove('active');}
+  }
+
+  // Gentle bobbing
+  helixGroup.position.y=Math.sin(state.time*0.5)*0.15;
+
+  if(controls)controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>

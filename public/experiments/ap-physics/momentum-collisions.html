@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Momentum & Collisions — NeonPhysics AP Physics 1</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(99,102,241,.08));border-bottom:1px solid rgba(168,85,247,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(168,85,247,.2);border:1px solid rgba(168,85,247,.4);color:#c4b5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative;background:#070b14}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:220px}
+    .mo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+    .mo-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
+    .mo-card-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+    .mo-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-blue{color:#60a5fa} .val-violet{color:#a78bfa} .val-green{color:#34d399}
+    .total-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:7px}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#a78bfa;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(168,85,247,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#a855f7;cursor:pointer}
+    .mode-row{display:flex;gap:8px;margin-bottom:14px}
+    .mode-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+    .mode-btn.active{background:rgba(168,85,247,.2);border-color:rgba(168,85,247,.5);color:#c4b5fd}
+    .btn-row{display:flex;gap:8px;margin-top:4px}
+    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#a855f7;color:#fff}
+    .btn-primary:hover{background:#9333ea}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .formula-box{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .ke-row{display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:8px}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Momentum &amp; Collisions</h1>
+  <p class="subtitle">Conservation of momentum — elastic and inelastic</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="mo-grid">
+        <div class="mo-card">
+          <div class="mo-card-title">p₁ Before</div>
+          <div class="mo-val val-blue" id="p1before">8.00 kg·m/s</div>
+        </div>
+        <div class="mo-card">
+          <div class="mo-card-title">p₂ Before</div>
+          <div class="mo-val val-violet" id="p2before">-6.00 kg·m/s</div>
+        </div>
+        <div class="mo-card">
+          <div class="mo-card-title">p₁ After</div>
+          <div class="mo-val val-blue" id="p1after">—</div>
+        </div>
+        <div class="mo-card">
+          <div class="mo-card-title">p₂ After</div>
+          <div class="mo-val val-violet" id="p2after">—</div>
+        </div>
+      </div>
+      <div class="total-row">
+        <span style="font-size:11px;color:#64748b">Total p (conserved)</span>
+        <span class="mo-val val-green" id="ptotal">2.00 kg·m/s</span>
+      </div>
+      <div class="ke-row">
+        <span>KE Before: <strong id="keBefore" style="color:#e2e8f0">—</strong></span>
+        <span>KE After: <strong id="keAfter" style="color:#e2e8f0">—</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Collision Type</div>
+      <div class="mode-row">
+        <div class="mode-btn active" id="modeElastic" onclick="setMode('elastic')">Elastic</div>
+        <div class="mode-btn" id="modeInelastic" onclick="setMode('inelastic')">Perfectly Inelastic</div>
+      </div>
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Mass 1 (m₁)</span><span class="param-val" id="vm1">2.0 kg</span></div>
+        <input type="range" id="sm1" min="0.5" max="10" value="2" step="0.5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Velocity 1 (v₁)</span><span class="param-val" id="vv1">+4.0 m/s</span></div>
+        <input type="range" id="sv1" min="-10" max="10" value="4" step="0.5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Mass 2 (m₂)</span><span class="param-val" id="vm2">2.0 kg</span></div>
+        <input type="range" id="sm2" min="0.5" max="10" value="2" step="0.5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Velocity 2 (v₂)</span><span class="param-val" id="vv2">-3.0 m/s</span></div>
+        <input type="range" id="sv2" min="-10" max="10" value="-3" step="0.5">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnLaunch">▶ Launch</button>
+        <button class="btn btn-ghost" id="btnReset">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Conservation of momentum</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Post-collision v₁ (elastic)</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Inelastic final velocity</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 3 AP Problems Locked</div>
+        <div class="ap-lock-desc">Upgrade to Pro to access AP Physics 1 exam-style collision problems with full solutions.</div>
+        <button class="ap-lock-btn">Unlock with Pro →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Params ──────────────────────────────────────────────────────────
+let m1=2, v1=4, m2=2, v2=-3;
+let mode='elastic'; // 'elastic' or 'inelastic'
+let phase='ready'; // 'ready' | 'moving' | 'collided'
+let x1=-4, x2=4, v1c=v1, v2c=v2;
+let collisionDone=false;
+
+// ─── Three.js setup ──────────────────────────────────────────────────
+const wrap=document.getElementById('canvasWrap');
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x070b14);
+
+const camera=new THREE.PerspectiveCamera(50,1,0.1,100);
+camera.position.set(0,4,12);
+camera.lookAt(0,0,0);
+
+const controls=typeof THREE.OrbitControls!=='undefined'
+  ?new THREE.OrbitControls(camera,renderer.domElement):null;
+if(controls){controls.enableDamping=true;controls.dampingFactor=0.08;}
+
+// ─── Lighting ────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x334466,0.8));
+const dl=new THREE.DirectionalLight(0xaabbff,1.2);
+dl.position.set(5,10,5);
+scene.add(dl);
+const pl1=new THREE.PointLight(0x3b82f6,3,12);
+pl1.position.set(-4,2,2);
+scene.add(pl1);
+const pl2=new THREE.PointLight(0xa855f7,3,12);
+pl2.position.set(4,2,2);
+scene.add(pl2);
+
+// ─── Track ───────────────────────────────────────────────────────────
+const trackMat=new THREE.MeshStandardMaterial({color:0x1e2a3a,metalness:.7,roughness:.3});
+const track=new THREE.Mesh(new THREE.BoxGeometry(16,0.15,1.2),trackMat);
+track.position.y=-0.6;
+scene.add(track);
+// rail lines
+for(const z of[-0.5,0.5]){
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(16,0.08,0.08),
+    new THREE.MeshStandardMaterial({color:0x334466,metalness:.9,roughness:.2}));
+  rail.position.set(0,-0.35,z);
+  scene.add(rail);
+}
+
+// ─── Ball factory ─────────────────────────────────────────────────────
+function makeBall(color, emissive){
+  const g=new THREE.SphereGeometry(0.45,32,32);
+  const mat=new THREE.MeshStandardMaterial({color,emissive,emissiveIntensity:.4,metalness:.3,roughness:.4});
+  const mesh=new THREE.Mesh(g,mat);
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(.55,32,32),
+    new THREE.MeshStandardMaterial({color,emissive,emissiveIntensity:.3,transparent:true,opacity:.18,side:THREE.BackSide}));
+  mesh.add(glow);
+  return mesh;
+}
+const ball1=makeBall(0x3b82f6,0x1d4ed8);
+const ball2=makeBall(0xa855f7,0x7e22ce);
+ball1.position.set(-4,0,0);
+ball2.position.set(4,0,0);
+scene.add(ball1,ball2);
+
+// ─── Velocity arrows (simple) ─────────────────────────────────────────
+function makeArrow(color){
+  const g=new THREE.ConeGeometry(.15,.5,8);
+  g.translate(0,.25,0);
+  const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.5});
+  return new THREE.Mesh(g,mat);
+}
+const arr1=makeArrow(0x60a5fa); scene.add(arr1);
+const arr2=makeArrow(0xc4b5fd); scene.add(arr2);
+
+// ─── Grid ────────────────────────────────────────────────────────────
+const grid=new THREE.GridHelper(20,20,0x1a2540,0x0f1a2e);
+grid.position.y=-0.7;
+scene.add(grid);
+
+// ─── Physics ──────────────────────────────────────────────────────────
+function calcAfter(){
+  let v1f, v2f;
+  if(mode==='elastic'){
+    v1f=((m1-m2)*v1+(2*m2*v2))/(m1+m2);
+    v2f=((m2-m1)*v2+(2*m1*v1))/(m1+m2);
+  } else {
+    v1f=v2f=(m1*v1+m2*v2)/(m1+m2);
+  }
+  return [v1f,v2f];
+}
+
+function updateStats(after=false){
+  const p1b=(m1*v1).toFixed(2), p2b=(m2*v2).toFixed(2);
+  const pt=(m1*v1+m2*v2).toFixed(2);
+  document.getElementById('p1before').textContent=p1b+' kg·m/s';
+  document.getElementById('p2before').textContent=p2b+' kg·m/s';
+  document.getElementById('ptotal').textContent=pt+' kg·m/s';
+  const ke1=(0.5*m1*v1*v1).toFixed(2);
+  const ke2=(0.5*m2*v2*v2).toFixed(2);
+  document.getElementById('keBefore').textContent=(+ke1+ +ke2).toFixed(2)+' J';
+  if(after){
+    const [v1f,v2f]=calcAfter();
+    document.getElementById('p1after').textContent=(m1*v1f).toFixed(2)+' kg·m/s';
+    document.getElementById('p2after').textContent=(m2*v2f).toFixed(2)+' kg·m/s';
+    const kef=(0.5*m1*v1f*v1f+0.5*m2*v2f*v2f).toFixed(2);
+    document.getElementById('keAfter').textContent=kef+' J';
+  } else {
+    document.getElementById('p1after').textContent='—';
+    document.getElementById('p2after').textContent='—';
+    document.getElementById('keAfter').textContent='—';
+  }
+}
+
+function updateArrows(){
+  arr1.position.set(x1+(v1c>0?.7:-.7),0.8,0);
+  arr1.rotation.z=v1c<0?Math.PI:0;
+  arr1.visible=Math.abs(v1c)>.1;
+  arr2.position.set(x2+(v2c>0?.7:-.7),0.8,0);
+  arr2.rotation.z=v2c<0?Math.PI:0;
+  arr2.visible=Math.abs(v2c)>.1;
+}
+
+// ─── Mode toggle ──────────────────────────────────────────────────────
+function setMode(m){
+  mode=m;
+  document.getElementById('modeElastic').classList.toggle('active',m==='elastic');
+  document.getElementById('modeInelastic').classList.toggle('active',m==='inelastic');
+  resetSim();
+}
+
+// ─── Reset / Launch ───────────────────────────────────────────────────
+function resetSim(){
+  x1=-4; x2=4; v1c=v1; v2c=v2; phase='ready'; collisionDone=false;
+  ball1.position.x=x1; ball2.position.x=x2;
+  pl1.position.x=x1; pl2.position.x=x2;
+  updateStats(false); updateArrows();
+}
+
+document.getElementById('btnLaunch').addEventListener('click',()=>{
+  if(phase==='ready') phase='moving';
+});
+document.getElementById('btnReset').addEventListener('click',resetSim);
+
+// ─── Sliders ──────────────────────────────────────────────────────────
+document.getElementById('sm1').addEventListener('input',e=>{m1=+e.target.value;document.getElementById('vm1').textContent=m1.toFixed(1)+' kg';updateStats();});
+document.getElementById('sv1').addEventListener('input',e=>{v1=+e.target.value;document.getElementById('vv1').textContent=(v1>=0?'+':'')+v1.toFixed(1)+' m/s';updateStats();resetSim();});
+document.getElementById('sm2').addEventListener('input',e=>{m2=+e.target.value;document.getElementById('vm2').textContent=m2.toFixed(1)+' kg';updateStats();});
+document.getElementById('sv2').addEventListener('input',e=>{v2=+e.target.value;document.getElementById('vv2').textContent=(v2>=0?'+':'')+v2.toFixed(1)+' m/s';updateStats();resetSim();});
+
+// ─── Render loop ──────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+updateStats(); updateArrows();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.033);
+
+  if(phase==='moving'){
+    x1+=v1c*dt*1.2; x2+=v2c*dt*1.2;
+    ball1.position.x=x1; ball2.position.x=x2;
+    pl1.position.x=x1; pl2.position.x=x2;
+    updateArrows();
+
+    // collision check
+    const gap=Math.abs(x1-x2)-0.9; // 2 radii
+    if(gap<=0 && !collisionDone){
+      collisionDone=true;
+      const [v1f,v2f]=calcAfter();
+      if(mode==='inelastic'){
+        // merge: both balls move together
+        const mx=(m1*x1+m2*x2)/(m1+m2);
+        x1=x2=mx;
+        ball2.visible=false; // they merge visually
+      }
+      v1c=mode==='inelastic'?v1f:v1f;
+      v2c=mode==='inelastic'?v1f:v2f; // inelastic: same vel
+      if(mode==='inelastic') v2c=v1f;
+      updateStats(true);
+      // flash
+      ball1.material.emissiveIntensity=2;
+      ball2.material.emissiveIntensity=2;
+      setTimeout(()=>{ball1.material.emissiveIntensity=.4;ball2.material.emissiveIntensity=.4;},300);
+    }
+    // stop when off screen
+    if(Math.abs(x1)>9&&Math.abs(x2)>9) phase='done';
+  }
+
+  ball1.rotation.y+=0.02; ball2.rotation.y-=0.02;
+  if(controls) controls.update();
+  renderer.render(scene,camera);
+}
+
+function resize(){
+  const w=wrap.clientWidth,h=wrap.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize); resize(); animate();
+
+// ─── KaTeX ────────────────────────────────────────────────────────────
+katex.render('m_1v_1+m_2v_2=m_1v_1\'+m_2v_2\'',document.getElementById('f1'),{throwOnError:false});
+katex.render('v_1\'=\\dfrac{(m_1-m_2)v_1+2m_2v_2}{m_1+m_2}',document.getElementById('f2'),{throwOnError:false});
+katex.render('v_f=\\dfrac{m_1v_1+m_2v_2}{m_1+m_2}',document.getElementById('f3'),{throwOnError:false});
+</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecosystems & Food Webs — NeonPhysics Middle School</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(132,204,22,0.35);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#bef264;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:260px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:220px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#84cc16;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(132,204,22,0.15);border:1px solid rgba(132,204,22,0.4);color:#bef264;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:0.68rem;transition:all 0.2s}
+    button:hover{background:rgba(132,204,22,0.3)}
+    button.active{background:rgba(132,204,22,0.4);border-color:#84cc16}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#a3e635;font-weight:600;font-family:monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(132,204,22,0.3);color:#bef264}
+    #pop-chart{position:absolute;bottom:110px;right:20px;width:180px;height:100px;pointer-events:none}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<canvas id="pop-chart" width="180" height="100"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Ecosystems & Food Webs <span class="badge">MS Biology</span></h1>
+      <p>Producers, consumers, decomposers — energy flows through the food web</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Producers (Plants) <span id="prod-val">50</span></label>
+        <input type="range" id="prod-slider" min="10" max="100" step="5" value="50">
+      </div>
+      <div class="slider-row">
+        <label>Primary Consumers <span id="cons1-val">20</span></label>
+        <input type="range" id="cons1-slider" min="5" max="50" step="5" value="20">
+      </div>
+      <div class="slider-row">
+        <label>Secondary Consumers <span id="cons2-val">5</span></label>
+        <input type="range" id="cons2-slider" min="1" max="15" step="1" value="5">
+      </div>
+      <div class="btn-row">
+        <button id="btn-remove" onclick="removeTopPredator()">⚡ Remove Predator</button>
+        <button id="btn-reset" onclick="resetEco()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#bef264;margin-bottom:4px;font-weight:600">Ecosystem Data</div>
+      <div class="data-row">Producers <span class="data-val" id="d-prod">50</span></div>
+      <div class="data-row">Herbivores <span class="data-val" id="d-herb">20</span></div>
+      <div class="data-row">Carnivores <span class="data-val" id="d-carn">5</span></div>
+      <div class="data-row">Energy Lost/Level <span class="data-val" id="d-eff">90%</span></div>
+      <div class="data-row">Ecosystem Status <span class="data-val" id="d-status">Balanced</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#bef264;margin-bottom:4px;font-weight:600">Energy Flow</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let prodCount=50, cons1Count=20, cons2Count=5;
+let scene,camera,renderer;
+let organisms=[];
+let popHistory={prod:[],herb:[],carn:[]};
+let simProd=50, simHerb=20, simCarn=5;
+let predatorRemoved=false;
+
+function resetEco(){
+  predatorRemoved=false; popHistory={prod:[],herb:[],carn:[]};
+  simProd=prodCount; simHerb=cons1Count; simCarn=cons2Count;
+  buildScene();
+}
+
+function removeTopPredator(){
+  predatorRemoved=true; simCarn=0;
+  document.getElementById('d-status').textContent='Trophic Cascade!';
+  buildScene();
+}
+
+function buildScene(){
+  while(scene.children.length) scene.remove(scene.children[0]);
+  organisms=[];
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,8,5); scene.add(dl);
+  // ground
+  const gnd=new THREE.Mesh(new THREE.PlaneGeometry(24,16),new THREE.MeshStandardMaterial({color:0x14532d}));
+  gnd.rotation.x=-Math.PI/2; gnd.position.y=-3; scene.add(gnd);
+  // grid
+  const gh=new THREE.GridHelper(24,24,0x166534,0x052e16); gh.position.y=-3; scene.add(gh);
+  // producers (green pyramids)
+  const nProd=Math.min(60,Math.round(simProd*0.8));
+  for(let i=0;i<nProd;i++){
+    const h=0.3+Math.random()*0.4;
+    const m=new THREE.Mesh(new THREE.ConeGeometry(0.2,h,6),new THREE.MeshStandardMaterial({color:0x16a34a,emissive:0x14532d,emissiveIntensity:0.2}));
+    m.position.set((Math.random()-0.5)*20,-3+h/2,(Math.random()-0.5)*12);
+    scene.add(m);
+    organisms.push({mesh:m,type:'producer',vel:new THREE.Vector3(0,0,0)});
+  }
+  // herbivores (blue spheres)
+  const nHerb=Math.min(30,Math.round(simHerb));
+  for(let i=0;i<nHerb;i++){
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.25,10,10),new THREE.MeshStandardMaterial({color:0x3b82f6,emissive:0x1d4ed8,emissiveIntensity:0.3}));
+    m.position.set((Math.random()-0.5)*18,-2.7,(Math.random()-0.5)*10);
+    const spd=(Math.random()-0.5)*0.03;
+    organisms.push({mesh:m,type:'herbivore',vel:new THREE.Vector3(spd,0,(Math.random()-0.5)*0.02)}); scene.add(m);
+  }
+  // carnivores (red triangles/diamonds)
+  if(!predatorRemoved){
+    const nCarn=Math.min(10,Math.round(simCarn));
+    for(let i=0;i<nCarn;i++){
+      const m=new THREE.Mesh(new THREE.OctahedronGeometry(0.35),new THREE.MeshStandardMaterial({color:0xef4444,emissive:0x991b1b,emissiveIntensity:0.4}));
+      m.position.set((Math.random()-0.5)*16,-2.5,(Math.random()-0.5)*8);
+      const spd=(Math.random()-0.5)*0.04;
+      organisms.push({mesh:m,type:'carnivore',vel:new THREE.Vector3(spd,0,(Math.random()-0.5)*0.03)}); scene.add(m);
+    }
+  }
+}
+
+function initScene(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,100); camera.position.set(0,8,18); camera.lookAt(0,-1,0);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+  renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  buildScene();
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  animate();
+}
+
+let t3=0, simTick=0;
+function animate(){
+  requestAnimationFrame(animate); t3+=0.016; simTick++;
+  organisms.forEach(o=>{
+    if(o.type==='herbivore'||o.type==='carnivore'){
+      o.mesh.position.addScaledVector(o.vel,1);
+      if(Math.abs(o.mesh.position.x)>10){ o.vel.x*=-1; }
+      if(Math.abs(o.mesh.position.z)>6){ o.vel.z*=-1; }
+      o.mesh.rotation.y+=0.03;
+    }
+  });
+  // Lotka-Volterra sim (every ~60 frames)
+  if(simTick%60===0){
+    const alpha=1.0, beta=0.05, delta=0.02, gamma=0.8;
+    const dt=0.15;
+    const dH=alpha*simHerb - beta*simHerb*simCarn;
+    const dC=delta*simHerb*simCarn - gamma*simCarn;
+    simHerb=Math.max(1,simHerb+dH*dt);
+    if(!predatorRemoved) simCarn=Math.max(0,simCarn+dC*dt);
+    else simHerb=Math.min(200,simHerb*1.03);
+    popHistory.herb.push(simHerb);
+    popHistory.carn.push(simCarn);
+    if(popHistory.herb.length>40){ popHistory.herb.shift(); popHistory.carn.shift(); }
+    document.getElementById('d-herb').textContent=Math.round(simHerb);
+    document.getElementById('d-carn').textContent=Math.round(simCarn);
+    const status=predatorRemoved?'Trophic Cascade!':simHerb>80?'Herbivore Boom':simCarn>12?'Carnivore Peak':'Balanced';
+    document.getElementById('d-status').textContent=status;
+    drawPopChart();
+  }
+  renderer.render(scene,camera);
+}
+
+function drawPopChart(){
+  const cvs=document.getElementById('pop-chart');
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,180,100);
+  ctx.fillStyle='rgba(10,14,26,0.7)'; ctx.fillRect(0,0,180,100);
+  ctx.strokeStyle='rgba(132,204,22,0.3)'; ctx.strokeRect(0,0,180,100);
+  const h=popHistory.herb, c=popHistory.carn;
+  if(h.length<2) return;
+  const maxV=Math.max(...h,...c,10)*1.1;
+  const draw=(arr,color)=>{
+    ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.beginPath();
+    arr.forEach((v,i)=>{
+      const x=i/(arr.length-1)*176+2, y=96-v/maxV*90;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }); ctx.stroke();
+  };
+  draw(h,'#3b82f6'); draw(c,'#ef4444');
+  ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
+  ctx.fillText('🔵 Herbivores  🔴 Carnivores',6,94);
+}
+
+document.getElementById('prod-slider').addEventListener('input',function(){prodCount=+this.value;simProd=prodCount;document.getElementById('prod-val').textContent=prodCount;document.getElementById('d-prod').textContent=prodCount;buildScene();});
+document.getElementById('cons1-slider').addEventListener('input',function(){cons1Count=+this.value;simHerb=cons1Count;document.getElementById('cons1-val').textContent=cons1Count;buildScene();});
+document.getElementById('cons2-slider').addEventListener('input',function(){cons2Count=+this.value;simCarn=cons2Count;document.getElementById('cons2-val').textContent=cons2Count;buildScene();});
+
+katex.render('\\text{10\\% Rule: only 10\\% of energy passes to next level}', document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\frac{dH}{dt}=\\alpha H - \\beta HC \\quad \\frac{dC}{dt}=\\delta HC - \\gamma C', document.getElementById('kx-2'),{throwOnError:false});
+
+initScene();
+</script>
+</body>
+</html>

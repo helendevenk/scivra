@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rotational Motion & Torque — NeonPhysics AP Physics 1</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(251,146,60,.12),rgba(239,68,68,.08));border-bottom:1px solid rgba(251,146,60,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-pro{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 72px)}
+    .canvas-wrap{position:relative;background:#070b14}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:240px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .metric-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
+    .metric-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+    .metric-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-orange{color:#fb923c} .val-amber{color:#fbbf24} .val-violet{color:#a78bfa} .val-green{color:#34d399}
+    .conservation-bar{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.2);border-radius:8px;padding:8px 12px}
+    .cons-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+    .cons-label{color:#64748b} .cons-val{font-weight:700;font-variant-numeric:tabular-nums}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fb923c;cursor:pointer}
+    .mode-row{display:flex;gap:8px;margin-bottom:14px}
+    .mode-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+    .mode-btn.active{background:rgba(251,146,60,.2);border-color:rgba(251,146,60,.5);color:#fdba74}
+    .formula-box{background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .ap-lock{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px;text-align:center}
+    .ap-lock-title{font-size:12px;font-weight:600;color:#fbbf24;margin-bottom:4px}
+    .ap-lock-desc{font-size:11px;color:#78716c}
+    .ap-lock-btn{margin-top:10px;padding:7px 20px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .btn-row{display:flex;gap:8px;margin-top:4px}
+    .btn{padding:8px 0;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;flex:1;text-align:center}
+    .btn-primary{background:#f97316;color:#fff}
+    .btn-primary:hover{background:#ea580c}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-pro">PRO</span>
+  </div>
+  <h1>Rotational Motion &amp; Torque</h1>
+  <p class="subtitle">Angular momentum conservation — spinning skater effect</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Angular Vel ω</div>
+          <div class="metric-val val-orange" id="omegaDisplay">2.50 rad/s</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Ang. Momentum L</div>
+          <div class="metric-val val-amber" id="angMomDisplay">5.00 kg·m²/s</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Moment Inertia I</div>
+          <div class="metric-val val-violet" id="inertiaDisplay">2.00 kg·m²</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Rot. KE</div>
+          <div class="metric-val val-green" id="keDisplay">6.25 J</div>
+        </div>
+      </div>
+      <div class="conservation-bar">
+        <div class="cons-row">
+          <span class="cons-label">Angular Momentum (conserved)</span>
+          <span class="cons-val val-amber" id="lConserved">5.00</span>
+        </div>
+        <div class="cons-row">
+          <span class="cons-label">α = τ/I</span>
+          <span class="cons-val val-orange" id="alphaDisplay">2.50 rad/s²</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Mode</div>
+      <div class="mode-row">
+        <div class="mode-btn active" id="modeDisc" onclick="setMode('disc')">Disk + Torque</div>
+        <div class="mode-btn" id="modeSkater" onclick="setMode('skater')">Skater Arms</div>
+      </div>
+    </div>
+
+    <div class="section" id="discSection">
+      <div class="section-title">Disk Parameters</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Applied Torque (τ)</span>
+          <span class="param-val" id="torqueVal">5.0 N·m</span>
+        </div>
+        <input type="range" id="torque" min="0" max="20" step="0.5" value="5">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Moment of Inertia (I)</span>
+          <span class="param-val" id="inertiaVal">2.0 kg·m²</span>
+        </div>
+        <input type="range" id="inertia" min="0.5" max="10" step="0.5" value="2">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="resetDisk()">Reset</button>
+        <button class="btn btn-ghost" id="pauseBtn" onclick="togglePause()">Pause</button>
+      </div>
+    </div>
+
+    <div class="section" id="skaterSection" style="display:none">
+      <div class="section-title">Skater Parameters</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Arm Radius</span>
+          <span class="param-val" id="armRadiusVal">0.80 m</span>
+        </div>
+        <input type="range" id="armRadius" min="0.2" max="1.5" step="0.05" value="0.8">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Skater Mass (Pro)</span>
+          <span class="param-val" id="skaterMassVal">60 kg</span>
+        </div>
+        <input type="range" id="skaterMass" min="30" max="120" step="5" value="60" disabled style="opacity:.4">
+      </div>
+      <p style="font-size:10px;color:#64748b;margin-top:4px;">Mass control requires Pro plan</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div id="f1"></div>
+        <div class="formula-desc">Torque = rotational Newton's 2nd Law</div>
+      </div>
+      <div class="formula-box">
+        <div id="f2"></div>
+        <div class="formula-desc">Angular momentum</div>
+      </div>
+      <div class="formula-box">
+        <div id="f3"></div>
+        <div class="formula-desc">Conservation: skater spins faster pulling arms in</div>
+      </div>
+      <div class="formula-box">
+        <div id="f4"></div>
+        <div class="formula-desc">Moment of inertia depends on mass distribution</div>
+      </div>
+      <div class="formula-box">
+        <div id="f5"></div>
+        <div class="formula-desc">Rotational kinetic energy</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice Problems</div>
+      <div class="ap-lock">
+        <div class="ap-lock-title">🔒 AP Exam Mode</div>
+        <div class="ap-lock-desc">4 exam-style problems including the incline race (solid disk vs hollow ring).</div>
+        <button class="ap-lock-btn">Unlock with AP Season Pass →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Scene ─────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvasWrap');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+camera.position.set(0, 6, 10);
+camera.lookAt(0, 0, 0);
+
+const controls = typeof THREE.OrbitControls !== 'undefined'
+  ? new THREE.OrbitControls(camera, renderer.domElement)
+  : null;
+if (controls) { controls.enableDamping = true; controls.dampingFactor = 0.08; }
+
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+const dirLight = new THREE.DirectionalLight(0xfdba74, 2);
+dirLight.position.set(5, 8, 5);
+scene.add(dirLight);
+
+const gridHelper = new THREE.GridHelper(14, 14, 0x1e293b, 0x0f172a);
+gridHelper.position.y = -1.2;
+scene.add(gridHelper);
+
+// ── Disk mode objects ─────────────────────────────────────────────────────────
+const diskGroup = new THREE.Group();
+scene.add(diskGroup);
+
+const diskGeo = new THREE.CylinderGeometry(2, 2, 0.3, 48);
+const diskMat = new THREE.MeshPhongMaterial({ color: 0x1e3a5f, emissive: 0x0c1a33, shininess: 40 });
+const disk = new THREE.Mesh(diskGeo, diskMat);
+diskGroup.add(disk);
+
+// Spoke lines on disk face
+for (let i = 0; i < 8; i++) {
+  const a = (i / 8) * Math.PI * 2;
+  const pts = [new THREE.Vector3(0, 0.16, 0), new THREE.Vector3(Math.cos(a) * 2, 0.16, Math.sin(a) * 2)];
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x38bdf8, opacity: 0.5, transparent: true }));
+  diskGroup.add(line);
+}
+
+// Torque force indicator (red arc hint)
+const toruGeo = new THREE.TorusGeometry(2.2, 0.06, 8, 32, Math.PI * 0.6);
+const toruMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+const torqueArc = new THREE.Mesh(toruGeo, toruMat);
+torqueArc.rotation.x = -Math.PI / 2;
+diskGroup.add(torqueArc);
+
+// ── Skater mode objects ───────────────────────────────────────────────────────
+const skaterGroup = new THREE.Group();
+skaterGroup.visible = false;
+scene.add(skaterGroup);
+
+// Body
+const bodyGeo = new THREE.CapsuleGeometry(0.25, 1.0, 8, 16);
+const bodyMat = new THREE.MeshPhongMaterial({ color: 0xfb923c, emissive: 0x3a1000, shininess: 40 });
+const skaterBody = new THREE.Mesh(bodyGeo, bodyMat);
+skaterBody.position.y = 0.5;
+skaterGroup.add(skaterBody);
+
+// Arms (two spheres as placeholders for arm radius visualization)
+const armGeo = new THREE.SphereGeometry(0.12, 10, 10);
+const armMat = new THREE.MeshPhongMaterial({ color: 0xfdba74, emissive: 0x3a1000 });
+const armL = new THREE.Mesh(armGeo, armMat);
+const armR = new THREE.Mesh(armGeo, armMat);
+skaterGroup.add(armL, armR);
+
+// Arm connecting lines
+const armLineMat = new THREE.LineBasicMaterial({ color: 0xfdba74, linewidth: 2 });
+const armLineGeoL = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0.8,0), new THREE.Vector3(-0.8,0.8,0)]);
+const armLineGeoR = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0.8,0), new THREE.Vector3(0.8,0.8,0)]);
+const armLineL = new THREE.Line(armLineGeoL, armLineMat);
+const armLineR = new THREE.Line(armLineGeoR, armLineMat);
+skaterGroup.add(armLineL, armLineR);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let mode = 'disc';
+let torque = 5, inertia = 2;
+let armRadius = 0.8, skaterMass = 60;
+let diskOmega = 0, diskAngle = 0;
+let skaterOmega = 2.5, skaterAngle = 0;
+const skaterBaseI = 1.5; // body moment of inertia
+let L0_skater = 5; // initial angular momentum for skater mode
+let paused = false;
+
+function setMode(m) {
+  mode = m;
+  diskGroup.visible = (m === 'disc');
+  skaterGroup.visible = (m === 'skater');
+  document.getElementById('discSection').style.display = (m === 'disc') ? '' : 'none';
+  document.getElementById('skaterSection').style.display = (m === 'skater') ? '' : 'none';
+  document.getElementById('modeDisc').classList.toggle('active', m === 'disc');
+  document.getElementById('modeSkater').classList.toggle('active', m === 'skater');
+  if (m === 'skater') {
+    // Compute initial angular momentum
+    const I_arms = 2 * skaterMass * 0.3 * armRadius * armRadius; // simplified
+    const I_total = skaterBaseI + I_arms;
+    L0_skater = I_total * 2.5; // start at ω=2.5
+    skaterOmega = 2.5;
+  }
+}
+
+function resetDisk() { diskOmega = 0; diskAngle = 0; }
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+}
+
+// Sliders
+function bindSlider(id, labelId, unit, decimals, cb) {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    document.getElementById(labelId).textContent = v.toFixed(decimals) + ' ' + unit;
+    cb(v);
+  });
+}
+bindSlider('torque', 'torqueVal', 'N·m', 1, v => { torque = v; });
+bindSlider('inertia', 'inertiaVal', 'kg·m²', 1, v => { inertia = v; });
+bindSlider('armRadius', 'armRadiusVal', 'm', 2, v => {
+  armRadius = v;
+  const I_arms = 2 * skaterMass * 0.3 * armRadius * armRadius;
+  const I_total = skaterBaseI + I_arms;
+  skaterOmega = L0_skater / I_total;
+});
+
+// ── Animation ─────────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = paused ? 0 : Math.min(clock.getDelta(), 0.033);
+
+  if (mode === 'disc') {
+    const alpha = torque / inertia;
+    diskOmega = Math.min(diskOmega + alpha * dt, 30); // cap at 30 rad/s
+    diskAngle += diskOmega * dt;
+    diskGroup.rotation.y = diskAngle;
+    torqueArc.visible = torque > 0.5;
+
+    const L = inertia * diskOmega;
+    const KE = 0.5 * inertia * diskOmega * diskOmega;
+    document.getElementById('omegaDisplay').textContent = diskOmega.toFixed(2) + ' rad/s';
+    document.getElementById('angMomDisplay').textContent = L.toFixed(2) + ' kg·m²/s';
+    document.getElementById('inertiaDisplay').textContent = inertia.toFixed(2) + ' kg·m²';
+    document.getElementById('keDisplay').textContent = KE.toFixed(2) + ' J';
+    document.getElementById('lConserved').textContent = L.toFixed(2);
+    document.getElementById('alphaDisplay').textContent = (torque / inertia).toFixed(2) + ' rad/s²';
+  } else {
+    skaterAngle += skaterOmega * dt;
+    skaterGroup.rotation.y = skaterAngle;
+
+    const I_arms = 2 * skaterMass * 0.3 * armRadius * armRadius;
+    const I_total = skaterBaseI + I_arms;
+    skaterOmega = L0_skater / I_total;
+
+    // Arm positions
+    armL.position.set(-armRadius, 0.8, 0);
+    armR.position.set( armRadius, 0.8, 0);
+
+    const ptsL = [new THREE.Vector3(0, 0.8, 0), new THREE.Vector3(-armRadius, 0.8, 0)];
+    const ptsR = [new THREE.Vector3(0, 0.8, 0), new THREE.Vector3( armRadius, 0.8, 0)];
+    armLineL.geometry.setFromPoints(ptsL);
+    armLineR.geometry.setFromPoints(ptsR);
+
+    const KE = 0.5 * I_total * skaterOmega * skaterOmega;
+    document.getElementById('omegaDisplay').textContent = skaterOmega.toFixed(2) + ' rad/s';
+    document.getElementById('angMomDisplay').textContent = L0_skater.toFixed(2) + ' kg·m²/s';
+    document.getElementById('inertiaDisplay').textContent = I_total.toFixed(2) + ' kg·m²';
+    document.getElementById('keDisplay').textContent = KE.toFixed(2) + ' J';
+    document.getElementById('lConserved').textContent = L0_skater.toFixed(2);
+    document.getElementById('alphaDisplay').textContent = '0.00 rad/s² (no ext. torque)';
+  }
+
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+// ── Resize ────────────────────────────────────────────────────────────────────
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(wrap);
+resize();
+
+// ── KaTeX ─────────────────────────────────────────────────────────────────────
+const formulas = [
+  { id: 'f1', latex: '\\tau = rF\\sin\\theta = I\\alpha' },
+  { id: 'f2', latex: 'L = I\\omega' },
+  { id: 'f3', latex: 'I_1\\omega_1 = I_2\\omega_2' },
+  { id: 'f4', latex: 'I = \\sum m_i r_i^2' },
+  { id: 'f5', latex: 'KE_{rot} = \\tfrac{1}{2}I\\omega^2' },
+];
+formulas.forEach(f => {
+  if (window.katex) katex.render(f.latex, document.getElementById(f.id), { throwOnError: false });
+});
+
+animate();
+</script>
+</body>
+</html>
