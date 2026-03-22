@@ -70,8 +70,8 @@ export interface Experiment {
   // Classification
   standards: Standards;
   category: PhysicsCategory;
-  subject: Subject;
-  gradeLevel: GradeLevel;
+  subject?: Subject;
+  gradeLevel?: GradeLevel;
   tags: string[];
   difficulty: Difficulty;
 
