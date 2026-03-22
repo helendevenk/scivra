@@ -1,48 +1,48 @@
-# Sprint 0 Status
+# 任务执行状态
 
-**Status**: IN_PROGRESS
-**Started**: 2026-03-22T16:30:00Z
-**Current Task**: T6 (next: write experiment_access tests)
-**Iteration**: 2
+> 此文件是进度追踪的**唯一权威来源**
 
-## Progress
+## 基本信息
 
-### T1: CSS prefix migration ✅
-- Renamed all `.edu-*` to `.np-*` in theme-education.css (replace_all)
-- Renamed `--edu-*` to `--np-*` CSS variables
-- Added deprecated `.edu-*` class aliases at bottom (inline styles, not @apply)
-- Evidence: `grep -c "\.np-" theme-education.css` = 42 matches
+| 字段 | 值 |
+|------|-----|
+| 任务 | Q2 2026 统一工作计划 |
+| 开始时间 | 2026-03-22T10:46:54Z |
+| 当前状态 | IN_PROGRESS |
+| 当前阶段 | Phase F1/F2/F3 ✅ 全部完成，准备集成联调 |
+| 最后更新 | 2026-03-22T23:35:00Z |
 
-### T2: TSX file migration ✅
-- Zero TSX files reference `edu-` classes (only CSS + 1 comment in visual-design.ts)
-- Updated visual-design.ts comment: "edu-academic" → "np-academic"
-- Evidence: `grep -r "edu-" src/ --include="*.tsx"` = 0 matches
+## 阶段进度
 
-### T3: Subject color system ✅
-- Added 5 `[data-subject]` CSS rules + dark mode variants to theme-education.css
-- Added `.np-subject-badge` and `.np-subject-card` contextual components
-- Updated theme.css: `--subject-*` CSS variables (physics/chemistry/biology/earth/math)
-- Added `--np-gold/green/navy` with deprecated `--edu-*` aliases in theme.css
-- Evidence: `grep -c "data-subject" theme-education.css` = 12 matches
+| 阶段 | 状态 | 任务数 | 完成数 |
+|------|------|--------|--------|
+| Phase 0.5: 学科解耦 | ✅ 完成 | 11 | 11 |
+| Phase BG: 批量生成+内容 | ✅ 完成 | 9 | 9 |
+| Phase 3.5: 验证+修正 | ✅ 完成 | 8 | 8 |
+| Phase F1: AP Prep | ✅ 完成 | 5 | 5 |
+| Phase F2: Quest | ✅ 完成 | 5 | 5 |
+| Phase F3: Notebook | ✅ 完成 | 5 | 5 |
+| 集成联调 | 🔄 进行中 | 3 | 1 |
 
-### T4: Subject metadata ✅
-- Created `src/shared/lib/experiments/subjects.ts`
-- SUBJECTS const with 5 entries: physics/chemistry/biology/earth-science/math
-- Each has label, labelZh, dataAttr, icon
-- Exported SUBJECT_LIST array
-- Type-safe: `satisfies Record<Subject, ...>`
+## 迭代记录
 
-### T5: Experiment types ✅
-- Added `Subject` type to `src/shared/types/experiment.ts`
-- Added `GradeLevel` type: "K-2" | "3-5" | "6-8" | "9-12" | "AP"
-- Added `subject` and `gradeLevel` fields to Experiment interface
+| 迭代 | 时间 | 完成内容 |
+|------|------|----------|
+| 0 | 2026-03-22 | RalphFree 初始化 |
+| 1-5 | 2026-03-22 | ✅ Phase 0.5: A0-A10 学科解耦，104 tests |
+| 6-19 | 2026-03-22 | ✅ Phase BG: 73 个 AP Physics HTML，PhET 66 对标 100% |
+| 20 | 2026-03-22 | ✅ B1a-B1c: 验证框架 + 5条物理规则 + DB 6字段 |
+| 21-22 | 2026-03-22 | ✅ B1d: UI Verified 标签（Gallery 卡片/详情页/筛选） |
+| 23-26 | 2026-03-22 | ✅ B3a-B3d: refine-core + API + 版本历史 UI |
+| 27 | 2026-03-22 | ✅ Schema 迁移: 14 新表 + learningStats 2 字段 |
+| 28 | 2026-03-22 | ✅ Phase F1: AP Prep — 5 model + 11 API + 5 页面 + seed 30题 |
+| 29 | 2026-03-22 | ✅ Phase F2: Quest — 5 model + 7 API + 4 页面 + scoring + seed |
+| 30 | 2026-03-22 | ✅ Phase F3: Notebook — 3 model + AI engine + 9 API + editor + drawer |
+| 31 | 2026-03-22 | ✅ 三模块集成: build ✅ + 104 tests ✅ + worktree 合并清理 |
 
-### T6-T16: PENDING
-- Next: T6 — write failing test for experiment_access model (TDD)
-- Tests live in `tests/unit/` (not `src/`), vitest config: `tests/**/*.test.{ts,tsx}`
-- Test setup: `tests/setup.ts`
+## 剩余工作
 
-## Key Discovery
-- edu-* classes only exist in CSS files, NOT in TSX components
-- Migration blast radius was minimal: 3 files total (theme-education.css, theme.css, visual-design.ts comment)
-- Test directory is `tests/unit/`, not `src/shared/models/__tests__/`
+### 集成联调（Week 18）
+- [x] 三模块 build 通过
+- [ ] Free/Pro 权限矩阵验证
+- [ ] 性能测试 + 部署准备
