@@ -706,6 +706,14 @@ export const upgGeneration = pgTable(
     featured: boolean('featured').default(false),
     tags: text('tags').array(), // TEXT[], AI auto-extract + user editable
     forkedFrom: text('forked_from'),
+    // Phase 3.5: Validation
+    validationScore: integer('validation_score'),
+    validationDetails: text('validation_details'),
+    validatedAt: timestamp('validated_at'),
+    // Phase 3.5: Refinement
+    version: integer('version').default(1),
+    parentId: text('parent_id'),
+    refinementPrompt: text('refinement_prompt'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
       .defaultNow()
@@ -725,10 +733,16 @@ export const upgGeneration = pgTable(
       table.featured,
       table.createdAt
     ),
+    // Phase 0.7: Critical indexes for gallery and user queries
+    index('idx_upg_generation_user_created').on(table.userId, table.createdAt),
+    index('idx_upg_generation_tags').on(table.tags),
+    index('idx_upg_generation_gallery').on(table.isPublic, table.category, table.createdAt),
     foreignKey({
       columns: [table.forkedFrom],
       foreignColumns: [table.id],
     }).onDelete('set null'),
+    // Phase 3.5: Refinement version chain index
+    index('idx_upg_generation_parent').on(table.parentId),
   ]
 );
 
@@ -946,6 +960,10 @@ export const learningStats = pgTable(
     lastActiveAt: timestamp('last_active_at').defaultNow().notNull(),
     streakDays: integer('streak_days').default(0).notNull(),
     longestStreak: integer('longest_streak').default(0).notNull(),
+
+    // Phase F2: Quest stats
+    questsCompleted: integer('quests_completed').default(0).notNull(),
+    achievementsEarned: integer('achievements_earned').default(0).notNull(),
     
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -962,3 +980,603 @@ export const learningStats = pgTable(
 
 export type LearningStats = typeof learningStats.$inferSelect;
 export type NewLearningStats = typeof learningStats.$inferInsert;
+
+// ─── Phase 0.7: Database Optimization Tables ───
+
+// Audit Log Table
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    userId: varchar('user_id', { length: 255 }),
+    action: varchar('action', { length: 100 }).notNull(), // 'generate_upg' | 'like' | 'report' | 'admin_delete' | 'credit_earn' | 'credit_spend'
+    resourceType: varchar('resource_type', { length: 50 }), // 'upg_generation' | 'user' | 'credit' | 'report'
+    resourceId: varchar('resource_id', { length: 255 }),
+    metadata: text('metadata'), // JSON string for flexible additional info
+    ipAddress: varchar('ip_address', { length: 45 }), // IPv6 max length
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_audit_log_user_created').on(table.userId, table.createdAt),
+    index('idx_audit_log_action_created').on(table.action, table.createdAt),
+    index('idx_audit_log_resource').on(table.resourceType, table.resourceId),
+  ]
+);
+
+// UPG Tag Table (normalized tag management)
+export const upgTag = pgTable(
+  'upg_tag',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    name: varchar('name', { length: 100 }).unique().notNull(),
+    category: varchar('category', { length: 50 }), // 'physics' | 'chemistry' | 'biology' | 'math' | 'astronomy' | 'engineering'
+    usageCount: integer('usage_count').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_upg_tag_category').on(table.category),
+    index('idx_upg_tag_usage_count').on(table.usageCount),
+  ]
+);
+
+// UPG Generation-Tag Association Table (many-to-many)
+export const upgGenerationTag = pgTable(
+  'upg_generation_tag',
+  {
+    generationId: varchar('generation_id', { length: 255 })
+      .notNull()
+      .references(() => upgGeneration.id, { onDelete: 'cascade' }),
+    tagId: varchar('tag_id', { length: 255 })
+      .notNull()
+      .references(() => upgTag.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_upg_generation_tag_generation').on(table.generationId),
+    index('idx_upg_generation_tag_tag').on(table.tagId),
+    unique('uq_upg_generation_tag').on(table.generationId, table.tagId),
+  ]
+);
+
+// User Credits Table (with optimistic locking for concurrency control)
+export const userCredits = pgTable(
+  'user_credits',
+  {
+    userId: varchar('user_id', { length: 255 })
+      .primaryKey()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    totalCredits: integer('total_credits').default(0).notNull(),
+    usedCredits: integer('used_credits').default(0).notNull(),
+    // availableCredits computed as (totalCredits - usedCredits)
+    version: integer('version').default(0).notNull(), // Optimistic lock version
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_user_credits_user').on(table.userId),
+  ]
+);
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type NewAuditLog = typeof auditLog.$inferInsert;
+export type UpgTag = typeof upgTag.$inferSelect;
+export type NewUpgTag = typeof upgTag.$inferInsert;
+export type UpgGenerationTag = typeof upgGenerationTag.$inferSelect;
+export type NewUpgGenerationTag = typeof upgGenerationTag.$inferInsert;
+export type UserCredits = typeof userCredits.$inferSelect;
+export type NewUserCredits = typeof userCredits.$inferInsert;
+
+// ─── Phase 0.6: Content Moderation Tables ───
+
+// Content Moderation Table (审核记录表)
+export const contentModeration = pgTable(
+  'content_moderation',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    generationId: varchar('generation_id', { length: 255 })
+      .notNull()
+      .references(() => upgGeneration.id, { onDelete: 'cascade' }),
+    checkType: varchar('check_type', { length: 20 }).notNull(), // 'input' | 'output' | 'manual'
+    status: varchar('status', { length: 20 }).notNull(), // 'pass' | 'reject' | 'pending'
+    reason: text('reason'), // 审核不通过的原因
+    matchedKeywords: text('matched_keywords').array(), // 匹配到的敏感词列表
+    reviewedBy: varchar('reviewed_by', { length: 255 }).references(() => user.id, { onDelete: 'set null' }), // 人工审核员
+    reviewNotes: text('review_notes'), // 审核备注
+    checkedAt: timestamp('checked_at').defaultNow().notNull(),
+    reviewedAt: timestamp('reviewed_at'), // 人工审核时间
+  },
+  (table) => [
+    index('idx_content_moderation_generation').on(table.generationId),
+    index('idx_content_moderation_status').on(table.status),
+    index('idx_content_moderation_check_type').on(table.checkType),
+    index('idx_content_moderation_checked_at').on(table.checkedAt),
+  ]
+);
+
+export type ContentModeration = typeof contentModeration.$inferSelect;
+export type NewContentModeration = typeof contentModeration.$inferInsert;
+
+// ─── Autopilot Sessions ───
+
+export const autopilotSession = pgTable(
+  'autopilot_session',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    generationId: text('generation_id')
+      .notNull()
+      .references(() => upgGeneration.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('active'), // active/completed/aborted
+    totalSteps: integer('total_steps').default(0),
+    language: text('language').notNull(),
+    completedQuiz: boolean('completed_quiz').default(false),
+    quizCorrect: integer('quiz_correct').default(0),
+    durationMs: integer('duration_ms'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+  },
+  (table) => [
+    index('idx_autopilot_session_user').on(table.userId),
+    index('idx_autopilot_session_user_gen').on(table.userId, table.generationId),
+  ]
+);
+
+export type AutopilotSession = typeof autopilotSession.$inferSelect;
+export type NewAutopilotSession = typeof autopilotSession.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════
+// Phase F1: AP Prep Mode (5 tables)
+// ═══════════════════════════════════════════════════════════════
+
+export const apExam = pgTable(
+  'ap_exam',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').unique().notNull(),
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    descriptionEn: text('description_en'),
+    descriptionZh: text('description_zh'),
+    unitCount: integer('unit_count').default(0),
+    questionCount: integer('question_count').default(0),
+    isPublished: boolean('is_published').default(false),
+    coverImage: text('cover_image'),
+    sort: integer('sort').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_ap_exam_published').on(table.isPublished),
+  ]
+);
+
+export const apUnit = pgTable(
+  'ap_unit',
+  {
+    id: text('id').primaryKey(),
+    examId: text('exam_id')
+      .notNull()
+      .references(() => apExam.id, { onDelete: 'cascade' }),
+    slug: text('slug').notNull(),
+    unitNumber: integer('unit_number').notNull(),
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    descriptionEn: text('description_en'),
+    descriptionZh: text('description_zh'),
+    topicCount: integer('topic_count').default(0),
+    questionCount: integer('question_count').default(0),
+    examWeight: integer('exam_weight'),
+    sort: integer('sort').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_ap_unit_exam').on(table.examId),
+    unique('uq_ap_unit_exam_slug').on(table.examId, table.slug),
+  ]
+);
+
+export const apQuestion = pgTable(
+  'ap_question',
+  {
+    id: text('id').primaryKey(),
+    examId: text('exam_id')
+      .notNull()
+      .references(() => apExam.id, { onDelete: 'cascade' }),
+    unitId: text('unit_id')
+      .notNull()
+      .references(() => apUnit.id, { onDelete: 'cascade' }),
+    upgGenerationId: text('upg_generation_id')
+      .references(() => upgGeneration.id, { onDelete: 'set null' }),
+    questionNumber: integer('question_number').notNull(),
+    type: text('type').notNull(), // mcq | frq
+    difficulty: text('difficulty').notNull(), // easy | medium | hard
+    examFrequency: text('exam_frequency'), // high | medium | low
+    stemEn: text('stem_en').notNull(),
+    stemZh: text('stem_zh'),
+    stemImage: text('stem_image'),
+    choicesEn: text('choices_en'), // JSON
+    choicesZh: text('choices_zh'), // JSON
+    correctAnswer: text('correct_answer').notNull(),
+    explanationEn: text('explanation_en').notNull(),
+    explanationZh: text('explanation_zh'),
+    upgPrompt: text('upg_prompt'),
+    tags: text('tags'), // JSON array
+    source: text('source'), // original | adapted
+    isPublished: boolean('is_published').default(false),
+    sort: integer('sort').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_ap_question_exam_unit').on(table.examId, table.unitId),
+    index('idx_ap_question_difficulty').on(table.difficulty),
+    index('idx_ap_question_type').on(table.type),
+    index('idx_ap_question_published').on(table.isPublished, table.examId),
+  ]
+);
+
+export const apAttempt = pgTable(
+  'ap_attempt',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    questionId: text('question_id')
+      .notNull()
+      .references(() => apQuestion.id, { onDelete: 'cascade' }),
+    examId: text('exam_id')
+      .notNull()
+      .references(() => apExam.id, { onDelete: 'cascade' }),
+    unitId: text('unit_id')
+      .notNull()
+      .references(() => apUnit.id, { onDelete: 'cascade' }),
+    selectedAnswer: text('selected_answer').notNull(),
+    isCorrect: boolean('is_correct').notNull(),
+    timeSpentSeconds: integer('time_spent_seconds'),
+    viewedExplanation: boolean('viewed_explanation').default(false),
+    viewedUpg: boolean('viewed_upg').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_ap_attempt_user_exam').on(table.userId, table.examId),
+    index('idx_ap_attempt_user_question').on(table.userId, table.questionId),
+    index('idx_ap_attempt_user_unit').on(table.userId, table.unitId),
+    index('idx_ap_attempt_created').on(table.createdAt),
+  ]
+);
+
+export const apUserProgress = pgTable(
+  'ap_user_progress',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    examId: text('exam_id')
+      .notNull()
+      .references(() => apExam.id, { onDelete: 'cascade' }),
+    totalAttempted: integer('total_attempted').default(0).notNull(),
+    totalCorrect: integer('total_correct').default(0).notNull(),
+    unitBreakdown: text('unit_breakdown'), // JSON
+    weakUnits: text('weak_units'), // JSON
+    lastAttemptAt: timestamp('last_attempt_at'),
+    streakDays: integer('streak_days').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    unique('uq_ap_user_progress_user_exam').on(table.userId, table.examId),
+    index('idx_ap_user_progress_user').on(table.userId),
+  ]
+);
+
+// Type exports for Phase F1
+export type ApExam = typeof apExam.$inferSelect;
+export type NewApExam = typeof apExam.$inferInsert;
+export type ApUnit = typeof apUnit.$inferSelect;
+export type NewApUnit = typeof apUnit.$inferInsert;
+export type ApQuestion = typeof apQuestion.$inferSelect;
+export type NewApQuestion = typeof apQuestion.$inferInsert;
+export type ApAttempt = typeof apAttempt.$inferSelect;
+export type NewApAttempt = typeof apAttempt.$inferInsert;
+export type ApUserProgress = typeof apUserProgress.$inferSelect;
+export type NewApUserProgress = typeof apUserProgress.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════
+// Phase F2: Physics Quest (6 tables)
+// ═══════════════════════════════════════════════════════════════
+
+export const quest = pgTable(
+  'quest',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').unique().notNull(),
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    descriptionEn: text('description_en').notNull(),
+    descriptionZh: text('description_zh').notNull(),
+    category: text('category').notNull(), // mechanics/waves/electricity/thermodynamics
+    difficulty: text('difficulty').notNull(), // beginner/intermediate/advanced
+    tier: text('tier').notNull().default('free'), // free/pro/max
+    coverImage: text('cover_image'),
+    estimatedMinutes: integer('estimated_minutes').notNull().default(20),
+    stepCount: integer('step_count').notNull().default(0),
+    experimentId: text('experiment_id').notNull(),
+    prerequisiteQuestId: text('prerequisite_quest_id'),
+    isWeeklyChallenge: boolean('is_weekly_challenge').default(false),
+    weeklyStartDate: text('weekly_start_date'),
+    weeklyEndDate: text('weekly_end_date'),
+    isPublished: boolean('is_published').default(false),
+    sortOrder: integer('sort_order').default(0),
+    attemptCount: integer('attempt_count').default(0),
+    completionCount: integer('completion_count').default(0),
+    avgScore: integer('avg_score').default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_quest_category_published').on(table.category, table.isPublished),
+    index('idx_quest_experiment').on(table.experimentId),
+    index('idx_quest_weekly').on(table.isWeeklyChallenge, table.weeklyStartDate),
+    foreignKey({
+      columns: [table.prerequisiteQuestId],
+      foreignColumns: [table.id],
+    }).onDelete('set null'),
+  ]
+);
+
+export const questStep = pgTable(
+  'quest_step',
+  {
+    id: text('id').primaryKey(),
+    questId: text('quest_id')
+      .notNull()
+      .references(() => quest.id, { onDelete: 'cascade' }),
+    orderIndex: integer('order_index').notNull(),
+    stepType: text('step_type').notNull(), // knowledge|predict|experiment|compare|explain
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    contentEn: text('content_en').notNull(),
+    contentZh: text('content_zh').notNull(),
+    config: text('config'), // JSON
+    maxPoints: integer('max_points').notNull().default(10),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    unique('uq_quest_step_order').on(table.questId, table.orderIndex),
+    index('idx_quest_step_quest').on(table.questId),
+  ]
+);
+
+export const questAttempt = pgTable(
+  'quest_attempt',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    questId: text('quest_id')
+      .notNull()
+      .references(() => quest.id, { onDelete: 'cascade' }),
+    currentStep: integer('current_step').notNull().default(0),
+    status: text('status').notNull().default('in_progress'), // in_progress|completed|abandoned
+    totalScore: integer('total_score').default(0),
+    maxPossibleScore: integer('max_possible_score').default(0),
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+    totalTimeSeconds: integer('total_time_seconds').default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index('idx_quest_attempt_user').on(table.userId),
+    index('idx_quest_attempt_quest').on(table.questId),
+    index('idx_quest_attempt_user_quest').on(table.userId, table.questId),
+    index('idx_quest_attempt_status').on(table.status),
+  ]
+);
+
+export const questStepResponse = pgTable(
+  'quest_step_response',
+  {
+    id: text('id').primaryKey(),
+    attemptId: text('attempt_id')
+      .notNull()
+      .references(() => questAttempt.id, { onDelete: 'cascade' }),
+    stepId: text('step_id')
+      .notNull()
+      .references(() => questStep.id, { onDelete: 'cascade' }),
+    responseType: text('response_type').notNull(), // numeric|choice|text|observation
+    responseValue: text('response_value'),
+    score: integer('score').default(0),
+    maxScore: integer('max_score').notNull(),
+    aiFeedback: text('ai_feedback'),
+    comparisonData: text('comparison_data'), // JSON
+    submittedAt: timestamp('submitted_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_quest_step_response_attempt').on(table.attemptId),
+    unique('uq_quest_step_response').on(table.attemptId, table.stepId),
+  ]
+);
+
+export const achievement = pgTable(
+  'achievement',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').unique().notNull(),
+    titleEn: text('title_en').notNull(),
+    titleZh: text('title_zh').notNull(),
+    descriptionEn: text('description_en').notNull(),
+    descriptionZh: text('description_zh').notNull(),
+    icon: text('icon').notNull(),
+    category: text('category').notNull(), // quest|streak|mastery|social
+    criteria: text('criteria').notNull(), // JSON
+    rarity: text('rarity').notNull().default('common'), // common|rare|epic|legendary
+    sortOrder: integer('sort_order').default(0),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_achievement_category').on(table.category),
+    index('idx_achievement_active').on(table.isActive),
+  ]
+);
+
+export const userAchievement = pgTable(
+  'user_achievement',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    achievementId: text('achievement_id')
+      .notNull()
+      .references(() => achievement.id, { onDelete: 'cascade' }),
+    questAttemptId: text('quest_attempt_id'),
+    unlockedAt: timestamp('unlocked_at').defaultNow().notNull(),
+  },
+  (table) => [
+    unique('uq_user_achievement').on(table.userId, table.achievementId),
+    index('idx_user_achievement_user').on(table.userId),
+  ]
+);
+
+// Type exports for Phase F2
+export type Quest = typeof quest.$inferSelect;
+export type NewQuest = typeof quest.$inferInsert;
+export type QuestStep = typeof questStep.$inferSelect;
+export type NewQuestStep = typeof questStep.$inferInsert;
+export type QuestAttempt = typeof questAttempt.$inferSelect;
+export type NewQuestAttempt = typeof questAttempt.$inferInsert;
+export type QuestStepResponse = typeof questStepResponse.$inferSelect;
+export type NewQuestStepResponse = typeof questStepResponse.$inferInsert;
+export type Achievement = typeof achievement.$inferSelect;
+export type NewAchievement = typeof achievement.$inferInsert;
+export type UserAchievement = typeof userAchievement.$inferSelect;
+export type NewUserAchievement = typeof userAchievement.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════
+// Phase F3: Lab Notebook AI (3 tables)
+// ═══════════════════════════════════════════════════════════════
+
+export const labNotebook = pgTable(
+  'lab_notebook',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    experimentId: text('experiment_id'),
+    generationId: text('generation_id')
+      .references(() => upgGeneration.id, { onDelete: 'set null' }),
+    autopilotSessionId: text('autopilot_session_id')
+      .references(() => autopilotSession.id, { onDelete: 'set null' }),
+    title: text('title').notNull(),
+    status: text('status').notNull().default('draft'), // draft|completed|archived
+    language: text('language').notNull().default('en'),
+    hypothesis: text('hypothesis'), // JSON: SectionContent
+    method: text('method'), // JSON
+    data: text('data'), // JSON
+    analysis: text('analysis'), // JSON
+    conclusion: text('conclusion'), // JSON
+    aiSuggestionsUsed: integer('ai_suggestions_used').default(0),
+    aiModel: text('ai_model'),
+    version: integer('version').default(1),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    completedAt: timestamp('completed_at'),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    index('idx_lab_notebook_user_status').on(table.userId, table.status),
+    index('idx_lab_notebook_user_created').on(table.userId, table.createdAt),
+    index('idx_lab_notebook_generation').on(table.generationId),
+    index('idx_lab_notebook_experiment').on(table.experimentId),
+  ]
+);
+
+export const labNotebookVersion = pgTable(
+  'lab_notebook_version',
+  {
+    id: text('id').primaryKey(),
+    notebookId: text('notebook_id')
+      .notNull()
+      .references(() => labNotebook.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    hypothesis: text('hypothesis'),
+    method: text('method'),
+    data: text('data'),
+    analysis: text('analysis'),
+    conclusion: text('conclusion'),
+    changeDescription: text('change_description'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    unique('uq_notebook_version').on(table.notebookId, table.version),
+    index('idx_notebook_version_notebook').on(table.notebookId),
+  ]
+);
+
+export const labNotebookExport = pgTable(
+  'lab_notebook_export',
+  {
+    id: text('id').primaryKey(),
+    notebookId: text('notebook_id')
+      .notNull()
+      .references(() => labNotebook.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    format: text('format').notNull().default('pdf'),
+    fileUrl: text('file_url'),
+    fileSize: integer('file_size'),
+    includeWatermark: boolean('include_watermark').default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_notebook_export_notebook').on(table.notebookId),
+    index('idx_notebook_export_user').on(table.userId),
+  ]
+);
+
+// Type exports for Phase F3
+export type LabNotebook = typeof labNotebook.$inferSelect;
+export type NewLabNotebook = typeof labNotebook.$inferInsert;
+export type LabNotebookVersion = typeof labNotebookVersion.$inferSelect;
+export type NewLabNotebookVersion = typeof labNotebookVersion.$inferInsert;
+export type LabNotebookExport = typeof labNotebookExport.$inferSelect;
+export type NewLabNotebookExport = typeof labNotebookExport.$inferInsert;
