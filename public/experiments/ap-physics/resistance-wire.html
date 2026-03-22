@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resistance in a Wire — Resistivity, Length & Cross-Section</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* UI Panel */
+  #ui { position: fixed; top: 0; left: 0; width: 290px; height: 100vh; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); padding: 16px; overflow-y: auto; backdrop-filter: blur(8px); z-index: 10; }
+  .panel-title { font-size: 13px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
+  .section { margin-bottom: 14px; padding: 12px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
+  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 10px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px; }
+  .slider-name { color: #c9d1d9; }
+  .slider-val { color: #60a5fa; font-weight: 700; min-width: 60px; text-align: right; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+
+  /* Data readout */
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-cell { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.15); border-radius: 6px; padding: 8px; text-align: center; }
+  .data-cell-label { font-size: 9px; color: #7d8590; text-transform: uppercase; }
+  .data-cell-value { font-size: 14px; font-weight: 700; color: #60a5fa; margin-top: 2px; }
+  .data-cell-unit { font-size: 9px; color: #7d8590; }
+
+  /* Big R display */
+  .big-r { text-align: center; padding: 12px 8px; }
+  .big-r-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.1em; }
+  .big-r-value { font-size: 36px; font-weight: 700; color: #f59e0b; margin-top: 4px; line-height: 1; }
+  .big-r-unit { font-size: 14px; color: #f59e0b; opacity: 0.7; }
+
+  /* Formulas */
+  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; text-align: center; }
+
+  /* Material selector */
+  .material-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .material-btn { padding: 7px 6px; font-size: 10px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: center; }
+  .material-btn:hover { border-color: #3b82f6; color: #60a5fa; background: rgba(59,130,246,0.1); }
+  .material-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+  .material-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* Preset buttons */
+  .preset-btn { display: block; width: 100%; padding: 7px 10px; font-size: 10px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; margin-bottom: 4px; text-align: left; }
+  .preset-btn:hover { border-color: #3b82f6; color: #60a5fa; background: rgba(59,130,246,0.1); }
+  .preset-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+
+  /* Info panel right */
+  #info { position: fixed; top: 12px; right: 12px; width: 230px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(8px); }
+  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; margin-bottom: 6px; }
+
+  /* Quiz */
+  #quiz-panel { position: fixed; bottom: 12px; right: 12px; width: 320px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 14px; z-index: 10; backdrop-filter: blur(8px); max-height: 45vh; overflow-y: auto; }
+  #quiz-panel h3 { font-size: 11px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .quiz-q { margin-bottom: 12px; }
+  .quiz-q p { font-size: 11px; color: #c9d1d9; margin-bottom: 6px; line-height: 1.4; }
+  .quiz-opt { display: block; width: 100%; padding: 6px 10px; font-size: 10px; border-radius: 5px; border: 1px solid rgba(59,130,246,0.2); background: transparent; color: #7d8590; cursor: pointer; font-family: inherit; margin-bottom: 3px; text-align: left; transition: all 0.15s; }
+  .quiz-opt:hover { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #22c55e; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #ef4444; }
+  .quiz-opt:disabled { cursor: default; opacity: 0.7; }
+  .quiz-feedback { font-size: 10px; margin-top: 4px; line-height: 1.4; }
+
+  /* FPS */
+  #fps { position: fixed; bottom: 8px; left: 300px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="ui">
+  <div class="panel-title">&#9889; Resistance in a Wire</div>
+
+  <!-- Big R -->
+  <div class="section big-r">
+    <div class="big-r-label">Resistance</div>
+    <div class="big-r-value" id="big-r-val">5.35</div>
+    <div class="big-r-unit">&Omega;</div>
+  </div>
+
+  <!-- Material Selector -->
+  <div class="section">
+    <div class="section-label">Material</div>
+    <div class="material-grid">
+      <button class="material-btn active" onclick="selectMaterial(0)"><span class="material-swatch" style="background:#e87d4a"></span>Copper</button>
+      <button class="material-btn" onclick="selectMaterial(1)"><span class="material-swatch" style="background:#9ca3af"></span>Nichrome</button>
+      <button class="material-btn" onclick="selectMaterial(2)"><span class="material-swatch" style="background:#fbbf24"></span>Gold</button>
+      <button class="material-btn" onclick="selectMaterial(3)"><span class="material-swatch" style="background:#a3bfcf"></span>Aluminum</button>
+    </div>
+  </div>
+
+  <!-- Sliders -->
+  <div class="section">
+    <div class="section-label">Parameters</div>
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Wire Length (L)</span><span class="slider-val" id="l-val">10 cm</span></div>
+      <input type="range" id="slider-l" min="1" max="50" step="1" value="10" oninput="updateSliders()">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Wire Radius (r)</span><span class="slider-val" id="r-val">1.0 mm</span></div>
+      <input type="range" id="slider-r" min="0.1" max="5" step="0.1" value="1" oninput="updateSliders()">
+    </div>
+  </div>
+
+  <!-- Live data -->
+  <div class="section">
+    <div class="section-label">Live Measurements</div>
+    <div class="data-grid">
+      <div class="data-cell"><div class="data-cell-label">Resistivity (&rho;)</div><div class="data-cell-value" id="disp-rho">1.68e-8</div><div class="data-cell-unit">&Omega;&middot;m</div></div>
+      <div class="data-cell"><div class="data-cell-label">Length</div><div class="data-cell-value" id="disp-l">0.100</div><div class="data-cell-unit">m</div></div>
+      <div class="data-cell"><div class="data-cell-label">Area (A)</div><div class="data-cell-value" id="disp-a">3.14e-6</div><div class="data-cell-unit">m&sup2;</div></div>
+      <div class="data-cell"><div class="data-cell-label">Resistance</div><div class="data-cell-value" id="disp-r">0.535</div><div class="data-cell-unit">&Omega;</div></div>
+    </div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="section">
+    <div class="section-label">Key Formulas</div>
+    <div class="formula-box" id="f1"></div>
+    <div class="formula-box" id="f2"></div>
+  </div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="section-label">Presets</div>
+    <button class="preset-btn" onclick="applyPreset(1)">1. Copper Wire (&rho; = 1.68&times;10&sup8; &Omega;&middot;m)</button>
+    <button class="preset-btn" onclick="applyPreset(2)">2. Nichrome Wire (&rho; = 1.1&times;10&#8310; &Omega;&middot;m)</button>
+    <button class="preset-btn" onclick="applyPreset(3)">3. Long Thin vs Short Thick</button>
+  </div>
+</div>
+
+<div id="info">
+  <h3>About This Experiment</h3>
+  <p>Explore how wire resistance depends on <strong style="color:#60a5fa">resistivity</strong> (&rho;), <strong style="color:#60a5fa">length</strong> (L), and <strong style="color:#60a5fa">cross-sectional area</strong> (A).</p>
+  <p>The 3D wire dynamically changes shape. Internal electrons show how easily current flows &mdash; higher resistance means slower, fewer visible electrons.</p>
+  <p>The cross-section view on the right shows the wire's circular area. Try different materials and dimensions to see how R changes!</p>
+  <p style="color:#f59e0b; font-size:9px; margin-top:8px;">Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan</p>
+</div>
+
+<div id="quiz-panel">
+  <h3>&#128300; Quiz</h3>
+  <div class="quiz-q" id="q1">
+    <p><strong>Q1:</strong> A copper wire is 20 cm long with radius 1 mm. If you double the length to 40 cm while keeping the radius the same, what happens to the resistance?</p>
+    <button class="quiz-opt" onclick="checkQuiz(1,this,'a')">A) Resistance stays the same</button>
+    <button class="quiz-opt" onclick="checkQuiz(1,this,'b')">B) Resistance doubles</button>
+    <button class="quiz-opt" onclick="checkQuiz(1,this,'c')">C) Resistance quadruples</button>
+    <button class="quiz-opt" onclick="checkQuiz(1,this,'d')">D) Resistance halves</button>
+    <div class="quiz-feedback" id="fb1"></div>
+  </div>
+  <div class="quiz-q" id="q2">
+    <p><strong>Q2:</strong> Two wires are made of the same material and have the same length. Wire A has radius 1 mm, Wire B has radius 2 mm. How does Wire B's resistance compare to Wire A's?</p>
+    <button class="quiz-opt" onclick="checkQuiz(2,this,'a')">A) Wire B has half the resistance</button>
+    <button class="quiz-opt" onclick="checkQuiz(2,this,'b')">B) Wire B has one-quarter the resistance</button>
+    <button class="quiz-opt" onclick="checkQuiz(2,this,'c')">C) Wire B has double the resistance</button>
+    <button class="quiz-opt" onclick="checkQuiz(2,this,'d')">D) Both wires have the same resistance</button>
+    <div class="quiz-feedback" id="fb2"></div>
+  </div>
+</div>
+
+<div id="fps"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+"use strict";
+
+try {
+
+  // ── Materials ──
+  var MATERIALS = [
+    { name: 'Copper',    rho: 1.68e-8,  color: 0xe87d4a, emissive: 0x5a2a10 },
+    { name: 'Nichrome',  rho: 1.1e-6,   color: 0x9ca3af, emissive: 0x3a3f47 },
+    { name: 'Gold',      rho: 2.44e-8,  color: 0xfbbf24, emissive: 0x6b4f0a },
+    { name: 'Aluminum',  rho: 2.65e-8,  color: 0xa3bfcf, emissive: 0x3a4f5f }
+  ];
+
+  var currentMaterial = 0;
+  var wireLength = 10;   // cm
+  var wireRadius = 1.0;  // mm
+
+  // ── Three.js Setup ──
+  var container = document.getElementById('canvas-container');
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.015);
+
+  var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(6, 4, 8);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 0, 0);
+  controls.minDistance = 3;
+  controls.maxDistance = 30;
+
+  // ── Lighting (4 lights) ──
+  var ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+  scene.add(ambientLight);
+
+  var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 8, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+
+  var pointLight1 = new THREE.PointLight(0x3b82f6, 0.6, 30);
+  pointLight1.position.set(-4, 3, -2);
+  scene.add(pointLight1);
+
+  var pointLight2 = new THREE.PointLight(0xf59e0b, 0.4, 25);
+  pointLight2.position.set(4, -2, 4);
+  scene.add(pointLight2);
+
+  // ── Grid ──
+  var gridHelper = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x0f2030);
+  gridHelper.position.y = -2.5;
+  scene.add(gridHelper);
+
+  // ── Wire Mesh ──
+  var wireGeometry = new THREE.CylinderGeometry(1, 1, 1, 32, 1, false);
+  var wireMaterial = new THREE.MeshPhysicalMaterial({
+    color: MATERIALS[0].color,
+    emissive: MATERIALS[0].emissive,
+    emissiveIntensity: 0.15,
+    metalness: 0.85,
+    roughness: 0.25,
+    clearcoat: 0.3
+  });
+  var wireMesh = new THREE.Mesh(wireGeometry, wireMaterial);
+  wireMesh.rotation.z = Math.PI / 2;
+  wireMesh.castShadow = true;
+  wireMesh.receiveShadow = true;
+  scene.add(wireMesh);
+
+  // ── End Caps (terminals) ──
+  var termGeo = new THREE.CylinderGeometry(1, 1, 0.15, 32);
+  var termMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, metalness: 0.9, roughness: 0.3 });
+  var termLeft = new THREE.Mesh(termGeo, termMat);
+  termLeft.rotation.z = Math.PI / 2;
+  scene.add(termLeft);
+  var termRight = new THREE.Mesh(termGeo, termMat);
+  termRight.rotation.z = Math.PI / 2;
+  scene.add(termRight);
+
+  // ── Cross-Section Ring (right side) ──
+  var crossSectionGroup = new THREE.Group();
+  crossSectionGroup.position.set(5.5, 0, 0);
+  scene.add(crossSectionGroup);
+
+  var ringGeo = new THREE.TorusGeometry(1, 0.04, 16, 64);
+  var ringMat = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x1e40af, emissiveIntensity: 0.5 });
+  var ringMesh = new THREE.Mesh(ringGeo, ringMat);
+  crossSectionGroup.add(ringMesh);
+
+  // Cross section fill (semi-transparent disc)
+  var discGeo = new THREE.CircleGeometry(1, 64);
+  var discMat = new THREE.MeshStandardMaterial({
+    color: MATERIALS[0].color,
+    transparent: true,
+    opacity: 0.3,
+    side: THREE.DoubleSide
+  });
+  var discMesh = new THREE.Mesh(discGeo, discMat);
+  crossSectionGroup.add(discMesh);
+
+  // Radius line on cross section
+  var radiusLineMat = new THREE.LineBasicMaterial({ color: 0xf59e0b });
+  var radiusLineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0.01),
+    new THREE.Vector3(1, 0, 0.01)
+  ]);
+  var radiusLine = new THREE.Line(radiusLineGeo, radiusLineMat);
+  crossSectionGroup.add(radiusLine);
+
+  // "r" label sprite
+  var rLabelCanvas = document.createElement('canvas');
+  rLabelCanvas.width = 64;
+  rLabelCanvas.height = 32;
+  var rLabelCtx = rLabelCanvas.getContext('2d');
+  rLabelCtx.fillStyle = '#f59e0b';
+  rLabelCtx.font = 'bold 22px monospace';
+  rLabelCtx.fillText('r', 24, 24);
+  var rLabelTexture = new THREE.CanvasTexture(rLabelCanvas);
+  var rLabelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: rLabelTexture, transparent: true }));
+  rLabelSprite.position.set(0.5, -0.3, 0.05);
+  rLabelSprite.scale.set(0.6, 0.3, 1);
+  crossSectionGroup.add(rLabelSprite);
+
+  // "A = πr²" label
+  var aLabelCanvas = document.createElement('canvas');
+  aLabelCanvas.width = 160;
+  aLabelCanvas.height = 40;
+  var aLabelCtx = aLabelCanvas.getContext('2d');
+  aLabelCtx.fillStyle = '#60a5fa';
+  aLabelCtx.font = 'bold 20px monospace';
+  aLabelCtx.fillText('A = \u03C0r\u00B2', 10, 28);
+  var aLabelTexture = new THREE.CanvasTexture(aLabelCanvas);
+  var aLabelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: aLabelTexture, transparent: true }));
+  aLabelSprite.position.set(0, -1.6, 0.05);
+  aLabelSprite.scale.set(1.5, 0.4, 1);
+  crossSectionGroup.add(aLabelSprite);
+
+  // ── Electrons ──
+  var MAX_ELECTRONS = 200;
+  var electronGroup = new THREE.Group();
+  scene.add(electronGroup);
+  var electronPositions = [];
+  var electronSpeeds = [];
+  var electronGeo = new THREE.SphereGeometry(0.04, 8, 8);
+  var electronMat = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 0.8 });
+
+  for (var i = 0; i < MAX_ELECTRONS; i++) {
+    var eMesh = new THREE.Mesh(electronGeo, electronMat);
+    eMesh.visible = false;
+    electronGroup.add(eMesh);
+    electronPositions.push({ x: 0, y: 0, z: 0, angle: Math.random() * Math.PI * 2 });
+    electronSpeeds.push(0.5 + Math.random() * 0.5);
+  }
+
+  // ── Length label sprite ──
+  var lLabelCanvas = document.createElement('canvas');
+  lLabelCanvas.width = 200;
+  lLabelCanvas.height = 40;
+  var lLabelTexture = new THREE.CanvasTexture(lLabelCanvas);
+  var lLabelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: lLabelTexture, transparent: true }));
+  lLabelSprite.position.set(0, -1.8, 0);
+  lLabelSprite.scale.set(2, 0.4, 1);
+  scene.add(lLabelSprite);
+
+  // ── Arrow helpers for length ──
+  var arrowLeft = null;
+  var arrowRight = null;
+
+  function createArrows(halfLen) {
+    if (arrowLeft) { scene.remove(arrowLeft); scene.remove(arrowRight); }
+    var arrColor = new THREE.Color(0x60a5fa);
+    arrowLeft = new THREE.ArrowHelper(
+      new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, -1.4, 0),
+      halfLen, arrColor, 0.15, 0.08
+    );
+    arrowRight = new THREE.ArrowHelper(
+      new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, -1.4, 0),
+      halfLen, arrColor, 0.15, 0.08
+    );
+    scene.add(arrowLeft);
+    scene.add(arrowRight);
+  }
+
+  // ── State ──
+  var state = { resistance: 0, area: 0 };
+
+  // ── Compute & Update ──
+  function computeResistance() {
+    var rho = MATERIALS[currentMaterial].rho;
+    var L = wireLength / 100;  // cm → m
+    var r = wireRadius / 1000; // mm → m
+    var A = Math.PI * r * r;
+    var R = rho * L / A;
+    state.resistance = R;
+    state.area = A;
+    return { rho: rho, L: L, r: r, A: A, R: R };
+  }
+
+  function formatSci(val, digits) {
+    if (val === 0) return '0';
+    var exp = Math.floor(Math.log10(Math.abs(val)));
+    var mantissa = val / Math.pow(10, exp);
+    if (Math.abs(exp) <= 2) return val.toFixed(digits !== undefined ? digits : 4);
+    return mantissa.toFixed(2) + 'e' + exp;
+  }
+
+  function updateScene() {
+    var d = computeResistance();
+
+    // Update wire mesh
+    var scaleLen = Math.max(wireLength / 10, 0.1);  // visual: 10cm = 1 unit
+    var scaleRad = Math.max(wireRadius / 1, 0.1);   // visual: 1mm = 1 unit radius (scaled down)
+    var visRadius = scaleRad * 0.4;
+    var visLength = scaleLen * 2;
+
+    wireMesh.geometry.dispose();
+    wireMesh.geometry = new THREE.CylinderGeometry(visRadius, visRadius, visLength, 32, 1, false);
+    wireMesh.rotation.z = Math.PI / 2;
+
+    // Color
+    wireMaterial.color.setHex(MATERIALS[currentMaterial].color);
+    wireMaterial.emissive.setHex(MATERIALS[currentMaterial].emissive);
+
+    // Terminals
+    var termRadius = visRadius * 1.3;
+    termLeft.geometry.dispose();
+    termLeft.geometry = new THREE.CylinderGeometry(termRadius, termRadius, 0.15, 32);
+    termLeft.position.set(-visLength / 2 - 0.075, 0, 0);
+
+    termRight.geometry.dispose();
+    termRight.geometry = new THREE.CylinderGeometry(termRadius, termRadius, 0.15, 32);
+    termRight.position.set(visLength / 2 + 0.075, 0, 0);
+
+    // Cross section
+    var csRadius = visRadius * 1.8;
+    var csX = visLength / 2 + 1.5;
+    crossSectionGroup.position.set(csX, 0, 0);
+
+    ringMesh.geometry.dispose();
+    ringMesh.geometry = new THREE.TorusGeometry(csRadius, 0.04, 16, 64);
+
+    discMesh.geometry.dispose();
+    discMesh.geometry = new THREE.CircleGeometry(csRadius, 64);
+    discMat.color.setHex(MATERIALS[currentMaterial].color);
+
+    // Radius line
+    radiusLine.geometry.dispose();
+    radiusLine.geometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0.01),
+      new THREE.Vector3(csRadius, 0, 0.01)
+    ]);
+
+    rLabelSprite.position.set(csRadius * 0.5, -0.3, 0.05);
+    aLabelSprite.position.set(0, -(csRadius + 0.6), 0.05);
+
+    // Length arrows + label
+    createArrows(visLength / 2);
+    var lCtx = lLabelCanvas.getContext('2d');
+    lCtx.clearRect(0, 0, 200, 40);
+    lCtx.fillStyle = '#60a5fa';
+    lCtx.font = 'bold 18px monospace';
+    lCtx.textAlign = 'center';
+    lCtx.fillText('L = ' + wireLength + ' cm', 100, 28);
+    lLabelTexture.needsUpdate = true;
+    lLabelSprite.position.set(0, -2.0, 0);
+
+    // Electrons
+    var electronCount = Math.round(THREE.MathUtils.clamp(
+      (1 / (d.R + 0.001)) * 10, 10, MAX_ELECTRONS
+    ));
+    var baseSpeed = THREE.MathUtils.clamp(1 / (d.R * 100 + 0.1), 0.005, 0.08);
+
+    for (var i = 0; i < MAX_ELECTRONS; i++) {
+      var child = electronGroup.children[i];
+      if (i < electronCount) {
+        child.visible = true;
+        var ep = electronPositions[i];
+        ep.x = (Math.random() - 0.5) * visLength * 0.9;
+        var angle = Math.random() * Math.PI * 2;
+        var dist = Math.random() * visRadius * 0.85;
+        ep.y = Math.cos(angle) * dist;
+        ep.z = Math.sin(angle) * dist;
+        ep.angle = angle;
+        electronSpeeds[i] = baseSpeed * (0.7 + Math.random() * 0.6);
+        child.position.set(ep.x, ep.y, ep.z);
+      } else {
+        child.visible = false;
+      }
+    }
+
+    // ── UI Updates ──
+    document.getElementById('l-val').textContent = wireLength + ' cm';
+    document.getElementById('r-val').textContent = wireRadius.toFixed(1) + ' mm';
+
+    var rStr;
+    if (d.R < 0.001) {
+      rStr = formatSci(d.R);
+    } else if (d.R < 1000) {
+      rStr = d.R.toFixed(4);
+    } else {
+      rStr = formatSci(d.R);
+    }
+
+    document.getElementById('big-r-val').textContent = rStr;
+    document.getElementById('disp-rho').textContent = formatSci(d.rho);
+    document.getElementById('disp-l').textContent = d.L.toFixed(3);
+    document.getElementById('disp-a').textContent = formatSci(d.A);
+    document.getElementById('disp-r').textContent = rStr;
+  }
+
+  function updateSliders() {
+    wireLength = parseInt(document.getElementById('slider-l').value, 10);
+    wireRadius = parseFloat(document.getElementById('slider-r').value);
+    updateScene();
+  }
+
+  function selectMaterial(idx) {
+    currentMaterial = idx;
+    var btns = document.querySelectorAll('.material-btn');
+    btns.forEach(function(b, i) {
+      b.classList.toggle('active', i === idx);
+    });
+    updateScene();
+  }
+
+  function applyPreset(n) {
+    var btns = document.querySelectorAll('.preset-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    btns[n - 1].classList.add('active');
+
+    if (n === 1) {
+      selectMaterial(0);
+      document.getElementById('slider-l').value = 10;
+      document.getElementById('slider-r').value = 1;
+      wireLength = 10;
+      wireRadius = 1;
+    } else if (n === 2) {
+      selectMaterial(1);
+      document.getElementById('slider-l').value = 10;
+      document.getElementById('slider-r').value = 1;
+      wireLength = 10;
+      wireRadius = 1;
+    } else if (n === 3) {
+      // Long thin wire first, then user can compare
+      selectMaterial(0);
+      document.getElementById('slider-l').value = 50;
+      document.getElementById('slider-r').value = 0.5;
+      wireLength = 50;
+      wireRadius = 0.5;
+    }
+    updateScene();
+  }
+
+  // ── Quiz ──
+  var quizAnswered = { 1: false, 2: false };
+
+  function checkQuiz(qNum, btn, answer) {
+    if (quizAnswered[qNum]) return;
+    quizAnswered[qNum] = true;
+
+    var correct = { 1: 'b', 2: 'b' };
+    var explanations = {
+      1: 'Correct! R = \u03C1L/A. Doubling L doubles R. Resistance is directly proportional to length.',
+      2: 'Correct! A = \u03C0r\u00B2. Doubling the radius quadruples the area (2\u00B2 = 4), so resistance becomes 1/4.'
+    };
+    var wrongExplanations = {
+      1: 'Not quite. R = \u03C1L/A shows resistance is directly proportional to length. Doubling L doubles R.',
+      2: 'Not quite. A = \u03C0r\u00B2, so doubling r gives 4\u00D7 the area. Since R = \u03C1L/A, R becomes 1/4.'
+    };
+
+    var isCorrect = (answer === correct[qNum]);
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    var fb = document.getElementById('fb' + qNum);
+    fb.style.color = isCorrect ? '#22c55e' : '#ef4444';
+    fb.textContent = isCorrect ? explanations[qNum] : wrongExplanations[qNum];
+
+    // Highlight correct answer
+    var allBtns = document.getElementById('q' + qNum).querySelectorAll('.quiz-opt');
+    allBtns.forEach(function(b) {
+      b.disabled = true;
+      if (b.textContent.charAt(0).toLowerCase() === correct[qNum].toUpperCase()) {
+        b.classList.add('correct');
+      }
+    });
+  }
+
+  // ── KaTeX Formulas ──
+  katex.render('R = \\dfrac{\\rho \\, L}{A}', document.getElementById('f1'), { displayMode: true });
+  katex.render('A = \\pi r^2', document.getElementById('f2'), { displayMode: true });
+
+  // ── Animation Loop ──
+  var clock = new THREE.Clock();
+  var frameCount = 0;
+  var fpsTime = 0;
+
+  function animate() {
+    var delta = clock.getDelta();
+    var elapsed = clock.getElapsedTime();
+
+    frameCount++;
+    fpsTime += delta;
+    if (fpsTime >= 1) {
+      document.getElementById('fps').textContent = Math.round(frameCount / fpsTime) + ' fps';
+      frameCount = 0;
+      fpsTime = 0;
+    }
+
+    controls.update();
+
+    // Animate electrons
+    var d = computeResistance();
+    var visLength = Math.max(wireLength / 10, 0.1) * 2;
+    var visRadius = Math.max(wireRadius / 1, 0.1) * 0.4;
+    var halfLen = visLength / 2;
+
+    for (var i = 0; i < MAX_ELECTRONS; i++) {
+      var child = electronGroup.children[i];
+      if (!child.visible) continue;
+
+      var ep = electronPositions[i];
+      var speed = electronSpeeds[i];
+
+      // Move along x-axis (wire direction)
+      ep.x += speed * delta * 10;
+
+      // Slight wandering within the wire
+      ep.angle += (Math.random() - 0.5) * 0.3 * delta;
+
+      // Wrap around
+      if (ep.x > halfLen * 0.95) {
+        ep.x = -halfLen * 0.95;
+      }
+
+      child.position.set(ep.x, ep.y, ep.z);
+
+      // Pulsing glow
+      var pulse = 0.6 + 0.4 * Math.sin(elapsed * 3 + i * 0.5);
+      child.scale.setScalar(pulse);
+    }
+
+    // Gentle wire glow pulsing
+    wireMaterial.emissiveIntensity = 0.12 + 0.05 * Math.sin(elapsed * 1.5);
+
+    // Cross section ring pulsing
+    ringMat.emissiveIntensity = 0.3 + 0.2 * Math.sin(elapsed * 2);
+
+    renderer.render(scene, camera);
+  }
+
+  renderer.setAnimationLoop(animate);
+
+  // ── Resize ──
+  window.addEventListener('resize', function() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  });
+
+  // ── Initial Scene ──
+  updateScene();
+
+} catch (err) {
+  var errDiv = document.createElement('div');
+  errDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#ef4444;font-family:monospace;font-size:16px;padding:40px;text-align:center;z-index:9999;';
+  errDiv.textContent = 'Error: ' + (err.message || err);
+  document.body.appendChild(errDiv);
+}
+</script>
+</body>
+</html>

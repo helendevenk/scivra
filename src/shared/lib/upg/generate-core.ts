@@ -1,4 +1,5 @@
 import { callOpenRouter } from '@/shared/lib/upg/openrouter-client';
+import { callAnthropic } from '@/shared/lib/upg/anthropic-client';
 import {
   getSystemPrompt,
   buildUserPrompt,
@@ -20,11 +21,15 @@ import {
   injectPerformanceUI,
   injectMobileOptimization,
 } from '@/shared/lib/performance/performance-template';
+import { getAllConfigs } from '@/shared/models/config';
+import { runFullValidation } from '@/shared/lib/upg/validation';
 
 export interface GenerateCoreParams {
   prompt: string;
   language: 'zh' | 'en';
   userId: string | null;
+  /** Discipline ID (default: 'physics') */
+  discipline?: string;
   /** Pre-created generation ID (for fork: record already exists in pending state) */
   existingGenerationId?: string;
   /** Extra fields to merge into the generation record */
@@ -50,11 +55,11 @@ export interface GenerateCoreResult {
 export async function generateCore(
   params: GenerateCoreParams
 ): Promise<GenerateCoreResult> {
-  const { prompt, language, userId, existingGenerationId, extraFields } =
+  const { prompt, language, userId, discipline, existingGenerationId, extraFields } =
     params;
   const model = selectModel();
-  const systemPrompt = getSystemPrompt();
-  const userPrompt = buildUserPrompt(prompt, language);
+  const systemPrompt = getSystemPrompt(discipline);
+  const userPrompt = buildUserPrompt(prompt, language, discipline);
   const promptHash = createHash('sha256').update(prompt).digest('hex');
   const generationId = existingGenerationId || getUuid();
 
@@ -118,12 +123,15 @@ export async function generateCore(
     });
   }
 
-  // 1. AI generation
-  const aiResult = await callOpenRouter({
-    model,
-    systemPrompt,
-    userPrompt,
-  });
+  // 1. AI generation (provider selection: Anthropic proxy or OpenRouter)
+  const configs = await getAllConfigs();
+  const apiKey = process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
+  const baseUrl = process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url;
+  const useAnthropic = baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
+
+  const aiResult = useAnthropic && apiKey
+    ? await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl })
+    : await callOpenRouter({ model, systemPrompt, userPrompt });
 
   // 2. Post-processing
   let { sanitized: htmlContent } = sanitizeHtml(aiResult.html);
@@ -133,7 +141,7 @@ export async function generateCore(
   htmlContent = injectMobileOptimization(htmlContent);
   htmlContent = injectPerformanceUI(htmlContent);
 
-  const qualityResult = checkQuality(htmlContent);
+  const qualityResult = checkQuality(htmlContent, discipline);
 
   // Log warnings for debugging (non-blocking)
   if (qualityResult.warnings.length > 0) {
@@ -243,6 +251,20 @@ export async function generateCore(
     });
   }
 
+  // 3.5. Discipline validation (non-blocking, results stored as metadata)
+  let validationScore: number | null = null;
+  let validationDetails: string | null = null;
+  let validatedAt: Date | null = null;
+  try {
+    const validationResult = runFullValidation(htmlContent, discipline || 'physics');
+    validationScore = validationResult.overallScore;
+    validationDetails = JSON.stringify(validationResult.details);
+    validatedAt = new Date();
+  } catch {
+    // Validation crash should never block generation
+    console.warn('[UPG] Validation failed silently');
+  }
+
   // 4. Success: store completed generation
   const successData: NewUpgGeneration = {
     id: generationId,
@@ -250,6 +272,7 @@ export async function generateCore(
     prompt,
     promptHash,
     language,
+    category: discipline || null,
     htmlContent,
     htmlSize,
     model,
@@ -257,6 +280,9 @@ export async function generateCore(
     inputTokens: aiResult.inputTokens,
     outputTokens: aiResult.outputTokens,
     costCredits: 0, // Caller handles credit deduction
+    validationScore,
+    validationDetails,
+    validatedAt,
     status: 'completed',
     isPublic: false,
     viewCount: 0,

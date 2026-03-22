@@ -95,14 +95,14 @@ export function DashboardLearnPanel() {
               <Card className="transition-shadow hover:shadow-md">
                 <CardContent className="space-y-2 p-4">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-neon-cyan" />
+                    <BookOpen className="h-4 w-4 text-primary" />
                     <span className="line-clamp-1 text-sm font-medium">
                       {title}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     {p.completed ? (
-                      <span className="flex items-center gap-1 text-neon-green">
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle className="h-3.5 w-3.5" />
                         {t('card.completed')}
                       </span>

@@ -10,8 +10,8 @@ interface FormulaDisplayProps {
 
 export function FormulaDisplay({ formulas }: FormulaDisplayProps) {
   return (
-    <div className="rounded-lg border border-neon-purple/20 bg-surface-raised-dark/80 p-4 backdrop-blur-sm">
-      <h3 className="mb-3 font-serif text-sm font-semibold text-neon-purple">
+    <div className="rounded-lg border border-violet-600/20 bg-card/80 p-4 backdrop-blur-sm dark:border-violet-400/20">
+      <h3 className="mb-3 font-serif text-sm font-semibold text-violet-600 dark:text-violet-400">
         Formulas
       </h3>
       <div className="flex flex-col gap-3">

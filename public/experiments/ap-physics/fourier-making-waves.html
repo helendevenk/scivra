@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fourier: Making Waves — Harmonic Synthesis</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas#c { display: block; }
+
+  /* ── UI Panel ── */
+  #ui { position: fixed; top: 0; left: 0; width: 310px; height: 100vh; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); padding: 14px; overflow-y: auto; backdrop-filter: blur(8px); z-index: 10; }
+  #ui::-webkit-scrollbar { width: 4px; }
+  #ui::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  .panel-title { font-size: 13px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .section { margin-bottom: 12px; padding: 10px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
+  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 8px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 11px; }
+  .slider-name { color: #c9d1d9; }
+  .slider-val { color: #60a5fa; font-weight: 700; min-width: 50px; text-align: right; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+
+  /* Presets */
+  .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .preset-btn { padding: 5px 10px; font-size: 10px; font-weight: 600; border-radius: 5px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .preset-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+  .preset-btn:hover:not(.active) { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
+
+  /* Toggle buttons for harmonics */
+  .toggle-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .toggle-btn { padding: 4px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; border: 1px solid; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .toggle-btn.on { opacity: 1; }
+  .toggle-btn.off { opacity: 0.35; }
+
+  /* Formulas (KaTeX) */
+  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; text-align: center; }
+  .formula-desc { font-size: 10px; color: #7d8590; margin-top: 3px; }
+
+  /* 2D Canvas displays */
+  .canvas-section { margin-bottom: 8px; }
+  .canvas-section canvas { width: 100%; border-radius: 6px; border: 1px solid rgba(59,130,246,0.15); background: rgba(15,23,42,0.9); }
+
+  /* Quiz */
+  #quiz-panel { position: fixed; bottom: 12px; left: 322px; width: 380px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 14px; z-index: 10; backdrop-filter: blur(8px); max-height: 280px; overflow-y: auto; }
+  .quiz-title { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .quiz-q { font-size: 11px; color: #c9d1d9; margin-bottom: 6px; line-height: 1.4; }
+  .quiz-opt { display: block; width: 100%; text-align: left; padding: 5px 8px; margin-bottom: 3px; font-size: 10px; font-family: inherit; border-radius: 4px; border: 1px solid rgba(59,130,246,0.2); background: transparent; color: #c9d1d9; cursor: pointer; transition: all 0.15s; }
+  .quiz-opt:hover { border-color: rgba(59,130,246,0.5); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #22c55e; pointer-events: none; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #ef4444; pointer-events: none; }
+  .quiz-feedback { font-size: 10px; margin-top: 4px; margin-bottom: 8px; line-height: 1.3; }
+
+  /* Info panel */
+  #info { position: fixed; top: 12px; right: 12px; width: 240px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(8px); }
+  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; }
+
+  /* FPS */
+  #fps { position: fixed; bottom: 8px; right: 8px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+</style>
+</head>
+<body>
+<div id="canvas-container"><canvas id="c"></canvas></div>
+
+<div id="ui">
+  <div class="panel-title">~ Fourier: Making Waves</div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="section-label">Wave Presets</div>
+    <div class="preset-row">
+      <button class="preset-btn" onclick="applyPreset('square')">Square</button>
+      <button class="preset-btn" onclick="applyPreset('sawtooth')">Sawtooth</button>
+      <button class="preset-btn" onclick="applyPreset('triangle')">Triangle</button>
+      <button class="preset-btn" onclick="applyPreset('single')">Single Sine</button>
+      <button class="preset-btn active" onclick="applyPreset('custom')">Custom</button>
+    </div>
+  </div>
+
+  <!-- Harmonic Toggles -->
+  <div class="section">
+    <div class="section-label">Show / Hide Harmonics</div>
+    <div class="toggle-row" id="toggle-row"></div>
+  </div>
+
+  <!-- Harmonic Amplitude Sliders -->
+  <div class="section">
+    <div class="section-label">Harmonic Amplitudes</div>
+    <div id="sliders"></div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="section">
+    <div class="section-label">Fourier Series</div>
+    <div class="formula-box" id="formula-general"></div>
+    <div class="formula-desc">General Fourier series</div>
+    <div class="formula-box" id="formula-square" style="margin-top:6px;"></div>
+    <div class="formula-desc">Square wave (odd harmonics only)</div>
+  </div>
+
+  <!-- Harmonics Canvas -->
+  <div class="section">
+    <div class="section-label">Individual Harmonics</div>
+    <div class="canvas-section"><canvas id="harmonics-canvas" width="564" height="200"></canvas></div>
+  </div>
+
+  <!-- Sum Canvas -->
+  <div class="section">
+    <div class="section-label">Superposition Result</div>
+    <div class="canvas-section"><canvas id="sum-canvas" width="564" height="160"></canvas></div>
+  </div>
+</div>
+
+<!-- Info -->
+<div id="info">
+  <h3>About Fourier Synthesis</h3>
+  <p>Any periodic waveform can be decomposed into (or built from) a sum of sinusoidal harmonics. Adjust the amplitude sliders to see how individual sine waves combine. Try the presets to see classic waveform constructions.</p>
+  <p style="margin-top:6px;">The 3D surface shows the composite wave propagating through space. Drag to orbit.</p>
+</div>
+
+<!-- Quiz -->
+<div id="quiz-panel">
+  <div class="quiz-title">Knowledge Check</div>
+
+  <div class="quiz-q">Q1: A square wave's Fourier series contains which harmonics?</div>
+  <button class="quiz-opt" onclick="checkQuiz(this,false)">A) All harmonics (1, 2, 3, 4, ...)</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,true)">B) Only odd harmonics (1, 3, 5, 7, ...)</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,false)">C) Only even harmonics (2, 4, 6, 8, ...)</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,false)">D) Only the fundamental frequency</button>
+  <div class="quiz-feedback" id="fb1"></div>
+
+  <div class="quiz-q">Q2: As you add more harmonics to approximate a square wave, the overshoot near discontinuities:</div>
+  <button class="quiz-opt" onclick="checkQuiz(this,false)">A) Disappears completely</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,false)">B) Decreases to zero amplitude</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,true)">C) Persists at about 9% (Gibbs phenomenon)</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,false)">D) Increases without bound</button>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+
+<div id="fps"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ── Config ──
+const NUM_HARMONICS = 5;
+const HARMONIC_COLORS = ['#3b82f6','#f59e0b','#22c55e','#ef4444','#a855f7'];
+
+let amplitudes = [1, 0, 0, 0, 0];
+let visible = [true, true, true, true, true];
+let activePreset = 'custom';
+let animTime = 0;
+
+// ── Build Sliders ──
+const slidersDiv = document.getElementById('sliders');
+const toggleRow = document.getElementById('toggle-row');
+
+for (let i = 0; i < NUM_HARMONICS; i++) {
+  // Toggle button
+  const btn = document.createElement('button');
+  btn.className = 'toggle-btn on';
+  btn.style.borderColor = HARMONIC_COLORS[i];
+  btn.style.color = HARMONIC_COLORS[i];
+  btn.style.background = HARMONIC_COLORS[i] + '22';
+  btn.textContent = 'H' + (i + 1);
+  btn.dataset.index = i;
+  btn.onclick = function() {
+    visible[i] = !visible[i];
+    btn.className = 'toggle-btn ' + (visible[i] ? 'on' : 'off');
+  };
+  toggleRow.appendChild(btn);
+
+  // Slider
+  const row = document.createElement('div');
+  row.className = 'slider-row';
+  row.innerHTML =
+    '<div class="slider-label">' +
+      '<span class="slider-name" style="color:' + HARMONIC_COLORS[i] + '">Harmonic ' + (i+1) + ' (n=' + (i+1) + ')</span>' +
+      '<span class="slider-val" id="val' + i + '">' + amplitudes[i].toFixed(2) + '</span>' +
+    '</div>' +
+    '<input type="range" id="sl' + i + '" min="0" max="1" step="0.01" value="' + amplitudes[i] + '">';
+  slidersDiv.appendChild(row);
+
+  document.getElementById('sl' + i).addEventListener('input', function() {
+    amplitudes[i] = parseFloat(this.value);
+    document.getElementById('val' + i).textContent = amplitudes[i].toFixed(2);
+    setActivePreset('custom');
+  });
+}
+
+// ── Presets ──
+function applyPreset(name) {
+  switch(name) {
+    case 'square':
+      // 4/pi * [sin(x)/1 + sin(3x)/3 + sin(5x)/5 ...]
+      for (let i = 0; i < NUM_HARMONICS; i++) {
+        const n = i + 1;
+        amplitudes[i] = (n % 2 === 1) ? (4 / Math.PI) / n : 0;
+        amplitudes[i] = Math.min(amplitudes[i], 1);
+      }
+      break;
+    case 'sawtooth':
+      // 2/pi * [sin(x)/1 - sin(2x)/2 + sin(3x)/3 ...]
+      for (let i = 0; i < NUM_HARMONICS; i++) {
+        const n = i + 1;
+        amplitudes[i] = (2 / Math.PI) / n;
+        amplitudes[i] = Math.min(amplitudes[i], 1);
+      }
+      break;
+    case 'triangle':
+      // 8/pi^2 * [sin(x)/1^2 - sin(3x)/3^2 + sin(5x)/5^2 ...]
+      for (let i = 0; i < NUM_HARMONICS; i++) {
+        const n = i + 1;
+        amplitudes[i] = (n % 2 === 1) ? (8 / (Math.PI * Math.PI)) / (n * n) : 0;
+        amplitudes[i] = Math.min(amplitudes[i], 1);
+      }
+      break;
+    case 'single':
+      amplitudes = [1, 0, 0, 0, 0];
+      break;
+    case 'custom':
+      break;
+  }
+  for (let i = 0; i < NUM_HARMONICS; i++) {
+    document.getElementById('sl' + i).value = amplitudes[i];
+    document.getElementById('val' + i).textContent = amplitudes[i].toFixed(2);
+  }
+  setActivePreset(name);
+}
+
+function setActivePreset(name) {
+  activePreset = name;
+  document.querySelectorAll('.preset-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().replace(' ', '') === name ||
+      (name === 'single' && btn.textContent === 'Single Sine'));
+  });
+}
+
+// ── KaTeX Formulas ──
+katex.render('f(x) = \\sum_{n=1}^{N} A_n \\sin(n\\omega x + \\varphi_n)', document.getElementById('formula-general'), { displayMode: true, throwOnError: false });
+katex.render('\\text{Square} = \\frac{4}{\\pi}\\sum_{n=1,3,5...} \\frac{\\sin(n\\omega x)}{n}', document.getElementById('formula-square'), { displayMode: true, throwOnError: false });
+
+// ── 2D Canvas Drawing ──
+const hCanvas = document.getElementById('harmonics-canvas');
+const hCtx = hCanvas.getContext('2d');
+const sCanvas = document.getElementById('sum-canvas');
+const sCtx = sCanvas.getContext('2d');
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
+  ctx.lineWidth = 1;
+  const midY = h / 2;
+  // Horizontal center
+  ctx.strokeStyle = 'rgba(59,130,246,0.2)';
+  ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(w, midY); ctx.stroke();
+  // Vertical lines at pi intervals
+  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
+  for (let i = 1; i < 4; i++) {
+    const x = (i / 4) * w;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+}
+
+function drawHarmonics(time) {
+  const w = hCanvas.width, h = hCanvas.height;
+  hCtx.clearRect(0, 0, w, h);
+  drawGrid(hCtx, w, h);
+
+  const midY = h / 2;
+  const ampScale = (h / 2) * 0.85 / NUM_HARMONICS;
+
+  for (let i = NUM_HARMONICS - 1; i >= 0; i--) {
+    if (!visible[i] || amplitudes[i] < 0.001) continue;
+    const n = i + 1;
+    const baseY = midY + (i - (NUM_HARMONICS - 1) / 2) * (h * 0.12);
+
+    hCtx.strokeStyle = HARMONIC_COLORS[i];
+    hCtx.lineWidth = 1.5;
+    hCtx.globalAlpha = 0.85;
+    hCtx.beginPath();
+    for (let px = 0; px < w; px++) {
+      const x = (px / w) * Math.PI * 4;
+      const y = baseY - amplitudes[i] * Math.sin(n * x + time * 2) * ampScale * 2.5;
+      if (px === 0) hCtx.moveTo(px, y); else hCtx.lineTo(px, y);
+    }
+    hCtx.stroke();
+    hCtx.globalAlpha = 1;
+
+    // Label
+    hCtx.fillStyle = HARMONIC_COLORS[i];
+    hCtx.font = '9px JetBrains Mono, monospace';
+    hCtx.fillText('n=' + n + ' A=' + amplitudes[i].toFixed(2), 4, baseY - ampScale * amplitudes[i] * 2.5 - 4);
+  }
+}
+
+function drawSum(time) {
+  const w = sCanvas.width, h = sCanvas.height;
+  sCtx.clearRect(0, 0, w, h);
+  drawGrid(sCtx, w, h);
+
+  const midY = h / 2;
+  const ampScale = (h / 2) * 0.8;
+
+  // Compute max for normalization
+  let maxVal = 0;
+  for (let px = 0; px < w; px++) {
+    const x = (px / w) * Math.PI * 4;
+    let val = 0;
+    for (let i = 0; i < NUM_HARMONICS; i++) {
+      val += amplitudes[i] * Math.sin((i + 1) * x + time * 2);
+    }
+    if (Math.abs(val) > maxVal) maxVal = Math.abs(val);
+  }
+  const norm = maxVal > 0 ? 1 / maxVal : 1;
+
+  // Glow effect
+  sCtx.shadowColor = '#3b82f6';
+  sCtx.shadowBlur = 8;
+  sCtx.strokeStyle = '#60a5fa';
+  sCtx.lineWidth = 2.5;
+  sCtx.beginPath();
+  for (let px = 0; px < w; px++) {
+    const x = (px / w) * Math.PI * 4;
+    let val = 0;
+    for (let i = 0; i < NUM_HARMONICS; i++) {
+      val += amplitudes[i] * Math.sin((i + 1) * x + time * 2);
+    }
+    const y = midY - val * norm * ampScale;
+    if (px === 0) sCtx.moveTo(px, y); else sCtx.lineTo(px, y);
+  }
+  sCtx.stroke();
+  sCtx.shadowBlur = 0;
+}
+
+// ── Three.js 3D Wave Surface ──
+const canvas3D = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas: canvas3D, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0f172a);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(4, 3, 5);
+
+const controls = new THREE.OrbitControls(camera, canvas3D);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.8;
+controls.target.set(0, 0, 0);
+
+// Wave surface
+const SEG_X = 128, SEG_Z = 64;
+const planeGeo = new THREE.PlaneGeometry(8, 4, SEG_X, SEG_Z);
+planeGeo.rotateX(-Math.PI / 2);
+
+const waveMat = new THREE.MeshStandardMaterial({
+  color: 0x3b82f6,
+  wireframe: false,
+  side: THREE.DoubleSide,
+  metalness: 0.3,
+  roughness: 0.6,
+  transparent: true,
+  opacity: 0.85
+});
+const waveMesh = new THREE.Mesh(planeGeo, waveMat);
+scene.add(waveMesh);
+
+// Wireframe overlay
+const wireMat = new THREE.MeshBasicMaterial({
+  color: 0x60a5fa,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.15
+});
+const wireMesh = new THREE.Mesh(planeGeo, wireMat);
+scene.add(wireMesh);
+
+// Lights
+const ambient = new THREE.AmbientLight(0x334466, 0.6);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0x88aaff, 1.0);
+dirLight.position.set(3, 5, 4);
+scene.add(dirLight);
+const pointLight = new THREE.PointLight(0x3b82f6, 0.5, 20);
+pointLight.position.set(-3, 3, -3);
+scene.add(pointLight);
+
+// Grid helper
+const gridHelper = new THREE.GridHelper(10, 20, 0x1e3a5f, 0x0f2340);
+gridHelper.position.y = -1.5;
+scene.add(gridHelper);
+
+function updateWaveSurface(time) {
+  const pos = planeGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    let y = 0;
+    for (let h = 0; h < NUM_HARMONICS; h++) {
+      const n = h + 1;
+      y += amplitudes[h] * Math.sin(n * x * 0.8 + time * 2) * Math.cos(z * 0.5 + time * 0.5);
+    }
+    // Normalize
+    let maxAmp = 0;
+    for (let h = 0; h < NUM_HARMONICS; h++) maxAmp += amplitudes[h];
+    if (maxAmp > 0) y /= maxAmp;
+    pos.setY(i, y * 1.2);
+  }
+  pos.needsUpdate = true;
+  planeGeo.computeVertexNormals();
+}
+
+// ── Resize ──
+function onResize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// ── Quiz ──
+let quizIdx = 0;
+function checkQuiz(btn, correct) {
+  const siblings = btn.parentElement.querySelectorAll('.quiz-opt');
+  const fbId = quizIdx < 4 ? 'fb1' : 'fb2';
+  if (quizIdx < 4) quizIdx = 4; else quizIdx = 8;
+
+  siblings.forEach(function(b) {
+    b.style.pointerEvents = 'none';
+  });
+
+  if (correct) {
+    btn.classList.add('correct');
+    document.getElementById(fbId).innerHTML = '<span style="color:#22c55e;">Correct!</span>';
+  } else {
+    btn.classList.add('wrong');
+    // Highlight correct
+    siblings.forEach(function(b) {
+      if ((fbId === 'fb1' && b.textContent.indexOf('odd') > -1) ||
+          (fbId === 'fb2' && b.textContent.indexOf('9%') > -1)) {
+        b.classList.add('correct');
+      }
+    });
+    if (fbId === 'fb1') {
+      document.getElementById(fbId).innerHTML = '<span style="color:#ef4444;">Incorrect.</span> <span style="color:#7d8590;">A square wave only contains odd harmonics because its symmetry cancels even terms.</span>';
+    } else {
+      document.getElementById(fbId).innerHTML = '<span style="color:#ef4444;">Incorrect.</span> <span style="color:#7d8590;">The Gibbs phenomenon causes ~9% overshoot at discontinuities, even with infinite terms.</span>';
+    }
+  }
+}
+
+// Fix quiz detection
+(function() {
+  const allOpts = document.querySelectorAll('.quiz-opt');
+  let q1Done = false;
+  allOpts.forEach(function(opt, idx) {
+    const origOnclick = opt.onclick;
+    opt.onclick = null;
+    opt.addEventListener('click', function() {
+      if (idx < 4 && !q1Done) { q1Done = true; quizIdx = 0; }
+      else if (idx >= 4) { quizIdx = 4; }
+      const isCorrect = (idx === 1) || (idx === 6); // B for Q1, C for Q2
+      const fbId = idx < 4 ? 'fb1' : 'fb2';
+      const siblings = [];
+      const start = idx < 4 ? 0 : 4;
+      const end = idx < 4 ? 4 : 8;
+      for (let j = start; j < end; j++) siblings.push(allOpts[j]);
+
+      siblings.forEach(function(b) { b.style.pointerEvents = 'none'; });
+
+      if (isCorrect) {
+        opt.classList.add('correct');
+        if (idx < 4) {
+          document.getElementById(fbId).innerHTML = '<span style="color:#22c55e;">Correct!</span> <span style="color:#7d8590;">The odd symmetry of a square wave means even harmonics cancel out.</span>';
+        } else {
+          document.getElementById(fbId).innerHTML = '<span style="color:#22c55e;">Correct!</span> <span style="color:#7d8590;">The Gibbs phenomenon is an inherent overshoot (~9%) at discontinuities.</span>';
+        }
+      } else {
+        opt.classList.add('wrong');
+        siblings.forEach(function(b, bi) {
+          if ((idx < 4 && bi === 1) || (idx >= 4 && bi === 2)) b.classList.add('correct');
+        });
+        if (idx < 4) {
+          document.getElementById(fbId).innerHTML = '<span style="color:#ef4444;">Incorrect.</span> <span style="color:#7d8590;">A square wave only contains odd harmonics (n=1,3,5...) because its symmetry cancels even terms.</span>';
+        } else {
+          document.getElementById(fbId).innerHTML = '<span style="color:#ef4444;">Incorrect.</span> <span style="color:#7d8590;">The Gibbs phenomenon causes ~9% overshoot at discontinuities, persisting even with infinite terms.</span>';
+        }
+      }
+    });
+  });
+  // Remove inline onclick
+  document.querySelectorAll('.quiz-opt').forEach(function(o) { o.removeAttribute('onclick'); });
+})();
+
+// ── Animation Loop ──
+let lastTime = performance.now();
+let frameCount = 0;
+let fpsDisplay = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const now = performance.now();
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+  animTime += dt;
+
+  // FPS
+  frameCount++;
+  if (frameCount % 30 === 0) {
+    fpsDisplay = Math.round(1 / dt);
+    document.getElementById('fps').textContent = fpsDisplay + ' fps';
+  }
+
+  // 2D
+  drawHarmonics(animTime);
+  drawSum(animTime);
+
+  // 3D
+  updateWaveSurface(animTime);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ── Init ──
+applyPreset('square');
+animate();
+</script>
+</body>
+</html>

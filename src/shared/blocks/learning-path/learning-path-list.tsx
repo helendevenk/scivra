@@ -81,7 +81,7 @@ export function LearningPathList() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-64 animate-pulse rounded-lg bg-surface-dark"
+              className="h-64 animate-pulse rounded-lg bg-muted"
             />
           ))}
         </div>

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blackbody Spectrum — NeonPhysics AP Physics</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(234,179,8,.08),rgba(251,146,60,.06));border-bottom:1px solid rgba(234,179,8,.2);flex-shrink:0}
+    .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .badge{background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.35);color:#fde68a;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
+    .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
+    .layout{display:flex;flex:1;overflow:hidden}
+    .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .three-wrap{height:35%;position:relative;background:#080a12;border-bottom:1px solid rgba(255,255,255,.06)}
+    .three-wrap canvas{display:block;width:100%;height:100%}
+    .chart-wrap{flex:1;position:relative;background:#0b0e1a;padding:12px}
+    .chart-wrap canvas{display:block;width:100%;height:100%;border-radius:6px}
+    .overlay{position:absolute;top:12px;left:12px;background:rgba(8,9,15,.92);border:1px solid rgba(234,179,8,.2);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px);min-width:220px;z-index:10}
+    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px;align-items:center}
+    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+    .yellow{color:#fbbf24}.orange{color:#fb923c}.blue{color:#60a5fa}.green{color:#4ade80}.red{color:#f87171}.violet{color:#c084fc}.white{color:#f0f4ff}
+    .sidebar{width:300px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+    .param-name{font-size:11px;color:#94a3b8}
+    .param-val{font-size:11px;font-weight:700;color:#fbbf24;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(234,179,8,.2);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#eab308;cursor:pointer;box-shadow:0 0 6px rgba(234,179,8,.6)}
+    .preset-btn{display:inline-block;padding:5px 12px;margin:0 4px 6px 0;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(234,179,8,.25);background:rgba(234,179,8,.08);color:#fde68a;transition:all .15s}
+    .preset-btn:hover{background:rgba(234,179,8,.18);border-color:rgba(234,179,8,.5)}
+    .preset-btn.active{background:rgba(234,179,8,.25);border-color:#eab308}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .toggle-label{font-size:11px;color:#94a3b8}
+    .toggle{position:relative;width:36px;height:20px;cursor:pointer}
+    .toggle input{display:none}
+    .toggle-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:10px;transition:.2s}
+    .toggle input:checked+.toggle-track{background:rgba(234,179,8,.5)}
+    .toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+    .toggle input:checked~.toggle-knob{left:18px}
+    .formula-box{background:rgba(234,179,8,.04);border:1px solid rgba(234,179,8,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px;overflow-x:auto}
+    .formula-desc{font-size:10px;color:#475569;margin-top:3px}
+    .key-insight{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.2);border-radius:7px;padding:10px 12px;margin-top:8px}
+    .key-insight-title{font-size:10px;font-weight:700;color:#93c5fd;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+    .key-insight-text{font-size:10px;color:#64748b;line-height:1.6}
+    .compare-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .compare-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .compare-text{font-size:10px;color:#94a3b8}
+    .quiz-section{padding:16px 18px}
+    .quiz-q{font-size:11px;color:#cbd5e1;margin-bottom:8px;line-height:1.5}
+    .quiz-opt{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;border-radius:5px;font-size:10px;color:#94a3b8;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s}
+    .quiz-opt:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
+    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-opt.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5}
+    .quiz-feedback{font-size:10px;margin-top:4px;padding:6px 10px;border-radius:5px;line-height:1.5;display:none}
+    .quiz-feedback.show{display:block}
+    .quiz-feedback.ok{background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.2)}
+    .quiz-feedback.no{background:rgba(239,68,68,.08);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+    .legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;color:#94a3b8}
+    .legend-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
+    .rj-label{color:#f87171;font-style:italic}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Blackbody Spectrum</h1>
+  <p class="subtitle">Planck distribution, Wien displacement law, and Stefan-Boltzmann law</p>
+</div>
+
+<div class="layout">
+  <div class="main-area">
+    <div class="three-wrap" id="threeWrap">
+      <div class="overlay" id="statsOverlay">
+        <div class="stat-row">
+          <span class="stat-label">Temperature</span>
+          <span class="stat-value yellow" id="statT">5778 K</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Peak Wavelength</span>
+          <span class="stat-value orange" id="statLambda">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Power</span>
+          <span class="stat-value blue" id="statPower">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Peak Color</span>
+          <span class="stat-value" id="statColor" style="display:flex;align-items:center;gap:6px"><span id="colorSwatch" style="width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,.2)"></span><span id="colorName">--</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chartCanvas"></canvas>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Controls</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Temperature</span>
+          <span class="param-val" id="tempVal">5778 K</span>
+        </div>
+        <input type="range" id="tempSlider" min="1000" max="10000" step="1" value="5778">
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Show Color Glow</span>
+        <label class="toggle">
+          <input type="checkbox" id="showColor" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-knob"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Rayleigh-Jeans Curve</span>
+        <label class="toggle">
+          <input type="checkbox" id="showRJ">
+          <span class="toggle-track"></span>
+          <span class="toggle-knob"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <button class="preset-btn" data-temp="3000" id="preRed">Red Star (3000 K)</button>
+      <button class="preset-btn active" data-temp="5778" id="preSun">Sun (5778 K)</button>
+      <button class="preset-btn" data-temp="10000" id="preBlue">Blue Star (10000 K)</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Comparison Curves</div>
+      <div class="compare-row"><div class="compare-swatch" style="background:#ef4444"></div><span class="compare-text">Red Star — 3000 K (always shown)</span></div>
+      <div class="compare-row"><div class="compare-swatch" style="background:#fbbf24"></div><span class="compare-text">Sun — 5778 K (always shown)</span></div>
+      <div class="compare-row"><div class="compare-swatch" style="background:#60a5fa"></div><span class="compare-text">Blue Star — 10000 K (always shown)</span></div>
+      <div class="compare-row"><div class="compare-swatch" style="background:#22d3ee"></div><span class="compare-text">Current Temperature (interactive)</span></div>
+
+      <div style="margin-top:8px">
+        <div class="legend-row"><div class="legend-line" style="background:#f87171;border:none;height:2px;border-top:2px dashed #f87171;background:none"></div><span class="rj-label">Rayleigh-Jeans (classical)</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Formulas</div>
+      <div class="formula-box"><div id="formula1"></div><div class="formula-desc">Planck's spectral radiance</div></div>
+      <div class="formula-box"><div id="formula2"></div><div class="formula-desc">Wien displacement law (b = 2.898 x 10^-3 m K)</div></div>
+      <div class="formula-box"><div id="formula3"></div><div class="formula-desc">Stefan-Boltzmann law</div></div>
+    </div>
+
+    <div class="section">
+      <div class="key-insight">
+        <div class="key-insight-title">Ultraviolet Catastrophe</div>
+        <div class="key-insight-text">Classical physics (Rayleigh-Jeans law) predicts infinite energy at short wavelengths. Toggle the R-J curve to see how it diverges. Planck resolved this by proposing energy quantization: E = nhf. This was the birth of quantum mechanics.</div>
+      </div>
+      <div class="key-insight" style="margin-top:8px">
+        <div class="key-insight-title">Why Stars Have Colors</div>
+        <div class="key-insight-text">Hotter stars emit more at shorter wavelengths (Wien's law). A 3000 K red dwarf peaks in infrared, the Sun (5778 K) peaks in green-yellow, and a 10000 K star peaks in UV, appearing blue-white to our eyes.</div>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quiz</div>
+      <div style="margin-bottom:18px">
+        <div class="quiz-q">1. If the temperature of a blackbody doubles, by what factor does its total radiated power increase?</div>
+        <button class="quiz-opt" data-q="1" data-v="a">A) 2</button>
+        <button class="quiz-opt" data-q="1" data-v="b">B) 4</button>
+        <button class="quiz-opt" data-q="1" data-v="c">C) 8</button>
+        <button class="quiz-opt" data-q="1" data-v="d">D) 16</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div>
+        <div class="quiz-q">2. The peak wavelength of the Sun's spectrum is about 500 nm. A star with peak wavelength of 250 nm has a surface temperature of approximately:</div>
+        <button class="quiz-opt" data-q="2" data-v="a">A) 2889 K</button>
+        <button class="quiz-opt" data-q="2" data-v="b">B) 5778 K</button>
+        <button class="quiz-opt" data-q="2" data-v="c">C) 11556 K</button>
+        <button class="quiz-opt" data-q="2" data-v="d">D) 23112 K</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Physical Constants ──────────────────────────────────
+const h  = 6.62607015e-34;   // Planck constant (J s)
+const c  = 2.99792458e8;     // Speed of light (m/s)
+const kB = 1.380649e-23;     // Boltzmann constant (J/K)
+const sigma = 5.670374419e-8; // Stefan-Boltzmann constant (W/m^2/K^4)
+const b_wien = 2.897771955e-3; // Wien displacement constant (m K)
+
+// ─── State ───────────────────────────────────────────────
+let temperature = 5778;
+let showColorGlow = true;
+let showRayleighJeans = false;
+
+// ─── KaTeX Formulas ──────────────────────────────────────
+katex.render("B(\\lambda,T) = \\frac{2hc^2}{\\lambda^5} \\cdot \\frac{1}{e^{hc/\\lambda k_B T}-1}", document.getElementById('formula1'), {displayMode:false,throwOnError:false});
+katex.render("\\lambda_{\\max} = \\frac{b}{T}", document.getElementById('formula2'), {displayMode:false,throwOnError:false});
+katex.render("P = \\sigma T^4", document.getElementById('formula3'), {displayMode:false,throwOnError:false});
+
+// ─── Physics Functions ───────────────────────────────────
+function planck(lambda_m, T) {
+  const a = 2.0 * h * c * c / Math.pow(lambda_m, 5);
+  const exponent = (h * c) / (lambda_m * kB * T);
+  if (exponent > 500) return 0;
+  return a / (Math.exp(exponent) - 1.0);
+}
+
+function rayleighJeans(lambda_m, T) {
+  return (2.0 * c * kB * T) / Math.pow(lambda_m, 4);
+}
+
+function wienPeak(T) {
+  return b_wien / T;
+}
+
+function stefanBoltzmann(T) {
+  return sigma * Math.pow(T, 4);
+}
+
+// ─── Color from Temperature (approximate blackbody) ──────
+function tempToColor(T) {
+  // Attempt CIE-based approximation for visual color
+  let r, g, b_c;
+  const t = T / 100;
+  if (t <= 66) {
+    r = 255;
+    g = Math.max(0, Math.min(255, 99.4708025861 * Math.log(t) - 161.1195681661));
+    if (t <= 19) { b_c = 0; }
+    else { b_c = Math.max(0, Math.min(255, 138.5177312231 * Math.log(t - 10) - 305.0447927307)); }
+  } else {
+    r = Math.max(0, Math.min(255, 329.698727446 * Math.pow(t - 60, -0.1332047592)));
+    g = Math.max(0, Math.min(255, 288.1221695283 * Math.pow(t - 60, -0.0755148492)));
+    b_c = 255;
+  }
+  return { r: r / 255, g: g / 255, b: b_c / 255 };
+}
+
+function tempToHex(T) {
+  const c = tempToColor(T);
+  const toHex = v => Math.round(v * 255).toString(16).padStart(2, '0');
+  return '#' + toHex(c.r) + toHex(c.g) + toHex(c.b);
+}
+
+function wavelengthToRGB(lambda_nm) {
+  // Attempt visible-spectrum color from wavelength
+  let r = 0, g = 0, b = 0;
+  if (lambda_nm >= 380 && lambda_nm < 440) {
+    r = -(lambda_nm - 440) / (440 - 380); b = 1;
+  } else if (lambda_nm >= 440 && lambda_nm < 490) {
+    g = (lambda_nm - 440) / (490 - 440); b = 1;
+  } else if (lambda_nm >= 490 && lambda_nm < 510) {
+    g = 1; b = -(lambda_nm - 510) / (510 - 490);
+  } else if (lambda_nm >= 510 && lambda_nm < 580) {
+    r = (lambda_nm - 510) / (580 - 510); g = 1;
+  } else if (lambda_nm >= 580 && lambda_nm < 645) {
+    r = 1; g = -(lambda_nm - 645) / (645 - 580);
+  } else if (lambda_nm >= 645 && lambda_nm <= 700) {
+    r = 1;
+  }
+  // Intensity falloff at edges
+  let factor;
+  if (lambda_nm >= 380 && lambda_nm < 420) factor = 0.3 + 0.7 * (lambda_nm - 380) / (420 - 380);
+  else if (lambda_nm >= 645 && lambda_nm <= 700) factor = 0.3 + 0.7 * (700 - lambda_nm) / (700 - 645);
+  else if (lambda_nm >= 420 && lambda_nm < 645) factor = 1;
+  else factor = 0;
+  return { r: r * factor, g: g * factor, b: b * factor };
+}
+
+// ─── Three.js Scene ──────────────────────────────────────
+const threeWrap = document.getElementById('threeWrap');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x080a12);
+threeWrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(0, 0, 4);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enablePan = false;
+controls.minDistance = 2;
+controls.maxDistance = 8;
+
+// Glowing sphere
+const sphereGeo = new THREE.SphereGeometry(0.8, 64, 64);
+const sphereMat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  emissive: 0xffffff,
+  emissiveIntensity: 0.6,
+  roughness: 0.3,
+  metalness: 0.0
+});
+const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+scene.add(sphere);
+
+// Glow sprite
+const glowCanvas = document.createElement('canvas');
+glowCanvas.width = 256;
+glowCanvas.height = 256;
+const glowCtx = glowCanvas.getContext('2d');
+const gradient = glowCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
+gradient.addColorStop(0, 'rgba(255,255,255,0.6)');
+gradient.addColorStop(0.3, 'rgba(255,255,255,0.2)');
+gradient.addColorStop(1, 'rgba(255,255,255,0)');
+glowCtx.fillStyle = gradient;
+glowCtx.fillRect(0, 0, 256, 256);
+const glowTex = new THREE.CanvasTexture(glowCanvas);
+const glowMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
+const glowSprite = new THREE.Sprite(glowMat);
+glowSprite.scale.set(4, 4, 1);
+scene.add(glowSprite);
+
+// Ambient + point light
+const ambientLight = new THREE.AmbientLight(0x1a1a3a, 0.3);
+scene.add(ambientLight);
+const pointLight = new THREE.PointLight(0xffffff, 0.5, 20);
+pointLight.position.set(3, 3, 3);
+scene.add(pointLight);
+
+// Stars background
+const starsGeo = new THREE.BufferGeometry();
+const starPositions = [];
+for (let i = 0; i < 300; i++) {
+  starPositions.push((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+}
+starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+const starsMat = new THREE.PointsMaterial({ color: 0x445566, size: 0.06 });
+scene.add(new THREE.Points(starsGeo, starsMat));
+
+function updateSphereColor(T) {
+  const col = tempToColor(T);
+  const threeCol = new THREE.Color(col.r, col.g, col.b);
+  sphereMat.emissive.copy(threeCol);
+  sphereMat.color.copy(threeCol);
+  const intensity = Math.min(1.2, 0.3 + (T - 1000) / 9000 * 0.9);
+  sphereMat.emissiveIntensity = showColorGlow ? intensity : 0.15;
+  glowMat.color.copy(threeCol);
+  glowMat.opacity = showColorGlow ? 0.4 + intensity * 0.3 : 0.1;
+  glowSprite.scale.setScalar(showColorGlow ? 3 + intensity * 2 : 2);
+}
+
+function resizeThree() {
+  const w = threeWrap.clientWidth;
+  const h = threeWrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+// ─── Chart (Canvas 2D) ──────────────────────────────────
+const chartCanvas = document.getElementById('chartCanvas');
+const ctx = chartCanvas.getContext('2d');
+
+const CHART_LAMBDA_MIN = 50;   // nm
+const CHART_LAMBDA_MAX = 3000; // nm
+
+const PRESET_TEMPS = [3000, 5778, 10000];
+const PRESET_COLORS = ['#ef4444', '#fbbf24', '#60a5fa'];
+const PRESET_NAMES = ['3000 K', '5778 K', '10000 K'];
+const CURRENT_COLOR = '#22d3ee';
+
+function drawChart() {
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  const rect = chartCanvas.parentElement.getBoundingClientRect();
+  const W = rect.width - 24;
+  const H = rect.height - 24;
+  chartCanvas.width = W * dpr;
+  chartCanvas.height = H * dpr;
+  chartCanvas.style.width = W + 'px';
+  chartCanvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const pad = { top: 20, right: 20, bottom: 44, left: 62 };
+  const pw = W - pad.left - pad.right;
+  const ph = H - pad.top - pad.bottom;
+
+  // Determine y-max across all visible curves
+  const numPoints = 500;
+  let yMax = 0;
+  const allTemps = [...PRESET_TEMPS, temperature];
+  for (const T of allTemps) {
+    for (let i = 0; i <= numPoints; i++) {
+      const lam = (CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * i / numPoints) * 1e-9;
+      const val = planck(lam, T);
+      if (val > yMax) yMax = val;
+    }
+  }
+  if (showRayleighJeans) {
+    // Cap RJ to 1.5x Planck max to keep chart readable
+    yMax = yMax * 1.5;
+  }
+  yMax *= 1.1;
+
+  // Background
+  ctx.fillStyle = '#0b0e1a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Visible spectrum band
+  const visMinX = pad.left + ((380 - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
+  const visMaxX = pad.left + ((700 - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
+  // Draw rainbow gradient
+  const rainbowGrad = ctx.createLinearGradient(visMinX, 0, visMaxX, 0);
+  const specColors = [
+    [380, 'rgba(128,0,255,0.12)'],
+    [440, 'rgba(0,0,255,0.12)'],
+    [490, 'rgba(0,255,255,0.12)'],
+    [510, 'rgba(0,255,0,0.12)'],
+    [580, 'rgba(255,255,0,0.12)'],
+    [645, 'rgba(255,128,0,0.12)'],
+    [700, 'rgba(255,0,0,0.12)']
+  ];
+  for (const [wl, col] of specColors) {
+    rainbowGrad.addColorStop((wl - 380) / (700 - 380), col);
+  }
+  ctx.fillStyle = rainbowGrad;
+  ctx.fillRect(visMinX, pad.top, visMaxX - visMinX, ph);
+
+  // Label visible region
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.fillStyle = '#475569';
+  ctx.textAlign = 'center';
+  ctx.fillText('Visible', (visMinX + visMaxX) / 2, pad.top + 12);
+  // Dashed borders
+  ctx.save();
+  ctx.setLineDash([3, 3]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath();
+  ctx.moveTo(visMinX, pad.top);
+  ctx.lineTo(visMinX, pad.top + ph);
+  ctx.moveTo(visMaxX, pad.top);
+  ctx.lineTo(visMaxX, pad.top + ph);
+  ctx.stroke();
+  ctx.restore();
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  const yTicks = 5;
+  for (let i = 0; i <= yTicks; i++) {
+    const y = pad.top + ph * (1 - i / yTicks);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + pw, y);
+    ctx.stroke();
+  }
+  const xTickVals = [0, 250, 500, 750, 1000, 1500, 2000, 2500, 3000];
+  for (const xv of xTickVals) {
+    if (xv < CHART_LAMBDA_MIN || xv > CHART_LAMBDA_MAX) continue;
+    const x = pad.left + ((xv - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top);
+    ctx.lineTo(x, pad.top + ph);
+    ctx.stroke();
+  }
+
+  // Helper: lambda to x
+  function lamToX(lam_nm) {
+    return pad.left + ((lam_nm - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
+  }
+  function valToY(v) {
+    return pad.top + ph * (1 - Math.min(v, yMax) / yMax);
+  }
+
+  // Draw Planck curves for presets
+  function drawPlanckCurve(T, color, lineWidth, dashed) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    if (dashed) ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= numPoints; i++) {
+      const lam_nm = CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * i / numPoints;
+      const lam_m = lam_nm * 1e-9;
+      const val = planck(lam_m, T);
+      const x = lamToX(lam_nm);
+      const y = valToY(val);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draw preset reference curves (thin)
+  for (let i = 0; i < PRESET_TEMPS.length; i++) {
+    drawPlanckCurve(PRESET_TEMPS[i], PRESET_COLORS[i], 1.2, true);
+  }
+  // Draw current temperature curve (thick, solid)
+  drawPlanckCurve(temperature, CURRENT_COLOR, 2.5, false);
+
+  // Rayleigh-Jeans curve
+  if (showRayleighJeans) {
+    ctx.save();
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= numPoints; i++) {
+      const lam_nm = CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * i / numPoints;
+      const lam_m = lam_nm * 1e-9;
+      const val = rayleighJeans(lam_m, temperature);
+      const x = lamToX(lam_nm);
+      const y = valToY(val);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else { if (y >= pad.top) ctx.lineTo(x, y); }
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Label
+    ctx.font = 'italic 9px -apple-system, sans-serif';
+    ctx.fillStyle = '#f87171';
+    ctx.textAlign = 'left';
+    const rjLabelX = lamToX(200);
+    ctx.fillText('Rayleigh-Jeans', rjLabelX, pad.top + 28);
+    ctx.fillText('(UV catastrophe)', rjLabelX, pad.top + 40);
+  }
+
+  // Wien displacement arrow for current temp
+  const peakNm = wienPeak(temperature) * 1e9;
+  if (peakNm >= CHART_LAMBDA_MIN && peakNm <= CHART_LAMBDA_MAX) {
+    const peakX = lamToX(peakNm);
+    const peakVal = planck(peakNm * 1e-9, temperature);
+    const peakY = valToY(peakVal);
+    // Arrow pointing down to peak
+    ctx.save();
+    ctx.strokeStyle = CURRENT_COLOR;
+    ctx.fillStyle = CURRENT_COLOR;
+    ctx.lineWidth = 1.5;
+    const arrowTop = Math.max(pad.top, peakY - 30);
+    ctx.beginPath();
+    ctx.moveTo(peakX, arrowTop);
+    ctx.lineTo(peakX, peakY - 5);
+    ctx.stroke();
+    // Arrowhead
+    ctx.beginPath();
+    ctx.moveTo(peakX, peakY - 2);
+    ctx.lineTo(peakX - 3, peakY - 8);
+    ctx.lineTo(peakX + 3, peakY - 8);
+    ctx.closePath();
+    ctx.fill();
+    // Label
+    ctx.font = 'bold 9px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('λ_max=' + Math.round(peakNm) + ' nm', peakX, arrowTop - 4);
+    ctx.restore();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, pad.top);
+  ctx.lineTo(pad.left, pad.top + ph);
+  ctx.lineTo(pad.left + pw, pad.top + ph);
+  ctx.stroke();
+
+  // X-axis labels
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'center';
+  for (const xv of xTickVals) {
+    if (xv < CHART_LAMBDA_MIN || xv > CHART_LAMBDA_MAX) continue;
+    const x = lamToX(xv);
+    ctx.fillText(xv, x, pad.top + ph + 14);
+  }
+  ctx.fillText('Wavelength (nm)', pad.left + pw / 2, pad.top + ph + 32);
+
+  // Y-axis label
+  ctx.save();
+  ctx.translate(14, pad.top + ph / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.fillText('Spectral Radiance (W/sr/m\u00B3)', 0, 0);
+  ctx.restore();
+
+  // Y-axis tick labels
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#475569';
+  ctx.font = '8px -apple-system, sans-serif';
+  for (let i = 0; i <= yTicks; i++) {
+    const val = yMax * i / yTicks;
+    const y = pad.top + ph * (1 - i / yTicks);
+    let label;
+    if (val === 0) label = '0';
+    else {
+      const exp = Math.floor(Math.log10(val));
+      const mantissa = val / Math.pow(10, exp);
+      label = mantissa.toFixed(1) + 'e' + exp;
+    }
+    ctx.fillText(label, pad.left - 5, y + 3);
+  }
+
+  // Visible wavelength color bar at bottom of chart
+  const barH = 6;
+  const barY = pad.top + ph - barH;
+  for (let px = Math.max(0, visMinX - pad.left); px <= Math.min(pw, visMaxX - pad.left); px++) {
+    const lam_nm = CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * px / pw;
+    if (lam_nm < 380 || lam_nm > 700) continue;
+    const rgb = wavelengthToRGB(lam_nm);
+    ctx.fillStyle = `rgb(${Math.round(rgb.r*255)},${Math.round(rgb.g*255)},${Math.round(rgb.b*255)})`;
+    ctx.fillRect(pad.left + px, barY, 1.5, barH);
+  }
+}
+
+// ─── Update Stats ────────────────────────────────────────
+function updateStats() {
+  const T = temperature;
+  const lambdaMax = wienPeak(T);
+  const lambdaMaxNm = lambdaMax * 1e9;
+  const power = stefanBoltzmann(T);
+  const col = tempToColor(T);
+  const hex = tempToHex(T);
+
+  document.getElementById('statT').textContent = T + ' K';
+  document.getElementById('tempVal').textContent = T + ' K';
+  document.getElementById('statLambda').textContent = Math.round(lambdaMaxNm) + ' nm';
+
+  // Power formatting
+  let powerStr;
+  if (power < 1e6) powerStr = (power / 1e3).toFixed(1) + ' kW/m\u00B2';
+  else if (power < 1e9) powerStr = (power / 1e6).toFixed(2) + ' MW/m\u00B2';
+  else powerStr = (power / 1e9).toFixed(2) + ' GW/m\u00B2';
+  document.getElementById('statPower').textContent = powerStr;
+
+  document.getElementById('colorSwatch').style.background = hex;
+
+  // Color name
+  let colorName;
+  if (lambdaMaxNm > 700) colorName = 'Infrared (deep red glow)';
+  else if (lambdaMaxNm > 620) colorName = 'Red';
+  else if (lambdaMaxNm > 590) colorName = 'Orange';
+  else if (lambdaMaxNm > 560) colorName = 'Yellow';
+  else if (lambdaMaxNm > 490) colorName = 'Green-Yellow';
+  else if (lambdaMaxNm > 450) colorName = 'Blue';
+  else colorName = 'Violet / UV';
+  document.getElementById('colorName').textContent = colorName;
+  document.getElementById('colorName').style.color = hex;
+}
+
+// ─── Preset Buttons ──────────────────────────────────────
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    temperature = parseInt(btn.dataset.temp);
+    document.getElementById('tempSlider').value = temperature;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    refresh();
+  });
+});
+
+function updatePresetHighlight() {
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.temp) === temperature);
+  });
+}
+
+// ─── Slider ──────────────────────────────────────────────
+document.getElementById('tempSlider').addEventListener('input', e => {
+  temperature = parseInt(e.target.value);
+  updatePresetHighlight();
+  refresh();
+});
+
+// ─── Toggles ─────────────────────────────────────────────
+document.getElementById('showColor').addEventListener('change', e => {
+  showColorGlow = e.target.checked;
+  refresh();
+});
+document.getElementById('showRJ').addEventListener('change', e => {
+  showRayleighJeans = e.target.checked;
+  drawChart();
+});
+
+function refresh() {
+  updateSphereColor(temperature);
+  updateStats();
+  drawChart();
+}
+
+// ─── Quiz ────────────────────────────────────────────────
+const answers = { '1': 'd', '2': 'c' };
+const explanations = {
+  '1': { ok: 'Correct! P = σT⁴, so doubling T gives 2⁴ = 16 times the power.', no: 'Incorrect. P = σT⁴ (Stefan-Boltzmann law). Doubling T: P\' = σ(2T)⁴ = 16σT⁴. The answer is 16.' },
+  '2': { ok: 'Correct! Wien\'s law: T = b/λ_max. Half the wavelength means double the temperature: 2 × 5778 ≈ 11556 K.', no: 'Incorrect. Wien\'s law gives T = b/λ_max. Since λ_max is halved (500→250 nm), T doubles: 2 × 5778 ≈ 11556 K.' }
+};
+
+document.querySelectorAll('.quiz-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const q = btn.dataset.q;
+    const v = btn.dataset.v;
+    const fb = document.getElementById('fb' + q);
+    const isCorrect = v === answers[q];
+
+    // Disable all options for this question
+    document.querySelectorAll(`.quiz-opt[data-q="${q}"]`).forEach(b => {
+      b.style.pointerEvents = 'none';
+      if (b.dataset.v === answers[q]) b.classList.add('correct');
+    });
+    if (!isCorrect) btn.classList.add('wrong');
+
+    fb.textContent = isCorrect ? explanations[q].ok : explanations[q].no;
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'ok' : 'no');
+  });
+});
+
+// ─── Resize ──────────────────────────────────────────────
+function onResize() {
+  resizeThree();
+  drawChart();
+}
+window.addEventListener('resize', onResize);
+
+// ─── Animation Loop ──────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  sphere.rotation.y += 0.002;
+  renderer.render(scene, camera);
+}
+
+// ─── Init ────────────────────────────────────────────────
+resizeThree();
+updateSphereColor(temperature);
+updateStats();
+drawChart();
+animate();
+</script>
+</body>
+</html>

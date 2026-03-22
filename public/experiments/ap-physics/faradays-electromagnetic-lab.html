@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faraday's Electromagnetic Lab — NeonPhysics AP Physics 2</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(6,182,212,.07));border-bottom:1px solid rgba(16,185,129,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px;align-items:center}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ap{background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.4);color:#6ee7b7}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .header h1{font-size:1.3rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 80px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#6ee7b7;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(16,185,129,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#10b981;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
+    .stat-card.span2{grid-column:span 2}
+    .stat-card-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .stat-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .v-green{color:#6ee7b7}.v-cyan{color:#67e8f9}.v-amber{color:#fcd34d}.v-rose{color:#fda4af}.v-sky{color:#7dd3fc}
+    .formula-box{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:5px}
+    .formula-live{font-size:11px;color:#94a3b8;margin-top:4px;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+    .mode-btn{width:100%;padding:8px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:6px;text-align:left}
+    .mode-btn:hover{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3)}
+    .mode-btn.active{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.4);color:#6ee7b7}
+    .pause-btn{width:100%;padding:9px;border-radius:7px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.08);color:#6ee7b7;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .pause-btn:hover{background:rgba(16,185,129,.18)}
+    .reset-btn{width:100%;padding:9px;border-radius:7px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .reset-btn:hover{background:rgba(251,191,36,.18)}
+    .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-variant-numeric:tabular-nums;pointer-events:none;z-index:5}
+    .canvas-area{position:relative}
+    .threejs-wrap{position:relative;overflow:hidden;width:100%;height:100%}
+    #threeCanvas{display:block;width:100%;height:100%}
+    .katex{font-size:1em}
+    .katex .base{color:#6ee7b7}
+    .quiz-section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .quiz-q{font-size:12px;color:#cbd5e1;margin-bottom:8px;line-height:1.5}
+    .quiz-opt{display:block;width:100%;padding:6px 10px;margin-bottom:4px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:#94a3b8;font-size:11px;cursor:pointer;text-align:left;transition:all .15s}
+    .quiz-opt:hover{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}
+    .quiz-opt.correct{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#6ee7b7}
+    .quiz-opt.wrong{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#fca5a5}
+    .quiz-opt:disabled{cursor:default;opacity:.7}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:5px 8px;border-radius:4px;display:none}
+    .quiz-feedback.show{display:block}
+    .quiz-feedback.correct-fb{background:rgba(16,185,129,.1);color:#6ee7b7;border:1px solid rgba(16,185,129,.2)}
+    .quiz-feedback.wrong-fb{background:rgba(239,68,68,.08);color:#fca5a5;border:1px solid rgba(239,68,68,.15)}
+    .preset-tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;color:#64748b;border:1px solid rgba(255,255,255,.06);margin-left:6px}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Faraday's Electromagnetic Lab</h1>
+  <p>Bar magnet, compass array, electromagnetic induction, solenoid &amp; transformer</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Experiment Mode</div>
+      <button class="mode-btn active" data-mode="0">1. Bar Magnet + Compass <span class="preset-tag">Preset</span></button>
+      <button class="mode-btn" data-mode="1">2. Induction <span class="preset-tag">Preset</span></button>
+      <button class="mode-btn" data-mode="2">3. Electromagnet <span class="preset-tag">Preset</span></button>
+      <button class="mode-btn" data-mode="3">4. Transformer</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Magnet Strength (T)</span>
+          <span class="param-val" id="lblMag">1.00</span>
+        </div>
+        <input type="range" id="sliderMag" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Coil Turns N</span>
+          <span class="param-val" id="lblN">20</span>
+        </div>
+        <input type="range" id="sliderN" min="1" max="100" step="1" value="20">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Current I (A)</span>
+          <span class="param-val" id="lblI">0.0</span>
+        </div>
+        <input type="range" id="sliderI" min="0" max="10" step="0.1" value="0">
+      </div>
+      <button class="pause-btn" id="pauseBtn">Pause</button>
+      <button class="reset-btn" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Flux &Phi;</div>
+        <div class="stat-card-value v-green" id="statFlux">0.000 Wb</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">EMF</div>
+        <div class="stat-card-value v-cyan" id="statEMF">0.000 V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">B Solenoid</div>
+        <div class="stat-card-value v-amber" id="statBsol">0.000 T</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Mode</div>
+        <div class="stat-card-value v-rose" id="statMode">Compass</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Formulas</div>
+      <div class="formula-box">
+        <div id="formula1"></div>
+        <div class="formula-desc">Faraday's Law of Induction</div>
+      </div>
+      <div class="formula-box">
+        <div id="formula2"></div>
+        <div class="formula-desc">Magnetic Flux</div>
+      </div>
+      <div class="formula-box">
+        <div id="formula3"></div>
+        <div class="formula-desc">Solenoid Magnetic Field</div>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-q">Q1: When a magnet is pushed into a coil faster, what happens to the induced EMF?</div>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,0)">A) EMF stays the same</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,1)">B) EMF increases</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,2)">C) EMF decreases</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,3)">D) EMF becomes zero</button>
+      <div class="quiz-feedback" id="fb1"></div>
+
+      <div class="quiz-q" style="margin-top:14px">Q2: Doubling the number of turns in a solenoid while keeping current constant will:</div>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,0)">A) Halve the magnetic field</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,1)">B) Double the magnetic field</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,2)">C) Quadruple the magnetic field</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,3)">D) Have no effect on the field</button>
+      <div class="quiz-feedback" id="fb2"></div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <div class="threejs-wrap">
+      <canvas id="threeCanvas"></canvas>
+      <div class="fps-badge" id="fpsBadge">-- FPS</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Quiz logic
+const quizAnswers = {1: 1, 2: 1};
+const quizExplanations = {
+  1: {correct: 'Correct! EMF = -N d\u03A6/dt. Faster motion means greater d\u03A6/dt, producing higher EMF.', wrong: 'Incorrect. A faster-moving magnet increases d\u03A6/dt, which increases the EMF by Faraday\'s law.'},
+  2: {correct: 'Correct! B = \u03BC\u2080nI. Doubling turns (n) doubles the magnetic field.', wrong: 'Incorrect. B_solenoid = \u03BC\u2080nI is linear in n, so doubling turns doubles B.'}
+};
+function checkQuiz(btn, qNum, choice) {
+  const parent = btn.parentElement;
+  const opts = parent.querySelectorAll('.quiz-opt');
+  const fb = document.getElementById('fb' + qNum);
+  opts.forEach(o => { o.disabled = true; });
+  if (choice === quizAnswers[qNum]) {
+    btn.classList.add('correct');
+    fb.textContent = quizExplanations[qNum].correct;
+    fb.className = 'quiz-feedback show correct-fb';
+  } else {
+    btn.classList.add('wrong');
+    opts[quizAnswers[qNum]].classList.add('correct');
+    fb.textContent = quizExplanations[qNum].wrong;
+    fb.className = 'quiz-feedback show wrong-fb';
+  }
+}
+
+// KaTeX rendering
+document.addEventListener('DOMContentLoaded', function() {
+  katex.render('\\mathcal{E} = -N \\frac{d\\Phi}{dt}', document.getElementById('formula1'), {displayMode: false});
+  katex.render('\\Phi = B \\cdot A \\cos\\theta', document.getElementById('formula2'), {displayMode: false});
+  katex.render('B_{\\text{sol}} = \\mu_0 n I', document.getElementById('formula3'), {displayMode: false});
+});
+
+// Three.js setup
+const canvas = document.getElementById('threeCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0f172a);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(8, 6, 10);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+
+// Lighting
+const ambient = new THREE.AmbientLight(0x334466, 0.6);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(5, 10, 7);
+scene.add(dirLight);
+const pointLight = new THREE.PointLight(0x10b981, 0.5, 30);
+pointLight.position.set(-3, 5, 3);
+scene.add(pointLight);
+
+// Grid
+const gridHelper = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x0d2137);
+scene.add(gridHelper);
+
+// State
+let currentMode = 0;
+let paused = false;
+let magnetStrength = 1.0;
+let coilTurns = 20;
+let current = 0;
+let magnetPos = 0;
+let magnetDir = 1;
+let time = 0;
+let prevFlux = 0;
+const mu0 = 4 * Math.PI * 1e-7;
+
+// Groups for each mode
+const modeGroups = [new THREE.Group(), new THREE.Group(), new THREE.Group(), new THREE.Group()];
+modeGroups.forEach(g => scene.add(g));
+
+// Materials
+const matRed = new THREE.MeshPhongMaterial({color: 0xff3333, shininess: 60});
+const matBlue = new THREE.MeshPhongMaterial({color: 0x3388ff, shininess: 60});
+const matCopper = new THREE.MeshPhongMaterial({color: 0xcc7733, shininess: 40});
+const matDarkCopper = new THREE.MeshPhongMaterial({color: 0x885522, shininess: 40});
+const matIron = new THREE.MeshPhongMaterial({color: 0x666688, shininess: 30});
+const matNeedle = new THREE.MeshPhongMaterial({color: 0xff4444, shininess: 80});
+const matNeedleSouth = new THREE.MeshPhongMaterial({color: 0xffffff, shininess: 80});
+const matFieldLine = new THREE.LineBasicMaterial({color: 0x10b981, transparent: true, opacity: 0.5});
+const matFieldLineBlue = new THREE.LineBasicMaterial({color: 0x3b82f6, transparent: true, opacity: 0.5});
+const matInduced = new THREE.LineBasicMaterial({color: 0xfbbf24, transparent: true, opacity: 0.7});
+
+// ========== MODE 0: Bar Magnet + Compass Array ==========
+function buildMode0() {
+  const g = modeGroups[0];
+  // Bar magnet
+  const magGroup = new THREE.Group();
+  magGroup.name = 'barMagnet0';
+  const halfN = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.6), matRed);
+  halfN.position.x = 0.6;
+  const halfS = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.6), matBlue);
+  halfS.position.x = -0.6;
+  magGroup.add(halfN, halfS);
+  // Labels
+  const labelN = makeTextSprite('N', 0.4, '#ff6666');
+  labelN.position.set(0.8, 0.55, 0);
+  magGroup.add(labelN);
+  const labelS = makeTextSprite('S', 0.4, '#6699ff');
+  labelS.position.set(-0.8, 0.55, 0);
+  magGroup.add(labelS);
+  magGroup.position.y = 0.3;
+  g.add(magGroup);
+
+  // Compass grid
+  for (let ix = -3; ix <= 3; ix++) {
+    for (let iz = -3; iz <= 3; iz++) {
+      if (Math.abs(ix) <= 1 && iz === 0) continue;
+      const compass = createCompass();
+      compass.position.set(ix * 1.8, 0.15, iz * 1.8);
+      compass.name = 'compass';
+      g.add(compass);
+    }
+  }
+
+  // Field lines
+  buildDipoleFieldLines(g, 0);
+}
+
+function createCompass() {
+  const group = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 16), matIron);
+  group.add(base);
+  const needleN = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.5, 6), matNeedle);
+  needleN.rotation.z = -Math.PI / 2;
+  needleN.position.set(0.2, 0.1, 0);
+  const needleS = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.5, 6), matNeedleSouth);
+  needleS.rotation.z = Math.PI / 2;
+  needleS.position.set(-0.2, 0.1, 0);
+  const needleGroup = new THREE.Group();
+  needleGroup.add(needleN, needleS);
+  needleGroup.name = 'needleGroup';
+  group.add(needleGroup);
+  return group;
+}
+
+function buildDipoleFieldLines(g, yOffset) {
+  const lineGroup = new THREE.Group();
+  lineGroup.name = 'fieldLines';
+  const numLines = 12;
+  for (let i = 0; i < numLines; i++) {
+    const angle = (i / numLines) * Math.PI * 2;
+    const pts = [];
+    const startR = 0.4;
+    let px = Math.cos(angle) * startR + 0.6;
+    let py = yOffset;
+    let pz = Math.sin(angle) * startR;
+    for (let step = 0; step < 80; step++) {
+      pts.push(new THREE.Vector3(px, py, pz));
+      const b = dipoleField(px, py - yOffset, pz, magnetStrength);
+      const mag = Math.sqrt(b.x * b.x + b.y * b.y + b.z * b.z);
+      if (mag < 0.001) break;
+      const ds = 0.15;
+      px += (b.x / mag) * ds;
+      py += (b.y / mag) * ds;
+      pz += (b.z / mag) * ds;
+      if (Math.sqrt(px * px + (py - yOffset) * (py - yOffset) + pz * pz) > 8) break;
+    }
+    if (pts.length > 2) {
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const line = new THREE.Line(geo, matFieldLine);
+      lineGroup.add(line);
+    }
+  }
+  g.add(lineGroup);
+}
+
+function dipoleField(x, y, z, strength) {
+  const m = {x: strength, y: 0, z: 0};
+  const r = Math.sqrt(x * x + y * y + z * z);
+  if (r < 0.3) return {x: 0, y: 0, z: 0};
+  const r5 = Math.pow(r, 5);
+  const r3 = Math.pow(r, 3);
+  const mdotr = m.x * x + m.y * y + m.z * z;
+  return {
+    x: (3 * mdotr * x / r5 - m.x / r3) * 0.5,
+    y: (3 * mdotr * y / r5 - m.y / r3) * 0.5,
+    z: (3 * mdotr * z / r5 - m.z / r3) * 0.5
+  };
+}
+
+// ========== MODE 1: Induction (magnet through coil) ==========
+function buildMode1() {
+  const g = modeGroups[1];
+  // Coil (torus)
+  const coil = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.08, 8, 32), matCopper);
+  coil.rotation.y = Math.PI / 2;
+  coil.position.set(0, 1.5, 0);
+  g.add(coil);
+  // Multiple turns visual
+  for (let i = 1; i < 4; i++) {
+    const c = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.06, 8, 32), matCopper);
+    c.rotation.y = Math.PI / 2;
+    c.position.set(i * 0.12, 1.5, 0);
+    g.add(c);
+  }
+  // Coil support
+  const support = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3, 8), matIron);
+  support.position.set(0, 0, 1.3);
+  g.add(support);
+  const support2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3, 8), matIron);
+  support2.position.set(0, 0, -1.3);
+  g.add(support2);
+
+  // Bar magnet for induction
+  const mag = new THREE.Group();
+  mag.name = 'inductionMagnet';
+  const hN = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.5), matRed);
+  hN.position.x = 0.4;
+  const hS = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.5), matBlue);
+  hS.position.x = -0.4;
+  mag.add(hN, hS);
+  const ln = makeTextSprite('N', 0.3, '#ff6666');
+  ln.position.set(0.5, 0.5, 0);
+  mag.add(ln);
+  const ls = makeTextSprite('S', 0.3, '#6699ff');
+  ls.position.set(-0.5, 0.5, 0);
+  mag.add(ls);
+  mag.position.set(-4, 1.5, 0);
+  mag.rotation.z = 0;
+  g.add(mag);
+
+  // Wire leads
+  const wirePts = [new THREE.Vector3(0, 1.5, 1.3), new THREE.Vector3(0, -0.5, 1.3), new THREE.Vector3(2, -0.5, 1.3), new THREE.Vector3(2, -0.5, -1.3), new THREE.Vector3(0, -0.5, -1.3), new THREE.Vector3(0, 1.5, -1.3)];
+  const wireGeo = new THREE.BufferGeometry().setFromPoints(wirePts);
+  const wire = new THREE.Line(wireGeo, matCopper);
+  g.add(wire);
+
+  // Galvanometer indicator
+  const galv = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.4), matIron);
+  galv.position.set(2, -0.5, 0);
+  g.add(galv);
+  const galvLabel = makeTextSprite('G', 0.35, '#fbbf24');
+  galvLabel.position.set(2, -0.1, 0);
+  g.add(galvLabel);
+
+  // EMF arrow (shows induced current direction)
+  const arrowGroup = new THREE.Group();
+  arrowGroup.name = 'emfArrow';
+  g.add(arrowGroup);
+}
+
+// ========== MODE 2: Electromagnet ==========
+function buildMode2() {
+  const g = modeGroups[2];
+  // Iron core
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 4, 16), matIron);
+  core.rotation.z = Math.PI / 2;
+  core.position.y = 1;
+  g.add(core);
+
+  // Coil windings
+  for (let i = -8; i <= 8; i++) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.06, 8, 24), matCopper);
+    ring.rotation.y = Math.PI / 2;
+    ring.position.set(i * 0.2, 1, 0);
+    g.add(ring);
+  }
+
+  // Battery
+  const batt = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.4), new THREE.MeshPhongMaterial({color: 0x44aa44, shininess: 30}));
+  batt.position.set(0, -1, 0);
+  g.add(batt);
+  const battLabel = makeTextSprite('Battery', 0.3, '#86efac');
+  battLabel.position.set(0, -0.4, 0);
+  g.add(battLabel);
+
+  // Wires to battery
+  const w1Pts = [new THREE.Vector3(-1.8, 1, 0), new THREE.Vector3(-1.8, -1, 0), new THREE.Vector3(-0.3, -1, 0)];
+  const w2Pts = [new THREE.Vector3(1.8, 1, 0), new THREE.Vector3(1.8, -1, 0), new THREE.Vector3(0.3, -1, 0)];
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(w1Pts), matCopper));
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(w2Pts), matCopper));
+
+  // Field lines group
+  const flGroup = new THREE.Group();
+  flGroup.name = 'solenoidFieldLines';
+  g.add(flGroup);
+}
+
+// ========== MODE 3: Transformer ==========
+function buildMode3() {
+  const g = modeGroups[3];
+  // Iron core (rectangular frame)
+  const coreGeo = new THREE.BoxGeometry(0.4, 4, 0.8);
+  const leftCore = new THREE.Mesh(coreGeo, matIron);
+  leftCore.position.set(-2, 1, 0);
+  const rightCore = new THREE.Mesh(coreGeo, matIron);
+  rightCore.position.set(2, 1, 0);
+  const topCore = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.4, 0.8), matIron);
+  topCore.position.set(0, 3.2, 0);
+  const botCore = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.4, 0.8), matIron);
+  botCore.position.set(0, -1.2, 0);
+  g.add(leftCore, rightCore, topCore, botCore);
+
+  // Primary coil (left)
+  for (let i = -5; i <= 5; i++) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.05, 8, 24), matCopper);
+    ring.rotation.z = Math.PI / 2;
+    ring.position.set(-2, 1 + i * 0.2, 0);
+    g.add(ring);
+  }
+  const primLabel = makeTextSprite('Primary', 0.35, '#fbbf24');
+  primLabel.position.set(-2, -0.2, 1);
+  g.add(primLabel);
+
+  // Secondary coil (right)
+  for (let i = -5; i <= 5; i++) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.05, 8, 24), matDarkCopper);
+    ring.rotation.z = Math.PI / 2;
+    ring.position.set(2, 1 + i * 0.2, 0);
+    g.add(ring);
+  }
+  const secLabel = makeTextSprite('Secondary', 0.35, '#67e8f9');
+  secLabel.position.set(2, -0.2, 1);
+  g.add(secLabel);
+
+  // AC source indicator (left)
+  const acLabel = makeTextSprite('AC ~', 0.4, '#fbbf24');
+  acLabel.position.set(-2, -2, 0);
+  g.add(acLabel);
+
+  // Load indicator (right)
+  const loadLabel = makeTextSprite('Load', 0.35, '#67e8f9');
+  loadLabel.position.set(2, -2, 0);
+  g.add(loadLabel);
+
+  // Field lines in core
+  const tflGroup = new THREE.Group();
+  tflGroup.name = 'transformerFieldLines';
+  g.add(tflGroup);
+}
+
+// Text sprite helper
+function makeTextSprite(text, size, color) {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 40px sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({map: tex, transparent: true});
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(size * 2, size, 1);
+  return sp;
+}
+
+// Build all modes
+buildMode0();
+buildMode1();
+buildMode2();
+buildMode3();
+
+function setMode(m) {
+  currentMode = m;
+  modeGroups.forEach((g, i) => { g.visible = (i === m); });
+  document.querySelectorAll('.mode-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === m);
+  });
+  const modeNames = ['Compass', 'Induction', 'Electromagnet', 'Transformer'];
+  document.getElementById('statMode').textContent = modeNames[m];
+  magnetPos = -4;
+  magnetDir = 1;
+  time = 0;
+  prevFlux = 0;
+  updateFieldLines();
+}
+setMode(0);
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => setMode(parseInt(btn.dataset.mode)));
+});
+
+// Sliders
+const sliderMag = document.getElementById('sliderMag');
+const sliderN = document.getElementById('sliderN');
+const sliderI = document.getElementById('sliderI');
+
+sliderMag.addEventListener('input', () => {
+  magnetStrength = parseFloat(sliderMag.value);
+  document.getElementById('lblMag').textContent = magnetStrength.toFixed(2);
+  updateFieldLines();
+});
+sliderN.addEventListener('input', () => {
+  coilTurns = parseInt(sliderN.value);
+  document.getElementById('lblN').textContent = coilTurns;
+});
+sliderI.addEventListener('input', () => {
+  current = parseFloat(sliderI.value);
+  document.getElementById('lblI').textContent = current.toFixed(1);
+  updateFieldLines();
+});
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  sliderMag.value = 1; magnetStrength = 1; document.getElementById('lblMag').textContent = '1.00';
+  sliderN.value = 20; coilTurns = 20; document.getElementById('lblN').textContent = '20';
+  sliderI.value = 0; current = 0; document.getElementById('lblI').textContent = '0.0';
+  magnetPos = -4; magnetDir = 1; time = 0; prevFlux = 0;
+  updateFieldLines();
+});
+
+// Update field lines for modes 0, 2, 3
+function updateFieldLines() {
+  // Mode 0: recreate dipole field lines
+  const fl0 = modeGroups[0].getObjectByName('fieldLines');
+  if (fl0) {
+    modeGroups[0].remove(fl0);
+    fl0.children.forEach(c => { if (c.geometry) c.geometry.dispose(); });
+  }
+  buildDipoleFieldLines(modeGroups[0], 0.3);
+
+  // Mode 2: solenoid field
+  updateSolenoidFieldLines();
+
+  // Mode 3: transformer field
+  updateTransformerFieldLines();
+}
+
+function updateSolenoidFieldLines() {
+  const g = modeGroups[2];
+  const old = g.getObjectByName('solenoidFieldLines');
+  if (old) {
+    old.children.forEach(c => { if (c.geometry) c.geometry.dispose(); });
+    while (old.children.length) old.remove(old.children[0]);
+  }
+  if (current < 0.01) return;
+  const flGroup = old || new THREE.Group();
+  flGroup.name = 'solenoidFieldLines';
+  const bStr = mu0 * (coilTurns / 3.6) * current;
+  const numLines = 8;
+  for (let i = 0; i < numLines; i++) {
+    const angle = (i / numLines) * Math.PI * 2;
+    const pts = [];
+    // Inside solenoid
+    for (let x = -2; x <= 2; x += 0.15) {
+      const r = 0.25 + 0.15 * Math.sin(angle);
+      pts.push(new THREE.Vector3(x, 1 + Math.cos(angle) * r, Math.sin(angle) * r));
+    }
+    // Curve outside
+    for (let t = 0; t <= Math.PI; t += 0.1) {
+      const spread = 1.5 + Math.abs(Math.sin(angle)) * 0.5;
+      pts.push(new THREE.Vector3(
+        2 - 4 * t / Math.PI,
+        1 + Math.cos(angle) * spread * Math.sin(t),
+        Math.sin(angle) * spread * Math.sin(t)
+      ));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const curvePoints = curve.getPoints(60);
+    const geo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+    const mat = matFieldLineBlue.clone();
+    mat.opacity = Math.min(0.6, bStr * 800);
+    flGroup.add(new THREE.Line(geo, mat));
+  }
+  if (!old) g.add(flGroup);
+}
+
+function updateTransformerFieldLines() {
+  const g = modeGroups[3];
+  const old = g.getObjectByName('transformerFieldLines');
+  if (old) {
+    old.children.forEach(c => { if (c.geometry) c.geometry.dispose(); });
+    while (old.children.length) old.remove(old.children[0]);
+  }
+  const flGroup = old || new THREE.Group();
+  flGroup.name = 'transformerFieldLines';
+  const intensity = Math.sin(time * 3) * magnetStrength;
+  const numLines = 4;
+  for (let i = 0; i < numLines; i++) {
+    const offset = (i - 1.5) * 0.12;
+    const pts = [
+      new THREE.Vector3(-2, -1, offset),
+      new THREE.Vector3(-2, 1, offset),
+      new THREE.Vector3(-2, 3.2, offset),
+      new THREE.Vector3(0, 3.2, offset),
+      new THREE.Vector3(2, 3.2, offset),
+      new THREE.Vector3(2, 1, offset),
+      new THREE.Vector3(2, -1.2, offset),
+      new THREE.Vector3(0, -1.2, offset),
+      new THREE.Vector3(-2, -1.2, offset),
+    ];
+    const curve = new THREE.CatmullRomCurve3(pts, true);
+    const cpts = curve.getPoints(60);
+    const geo = new THREE.BufferGeometry().setFromPoints(cpts);
+    const mat = matFieldLine.clone();
+    mat.opacity = Math.abs(intensity) * 0.4 + 0.1;
+    mat.color = intensity > 0 ? new THREE.Color(0x10b981) : new THREE.Color(0xf97316);
+    flGroup.add(new THREE.Line(geo, mat));
+  }
+  if (!old) g.add(flGroup);
+}
+
+// Resize
+function resize() {
+  const wrap = canvas.parentElement;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// FPS tracking
+let frameCount = 0, lastFpsTime = performance.now();
+
+// Animation
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  frameCount++;
+  if (now - lastFpsTime >= 1000) {
+    document.getElementById('fpsBadge').textContent = frameCount + ' FPS';
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+
+  if (!paused) {
+    const dt = 0.016;
+    time += dt;
+
+    if (currentMode === 0) {
+      updateCompassNeedles();
+    } else if (currentMode === 1) {
+      updateInduction(dt);
+    } else if (currentMode === 2) {
+      updateElectromagnet();
+    } else if (currentMode === 3) {
+      updateTransformer(dt);
+    }
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function updateCompassNeedles() {
+  modeGroups[0].children.forEach(child => {
+    if (child.name !== 'compass') return;
+    const pos = child.position;
+    const b = dipoleField(pos.x, pos.y - 0.3, pos.z, magnetStrength);
+    const angle = Math.atan2(b.z, b.x);
+    const needle = child.getObjectByName('needleGroup');
+    if (needle) {
+      const target = -angle;
+      needle.rotation.y += (target - needle.rotation.y) * 0.08;
+    }
+  });
+  // Update stats
+  const flux = magnetStrength * 0.01 * coilTurns;
+  document.getElementById('statFlux').textContent = flux.toFixed(4) + ' Wb';
+  document.getElementById('statEMF').textContent = '0.000 V';
+  const bSol = mu0 * (coilTurns / 1) * current;
+  document.getElementById('statBsol').textContent = bSol.toFixed(6) + ' T';
+}
+
+function updateInduction(dt) {
+  const mag = modeGroups[1].getObjectByName('inductionMagnet');
+  if (!mag) return;
+  magnetPos += magnetDir * 2 * dt;
+  if (magnetPos > 3) magnetDir = -1;
+  if (magnetPos < -4) magnetDir = 1;
+  mag.position.x = magnetPos;
+
+  // Calculate flux: approximate as B * A at coil position
+  const dx = magnetPos;
+  const r = Math.sqrt(dx * dx + 0.01);
+  const B = magnetStrength / (r * r * r + 0.5);
+  const A = Math.PI * 1.2 * 1.2;
+  const flux = coilTurns * B * A * (dx > 0 ? 1 : -1);
+  const emf = -coilTurns * (flux - prevFlux) / (dt * coilTurns + 0.001);
+  prevFlux = flux;
+
+  document.getElementById('statFlux').textContent = flux.toFixed(4) + ' Wb';
+  document.getElementById('statEMF').textContent = emf.toFixed(3) + ' V';
+  const bSol = mu0 * (coilTurns / 1) * current;
+  document.getElementById('statBsol').textContent = bSol.toFixed(6) + ' T';
+
+  // Update EMF arrow visual
+  const arrowG = modeGroups[1].getObjectByName('emfArrow');
+  if (arrowG) {
+    while (arrowG.children.length) {
+      const c = arrowG.children[0];
+      if (c.geometry) c.geometry.dispose();
+      arrowG.remove(c);
+    }
+    if (Math.abs(emf) > 0.01) {
+      const arrowLen = Math.min(2, Math.abs(emf) * 0.3);
+      const dir = emf > 0 ? 1 : -1;
+      const arrowPts = [
+        new THREE.Vector3(0, -0.5, dir * 1.3),
+        new THREE.Vector3(0, -0.5 + arrowLen * 0.5, dir * 1.3)
+      ];
+      const arrowGeo = new THREE.BufferGeometry().setFromPoints(arrowPts);
+      arrowG.add(new THREE.Line(arrowGeo, matInduced));
+    }
+  }
+}
+
+function updateElectromagnet() {
+  const bSol = mu0 * (coilTurns / 3.6) * current;
+  const flux = bSol * Math.PI * 0.3 * 0.3 * coilTurns;
+  document.getElementById('statFlux').textContent = flux.toFixed(6) + ' Wb';
+  document.getElementById('statEMF').textContent = '0.000 V';
+  document.getElementById('statBsol').textContent = bSol.toFixed(6) + ' T';
+}
+
+function updateTransformer(dt) {
+  // AC sinusoidal
+  const omega = 3;
+  const fluxPrimary = magnetStrength * Math.sin(omega * time) * Math.PI * 0.5 * 0.5;
+  const emfPrimary = -coilTurns * magnetStrength * omega * Math.cos(omega * time) * Math.PI * 0.5 * 0.5;
+  const turnsRatio = coilTurns / 20;
+  const emfSecondary = emfPrimary * turnsRatio;
+
+  document.getElementById('statFlux').textContent = (fluxPrimary * coilTurns).toFixed(4) + ' Wb';
+  document.getElementById('statEMF').textContent = emfSecondary.toFixed(3) + ' V';
+  const bSol = mu0 * (coilTurns / 1) * current;
+  document.getElementById('statBsol').textContent = bSol.toFixed(6) + ' T';
+
+  updateTransformerFieldLines();
+
+  // Pulse effect on coils
+  const pulse = Math.abs(Math.sin(omega * time));
+  modeGroups[3].children.forEach(c => {
+    if (c.material === matCopper) {
+      c.material = matCopper.clone();
+      c.material.emissive = new THREE.Color(0x10b981);
+      c.material.emissiveIntensity = pulse * 0.3;
+    }
+  });
+}
+
+// Start
+animate();
+</script>
+</body>
+</html>

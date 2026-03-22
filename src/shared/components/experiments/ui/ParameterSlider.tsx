@@ -24,7 +24,7 @@ export function ParameterSlider({
         >
           {parameter.label}
         </label>
-        <span className="font-mono text-neon-cyan">
+        <span className="font-mono text-primary">
           {value}
           {parameter.unit && (
             <span className="ml-1 text-muted-foreground">
@@ -42,8 +42,7 @@ export function ParameterSlider({
         value={value}
         onChange={(e) => onChange(parameter.id, parseFloat(e.target.value))}
         disabled={disabled}
-        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-surface-raised-dark
-          accent-neon-cyan disabled:cursor-not-allowed disabled:opacity-50"
+        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary disabled:cursor-not-allowed disabled:opacity-50"
         aria-label={`${parameter.label}: ${value} ${parameter.unit}`}
       />
       <div className="flex justify-between text-xs text-muted-foreground">

@@ -46,11 +46,11 @@ export function withNoFollow(
     React.AnchorHTMLAttributes<HTMLAnchorElement>
   >
 ) {
-  return ({
+  function NoFollowWrapper({
     href,
     children,
     ...props
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
     // Check if the link is external
     const isExternal = href?.startsWith('http') || href?.startsWith('//');
 
@@ -74,7 +74,8 @@ export function withNoFollow(
         {children}
       </LinkComponent>
     );
-  };
+  }
+  return NoFollowWrapper;
 }
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {

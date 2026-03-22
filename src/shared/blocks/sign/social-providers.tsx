@@ -27,9 +27,9 @@ export function SocialProviders({
   const router = useRouter();
 
   const { setIsShowSignModal } = useAppContext();
+  const locale = useLocale();
 
   if (callbackUrl) {
-    const locale = useLocale();
     if (
       locale !== defaultLocale &&
       callbackUrl.startsWith('/') &&

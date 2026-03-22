@@ -2,27 +2,19 @@ import { respData, respErr } from '@/shared/lib/resp';
 import { getUserInfo } from '@/shared/models/user';
 import { getRemainingCredits, consumeCredits, refundCredits } from '@/shared/models/credit';
 import {
-  createUpgGeneration,
-  NewUpgGeneration,
-} from '@/shared/models/upg_generation';
-import {
   getDailyQuotaCount,
   incrementDailyQuota,
 } from '@/shared/models/upg_daily_quota';
 import { getCurrentSubscription } from '@/shared/models/subscription';
 import { subscriptionToTier } from '@/shared/lib/experiments/access';
-import { callOpenRouter } from '@/shared/lib/upg/openrouter-client';
-import { getSystemPrompt, buildUserPrompt } from '@/shared/lib/upg/system-prompt';
-import { sanitizeHtml } from '@/shared/lib/upg/html-sanitizer';
-import { checkQuality } from '@/shared/lib/upg/quality-checker';
-import { selectModel } from '@/shared/lib/upg/model-selector';
+import { generateCore } from '@/shared/lib/upg/generate-core';
+import { getDisciplineConfig, isValidDiscipline } from '@/shared/lib/upg/disciplines';
 import {
   UPG_CREDITS_PER_GENERATION,
   UPG_CREDITS_PER_REGENERATION,
   UPG_FREE_DAILY_LIMIT,
   UPG_PRO_DAILY_LIMIT,
 } from '@/shared/lib/upg/constants';
-import { getUuid } from '@/shared/lib/hash';
 import { createHash } from 'crypto';
 import { checkRateLimit, acquireLock, releaseLock } from '@/shared/lib/redis';
 
@@ -38,7 +30,17 @@ export async function POST(request: Request) {
     const body = await request.json();
     const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
     const language: 'zh' | 'en' = body.language === 'en' ? 'en' : 'zh';
+    const discipline = typeof body.discipline === 'string' ? body.discipline : 'physics';
     const isRegenerate = body.isRegenerate === true;
+
+    // Validate discipline
+    if (!isValidDiscipline(discipline)) {
+      return respErr('Invalid discipline');
+    }
+    const disciplineConfig = getDisciplineConfig(discipline);
+    if (!disciplineConfig.enabled) {
+      return respErr(`${disciplineConfig.name.en} is coming soon`);
+    }
     const creditsToConsume = isRegenerate ? UPG_CREDITS_PER_REGENERATION : UPG_CREDITS_PER_GENERATION;
 
     if (prompt.length < 2 || prompt.length > 500) {
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
       const ip = forwarded?.split(',')[0]?.trim() || realIp || 'unknown';
       const ipHash = hashIp(ip);
 
-      const { allowed, remaining } = await checkRateLimit(
+      const { allowed } = await checkRateLimit(
         `upg:anon:${ipHash}`,
         1, // 1 generation per day
         86400 // 24 hours
@@ -99,55 +101,23 @@ export async function POST(request: Request) {
       return respErr('A generation is already in progress. Please wait.');
     }
 
-    // 6. AI generation
-    const model = selectModel();
-    const systemPrompt = getSystemPrompt();
-    const userPrompt = buildUserPrompt(prompt, language);
-
-    const aiResult = await callOpenRouter({
-      model,
-      systemPrompt,
-      userPrompt,
+    // 6. Call generateCore (AI generation + sanitize + quality check + moderation + store)
+    const result = await generateCore({
+      prompt,
+      language,
+      userId,
+      discipline,
     });
 
-    // 7. Post-processing
-    const { sanitized: htmlContent, issues: sanitizeIssues } = sanitizeHtml(aiResult.html);
-    const qualityResult = checkQuality(htmlContent);
-
-    if (!qualityResult.passed) {
-      // Quality check failed — record as failed, no credits deducted
-      const promptHash = createHash('sha256').update(prompt).digest('hex');
-      await createUpgGeneration({
-        id: getUuid(),
-        userId,
-        prompt,
-        promptHash,
-        language,
-        htmlContent,
-        model,
-        provider: 'openrouter',
-        inputTokens: aiResult.inputTokens,
-        outputTokens: aiResult.outputTokens,
-        costCredits: 0,
-        status: 'failed',
-        errorMessage: `Quality check failed: ${qualityResult.issues.join('; ')}`,
-        isPublic: false,
-        viewCount: 0,
-        shareCount: 0,
-        downloadCount: 0,
-      });
-
-      return respErr(`Generation quality check failed: ${qualityResult.issues.join('; ')}`);
+    if (result.status === 'failed') {
+      return respErr(result.errorMessage || 'Generation failed');
     }
 
-    // 8. Success: consume credits + create record + increment quota
-    const promptHash = createHash('sha256').update(prompt).digest('hex');
-    const htmlSize = new TextEncoder().encode(htmlContent).length;
+    // 7. Success: consume credits + increment quota
     let creditId: string | null = null;
     let creditsConsumed = false;
 
     try {
-      // Consume credits first (atomic operation)
       if (userId) {
         const creditResult = await consumeCredits({
           userId,
@@ -157,95 +127,38 @@ export async function POST(request: Request) {
         });
         creditId = creditResult?.id ?? null;
         creditsConsumed = true;
-      }
 
-      // Create generation record
-      const generationData: NewUpgGeneration = {
-        id: getUuid(),
-        userId,
-        prompt,
-        promptHash,
-        language,
-        htmlContent,
-        htmlSize,
-        model,
-        provider: 'openrouter',
-        inputTokens: aiResult.inputTokens,
-        outputTokens: aiResult.outputTokens,
-        costCredits: userId ? creditsToConsume : 0,
-        creditId,
-        status: 'completed',
-        isPublic: false,
-        viewCount: 0,
-        shareCount: 0,
-        downloadCount: 0,
-      };
-
-      const generation = await createUpgGeneration(generationData);
-
-      // Increment daily quota
-      if (userId) {
         await incrementDailyQuota(userId, todayStr);
       }
-      // Anonymous usage is already tracked by Redis rate limiter
 
       return respData({
-        id: generation.id,
-        status: generation.status,
-        htmlContent: generation.htmlContent,
+        id: result.id,
+        status: result.status,
+        htmlContent: result.htmlContent,
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       // If database operations fail after credits consumed, refund them
       if (creditsConsumed && userId && creditId) {
         try {
+          const errMsg = dbError instanceof Error ? dbError.message : 'Unknown error';
           await refundCredits({
             userId,
             credits: creditsToConsume,
             scene: 'upg-refund',
-            description: `Refund due to generation failure: ${dbError.message?.slice(0, 100)}`,
+            description: `Refund due to post-generation failure: ${errMsg.slice(0, 100)}`,
             relatedCreditId: creditId,
           });
-          console.log(`Refunded ${creditsToConsume} credits to user ${userId} due to error`);
-        } catch (refundError: any) {
+        } catch (refundError: unknown) {
           console.error('Failed to refund credits:', refundError);
-          // Log this critical error but don't throw - user already got error response
         }
       }
-      throw dbError; // Re-throw to be caught by outer catch
+      throw dbError;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const errMsg = e instanceof Error ? e.message : 'Generation failed';
     console.error('UPG generate failed:', e);
-
-    // Try to record failed generation
-    try {
-      const body = await request.clone().json().catch(() => ({}));
-      const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-      if (prompt) {
-        const user = await getUserInfo().catch(() => null);
-        const promptHash = createHash('sha256').update(prompt).digest('hex');
-        await createUpgGeneration({
-          id: getUuid(),
-          userId: user?.id ?? null,
-          prompt,
-          promptHash,
-          language: body.language === 'en' ? 'en' : 'zh',
-          model: selectModel(),
-          provider: 'openrouter',
-          status: 'failed',
-          errorMessage: e.message?.slice(0, 500),
-          isPublic: false,
-          viewCount: 0,
-          shareCount: 0,
-          downloadCount: 0,
-        });
-      }
-    } catch {
-      // Ignore secondary errors
-    }
-
-    return respErr(e.message || 'Generation failed');
+    return respErr(errMsg);
   } finally {
-    // Release distributed lock
     if (lockKey) {
       await releaseLock(lockKey);
     }

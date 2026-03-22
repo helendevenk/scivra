@@ -63,12 +63,12 @@ export async function POST(req: Request) {
     }
 
     const configs = await getAllConfigs();
-    const openrouterApiKey = configs.openrouter_api_key;
+    const openrouterApiKey = process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
     if (!openrouterApiKey) {
-      throw new Error('openrouter_api_key is not set');
+      throw new Error('OPENROUTER_API_KEY is not set');
     }
 
-    const openrouterBaseUrl = configs.openrouter_base_url;
+    const openrouterBaseUrl = process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url;
 
     const currentTime = new Date();
 

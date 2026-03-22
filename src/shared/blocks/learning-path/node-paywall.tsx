@@ -18,7 +18,7 @@ export function NodePaywall({ reason }: NodePaywallProps) {
 
   return (
     <div className="mx-auto flex max-w-md items-center justify-center px-4 py-24">
-      <Card className="w-full border-neon-cyan/10 bg-surface-dark">
+      <Card className="w-full border-primary/10 bg-card">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <Lock className="h-6 w-6 text-muted-foreground" />

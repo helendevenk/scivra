@@ -54,17 +54,33 @@ export async function findUpgGenerationById(id: string) {
   return result;
 }
 
+// Alias for compatibility
+export const getUpgGenerationById = findUpgGenerationById;
+
 export async function getUpgGenerationsByUserId(
   userId: string,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
+  q?: string,
+  status?: string
 ) {
+  const conditions = [
+    eq(upgGeneration.userId, userId),
+    isNull(upgGeneration.deletedAt),
+  ];
+
+  if (q) {
+    conditions.push(ilike(upgGeneration.prompt, `%${q}%`));
+  }
+
+  if (status && status !== 'all') {
+    conditions.push(eq(upgGeneration.status, status));
+  }
+
   const result = await db()
     .select()
     .from(upgGeneration)
-    .where(
-      and(eq(upgGeneration.userId, userId), isNull(upgGeneration.deletedAt))
-    )
+    .where(and(...conditions))
     .orderBy(desc(upgGeneration.createdAt))
     .limit(pageSize)
     .offset((page - 1) * pageSize);
@@ -115,6 +131,8 @@ const galleryColumns = {
   featured: upgGeneration.featured,
   tags: upgGeneration.tags,
   forkedFrom: upgGeneration.forkedFrom,
+  validationScore: upgGeneration.validationScore,
+  validatedAt: upgGeneration.validatedAt,
   createdAt: upgGeneration.createdAt,
 };
 
@@ -144,6 +162,10 @@ export async function getGalleryList(params: GalleryListParams) {
 
   if (params.author) {
     conditions.push(eq(upgGeneration.userId, params.author));
+  }
+
+  if (params.verified) {
+    conditions.push(gte(upgGeneration.validationScore, 70));
   }
 
   let orderBy;
@@ -200,6 +222,12 @@ export async function getGalleryDetail(id: string) {
       forkedFrom: upgGeneration.forkedFrom,
       shareCount: upgGeneration.shareCount,
       downloadCount: upgGeneration.downloadCount,
+      validationScore: upgGeneration.validationScore,
+      validationDetails: upgGeneration.validationDetails,
+      validatedAt: upgGeneration.validatedAt,
+      version: upgGeneration.version,
+      parentId: upgGeneration.parentId,
+      refinementPrompt: upgGeneration.refinementPrompt,
       createdAt: upgGeneration.createdAt,
       authorName: user.name,
       authorImage: user.image,
@@ -293,6 +321,59 @@ export async function getTotalLikesReceived(userId: string): Promise<number> {
       and(eq(upgGeneration.userId, userId), isNull(upgGeneration.deletedAt))
     );
   return Number(result?.total) || 0;
+}
+
+// ─── Version chain queries (Phase 3.5 B3) ───
+
+export async function getVersionChain(generationId: string) {
+  // Walk up to find root, then fetch all descendants
+  const target = await findUpgGenerationById(generationId);
+  if (!target) return [];
+
+  // Find root: walk parentId up
+  let rootId = target.id;
+  let current = target;
+  while (current.parentId) {
+    const parent = await findUpgGenerationById(current.parentId);
+    if (!parent) break;
+    rootId = parent.id;
+    current = parent;
+  }
+
+  // Fetch all versions in the chain (root + all descendants)
+  const rows = await db()
+    .select({
+      id: upgGeneration.id,
+      version: upgGeneration.version,
+      parentId: upgGeneration.parentId,
+      refinementPrompt: upgGeneration.refinementPrompt,
+      status: upgGeneration.status,
+      validationScore: upgGeneration.validationScore,
+      createdAt: upgGeneration.createdAt,
+    })
+    .from(upgGeneration)
+    .where(
+      and(
+        or(
+          eq(upgGeneration.id, rootId),
+          eq(upgGeneration.parentId, rootId),
+          // Also catch grandchildren by walking from target
+          sql`${upgGeneration.id} IN (
+            WITH RECURSIVE chain AS (
+              SELECT id, parent_id FROM upg_generation WHERE id = ${rootId}
+              UNION ALL
+              SELECT ug.id, ug.parent_id FROM upg_generation ug
+              INNER JOIN chain c ON ug.parent_id = c.id
+            )
+            SELECT id FROM chain
+          )`
+        ),
+        isNull(upgGeneration.deletedAt)
+      )
+    )
+    .orderBy(upgGeneration.version);
+
+  return rows;
 }
 
 export async function getMonthlyGenerationCount(

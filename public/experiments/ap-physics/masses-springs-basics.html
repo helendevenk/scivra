@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masses and Springs: Basics — NeonPhysics AP Physics 1</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:18px 28px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(99,102,241,.08));border-bottom:1px solid rgba(59,130,246,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+    .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px}
+    h1{font-size:1.6rem;font-weight:700;color:#f0f4ff;letter-spacing:-.3px}
+    .subtitle{color:#94a3b8;font-size:.85rem}
+
+    .main-layout{display:grid;grid-template-columns:280px 1fr 270px;grid-template-rows:1fr auto;height:calc(100vh - 72px)}
+
+    .left-panel{grid-row:1/3;background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+
+    .center-area{position:relative;background:#0f172a;grid-column:2;grid-row:1}
+    canvas#c3d{display:block;width:100%!important;height:100%!important}
+
+    .right-panel{grid-row:1/3;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+
+    .bottom-bar{grid-column:2;grid-row:2;background:#0d1117;border-top:1px solid rgba(255,255,255,.07);padding:14px 20px}
+    .slider-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
+    .param-row{margin-bottom:0}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .param-name{font-size:11px;color:#94a3b8}
+    .param-val{font-size:11px;font-weight:600;color:#60a5fa;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;outline:none;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
+    .btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .btn{padding:7px 14px;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#3b82f6;color:#fff}
+    .btn-primary:hover{background:#2563eb}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
+    .btn-preset{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.3);font-size:10px;padding:5px 10px}
+    .btn-preset:hover{background:rgba(139,92,246,.25)}
+    .btn-preset.active{background:rgba(139,92,246,.3);border-color:#a78bfa}
+
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .katex{font-size:.85em!important}
+
+    .overlay-stats{position:absolute;top:14px;left:14px;background:rgba(15,23,42,.88);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 16px;min-width:190px;backdrop-filter:blur(8px);z-index:10}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:6px}
+    .stat-row:last-child{margin-bottom:0}
+    .stat-label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .stat-value{font-size:12px;font-weight:600;color:#e2e8f0;font-variant-numeric:tabular-nums}
+    .stat-value.accent{color:#60a5fa}
+
+    .fps-badge{position:absolute;top:14px;right:14px;background:rgba(15,23,42,.88);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:10px;color:#64748b;font-variant-numeric:tabular-nums;z-index:10}
+
+    .chart-wrap{padding:0 18px 16px}
+    .chart-title{font-size:10px;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+    canvas.chart{width:100%;height:120px;border-radius:6px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}
+
+    .period-display{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:12px;text-align:center;margin-bottom:8px}
+    .period-big{font-size:28px;font-weight:700;color:#60a5fa;font-variant-numeric:tabular-nums}
+    .period-unit{font-size:12px;color:#64748b;margin-top:2px}
+
+    .quiz-box{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:12px;margin-bottom:10px}
+    .quiz-q{font-size:12px;color:#e2e8f0;margin-bottom:8px;line-height:1.5}
+    .quiz-opts label{display:block;font-size:11px;color:#94a3b8;padding:4px 8px;border-radius:4px;cursor:pointer;margin-bottom:2px;transition:background .1s}
+    .quiz-opts label:hover{background:rgba(255,255,255,.05)}
+    .quiz-opts input[type=radio]{margin-right:6px;accent-color:#22c55e}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:4px;display:none}
+    .quiz-feedback.correct{display:block;background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+    .quiz-feedback.wrong{display:block;background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+    .quiz-check{margin-top:6px;padding:5px 12px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer}
+
+    .info-text{font-size:11px;color:#94a3b8;line-height:1.6;margin-bottom:8px}
+    .info-text strong{color:#e2e8f0}
+
+    @media(max-width:1100px){
+      .main-layout{grid-template-columns:1fr;grid-template-rows:auto 50vh auto auto auto}
+      .left-panel{grid-row:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+      .center-area{grid-column:1;grid-row:auto;min-height:50vh}
+      .right-panel{grid-row:auto;border-left:none;border-top:1px solid rgba(255,255,255,.07)}
+      .bottom-bar{grid-column:1;grid-row:auto}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac">BASICS</span>
+  </div>
+  <h1>Masses and Springs: Basics</h1>
+  <p class="subtitle">Introduction to spring oscillations — Hooke's Law and period of a mass-spring system</p>
+</div>
+
+<div class="main-layout">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Hooke's Law — restoring force proportional to displacement</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Period of a mass-spring oscillator</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">What is Hooke's Law?</div>
+      <p class="info-text">When a spring is stretched or compressed from its <strong>natural length</strong>, it pushes back with a force proportional to how far it was displaced. The proportionality constant <strong>k</strong> is the spring constant, measured in N/m.</p>
+      <p class="info-text">A larger <strong>k</strong> means a stiffer spring that resists deformation more strongly. A smaller k means a softer, more flexible spring.</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Period and Mass</div>
+      <p class="info-text">The <strong>period T</strong> is the time for one complete oscillation. It depends on mass and spring constant, but <strong>not on amplitude</strong> (for ideal springs).</p>
+      <p class="info-text">Heavier masses oscillate more slowly (longer period). Stiffer springs oscillate faster (shorter period).</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Live Parameters</div>
+      <div class="stat-row"><span class="stat-label">Equilibrium stretch</span><span class="stat-value accent" id="statXeq">0.098 m</span></div>
+      <div class="stat-row"><span class="stat-label">Natural Period T</span><span class="stat-value accent" id="statT">0.628 s</span></div>
+      <div class="stat-row"><span class="stat-label">Frequency f</span><span class="stat-value" id="statFreq">1.592 Hz</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center-area" id="canvasWrap">
+    <canvas id="c3d"></canvas>
+    <div class="overlay-stats">
+      <div class="stat-row"><span class="stat-label">Displacement</span><span class="stat-value accent" id="statDisp">0.000 m</span></div>
+      <div class="stat-row"><span class="stat-label">Velocity</span><span class="stat-value" id="statVel">0.000 m/s</span></div>
+      <div class="stat-row"><span class="stat-label">Spring Force</span><span class="stat-value" id="statForce">0.000 N</span></div>
+    </div>
+    <div class="fps-badge" id="fpsBadge">60 FPS</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="section">
+      <div class="section-title">Measured Period</div>
+      <div class="period-display">
+        <div class="period-big" id="periodBig">0.628</div>
+        <div class="period-unit">seconds per cycle</div>
+      </div>
+      <p class="info-text" style="text-align:center;margin:0">Theoretical: <strong id="periodTheory">0.628 s</strong></p>
+    </div>
+    <div class="section">
+      <div class="section-title">Displacement vs Time</div>
+      <div class="chart-wrap" style="padding:0">
+        <canvas class="chart" id="chartCanvas" width="250" height="120"></canvas>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-box" id="quiz1">
+        <div class="quiz-q">1. If you increase the spring constant k while keeping mass the same, the period will:</div>
+        <div class="quiz-opts">
+          <label><input type="radio" name="q1" value="a"> Increase</label>
+          <label><input type="radio" name="q1" value="b"> Decrease</label>
+          <label><input type="radio" name="q1" value="c"> Stay the same</label>
+          <label><input type="radio" name="q1" value="d"> First increase then decrease</label>
+        </div>
+        <button class="quiz-check" onclick="checkQuiz(1)">Check Answer</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div class="quiz-box" id="quiz2">
+        <div class="quiz-q">2. A 2 kg mass on a spring with k = 200 N/m has a period closest to:</div>
+        <div class="quiz-opts">
+          <label><input type="radio" name="q2" value="a"> 0.20 s</label>
+          <label><input type="radio" name="q2" value="b"> 0.63 s</label>
+          <label><input type="radio" name="q2" value="c"> 1.00 s</label>
+          <label><input type="radio" name="q2" value="d"> 3.14 s</label>
+        </div>
+        <button class="quiz-check" onclick="checkQuiz(2)">Check Answer</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-bar">
+    <div class="slider-grid">
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Spring Constant k</span><span class="param-val" id="vk">100 N/m</span></div>
+        <input type="range" id="sk" min="20" max="300" value="100" step="5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Mass</span><span class="param-val" id="vm">1.0 kg</span></div>
+        <input type="range" id="sm" min="0.5" max="5" value="1" step="0.1">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnPlay">Pause</button>
+      <button class="btn btn-ghost" id="btnReset">Reset</button>
+      <span style="width:1px;background:rgba(255,255,255,.1);margin:0 4px"></span>
+      <button class="btn btn-preset" data-preset="light">Light and Bouncy</button>
+      <button class="btn btn-preset" data-preset="heavy">Heavy and Slow</button>
+      <button class="btn btn-preset" data-preset="stiff">Stiff Spring</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ─── State ──────────────────────────────────────────────────────────────
+var kSpring = 100, mass = 1;
+var g = 9.81;
+var displacement = 0, velocity = 0;
+var initAmplitude = 0.15;
+var simTime = 0, running = true;
+var chartData = [];
+var MAX_CHART_POINTS = 300;
+
+// Period measurement
+var lastCrossTime = null, measuredPeriod = null;
+var prevDisp = 0;
+
+// ─── Derived ────────────────────────────────────────────────────────────
+function xEq() { return mass * g / kSpring; }
+function omega() { return Math.sqrt(kSpring / mass); }
+function period() { return 2 * Math.PI / omega(); }
+
+// ─── KaTeX ──────────────────────────────────────────────────────────────
+try {
+  katex.render("F = -kx", document.getElementById("f1"), {displayMode: true});
+  katex.render("T = 2\\pi\\sqrt{\\dfrac{m}{k}}", document.getElementById("f2"), {displayMode: true});
+} catch(e) { console.warn("KaTeX error:", e); }
+
+// ─── Three.js ───────────────────────────────────────────────────────────
+var wrap = document.getElementById("canvasWrap");
+var canvas3d = document.getElementById("c3d");
+var renderer, scene, camera, controls;
+
+try {
+  renderer = new THREE.WebGLRenderer({canvas: canvas3d, antialias: true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.02);
+
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(3, 1.5, 5);
+  camera.lookAt(0, 0, 0);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 0, 0);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x334466, 0.6));
+
+  var dirLight = new THREE.DirectionalLight(0xaaccff, 1.0);
+  dirLight.position.set(5, 8, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+
+  var ptLight1 = new THREE.PointLight(0x3b82f6, 1.5, 20);
+  ptLight1.position.set(-3, 4, 3);
+  scene.add(ptLight1);
+
+  var ptLight2 = new THREE.PointLight(0x8b5cf6, 0.8, 15);
+  ptLight2.position.set(2, -2, 4);
+  scene.add(ptLight2);
+
+  // Grid
+  var gridHelper = new THREE.GridHelper(10, 20, 0x1e293b, 0x1e293b);
+  gridHelper.position.y = -4;
+  scene.add(gridHelper);
+
+  // ─── Support bracket ─────────────────────────────────────────────────
+  var bracketMat = new THREE.MeshStandardMaterial({color: 0x334155, metalness: 0.7, roughness: 0.3});
+  var bracketTop = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.15, 0.8), bracketMat);
+  bracketTop.position.set(0, 3.5, 0);
+  bracketTop.castShadow = true;
+  scene.add(bracketTop);
+
+  var bracketPole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.6, 8), bracketMat);
+  bracketPole.position.set(0, 3.2, 0);
+  scene.add(bracketPole);
+
+  // ─── Spring (TubeGeometry helix) ─────────────────────────────────────
+  var COILS = 12;
+  var SPRING_RADIUS = 0.15;
+  var TUBE_RADIUS = 0.025;
+  var springMesh = null;
+  var springMat = new THREE.MeshStandardMaterial({
+    color: 0x60a5fa,
+    emissive: 0x1d4ed8,
+    emissiveIntensity: 0.3,
+    metalness: 0.6,
+    roughness: 0.4
+  });
+
+  function createSpringGeometry(topY, bottomY) {
+    var pts = [];
+    var totalAngle = COILS * 2 * Math.PI;
+    var segs = COILS * 20;
+    for (var i = 0; i <= segs; i++) {
+      var t = i / segs;
+      var angle = totalAngle * t;
+      var y = topY + (bottomY - topY) * t;
+      pts.push(new THREE.Vector3(
+        SPRING_RADIUS * Math.cos(angle),
+        y,
+        SPRING_RADIUS * Math.sin(angle)
+      ));
+    }
+    var curve = new THREE.CatmullRomCurve3(pts);
+    return new THREE.TubeGeometry(curve, segs, TUBE_RADIUS, 8, false);
+  }
+
+  function updateSpring(bottomY) {
+    if (springMesh) {
+      springMesh.geometry.dispose();
+      scene.remove(springMesh);
+    }
+    var geo = createSpringGeometry(2.9, bottomY + 0.35);
+    springMesh = new THREE.Mesh(geo, springMat);
+    springMesh.castShadow = true;
+    scene.add(springMesh);
+  }
+
+  // ─── Mass block ──────────────────────────────────────────────────────
+  var massMat = new THREE.MeshStandardMaterial({
+    color: 0x3b82f6,
+    emissive: 0x1d4ed8,
+    emissiveIntensity: 0.35,
+    metalness: 0.4,
+    roughness: 0.5
+  });
+  var massBlock = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), massMat);
+  massBlock.castShadow = true;
+  massBlock.receiveShadow = true;
+  scene.add(massBlock);
+
+  // Glow
+  var glowMat = new THREE.MeshStandardMaterial({
+    color: 0x93c5fd, emissive: 0x93c5fd, emissiveIntensity: 0.5,
+    transparent: true, opacity: 0.15, side: THREE.BackSide
+  });
+  massBlock.add(new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.58, 0.58), glowMat));
+
+  // Mass label
+  var massLabelSprite = createTextSprite("1.0 kg", "#60a5fa");
+  massLabelSprite.position.set(0.55, 0, 0);
+  massBlock.add(massLabelSprite);
+
+  function createTextSprite(text, color) {
+    var c = document.createElement("canvas");
+    c.width = 128; c.height = 48;
+    var ctx = c.getContext("2d");
+    ctx.font = "bold 22px -apple-system, sans-serif";
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 64, 24);
+    var tex = new THREE.CanvasTexture(c);
+    var mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false});
+    var sprite = new THREE.Sprite(mat);
+    sprite.scale.set(0.8, 0.3, 1);
+    return sprite;
+  }
+
+  function updateMassLabel() {
+    massBlock.remove(massLabelSprite);
+    massLabelSprite.material.map.dispose();
+    massLabelSprite.material.dispose();
+    massLabelSprite = createTextSprite(mass.toFixed(1) + " kg", "#60a5fa");
+    massLabelSprite.position.set(0.55, 0, 0);
+    massBlock.add(massLabelSprite);
+  }
+
+  // ─── Equilibrium line (dashed) ───────────────────────────────────────
+  var eqLineMat = new THREE.LineDashedMaterial({color: 0xfbbf24, dashSize: 0.1, gapSize: 0.06});
+  var eqLineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-1, 0, 0), new THREE.Vector3(1, 0, 0)
+  ]);
+  var eqLine = new THREE.Line(eqLineGeo, eqLineMat);
+  eqLine.computeLineDistances();
+  scene.add(eqLine);
+
+  var eqLabel = createTextSprite("Equilibrium", "#fbbf24");
+  eqLabel.position.set(1.3, 0, 0);
+  eqLabel.scale.set(1.0, 0.35, 1);
+  scene.add(eqLabel);
+
+  // ─── Spring force arrow ──────────────────────────────────────────────
+  var arrowSpring = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 1, 0xef4444, 0.12, 0.08
+  );
+  scene.add(arrowSpring);
+
+  // Arrow label
+  var arrowLabel = createTextSprite("F = -kx", "#ef4444");
+  arrowLabel.scale.set(0.7, 0.25, 1);
+  scene.add(arrowLabel);
+
+  updateSpring(0);
+} catch(e) {
+  console.error("Three.js init error:", e);
+}
+
+// ─── Physics (Velocity Verlet, no damping) ──────────────────────────────
+function physicsStep(dt) {
+  dt = Math.min(dt, 0.02);
+  // displacement is measured from equilibrium
+  var a = -kSpring * displacement / mass;
+  var newX = displacement + velocity * dt + 0.5 * a * dt * dt;
+  var aNew = -kSpring * newX / mass;
+  velocity = velocity + 0.5 * (a + aNew) * dt;
+  displacement = newX;
+}
+
+// ─── Period measurement (zero-crossing detection) ───────────────────────
+function measurePeriod() {
+  // Detect upward zero-crossing
+  if (prevDisp < 0 && displacement >= 0) {
+    if (lastCrossTime !== null) {
+      measuredPeriod = simTime - lastCrossTime;
+    }
+    lastCrossTime = simTime;
+  }
+  prevDisp = displacement;
+}
+
+// ─── Chart ──────────────────────────────────────────────────────────────
+var chartCanvas = document.getElementById("chartCanvas");
+var chartCtx = chartCanvas.getContext("2d");
+
+function drawChart() {
+  var W = chartCanvas.width, H = chartCanvas.height;
+  chartCtx.clearRect(0, 0, W, H);
+
+  // Background
+  chartCtx.fillStyle = "rgba(0,0,0,0.3)";
+  chartCtx.fillRect(0, 0, W, H);
+
+  // Grid lines
+  chartCtx.strokeStyle = "rgba(255,255,255,0.05)";
+  chartCtx.lineWidth = 1;
+  chartCtx.beginPath();
+  chartCtx.moveTo(0, H / 2); chartCtx.lineTo(W, H / 2);
+  chartCtx.stroke();
+
+  // Zero label
+  chartCtx.fillStyle = "#475569";
+  chartCtx.font = "9px sans-serif";
+  chartCtx.fillText("0", 4, H / 2 - 3);
+
+  if (chartData.length < 2) return;
+
+  // Find scale
+  var maxA = 0.01;
+  for (var i = 0; i < chartData.length; i++) {
+    var absVal = Math.abs(chartData[i]);
+    if (absVal > maxA) maxA = absVal;
+  }
+  maxA *= 1.2;
+
+  // Draw line
+  chartCtx.strokeStyle = "#60a5fa";
+  chartCtx.lineWidth = 1.5;
+  chartCtx.beginPath();
+  for (var j = 0; j < chartData.length; j++) {
+    var px = (j / MAX_CHART_POINTS) * W;
+    var py = H / 2 - (chartData[j] / maxA) * (H / 2 * 0.85);
+    if (j === 0) chartCtx.moveTo(px, py);
+    else chartCtx.lineTo(px, py);
+  }
+  chartCtx.stroke();
+
+  // Glow
+  chartCtx.strokeStyle = "rgba(96,165,250,0.25)";
+  chartCtx.lineWidth = 4;
+  chartCtx.beginPath();
+  for (var n = 0; n < chartData.length; n++) {
+    var gx = (n / MAX_CHART_POINTS) * W;
+    var gy = H / 2 - (chartData[n] / maxA) * (H / 2 * 0.85);
+    if (n === 0) chartCtx.moveTo(gx, gy);
+    else chartCtx.lineTo(gx, gy);
+  }
+  chartCtx.stroke();
+}
+
+// ─── Update HUD ─────────────────────────────────────────────────────────
+function updateHUD() {
+  var eq = xEq();
+  var T = period();
+  var f = 1 / T;
+
+  document.getElementById("statXeq").textContent = eq.toFixed(3) + " m";
+  document.getElementById("statT").textContent = T.toFixed(3) + " s";
+  document.getElementById("statFreq").textContent = f.toFixed(3) + " Hz";
+
+  document.getElementById("statDisp").textContent = displacement.toFixed(3) + " m";
+  document.getElementById("statVel").textContent = velocity.toFixed(3) + " m/s";
+
+  var springForce = -kSpring * displacement;
+  document.getElementById("statForce").textContent = springForce.toFixed(2) + " N";
+
+  // Period display
+  document.getElementById("periodTheory").textContent = T.toFixed(3) + " s";
+  if (measuredPeriod !== null) {
+    document.getElementById("periodBig").textContent = measuredPeriod.toFixed(3);
+  } else {
+    document.getElementById("periodBig").textContent = T.toFixed(3);
+  }
+}
+
+// ─── Scene update ───────────────────────────────────────────────────────
+function updateScene() {
+  if (!massBlock) return;
+
+  // Map displacement to 3D Y. Equilibrium at y=0 in world space.
+  // Positive displacement = downward (stretch)
+  var SCALE = 5; // visual scale factor
+  var blockY = -displacement * SCALE;
+
+  massBlock.position.y = blockY;
+  updateSpring(blockY);
+
+  // Scale mass block by mass
+  var s = 0.35 + mass * 0.06;
+  massBlock.scale.set(s, s, s);
+
+  // Equilibrium line at y=0
+  eqLine.position.y = 0;
+  eqLabel.position.y = 0;
+
+  // Force arrow
+  var force = -kSpring * displacement;
+  var arrowLen = Math.abs(force) * SCALE * 0.008;
+  arrowLen = Math.max(arrowLen, 0.01);
+  var arrowDir = force > 0 ? -1 : 1; // Force direction in world space (inverted because + disp = down)
+
+  arrowSpring.position.set(0.5, blockY, 0);
+  arrowSpring.setDirection(new THREE.Vector3(0, arrowDir, 0));
+  arrowSpring.setLength(arrowLen, 0.1, 0.06);
+
+  // Arrow label follows arrow
+  arrowLabel.position.set(0.5 + 0.5, blockY + arrowDir * arrowLen * 0.5, 0);
+}
+
+// ─── Animation loop ─────────────────────────────────────────────────────
+var lastTime = performance.now();
+var fpsFrames = 0, fpsLast = performance.now();
+
+function animate(now) {
+  requestAnimationFrame(animate);
+
+  var dt = (now - lastTime) / 1000;
+  lastTime = now;
+  if (dt > 0.1) dt = 0.016;
+
+  // FPS
+  fpsFrames++;
+  if (now - fpsLast > 500) {
+    var fps = Math.round(fpsFrames / ((now - fpsLast) / 1000));
+    document.getElementById("fpsBadge").textContent = fps + " FPS";
+    fpsFrames = 0;
+    fpsLast = now;
+  }
+
+  if (running) {
+    // Sub-step physics for stability
+    var steps = 4;
+    var subDt = dt / steps;
+    for (var i = 0; i < steps; i++) {
+      physicsStep(subDt);
+      simTime += subDt;
+    }
+
+    measurePeriod();
+
+    // Chart data (every ~2 frames)
+    chartData.push(displacement);
+    if (chartData.length > MAX_CHART_POINTS) chartData.shift();
+
+    updateScene();
+    updateHUD();
+    drawChart();
+  }
+
+  if (controls) controls.update();
+  if (renderer && scene && camera) {
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    if (canvas3d.width !== w || canvas3d.height !== h) {
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.render(scene, camera);
+  }
+}
+
+requestAnimationFrame(animate);
+
+// ─── Controls ───────────────────────────────────────────────────────────
+var sliderK = document.getElementById("sk");
+var sliderM = document.getElementById("sm");
+
+function resetSim() {
+  displacement = initAmplitude;
+  velocity = 0;
+  simTime = 0;
+  chartData = [];
+  lastCrossTime = null;
+  measuredPeriod = null;
+  prevDisp = 0;
+  updateScene();
+  updateHUD();
+}
+
+sliderK.addEventListener("input", function() {
+  kSpring = parseFloat(this.value);
+  document.getElementById("vk").textContent = kSpring + " N/m";
+  resetSim();
+});
+
+sliderM.addEventListener("input", function() {
+  mass = parseFloat(this.value);
+  document.getElementById("vm").textContent = mass.toFixed(1) + " kg";
+  if (typeof updateMassLabel === "function") updateMassLabel();
+  resetSim();
+});
+
+document.getElementById("btnPlay").addEventListener("click", function() {
+  running = !running;
+  this.textContent = running ? "Pause" : "Play";
+});
+
+document.getElementById("btnReset").addEventListener("click", function() {
+  running = true;
+  document.getElementById("btnPlay").textContent = "Pause";
+  resetSim();
+});
+
+// Presets
+var presets = {
+  light:  {k: 40,  m: 0.5, label: "Light and Bouncy"},
+  heavy:  {k: 80,  m: 4.5, label: "Heavy and Slow"},
+  stiff:  {k: 280, m: 1.5, label: "Stiff Spring"}
+};
+
+document.querySelectorAll(".btn-preset").forEach(function(btn) {
+  btn.addEventListener("click", function() {
+    var key = this.getAttribute("data-preset");
+    var p = presets[key];
+    if (!p) return;
+
+    // Clear active states
+    document.querySelectorAll(".btn-preset").forEach(function(b) { b.classList.remove("active"); });
+    this.classList.add("active");
+
+    kSpring = p.k;
+    mass = p.m;
+    sliderK.value = kSpring;
+    sliderM.value = mass;
+    document.getElementById("vk").textContent = kSpring + " N/m";
+    document.getElementById("vm").textContent = mass.toFixed(1) + " kg";
+    if (typeof updateMassLabel === "function") updateMassLabel();
+
+    running = true;
+    document.getElementById("btnPlay").textContent = "Pause";
+    resetSim();
+  });
+});
+
+// ─── Quiz ───────────────────────────────────────────────────────────────
+function checkQuiz(n) {
+  var fb = document.getElementById("fb" + n);
+  var sel = document.querySelector('input[name="q' + n + '"]:checked');
+  if (!sel) {
+    fb.className = "quiz-feedback wrong";
+    fb.textContent = "Please select an answer.";
+    fb.style.display = "block";
+    return;
+  }
+  if (n === 1) {
+    if (sel.value === "b") {
+      fb.className = "quiz-feedback correct";
+      fb.textContent = "Correct! T = 2\u03C0\u221A(m/k). Increasing k (denominator) makes the period shorter.";
+    } else {
+      fb.className = "quiz-feedback wrong";
+      fb.textContent = "Not quite. Look at T = 2\u03C0\u221A(m/k) \u2014 k is in the denominator under the square root. A larger k means a smaller T.";
+    }
+  }
+  if (n === 2) {
+    if (sel.value === "b") {
+      fb.className = "quiz-feedback correct";
+      fb.textContent = "Correct! T = 2\u03C0\u221A(2/200) = 2\u03C0\u221A(0.01) = 2\u03C0(0.1) \u2248 0.628 s.";
+    } else {
+      fb.className = "quiz-feedback wrong";
+      fb.textContent = "Try again. T = 2\u03C0\u221A(m/k) = 2\u03C0\u221A(2/200) = 2\u03C0\u00D70.1 \u2248 0.628 s.";
+    }
+  }
+  fb.style.display = "block";
+}
+
+// ─── Init ───────────────────────────────────────────────────────────────
+resetSim();
+</script>
+</body>
+</html>

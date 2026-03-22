@@ -21,10 +21,15 @@ export function JsonPreview({
     return <div className={className}>{value}</div>;
   }
 
+  let parsed: unknown;
   try {
-    const json = JSON.parse(value);
-    return <pre className={className}>{JSON.stringify(json, null, 2)}</pre>;
-  } catch (error) {
-    return <div className={className}>{value}</div>;
+    parsed = JSON.parse(value);
+  } catch {
+    parsed = null;
   }
+
+  if (parsed !== null) {
+    return <pre className={className}>{JSON.stringify(parsed, null, 2)}</pre>;
+  }
+  return <div className={className}>{value}</div>;
 }

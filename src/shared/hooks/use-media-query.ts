@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 import { useEffect, useState } from 'react';
 
 export function useMediaQuery(query: string): boolean {

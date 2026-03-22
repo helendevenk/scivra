@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projectile Data Lab — NeonPhysics AP Physics 1</title>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="/lib/orbit-controls.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07090f;color:#e8eaf0;overflow-x:hidden}
+.header{padding:20px 28px;background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(99,102,241,.08));border-bottom:1px solid rgba(168,85,247,.2)}
+.header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.badge{background:rgba(168,85,247,.2);border:1px solid rgba(168,85,247,.4);color:#c4b5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+.subtitle{color:#94a3b8;font-size:.9rem}
+.layout{display:grid;grid-template-columns:1fr 370px;gap:0;height:calc(100vh - 90px)}
+.canvas-wrap{position:relative;background:#0f172a}
+canvas#c{display:block;width:100%!important;height:100%!important}
+.sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+.section{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+.section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.param-row{margin-bottom:14px}
+.param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+.param-name{font-size:12px;color:#94a3b8}
+.param-val{font-size:12px;font-weight:600;color:#a78bfa;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(168,85,247,.2);border-radius:2px;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#a855f7;cursor:pointer}
+.btn-row{display:flex;gap:8px;margin-top:6px}
+.btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;flex:1;text-align:center}
+.btn-primary{background:#a855f7;color:#fff}
+.btn-primary:hover{background:#9333ea}
+.btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-danger{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.2)}
+.btn-danger:hover{background:rgba(248,113,113,.25)}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{flex:1;padding:7px 4px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;min-width:90px}
+.preset-btn:hover{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.3);color:#c4b5fd}
+.preset-btn.active{background:rgba(168,85,247,.2);border-color:rgba(168,85,247,.5);color:#c4b5fd}
+.formula-box{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.15);border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.formula-row{margin-bottom:6px}
+.formula-row:last-child{margin-bottom:0}
+.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.live-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px;text-align:center}
+.live-label{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:3px}
+.live-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.val-blue{color:#60a5fa}.val-violet{color:#a78bfa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-cyan{color:#22d3ee}
+.data-table-wrap{max-height:200px;overflow-y:auto;border:1px solid rgba(255,255,255,.06);border-radius:8px}
+.data-table{width:100%;border-collapse:collapse;font-size:11px}
+.data-table th{background:rgba(168,85,247,.1);color:#a78bfa;padding:6px 8px;text-align:center;position:sticky;top:0;font-weight:600;font-size:10px;text-transform:uppercase}
+.data-table td{padding:5px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums;color:#cbd5e1}
+.data-table tr:hover td{background:rgba(168,85,247,.05)}
+.theory-note{font-size:11px;color:#64748b;line-height:1.5;padding:8px 10px;background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.12);border-radius:7px}
+.theory-note strong{color:#fbbf24}
+.overlay-info{position:absolute;top:14px;left:14px;background:rgba(7,9,20,.88);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:12px 16px;backdrop-filter:blur(8px);pointer-events:none;min-width:200px}
+.overlay-info .oi-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:6px}
+.overlay-info .oi-row{font-size:12px;margin-bottom:3px;color:#cbd5e1}
+.overlay-info .oi-row span{font-weight:700;color:#a78bfa}
+.quiz-section{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+.quiz-q{font-size:12px;color:#e2e8f0;margin-bottom:10px;line-height:1.5}
+.quiz-q strong{color:#a78bfa}
+.quiz-opts label{display:block;padding:7px 10px;margin-bottom:4px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;font-size:11px;color:#94a3b8;transition:all .15s}
+.quiz-opts label:hover{border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.06)}
+.quiz-opts input{display:none}
+.quiz-opts label.selected{border-color:rgba(168,85,247,.5);background:rgba(168,85,247,.12);color:#c4b5fd}
+.quiz-opts label.correct{border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.12);color:#6ee7b7}
+.quiz-opts label.wrong{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.12);color:#fca5a5}
+.quiz-feedback{margin-top:8px;padding:8px 10px;border-radius:6px;font-size:11px;line-height:1.5;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.pass{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:#6ee7b7}
+.quiz-feedback.fail{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:#fca5a5}
+.color-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Projectile Data Lab</h1>
+  <p class="subtitle">Launch projectiles, collect range/height/time data, and analyze the parabolic trajectory</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap">
+    <canvas id="c"></canvas>
+    <div class="overlay-info" id="overlay">
+      <div class="oi-title">Last Launch</div>
+      <div class="oi-row">Range: <span id="ov-range">--</span> m</div>
+      <div class="oi-row">Max Height: <span id="ov-height">--</span> m</div>
+      <div class="oi-row">Time: <span id="ov-time">--</span> s</div>
+      <div class="oi-row">Angle for max range: <span id="ov-opt">45.0°</span></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <!-- Controls -->
+    <div class="section">
+      <div class="section-title">Launch Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Initial Speed (m/s)</span><span class="param-val" id="v-val">15.0</span></div>
+        <input type="range" id="sl-v" min="5" max="30" step="0.5" value="15">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Launch Angle (°)</span><span class="param-val" id="a-val">45.0</span></div>
+        <input type="range" id="sl-a" min="10" max="80" step="1" value="45">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Mass (kg)</span><span class="param-val" id="m-val">1.0</span></div>
+        <input type="range" id="sl-m" min="0.5" max="5" step="0.1" value="1">
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="section">
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-launch">Launch</button>
+        <button class="btn btn-ghost" id="btn-clear">Clear All</button>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div class="preset-row">
+        <button class="preset-btn" data-v="15" data-a="45" data-m="1" id="pre-max">Maximum Range</button>
+        <button class="preset-btn" data-v="15" data-a="70" data-m="1" id="pre-high">High Angle</button>
+        <button class="preset-btn" data-v="25" data-a="20" data-m="1" id="pre-low">Low Fast</button>
+      </div>
+    </div>
+
+    <!-- Live Data -->
+    <div class="section">
+      <div class="section-title">Live Data</div>
+      <div class="live-grid">
+        <div class="live-card"><div class="live-label">x (m)</div><div class="live-val val-blue" id="lv-x">0.00</div></div>
+        <div class="live-card"><div class="live-label">y (m)</div><div class="live-val val-green" id="lv-y">0.00</div></div>
+        <div class="live-card"><div class="live-label">vx (m/s)</div><div class="live-val val-violet" id="lv-vx">0.00</div></div>
+        <div class="live-card"><div class="live-label">vy (m/s)</div><div class="live-val val-amber" id="lv-vy">0.00</div></div>
+        <div class="live-card"><div class="live-label">Speed (m/s)</div><div class="live-val val-cyan" id="lv-spd">0.00</div></div>
+        <div class="live-card"><div class="live-label">Time (s)</div><div class="live-val val-red" id="lv-t">0.00</div></div>
+      </div>
+    </div>
+
+    <!-- Formulas -->
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div class="formula-row" id="f1"></div>
+        <div class="formula-row" id="f2"></div>
+        <div class="formula-row" id="f3"></div>
+      </div>
+      <div class="theory-note">
+        <strong>Key insight:</strong> Range is maximized at 45° because sin(2&theta;) peaks at &theta;=45°. Mass does not affect projectile trajectory (no air resistance).
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="section">
+      <div class="section-title">Data Table <span style="font-size:10px;color:#64748b;font-weight:400">(auto-recorded)</span></div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Angle</th><th>Speed</th><th>Range</th><th>Height</th><th>Time</th></tr></thead>
+          <tbody id="dt-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="quiz-section">
+      <div class="section-title">Comprehension Check</div>
+
+      <div class="quiz-q"><strong>Q1.</strong> A projectile is launched at 30° and another at 60° with the same speed. Which statement is true?</div>
+      <div class="quiz-opts" id="q1-opts">
+        <label data-i="0"><input type="radio" name="q1" value="0"> The 30° projectile has a longer range</label>
+        <label data-i="1"><input type="radio" name="q1" value="1"> Both have the same range</label>
+        <label data-i="2"><input type="radio" name="q1" value="2"> The 60° projectile reaches a greater max height</label>
+        <label data-i="3"><input type="radio" name="q1" value="3"> Both B and C are correct</label>
+      </div>
+      <div class="quiz-feedback" id="q1-fb"></div>
+
+      <div class="quiz-q" style="margin-top:16px"><strong>Q2.</strong> If you double the launch speed while keeping the angle at 45°, the range will:</div>
+      <div class="quiz-opts" id="q2-opts">
+        <label data-i="0"><input type="radio" name="q2" value="0"> Double</label>
+        <label data-i="1"><input type="radio" name="q2" value="1"> Triple</label>
+        <label data-i="2"><input type="radio" name="q2" value="2"> Quadruple</label>
+        <label data-i="3"><input type="radio" name="q2" value="3"> Stay the same (mass independent)</label>
+      </div>
+      <div class="quiz-feedback" id="q2-fb"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const G = 9.81;
+  const COLORS = [0xa855f7,0x60a5fa,0x34d399,0xfbbf24,0xf87171,0x22d3ee,0xf472b6,0x818cf8,0xfb923c,0x4ade80];
+  const COLOR_CSS = ['#a855f7','#60a5fa','#34d399','#fbbf24','#f87171','#22d3ee','#f472b6','#818cf8','#fb923c','#4ade80'];
+
+  /* ---------- KaTeX formulas ---------- */
+  katex.render('x = v_0 \\cos(\\theta)\\, t', document.getElementById('f1'), {displayMode:false});
+  katex.render('y = v_0 \\sin(\\theta)\\, t - \\tfrac{1}{2}g t^2', document.getElementById('f2'), {displayMode:false});
+  katex.render('R = \\dfrac{v_0^2 \\sin(2\\theta)}{g}', document.getElementById('f3'), {displayMode:false});
+
+  /* ---------- DOM refs ---------- */
+  const slV = document.getElementById('sl-v'), slA = document.getElementById('sl-a'), slM = document.getElementById('sl-m');
+  const vVal = document.getElementById('v-val'), aVal = document.getElementById('a-val'), mVal = document.getElementById('m-val');
+  const lvX = document.getElementById('lv-x'), lvY = document.getElementById('lv-y');
+  const lvVx = document.getElementById('lv-vx'), lvVy = document.getElementById('lv-vy');
+  const lvSpd = document.getElementById('lv-spd'), lvT = document.getElementById('lv-t');
+  const ovRange = document.getElementById('ov-range'), ovHeight = document.getElementById('ov-height');
+  const ovTime = document.getElementById('ov-time'), ovOpt = document.getElementById('ov-opt');
+  const dtBody = document.getElementById('dt-body');
+
+  slV.oninput = () => vVal.textContent = parseFloat(slV.value).toFixed(1);
+  slA.oninput = () => aVal.textContent = parseFloat(slA.value).toFixed(1);
+  slM.oninput = () => mVal.textContent = parseFloat(slM.value).toFixed(1);
+
+  /* ---------- Presets ---------- */
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('.preset-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      slV.value = b.dataset.v; slV.oninput();
+      slA.value = b.dataset.a; slA.oninput();
+      slM.value = b.dataset.m; slM.oninput();
+    };
+  });
+
+  /* ---------- Three.js setup ---------- */
+  const canvas = document.getElementById('c');
+  const wrap = canvas.parentElement;
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
+
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
+  camera.position.set(20, 15, 30);
+
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(15, 5, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 120;
+
+  /* Lighting */
+  scene.add(new THREE.AmbientLight(0x404060, 0.6));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+  dl.position.set(20, 30, 15);
+  scene.add(dl);
+  scene.add(new THREE.HemisphereLight(0x8080ff, 0x404020, 0.3));
+
+  /* Ground */
+  const groundGeo = new THREE.PlaneGeometry(200, 200);
+  const groundMat = new THREE.MeshStandardMaterial({color:0x1a1e2e, roughness:0.95, metalness:0.0});
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI/2;
+  ground.position.y = -0.01;
+  scene.add(ground);
+
+  /* Grid */
+  const grid = new THREE.GridHelper(200, 40, 0x2a2f45, 0x1e2238);
+  scene.add(grid);
+
+  /* Axis labels (simple sprites) */
+  function makeLabel(text, pos, color) {
+    const cvs = document.createElement('canvas');
+    cvs.width = 128; cvs.height = 48;
+    const ctx = cvs.getContext('2d');
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = color || '#64748b';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, 64, 34);
+    const tex = new THREE.CanvasTexture(cvs);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+    sp.position.copy(pos);
+    sp.scale.set(3, 1.2, 1);
+    scene.add(sp);
+    return sp;
+  }
+  makeLabel('X (range)', new THREE.Vector3(50, 0.5, 0), '#60a5fa');
+  makeLabel('Y (height)', new THREE.Vector3(-1, 25, 0), '#34d399');
+
+  /* Launcher */
+  const launcherGroup = new THREE.Group();
+  scene.add(launcherGroup);
+
+  // Base
+  const baseCyl = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.8, 1, 0.6, 16),
+    new THREE.MeshStandardMaterial({color:0x475569, metalness:0.6, roughness:0.3})
+  );
+  baseCyl.position.y = 0.3;
+  launcherGroup.add(baseCyl);
+
+  // Barrel
+  const barrelGeo = new THREE.CylinderGeometry(0.25, 0.35, 3, 12);
+  const barrelMat = new THREE.MeshStandardMaterial({color:0x6366f1, metalness:0.7, roughness:0.2});
+  const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+  barrel.position.set(0, 0.6, 0);
+  launcherGroup.add(barrel);
+
+  function updateBarrelAngle(deg) {
+    const rad = deg * Math.PI / 180;
+    barrel.position.set(Math.cos(rad)*1.5, 0.6 + Math.sin(rad)*1.5, 0);
+    barrel.rotation.z = rad - Math.PI/2;
+  }
+  updateBarrelAngle(45);
+
+  slA.addEventListener('input', () => updateBarrelAngle(parseFloat(slA.value)));
+
+  /* Measuring tape lines on ground */
+  function buildMeasureTicks() {
+    const pts = [];
+    for (let i = 0; i <= 100; i += 5) {
+      pts.push(new THREE.Vector3(i, 0.02, -0.8));
+      pts.push(new THREE.Vector3(i, 0.02, 0.8));
+      pts.push(new THREE.Vector3(i, 0.02, -0.8)); // reset
+      if (i < 100) pts.push(new THREE.Vector3(i+5, 0.02, -0.8));
+    }
+    // straight line
+    const linePts = [new THREE.Vector3(0,0.02,0), new THREE.Vector3(100,0.02,0)];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
+    const lineMat = new THREE.LineBasicMaterial({color:0x475569, transparent:true, opacity:0.6});
+    scene.add(new THREE.Line(lineGeo, lineMat));
+
+    // tick marks
+    for (let i = 0; i <= 100; i += 5) {
+      const tkPts = [new THREE.Vector3(i,0.02,-0.5), new THREE.Vector3(i,0.02,0.5)];
+      const tkGeo = new THREE.BufferGeometry().setFromPoints(tkPts);
+      const big = i % 10 === 0;
+      const tkMat = new THREE.LineBasicMaterial({color: big ? 0x64748b : 0x334155, transparent:true, opacity: big ? 0.8 : 0.5});
+      scene.add(new THREE.Line(tkGeo, tkMat));
+      if (big) makeLabel(i + 'm', new THREE.Vector3(i, 0.3, 1.5), '#475569');
+    }
+  }
+  buildMeasureTicks();
+
+  /* ---------- Projectile state ---------- */
+  let launches = [];
+  let activeLaunch = null;
+  let launchCount = 0;
+  let animTime = 0;
+  let projectileMesh = null;
+
+  function createProjectile(colorHex) {
+    const geo = new THREE.SphereGeometry(0.35, 16, 16);
+    const mat = new THREE.MeshStandardMaterial({color: colorHex, metalness:0.4, roughness:0.3, emissive: colorHex, emissiveIntensity:0.3});
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+    return mesh;
+  }
+
+  function calcTrajectory(v0, angleDeg) {
+    const rad = angleDeg * Math.PI / 180;
+    const vx = v0 * Math.cos(rad);
+    const vy = v0 * Math.sin(rad);
+    const tTotal = 2 * vy / G;
+    const range = vx * tTotal;
+    const maxH = vy * vy / (2 * G);
+    return {vx, vy, tTotal, range, maxH, rad};
+  }
+
+  function buildTrailLine(v0, angleDeg, colorHex) {
+    const {vx, vy, tTotal} = calcTrajectory(v0, angleDeg);
+    const pts = [];
+    const steps = 120;
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * tTotal;
+      const x = vx * t;
+      const y = vy * t - 0.5 * G * t * t;
+      pts.push(new THREE.Vector3(x, Math.max(y, 0), 0));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({color: colorHex, transparent:true, opacity:0.7, linewidth:2});
+    const line = new THREE.Line(geo, mat);
+    scene.add(line);
+    return line;
+  }
+
+  function buildLandingMarker(range, colorHex) {
+    const ringGeo = new THREE.RingGeometry(0.5, 0.7, 24);
+    const ringMat = new THREE.MeshBasicMaterial({color: colorHex, side:THREE.DoubleSide, transparent:true, opacity:0.6});
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(range, 0.03, 0);
+    scene.add(ring);
+
+    // vertical dashed line at landing
+    const dashPts = [new THREE.Vector3(range, 0, 0), new THREE.Vector3(range, 0.8, 0)];
+    const dashGeo = new THREE.BufferGeometry().setFromPoints(dashPts);
+    const dashMat = new THREE.LineBasicMaterial({color: colorHex, transparent:true, opacity:0.4});
+    const dashLine = new THREE.Line(dashGeo, dashMat);
+    scene.add(dashLine);
+
+    return [ring, dashLine];
+  }
+
+  function buildMaxHeightMarker(v0, angleDeg, colorHex) {
+    const {vx, vy, maxH} = calcTrajectory(v0, angleDeg);
+    const tPeak = vy / G;
+    const xPeak = vx * tPeak;
+
+    // small horizontal dash at peak
+    const pts = [new THREE.Vector3(xPeak - 0.4, maxH, 0), new THREE.Vector3(xPeak + 0.4, maxH, 0)];
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({color: colorHex, transparent:true, opacity:0.5});
+    const line = new THREE.Line(geo, mat);
+    scene.add(line);
+    return [line];
+  }
+
+  /* ---------- Launch ---------- */
+  function doLaunch() {
+    const v0 = parseFloat(slV.value);
+    const angle = parseFloat(slA.value);
+    const mass = parseFloat(slM.value);
+    const ci = launchCount % COLORS.length;
+    const colorHex = COLORS[ci];
+    const colorCSS = COLOR_CSS[ci];
+
+    const traj = calcTrajectory(v0, angle);
+
+    // Remove old projectile mesh if present
+    if (projectileMesh) { scene.remove(projectileMesh); projectileMesh.geometry.dispose(); projectileMesh.material.dispose(); }
+    projectileMesh = createProjectile(colorHex);
+
+    const trail = buildTrailLine(v0, angle, colorHex);
+    const landMark = buildLandingMarker(traj.range, colorHex);
+    const peakMark = buildMaxHeightMarker(v0, angle, colorHex);
+
+    activeLaunch = {v0, angle, mass, traj, colorHex, colorCSS, startTime: null, done: false, ci};
+    launchCount++;
+
+    // Store for cleanup
+    launches.push({trail, landMark, peakMark, projectileMesh, v0, angle, mass, traj, colorCSS, ci});
+
+    // Auto-adjust camera to fit trajectory
+    const lookRange = Math.max(traj.range, 10);
+    const lookH = Math.max(traj.maxH, 5);
+    controls.target.set(lookRange * 0.4, lookH * 0.3, 0);
+  }
+
+  function recordLaunch(launch) {
+    const {angle, v0, mass, traj, colorCSS} = launch;
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><span class="color-dot" style="background:${colorCSS}"></span>${launches.length}</td><td>${angle.toFixed(1)}°</td><td>${v0.toFixed(1)}</td><td>${traj.range.toFixed(2)}</td><td>${traj.maxH.toFixed(2)}</td><td>${traj.tTotal.toFixed(3)}</td>`;
+    dtBody.appendChild(row);
+    // Scroll to bottom
+    const wrap = document.querySelector('.data-table-wrap');
+    wrap.scrollTop = wrap.scrollHeight;
+
+    // Update overlay
+    ovRange.textContent = traj.range.toFixed(2);
+    ovHeight.textContent = traj.maxH.toFixed(2);
+    ovTime.textContent = traj.tTotal.toFixed(3);
+  }
+
+  document.getElementById('btn-launch').onclick = () => {
+    doLaunch();
+  };
+
+  document.getElementById('btn-clear').onclick = () => {
+    // Remove all launch visuals
+    launches.forEach(l => {
+      scene.remove(l.trail); l.trail.geometry.dispose(); l.trail.material.dispose();
+      l.landMark.forEach(m => { scene.remove(m); if(m.geometry) m.geometry.dispose(); if(m.material) m.material.dispose(); });
+      l.peakMark.forEach(m => { scene.remove(m); if(m.geometry) m.geometry.dispose(); if(m.material) m.material.dispose(); });
+    });
+    if (projectileMesh) { scene.remove(projectileMesh); projectileMesh.geometry.dispose(); projectileMesh.material.dispose(); projectileMesh = null; }
+    launches = [];
+    activeLaunch = null;
+    launchCount = 0;
+    dtBody.innerHTML = '';
+    ovRange.textContent = '--';
+    ovHeight.textContent = '--';
+    ovTime.textContent = '--';
+    lvX.textContent = '0.00'; lvY.textContent = '0.00';
+    lvVx.textContent = '0.00'; lvVy.textContent = '0.00';
+    lvSpd.textContent = '0.00'; lvT.textContent = '0.00';
+  };
+
+  /* ---------- 45° annotation ---------- */
+  (function draw45Annotation() {
+    // Arc showing 45° on the launcher
+    const arcPts = [];
+    const arcR = 2.2;
+    for (let i = 0; i <= 30; i++) {
+      const a = (i / 30) * (45 * Math.PI / 180);
+      arcPts.push(new THREE.Vector3(Math.cos(a) * arcR, 0.6 + Math.sin(a) * arcR, 0));
+    }
+    const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+    const arcMat = new THREE.LineBasicMaterial({color:0xfbbf24, transparent:true, opacity:0.5});
+    scene.add(new THREE.Line(arcGeo, arcMat));
+    makeLabel('45° max R', new THREE.Vector3(2.5, 3.2, 0), '#fbbf24');
+  })();
+
+  /* ---------- Animation loop ---------- */
+  let prevTime = 0;
+
+  function animate(time) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((time - prevTime) / 1000, 0.05);
+    prevTime = time;
+
+    controls.update();
+
+    // Animate active projectile
+    if (activeLaunch && !activeLaunch.done) {
+      if (activeLaunch.startTime === null) activeLaunch.startTime = time;
+      const elapsed = (time - activeLaunch.startTime) / 1000;
+      const {vx, vy, tTotal} = activeLaunch.traj;
+
+      const t = Math.min(elapsed, tTotal);
+      const x = vx * t;
+      const y = Math.max(vy * t - 0.5 * G * t * t, 0);
+      const curVy = vy - G * t;
+      const speed = Math.sqrt(vx * vx + curVy * curVy);
+
+      if (projectileMesh) {
+        projectileMesh.position.set(x, y, 0);
+      }
+
+      // Update live data
+      lvX.textContent = x.toFixed(2);
+      lvY.textContent = y.toFixed(2);
+      lvVx.textContent = vx.toFixed(2);
+      lvVy.textContent = curVy.toFixed(2);
+      lvSpd.textContent = speed.toFixed(2);
+      lvT.textContent = t.toFixed(3);
+
+      if (elapsed >= tTotal) {
+        activeLaunch.done = true;
+        if (projectileMesh) projectileMesh.position.set(activeLaunch.traj.range, 0, 0);
+        recordLaunch(activeLaunch);
+      }
+    }
+
+    // Resize
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    if (canvas.width !== w * renderer.getPixelRatio() || canvas.height !== h * renderer.getPixelRatio()) {
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    renderer.render(scene, camera);
+  }
+  requestAnimationFrame(animate);
+
+  /* ---------- Quiz ---------- */
+  function setupQuiz(qId, correctIdx, passText, failText) {
+    const opts = document.getElementById(qId + '-opts');
+    const fb = document.getElementById(qId + '-fb');
+    const labels = opts.querySelectorAll('label');
+    labels.forEach(label => {
+      label.onclick = (e) => {
+        // Prevent re-answer
+        if (fb.classList.contains('show')) return;
+        const idx = parseInt(label.dataset.i);
+        labels.forEach(l => l.classList.remove('selected','correct','wrong'));
+        label.classList.add('selected');
+
+        if (idx === correctIdx) {
+          label.classList.add('correct');
+          fb.textContent = passText;
+          fb.className = 'quiz-feedback show pass';
+        } else {
+          label.classList.add('wrong');
+          labels[correctIdx].classList.add('correct');
+          fb.textContent = failText;
+          fb.className = 'quiz-feedback show fail';
+        }
+      };
+    });
+  }
+
+  setupQuiz('q1', 3,
+    'Correct! Complementary angles (30° and 60°) give the same range because sin(2x30°) = sin(2x60°) = sin(60°) = sin(120°). The higher angle always reaches greater max height.',
+    'Not quite. Complementary angles share the same range (sin(60°)=sin(120°)), and the steeper angle (60°) always achieves greater max height. Both B and C are true.'
+  );
+  setupQuiz('q2', 2,
+    'Correct! Range = v₀²sin(2θ)/g. Doubling v₀ multiplies range by 2² = 4. The range scales with the square of the speed.',
+    'Not quite. R = v₀²sin(2θ)/g — range depends on v₀ squared. Doubling v₀ gives 4x the range.'
+  );
+
+})();
+</script>
+</body>
+</html>

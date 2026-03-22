@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AC Generator — NeonPhysics AP Physics 2</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(6,182,212,.07));border-bottom:1px solid rgba(16,185,129,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px;align-items:center}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ap{background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.4);color:#6ee7b7}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 80px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#6ee7b7;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(16,185,129,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#10b981;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
+    .stat-card.span2{grid-column:span 2}
+    .stat-card-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .stat-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .v-green{color:#6ee7b7} .v-cyan{color:#67e8f9} .v-amber{color:#fcd34d} .v-rose{color:#fda4af} .v-sky{color:#7dd3fc}
+    .formula-box{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:5px}
+    .formula-live{font-size:11px;color:#94a3b8;margin-top:4px;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+    .pause-btn{width:100%;padding:9px;border-radius:7px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.08);color:#6ee7b7;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .pause-btn:hover{background:rgba(16,185,129,.18)}
+    .reset-btn{width:100%;padding:9px;border-radius:7px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .reset-btn:hover{background:rgba(251,191,36,.18)}
+    .preset-btn{width:100%;padding:7px;border-radius:6px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.08);color:#c4b5fd;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:6px}
+    .preset-btn:hover{background:rgba(139,92,246,.18)}
+    .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-variant-numeric:tabular-nums;pointer-events:none;z-index:5}
+    .canvas-area{position:relative;display:grid;grid-template-rows:1fr 200px}
+    .threejs-wrap{position:relative;overflow:hidden}
+    #threeCanvas{display:block;width:100%;height:100%}
+    .graphs-wrap{display:grid;grid-template-columns:1fr 1fr;background:#060c12;border-top:1px solid rgba(255,255,255,.06);position:relative}
+    .graph-panel{position:relative;border-right:1px solid rgba(255,255,255,.04)}
+    .graph-panel:last-child{border-right:none}
+    .graph-panel canvas{display:block;width:100%;height:100%}
+    .graph-label{position:absolute;top:8px;left:12px;font-size:11px;color:#64748b;pointer-events:none}
+    .graph-value{position:absolute;top:8px;right:12px;font-size:11px;font-weight:600;pointer-events:none;font-variant-numeric:tabular-nums}
+    .quiz-section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .quiz-q{font-size:12px;color:#cbd5e1;margin-bottom:8px;line-height:1.5}
+    .quiz-opt{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);color:#94a3b8;font-size:11px;cursor:pointer;transition:all .15s}
+    .quiz-opt:hover{background:rgba(255,255,255,.06);color:#e2e8f0}
+    .quiz-opt.correct{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#6ee7b7}
+    .quiz-opt.wrong{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#fca5a5}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:6px;line-height:1.5;display:none}
+    .quiz-feedback.show{display:block}
+    .quiz-feedback.correct-fb{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#6ee7b7}
+    .quiz-feedback.wrong-fb{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:#fca5a5}
+    .katex{font-size:1em}
+    .katex .base{color:#6ee7b7}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>AC Generator — Electromagnetic Induction</h1>
+  <p>Rotating coil in a magnetic field generates sinusoidal EMF and powers a light bulb</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Rotation Speed (rad/s)</span>
+          <span class="param-val" id="lblW">3.0</span>
+        </div>
+        <input type="range" id="sliderW" min="0.5" max="10" step="0.1" value="3.0">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Magnetic Field B (T)</span>
+          <span class="param-val" id="lblB">1.00</span>
+        </div>
+        <input type="range" id="sliderB" min="0.1" max="2.0" step="0.05" value="1.0">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Number of Turns N</span>
+          <span class="param-val" id="lblN">50</span>
+        </div>
+        <input type="range" id="sliderN" min="1" max="100" step="1" value="50">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Coil Area A (m&sup2;)</span>
+          <span class="param-val" id="lblA">0.050</span>
+        </div>
+        <input type="range" id="sliderA" min="0.01" max="0.1" step="0.005" value="0.05">
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Peak EMF</div>
+        <div class="stat-card-value v-green" id="statPeakEMF">7.50 V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Current EMF</div>
+        <div class="stat-card-value v-cyan" id="statEMF">0.00 V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Flux &Phi;</div>
+        <div class="stat-card-value v-amber" id="statFlux">0.050 Wb</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Frequency</div>
+        <div class="stat-card-value v-rose" id="statFreq">0.48 Hz</div>
+      </div>
+      <div class="stat-card span2">
+        <div class="stat-card-label">Coil Angle</div>
+        <div class="stat-card-value v-sky" id="statAngle">0.00 rad</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Formulas</div>
+      <div class="formula-box">
+        <div id="formula1"></div>
+        <div class="formula-desc">Induced EMF (Faraday's Law)</div>
+        <div class="formula-live" id="formulaLive1">EMF = 7.50 sin(3.0t) V</div>
+      </div>
+      <div class="formula-box">
+        <div id="formula2"></div>
+        <div class="formula-desc">Magnetic flux through coil</div>
+        <div class="formula-live" id="formulaLive2">&Phi; = 0.050 cos(&theta;) Wb</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <button class="preset-btn" onclick="applyPreset(0.5, 0.5, 20, 0.03)">1. Slow Generator</button>
+      <button class="preset-btn" onclick="applyPreset(8, 1, 50, 0.05)">2. Fast Generator</button>
+      <button class="preset-btn" onclick="applyPreset(3, 2, 100, 0.08)">3. Strong Magnets</button>
+    </div>
+
+    <div class="section">
+      <button class="pause-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
+      <button class="reset-btn" onclick="resetSim()">Reset</button>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-q">Q1: When the coil plane is parallel to the magnetic field, the induced EMF is:</div>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,'a')">A) Zero</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,'b')">B) Maximum</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,'c')">C) Half of maximum</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,1,'d')">D) Cannot be determined</button>
+      <div class="quiz-feedback" id="fb1"></div>
+
+      <div class="quiz-q" style="margin-top:14px">Q2: If you double both B and &omega;, the peak EMF becomes:</div>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,'a')">A) 2x original</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,'b')">B) 4x original</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,'c')">C) 8x original</button>
+      <button class="quiz-opt" onclick="checkQuiz(this,2,'d')">D) Unchanged</button>
+      <div class="quiz-feedback" id="fb2"></div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <div class="threejs-wrap">
+      <canvas id="threeCanvas"></canvas>
+      <div class="fps-badge" id="fpsBadge">60 FPS</div>
+    </div>
+    <div class="graphs-wrap">
+      <div class="graph-panel">
+        <canvas id="emfGraph"></canvas>
+        <div class="graph-label">EMF(t)</div>
+        <div class="graph-value v-green" id="emfGraphVal">0.00 V</div>
+      </div>
+      <div class="graph-panel">
+        <canvas id="fluxGraph"></canvas>
+        <div class="graph-label">&Phi;(t)</div>
+        <div class="graph-value v-amber" id="fluxGraphVal">0.050 Wb</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // --- KaTeX formulas ---
+  katex.render('\\mathcal{E} = NBA\\omega \\sin(\\omega t)', document.getElementById('formula1'), {displayMode:false});
+  katex.render('\\Phi = BA\\cos(\\theta)', document.getElementById('formula2'), {displayMode:false});
+
+  // --- State ---
+  var omega = 3.0, B = 1.0, N = 50, A = 0.05;
+  var simTime = 0, paused = false;
+  var emfHistory = [], fluxHistory = [];
+  var maxHistory = 600;
+
+  // --- Sliders ---
+  var sW = document.getElementById('sliderW'), lW = document.getElementById('lblW');
+  var sB = document.getElementById('sliderB'), lB = document.getElementById('lblB');
+  var sN = document.getElementById('sliderN'), lN = document.getElementById('lblN');
+  var sA = document.getElementById('sliderA'), lA = document.getElementById('lblA');
+
+  sW.oninput = function(){ omega = parseFloat(this.value); lW.textContent = omega.toFixed(1); };
+  sB.oninput = function(){ B = parseFloat(this.value); lB.textContent = B.toFixed(2); };
+  sN.oninput = function(){ N = parseInt(this.value); lN.textContent = N; };
+  sA.oninput = function(){ A = parseFloat(this.value); lA.textContent = A.toFixed(3); };
+
+  window.applyPreset = function(w, b, n, a){
+    omega = w; B = b; N = n; A = a;
+    sW.value = w; lW.textContent = w.toFixed(1);
+    sB.value = b; lB.textContent = b.toFixed(2);
+    sN.value = n; lN.textContent = n;
+    sA.value = a; lA.textContent = a.toFixed(3);
+    simTime = 0;
+    emfHistory.length = 0;
+    fluxHistory.length = 0;
+  };
+
+  window.togglePause = function(){
+    paused = !paused;
+    document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+  };
+
+  window.resetSim = function(){
+    simTime = 0;
+    emfHistory.length = 0;
+    fluxHistory.length = 0;
+    paused = false;
+    document.getElementById('pauseBtn').textContent = 'Pause';
+  };
+
+  // --- Quiz ---
+  var quizAnswered = {1:false, 2:false};
+  window.checkQuiz = function(btn, q, ans){
+    if(quizAnswered[q]) return;
+    var fb = document.getElementById('fb'+q);
+    var correct1 = 'b', correct2 = 'b';
+    var correctAns = q === 1 ? correct1 : correct2;
+    var explanations = {
+      1: 'When the coil plane is parallel to B, the angle between the area vector and B is 90 degrees. The rate of flux change is maximum, so EMF = NBAw sin(wt) is at its peak (sin(90) = 1).',
+      2: 'Peak EMF = NBAw. Doubling both B and w gives N(2B)A(2w) = 4NBAw, which is 4x the original.'
+    };
+    quizAnswered[q] = true;
+    if(ans === correctAns){
+      btn.classList.add('correct');
+      fb.className = 'quiz-feedback show correct-fb';
+      fb.textContent = 'Correct! ' + explanations[q];
+    } else {
+      btn.classList.add('wrong');
+      fb.className = 'quiz-feedback show wrong-fb';
+      fb.textContent = 'Incorrect. ' + explanations[q];
+      var opts = btn.parentElement.querySelectorAll('.quiz-opt');
+      var idx = correctAns.charCodeAt(0) - 97;
+      opts[idx].classList.add('correct');
+    }
+  };
+
+  // --- Three.js Setup ---
+  var canvas = document.getElementById('threeCanvas');
+  var wrap = canvas.parentElement;
+  var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a);
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0f172a, 15, 30);
+  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(5, 3.5, 6);
+  camera.lookAt(0, 0, 0);
+
+  var controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 3;
+  controls.maxDistance = 20;
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x334466, 0.6));
+  var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 8, 5);
+  scene.add(dirLight);
+  var pointLight = new THREE.PointLight(0x10b981, 0.5, 15);
+  pointLight.position.set(0, 3, 0);
+  scene.add(pointLight);
+
+  // --- Grid ---
+  var grid = new THREE.GridHelper(12, 24, 0x1a2744, 0x111d33);
+  grid.position.y = -2.5;
+  scene.add(grid);
+
+  // --- Magnets ---
+  function createMagnet(color, label){
+    var group = new THREE.Group();
+    var geo = new THREE.BoxGeometry(1.2, 2.5, 1.8);
+    var mat = new THREE.MeshPhongMaterial({color:color, transparent:true, opacity:0.85, shininess:60});
+    var mesh = new THREE.Mesh(geo, mat);
+    group.add(mesh);
+    // pole face highlight
+    var faceGeo = new THREE.PlaneGeometry(1.0, 2.3);
+    var faceMat = new THREE.MeshBasicMaterial({color:color, transparent:true, opacity:0.3, side:THREE.DoubleSide});
+    var face = new THREE.Mesh(faceGeo, faceMat);
+    face.position.z = 0.91;
+    group.add(face);
+    return group;
+  }
+
+  var northMagnet = createMagnet(0xef4444, 'N');
+  northMagnet.position.set(-2.5, 0, 0);
+  scene.add(northMagnet);
+
+  var southMagnet = createMagnet(0x3b82f6, 'S');
+  southMagnet.position.set(2.5, 0, 0);
+  scene.add(southMagnet);
+
+  // Magnet labels
+  function createLabel(text, color){
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = color;
+    ctx.font = 'bold 48px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 32, 32);
+    var tex = new THREE.CanvasTexture(c);
+    var mat = new THREE.SpriteMaterial({map:tex, transparent:true});
+    var sprite = new THREE.Sprite(mat);
+    sprite.scale.set(0.6, 0.6, 1);
+    return sprite;
+  }
+
+  var nLabel = createLabel('N', '#fca5a5');
+  nLabel.position.set(-2.5, 1.8, 0);
+  scene.add(nLabel);
+
+  var sLabel = createLabel('S', '#93c5fd');
+  sLabel.position.set(2.5, 1.8, 0);
+  scene.add(sLabel);
+
+  // --- Magnetic Field Lines ---
+  var fieldLines = [];
+  function createFieldLine(yOffset, zOffset){
+    var pts = [];
+    var steps = 40;
+    for(var i = 0; i <= steps; i++){
+      var t = i / steps;
+      var x = -2.0 + 4.0 * t;
+      var bulge = Math.sin(t * Math.PI);
+      var y = yOffset + bulge * 0.3;
+      var z = zOffset + bulge * zOffset * 0.3;
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+    var curve = new THREE.CatmullRomCurve3(pts);
+    var geo = new THREE.TubeGeometry(curve, 30, 0.015, 6, false);
+    var mat = new THREE.MeshBasicMaterial({color:0x38bdf8, transparent:true, opacity:0.35});
+    var mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+    fieldLines.push(mesh);
+
+    // Arrowheads
+    var arrowGeo = new THREE.ConeGeometry(0.04, 0.12, 6);
+    var arrowMat = new THREE.MeshBasicMaterial({color:0x38bdf8, transparent:true, opacity:0.5});
+    var arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    var midPt = curve.getPointAt(0.5);
+    var tangent = curve.getTangentAt(0.5);
+    arrow.position.copy(midPt);
+    arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), tangent.normalize());
+    scene.add(arrow);
+  }
+
+  var offsets = [-0.8, -0.4, 0, 0.4, 0.8];
+  var zOffs = [-0.6, -0.3, 0, 0.3, 0.6];
+  for(var i = 0; i < offsets.length; i++){
+    for(var j = 0; j < zOffs.length; j++){
+      if(Math.abs(offsets[i]) + Math.abs(zOffs[j]) < 1.2){
+        createFieldLine(offsets[i], zOffs[j]);
+      }
+    }
+  }
+
+  // --- Coil ---
+  var coilGroup = new THREE.Group();
+  scene.add(coilGroup);
+
+  var coilMat = new THREE.MeshPhongMaterial({color:0xfbbf24, emissive:0x92400e, emissiveIntensity:0.3, shininess:80});
+
+  function buildCoilFrame(){
+    var w = 1.4, h = 1.8, r = 0.035;
+    var shape = new THREE.Shape();
+    shape.moveTo(-w/2, -h/2);
+    shape.lineTo(w/2, -h/2);
+    shape.lineTo(w/2, h/2);
+    shape.lineTo(-w/2, h/2);
+    shape.lineTo(-w/2, -h/2);
+
+    var pts = shape.getPoints(40);
+    var path = new THREE.CatmullRomCurve3(pts.map(function(p){ return new THREE.Vector3(p.x, p.y, 0); }), true);
+    var tubeGeo = new THREE.TubeGeometry(path, 60, r, 8, true);
+    return tubeGeo;
+  }
+
+  var coilMesh = new THREE.Mesh(buildCoilFrame(), coilMat);
+  coilGroup.add(coilMesh);
+
+  // Second winding offset
+  var coilMesh2 = new THREE.Mesh(buildCoilFrame(), coilMat);
+  coilMesh2.position.z = 0.08;
+  coilGroup.add(coilMesh2);
+
+  // Axle
+  var axleGeo = new THREE.CylinderGeometry(0.03, 0.03, 3.5, 8);
+  var axleMat = new THREE.MeshPhongMaterial({color:0x94a3b8});
+  var axle = new THREE.Mesh(axleGeo, axleMat);
+  axle.rotation.x = Math.PI / 2;
+  coilGroup.add(axle);
+
+  // Slip rings
+  var ringGeo = new THREE.TorusGeometry(0.08, 0.025, 8, 16);
+  var ringMat = new THREE.MeshPhongMaterial({color:0xd97706});
+  var ring1 = new THREE.Mesh(ringGeo, ringMat);
+  ring1.position.z = 1.5;
+  ring1.rotation.x = Math.PI / 2;
+  coilGroup.add(ring1);
+  var ring2 = new THREE.Mesh(ringGeo, ringMat.clone());
+  ring2.position.z = -1.5;
+  ring2.rotation.x = Math.PI / 2;
+  coilGroup.add(ring2);
+
+  // --- Wires to bulb ---
+  var wireMat = new THREE.MeshBasicMaterial({color:0xfbbf24, transparent:true, opacity:0.6});
+
+  function makeWire(points){
+    var curve = new THREE.CatmullRomCurve3(points);
+    var geo = new THREE.TubeGeometry(curve, 20, 0.02, 6, false);
+    return new THREE.Mesh(geo, wireMat);
+  }
+
+  var wire1 = makeWire([
+    new THREE.Vector3(0, 0, 1.5),
+    new THREE.Vector3(0, -1.5, 1.5),
+    new THREE.Vector3(0, -2, 2.5),
+    new THREE.Vector3(0, -2, 3.2)
+  ]);
+  scene.add(wire1);
+
+  var wire2 = makeWire([
+    new THREE.Vector3(0, 0, -1.5),
+    new THREE.Vector3(0, -1.5, -1.5),
+    new THREE.Vector3(0, -2, -0.5),
+    new THREE.Vector3(0, -2, 3.2)
+  ]);
+  scene.add(wire2);
+
+  // --- Light Bulb ---
+  var bulbGroup = new THREE.Group();
+  bulbGroup.position.set(0, -1.8, 3.5);
+  scene.add(bulbGroup);
+
+  // bulb glass
+  var bulbGeo = new THREE.SphereGeometry(0.3, 16, 16);
+  var bulbMat = new THREE.MeshPhongMaterial({color:0xfef3c7, transparent:true, opacity:0.4, emissive:0xfbbf24, emissiveIntensity:0});
+  var bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+  bulbGroup.add(bulbMesh);
+
+  // bulb base
+  var baseGeo = new THREE.CylinderGeometry(0.15, 0.18, 0.25, 12);
+  var baseMat = new THREE.MeshPhongMaterial({color:0x6b7280});
+  var baseMesh = new THREE.Mesh(baseGeo, baseMat);
+  baseMesh.position.y = -0.35;
+  bulbGroup.add(baseMesh);
+
+  // filament
+  var filGeo = new THREE.TorusGeometry(0.08, 0.012, 6, 12);
+  var filMat = new THREE.MeshBasicMaterial({color:0xfbbf24, transparent:true, opacity:0.6});
+  var filMesh = new THREE.Mesh(filGeo, filMat);
+  filMesh.rotation.x = Math.PI / 4;
+  bulbGroup.add(filMesh);
+
+  // glow sprite
+  var glowCanvas = document.createElement('canvas');
+  glowCanvas.width = 64; glowCanvas.height = 64;
+  var gCtx = glowCanvas.getContext('2d');
+  var grad = gCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(251,191,36,0.8)');
+  grad.addColorStop(0.5, 'rgba(251,191,36,0.2)');
+  grad.addColorStop(1, 'rgba(251,191,36,0)');
+  gCtx.fillStyle = grad;
+  gCtx.fillRect(0, 0, 64, 64);
+  var glowTex = new THREE.CanvasTexture(glowCanvas);
+  var glowMat = new THREE.SpriteMaterial({map:glowTex, transparent:true, blending:THREE.AdditiveBlending});
+  var glowSprite = new THREE.Sprite(glowMat);
+  glowSprite.scale.set(0, 0, 1);
+  bulbGroup.add(glowSprite);
+
+  // Bulb label
+  var bulbLabel = createLabel('Bulb', '#fbbf24');
+  bulbLabel.position.set(0, -2.5, 3.5);
+  bulbLabel.scale.set(0.5, 0.5, 1);
+  scene.add(bulbLabel);
+
+  // --- Resize ---
+  function onResize(){
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    if(w === 0 || h === 0) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+  window.addEventListener('resize', onResize);
+  setTimeout(onResize, 50);
+
+  // --- Graph Canvases ---
+  var emfCanvas = document.getElementById('emfGraph');
+  var fluxCanvas = document.getElementById('fluxGraph');
+  var emfCtx = emfCanvas.getContext('2d');
+  var fluxCtx = fluxCanvas.getContext('2d');
+
+  function resizeGraphs(){
+    var panels = document.querySelectorAll('.graph-panel');
+    panels.forEach(function(p, i){
+      var c = p.querySelector('canvas');
+      c.width = p.clientWidth * window.devicePixelRatio;
+      c.height = p.clientHeight * window.devicePixelRatio;
+    });
+  }
+  window.addEventListener('resize', resizeGraphs);
+  setTimeout(resizeGraphs, 60);
+
+  function drawGraph(ctx, data, maxVal, color, label){
+    var w = ctx.canvas.width, h = ctx.canvas.height;
+    var dpr = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, w, h);
+
+    // grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = dpr;
+    ctx.beginPath();
+    ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, h/4); ctx.lineTo(w, h/4);
+    ctx.moveTo(0, 3*h/4); ctx.lineTo(w, 3*h/4);
+    ctx.stroke();
+
+    // zero label
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = (10*dpr)+'px sans-serif';
+    ctx.fillText('0', 4*dpr, h/2 - 4*dpr);
+
+    if(data.length < 2) return;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2 * dpr;
+    ctx.beginPath();
+    var len = data.length;
+    var step = w / maxHistory;
+    for(var i = 0; i < len; i++){
+      var x = i * step;
+      var y = h/2 - (data[i] / (maxVal || 1)) * (h/2 - 10*dpr);
+      if(i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // trailing dot
+    if(len > 0){
+      var lastX = (len-1) * step;
+      var lastY = h/2 - (data[len-1] / (maxVal || 1)) * (h/2 - 10*dpr);
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 3*dpr, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+  }
+
+  // --- FPS ---
+  var frameCount = 0, lastFpsTime = performance.now();
+
+  // --- Animation ---
+  var clock = new THREE.Clock();
+
+  function animate(){
+    requestAnimationFrame(animate);
+
+    var dt = clock.getDelta();
+    if(dt > 0.1) dt = 0.016;
+
+    // FPS
+    frameCount++;
+    var now = performance.now();
+    if(now - lastFpsTime >= 500){
+      var fps = Math.round(frameCount / ((now - lastFpsTime) / 1000));
+      document.getElementById('fpsBadge').textContent = fps + ' FPS';
+      frameCount = 0;
+      lastFpsTime = now;
+    }
+
+    if(!paused){
+      simTime += dt;
+
+      // Physics
+      var theta = omega * simTime;
+      var peakEMF = N * B * A * omega;
+      var emf = peakEMF * Math.sin(theta);
+      var flux = B * A * Math.cos(theta);
+      var freq = omega / (2 * Math.PI);
+
+      // Rotate coil
+      coilGroup.rotation.x = theta;
+
+      // Bulb brightness (proportional to |EMF|/peakEMF)
+      var brightness = Math.abs(emf) / (peakEMF || 1);
+      bulbMat.emissiveIntensity = brightness * 1.5;
+      bulbMat.opacity = 0.3 + brightness * 0.5;
+      filMat.opacity = 0.3 + brightness * 0.7;
+      filMat.color.setHex(brightness > 0.5 ? 0xfef3c7 : 0xfbbf24);
+      var glowSize = brightness * 2.0;
+      glowSprite.scale.set(glowSize, glowSize, 1);
+      glowSprite.material.opacity = brightness * 0.8;
+
+      // Graph data
+      emfHistory.push(emf);
+      fluxHistory.push(flux);
+      if(emfHistory.length > maxHistory) emfHistory.shift();
+      if(fluxHistory.length > maxHistory) fluxHistory.shift();
+
+      // Update stats
+      document.getElementById('statPeakEMF').textContent = peakEMF.toFixed(2) + ' V';
+      document.getElementById('statEMF').textContent = emf.toFixed(2) + ' V';
+      document.getElementById('statFlux').textContent = flux.toFixed(4) + ' Wb';
+      document.getElementById('statFreq').textContent = freq.toFixed(2) + ' Hz';
+      document.getElementById('statAngle').textContent = (theta % (2*Math.PI)).toFixed(2) + ' rad';
+
+      // Live formulas
+      document.getElementById('formulaLive1').textContent = 'EMF = ' + peakEMF.toFixed(2) + ' sin(' + omega.toFixed(1) + 't) V';
+      document.getElementById('formulaLive2').innerHTML = '&Phi; = ' + (B*A).toFixed(4) + ' cos(&theta;) Wb';
+
+      // Graph values
+      document.getElementById('emfGraphVal').textContent = emf.toFixed(2) + ' V';
+      document.getElementById('fluxGraphVal').textContent = flux.toFixed(4) + ' Wb';
+
+      // Draw graphs
+      drawGraph(emfCtx, emfHistory, peakEMF || 1, '#6ee7b7', 'EMF');
+      drawGraph(fluxCtx, fluxHistory, B * A || 0.01, '#fcd34d', 'Flux');
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  animate();
+})();
+</script>
+</body>
+</html>

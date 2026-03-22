@@ -5,6 +5,7 @@ export interface GalleryListParams {
   tag?: string;
   q?: string;
   author?: string;
+  verified?: boolean;
 }
 
 export interface GalleryListItem {
@@ -21,6 +22,8 @@ export interface GalleryListItem {
   featured: boolean | null;
   tags: string[] | null;
   forkedFrom: string | null;
+  validationScore: number | null;
+  validatedAt: Date | null;
   createdAt: Date;
   // Joined fields
   authorName?: string;
@@ -39,4 +42,5 @@ export interface GalleryDetailItem extends GalleryListItem {
   htmlUrl: string | null;
   shareCount: number | null;
   downloadCount: number | null;
+  validationDetails: string | null;
 }

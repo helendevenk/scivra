@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometric Optics — Lens Ray Tracing — NeonPhysics AP Physics</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.08));border-bottom:1px solid rgba(59,130,246,.2);flex-shrink:0}
+    .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
+    .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
+    .layout{display:flex;flex:1;overflow:hidden}
+    .canvas-wrap{flex:1;position:relative;background:#0a0e16}
+    canvas{display:block;width:100%;height:100%}
+    .fps{position:absolute;bottom:10px;right:12px;font-size:10px;color:#334155;font-variant-numeric:tabular-nums;font-family:monospace}
+    .overlay{position:absolute;top:12px;left:12px;background:rgba(10,14,22,.9);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px);min-width:200px}
+    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px}
+    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+    .blue{color:#60a5fa} .violet{color:#c084fc} .orange{color:#fb923c} .green{color:#4ade80} .red{color:#f87171}
+    .sidebar{width:280px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+    .param-name{font-size:11px;color:#94a3b8}
+    .param-val{font-size:11px;font-weight:700;color:#60a5fa;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(59,130,246,.25);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
+    .formula-box{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px}
+    .formula-text{font-family:'Courier New',monospace;font-size:12px;color:#93c5fd;letter-spacing:.3px}
+    .formula-desc{font-size:10px;color:#475569;margin-top:3px}
+    .legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
+    .legend-line{width:16px;height:2px;border-radius:1px}
+    .lens-type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:8px}
+    .convex-badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
+    .concave-badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Geometric Optics — Lens Ray Tracing</h1>
+  <p class="subtitle">Thin lens equation, focal points, and image formation</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row">
+        <span class="stat-label">Image Distance v</span>
+        <span class="stat-value blue" id="statV">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Magnification m</span>
+        <span class="stat-value violet" id="statM">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Image Type</span>
+        <span class="stat-value orange" id="statType">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Orientation</span>
+        <span class="stat-value green" id="statOrient">—</span>
+      </div>
+    </div>
+    <div class="fps" id="fps">0 FPS</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Lens Parameters</div>
+      <div id="lensTypeBadge" class="lens-type-badge convex-badge">CONVEX LENS (f > 0)</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Focal Length f</span>
+          <span class="param-val" id="valF">20 cm</span>
+        </div>
+        <input type="range" id="sliderF" min="-50" max="50" step="1" value="20">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Object Distance u</span>
+          <span class="param-val" id="valU">30 cm</span>
+        </div>
+        <input type="range" id="sliderU" min="5" max="100" step="1" value="30">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Object Height</span>
+          <span class="param-val" id="valH">2 cm</span>
+        </div>
+        <input type="range" id="sliderH" min="1" max="5" step="0.5" value="2">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Ray Legend</div>
+      <div class="legend-row">
+        <div class="legend-item">
+          <div class="legend-line" style="background:#ef4444"></div>
+          <span>Ray 1 — Parallel</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-line" style="background:#22c55e"></div>
+          <span>Ray 2 — Focal</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-line" style="background:#3b82f6"></div>
+          <span>Ray 3 — Center</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-line" style="background:#f59e0b;border-top:1px dashed #f59e0b;background:none"></div>
+          <span>Virtual (dashed)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Thin Lens Equations</div>
+      <div class="formula-box">
+        <div class="formula-text">1/f = 1/v + 1/u</div>
+        <div class="formula-desc">Thin lens equation (sign convention: real = positive)</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">m = −v / u</div>
+        <div class="formula-desc">Lateral magnification</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">f_threshold: u = f → v → ∞</div>
+        <div class="formula-desc">Object at focal point → no image formed</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">Real image: v > 0, inverted</div>
+        <div class="formula-desc">Virtual image: v &lt; 0, upright</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">About</div>
+      <div style="font-size:11px;color:#475569;line-height:1.6">
+        Drag sliders to adjust the focal length and object position. Positive focal length = convex (converging) lens. Negative = concave (diverging) lens. Three principal rays determine image location.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  var params = { f: 20, u: 30, h: 2 };
+  // 1 unit = 10 cm; scene spans ±14 units wide, ±7 high
+  var SCALE = 0.1; // cm → units
+
+  // ── Three.js setup ─────────────────────────────────────────────────────────
+  var canvas = document.getElementById('c');
+  var wrap = document.getElementById('canvasWrap');
+  var renderer, scene, camera;
+  var sceneObjects = [];
+  var fpsEl = document.getElementById('fps');
+  var fpsCount = 0, fpsLast = performance.now();
+
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0a0e16, 1);
+
+    scene = new THREE.Scene();
+
+    var W = wrap.clientWidth, H = wrap.clientHeight;
+    var aspect = W / H;
+    var frustH = 8;
+    camera = new THREE.OrthographicCamera(
+      -frustH * aspect, frustH * aspect,
+      frustH, -frustH, 0.1, 100
+    );
+    camera.position.set(0, 0, 10);
+    camera.lookAt(0, 0, 0);
+
+    renderer.setSize(W, H);
+
+    // Ambient light (for any mesh materials)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    var dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(0, 5, 10);
+    scene.add(dirLight);
+    var rimLight = new THREE.DirectionalLight(0x3b82f6, 0.4);
+    rimLight.position.set(-5, -3, 5);
+    scene.add(rimLight);
+
+  } catch(e) {
+    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">WebGL initialization failed: ' + e.message + '</div>';
+    return;
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function makeLine(points, color, dashed, dashSize, gapSize) {
+    var geo = new THREE.BufferGeometry().setFromPoints(points);
+    var mat;
+    if (dashed) {
+      mat = new THREE.LineDashedMaterial({ color: color, dashSize: dashSize || 0.25, gapSize: gapSize || 0.15, linewidth: 1 });
+    } else {
+      mat = new THREE.LineBasicMaterial({ color: color, linewidth: 1 });
+    }
+    var line = new THREE.Line(geo, mat);
+    if (dashed) line.computeLineDistances();
+    scene.add(line);
+    sceneObjects.push(line);
+    return line;
+  }
+
+  function makeArrow(from, to, color, headLen) {
+    var dir = new THREE.Vector3().subVectors(to, from).normalize();
+    var length = from.distanceTo(to);
+    headLen = headLen || Math.min(0.3, length * 0.25);
+    var arrow = new THREE.ArrowHelper(dir, from, length, color, headLen, headLen * 0.5);
+    scene.add(arrow);
+    sceneObjects.push(arrow);
+    return arrow;
+  }
+
+  function makeSphere(pos, radius, color, emissive) {
+    var geo = new THREE.SphereGeometry(radius, 16, 12);
+    var mat = new THREE.MeshPhongMaterial({ color: color, emissive: emissive || color, emissiveIntensity: 0.7, shininess: 80 });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(pos);
+    scene.add(mesh);
+    sceneObjects.push(mesh);
+    return mesh;
+  }
+
+  function clearSceneObjects() {
+    for (var i = 0; i < sceneObjects.length; i++) {
+      var obj = sceneObjects[i];
+      scene.remove(obj);
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) obj.material.dispose();
+    }
+    sceneObjects = [];
+  }
+
+  // ── Physics ────────────────────────────────────────────────────────────────
+  function computeImage(f, u) {
+    // Sign convention: object on left → u positive in real life (but here we pass raw cm)
+    // Thin lens: 1/v = 1/f - 1/u  (using real is positive convention)
+    if (Math.abs(f) < 0.5) return null;
+    if (Math.abs(u - f) < 0.5) return null; // at focal point → no image
+    var inv_v = 1/f - 1/u;
+    if (Math.abs(inv_v) < 1e-6) return null;
+    var v = 1 / inv_v;
+    var m = -v / u;
+    return { v: v, m: m };
+  }
+
+  // ── Build scene ─────────────────────────────────────────────────────────────
+  function buildScene() {
+    clearSceneObjects();
+
+    var f  = params.f;   // cm
+    var u  = params.u;   // cm, object distance (positive, object on left)
+    var h  = params.h;   // cm, object height
+
+    // Convert to scene units (1 unit = 10 cm)
+    var fU  = f  * SCALE;
+    var uU  = u  * SCALE;
+    var hU  = h  * SCALE;
+
+    var imgData = computeImage(f, u);
+    var vU = imgData ? imgData.v * SCALE : null;
+    var m  = imgData ? imgData.m : 0;
+    var imageH = imgData ? m * hU : 0;
+
+    var isReal   = imgData && imgData.v > 0;
+    var isUpright = imageH > 0;
+
+    // ── Update HUD ──
+    var statV     = document.getElementById('statV');
+    var statM     = document.getElementById('statM');
+    var statType  = document.getElementById('statType');
+    var statOrient= document.getElementById('statOrient');
+    var badgeEl   = document.getElementById('lensTypeBadge');
+
+    if (imgData) {
+      statV.textContent     = imgData.v.toFixed(1) + ' cm';
+      statM.textContent     = imgData.m.toFixed(2) + '×';
+      statType.textContent  = isReal ? 'Real' : 'Virtual';
+      statOrient.textContent = isUpright ? 'Upright' : 'Inverted';
+    } else {
+      statV.textContent = '∞'; statM.textContent = '—';
+      statType.textContent = 'No image'; statOrient.textContent = '—';
+    }
+
+    if (f > 0) {
+      badgeEl.textContent = 'CONVEX LENS (f > 0)';
+      badgeEl.className = 'lens-type-badge convex-badge';
+    } else if (f < 0) {
+      badgeEl.textContent = 'CONCAVE LENS (f < 0)';
+      badgeEl.className = 'lens-type-badge concave-badge';
+    } else {
+      badgeEl.textContent = 'FLAT GLASS (f = 0)';
+      badgeEl.className = 'lens-type-badge convex-badge';
+    }
+
+    // ── Optical Axis ──
+    makeLine([
+      new THREE.Vector3(-13, 0, 0),
+      new THREE.Vector3(13, 0, 0)
+    ], 0x334155);
+
+    // ── Lens ── (vertical blue glowing bar at x=0)
+    var lensH = 5.5;
+    var lensColor = f > 0 ? 0x3b82f6 : 0xf97316;
+    makeLine([new THREE.Vector3(0, -lensH, 0), new THREE.Vector3(0, lensH, 0)], lensColor);
+    // Lens caps (convex/concave decorative lines)
+    if (f > 0) {
+      // Convex: outward arrowheads on top and bottom
+      makeArrow(new THREE.Vector3(0, lensH - 0.4, 0), new THREE.Vector3(0, lensH, 0), lensColor, 0.4);
+      makeArrow(new THREE.Vector3(0, -(lensH - 0.4), 0), new THREE.Vector3(0, -lensH, 0), lensColor, 0.4);
+    } else if (f < 0) {
+      // Concave: inward arrowheads
+      makeArrow(new THREE.Vector3(0, lensH, 0), new THREE.Vector3(0, lensH - 0.4, 0), lensColor, 0.4);
+      makeArrow(new THREE.Vector3(0, -lensH, 0), new THREE.Vector3(0, -(lensH - 0.4), 0), lensColor, 0.4);
+    }
+    // Glow sphere at center
+    makeSphere(new THREE.Vector3(0, 0, 0), 0.1, lensColor, lensColor);
+
+    // ── Focal Points ──
+    if (Math.abs(fU) > 0.05) {
+      makeSphere(new THREE.Vector3(fU, 0, 0), 0.14, 0xfbbf24, 0xfbbf24);
+      makeSphere(new THREE.Vector3(-fU, 0, 0), 0.14, 0xfbbf24, 0xfbbf24);
+      // Labels (small tick marks)
+      makeLine([new THREE.Vector3(fU, -0.12, 0), new THREE.Vector3(fU, 0.12, 0)], 0xfbbf24);
+      makeLine([new THREE.Vector3(-fU, -0.12, 0), new THREE.Vector3(-fU, 0.12, 0)], 0xfbbf24);
+    }
+
+    // ── Object Arrow (red, on left side at x = -uU) ──
+    var objX = -uU;
+    makeArrow(
+      new THREE.Vector3(objX, 0, 0),
+      new THREE.Vector3(objX, hU, 0),
+      0xef4444, 0.2
+    );
+    // Object base dot
+    makeSphere(new THREE.Vector3(objX, 0, 0), 0.08, 0xef4444, 0xef4444);
+
+    // ── Image Arrow ──
+    if (imgData) {
+      var imgX = vU;
+      var imgColor = isReal ? 0xfb923c : 0xa78bfa;
+      var imgDashed = !isReal;
+      // Arrow (vertical)
+      if (imgDashed) {
+        // Virtual image: dashed line
+        makeLine([
+          new THREE.Vector3(imgX, 0, 0),
+          new THREE.Vector3(imgX, imageH, 0)
+        ], imgColor, true, 0.2, 0.12);
+      } else {
+        makeArrow(
+          new THREE.Vector3(imgX, 0, 0),
+          new THREE.Vector3(imgX, imageH, 0),
+          imgColor, 0.2
+        );
+      }
+      makeSphere(new THREE.Vector3(imgX, 0, 0), 0.08, imgColor, imgColor);
+    }
+
+    // ── Three Principal Rays ──
+    // Object tip position
+    var objTip = new THREE.Vector3(objX, hU, 0);
+    var axisY  = 0; // optical axis y = 0
+
+    // Clamp for display
+    var xMax = 12.5;
+
+    if (imgData) {
+      var imgX = vU;
+
+      // === RAY 1: Parallel to axis → through rear focal point (or extension) ===
+      // Before lens: horizontal from object tip to lens (x=0)
+      makeLine([objTip, new THREE.Vector3(0, hU, 0)], 0xef4444);
+
+      if (f > 0) {
+        // Refracted ray goes through rear focal point F'(+fU, 0)
+        var ray1Dir = new THREE.Vector3(fU - 0, 0 - hU, 0).normalize();
+        var tMax1 = (xMax - 0) / ray1Dir.x;
+        var ray1End = new THREE.Vector3(0 + ray1Dir.x * tMax1, hU + ray1Dir.y * tMax1, 0);
+        makeLine([new THREE.Vector3(0, hU, 0), ray1End], 0xef4444);
+      } else {
+        // Concave lens: ray diverges as if from virtual focal F'(-|f|, 0) on same side
+        // After lens at (0, hU), direction toward imaginary F'(fU, 0) — but extended backward
+        // Diverging: after lens, ray goes straight right but angled AWAY from axis
+        // Direction from F'(fU,0) through lens point (0,hU): slope = (hU-0)/(0-fU) = hU/(-fU)
+        var slopeR1 = hU / (-fU); // positive since fU < 0
+        var ray1EndX = xMax;
+        var ray1EndY = hU + slopeR1 * (ray1EndX - 0);
+        makeLine([new THREE.Vector3(0, hU, 0), new THREE.Vector3(ray1EndX, ray1EndY, 0)], 0xef4444);
+        // Virtual extension (dashed) back to virtual focal
+        makeLine([new THREE.Vector3(fU, 0, 0), new THREE.Vector3(0, hU, 0)], 0xef4444, true, 0.18, 0.1);
+      }
+
+      // === RAY 2: Through front focal point → parallel after lens ===
+      if (f > 0) {
+        // Ray from tip through F(-fU, 0) to lens
+        var fromF = new THREE.Vector3(-fU, 0, 0);
+        var dirToLens = new THREE.Vector3(0 - objTip.x, hU - objTip.y, 0).normalize();
+        // Start from well left of object
+        var tStart2 = (-xMax - objTip.x) / dirToLens.x;
+        var ray2Start = new THREE.Vector3(objTip.x + dirToLens.x * tStart2, objTip.y + dirToLens.y * tStart2, 0);
+        // Only draw from object tip to lens
+        makeLine([objTip, new THREE.Vector3(0, hU, 0)], 0x22c55e);
+        // After lens: parallel to axis
+        makeLine([new THREE.Vector3(0, hU, 0), new THREE.Vector3(xMax, hU, 0)], 0x22c55e);
+      } else {
+        // Concave: ray aimed at rear virtual focal (+|f| on right)
+        // Direction from objTip toward +|f| virtual focal
+        var vFocal = new THREE.Vector3(-fU, 0, 0); // -fU > 0
+        var dir2 = new THREE.Vector3(vFocal.x - objTip.x, vFocal.y - objTip.y, 0).normalize();
+        var t2 = (0 - objTip.x) / dir2.x;
+        var lensHitY2 = objTip.y + dir2.y * t2;
+        makeLine([objTip, new THREE.Vector3(0, lensHitY2, 0)], 0x22c55e);
+        // After: parallel
+        makeLine([new THREE.Vector3(0, lensHitY2, 0), new THREE.Vector3(xMax, lensHitY2, 0)], 0x22c55e);
+      }
+
+      // === RAY 3: Through optical center → straight through ===
+      var dir3 = new THREE.Vector3(0 - objTip.x, 0 - objTip.y, 0).normalize();
+      var tEnd3 = (xMax - objTip.x) / dir3.x;
+      var ray3End = new THREE.Vector3(objTip.x + dir3.x * tEnd3, objTip.y + dir3.y * tEnd3, 0);
+      makeLine([objTip, ray3End], 0x3b82f6);
+
+      // === Convergence / divergence dashed lines to image (if virtual) ===
+      if (!isReal) {
+        // Dashed extensions from lens back-side to virtual image
+        // Ray 1 virtual extension
+        var imgTip = new THREE.Vector3(imgX, imageH, 0);
+        makeLine([new THREE.Vector3(0, hU, 0), imgTip], 0xef4444, true, 0.15, 0.1);
+      }
+
+    } else {
+      // No image (object at focal): rays emerge parallel
+      makeLine([objTip, new THREE.Vector3(0, hU, 0)], 0xef4444);
+      makeLine([new THREE.Vector3(0, hU, 0), new THREE.Vector3(xMax, hU, 0)], 0xef4444);
+      // Ray through center
+      var dir3b = new THREE.Vector3(0 - objTip.x, 0 - objTip.y, 0).normalize();
+      makeLine([objTip, new THREE.Vector3(0, 0, 0)], 0x3b82f6);
+      makeLine([new THREE.Vector3(0, 0, 0), new THREE.Vector3(xMax, 0, 0)], 0x3b82f6);
+    }
+
+    // ── Distance markers (thin horizontal guide lines) ──
+    // Object distance line
+    makeLine([
+      new THREE.Vector3(objX, -hU - 0.6, 0),
+      new THREE.Vector3(0,    -hU - 0.6, 0)
+    ], 0x1e3a5f);
+
+    if (imgData && Math.abs(vU) > 0.1) {
+      makeLine([
+        new THREE.Vector3(0,    -hU - 0.9, 0),
+        new THREE.Vector3(vU,   -hU - 0.9, 0)
+      ], 0x2d1b0e);
+    }
+  }
+
+  // ── UI Bindings ────────────────────────────────────────────────────────────
+  function updateSliderLabel(id, val, unit) {
+    document.getElementById(id).textContent = val + ' ' + unit;
+  }
+
+  document.getElementById('sliderF').addEventListener('input', function() {
+    var v = parseInt(this.value);
+    if (v === 0) { this.value = 1; v = 1; }
+    params.f = v;
+    updateSliderLabel('valF', v, 'cm');
+    buildScene();
+  });
+
+  document.getElementById('sliderU').addEventListener('input', function() {
+    params.u = parseInt(this.value);
+    updateSliderLabel('valU', params.u, 'cm');
+    buildScene();
+  });
+
+  document.getElementById('sliderH').addEventListener('input', function() {
+    params.h = parseFloat(this.value);
+    updateSliderLabel('valH', params.h, 'cm');
+    buildScene();
+  });
+
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  function onResize() {
+    try {
+      var W = wrap.clientWidth, H = wrap.clientHeight;
+      if (W < 1 || H < 1) return;
+      var aspect = W / H;
+      var frustH = 8;
+      camera.left   = -frustH * aspect;
+      camera.right  =  frustH * aspect;
+      camera.top    =  frustH;
+      camera.bottom = -frustH;
+      camera.updateProjectionMatrix();
+      renderer.setSize(W, H);
+    } catch(e) {}
+  }
+  window.addEventListener('resize', onResize);
+
+  // ── Render Loop ────────────────────────────────────────────────────────────
+  function animate() {
+    requestAnimationFrame(animate);
+    try {
+      renderer.render(scene, camera);
+      fpsCount++;
+      var now = performance.now();
+      if (now - fpsLast >= 1000) {
+        fpsEl.textContent = fpsCount + ' FPS';
+        fpsCount = 0;
+        fpsLast = now;
+      }
+    } catch(e) {}
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  try {
+    buildScene();
+    animate();
+  } catch(e) {
+    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">Scene build failed: ' + e.message + '</div>';
+  }
+
+})();
+</script>
+</body>
+</html>

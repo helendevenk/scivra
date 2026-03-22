@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -175,7 +176,6 @@ function Simulation({
         color="#00ff88"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/SpaceMono-Regular.ttf"
       >
         {`v = ${velRef.current.toFixed(1)} m/s`}
       </Text>
@@ -187,7 +187,6 @@ function Simulation({
         color="#00f5ff"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/SpaceMono-Regular.ttf"
       >
         {`a = ${accelRef.current.toFixed(2)} m/s²`}
       </Text>

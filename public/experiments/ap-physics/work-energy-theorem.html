@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work-Energy Theorem | NeonPhysics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 280px; min-width: 280px; background: #161b22; border-right: 1px solid #30363d;
+    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
+  }
+  .panel-header {
+    padding: 16px; background: #0d1117; border-bottom: 1px solid #30363d;
+  }
+  .panel-header h2 { font-size: 13px; color: #58a6ff; letter-spacing: 0.05em; text-transform: uppercase; }
+  .panel-header h1 { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid #21262d; }
+  .section-title { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .control-row { margin-bottom: 12px; }
+  .control-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; margin-bottom: 5px; color: #c9d1d9;
+  }
+  .control-label .val { color: #58a6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pro-badge {
+    font-size: 9px; background: #6e40c9; color: #fff; padding: 1px 5px;
+    border-radius: 3px; font-weight: 700; letter-spacing: 0.05em;
+  }
+  input[type=range] {
+    width: 100%; height: 4px; appearance: none; background: #30363d;
+    border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: #58a6ff; cursor: pointer;
+  }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn {
+    flex: 1; padding: 8px 6px; border: 1px solid #30363d; border-radius: 6px;
+    background: #21262d; color: #c9d1d9; font-size: 12px; cursor: pointer;
+    transition: background 0.15s; font-weight: 600;
+  }
+  .btn:hover { background: #30363d; }
+  .btn.primary { background: #1f6feb; border-color: #388bfd; color: #fff; }
+  .btn.primary:hover { background: #388bfd; }
+
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-item {
+    background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
+    padding: 8px; text-align: center;
+  }
+  .data-item .d-label { font-size: 10px; color: #8b949e; margin-bottom: 3px; }
+  .data-item .d-val { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .data-item.ke .d-val { color: #58a6ff; }
+  .data-item.pe .d-val { color: #3fb950; }
+  .data-item.heat .d-val { color: #f78166; }
+  .data-item.speed .d-val { color: #e3b341; }
+  .data-item.total .d-val { color: #a5d6ff; }
+  .data-item.work .d-val { color: #d2a8ff; }
+
+  .formula-box {
+    background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
+    padding: 10px; font-family: 'Courier New', monospace; font-size: 11px;
+    color: #a5d6ff; line-height: 1.8;
+  }
+  .formula-box .f-line { color: #8b949e; }
+  .formula-box .f-line span { color: #a5d6ff; }
+
+  .fps-badge {
+    position: fixed; top: 10px; right: 10px; background: rgba(13,17,23,0.8);
+    border: 1px solid #30363d; border-radius: 4px; padding: 3px 8px;
+    font-size: 11px; color: #8b949e; font-variant-numeric: tabular-nums; z-index: 100;
+  }
+
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  #three-canvas { display: block; }
+  #energy-canvas {
+    position: absolute; bottom: 16px; right: 16px;
+    background: rgba(13,17,23,0.85); border: 1px solid #30363d;
+    border-radius: 8px; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <div class="panel-header">
+    <h2>AP Physics</h2>
+    <h1>Work-Energy Theorem</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Controls</div>
+
+    <div class="control-row">
+      <div class="control-label">Mass (kg) <span class="val" id="mass-val">5.0</span></div>
+      <input type="range" id="mass" min="0.5" max="20" step="0.5" value="5">
+    </div>
+    <div class="control-row">
+      <div class="control-label">Incline Angle (°) <span class="val" id="angle-val">30</span></div>
+      <input type="range" id="angle" min="10" max="75" step="1" value="30">
+    </div>
+    <div class="control-row">
+      <div class="control-label">
+        Friction μ <span class="val" id="mu-val">0.00</span>
+        <span class="pro-badge">PRO</span>
+      </div>
+      <input type="range" id="mu" min="0" max="0.8" step="0.01" value="0">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="btn-row">
+      <button class="btn primary" id="btn-play">Pause</button>
+      <button class="btn" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Live Data</div>
+    <div class="data-grid">
+      <div class="data-item ke"><div class="d-label">KE (J)</div><div class="d-val" id="d-ke">0.00</div></div>
+      <div class="data-item pe"><div class="d-label">PE (J)</div><div class="d-val" id="d-pe">0.00</div></div>
+      <div class="data-item heat"><div class="d-label">Heat (J)</div><div class="d-val" id="d-heat">0.00</div></div>
+      <div class="data-item speed"><div class="d-label">Speed (m/s)</div><div class="d-val" id="d-speed">0.00</div></div>
+      <div class="data-item total"><div class="d-label">Total E (J)</div><div class="d-val" id="d-total">0.00</div></div>
+      <div class="data-item work"><div class="d-label">W_net (J)</div><div class="d-val" id="d-work">0.00</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Formulas</div>
+    <div class="formula-box">
+      <div class="f-line">W<sub>net</sub> = <span>ΔKE</span></div>
+      <div class="f-line">W = <span>F·d·cos(θ)</span></div>
+      <div class="f-line">P = <span>F·v</span></div>
+      <div class="f-line">ΔE = <span>W_friction</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="three-canvas"></canvas>
+  <canvas id="energy-canvas" width="160" height="200"></canvas>
+</div>
+<div class="fps-badge" id="fps">FPS: --</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let mass = 5, angle = 30, mu = 0, playing = true;
+  const g = 9.8;
+  let sliderPos = 0;      // 0..1 fraction along slope
+  let velocity = 0;
+  const SLOPE_LENGTH = 6;
+  let initialPE = 0;
+  let heatAccum = 0;
+  let particles = [];
+
+  // ── DOM refs ───────────────────────────────────────────────────────────────
+  const wrap = document.getElementById('canvas-wrap');
+  const threeCanvas = document.getElementById('three-canvas');
+  const energyCanvas = document.getElementById('energy-canvas');
+  const ectx = energyCanvas.getContext('2d');
+
+  // ── Three.js setup ─────────────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0d1117);
+  renderer.shadowMap.enabled = true;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(4, 5, 10);
+  camera.lookAt(0, 1, 0);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(5, 10, 7);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+
+  // Grid floor
+  const gridHelper = new THREE.GridHelper(20, 20, 0x21262d, 0x21262d);
+  gridHelper.position.y = 0;
+  scene.add(gridHelper);
+
+  // ── Scene objects ──────────────────────────────────────────────────────────
+  let slopeMesh, blockMesh, groundMesh;
+  let arrowGravity, arrowNormal, arrowFriction, arrowNet;
+  const arrowGroup = new THREE.Group();
+  scene.add(arrowGroup);
+
+  // Particle system
+  const MAX_PARTICLES = 200;
+  const pGeo = new THREE.BufferGeometry();
+  const pPositions = new Float32Array(MAX_PARTICLES * 3);
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+  const pMat = new THREE.PointsMaterial({ color: 0xff8c42, size: 0.08, transparent: true, opacity: 0.9 });
+  const pSystem = new THREE.Points(pGeo, pMat);
+  scene.add(pSystem);
+
+  function buildScene() {
+    // Remove old
+    if (slopeMesh) scene.remove(slopeMesh);
+    if (groundMesh) scene.remove(groundMesh);
+
+    const rad = angle * Math.PI / 180;
+    const slopeH = SLOPE_LENGTH * Math.sin(rad);
+    const slopeW = SLOPE_LENGTH * Math.cos(rad);
+
+    // Slope geometry (a flat box tilted)
+    const sGeo = new THREE.BoxGeometry(SLOPE_LENGTH, 0.15, 3);
+    const sMat = new THREE.MeshLambertMaterial({ color: 0x484f58 });
+    slopeMesh = new THREE.Mesh(sGeo, sMat);
+    slopeMesh.rotation.z = rad;
+    slopeMesh.position.set(slopeW / 2 - SLOPE_LENGTH / 2 * Math.cos(rad), slopeH / 2, 0);
+    slopeMesh.receiveShadow = true;
+    scene.add(slopeMesh);
+
+    // Ground
+    const gGeo = new THREE.BoxGeometry(8, 0.15, 4);
+    const gMat = new THREE.MeshLambertMaterial({ color: 0x2d333b });
+    groundMesh = new THREE.Mesh(gGeo, gMat);
+    groundMesh.position.set(1, -0.075, 0);
+    groundMesh.receiveShadow = true;
+    scene.add(groundMesh);
+
+    // Block
+    if (!blockMesh) {
+      const bGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+      const bMat = new THREE.MeshLambertMaterial({ color: 0x388bfd });
+      blockMesh = new THREE.Mesh(bGeo, bMat);
+      blockMesh.castShadow = true;
+      scene.add(blockMesh);
+    }
+
+    initialPE = mass * g * SLOPE_LENGTH * Math.sin(rad);
+    updateBlockPosition();
+  }
+
+  function updateBlockPosition() {
+    const rad = angle * Math.PI / 180;
+    const dist = sliderPos * SLOPE_LENGTH;
+    const x = dist * Math.cos(rad) - SLOPE_LENGTH * Math.cos(rad) + SLOPE_LENGTH * Math.cos(rad) * 0;
+    // bottom of slope is at x=0, top at slopeW
+    const bx = (SLOPE_LENGTH - dist) * Math.cos(rad) - SLOPE_LENGTH * Math.cos(rad) / 2 + SLOPE_LENGTH * Math.cos(rad) / 2 - (SLOPE_LENGTH - dist) * Math.cos(rad) / 2;
+    // Simpler: place along slope
+    const t = 1 - sliderPos; // 0=top, 1=bottom
+    const px = t * SLOPE_LENGTH * Math.cos(rad) - SLOPE_LENGTH * Math.cos(rad) / 2;
+    const py = t * SLOPE_LENGTH * Math.sin(rad) + 0.25 * Math.cos(rad);
+    blockMesh.position.set(px, py + 0.05, 0);
+    blockMesh.rotation.z = -rad;
+    updateArrows();
+  }
+
+  function createArrow(color) {
+    const group = new THREE.Group();
+    const bodyGeo = new THREE.CylinderGeometry(0.04, 0.04, 1, 8);
+    const bodyMat = new THREE.MeshBasicMaterial({ color });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.5;
+    group.add(body);
+    const headGeo = new THREE.ConeGeometry(0.1, 0.25, 8);
+    const headMat = new THREE.MeshBasicMaterial({ color });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 1.125;
+    group.add(head);
+    return group;
+  }
+
+  arrowGravity = createArrow(0xff4444);
+  arrowNormal = createArrow(0x3fb950);
+  arrowFriction = createArrow(0xf78166);
+  arrowNet = createArrow(0xffffff);
+  arrowGroup.add(arrowGravity, arrowNormal, arrowFriction, arrowNet);
+
+  function updateArrows() {
+    if (!blockMesh) return;
+    const rad = angle * Math.PI / 180;
+    const bx = blockMesh.position.x, by = blockMesh.position.y;
+
+    const gravF = mass * g;
+    const normalF = gravF * Math.cos(rad);
+    const frictionF = mu * normalF;
+    const netF = gravF * Math.sin(rad) - frictionF;
+    const scale = 0.06;
+
+    // Gravity (down)
+    arrowGravity.position.set(bx, by, 0.7);
+    arrowGravity.rotation.z = Math.PI;
+    arrowGravity.scale.y = gravF * scale;
+
+    // Normal (perpendicular to slope)
+    arrowNormal.position.set(bx, by, 0.7);
+    arrowNormal.rotation.z = -(Math.PI / 2 - rad);
+    arrowNormal.scale.y = normalF * scale;
+
+    // Friction (up the slope)
+    arrowFriction.position.set(bx, by, 0.7);
+    arrowFriction.rotation.z = Math.PI + rad;
+    arrowFriction.scale.y = Math.max(0.01, frictionF * scale);
+    arrowFriction.visible = mu > 0;
+
+    // Net force along slope (down the slope)
+    arrowNet.position.set(bx, by, 0.7);
+    arrowNet.rotation.z = rad;
+    arrowNet.scale.y = Math.max(0.01, netF * scale);
+  }
+
+  // ── Physics ────────────────────────────────────────────────────────────────
+  function resetSim() {
+    sliderPos = 0;
+    velocity = 0;
+    heatAccum = 0;
+    particles = [];
+    updateBlockPosition();
+  }
+
+  function computeState() {
+    const rad = angle * Math.PI / 180;
+    const dist = sliderPos * SLOPE_LENGTH;
+    const height = (SLOPE_LENGTH - dist) * Math.sin(rad);
+    const ke = 0.5 * mass * velocity * velocity;
+    const pe = mass * g * height;
+    const total = ke + pe + heatAccum;
+    return { ke, pe, heat: heatAccum, total, speed: velocity, work: ke - 0 };
+  }
+
+  // ── Particle helpers ───────────────────────────────────────────────────────
+  function spawnParticles(x, y) {
+    for (let i = 0; i < 3; i++) {
+      particles.push({
+        x, y, z: (Math.random() - 0.5) * 2,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: Math.random() * 1.2 + 0.3,
+        vz: (Math.random() - 0.5) * 1.5,
+        life: 1.0
+      });
+    }
+    if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES);
+  }
+
+  function updateParticles(dt) {
+    for (let p of particles) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      p.vy -= 3 * dt;
+      p.life -= dt * 1.2;
+    }
+    particles = particles.filter(p => p.life > 0);
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      const p = particles[i];
+      if (p) {
+        pPositions[i * 3] = p.x;
+        pPositions[i * 3 + 1] = p.y;
+        pPositions[i * 3 + 2] = p.z;
+      } else {
+        pPositions[i * 3] = 0; pPositions[i * 3 + 1] = -100; pPositions[i * 3 + 2] = 0;
+      }
+    }
+    pGeo.attributes.position.needsUpdate = true;
+  }
+
+  // ── Energy bar chart ───────────────────────────────────────────────────────
+  function drawEnergyBars(ke, pe, heat, total) {
+    const w = energyCanvas.width, h = energyCanvas.height;
+    ectx.clearRect(0, 0, w, h);
+    ectx.fillStyle = 'rgba(13,17,23,0)';
+    ectx.fillRect(0, 0, w, h);
+
+    const barW = 30, gap = 12, topPad = 28, bottomPad = 30;
+    const maxH = h - topPad - bottomPad;
+    const maxE = Math.max(total, 1);
+    const bars = [
+      { label: 'KE', val: ke, color: '#388bfd' },
+      { label: 'PE', val: pe, color: '#3fb950' },
+      { label: 'Heat', val: heat, color: '#f78166' }
+    ];
+
+    ectx.fillStyle = '#8b949e';
+    ectx.font = '10px system-ui';
+    ectx.textAlign = 'center';
+    ectx.fillText('Energy (J)', w / 2, 14);
+
+    bars.forEach((b, i) => {
+      const bh = (b.val / maxE) * maxH;
+      const bx = gap + i * (barW + gap);
+      const by = topPad + (maxH - bh);
+      ectx.fillStyle = b.color + '33';
+      ectx.fillRect(bx, topPad, barW, maxH);
+      ectx.fillStyle = b.color;
+      ectx.fillRect(bx, by, barW, bh);
+      ectx.fillStyle = '#c9d1d9';
+      ectx.font = '9px system-ui';
+      ectx.fillText(b.label, bx + barW / 2, h - 16);
+      ectx.fillText(b.val.toFixed(1), bx + barW / 2, h - 6);
+    });
+  }
+
+  // ── FPS ────────────────────────────────────────────────────────────────────
+  let frameCount = 0, lastFPSTime = performance.now(), fps = 0;
+  const fpsEl = document.getElementById('fps');
+
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  function onResize() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    threeCanvas.style.width = w + 'px';
+    threeCanvas.style.height = h + 'px';
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // ── Main loop ──────────────────────────────────────────────────────────────
+  let lastTime = performance.now();
+  buildScene();
+  resetSim();
+  const rad0 = angle * Math.PI / 180;
+  const totalE0 = mass * g * SLOPE_LENGTH * Math.sin(rad0);
+
+  function animate() {
+    try {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const rawDt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const dt = playing ? rawDt : 0;
+
+      // FPS
+      frameCount++;
+      if (now - lastFPSTime >= 500) {
+        fps = Math.round(frameCount / ((now - lastFPSTime) / 1000));
+        frameCount = 0; lastFPSTime = now;
+        fpsEl.textContent = 'FPS: ' + fps;
+      }
+
+      if (playing && sliderPos < 1) {
+        const rad = angle * Math.PI / 180;
+        const gravComp = g * Math.sin(rad);
+        const normalF = mass * g * Math.cos(rad);
+        const frictionAcc = (mu * normalF) / mass;
+        const acc = gravComp - frictionAcc;
+        velocity = Math.max(0, velocity + acc * dt);
+        const newPos = sliderPos + (velocity * dt) / SLOPE_LENGTH;
+        sliderPos = Math.min(1, newPos);
+
+        // heat
+        if (mu > 0) {
+          const frictionForce = mu * normalF;
+          heatAccum += frictionForce * velocity * dt;
+          if (Math.random() < velocity * 0.3) spawnParticles(blockMesh.position.x, blockMesh.position.y);
+        }
+
+        updateBlockPosition();
+      } else if (sliderPos >= 1 && playing) {
+        velocity = 0;
+      }
+
+      updateParticles(dt);
+
+      const state = computeState();
+      document.getElementById('d-ke').textContent = state.ke.toFixed(2);
+      document.getElementById('d-pe').textContent = state.pe.toFixed(2);
+      document.getElementById('d-heat').textContent = state.heat.toFixed(2);
+      document.getElementById('d-speed').textContent = state.speed.toFixed(2);
+      document.getElementById('d-total').textContent = state.total.toFixed(2);
+      document.getElementById('d-work').textContent = (state.ke).toFixed(2);
+      drawEnergyBars(state.ke, state.pe, state.heat, state.total);
+
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.error('Render error:', e);
+    }
+  }
+
+  // ── Slider events ──────────────────────────────────────────────────────────
+  function bindSlider(id, valId, decimals, callback) {
+    const el = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    el.addEventListener('input', () => {
+      valEl.textContent = parseFloat(el.value).toFixed(decimals);
+      callback(parseFloat(el.value));
+    });
+  }
+
+  bindSlider('mass', 'mass-val', 1, v => { mass = v; resetSim(); buildScene(); });
+  bindSlider('angle', 'angle-val', 0, v => { angle = v; resetSim(); buildScene(); });
+  bindSlider('mu', 'mu-val', 2, v => { mu = v; heatAccum = 0; });
+
+  document.getElementById('btn-play').addEventListener('click', function() {
+    playing = !playing;
+    this.textContent = playing ? 'Pause' : 'Play';
+    this.className = playing ? 'btn primary' : 'btn';
+  });
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    resetSim();
+    buildScene();
+    playing = true;
+    document.getElementById('btn-play').textContent = 'Pause';
+    document.getElementById('btn-play').className = 'btn primary';
+  });
+
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinematics Graphs | NeonPhysics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 280px; min-width: 280px; background: #161b22; border-right: 1px solid #30363d;
+    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
+  }
+  .panel-header { padding: 16px; background: #0d1117; border-bottom: 1px solid #30363d; }
+  .panel-header h2 { font-size: 13px; color: #58a6ff; letter-spacing: 0.05em; text-transform: uppercase; }
+  .panel-header h1 { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid #21262d; }
+  .section-title { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .control-row { margin-bottom: 12px; }
+  .control-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 5px; color: #c9d1d9; }
+  .control-label .val { color: #58a6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pro-badge { font-size: 9px; background: #6e40c9; color: #fff; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+
+  input[type=range] { width: 100%; height: 4px; appearance: none; background: #30363d; border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #58a6ff; cursor: pointer; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn { flex: 1; padding: 8px 6px; border: 1px solid #30363d; border-radius: 6px; background: #21262d; color: #c9d1d9; font-size: 12px; cursor: pointer; transition: background 0.15s; font-weight: 600; }
+  .btn:hover { background: #30363d; }
+  .btn.primary { background: #1f6feb; border-color: #388bfd; color: #fff; }
+  .btn.primary:hover { background: #388bfd; }
+
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-item { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 8px; text-align: center; }
+  .data-item .d-label { font-size: 10px; color: #8b949e; margin-bottom: 3px; }
+  .data-item .d-val { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .data-item.pos .d-val { color: #58a6ff; }
+  .data-item.vel .d-val { color: #f78166; }
+  .data-item.acc .d-val { color: #e3b341; }
+  .data-item.tim .d-val { color: #3fb950; }
+
+  .formula-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; font-size: 11px; color: #a5d6ff; line-height: 1.9; }
+  .formula-box .f-line { color: #8b949e; }
+  .formula-box .f-line span { color: #a5d6ff; }
+
+  .fps-badge { position: fixed; top: 10px; right: 10px; background: rgba(13,17,23,0.8); border: 1px solid #30363d; border-radius: 4px; padding: 3px 8px; font-size: 11px; color: #8b949e; z-index: 100; }
+
+  #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #three-wrap { flex: 1; position: relative; min-height: 0; }
+  #three-canvas { display: block; }
+  #graphs-wrap { height: 220px; display: flex; border-top: 1px solid #21262d; }
+  #xt-canvas, #vt-canvas { flex: 1; display: block; }
+  #xt-canvas { border-right: 1px solid #21262d; }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <div class="panel-header">
+    <h2>AP Physics</h2>
+    <h1>Kinematics Graphs</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Controls</div>
+    <div class="control-row">
+      <div class="control-label">Initial Velocity v₀ (m/s) <span class="val" id="v0-val">5.0</span></div>
+      <input type="range" id="v0" min="-10" max="10" step="0.5" value="5">
+    </div>
+    <div class="control-row">
+      <div class="control-label">Acceleration a (m/s²) <span class="val" id="a-val">-2.0</span></div>
+      <input type="range" id="acc-slider" min="-5" max="5" step="0.1" value="-2">
+    </div>
+    <div class="control-row">
+      <div class="control-label">
+        Time Scale <span class="val" id="ts-val">1.0×</span>
+        <span class="pro-badge">PRO</span>
+      </div>
+      <input type="range" id="timescale" min="0.25" max="2" step="0.25" value="1">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="btn-row">
+      <button class="btn primary" id="btn-play">Pause</button>
+      <button class="btn" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Live Data</div>
+    <div class="data-grid">
+      <div class="data-item pos"><div class="d-label">Position x (m)</div><div class="d-val" id="d-pos">0.00</div></div>
+      <div class="data-item vel"><div class="d-label">Velocity v (m/s)</div><div class="d-val" id="d-vel">0.00</div></div>
+      <div class="data-item acc"><div class="d-label">Accel a (m/s²)</div><div class="d-val" id="d-acc">0.00</div></div>
+      <div class="data-item tim"><div class="d-label">Time t (s)</div><div class="d-val" id="d-time">0.00</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Formulas</div>
+    <div class="formula-box">
+      <div class="f-line">x = <span>x₀ + v₀t + ½at²</span></div>
+      <div class="f-line">v = <span>v₀ + at</span></div>
+      <div class="f-line">Δx = <span>area under v-t</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="main-area">
+  <div id="three-wrap">
+    <canvas id="three-canvas"></canvas>
+  </div>
+  <div id="graphs-wrap">
+    <canvas id="xt-canvas"></canvas>
+    <canvas id="vt-canvas"></canvas>
+  </div>
+</div>
+<div class="fps-badge" id="fps">FPS: --</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  let v0 = 5, accel = -2, timeScale = 1, playing = true;
+  let t = 0;
+  const MAX_T = 12;
+  const TRACK_LEN = 14;
+  const history = [];   // {t, x, v}
+
+  const threeWrap = document.getElementById('three-wrap');
+  const threeCanvas = document.getElementById('three-canvas');
+  const xtCanvas = document.getElementById('xt-canvas');
+  const vtCanvas = document.getElementById('vt-canvas');
+  const xctx = xtCanvas.getContext('2d');
+  const vctx = vtCanvas.getContext('2d');
+
+  // ── Three.js ────────────────────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0d1117);
+  renderer.shadowMap.enabled = true;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+  camera.position.set(0, 5, 12);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 10, 5);
+  scene.add(dirLight);
+
+  // Track
+  const trackGeo = new THREE.BoxGeometry(TRACK_LEN, 0.12, 1.2);
+  const trackMat = new THREE.MeshLambertMaterial({ color: 0x2d333b });
+  const track = new THREE.Mesh(trackGeo, trackMat);
+  track.position.y = -0.26;
+  scene.add(track);
+
+  // Track rails glow
+  const railGeo = new THREE.BoxGeometry(TRACK_LEN, 0.05, 0.05);
+  const railMat = new THREE.MeshBasicMaterial({ color: 0x30363d });
+  const rail1 = new THREE.Mesh(railGeo, railMat);
+  rail1.position.set(0, -0.19, 0.6);
+  const rail2 = rail1.clone();
+  rail2.position.z = -0.6;
+  scene.add(rail1, rail2);
+
+  // Grid
+  const grid = new THREE.GridHelper(TRACK_LEN, 14, 0x21262d, 0x161b22);
+  grid.position.y = -0.19;
+  scene.add(grid);
+
+  // Car body
+  const carGroup = new THREE.Group();
+  const bodyGeo = new THREE.BoxGeometry(1.2, 0.4, 0.8);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x388bfd });
+  const carBody = new THREE.Mesh(bodyGeo, bodyMat);
+  carBody.position.y = 0.2;
+  carGroup.add(carBody);
+  // Cab
+  const cabGeo = new THREE.BoxGeometry(0.6, 0.3, 0.75);
+  const cabMat = new THREE.MeshLambertMaterial({ color: 0x58a6ff });
+  const cab = new THREE.Mesh(cabGeo, cabMat);
+  cab.position.set(0.1, 0.55, 0);
+  carGroup.add(cab);
+  // Wheels
+  const wheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.1, 12);
+  const wheelMat = new THREE.MeshLambertMaterial({ color: 0x484f58 });
+  const wpos = [[-0.42, 0, 0.42], [0.42, 0, 0.42], [-0.42, 0, -0.42], [0.42, 0, -0.42]];
+  wpos.forEach(([wx, wy, wz]) => {
+    const w = new THREE.Mesh(wheelGeo, wheelMat);
+    w.rotation.x = Math.PI / 2;
+    w.position.set(wx, wy, wz);
+    carGroup.add(w);
+  });
+  // Glow
+  const glowGeo = new THREE.BoxGeometry(1.4, 0.5, 1.0);
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x1f6feb, transparent: true, opacity: 0.12, wireframe: false });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.y = 0.2;
+  carGroup.add(glow);
+  scene.add(carGroup);
+
+  // Velocity arrow
+  const velArrowGroup = new THREE.Group();
+  const vBodyGeo = new THREE.CylinderGeometry(0.04, 0.04, 1, 8);
+  const vBodyMat = new THREE.MeshBasicMaterial({ color: 0x58a6ff });
+  const vBody = new THREE.Mesh(vBodyGeo, vBodyMat);
+  vBody.position.y = 0.5;
+  velArrowGroup.add(vBody);
+  const vHeadGeo = new THREE.ConeGeometry(0.1, 0.25, 8);
+  const vHeadMat = new THREE.MeshBasicMaterial({ color: 0x58a6ff });
+  const vHead = new THREE.Mesh(vHeadGeo, vHeadMat);
+  vHead.position.y = 1.125;
+  velArrowGroup.add(vHead);
+  velArrowGroup.rotation.z = -Math.PI / 2;
+  scene.add(velArrowGroup);
+
+  // Accel arrow
+  const accArrowGroup = new THREE.Group();
+  const aBodyGeo = new THREE.CylinderGeometry(0.04, 0.04, 1, 8);
+  const aBodyMat = new THREE.MeshBasicMaterial({ color: 0xf78166 });
+  const aBody = new THREE.Mesh(aBodyGeo, aBodyMat);
+  aBody.position.y = 0.5;
+  accArrowGroup.add(aBody);
+  const aHeadGeo = new THREE.ConeGeometry(0.1, 0.25, 8);
+  const aHeadMat = new THREE.MeshBasicMaterial({ color: 0xf78166 });
+  const aHead = new THREE.Mesh(aHeadGeo, aHeadMat);
+  aHead.position.y = 1.125;
+  accArrowGroup.add(aHead);
+  accArrowGroup.rotation.z = -Math.PI / 2;
+  scene.add(accArrowGroup);
+
+  // Trail points
+  const TRAIL_MAX = 120;
+  const trailGeo = new THREE.BufferGeometry();
+  const trailPos = new Float32Array(TRAIL_MAX * 3);
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+  const trailMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.07, transparent: true, opacity: 0.6 });
+  const trailSystem = new THREE.Points(trailGeo, trailMat);
+  scene.add(trailSystem);
+  let trailBuffer = [];
+
+  // Time indicator sprite
+  const timeDiv = document.createElement('div');
+  timeDiv.style.cssText = 'position:absolute;top:12px;right:12px;color:#3fb950;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(13,17,23,0.7);padding:4px 8px;border-radius:4px;border:1px solid #21262d;pointer-events:none;';
+  document.getElementById('three-wrap').appendChild(timeDiv);
+
+  // ── Physics ────────────────────────────────────────────────────────────────
+  function posAt(time) { return v0 * time + 0.5 * accel * time * time; }
+  function velAt(time) { return v0 + accel * time; }
+
+  function resetSim() {
+    t = 0;
+    history.length = 0;
+    trailBuffer = [];
+    history.push({ t: 0, x: posAt(0), v: velAt(0) });
+  }
+
+  // ── Graphs ─────────────────────────────────────────────────────────────────
+  function drawGraph(ctx, canvas, data, color, labelY, labelX, curT, fillArea) {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, w, h);
+
+    const pad = { l: 44, r: 14, t: 20, b: 36 };
+    const gw = w - pad.l - pad.r, gh = h - pad.t - pad.b;
+
+    // Grid
+    ctx.strokeStyle = '#21262d'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + (i / 4) * gh;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gw, y); ctx.stroke();
+    }
+    for (let i = 0; i <= 6; i++) {
+      const x = pad.l + (i / 6) * gw;
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + gh); ctx.stroke();
+    }
+
+    // Find data range
+    let minV = Infinity, maxV = -Infinity;
+    for (const d of data) { if (d < minV) minV = d; if (d > maxV) maxV = d; }
+    if (minV === maxV) { minV -= 1; maxV += 1; }
+    const range = maxV - minV;
+    minV -= range * 0.1; maxV += range * 0.1;
+    const mapY = v => pad.t + gh - ((v - minV) / (maxV - minV)) * gh;
+    const mapX = i => pad.l + (i / (MAX_T)) * gw;
+
+    // Zero line
+    const zy = mapY(0);
+    if (zy >= pad.t && zy <= pad.t + gh) {
+      ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(pad.l, zy); ctx.lineTo(pad.l + gw, zy); ctx.stroke();
+    }
+
+    // v-t fill area (displacement)
+    if (fillArea && history.length > 1) {
+      const curIdx = Math.min(data.length - 1, Math.round((curT / MAX_T) * (data.length - 1)));
+      ctx.beginPath();
+      ctx.moveTo(mapX(0), mapY(0));
+      for (let i = 0; i <= curIdx; i++) {
+        const tx = (i / (data.length - 1)) * MAX_T;
+        ctx.lineTo(mapX(tx), mapY(data[i]));
+      }
+      ctx.lineTo(mapX((curIdx / (data.length - 1)) * MAX_T), mapY(0));
+      ctx.closePath();
+      ctx.fillStyle = color + '25';
+      ctx.fill();
+    }
+
+    // Curve
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+    const step = Math.max(1, Math.floor(data.length / gw));
+    let started = false;
+    for (let i = 0; i < data.length; i += step) {
+      const tx = (i / (data.length - 1)) * MAX_T;
+      const px = mapX(tx), py = mapY(data[i]);
+      if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Current time line
+    const curX = mapX(curT);
+    ctx.strokeStyle = '#ffffff33'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(curX, pad.t); ctx.lineTo(curX, pad.t + gh); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Current value dot
+    const curIdx2 = Math.min(data.length - 1, Math.round((curT / MAX_T) * (data.length - 1)));
+    if (curIdx2 >= 0 && curIdx2 < data.length) {
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(curX, mapY(data[curIdx2]), 4, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#484f58'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + gh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + gh); ctx.lineTo(pad.l + gw, pad.t + gh); ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#8b949e'; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(labelX, pad.l + gw / 2, h - 4);
+    ctx.save(); ctx.translate(10, pad.t + gh / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText(labelY, 0, 0); ctx.restore();
+
+    // Title
+    ctx.fillStyle = '#c9d1d9'; ctx.font = 'bold 11px system-ui';
+    ctx.fillText(labelY + ' vs ' + labelX, pad.l + gw / 2, pad.t - 6);
+
+    // Y ticks
+    ctx.fillStyle = '#8b949e'; ctx.font = '9px system-ui'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const v = minV + (i / 4) * (maxV - minV);
+      ctx.fillText(v.toFixed(1), pad.l - 3, pad.t + gh - (i / 4) * gh + 3);
+    }
+  }
+
+  function buildGraphData() {
+    const N = 300;
+    const xs = [], vs = [];
+    for (let i = 0; i <= N; i++) {
+      const time = (i / N) * MAX_T;
+      xs.push(posAt(time));
+      vs.push(velAt(time));
+    }
+    return { xs, vs };
+  }
+
+  // ── FPS ────────────────────────────────────────────────────────────────────
+  let frameCount = 0, lastFPSTime = performance.now();
+  const fpsEl = document.getElementById('fps');
+
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  function onResize() {
+    const w = threeWrap.clientWidth, h = threeWrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+
+    xtCanvas.width = xtCanvas.clientWidth;
+    xtCanvas.height = 220;
+    vtCanvas.width = vtCanvas.clientWidth;
+    vtCanvas.height = 220;
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // ── Main loop ──────────────────────────────────────────────────────────────
+  let lastTime = performance.now();
+  resetSim();
+
+  function animate() {
+    try {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const rawDt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const dt = playing ? rawDt * timeScale : 0;
+
+      frameCount++;
+      if (now - lastFPSTime >= 500) {
+        const f = Math.round(frameCount / ((now - lastFPSTime) / 1000));
+        frameCount = 0; lastFPSTime = now;
+        fpsEl.textContent = 'FPS: ' + f;
+      }
+
+      if (playing) {
+        t = Math.min(t + dt, MAX_T);
+        if (t >= MAX_T) { playing = false; document.getElementById('btn-play').textContent = 'Play'; document.getElementById('btn-play').className = 'btn'; }
+      }
+
+      const x = posAt(t);
+      const v = velAt(t);
+
+      // Clamp car position
+      const carX = Math.max(-TRACK_LEN / 2 + 0.7, Math.min(TRACK_LEN / 2 - 0.7, x * 0.5));
+      carGroup.position.set(carX, 0, 0);
+
+      // Velocity arrow
+      const vScale = Math.abs(v) * 0.12;
+      velArrowGroup.position.set(carX, 0.8, 0);
+      velArrowGroup.scale.y = Math.max(0.01, vScale);
+      velArrowGroup.rotation.z = v >= 0 ? -Math.PI / 2 : Math.PI / 2;
+
+      // Accel arrow
+      const aScale = Math.abs(accel) * 0.15;
+      accArrowGroup.position.set(carX, 1.5, 0);
+      accArrowGroup.scale.y = Math.max(0.01, aScale);
+      accArrowGroup.rotation.z = accel >= 0 ? -Math.PI / 2 : Math.PI / 2;
+      accArrowGroup.visible = Math.abs(accel) > 0.05;
+
+      // Trail
+      if (playing || (history.length === 0)) {
+        trailBuffer.push(new THREE.Vector3(carX, 0.05, 0));
+        if (trailBuffer.length > TRAIL_MAX) trailBuffer.shift();
+        for (let i = 0; i < TRAIL_MAX; i++) {
+          const p = trailBuffer[i];
+          if (p) { trailPos[i * 3] = p.x; trailPos[i * 3 + 1] = p.y; trailPos[i * 3 + 2] = p.z; }
+          else { trailPos[i * 3] = 0; trailPos[i * 3 + 1] = -100; trailPos[i * 3 + 2] = 0; }
+        }
+        trailGeo.attributes.position.needsUpdate = true;
+      }
+
+      // Update UI
+      document.getElementById('d-pos').textContent = x.toFixed(2);
+      document.getElementById('d-vel').textContent = v.toFixed(2);
+      document.getElementById('d-acc').textContent = accel.toFixed(2);
+      document.getElementById('d-time').textContent = t.toFixed(2);
+      timeDiv.textContent = 't = ' + t.toFixed(2) + ' s';
+
+      // Graphs
+      const { xs, vs } = buildGraphData();
+      drawGraph(xctx, xtCanvas, xs, '#388bfd', 'x (m)', 't (s)', t, false);
+      drawGraph(vctx, vtCanvas, vs, '#f78166', 'v (m/s)', 't (s)', t, true);
+
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.error('Render error:', e);
+    }
+  }
+
+  // ── Controls ───────────────────────────────────────────────────────────────
+  function bindSlider(id, valId, decimals, suffix, callback) {
+    const el = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    el.addEventListener('input', () => {
+      valEl.textContent = parseFloat(el.value).toFixed(decimals) + (suffix || '');
+      callback(parseFloat(el.value));
+    });
+  }
+
+  bindSlider('v0', 'v0-val', 1, '', v => { v0 = v; resetSim(); });
+  bindSlider('acc-slider', 'a-val', 1, '', v => { accel = v; resetSim(); });
+  bindSlider('timescale', 'ts-val', 2, '×', v => { timeScale = v; });
+
+  document.getElementById('btn-play').addEventListener('click', function() {
+    if (t >= MAX_T) { resetSim(); playing = true; }
+    else playing = !playing;
+    this.textContent = playing ? 'Pause' : 'Play';
+    this.className = playing ? 'btn primary' : 'btn';
+  });
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    resetSim();
+    playing = true;
+    trailBuffer = [];
+    document.getElementById('btn-play').textContent = 'Pause';
+    document.getElementById('btn-play').className = 'btn primary';
+  });
+
+  animate();
+})();
+</script>
+</body>
+</html>

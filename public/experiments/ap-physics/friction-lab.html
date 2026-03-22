@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friction Lab | NeonPhysics</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+
+  /* ── Header ── */
+  #header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 20px; background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #334155; z-index: 20; flex-shrink: 0;
+  }
+  #header .icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, #3B82F6, #0EA5E9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #fff;
+  }
+  #header h1 { font-size: 18px; font-weight: 700; color: #f1f5f9; }
+  #header .subtitle { font-size: 12px; color: #94a3b8; margin-top: 1px; }
+  #status-badge {
+    margin-left: auto; padding: 4px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+    transition: all 0.3s ease;
+  }
+  #status-badge.static { background: #166534; color: #4ade80; }
+  #status-badge.sliding { background: #7c2d12; color: #fb923c; }
+  #status-badge.critical { background: #713f12; color: #fbbf24; }
+
+  /* ── Layout ── */
+  #layout { display: flex; flex: 1; min-height: 0; }
+
+  /* ── Left Panel ── */
+  #left-panel {
+    width: 300px; min-width: 300px; background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(12px); border-right: 1px solid #334155;
+    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
+    transition: margin-left 0.3s ease;
+  }
+  #left-panel.collapsed { margin-left: -300px; }
+  #toggle-left {
+    position: absolute; left: 300px; top: 50%; transform: translateY(-50%);
+    width: 24px; height: 48px; background: #1e293b; border: 1px solid #334155;
+    border-left: none; border-radius: 0 6px 6px 0; cursor: pointer;
+    color: #94a3b8; font-size: 14px; z-index: 15; display: flex;
+    align-items: center; justify-content: center; transition: left 0.3s ease;
+  }
+  #left-panel.collapsed ~ #toggle-left { left: 0; }
+
+  .panel-section { padding: 14px 16px; border-bottom: 1px solid #1e293b; }
+  .panel-section-title {
+    font-size: 11px; color: #64748b; text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 10px; font-weight: 600;
+  }
+  .formula-card {
+    background: rgba(15, 23, 42, 0.7); border: 1px solid #334155;
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .formula-card .katex { font-size: 14px; }
+  .formula-label { font-size: 10px; color: #64748b; margin-bottom: 4px; }
+
+  .knowledge-card {
+    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(14,165,233,0.05));
+    border: 1px solid rgba(59,130,246,0.3); border-radius: 8px;
+    padding: 12px; font-size: 12px; line-height: 1.6; color: #cbd5e1;
+  }
+  .knowledge-card strong { color: #60a5fa; }
+
+  /* ── Canvas ── */
+  #canvas-wrap { flex: 1; position: relative; min-width: 0; }
+  #three-canvas { display: block; width: 100%; height: 100%; }
+
+  /* ── FPS ── */
+  #fps { position: absolute; top: 8px; left: 8px; font-size: 11px; color: #475569; z-index: 5; font-variant-numeric: tabular-nums; }
+
+  /* ── Bottom Controls ── */
+  #bottom-panel {
+    flex-shrink: 0; background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(12px);
+    border-top: 1px solid #334155; padding: 12px 20px; z-index: 10;
+  }
+  #controls-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+    align-items: start;
+  }
+  .ctrl-group { display: flex; flex-direction: column; }
+  .ctrl-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #94a3b8; margin-bottom: 5px;
+  }
+  .ctrl-val { color: #60a5fa; font-weight: 700; font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    width: 100%; height: 5px; appearance: none; -webkit-appearance: none;
+    background: #334155; border-radius: 3px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9);
+    cursor: pointer; box-shadow: 0 0 6px rgba(59,130,246,0.5);
+  }
+
+  #btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: center; }
+  .ctrl-btn {
+    padding: 7px 18px; border: 1px solid #334155; border-radius: 6px;
+    background: #1e293b; color: #cbd5e1; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .ctrl-btn:hover { background: #334155; }
+  .ctrl-btn.primary { background: linear-gradient(135deg, #3B82F6, #0EA5E9); border-color: #60a5fa; color: #fff; }
+  .ctrl-btn.primary:hover { opacity: 0.9; }
+
+  /* ── Quiz Panel ── */
+  #quiz-toggle {
+    position: fixed; bottom: 120px; right: 16px; width: 40px; height: 40px;
+    border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9);
+    border: none; color: #fff; font-size: 18px; cursor: pointer; z-index: 25;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+  }
+  #quiz-panel {
+    position: fixed; bottom: 120px; right: 16px; width: 320px;
+    background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(16px);
+    border: 1px solid #334155; border-radius: 12px; padding: 16px;
+    z-index: 30; display: none; max-height: 400px; overflow-y: auto;
+  }
+  #quiz-panel.open { display: block; }
+  #quiz-panel h3 { font-size: 14px; margin-bottom: 12px; color: #f1f5f9; }
+  .quiz-q { margin-bottom: 14px; }
+  .quiz-q p { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.5; }
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; padding: 8px 10px;
+    margin-bottom: 4px; border: 1px solid #334155; border-radius: 6px;
+    background: #0f172a; color: #e2e8f0; font-size: 12px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quiz-opt:hover { border-color: #60a5fa; background: rgba(59,130,246,0.1); }
+  .quiz-opt.correct { border-color: #4ade80; background: rgba(74,222,128,0.15); color: #4ade80; }
+  .quiz-opt.wrong { border-color: #f87171; background: rgba(248,113,113,0.15); color: #f87171; }
+  .quiz-feedback { font-size: 11px; margin-top: 4px; padding: 6px 8px; border-radius: 4px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: rgba(74,222,128,0.1); color: #4ade80; }
+  .quiz-feedback.wrong-fb { background: rgba(248,113,113,0.1); color: #f87171; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    #controls-grid { grid-template-columns: repeat(3, 1fr); }
+    #left-panel { width: 260px; min-width: 260px; }
+  }
+  @media (max-width: 640px) {
+    #controls-grid { grid-template-columns: repeat(2, 1fr); }
+    #left-panel { position: absolute; height: 100%; z-index: 20; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div class="icon">F</div>
+  <div>
+    <h1>Friction Lab</h1>
+    <div class="subtitle">Static &amp; Kinetic Friction on Flat and Inclined Surfaces</div>
+  </div>
+  <div id="status-badge" class="static">STATIC</div>
+</div>
+
+<!-- Main Layout -->
+<div id="layout">
+  <!-- Left Panel -->
+  <div id="left-panel">
+    <div class="panel-section">
+      <div class="panel-section-title">Key Equations</div>
+      <div class="formula-card">
+        <div class="formula-label">Static Friction (max)</div>
+        <div id="eq-fs"></div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-label">Kinetic Friction</div>
+        <div id="eq-fk"></div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-label">Normal Force</div>
+        <div id="eq-normal"></div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-label">Gravity Component (parallel)</div>
+        <div id="eq-parallel"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Concept Guide</div>
+      <div class="knowledge-card">
+        <strong>Static friction</strong> prevents motion up to a maximum value
+        <strong>f<sub>s,max</sub> = &mu;<sub>s</sub>N</strong>. Once the net force exceeds this threshold,
+        the object begins sliding and <strong>kinetic friction</strong> takes over at a lower constant value
+        <strong>f<sub>k</sub> = &mu;<sub>k</sub>N</strong>.<br><br>
+        On an inclined plane, gravity splits into a component <strong>mg sin&theta;</strong> pulling
+        the object down the slope and <strong>mg cos&theta;</strong> pressing it into the surface.
+        The <strong>critical angle</strong> occurs when tan&theta; = &mu;<sub>s</sub>.
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Live Values</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+        <div class="formula-card" style="text-align:center;">
+          <div class="formula-label">Normal Force</div>
+          <div id="live-N" style="font-size:14px;font-weight:700;color:#4ade80;">0 N</div>
+        </div>
+        <div class="formula-card" style="text-align:center;">
+          <div class="formula-label">Friction</div>
+          <div id="live-f" style="font-size:14px;font-weight:700;color:#f87171;">0 N</div>
+        </div>
+        <div class="formula-card" style="text-align:center;">
+          <div class="formula-label">mg sin&theta;</div>
+          <div id="live-par" style="font-size:14px;font-weight:700;color:#22d3ee;">0 N</div>
+        </div>
+        <div class="formula-card" style="text-align:center;">
+          <div class="formula-label">Acceleration</div>
+          <div id="live-a" style="font-size:14px;font-weight:700;color:#fbbf24;">0 m/s&sup2;</div>
+        </div>
+        <div class="formula-card" style="text-align:center;">
+          <div class="formula-label">Velocity</div>
+          <div id="live-v" style="font-size:14px;font-weight:700;color:#a78bfa;">0 m/s</div>
+        </div>
+        <div class="formula-card" style="text-align:center;">
+          <div class="formula-label">Net Force</div>
+          <div id="live-net" style="font-size:14px;font-weight:700;color:#fb923c;">0 N</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button id="toggle-left" title="Toggle panel">&lsaquo;</button>
+
+  <!-- 3D Canvas -->
+  <div id="canvas-wrap">
+    <div id="fps">-- fps</div>
+  </div>
+</div>
+
+<!-- Bottom Controls -->
+<div id="bottom-panel">
+  <div id="controls-grid">
+    <div class="ctrl-group">
+      <div class="ctrl-label">Mass (kg) <span class="ctrl-val" id="mass-val">10</span></div>
+      <input type="range" id="sl-mass" min="1" max="100" step="1" value="10">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Surface Angle (&deg;) <span class="ctrl-val" id="angle-val">15</span></div>
+      <input type="range" id="sl-angle" min="0" max="60" step="1" value="15">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">&mu;<sub>s</sub> (static) <span class="ctrl-val" id="mus-val">0.50</span></div>
+      <input type="range" id="sl-mus" min="0.1" max="1.5" step="0.05" value="0.5">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">&mu;<sub>k</sub> (kinetic) <span class="ctrl-val" id="muk-val">0.30</span></div>
+      <input type="range" id="sl-muk" min="0.05" max="1.0" step="0.05" value="0.3">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Applied Force (N) <span class="ctrl-val" id="force-val">0</span></div>
+      <input type="range" id="sl-force" min="0" max="200" step="1" value="0">
+    </div>
+  </div>
+  <div id="btn-row">
+    <button class="ctrl-btn primary" id="btn-play">&#9654; Play</button>
+    <button class="ctrl-btn" id="btn-pause">&#10074;&#10074; Pause</button>
+    <button class="ctrl-btn" id="btn-reset">&#8635; Reset</button>
+    <button class="ctrl-btn" id="btn-random">&#127922; Random Experiment</button>
+  </div>
+</div>
+
+<!-- Quiz Toggle -->
+<button id="quiz-toggle" title="Quiz">?</button>
+
+<!-- Quiz Panel -->
+<div id="quiz-panel">
+  <h3>Quick Quiz</h3>
+  <div class="quiz-q" id="q1">
+    <p><strong>Q1:</strong> A 10 kg block sits on a flat surface with &mu;<sub>s</sub> = 0.5.
+    What is the maximum static friction force?</p>
+    <button class="quiz-opt" data-q="1" data-correct="false">A) 5 N</button>
+    <button class="quiz-opt" data-q="1" data-correct="true">B) 49 N</button>
+    <button class="quiz-opt" data-q="1" data-correct="false">C) 98 N</button>
+    <button class="quiz-opt" data-q="1" data-correct="false">D) 50 N</button>
+    <div class="quiz-feedback" id="fb1"></div>
+  </div>
+  <div class="quiz-q" id="q2">
+    <p><strong>Q2:</strong> On an incline, at what angle does a block start sliding if &mu;<sub>s</sub> = 0.577?</p>
+    <button class="quiz-opt" data-q="2" data-correct="false">A) 25&deg;</button>
+    <button class="quiz-opt" data-q="2" data-correct="true">B) 30&deg;</button>
+    <button class="quiz-opt" data-q="2" data-correct="false">C) 45&deg;</button>
+    <button class="quiz-opt" data-q="2" data-correct="false">D) 60&deg;</button>
+    <div class="quiz-feedback" id="fb2"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+'use strict';
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── KaTeX Render ── */
+  try {
+    katex.render('f_s \\leq \\mu_s \\, N', document.getElementById('eq-fs'), { displayMode: true });
+    katex.render('f_k = \\mu_k \\, N', document.getElementById('eq-fk'), { displayMode: true });
+    katex.render('N = mg\\cos\\theta', document.getElementById('eq-normal'), { displayMode: true });
+    katex.render('F_{\\parallel} = mg\\sin\\theta', document.getElementById('eq-parallel'), { displayMode: true });
+  } catch (e) {
+    console.warn('KaTeX render failed:', e);
+  }
+
+  /* ── Constants ── */
+  const G = 9.8;
+  const ARROW_SCALE = 0.012;
+  const RAMP_LENGTH = 8;
+  const RAMP_WIDTH = 4;
+  const RAMP_THICKNESS = 0.3;
+  const BLOCK_SIZE = 0.8;
+
+  /* ── Pre-allocated vectors ── */
+  const _v0 = new THREE.Vector3();
+  const _v1 = new THREE.Vector3();
+  const _q0 = new THREE.Quaternion();
+
+  /* ── State ── */
+  const state = {
+    mass: 10, angle: 15, muS: 0.5, muK: 0.3, appliedForce: 0,
+    playing: false, sliding: false,
+    blockPos: 0, blockVel: 0,
+    targetAngle: 15 * Math.PI / 180,
+    currentAngle: 15 * Math.PI / 180
+  };
+
+  /* ── DOM refs ── */
+  const slMass = document.getElementById('sl-mass');
+  const slAngle = document.getElementById('sl-angle');
+  const slMuS = document.getElementById('sl-mus');
+  const slMuK = document.getElementById('sl-muk');
+  const slForce = document.getElementById('sl-force');
+  const massVal = document.getElementById('mass-val');
+  const angleVal = document.getElementById('angle-val');
+  const musVal = document.getElementById('mus-val');
+  const mukVal = document.getElementById('muk-val');
+  const forceVal = document.getElementById('force-val');
+  const statusBadge = document.getElementById('status-badge');
+  const fpsEl = document.getElementById('fps');
+  const liveN = document.getElementById('live-N');
+  const liveF = document.getElementById('live-f');
+  const livePar = document.getElementById('live-par');
+  const liveA = document.getElementById('live-a');
+  const liveV = document.getElementById('live-v');
+  const liveNet = document.getElementById('live-net');
+
+  /* ── Three.js Setup ── */
+  const wrap = document.getElementById('canvas-wrap');
+  let scene, camera, renderer, controls;
+  let rampGroup, blockMesh;
+  let arrowNormal, arrowFriction, arrowGravity, arrowGravPar, arrowGravPerp, arrowApplied;
+
+  try {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.Fog(0x0f172a, 20, 50);
+
+    camera = new THREE.PerspectiveCamera(50, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
+    camera.position.set(8, 6, 10);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    wrap.appendChild(renderer.domElement);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 2, 0);
+    controls.update();
+
+    /* Lights */
+    const ambient = new THREE.AmbientLight(0x4466aa, 0.5);
+    scene.add(ambient);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(8, 12, 6);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.set(1024, 1024);
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 30;
+    dirLight.shadow.camera.left = -10;
+    dirLight.shadow.camera.right = 10;
+    dirLight.shadow.camera.top = 10;
+    dirLight.shadow.camera.bottom = -10;
+    scene.add(dirLight);
+
+    const pointLight = new THREE.PointLight(0x3B82F6, 0.4, 20);
+    pointLight.position.set(-5, 8, -3);
+    scene.add(pointLight);
+
+    const hemiLight = new THREE.HemisphereLight(0x3B82F6, 0x0f172a, 0.3);
+    scene.add(hemiLight);
+
+    /* Ground grid */
+    const gridHelper = new THREE.GridHelper(30, 30, 0x1e3a5f, 0x0f2035);
+    scene.add(gridHelper);
+
+    /* ── Ramp ── */
+    rampGroup = new THREE.Group();
+    scene.add(rampGroup);
+
+    const rampGeo = new THREE.BoxGeometry(RAMP_LENGTH, RAMP_THICKNESS, RAMP_WIDTH);
+    const rampMat = new THREE.MeshStandardMaterial({
+      color: 0x334155, roughness: 0.6, metalness: 0.2
+    });
+    const rampMesh = new THREE.Mesh(rampGeo, rampMat);
+    rampMesh.receiveShadow = true;
+    rampMesh.position.set(RAMP_LENGTH / 2, 0, 0);
+    rampGroup.add(rampMesh);
+
+    /* Ramp surface lines */
+    const lineCount = 12;
+    for (let i = 0; i <= lineCount; i++) {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0.1, RAMP_THICKNESS / 2 + 0.01, -RAMP_WIDTH / 2 + (RAMP_WIDTH / lineCount) * i),
+        new THREE.Vector3(RAMP_LENGTH - 0.1, RAMP_THICKNESS / 2 + 0.01, -RAMP_WIDTH / 2 + (RAMP_WIDTH / lineCount) * i)
+      ]);
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.4 });
+      rampGroup.add(new THREE.Line(lineGeo, lineMat));
+    }
+
+    /* Ramp pivot at bottom-left corner */
+    rampGroup.position.set(-RAMP_LENGTH / 2, RAMP_THICKNESS / 2, 0);
+
+    /* ── Block ── */
+    const blockGeo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    const blockMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b, roughness: 0.4, metalness: 0.3
+    });
+    blockMesh = new THREE.Mesh(blockGeo, blockMat);
+    blockMesh.castShadow = true;
+    rampGroup.add(blockMesh);
+    updateBlockPosition();
+
+    /* ── Force Arrows ── */
+    const ORIGIN = new THREE.Vector3(0, 0, 0);
+    const UP = new THREE.Vector3(0, 1, 0);
+
+    arrowNormal = new THREE.ArrowHelper(UP, ORIGIN, 1, 0x4ade80, 0.15, 0.1);
+    arrowFriction = new THREE.ArrowHelper(UP, ORIGIN, 1, 0xf87171, 0.15, 0.1);
+    arrowGravity = new THREE.ArrowHelper(UP, ORIGIN, 1, 0x3B82F6, 0.15, 0.1);
+    arrowGravPar = new THREE.ArrowHelper(UP, ORIGIN, 1, 0x22d3ee, 0.12, 0.08);
+    arrowGravPerp = new THREE.ArrowHelper(UP, ORIGIN, 1, 0xd946ef, 0.12, 0.08);
+    arrowApplied = new THREE.ArrowHelper(UP, ORIGIN, 1, 0xfbbf24, 0.15, 0.1);
+
+    scene.add(arrowNormal);
+    scene.add(arrowFriction);
+    scene.add(arrowGravity);
+    scene.add(arrowGravPar);
+    scene.add(arrowGravPerp);
+    scene.add(arrowApplied);
+
+    /* ── Resize ── */
+    window.addEventListener('resize', function () {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    /* ── Animation Loop ── */
+    let lastTime = performance.now();
+    let frameCount = 0;
+    let fpsTime = 0;
+
+    renderer.setAnimationLoop(function (time) {
+      const dt = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
+
+      /* FPS */
+      frameCount++;
+      fpsTime += dt;
+      if (fpsTime >= 0.5) {
+        fpsEl.textContent = Math.round(frameCount / fpsTime) + ' fps';
+        frameCount = 0;
+        fpsTime = 0;
+      }
+
+      /* Smooth angle transition */
+      const angleDiff = state.targetAngle - state.currentAngle;
+      if (Math.abs(angleDiff) > 0.001) {
+        state.currentAngle += angleDiff * Math.min(1, dt * 5);
+      } else {
+        state.currentAngle = state.targetAngle;
+      }
+      rampGroup.rotation.z = state.currentAngle;
+
+      /* Physics step */
+      if (state.playing) {
+        physicsStep(dt);
+      }
+
+      /* Update visuals */
+      updateBlockPosition();
+      updateArrows();
+      updateLiveValues();
+
+      controls.update();
+      renderer.render(scene, camera);
+    });
+
+  } catch (err) {
+    console.error('Three.js initialization failed:', err);
+    wrap.innerHTML = '<div style="padding:40px;color:#f87171;text-align:center;">3D rendering failed. ' + err.message + '</div>';
+  }
+
+  /* ── Physics ── */
+  function computeForces() {
+    const theta = state.currentAngle;
+    const m = state.mass;
+    const mg = m * G;
+    const cosT = Math.cos(theta);
+    const sinT = Math.sin(theta);
+
+    const normalForce = mg * cosT;
+    const gravParallel = mg * sinT;
+    const maxStaticFriction = state.muS * normalForce;
+    const kineticFriction = state.muK * normalForce;
+
+    /* Net force along incline: positive = up the slope */
+    /* Applied force pushes up, gravity component pulls down */
+    const netDriving = state.appliedForce - gravParallel;
+
+    let frictionForce = 0;
+    let isSliding = state.sliding;
+    let acceleration = 0;
+
+    if (!state.sliding) {
+      /* Static case */
+      if (Math.abs(netDriving) > maxStaticFriction) {
+        isSliding = true;
+      } else {
+        frictionForce = -netDriving; /* friction opposes tendency */
+        acceleration = 0;
+      }
+    }
+
+    if (isSliding) {
+      /* Determine friction direction: opposes motion */
+      if (state.blockVel > 0.001) {
+        frictionForce = -kineticFriction; /* moving up, friction down */
+      } else if (state.blockVel < -0.001) {
+        frictionForce = kineticFriction; /* moving down, friction up */
+      } else {
+        /* At rest but was sliding - check if should remain sliding */
+        if (Math.abs(netDriving) > maxStaticFriction) {
+          frictionForce = netDriving > 0 ? -kineticFriction : kineticFriction;
+        } else {
+          isSliding = false;
+          frictionForce = -netDriving;
+        }
+      }
+
+      if (isSliding) {
+        acceleration = (netDriving + frictionForce) / m;
+      }
+    }
+
+    return {
+      normalForce: normalForce,
+      gravParallel: gravParallel,
+      gravPerp: mg * cosT,
+      gravity: mg,
+      frictionForce: frictionForce,
+      maxStaticFriction: maxStaticFriction,
+      kineticFriction: kineticFriction,
+      netDriving: netDriving,
+      acceleration: acceleration,
+      isSliding: isSliding,
+      netForce: isSliding ? (netDriving + frictionForce) : 0
+    };
+  }
+
+  function physicsStep(dt) {
+    const f = computeForces();
+    state.sliding = f.isSliding;
+
+    if (state.sliding) {
+      /* Verlet-style integration */
+      state.blockVel += f.acceleration * dt;
+      state.blockPos += state.blockVel * dt;
+
+      /* Clamp block position */
+      if (state.blockPos < 0) {
+        state.blockPos = 0;
+        state.blockVel = 0;
+        if (Math.abs(f.netDriving) <= f.maxStaticFriction) {
+          state.sliding = false;
+        }
+      }
+      if (state.blockPos > RAMP_LENGTH - BLOCK_SIZE) {
+        state.blockPos = RAMP_LENGTH - BLOCK_SIZE;
+        state.blockVel = 0;
+      }
+    }
+  }
+
+  function updateBlockPosition() {
+    const posAlongRamp = 1.5 + state.blockPos;
+    blockMesh.position.set(
+      posAlongRamp,
+      RAMP_THICKNESS / 2 + BLOCK_SIZE / 2,
+      0
+    );
+  }
+
+  function updateArrows() {
+    const f = computeForces();
+    const theta = state.currentAngle;
+
+    /* Get block world position */
+    blockMesh.getWorldPosition(_v0);
+    const bx = _v0.x;
+    const by = _v0.y;
+    const bz = _v0.z;
+
+    const cosT = Math.cos(theta);
+    const sinT = Math.sin(theta);
+
+    /* Normal force: perpendicular to ramp surface, pointing away */
+    const nLen = Math.max(f.normalForce * ARROW_SCALE, 0.01);
+    arrowNormal.position.set(bx, by, bz);
+    _v0.set(-sinT, cosT, 0).normalize();
+    arrowNormal.setDirection(_v0);
+    arrowNormal.setLength(nLen, Math.min(nLen * 0.2, 0.2), Math.min(nLen * 0.1, 0.12));
+
+    /* Friction: along ramp surface */
+    const fLen = Math.max(Math.abs(f.frictionForce) * ARROW_SCALE, 0.01);
+    arrowFriction.position.set(bx, by, bz);
+    /* frictionForce > 0 means up the slope, < 0 means down */
+    const fDir = f.frictionForce >= 0 ? 1 : -1;
+    _v0.set(cosT * fDir, sinT * fDir, 0).normalize();
+    arrowFriction.setDirection(_v0);
+    arrowFriction.setLength(fLen, Math.min(fLen * 0.2, 0.2), Math.min(fLen * 0.1, 0.12));
+    arrowFriction.visible = Math.abs(f.frictionForce) > 0.1;
+
+    /* Gravity: straight down */
+    const gLen = Math.max(f.gravity * ARROW_SCALE, 0.01);
+    arrowGravity.position.set(bx, by, bz);
+    _v0.set(0, -1, 0);
+    arrowGravity.setDirection(_v0);
+    arrowGravity.setLength(gLen, Math.min(gLen * 0.2, 0.2), Math.min(gLen * 0.1, 0.12));
+
+    /* Gravity parallel component: down the slope */
+    const gpLen = Math.max(f.gravParallel * ARROW_SCALE, 0.01);
+    arrowGravPar.position.set(bx, by, bz);
+    _v0.set(-cosT, -sinT, 0).normalize();
+    arrowGravPar.setDirection(_v0);
+    arrowGravPar.setLength(gpLen, Math.min(gpLen * 0.15, 0.15), Math.min(gpLen * 0.08, 0.1));
+
+    /* Gravity perpendicular component: into the surface */
+    const gppLen = Math.max(f.gravPerp * ARROW_SCALE, 0.01);
+    arrowGravPerp.position.set(bx, by, bz);
+    _v0.set(sinT, -cosT, 0).normalize();
+    arrowGravPerp.setDirection(_v0);
+    arrowGravPerp.setLength(gppLen, Math.min(gppLen * 0.15, 0.15), Math.min(gppLen * 0.08, 0.1));
+
+    /* Applied force: up the slope */
+    const aLen = Math.max(state.appliedForce * ARROW_SCALE, 0.01);
+    arrowApplied.position.set(bx, by, bz);
+    _v0.set(cosT, sinT, 0).normalize();
+    arrowApplied.setDirection(_v0);
+    arrowApplied.setLength(aLen, Math.min(aLen * 0.2, 0.2), Math.min(aLen * 0.1, 0.12));
+    arrowApplied.visible = state.appliedForce > 0.1;
+  }
+
+  function updateLiveValues() {
+    const f = computeForces();
+
+    liveN.textContent = f.normalForce.toFixed(1) + ' N';
+    liveF.textContent = Math.abs(f.frictionForce).toFixed(1) + ' N';
+    livePar.textContent = f.gravParallel.toFixed(1) + ' N';
+    liveA.textContent = f.acceleration.toFixed(2) + ' m/s\u00B2';
+    liveV.textContent = state.blockVel.toFixed(2) + ' m/s';
+    liveNet.textContent = f.netForce.toFixed(1) + ' N';
+
+    /* Status badge */
+    const netDriving = Math.abs(f.netDriving);
+    if (state.sliding) {
+      statusBadge.textContent = 'SLIDING';
+      statusBadge.className = 'sliding';
+    } else if (netDriving > f.maxStaticFriction * 0.85) {
+      statusBadge.textContent = 'NEAR CRITICAL';
+      statusBadge.className = 'critical';
+    } else {
+      statusBadge.textContent = 'STATIC';
+      statusBadge.className = 'static';
+    }
+  }
+
+  /* ── Slider Handlers ── */
+  function onSliderInput() {
+    state.mass = parseFloat(slMass.value);
+    state.angle = parseFloat(slAngle.value);
+    state.muS = parseFloat(slMuS.value);
+    state.muK = parseFloat(slMuK.value);
+    state.appliedForce = parseFloat(slForce.value);
+    state.targetAngle = state.angle * Math.PI / 180;
+
+    massVal.textContent = state.mass;
+    angleVal.textContent = state.angle;
+    musVal.textContent = state.muS.toFixed(2);
+    mukVal.textContent = state.muK.toFixed(2);
+    forceVal.textContent = state.appliedForce;
+
+    /* Ensure muK <= muS */
+    if (state.muK > state.muS) {
+      state.muK = state.muS;
+      slMuK.value = state.muK;
+      mukVal.textContent = state.muK.toFixed(2);
+    }
+  }
+
+  slMass.addEventListener('input', onSliderInput);
+  slAngle.addEventListener('input', onSliderInput);
+  slMuS.addEventListener('input', onSliderInput);
+  slMuK.addEventListener('input', onSliderInput);
+  slForce.addEventListener('input', onSliderInput);
+
+  /* ── Buttons ── */
+  document.getElementById('btn-play').addEventListener('click', function () {
+    state.playing = true;
+  });
+  document.getElementById('btn-pause').addEventListener('click', function () {
+    state.playing = false;
+  });
+  document.getElementById('btn-reset').addEventListener('click', function () {
+    state.playing = false;
+    state.sliding = false;
+    state.blockPos = 0;
+    state.blockVel = 0;
+  });
+
+  /* Presets */
+  const presets = [
+    { name: 'Flat + Push', mass: 10, angle: 0, muS: 0.5, muK: 0.3, force: 50 },
+    { name: 'Critical Angle', mass: 10, angle: 30, muS: 0.577, muK: 0.4, force: 0 },
+    { name: 'Ice Surface', mass: 20, angle: 15, muS: 0.1, muK: 0.05, force: 0 }
+  ];
+
+  document.getElementById('btn-random').addEventListener('click', function () {
+    const p = presets[Math.floor(Math.random() * presets.length)];
+    slMass.value = p.mass;
+    slAngle.value = p.angle;
+    slMuS.value = p.muS;
+    slMuK.value = p.muK;
+    slForce.value = p.force;
+    onSliderInput();
+
+    /* Reset simulation */
+    state.playing = false;
+    state.sliding = false;
+    state.blockPos = 0;
+    state.blockVel = 0;
+  });
+
+  /* ── Left Panel Toggle ── */
+  const leftPanel = document.getElementById('left-panel');
+  const toggleBtn = document.getElementById('toggle-left');
+  toggleBtn.addEventListener('click', function () {
+    leftPanel.classList.toggle('collapsed');
+    toggleBtn.textContent = leftPanel.classList.contains('collapsed') ? '\u203A' : '\u2039';
+    /* Trigger resize for Three.js */
+    setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 350);
+  });
+
+  /* ── Quiz ── */
+  const quizToggle = document.getElementById('quiz-toggle');
+  const quizPanel = document.getElementById('quiz-panel');
+  quizToggle.addEventListener('click', function () {
+    quizPanel.classList.toggle('open');
+  });
+
+  const quizAnswered = { 1: false, 2: false };
+  document.querySelectorAll('.quiz-opt').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const q = btn.getAttribute('data-q');
+      if (quizAnswered[q]) return;
+      quizAnswered[q] = true;
+
+      const isCorrect = btn.getAttribute('data-correct') === 'true';
+      const fb = document.getElementById('fb' + q);
+
+      /* Mark all options for this question */
+      document.querySelectorAll('.quiz-opt[data-q="' + q + '"]').forEach(function (opt) {
+        if (opt.getAttribute('data-correct') === 'true') {
+          opt.classList.add('correct');
+        } else if (opt === btn && !isCorrect) {
+          opt.classList.add('wrong');
+        }
+        opt.style.pointerEvents = 'none';
+      });
+
+      fb.classList.add('show');
+      if (isCorrect) {
+        fb.classList.add('correct-fb');
+        if (q === '1') {
+          fb.textContent = 'Correct! f_s,max = \u03BCs \u00D7 N = 0.5 \u00D7 (10 \u00D7 9.8) = 49 N';
+        } else {
+          fb.textContent = 'Correct! Critical angle \u03B8 = arctan(\u03BCs) = arctan(0.577) \u2248 30\u00B0';
+        }
+      } else {
+        fb.classList.add('wrong-fb');
+        if (q === '1') {
+          fb.textContent = 'Not quite. f_s,max = \u03BCs \u00D7 mg = 0.5 \u00D7 98 = 49 N. The answer is B.';
+        } else {
+          fb.textContent = 'Not quite. \u03B8 = arctan(0.577) \u2248 30\u00B0. The answer is B.';
+        }
+      }
+    });
+  });
+
+  /* Initial state */
+  onSliderInput();
+});
+</script>
+</body>
+</html>

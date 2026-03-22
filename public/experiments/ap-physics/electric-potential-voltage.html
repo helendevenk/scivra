@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electric Potential & Equipotential Surfaces — NeonPhysics AP Physics 2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden}
+    .layout{display:flex;height:100vh;width:100vw}
+    .canvas-wrap{position:relative;flex:1;min-width:0}
+    #c{display:block;width:100%;height:100%}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(13,17,23,.9);border:1px solid rgba(99,179,237,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:210px}
+    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:8px}
+    .stat-row:last-child{margin-bottom:0}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .fps-badge{position:absolute;bottom:16px;left:16px;background:rgba(13,17,23,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;font-variant-numeric:tabular-nums}
+    .orange{color:#fb923c}.red{color:#fca5a5}.blue{color:#60a5fa}.green{color:#86efac}.yellow{color:#fde68a}
+    .sidebar{width:280px;flex-shrink:0;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;display:flex;flex-direction:column}
+    .sidebar-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+    .badge-row{display:flex;gap:8px;margin-bottom:8px}
+    .badge{background:rgba(99,179,237,.15);border:1px solid rgba(99,179,237,.3);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.1rem;font-weight:700;color:#f0f4ff;line-height:1.3}
+    .subtitle{color:#64748b;font-size:.8rem;margin-top:3px}
+    .section{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:14px}
+    .param-row:last-child{margin-bottom:0}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(99,179,237,.2);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#60a5fa;cursor:pointer;transition:background .15s}
+    input[type=range]::-webkit-slider-thumb:hover{background:#93c5fd}
+    .toggle-row{display:flex;gap:8px;margin-top:4px}
+    .toggle-btn{flex:1;padding:7px 0;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#64748b;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+    .toggle-btn.active-pos{background:rgba(252,165,165,.15);border-color:rgba(252,165,165,.4);color:#fca5a5}
+    .toggle-btn.active-neg{background:rgba(96,165,250,.15);border-color:rgba(96,165,250,.4);color:#60a5fa}
+    .data-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .data-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px 12px}
+    .data-card-label{font-size:10px;color:#64748b;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .data-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#e8eaf0}
+    .formula-section{padding:16px 20px;flex:1}
+    .formula-box{background:rgba(99,179,237,.05);border:1px solid rgba(99,179,237,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-text{font-family:'JetBrains Mono',monospace;font-size:13px;color:#93c5fd;letter-spacing:.5px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .legend-line{width:16px;height:2px;flex-shrink:0}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <div class="canvas-wrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row">
+        <span class="stat-label">V at r=1m</span>
+        <span class="stat-value orange" id="statV">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">E at r=1m</span>
+        <span class="stat-value blue" id="statE">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Potential Energy</span>
+        <span class="stat-value yellow" id="statU">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Work W→∞</span>
+        <span class="stat-value green" id="statW">—</span>
+      </div>
+    </div>
+    <div class="fps-badge" id="fpsBadge">-- FPS</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="badge-row">
+        <span class="badge">AP PHYSICS 2</span>
+        <span class="badge badge-free">FREE</span>
+      </div>
+      <h1>Electric Potential<br>&amp; Equipotential Surfaces</h1>
+      <p class="subtitle">Point charge field, equipotential rings, and electric field lines in 3D</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Source Charge</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Source Charge q</span>
+          <span class="param-val" id="lblQ">+5.0 μC</span>
+        </div>
+        <input type="range" id="sliderQ" min="-100" max="100" value="50" step="1">
+        <div class="toggle-row" style="margin-top:8px">
+          <div class="toggle-btn active-pos" id="btnPos" onclick="setChargeSign(1)">+ Positive</div>
+          <div class="toggle-btn" id="btnNeg" onclick="setChargeSign(-1)">− Negative</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Test Charge</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Test Charge Sign</span>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-btn active-pos" id="btnTestPos" onclick="setTestSign(1)">+ Positive</div>
+          <div class="toggle-btn" id="btnTestNeg" onclick="setTestSign(-1)">− Negative</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Real-time Data</div>
+      <div class="data-grid">
+        <div class="data-card">
+          <div class="data-card-label">V at r=0.5m</div>
+          <div class="data-card-value orange" id="dataV05">—</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-label">V at r=1.0m</div>
+          <div class="data-card-value orange" id="dataV10">—</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-label">E at r=0.5m</div>
+          <div class="data-card-value blue" id="dataE05">—</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-label">E at r=1.0m</div>
+          <div class="data-card-value blue" id="dataE10">—</div>
+        </div>
+      </div>
+      <div class="legend-row" style="margin-top:12px">
+        <div class="legend-item"><div class="legend-dot" style="background:#fca5a5"></div>Positive charge</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Negative charge</div>
+        <div class="legend-item"><div class="legend-line" style="background:#fb923c"></div>Field lines</div>
+        <div class="legend-item"><div class="legend-line" style="background:hsl(200,70%,60%)"></div>Equipotential</div>
+      </div>
+    </div>
+
+    <div class="formula-section">
+      <div class="section-title">Formulas</div>
+      <div class="formula-box">
+        <div class="formula-text">V = kq / r</div>
+        <div class="formula-desc">Electric potential (V), k=8.99×10⁹ N·m²/C²</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">E = kq / r²</div>
+        <div class="formula-desc">Electric field magnitude (N/C)</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">U = q₀V = kqq₀/r</div>
+        <div class="formula-desc">Potential energy of test charge</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">W = q(V₁ − V₂)</div>
+        <div class="formula-desc">Work done moving charge between potentials</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const k = 8.99e9;
+
+  // ── State ──────────────────────────────────────────────────────────
+  let qMag = 5e-6;
+  let qSign = 1;
+  let testSign = 1;
+
+  // ── Scene setup ────────────────────────────────────────────────────
+  const canvas = document.getElementById('c');
+  const wrap   = canvas.parentElement;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0d1117, 1);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.01, 200);
+  camera.position.set(0, 12, 14);
+  camera.lookAt(0, 0, 0);
+
+  // Ambient + directional
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 10, 8);
+  scene.add(dirLight);
+
+  // ── Helpers ────────────────────────────────────────────────────────
+  function lerpColor(t) {
+    // t=0 → blue (low / outer), t=1 → red (high / inner)
+    const r = Math.round(t * 255);
+    const b = Math.round((1 - t) * 255);
+    const g = Math.round(60 + t * 60);
+    return new THREE.Color(r / 255, g / 255, b / 255);
+  }
+
+  function formatV(v) {
+    const abs = Math.abs(v);
+    if (abs >= 1e6) return (v/1e6).toFixed(2) + ' MV';
+    if (abs >= 1e3) return (v/1e3).toFixed(2) + ' kV';
+    return v.toFixed(1) + ' V';
+  }
+  function formatE(e) {
+    const abs = Math.abs(e);
+    if (abs >= 1e6) return (e/1e6).toFixed(2) + ' MN/C';
+    if (abs >= 1e3) return (e/1e3).toFixed(2) + ' kN/C';
+    return e.toFixed(1) + ' N/C';
+  }
+  function formatU(u) {
+    const abs = Math.abs(u);
+    if (abs >= 1) return u.toFixed(3) + ' J';
+    if (abs >= 1e-3) return (u*1e3).toFixed(2) + ' mJ';
+    return (u*1e6).toFixed(2) + ' μJ';
+  }
+
+  // ── Source charge sphere ───────────────────────────────────────────
+  const sourceGeo = new THREE.SphereGeometry(0.3, 32, 32);
+  const sourceMat = new THREE.MeshStandardMaterial({
+    color: 0xff6666, emissive: 0xff2222, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.2
+  });
+  const sourceMesh = new THREE.Mesh(sourceGeo, sourceMat);
+  scene.add(sourceMesh);
+
+  // Glow halo
+  const haloGeo = new THREE.SphereGeometry(0.5, 32, 32);
+  const haloMat = new THREE.MeshStandardMaterial({
+    color: 0xff4444, transparent: true, opacity: 0.12, side: THREE.BackSide
+  });
+  const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+  scene.add(haloMesh);
+
+  // Point light from source
+  const pointLight = new THREE.PointLight(0xff4444, 1.5, 12);
+  scene.add(pointLight);
+
+  // ── Equipotential circles (rings in XZ plane) ──────────────────────
+  const NUM_RINGS = 6;
+  const ringRadii = [1.0, 1.8, 2.6, 3.5, 4.5, 5.7];
+  const ringMeshes = [];
+
+  for (let i = 0; i < NUM_RINGS; i++) {
+    const t = 1 - i / (NUM_RINGS - 1);
+    const col = lerpColor(t);
+    const geo = new THREE.TorusGeometry(ringRadii[i], 0.04, 8, 80);
+    const mat = new THREE.MeshStandardMaterial({
+      color: col, emissive: col, emissiveIntensity: 0.5,
+      transparent: true, opacity: 0.75
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = Math.PI / 2;
+    scene.add(mesh);
+    ringMeshes.push(mesh);
+  }
+
+  // ── Field line arrows ──────────────────────────────────────────────
+  const NUM_ARROWS = 8;
+  const arrowHelpers = [];
+  const arrowDirs = [];
+
+  for (let i = 0; i < NUM_ARROWS; i++) {
+    const angle = (i / NUM_ARROWS) * Math.PI * 2;
+    const dir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+    arrowDirs.push(dir.clone());
+    const arrow = new THREE.ArrowHelper(
+      dir, new THREE.Vector3(0,0,0), 4,
+      0xfb923c, 0.5, 0.25
+    );
+    scene.add(arrow);
+    arrowHelpers.push(arrow);
+  }
+
+  // ── Test charge sphere ─────────────────────────────────────────────
+  const testGeo  = new THREE.SphereGeometry(0.15, 24, 24);
+  const testMat  = new THREE.MeshStandardMaterial({
+    color: 0xffffff, emissive: 0xaaaaaa, emissiveIntensity: 0.4
+  });
+  const testMesh = new THREE.Mesh(testGeo, testMat);
+  scene.add(testMesh);
+
+  // Test charge label ring
+  const testRingGeo = new THREE.TorusGeometry(0.22, 0.03, 8, 32);
+  const testRingMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.8 });
+  const testRingMesh = new THREE.Mesh(testRingGeo, testRingMat);
+  scene.add(testRingMesh);
+
+  // ── Orbit (manual mouse drag, no external dep) ─────────────────────
+  let isPointerDown = false;
+  let lastX = 0, lastY = 0;
+  let theta = 0.4, phi = 0.9, radius = 18;
+
+  function updateCamera() {
+    camera.position.set(
+      radius * Math.sin(phi) * Math.sin(theta),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.cos(theta)
+    );
+    camera.lookAt(0, 0, 0);
+  }
+  updateCamera();
+
+  wrap.addEventListener('pointerdown', e => { isPointerDown = true; lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('pointerup',   () => { isPointerDown = false; });
+  window.addEventListener('pointermove', e => {
+    if (!isPointerDown) return;
+    const dx = (e.clientX - lastX) * 0.005;
+    const dy = (e.clientY - lastY) * 0.005;
+    theta -= dx;
+    phi = Math.max(0.15, Math.min(Math.PI * 0.48, phi + dy));
+    lastX = e.clientX; lastY = e.clientY;
+    updateCamera();
+  });
+  wrap.addEventListener('wheel', e => {
+    radius = Math.max(4, Math.min(35, radius + e.deltaY * 0.02));
+    updateCamera();
+    e.preventDefault();
+  }, { passive: false });
+
+  // ── Resize ─────────────────────────────────────────────────────────
+  function onResize() {
+    try {
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    } catch(e) { /* ignore */ }
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // ── Update visuals based on charge sign ───────────────────────────
+  function updateChargeVisuals() {
+    const q = qSign * qMag;
+    const isPos = q >= 0;
+
+    const colMain  = isPos ? new THREE.Color(1, 0.4, 0.4) : new THREE.Color(0.4, 0.6, 1.0);
+    const colEmit  = isPos ? new THREE.Color(1, 0.1, 0.1) : new THREE.Color(0.1, 0.3, 1.0);
+    const lightCol = isPos ? 0xff3333 : 0x3366ff;
+
+    sourceMat.color.set(colMain);
+    sourceMat.emissive.set(colEmit);
+    haloMat.color.set(colMain);
+    pointLight.color.set(lightCol);
+
+    // Arrow direction: outward for +, inward for -
+    arrowHelpers.forEach((arrow, i) => {
+      const dir = isPos ? arrowDirs[i].clone() : arrowDirs[i].clone().negate();
+      const origin = isPos
+        ? arrowDirs[i].clone().multiplyScalar(0.4)
+        : arrowDirs[i].clone().multiplyScalar(3.2);
+      arrow.setDirection(dir);
+      arrow.position.copy(origin);
+      arrow.setLength(isPos ? 3.2 : 3.2, 0.5, 0.25);
+    });
+  }
+
+  // ── Update UI stats ───────────────────────────────────────────────
+  function updateStats() {
+    try {
+      const q  = qSign * qMag;
+      const qt = testSign * 1e-6;
+      const r1 = 1.0, r05 = 0.5;
+
+      const V1  = k * q / r1;
+      const V05 = k * q / r05;
+      const E1  = k * q / (r1 * r1);
+      const E05 = k * q / (r05 * r05);
+      const U   = k * q * qt / r1;
+      const W   = -U; // work to move to infinity
+
+      document.getElementById('statV').textContent  = formatV(V1);
+      document.getElementById('statE').textContent  = formatE(Math.abs(E1));
+      document.getElementById('statU').textContent  = formatU(U);
+      document.getElementById('statW').textContent  = formatU(W);
+      document.getElementById('dataV05').textContent = formatV(V05);
+      document.getElementById('dataV10').textContent = formatV(V1);
+      document.getElementById('dataE05').textContent = formatE(Math.abs(E05));
+      document.getElementById('dataE10').textContent = formatE(Math.abs(E1));
+
+      // Color stat values based on sign
+      const vColor = V1 >= 0 ? '#fca5a5' : '#60a5fa';
+      document.getElementById('statV').style.color = vColor;
+      document.getElementById('dataV05').style.color = vColor;
+      document.getElementById('dataV10').style.color = vColor;
+    } catch(e) { /* ignore */ }
+  }
+
+  // ── Animation ─────────────────────────────────────────────────────
+  let fpsTime = performance.now(), frameCount = 0, fps = 0;
+
+  function animate() {
+    try {
+      requestAnimationFrame(animate);
+      const t = performance.now() * 0.001;
+
+      // Pulsing source sphere
+      const pulse = 1 + 0.08 * Math.sin(t * 3);
+      sourceMesh.scale.setScalar(pulse);
+      haloMesh.scale.setScalar(pulse * 1.1);
+      pointLight.intensity = 1.2 + 0.4 * Math.sin(t * 3);
+
+      // Orbit test charge around origin (XZ plane, elevated slightly)
+      const orbitR = 2.2;
+      testMesh.position.set(
+        orbitR * Math.cos(t * 0.7),
+        0.3,
+        orbitR * Math.sin(t * 0.7)
+      );
+      testRingMesh.position.copy(testMesh.position);
+      testRingMesh.rotation.x = Math.PI / 2;
+      testRingMesh.rotation.z = t * 0.7;
+
+      // Slow ring rotation for depth
+      ringMeshes.forEach((r, i) => {
+        r.rotation.y = t * 0.05 * (i % 2 === 0 ? 1 : -1);
+      });
+
+      renderer.render(scene, camera);
+
+      // FPS
+      frameCount++;
+      const now = performance.now();
+      if (now - fpsTime > 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        fpsTime = now;
+        document.getElementById('fpsBadge').textContent = fps + ' FPS';
+      }
+
+      updateStats();
+    } catch(e) { /* ignore */ }
+  }
+
+  // ── Controls ──────────────────────────────────────────────────────
+  const sliderQ = document.getElementById('sliderQ');
+  sliderQ.addEventListener('input', () => {
+    const raw = parseFloat(sliderQ.value);
+    qMag = Math.abs(raw) * 0.1e-6;
+    if (raw === 0) qMag = 0.01e-6;
+    document.getElementById('lblQ').textContent =
+      (qSign > 0 ? '+' : '−') + (Math.abs(raw) * 0.1).toFixed(1) + ' μC';
+    updateChargeVisuals();
+  });
+
+  window.setChargeSign = function(sign) {
+    qSign = sign;
+    document.getElementById('btnPos').className = 'toggle-btn' + (sign > 0 ? ' active-pos' : '');
+    document.getElementById('btnNeg').className = 'toggle-btn' + (sign < 0 ? ' active-neg' : '');
+    const raw = parseFloat(sliderQ.value);
+    document.getElementById('lblQ').textContent =
+      (sign > 0 ? '+' : '−') + (Math.abs(raw) * 0.1).toFixed(1) + ' μC';
+    updateChargeVisuals();
+  };
+
+  window.setTestSign = function(sign) {
+    testSign = sign;
+    document.getElementById('btnTestPos').className = 'toggle-btn' + (sign > 0 ? ' active-pos' : '');
+    document.getElementById('btnTestNeg').className = 'toggle-btn' + (sign < 0 ? ' active-neg' : '');
+    testMat.color.set(sign > 0 ? 0xffffff : 0x88bbff);
+    testMat.emissive.set(sign > 0 ? 0xaaaaaa : 0x4488ff);
+  };
+
+  updateChargeVisuals();
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electromagnetic Induction — NeonPhysics AP Physics 2</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(6,182,212,.07));border-bottom:1px solid rgba(16,185,129,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px;align-items:center}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ap{background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.4);color:#6ee7b7}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 60px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#6ee7b7;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(16,185,129,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#10b981;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
+    .stat-card.span2{grid-column:span 2}
+    .stat-card-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .stat-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .v-green{color:#6ee7b7} .v-cyan{color:#67e8f9} .v-amber{color:#fcd34d} .v-rose{color:#fda4af} .v-sky{color:#7dd3fc}
+    .formula-box{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:5px}
+    .formula-live{font-size:11px;color:#94a3b8;margin-top:4px;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+    .pause-btn{width:100%;padding:9px;border-radius:7px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.08);color:#6ee7b7;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .pause-btn:hover{background:rgba(16,185,129,.18)}
+    .reset-btn{width:100%;padding:9px;border-radius:7px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .reset-btn:hover{background:rgba(251,191,36,.18)}
+    .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-variant-numeric:tabular-nums;pointer-events:none;z-index:5}
+    .canvas-area{position:relative;display:grid;grid-template-rows:1fr 200px}
+    .threejs-wrap{position:relative;overflow:hidden}
+    #threeCanvas{display:block;width:100%;height:100%}
+    .graphs-wrap{display:grid;grid-template-columns:1fr 1fr;background:#060c12;border-top:1px solid rgba(255,255,255,.06);position:relative}
+    .graph-panel{position:relative;border-right:1px solid rgba(255,255,255,.04)}
+    .graph-panel:last-child{border-right:none}
+    .graph-panel canvas{display:block;width:100%;height:100%}
+    .graph-label{position:absolute;top:8px;left:12px;font-size:11px;color:#64748b;pointer-events:none}
+    .graph-value{position:absolute;top:8px;right:12px;font-size:11px;font-weight:600;pointer-events:none;font-variant-numeric:tabular-nums}
+    .lenz-badge{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 12px;border-radius:10px;pointer-events:none;transition:all .2s;white-space:nowrap}
+    .dir-inc{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+    .dir-dec{background:rgba(251,146,60,.15);color:#fed7aa;border:1px solid rgba(251,146,60,.25)}
+    .dir-zero{background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.25)}
+    .katex{font-size:1em}
+    .katex .base{color:#6ee7b7}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Electromagnetic Induction — Faraday's Law</h1>
+  <p>Rotating coil generator with real-time flux, EMF, and Lenz's law visualization</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">B Field (T)</span>
+          <span class="param-val" id="lblB">0.50</span>
+        </div>
+        <input type="range" id="sliderB" min="0.1" max="2.0" step="0.05" value="0.5">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Angular Velocity (rad/s)</span>
+          <span class="param-val" id="lblW">2.0</span>
+        </div>
+        <input type="range" id="sliderW" min="0.1" max="10" step="0.1" value="2.0">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Coil Turns N</span>
+          <span class="param-val" id="lblN">50</span>
+        </div>
+        <input type="range" id="sliderN" min="1" max="200" step="1" value="50">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Coil Area (cm2)</span>
+          <span class="param-val" id="lblA">100</span>
+        </div>
+        <input type="range" id="sliderA" min="10" max="500" step="10" value="100">
+      </div>
+
+      <button class="pause-btn" id="pauseBtn">Pause</button>
+      <button class="reset-btn" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Flux (total)</div>
+        <div class="stat-card-value v-green" id="statPhi">-- Wb</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Angle</div>
+        <div class="stat-card-value v-cyan" id="statTheta">0 deg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Peak EMF</div>
+        <div class="stat-card-value v-amber" id="statEmax">-- V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Current EMF</div>
+        <div class="stat-card-value v-rose" id="statE">-- V</div>
+      </div>
+      <div class="stat-card span2">
+        <div class="stat-card-label">Flux Rate dPhi/dt</div>
+        <div class="stat-card-value v-sky" id="statDPhi">-- Wb/s</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Faraday's Law (Live)</div>
+      <div class="formula-box">
+        <div id="katexFaraday"></div>
+        <div class="formula-desc">Faraday's Law of Induction</div>
+        <div class="formula-live" id="faradayLive">EMF = -(50)(0.000) = 0.00 V</div>
+      </div>
+      <div class="formula-box">
+        <div id="katexFlux"></div>
+        <div class="formula-desc">Magnetic flux through coil</div>
+        <div class="formula-live" id="fluxLive">Phi = (0.50)(0.0100)cos(0) = 0.005 Wb</div>
+      </div>
+      <div class="formula-box">
+        <div id="katexPeak"></div>
+        <div class="formula-desc">Peak EMF of AC generator</div>
+        <div class="formula-live" id="peakLive">E_max = (50)(0.50)(0.01)(2.0) = 0.50 V</div>
+      </div>
+      <div class="formula-box">
+        <div id="katexLenz"></div>
+        <div class="formula-desc">Lenz's Law: induced current opposes flux change</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <div class="threejs-wrap" id="threeWrap">
+      <canvas id="threeCanvas"></canvas>
+      <div class="fps-badge" id="fpsBadge">60 FPS</div>
+    </div>
+    <div class="graphs-wrap">
+      <div class="graph-panel">
+        <canvas id="fluxCanvas"></canvas>
+        <div class="graph-label">Phi(t) — Magnetic Flux</div>
+        <div class="graph-value v-green" id="fluxNow">Phi = 0.000 Wb</div>
+      </div>
+      <div class="graph-panel">
+        <canvas id="emfCanvas"></canvas>
+        <div class="graph-label">EMF(t) = -N dPhi/dt</div>
+        <div class="graph-value v-rose" id="emfNow">EMF = 0.00 V</div>
+        <div class="lenz-badge dir-zero" id="dirLabel">No flux change</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  try {
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  var B = 0.5, omega = 2.0, N = 50, A_cm2 = 100;
+  var A = A_cm2 * 1e-4;
+  var theta = 0;
+  var paused = false;
+  var simTime = 0;
+
+  function emfMax() { return N * B * A * omega; }
+  function emfNow() { return emfMax() * Math.sin(theta); }
+  function phiSingle() { return B * A * Math.cos(theta); }
+  function phiTotal() { return N * B * A * Math.cos(theta); }
+  function dPhiDt() { return -N * B * A * omega * Math.sin(theta); }
+
+  // ── KaTeX Render ──────────────────────────────────────────────────────────
+  function renderKatex() {
+    try {
+      katex.render('\\mathcal{E} = -N\\,\\frac{d\\Phi}{dt}', document.getElementById('katexFaraday'), { displayMode: false, throwOnError: false });
+      katex.render('\\Phi = B \\cdot A \\cdot \\cos\\theta', document.getElementById('katexFlux'), { displayMode: false, throwOnError: false });
+      katex.render('\\mathcal{E}_{\\max} = N B A \\omega', document.getElementById('katexPeak'), { displayMode: false, throwOnError: false });
+      katex.render('\\text{Lenz: } I_{\\text{ind}} \\text{ opposes } \\frac{d\\Phi}{dt}', document.getElementById('katexLenz'), { displayMode: false, throwOnError: false });
+    } catch(e) {
+      console.warn('KaTeX render failed:', e);
+    }
+  }
+
+  // ── Three.js Setup ────────────────────────────────────────────────────────
+  var canvas3 = document.getElementById('threeCanvas');
+  var wrap3 = document.getElementById('threeWrap');
+
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas3, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+  camera.position.set(0, 5, 16);
+  camera.lookAt(0, 0, 0);
+
+  // OrbitControls
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 6;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+
+  // Lighting (4 lights)
+  scene.add(new THREE.AmbientLight(0x0d1a2a, 2));
+  var keyLight = new THREE.DirectionalLight(0x10b981, 1.0);
+  keyLight.position.set(6, 8, 6);
+  scene.add(keyLight);
+  var fillLight = new THREE.DirectionalLight(0x06b6d4, 0.5);
+  fillLight.position.set(-6, 2, -4);
+  scene.add(fillLight);
+  var backLight = new THREE.DirectionalLight(0x6366f1, 0.4);
+  backLight.position.set(0, -6, -6);
+  scene.add(backLight);
+
+  // ── Magnetic Field Lines ──────────────────────────────────────────────────
+  var fieldGroup = new THREE.Group();
+  scene.add(fieldGroup);
+  var arrowDir = new THREE.Vector3(1, 0, 0);
+  var arrowColor = 0x22c55e;
+  var arrowLen = 5.5;
+
+  for (var iy = -1; iy <= 1; iy++) {
+    for (var iz = -1; iz <= 1; iz++) {
+      var origin = new THREE.Vector3(-arrowLen / 2, iy * 2.2, iz * 2.2);
+      var arrow = new THREE.ArrowHelper(arrowDir, origin, arrowLen, arrowColor, 0.6, 0.35);
+      arrow.line.material.transparent = true;
+      arrow.line.material.opacity = 0.55;
+      arrow.cone.material.transparent = true;
+      arrow.cone.material.opacity = 0.6;
+      fieldGroup.add(arrow);
+    }
+  }
+
+  // ── Coil Frame ────────────────────────────────────────────────────────────
+  var coilGroup = new THREE.Group();
+  scene.add(coilGroup);
+
+  var COIL_W = 3.0, COIL_H = 4.0;
+  var coilGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(COIL_W, COIL_H, 0.05));
+  var coilMat = new THREE.LineBasicMaterial({ color: 0x3b82f6, linewidth: 2 });
+  var coilEdges = new THREE.LineSegments(coilGeo, coilMat);
+  coilGroup.add(coilEdges);
+
+  var coilFaceGeo = new THREE.PlaneGeometry(COIL_W, COIL_H);
+  var coilFaceMat = new THREE.MeshBasicMaterial({
+    color: 0x1d4ed8, transparent: true, opacity: 0.12, side: THREE.DoubleSide
+  });
+  var coilFace = new THREE.Mesh(coilFaceGeo, coilFaceMat);
+  coilGroup.add(coilFace);
+
+  // Rotation axis rod
+  var axisGeo = new THREE.CylinderGeometry(0.06, 0.06, COIL_H + 1.5, 8);
+  var axisMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9, roughness: 0.2 });
+  var axisRod = new THREE.Mesh(axisGeo, axisMat);
+  scene.add(axisRod);
+
+  // Normal arrow (shows area vector direction)
+  var normalDir = new THREE.Vector3(0, 0, 1);
+  var normalArrow = new THREE.ArrowHelper(normalDir, new THREE.Vector3(0, 0, 0), 2.5, 0xfbbf24, 0.5, 0.3);
+  coilGroup.add(normalArrow);
+
+  // ── Lenz's Law Current Direction Arrows (on coil edges) ───────────────────
+  var lenzArrows = [];
+  var lenzGroup = new THREE.Group();
+  coilGroup.add(lenzGroup);
+
+  function createLenzArrow(pos, dir, color) {
+    var a = new THREE.ArrowHelper(dir, pos, 0.8, color, 0.25, 0.18);
+    a.line.material.transparent = true;
+    a.cone.material.transparent = true;
+    lenzGroup.add(a);
+    return a;
+  }
+
+  // 4 arrows along coil edges showing induced current direction (CCW or CW)
+  var hw = COIL_W / 2, hh = COIL_H / 2;
+  // top edge: left to right (CCW default)
+  lenzArrows.push({ obj: createLenzArrow(new THREE.Vector3(-hw * 0.3, hh, 0.03), new THREE.Vector3(1, 0, 0), 0x3b82f6), basePos: new THREE.Vector3(-hw * 0.3, hh, 0.03), ccwDir: new THREE.Vector3(1, 0, 0), cwDir: new THREE.Vector3(-1, 0, 0) });
+  // right edge: top to bottom
+  lenzArrows.push({ obj: createLenzArrow(new THREE.Vector3(hw, hh * 0.3, 0.03), new THREE.Vector3(0, -1, 0), 0x3b82f6), basePos: new THREE.Vector3(hw, hh * 0.3, 0.03), ccwDir: new THREE.Vector3(0, -1, 0), cwDir: new THREE.Vector3(0, 1, 0) });
+  // bottom edge: right to left
+  lenzArrows.push({ obj: createLenzArrow(new THREE.Vector3(hw * 0.3, -hh, 0.03), new THREE.Vector3(-1, 0, 0), 0x3b82f6), basePos: new THREE.Vector3(hw * 0.3, -hh, 0.03), ccwDir: new THREE.Vector3(-1, 0, 0), cwDir: new THREE.Vector3(1, 0, 0) });
+  // left edge: bottom to top
+  lenzArrows.push({ obj: createLenzArrow(new THREE.Vector3(-hw, -hh * 0.3, 0.03), new THREE.Vector3(0, 1, 0), 0x3b82f6), basePos: new THREE.Vector3(-hw, -hh * 0.3, 0.03), ccwDir: new THREE.Vector3(0, 1, 0), cwDir: new THREE.Vector3(0, -1, 0) });
+
+  function updateLenzArrows(emfVal, emfMaxVal) {
+    var absRatio = Math.min(Math.abs(emfVal) / Math.max(emfMaxVal, 0.001), 1);
+    var isCCW = emfVal > 0;
+    var color;
+    if (Math.abs(emfVal) < 0.02 * emfMaxVal) {
+      color = new THREE.Color(0x475569);
+    } else if (isCCW) {
+      color = new THREE.Color(0x3b82f6);
+    } else {
+      color = new THREE.Color(0xfb923c);
+    }
+
+    for (var i = 0; i < lenzArrows.length; i++) {
+      var la = lenzArrows[i];
+      var dir = isCCW ? la.ccwDir : la.cwDir;
+      la.obj.setDirection(dir);
+      la.obj.setLength(0.4 + absRatio * 0.6, 0.2 + absRatio * 0.1, 0.15 + absRatio * 0.08);
+      la.obj.line.material.color.copy(color);
+      la.obj.line.material.opacity = 0.3 + absRatio * 0.7;
+      la.obj.cone.material.color.copy(color);
+      la.obj.cone.material.opacity = 0.3 + absRatio * 0.7;
+    }
+  }
+
+  // ── Load Resistor ─────────────────────────────────────────────────────────
+  var resistorGeo = new THREE.BoxGeometry(0.7, 0.9, 0.4);
+  var resistorMat = new THREE.MeshStandardMaterial({
+    color: 0x7c3aed, emissive: 0x3b0764, emissiveIntensity: 0.5,
+    metalness: 0.2, roughness: 0.5
+  });
+  var resistor = new THREE.Mesh(resistorGeo, resistorMat);
+  resistor.position.set(5.5, 0, 0);
+  scene.add(resistor);
+
+  // Wires
+  var wireMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
+  var wp1 = [
+    new THREE.Vector3(COIL_W / 2 + 0.1, COIL_H / 2, 0),
+    new THREE.Vector3(4.8, COIL_H / 2, 0),
+    new THREE.Vector3(5.5, COIL_H / 2, 0),
+    new THREE.Vector3(5.5, 0.45, 0)
+  ];
+  var wp2 = [
+    new THREE.Vector3(COIL_W / 2 + 0.1, -COIL_H / 2, 0),
+    new THREE.Vector3(4.8, -COIL_H / 2, 0),
+    new THREE.Vector3(5.5, -COIL_H / 2, 0),
+    new THREE.Vector3(5.5, -0.45, 0)
+  ];
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(wp1), wireMat));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(wp2), wireMat));
+
+  // ── History Buffers ───────────────────────────────────────────────────────
+  var HIST_SIZE = 360;
+  var emfHistory = new Float32Array(HIST_SIZE);
+  var fluxHistory = new Float32Array(HIST_SIZE);
+  var timeHistory = new Float32Array(HIST_SIZE);
+  var histIdx = 0;
+  var histFull = false;
+
+  // ── Graph Canvases ────────────────────────────────────────────────────────
+  var fluxCanvas = document.getElementById('fluxCanvas');
+  var fluxCtx = fluxCanvas.getContext('2d');
+  var emfCanvas = document.getElementById('emfCanvas');
+  var emfCtx = emfCanvas.getContext('2d');
+
+  function resizeGraphs() {
+    fluxCanvas.width = fluxCanvas.offsetWidth;
+    fluxCanvas.height = fluxCanvas.offsetHeight;
+    emfCanvas.width = emfCanvas.offsetWidth;
+    emfCanvas.height = emfCanvas.offsetHeight;
+  }
+
+  function drawGraph(ctx, canvas, history, maxVal, color, label) {
+    var w = canvas.width, h = canvas.height;
+    if (!w || !h) return;
+
+    var pad = { l: 52, r: 14, t: 28, b: 22 };
+    var cw = w - pad.l - pad.r;
+    var ch = h - pad.t - pad.b;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#060c12';
+    ctx.fillRect(0, 0, w, h);
+
+    var yMax = Math.max(maxVal, 0.001);
+    var WINDOW = 4.0;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for (var gi = 0; gi <= 4; gi++) {
+      var gx = pad.l + (gi / 4) * cw;
+      ctx.beginPath(); ctx.moveTo(gx, pad.t); ctx.lineTo(gx, pad.t + ch); ctx.stroke();
+    }
+    for (var gj = 0; gj <= 4; gj++) {
+      var gy = pad.t + (gj / 4) * ch;
+      ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(pad.l + cw, gy); ctx.stroke();
+    }
+
+    // Zero line
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+    var zy = pad.t + ch / 2;
+    ctx.beginPath(); ctx.moveTo(pad.l, zy); ctx.lineTo(pad.l + cw, zy); ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ch);
+    ctx.moveTo(pad.l, pad.t + ch); ctx.lineTo(pad.l + cw, pad.t + ch);
+    ctx.stroke();
+
+    // Y ticks
+    ctx.fillStyle = '#475569';
+    ctx.font = '9px system-ui';
+    ctx.textAlign = 'right';
+    var tickVals = [yMax, yMax / 2, 0, -yMax / 2, -yMax];
+    for (var ti = 0; ti < tickVals.length; ti++) {
+      var tv = tickVals[ti];
+      var ty = pad.t + ch / 2 - (tv / yMax) * (ch / 2);
+      var tvStr = Math.abs(tv) >= 1 ? tv.toFixed(1) : tv.toExponential(1);
+      ctx.fillText(tvStr, pad.l - 4, ty + 3);
+    }
+
+    // Reference lines at max/min
+    ctx.strokeStyle = 'rgba(251,191,36,0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l + cw, pad.t); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + ch); ctx.lineTo(pad.l + cw, pad.t + ch); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw curve
+    var nowT = timeHistory[(histIdx - 1 + HIST_SIZE) % HIST_SIZE];
+    var startT = nowT - WINDOW;
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    var started = false;
+    var count = histFull ? HIST_SIZE : histIdx;
+    for (var j = 0; j < count; j++) {
+      var idx = histFull ? (histIdx + j) % HIST_SIZE : j;
+      var t = timeHistory[idx];
+      if (t < startT) continue;
+      var v = history[idx];
+      var px = pad.l + ((t - startT) / WINDOW) * cw;
+      var py = pad.t + ch / 2 - (v / yMax) * (ch / 2);
+      py = Math.max(pad.t, Math.min(pad.t + ch, py));
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Current time vertical line
+    ctx.strokeStyle = 'rgba(239,68,68,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.l + cw, pad.t); ctx.lineTo(pad.l + cw, pad.t + ch); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Current point dot
+    var currentVal = history[(histIdx - 1 + HIST_SIZE) % HIST_SIZE];
+    var dotY = pad.t + ch / 2 - (currentVal / yMax) * (ch / 2);
+    dotY = Math.max(pad.t, Math.min(pad.t + ch, dotY));
+    ctx.beginPath();
+    ctx.arc(pad.l + cw, dotY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ef4444';
+    ctx.fill();
+  }
+
+  function drawFluxGraph() {
+    var maxFlux = Math.max(Math.abs(phiTotal()), N * B * A, 0.001);
+    drawGraph(fluxCtx, fluxCanvas, fluxHistory, maxFlux, '#10b981', 'Phi');
+  }
+
+  function drawEmfGraph() {
+    var maxEmf = Math.max(emfMax(), 0.001);
+    drawGraph(emfCtx, emfCanvas, emfHistory, maxEmf, '#f43f5e', 'EMF');
+  }
+
+  // ── Update Scene ──────────────────────────────────────────────────────────
+  function updateScene() {
+    coilGroup.rotation.y = theta;
+
+    var e = emfNow();
+    var em = Math.max(emfMax(), 0.01);
+    var t01 = Math.abs(e) / em;
+
+    // Coil color: blue when flux increasing, orange when decreasing
+    if (e > 0.01 * em) {
+      coilMat.color.setRGB(0.2 + t01 * 0.1, 0.5 + t01 * 0.2, 0.9 + t01 * 0.1);
+    } else if (e < -0.01 * em) {
+      coilMat.color.setRGB(0.9 + t01 * 0.1, 0.4 + t01 * 0.2, 0.1);
+    } else {
+      coilMat.color.setRGB(0.5, 0.5, 0.8);
+    }
+    coilFaceMat.opacity = 0.06 + t01 * 0.2;
+
+    // Resistor glow
+    resistorMat.emissiveIntensity = 0.1 + t01 * 1.2;
+    resistorMat.emissive.setRGB(0.15 + t01 * 0.3, 0.05, 0.2 + t01 * 0.3);
+
+    // Update Lenz arrows on coil
+    updateLenzArrows(e, em);
+
+    // Update Lenz direction label
+    var dirEl = document.getElementById('dirLabel');
+    if (e > 0.05 * em) {
+      dirEl.textContent = 'dPhi/dt < 0 -> CCW induced current (opposes decrease)';
+      dirEl.className = 'lenz-badge dir-inc';
+    } else if (e < -0.05 * em) {
+      dirEl.textContent = 'dPhi/dt > 0 -> CW induced current (opposes increase)';
+      dirEl.className = 'lenz-badge dir-dec';
+    } else {
+      dirEl.textContent = 'No flux change — no induced current';
+      dirEl.className = 'lenz-badge dir-zero';
+    }
+  }
+
+  function updateStats() {
+    var phi = phiTotal();
+    var e = emfNow();
+    var em = emfMax();
+    var dphi = dPhiDt();
+    var deg = ((theta % (2 * Math.PI)) * 180 / Math.PI);
+    if (deg < 0) deg += 360;
+
+    document.getElementById('statPhi').textContent = phi.toExponential(3) + ' Wb';
+    document.getElementById('statTheta').textContent = deg.toFixed(1) + ' deg';
+    document.getElementById('statEmax').textContent = em.toFixed(3) + ' V';
+    document.getElementById('statE').textContent = e.toFixed(3) + ' V';
+    document.getElementById('statDPhi').textContent = dphi.toExponential(3) + ' Wb/s';
+
+    document.getElementById('fluxNow').textContent = 'Phi = ' + phi.toExponential(3) + ' Wb';
+    document.getElementById('emfNow').textContent = 'EMF = ' + e.toFixed(3) + ' V';
+
+    // Live formula values
+    var dPhiPerTurn = -B * A * omega * Math.sin(theta);
+    document.getElementById('faradayLive').textContent =
+      'EMF = -(' + N + ')(' + dPhiPerTurn.toExponential(2) + ') = ' + e.toFixed(3) + ' V';
+
+    document.getElementById('fluxLive').textContent =
+      'Phi = (' + N + ')(' + B.toFixed(2) + ')(' + A.toExponential(2) + ')cos(' + deg.toFixed(0) + ') = ' + phi.toExponential(3) + ' Wb';
+
+    document.getElementById('peakLive').textContent =
+      'E_max = (' + N + ')(' + B.toFixed(2) + ')(' + A.toExponential(2) + ')(' + omega.toFixed(1) + ') = ' + em.toFixed(3) + ' V';
+  }
+
+  // ── Controls ──────────────────────────────────────────────────────────────
+  document.getElementById('sliderB').addEventListener('input', function() {
+    B = parseFloat(this.value);
+    document.getElementById('lblB').textContent = B.toFixed(2);
+  });
+  document.getElementById('sliderW').addEventListener('input', function() {
+    omega = parseFloat(this.value);
+    document.getElementById('lblW').textContent = omega.toFixed(1);
+  });
+  document.getElementById('sliderN').addEventListener('input', function() {
+    N = parseInt(this.value, 10);
+    document.getElementById('lblN').textContent = N;
+  });
+  document.getElementById('sliderA').addEventListener('input', function() {
+    A_cm2 = parseFloat(this.value);
+    A = A_cm2 * 1e-4;
+    document.getElementById('lblA').textContent = A_cm2;
+  });
+
+  document.getElementById('pauseBtn').addEventListener('click', function() {
+    paused = !paused;
+    this.textContent = paused ? 'Resume' : 'Pause';
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    theta = 0;
+    simTime = 0;
+    histIdx = 0;
+    histFull = false;
+    emfHistory.fill(0);
+    fluxHistory.fill(0);
+    timeHistory.fill(0);
+    updateScene();
+    updateStats();
+    drawFluxGraph();
+    drawEmfGraph();
+  });
+
+  // ── Resize ────────────────────────────────────────────────────────────────
+  function onResize() {
+    try {
+      var w = wrap3.clientWidth, h = wrap3.clientHeight;
+      if (w > 0 && h > 0) {
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      resizeGraphs();
+      drawFluxGraph();
+      drawEmfGraph();
+    } catch(e) {
+      console.error('Resize error:', e);
+    }
+  }
+  window.addEventListener('resize', onResize);
+
+  // ── Render Loop ───────────────────────────────────────────────────────────
+  var lastTime = performance.now();
+  var frameCount = 0, fpsTimer = 0;
+
+  renderer.setAnimationLoop(function() {
+    try {
+      var now = performance.now();
+      var dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      frameCount++;
+      fpsTimer += dt;
+      if (fpsTimer >= 1) {
+        document.getElementById('fpsBadge').textContent = frameCount + ' FPS';
+        frameCount = 0;
+        fpsTimer = 0;
+      }
+
+      controls.update();
+
+      if (!paused) {
+        theta += omega * dt;
+        simTime += dt;
+
+        // Record history
+        var curEmf = emfNow();
+        var curFlux = phiTotal();
+        emfHistory[histIdx] = curEmf;
+        fluxHistory[histIdx] = curFlux;
+        timeHistory[histIdx] = simTime;
+        histIdx = (histIdx + 1) % HIST_SIZE;
+        if (histIdx === 0) histFull = true;
+
+        updateScene();
+        updateStats();
+        drawFluxGraph();
+        drawEmfGraph();
+      }
+
+      renderer.render(scene, camera);
+    } catch(e) {
+      console.error('Render error:', e);
+    }
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  renderKatex();
+  onResize();
+  updateScene();
+  updateStats();
+  setTimeout(function() { resizeGraphs(); drawFluxGraph(); drawEmfGraph(); }, 100);
+
+  } catch(e) {
+    console.error('Init error:', e);
+    document.body.innerHTML = '<div style="color:#ef4444;padding:40px;font-size:18px">Failed to initialize: ' + e.message + '</div>';
+  }
+
+})();
+</script>
+</body>
+</html>

@@ -82,7 +82,7 @@ export function QuizSection({
   }
 
   return (
-    <Card className="border-neon-cyan/10 bg-surface-dark">
+    <Card className="border-primary/10 bg-card">
       <CardHeader>
         <CardTitle className="text-base">{t('node.quiz_title')}</CardTitle>
       </CardHeader>
@@ -94,13 +94,13 @@ export function QuizSection({
             const isCorrectAnswer = result && i === result.correctIndex;
             const isWrongSelected = result && !result.correct && i === selected;
 
-            let borderClass = 'border-border/50 hover:border-neon-cyan/50';
+            let borderClass = 'border-border/50 hover:border-primary/50';
             if (result) {
-              if (isCorrectAnswer) borderClass = 'border-neon-green bg-neon-green/5';
+              if (isCorrectAnswer) borderClass = 'border-emerald-600 bg-emerald-500/5 dark:border-emerald-400';
               else if (isWrongSelected) borderClass = 'border-red-500 bg-red-500/5';
               else borderClass = 'border-border/50 opacity-50';
             } else if (selected === i) {
-              borderClass = 'border-neon-cyan bg-neon-cyan/10';
+              borderClass = 'border-primary bg-primary/10';
             }
 
             return (
@@ -112,7 +112,7 @@ export function QuizSection({
               >
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs">
                   {result && isCorrectAnswer ? (
-                    <CheckCircle className="h-4 w-4 text-neon-green" />
+                    <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   ) : result && isWrongSelected ? (
                     <XCircle className="h-4 w-4 text-red-500" />
                   ) : (
@@ -141,7 +141,7 @@ export function QuizSection({
           <div className="space-y-3">
             <div
               className={`flex items-center gap-2 text-sm font-medium ${
-                result.correct ? 'text-neon-green' : 'text-red-500'
+                result.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
               }`}
             >
               {result.correct ? (

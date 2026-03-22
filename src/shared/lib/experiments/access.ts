@@ -6,6 +6,22 @@ const TIER_LEVELS: Record<Tier, number> = {
   max: 2,
 };
 
+/** Permanently free experiments — always accessible regardless of subscription */
+export const FREE_EXPERIMENT_IDS = new Set([
+  "newtons-laws",
+  "projectile-motion",
+  "simple-harmonic-motion",
+]);
+
+/** Check if user can access a specific experiment */
+export function canAccessExperiment(
+  experimentId: string,
+  userTier: Tier
+): boolean {
+  if (FREE_EXPERIMENT_IDS.has(experimentId)) return true;
+  return TIER_LEVELS[userTier] >= TIER_LEVELS["pro"];
+}
+
 export function canAccessTier(userTier: Tier, requiredTier: Tier): boolean {
   return TIER_LEVELS[userTier] >= TIER_LEVELS[requiredTier];
 }

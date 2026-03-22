@@ -28,7 +28,7 @@ export default async function ExperimentsPage({
   const experiments = getAllExperiments();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 pb-12 pt-20 lg:pt-24">
       <h1 className="mb-2 font-serif text-3xl font-bold text-foreground">
         {t("page.title")}
       </h1>
@@ -41,17 +41,17 @@ export default async function ExperimentsPage({
             href={`/${locale}/experiments/${exp.slug}`}
             className="group"
           >
-            <Card className="h-full border-neon-cyan/10 bg-surface-dark transition-all hover:border-neon-cyan/30 hover:shadow-lg">
+            <Card className="h-full border-primary/10 bg-card transition-all hover:border-primary/30 hover:shadow-lg">
               <CardHeader>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="rounded-full bg-neon-cyan/10 px-2 py-0.5 text-xs text-neon-cyan">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
                     {exp.category}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {t("card.estimated_time", { minutes: exp.estimatedTime })}
                   </span>
                 </div>
-                <CardTitle className="group-hover:text-neon-cyan">
+                <CardTitle className="text-foreground group-hover:text-primary">
                   {exp.title}
                 </CardTitle>
                 <CardDescription>{exp.subtitle}</CardDescription>
@@ -72,8 +72,8 @@ export default async function ExperimentsPage({
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ${
                     exp.tier === "free"
-                      ? "bg-neon-green/10 text-neon-green"
-                      : "bg-neon-orange/10 text-neon-orange"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                   }`}
                 >
                   {t(`card.tier_${exp.tier}`)}

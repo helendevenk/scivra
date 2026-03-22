@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Code, Download, Expand, Flag, Share2, Atom, Globe, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -15,6 +15,9 @@ import {
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
+import { AutopilotBridge, AutopilotToggle } from '@/shared/blocks/autopilot';
+import { injectAutopilotScript, hasAutopilotSupport } from '@/shared/lib/autopilot/inject';
+import { getUuid } from '@/shared/lib/hash';
 
 
 interface UpgViewClientProps {
@@ -23,6 +26,8 @@ interface UpgViewClientProps {
   htmlContent: string;
   isPublic: boolean;
   isOwner: boolean;
+  language: 'zh' | 'en';
+  isLoggedIn: boolean;
 }
 
 export function UpgViewClient({
@@ -31,11 +36,41 @@ export function UpgViewClient({
   htmlContent,
   isPublic,
   isOwner,
+  language,
+  isLoggedIn,
 }: UpgViewClientProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const t = useTranslations('upg');
   const router = useRouter();
   const [isIframeLoading, setIsIframeLoading] = useState(true);
+  const [autopilotActive, setAutopilotActive] = useState(false);
+  const [autopilotSessionId, setAutopilotSessionId] = useState<string>('');
+
+  const supportsAutopilot = useMemo(() => hasAutopilotSupport(htmlContent), [htmlContent]);
+
+  // Inject autopilot script when active
+  const iframeSrc = useMemo(() => {
+    if (autopilotActive && autopilotSessionId) {
+      return injectAutopilotScript(htmlContent, autopilotSessionId, language);
+    }
+    return htmlContent;
+  }, [autopilotActive, autopilotSessionId, htmlContent, language]);
+
+  const handleToggleAutopilot = useCallback(() => {
+    if (autopilotActive) {
+      setAutopilotActive(false);
+      setAutopilotSessionId('');
+    } else {
+      const newSessionId = getUuid();
+      setAutopilotSessionId(newSessionId);
+      setIsIframeLoading(true);
+      setAutopilotActive(true);
+    }
+  }, [autopilotActive]);
+
+  const handleAutopilotEnd = useCallback(() => {
+    setAutopilotActive(false);
+  }, []);
 
   const handleDownload = () => {
     const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -82,6 +117,9 @@ export function UpgViewClient({
       } else if (e.key.toLowerCase() === 'd') {
         e.preventDefault();
         handleDownload();
+      } else if (e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        if (supportsAutopilot && isLoggedIn) handleToggleAutopilot();
       } else if (e.key === 'Escape') {
         e.preventDefault();
         router.back();
@@ -92,11 +130,12 @@ export function UpgViewClient({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [router]);
+  }, [router, supportsAutopilot, isLoggedIn, handleToggleAutopilot]);
 
   const shortcuts = [
     { keyName: 'F', action: t('actions.fullscreen') },
     { keyName: 'D', action: t('actions.download_short') },
+    { keyName: 'T', action: 'AI Tutor' },
     { keyName: 'Esc', action: t('actions.back') },
   ];
 
@@ -161,7 +200,17 @@ export function UpgViewClient({
                   </Tooltip>
                   <div className="mx-0.5 h-5 w-px bg-border" />
 
-                  {/* Embed button (always visible) */}
+                  {/* AI Tutor button */}
+                  <AutopilotToggle
+                    isActive={autopilotActive}
+                    isSupported={supportsAutopilot}
+                    isLoggedIn={isLoggedIn}
+                    onToggle={handleToggleAutopilot}
+                  />
+
+                  <div className="mx-0.5 h-5 w-px bg-border" />
+
+                  {/* Embed button */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -247,7 +296,7 @@ export function UpgViewClient({
             )}
             <iframe
               ref={iframeRef}
-              srcDoc={htmlContent}
+              srcDoc={iframeSrc}
               sandbox="allow-scripts allow-same-origin"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               className={cn(
@@ -272,6 +321,19 @@ export function UpgViewClient({
           </div>
         </div>
       </main>
+
+      {/* AutopilotBridge: pure logic, no UI */}
+      {autopilotActive && autopilotSessionId && (
+        <AutopilotBridge
+          iframeRef={iframeRef}
+          generationId={id}
+          prompt={prompt}
+          language={language}
+          sessionId={autopilotSessionId}
+          isActive={autopilotActive}
+          onSessionEnd={handleAutopilotEnd}
+        />
+      )}
     </div>
   );
 }

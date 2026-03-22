@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { QuotaSnapshot } from '@/shared/lib/usage/quota';

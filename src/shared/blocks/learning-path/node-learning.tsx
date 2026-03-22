@@ -47,11 +47,11 @@ export function NodeLearning({ node, path, locale }: NodeLearningProps) {
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/learn" className="hover:text-neon-cyan">
+        <Link href="/learn" className="hover:text-primary">
           {t('page.title')}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <Link href={`/learn/${path.slug}`} className="hover:text-neon-cyan">
+        <Link href={`/learn/${path.slug}`} className="hover:text-primary">
           {pathTitle}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
@@ -72,7 +72,7 @@ export function NodeLearning({ node, path, locale }: NodeLearningProps) {
 
       {/* Embedded content */}
       {node.generationId && (
-        <div className="overflow-hidden rounded-lg border border-neon-cyan/10">
+        <div className="overflow-hidden rounded-lg border border-primary/10">
           <iframe
             src={`/embed/${node.generationId}`}
             className="h-[500px] w-full border-0"
@@ -83,7 +83,7 @@ export function NodeLearning({ node, path, locale }: NodeLearningProps) {
       )}
 
       {node.experimentSlug && (
-        <div className="rounded-lg border border-neon-cyan/10 bg-surface-dark p-4">
+        <div className="rounded-lg border border-primary/10 bg-card p-4">
           <Button asChild variant="outline">
             <Link href={`/experiments/${node.experimentSlug}`}>
               <ExternalLink className="mr-2 h-4 w-4" />

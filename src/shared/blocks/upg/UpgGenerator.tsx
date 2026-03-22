@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Atom,
+  Clock,
   Download,
   Expand,
+  Eye,
   Flag,
   Dna,
   Loader2,
@@ -19,6 +21,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { Link } from '@/core/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Progress } from '@/shared/components/ui/progress';
@@ -69,6 +72,11 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
 
+  const [history, setHistory] = useState<Array<{
+    id: string; prompt: string; status: string; createdAt: string;
+  }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressStepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -111,12 +119,30 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
     return () => stopProgressSimulation();
   }, [stopProgressSimulation]);
 
-  const handleGenerate = async (isRegenerate = false) => {
-    if (!user) {
-      setIsShowSignModal(true);
-      return;
+  const fetchHistory = useCallback(async () => {
+    if (!user) return;
+    setHistoryLoading(true);
+    try {
+      const resp = await fetch('/api/upg/my?page=1&pageSize=10');
+      const { code, data } = await resp.json();
+      if (code === 0 && data?.list) {
+        setHistory(data.list);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setHistoryLoading(false);
     }
+  }, [user]);
 
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  // Track whether anonymous user has generated (to show registration prompt)
+  const [showRegistrationPrompt, setShowRegistrationPrompt] = useState(false);
+
+  const handleGenerate = async (isRegenerate = false) => {
     const trimmed = prompt.trim();
     if (trimmed.length < MIN_PROMPT_LENGTH) {
       toast.error(t('generator.min_chars', { min: MIN_PROMPT_LENGTH }));
@@ -127,18 +153,22 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
       return;
     }
 
-    const cost = isRegenerate
-      ? UPG_CREDITS_PER_REGENERATION
-      : UPG_CREDITS_PER_GENERATION;
-    if (remainingCredits < cost) {
-      toast.error(
-        t('errors.insufficient_credits', {
-          cost,
-          remaining: remainingCredits,
-        })
-      );
-      return;
+    // Logged-in users: check credits
+    if (user) {
+      const cost = isRegenerate
+        ? UPG_CREDITS_PER_REGENERATION
+        : UPG_CREDITS_PER_GENERATION;
+      if (remainingCredits < cost) {
+        toast.error(
+          t('errors.insufficient_credits', {
+            cost,
+            remaining: remainingCredits,
+          })
+        );
+        return;
+      }
     }
+    // Anonymous users: let the backend handle rate limiting (1/day IP-based)
 
     setIsGenerating(true);
     setError(null);
@@ -167,14 +197,26 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
       setResult({ id: data.id, htmlContent: data.htmlContent });
       setHasGenerated(true);
       toast.success(t('generator.success'));
-      await fetchUserCredits();
+      if (user) {
+        await fetchUserCredits();
+        fetchHistory();
+      } else {
+        // Anonymous user just generated successfully — show registration prompt
+        setShowRegistrationPrompt(true);
+      }
     } catch (e: any) {
       stopProgressSimulation();
       setProgress(0);
       const msg = e.message || t('errors.generation_failed');
       setError(msg);
+      // Anonymous rate limit hit — prompt to sign in
+      if (!user && msg.includes('once per day')) {
+        setShowRegistrationPrompt(true);
+      }
       toast.error(msg);
-      await fetchUserCredits();
+      if (user) {
+        await fetchUserCredits();
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -303,47 +345,45 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                 size="lg"
                 className={cn(
                   "w-full",
-                  user && !isCheckSign && "text-base font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 hover:shadow-[0_0_20px_theme(colors.purple.500)] hover:scale-[1.02]"
+                  !isCheckSign && "text-base font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 hover:shadow-[0_0_20px_theme(colors.purple.500)] hover:scale-[1.02]"
                 )}
-                onClick={() => {
-                  if (!user && !isCheckSign) {
-                    setIsShowSignModal(true);
-                  } else {
-                    handleGenerate(false);
-                  }
-                }}
-                disabled={isCheckSign || isGenerating || (!!user && !isPromptValid)}
+                onClick={() => handleGenerate(false)}
+                disabled={isCheckSign || isGenerating || !isPromptValid}
               >
                 {isCheckSign ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('generator.checking_account')}
                   </>
-                ) : !user ? (
-                  <>
-                    <User className="mr-2 h-4 w-4" />
-                    {t('generator.sign_in_to_generate')}
-                  </>
                 ) : isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('generator.generating')}
                   </>
-                ) : (
+                ) : user ? (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
                     {t('generator.generate_button', {
                       credits: UPG_CREDITS_PER_GENERATION,
                     })}
                   </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {t('generator.try_free')}
+                  </>
                 )}
               </Button>
 
-              {user && (
+              {user ? (
                 <p className="text-muted-foreground text-center text-xs">
                   {t('generator.credits_remaining', {
                     credits: remainingCredits,
                   })}
+                </p>
+              ) : !isCheckSign && (
+                <p className="text-muted-foreground text-center text-xs">
+                  {t('generator.free_trial_hint')}
                 </p>
               )}
 
@@ -363,6 +403,56 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
             </CardContent>
           </Card>
 
+          {/* History */}
+          {user && history.length > 0 && (
+            <Card>
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>{t('history.title')}</span>
+                  </div>
+                  <Link href="/upg/my">
+                    <Button variant="ghost" size="sm" className="text-xs cursor-pointer">
+                      {t('history.view_all') ?? 'View All'}
+                    </Button>
+                  </Link>
+                </div>
+                <div className="space-y-1.5">
+                  {history.map((gen) => (
+                    <div
+                      key={gen.id}
+                      className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className={cn("inline-block h-2 w-2 rounded-full flex-shrink-0", {
+                          'bg-green-500': gen.status === 'completed',
+                          'bg-red-500': gen.status === 'failed',
+                          'bg-amber-500': gen.status === 'pending' || gen.status === 'generating',
+                        })} />
+                        <span className="text-sm truncate">{gen.prompt}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(gen.createdAt).toLocaleDateString(locale === 'en' ? 'en' : 'zh', {
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                          })}
+                        </span>
+                        {gen.status === 'completed' && (
+                          <Link href={`/upg/view/${gen.id}`}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer">
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Result Area */}
           {(result || error) && (
             <Card className="animate-fade-in-up overflow-hidden">
@@ -374,12 +464,12 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                 )}
 
                 {result && (
-                  <div className="relative group">
+                  <div className="relative">
                     <div className="overflow-hidden rounded-lg border shadow-sm">
                       <iframe
                         ref={iframeRef}
                         srcDoc={result.htmlContent}
-                        sandbox="allow-scripts"
+                        sandbox="allow-scripts allow-same-origin"
                         className={cn(
                           "h-[70vh] min-h-[500px] w-full border-0 transition-opacity duration-500 ease-out",
                           isIframeLoaded ? "opacity-100" : "opacity-0"
@@ -389,34 +479,61 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                       />
                     </div>
 
-                    {/* Action Bar — visible on hover */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border bg-background/80 p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 ease-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
-                      <div className="flex items-center gap-0.5">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 cursor-pointer" onClick={handleFullscreen}>
-                          <Expand className="h-4 w-4" />
+                    {/* Action Bar — always visible */}
+                    <div className="mt-3 flex items-center justify-center gap-2">
+                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" onClick={handleFullscreen}>
+                        <Expand className="h-3.5 w-3.5" />
+                        {t('actions.fullscreen')}
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" onClick={handleDownload}>
+                        <Download className="h-3.5 w-3.5" />
+                        {t('actions.download_short')}
+                      </Button>
+                      {hasGenerated && user && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGenerate(true)}
+                          disabled={isGenerating}
+                          className="gap-1.5 cursor-pointer text-primary hover:text-primary"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                          {t('actions.regenerate', { credits: UPG_CREDITS_PER_REGENERATION })}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 cursor-pointer" onClick={handleDownload}>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 cursor-pointer" onClick={handleReport}>
-                          <Flag className="h-4 w-4" />
-                        </Button>
-                        {hasGenerated && (
-                          <>
-                            <div className="mx-1 h-5 w-px bg-border" />
+                      )}
+                      <Button variant="ghost" size="sm" className="gap-1.5 cursor-pointer text-muted-foreground" onClick={handleReport}>
+                        <Flag className="h-3.5 w-3.5" />
+                        {t('actions.report')}
+                      </Button>
+                    </div>
+
+                    {/* Anonymous user registration prompt overlay */}
+                    {showRegistrationPrompt && !user && (
+                      <div className="absolute inset-0 flex items-end justify-center rounded-lg bg-gradient-to-t from-background via-background/80 to-transparent">
+                        <div className="mb-8 text-center space-y-3 p-6">
+                          <p className="text-lg font-semibold">
+                            {t('generator.anon_save_prompt')}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('generator.anon_save_description')}
+                          </p>
+                          <div className="flex items-center justify-center gap-3">
+                            <Button
+                              onClick={() => setIsShowSignModal(true)}
+                              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                            >
+                              {t('generator.anon_sign_up')}
+                            </Button>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              onClick={() => handleGenerate(true)}
-                              disabled={isGenerating}
-                              className="h-9 w-9 cursor-pointer text-primary hover:text-primary"
+                              onClick={() => setShowRegistrationPrompt(false)}
                             >
-                              <RefreshCw className="h-4 w-4" />
+                              {t('generator.anon_later')}
                             </Button>
-                          </>
-                        )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </CardContent>

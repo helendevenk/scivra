@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hooke's Law — NeonPhysics AP Physics 1</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:18px 24px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(99,102,241,.08));border-bottom:1px solid rgba(59,130,246,.2)}
+    .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px}
+    h1{font-size:1.6rem;font-weight:700;color:#f0f4ff;letter-spacing:-.3px}
+    .subtitle{color:#94a3b8;font-size:.85rem}
+
+    .main-layout{display:grid;grid-template-columns:280px 1fr 300px;grid-template-rows:1fr;gap:0;height:calc(100vh - 80px)}
+
+    /* Left panel */
+    .left-panel{background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .info-text{font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:8px}
+    .info-text strong{color:#e2e8f0}
+    .app-list{font-size:11px;color:#64748b;padding-left:16px;line-height:1.8}
+
+    /* Center area */
+    .center-area{display:flex;flex-direction:column;background:#070b14;position:relative}
+    .scene-wrap{flex:1;position:relative;min-height:0}
+    .scene-wrap canvas{display:block;width:100%!important;height:100%!important}
+    .overlay-stats{position:absolute;top:14px;left:14px;background:rgba(7,9,20,.88);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 16px;min-width:220px;backdrop-filter:blur(8px)}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:6px}
+    .stat-row:last-child{margin-bottom:0}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .stat-value{font-size:13px;font-weight:600;color:#e2e8f0;font-variant-numeric:tabular-nums}
+    .stat-value.accent{color:#60a5fa}
+    .stat-value.warn{color:#f87171}
+
+    .chart-wrap{height:200px;border-top:1px solid rgba(255,255,255,.06);background:#0a0f1a;position:relative;flex-shrink:0}
+    .chart-wrap canvas{width:100%;height:100%}
+    .chart-label{position:absolute;top:8px;left:14px;font-size:11px;color:#475569;font-weight:600;letter-spacing:.5px}
+
+    /* Energy bar */
+    .energy-section{padding:8px 16px;background:#0a0f1a;border-top:1px solid rgba(255,255,255,.06)}
+    .energy-bar-label{display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-bottom:4px}
+    .energy-bar-track{height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden}
+    .energy-pe{height:100%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);border-radius:5px;transition:width .1s linear}
+
+    /* Right panel */
+    .right-panel{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;display:flex;flex-direction:column}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#60a5fa;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;outline:none;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .btn{padding:7px 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#3b82f6;color:#fff}
+    .btn-primary:hover{background:#2563eb}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
+    .btn-amber{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24}
+    .btn-amber:hover{background:rgba(251,191,36,.25)}
+
+    .material-tag{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;margin-right:4px;margin-bottom:4px}
+
+    /* Quiz */
+    .quiz-box{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:12px;margin-bottom:10px}
+    .quiz-q{font-size:12px;color:#e2e8f0;margin-bottom:8px;font-weight:600}
+    .quiz-opts label{display:block;font-size:11px;color:#94a3b8;padding:4px 8px;border-radius:4px;cursor:pointer;margin-bottom:2px;transition:background .1s}
+    .quiz-opts label:hover{background:rgba(255,255,255,.05)}
+    .quiz-opts input{margin-right:6px}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 8px;border-radius:4px;display:none}
+    .quiz-feedback.correct{display:block;background:rgba(34,197,94,.1);color:#86efac}
+    .quiz-feedback.wrong{display:block;background:rgba(239,68,68,.1);color:#fca5a5}
+
+    .katex{font-size:.88em!important}
+
+    /* Responsive */
+    @media(max-width:1100px){
+      .main-layout{grid-template-columns:1fr;grid-template-rows:auto 50vh auto auto}
+      .left-panel{order:2}
+      .center-area{order:1}
+      .right-panel{order:3}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac">FREE</span>
+  </div>
+  <h1>Hooke's Law</h1>
+  <p class="subtitle">Elasticity, spring constant, elastic limit, and elastic potential energy</p>
+</div>
+
+<div class="main-layout">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Hooke's Law: restoring force</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Elastic potential energy stored</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Spring constant from force & extension</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Hooke's Law Explained</div>
+      <div class="info-text">
+        <strong>Hooke's Law</strong> states that the force needed to extend or compress a spring is directly proportional to the displacement from its natural length, as long as the <strong>elastic limit</strong> is not exceeded.
+      </div>
+      <div class="info-text">
+        Beyond the elastic limit, the material deforms permanently (plastic deformation) and the linear relationship breaks down. The spring constant <strong>k</strong> measures stiffness: higher k means a stiffer spring.
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Real-World Applications</div>
+      <ul class="app-list">
+        <li>Vehicle suspension systems</li>
+        <li>Mechanical watches & clocks</li>
+        <li>Trampolines and mattresses</li>
+        <li>Archery bows</li>
+        <li>Seismometers for earthquake detection</li>
+        <li>Force gauges and spring scales</li>
+      </ul>
+    </div>
+    <div class="section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-box" id="quiz1">
+        <div class="quiz-q">Q1: A spring with k = 400 N/m is stretched 0.2 m. What is the elastic PE stored?</div>
+        <div class="quiz-opts">
+          <label><input type="radio" name="q1" value="a"> 16 J</label>
+          <label><input type="radio" name="q1" value="b"> 8 J</label>
+          <label><input type="radio" name="q1" value="c"> 40 J</label>
+          <label><input type="radio" name="q1" value="d"> 80 J</label>
+        </div>
+        <div class="quiz-feedback" id="q1fb"></div>
+      </div>
+      <div class="quiz-box" id="quiz2">
+        <div class="quiz-q">Q2: If you double the applied force on a Hookean spring, the extension:</div>
+        <div class="quiz-opts">
+          <label><input type="radio" name="q2" value="a"> Halves</label>
+          <label><input type="radio" name="q2" value="b"> Doubles</label>
+          <label><input type="radio" name="q2" value="c"> Quadruples</label>
+          <label><input type="radio" name="q2" value="d"> Stays the same</label>
+        </div>
+        <div class="quiz-feedback" id="q2fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER AREA -->
+  <div class="center-area">
+    <div class="scene-wrap" id="sceneWrap">
+      <canvas id="c3d"></canvas>
+      <div class="overlay-stats">
+        <div class="stat-row"><span class="stat-label">Extension x</span><span class="stat-value accent" id="statX">0.250 m</span></div>
+        <div class="stat-row"><span class="stat-label">Spring Force F</span><span class="stat-value" id="statF">50.0 N</span></div>
+        <div class="stat-row"><span class="stat-label">Potential Energy</span><span class="stat-value accent" id="statPE">6.25 J</span></div>
+        <div class="stat-row"><span class="stat-label">Elastic Limit</span><span class="stat-value" id="statLimit">OK</span></div>
+      </div>
+    </div>
+    <div class="energy-section">
+      <div class="energy-bar-label"><span>Elastic PE: <span id="peLabel">6.25 J</span></span><span>Max ~20 J</span></div>
+      <div class="energy-bar-track"><div class="energy-pe" id="peBar" style="width:30%"></div></div>
+    </div>
+    <div class="chart-wrap">
+      <span class="chart-label">FORCE vs DISPLACEMENT</span>
+      <canvas id="chartCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Spring Constant k</span><span class="param-val" id="vk">200 N/m</span></div>
+        <input type="range" id="sk" min="10" max="1000" value="200" step="10">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Applied Force F</span><span class="param-val" id="vf">50 N</span></div>
+        <input type="range" id="sf" min="0" max="200" value="50" step="5">
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Controls</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="btnReset">Reset</button>
+        <button class="btn btn-amber" id="btnRandom">Random Experiment</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Material Presets</div>
+      <div class="info-text" id="matInfo">Current: Custom</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost material-btn" data-mat="rubber">Rubber Band</button>
+        <button class="btn btn-ghost material-btn" data-mat="steel">Steel Spring</button>
+        <button class="btn btn-ghost material-btn" data-mat="copper">Copper Wire</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Live Values</div>
+      <div class="stat-row"><span class="stat-label">x = F / k</span><span class="stat-value" id="liveX">0.250 m</span></div>
+      <div class="stat-row"><span class="stat-label">PE = 0.5 k x^2</span><span class="stat-value" id="livePE">6.25 J</span></div>
+      <div class="stat-row"><span class="stat-label">F_spring = -kx</span><span class="stat-value" id="liveFs">-50.0 N</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Materials database ────────────────────────────────────────────
+var MATERIALS = {
+  rubber:  { name: 'Rubber Band',  k: 50,  color: 0xe74c3c, limitX: 0.3 },
+  steel:   { name: 'Steel Spring', k: 500, color: 0x95a5a6, limitX: 0.8 },
+  copper:  { name: 'Copper Wire',  k: 200, color: 0xe67e22, limitX: 0.5 }
+};
+
+// ── State ─────────────────────────────────────────────────────────
+var springK = 200;
+var appliedForce = 50;
+var elasticLimitX = 0.5;
+var currentMaterial = null;
+var NATURAL_LENGTH = 3.0;
+var SCALE = 3.0;
+var chartHistory = [];
+
+// ── Derived ───────────────────────────────────────────────────────
+function getExtension() { return appliedForce / springK; }
+function getPE() { var x = getExtension(); return 0.5 * springK * x * x; }
+function isOverLimit() { return getExtension() > elasticLimitX; }
+
+// ── KaTeX formulas ────────────────────────────────────────────────
+try {
+  katex.render('F = kx', document.getElementById('f1'), {displayMode: true});
+  katex.render('PE = \\tfrac{1}{2}kx^2', document.getElementById('f2'), {displayMode: true});
+  katex.render('k = \\dfrac{F}{x}', document.getElementById('f3'), {displayMode: true});
+} catch(e) { /* KaTeX not loaded */ }
+
+// ── Three.js Setup ────────────────────────────────────────────────
+var wrap = document.getElementById('sceneWrap');
+var canvas3d = document.getElementById('c3d');
+var renderer, scene, camera, controls;
+
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
+
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 3, 9);
+  camera.lookAt(0, 0, 0);
+
+  controls = (typeof THREE.OrbitControls !== 'undefined')
+    ? new THREE.OrbitControls(camera, renderer.domElement) : null;
+  if (controls) {
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(1, 0, 0);
+    controls.update();
+  }
+
+  // ── Lighting (4 lights) ──────────────────────────────────────────
+  var ambLight = new THREE.AmbientLight(0x334466, 0.7);
+  scene.add(ambLight);
+
+  var dirLight = new THREE.DirectionalLight(0x6699ff, 1.0);
+  dirLight.position.set(5, 8, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+
+  var ptLight1 = new THREE.PointLight(0x3b82f6, 1.5, 20);
+  ptLight1.position.set(-3, 4, 3);
+  scene.add(ptLight1);
+
+  var ptLight2 = new THREE.PointLight(0x8b5cf6, 1.0, 15);
+  ptLight2.position.set(5, 2, -2);
+  scene.add(ptLight2);
+
+  // ── Ground grid ──────────────────────────────────────────────────
+  var grid = new THREE.GridHelper(20, 20, 0x1a2540, 0x0f1a2e);
+  grid.position.y = -1.5;
+  scene.add(grid);
+
+  // ── Wall (left anchor) ───────────────────────────────────────────
+  var wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.6 });
+  var wall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3, 2), wallMat);
+  wall.position.set(-4, 0, 0);
+  wall.castShadow = true;
+  wall.receiveShadow = true;
+  scene.add(wall);
+
+  // anchor plate
+  var plateMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7, roughness: 0.3 });
+  var plate = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.8), plateMat);
+  plate.position.set(-3.8, 0, 0);
+  scene.add(plate);
+
+  // ── Block (mass) ─────────────────────────────────────────────────
+  var blockMat = new THREE.MeshStandardMaterial({
+    color: 0x3b82f6, emissive: 0x1d4ed8, emissiveIntensity: 0.3,
+    metalness: 0.3, roughness: 0.5
+  });
+  var block = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), blockMat);
+  block.castShadow = true;
+  block.receiveShadow = true;
+  scene.add(block);
+
+  // glow
+  var glowMat = new THREE.MeshStandardMaterial({
+    color: 0x93c5fd, emissive: 0x93c5fd, emissiveIntensity: 0.5,
+    transparent: true, opacity: 0.15, side: THREE.BackSide
+  });
+  var glow = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.95, 0.95), glowMat);
+  block.add(glow);
+
+  // ── Spring helix (TubeGeometry) ──────────────────────────────────
+  var COILS = 14;
+  var HELIX_RADIUS = 0.25;
+  var springGroup = new THREE.Group();
+  scene.add(springGroup);
+  var springMesh = null;
+  var springColor = 0x60a5fa;
+
+  function buildSpring(totalLength) {
+    if (springMesh) {
+      springMesh.geometry.dispose();
+      springMesh.material.dispose();
+      springGroup.remove(springMesh);
+    }
+
+    var points = [];
+    var segments = COILS * 24;
+    for (var i = 0; i <= segments; i++) {
+      var t = i / segments;
+      var angle = t * COILS * Math.PI * 2;
+      var px = -3.7 + t * totalLength;
+      var py = HELIX_RADIUS * Math.sin(angle);
+      var pz = HELIX_RADIUS * Math.cos(angle);
+      points.push(new THREE.Vector3(px, py, pz));
+    }
+
+    var curve = new THREE.CatmullRomCurve3(points, false);
+    var tubeGeo = new THREE.TubeGeometry(curve, segments, 0.04, 8, false);
+    var tubeMat = new THREE.MeshStandardMaterial({
+      color: springColor,
+      emissive: springColor,
+      emissiveIntensity: 0.2,
+      metalness: 0.6,
+      roughness: 0.3
+    });
+    springMesh = new THREE.Mesh(tubeGeo, tubeMat);
+    springMesh.castShadow = true;
+    springGroup.add(springMesh);
+  }
+
+  // ── Ruler ────────────────────────────────────────────────────────
+  var rulerGroup = new THREE.Group();
+  rulerGroup.position.y = -1.0;
+  scene.add(rulerGroup);
+
+  function buildRuler() {
+    while (rulerGroup.children.length) {
+      var ch = rulerGroup.children[0];
+      if (ch.geometry) ch.geometry.dispose();
+      if (ch.material) ch.material.dispose();
+      rulerGroup.remove(ch);
+    }
+    var lineMat = new THREE.LineBasicMaterial({ color: 0x475569 });
+    // main line
+    var mainPts = [new THREE.Vector3(-3.7, 0, 0), new THREE.Vector3(6, 0, 0)];
+    var mainLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(mainPts), lineMat);
+    rulerGroup.add(mainLine);
+
+    // ticks every 0.1m (scaled)
+    for (var i = 0; i <= 30; i++) {
+      var xPos = -3.7 + (i / 10) * SCALE;
+      var tickH = (i % 5 === 0) ? 0.15 : 0.07;
+      var tickPts = [new THREE.Vector3(xPos, 0, 0), new THREE.Vector3(xPos, tickH, 0)];
+      var tick = new THREE.Line(new THREE.BufferGeometry().setFromPoints(tickPts), lineMat);
+      rulerGroup.add(tick);
+    }
+  }
+  buildRuler();
+
+  // ── Natural length marker (dashed) ──────────────────────────────
+  var natMarkerMat = new THREE.LineDashedMaterial({ color: 0x22d3ee, dashSize: 0.12, gapSize: 0.08 });
+  var natEndX = -3.7 + NATURAL_LENGTH;
+  var natPts = [new THREE.Vector3(natEndX, -1.2, 0), new THREE.Vector3(natEndX, 1.2, 0)];
+  var natMarker = new THREE.Line(new THREE.BufferGeometry().setFromPoints(natPts), natMarkerMat);
+  natMarker.computeLineDistances();
+  scene.add(natMarker);
+
+  // label
+  function makeLabel(text, color) {
+    var cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 64;
+    var cx = cv.getContext('2d');
+    cx.font = 'bold 24px sans-serif';
+    cx.fillStyle = color || '#94a3b8';
+    cx.textAlign = 'center';
+    cx.fillText(text, 128, 40);
+    var tex = new THREE.CanvasTexture(cv);
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.85 }));
+    sp.scale.set(1.8, 0.45, 1);
+    return sp;
+  }
+
+  var natLabel = makeLabel('Natural Length', '#22d3ee');
+  natLabel.position.set(natEndX, 1.5, 0);
+  scene.add(natLabel);
+
+  // ── Force arrows ─────────────────────────────────────────────────
+  // Applied force arrow (yellow, pointing right)
+  var appliedArrowDir = new THREE.Vector3(1, 0, 0);
+  var appliedArrow = new THREE.ArrowHelper(appliedArrowDir, new THREE.Vector3(0, 0, 0), 1, 0xfbbf24, 0.2, 0.12);
+  scene.add(appliedArrow);
+
+  // Spring restoring force arrow (red, pointing left)
+  var restoreArrowDir = new THREE.Vector3(-1, 0, 0);
+  var restoreArrow = new THREE.ArrowHelper(restoreArrowDir, new THREE.Vector3(0, 0, 0), 1, 0xef4444, 0.2, 0.12);
+  scene.add(restoreArrow);
+
+  // arrow labels
+  var appliedLabel = makeLabel('F (applied)', '#fbbf24');
+  appliedLabel.position.set(0, 0.8, 0);
+  scene.add(appliedLabel);
+
+  var restoreLabel = makeLabel('F = -kx', '#ef4444');
+  restoreLabel.position.set(0, -0.8, 0);
+  scene.add(restoreLabel);
+
+  // ── Extension marker ─────────────────────────────────────────────
+  var extLabel = makeLabel('x = 0.25 m', '#60a5fa');
+  extLabel.position.set(0, -1.6, 0);
+  scene.add(extLabel);
+
+  // ── Floor plane ──────────────────────────────────────────────────
+  var floorGeo = new THREE.PlaneGeometry(20, 20);
+  var floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9, metalness: 0.1 });
+  var floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.5;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+} catch (e) {
+  console.error('Three.js init error:', e);
+}
+
+// ── Chart (F-x graph) canvas ──────────────────────────────────────
+var chartCanvas = document.getElementById('chartCanvas');
+var chartCtx = chartCanvas.getContext('2d');
+
+function drawChart() {
+  var w = chartCanvas.width;
+  var h = chartCanvas.height;
+  chartCtx.clearRect(0, 0, w, h);
+
+  var padL = 50, padR = 20, padT = 30, padB = 30;
+  var plotW = w - padL - padR;
+  var plotH = h - padT - padB;
+
+  // axes
+  chartCtx.strokeStyle = '#334155';
+  chartCtx.lineWidth = 1;
+  chartCtx.beginPath();
+  chartCtx.moveTo(padL, padT);
+  chartCtx.lineTo(padL, padT + plotH);
+  chartCtx.lineTo(padL + plotW, padT + plotH);
+  chartCtx.stroke();
+
+  // axis labels
+  chartCtx.fillStyle = '#64748b';
+  chartCtx.font = '11px sans-serif';
+  chartCtx.textAlign = 'center';
+  chartCtx.fillText('Displacement x (m)', padL + plotW / 2, h - 4);
+  chartCtx.save();
+  chartCtx.translate(12, padT + plotH / 2);
+  chartCtx.rotate(-Math.PI / 2);
+  chartCtx.fillText('Force F (N)', 0, 0);
+  chartCtx.restore();
+
+  // scale: x 0..1m, F 0..maxF
+  var maxX = 1.0;
+  var maxF = 250;
+
+  // tick marks
+  chartCtx.fillStyle = '#475569';
+  chartCtx.font = '10px sans-serif';
+  chartCtx.textAlign = 'center';
+  for (var i = 0; i <= 5; i++) {
+    var xv = (i / 5) * maxX;
+    var px = padL + (xv / maxX) * plotW;
+    chartCtx.fillText(xv.toFixed(1), px, padT + plotH + 14);
+    chartCtx.beginPath();
+    chartCtx.moveTo(px, padT + plotH);
+    chartCtx.lineTo(px, padT + plotH + 4);
+    chartCtx.strokeStyle = '#334155';
+    chartCtx.stroke();
+  }
+  chartCtx.textAlign = 'right';
+  for (var j = 0; j <= 5; j++) {
+    var fv = (j / 5) * maxF;
+    var py = padT + plotH - (fv / maxF) * plotH;
+    chartCtx.fillText(fv.toFixed(0), padL - 6, py + 3);
+    chartCtx.beginPath();
+    chartCtx.moveTo(padL - 3, py);
+    chartCtx.lineTo(padL, py);
+    chartCtx.strokeStyle = '#334155';
+    chartCtx.stroke();
+  }
+
+  // elastic limit line (dashed)
+  var limitPx = padL + (elasticLimitX / maxX) * plotW;
+  if (limitPx > padL && limitPx < padL + plotW) {
+    chartCtx.setLineDash([4, 4]);
+    chartCtx.strokeStyle = '#f87171';
+    chartCtx.lineWidth = 1;
+    chartCtx.beginPath();
+    chartCtx.moveTo(limitPx, padT);
+    chartCtx.lineTo(limitPx, padT + plotH);
+    chartCtx.stroke();
+    chartCtx.setLineDash([]);
+    chartCtx.fillStyle = '#f87171';
+    chartCtx.font = '10px sans-serif';
+    chartCtx.textAlign = 'left';
+    chartCtx.fillText('Elastic Limit', limitPx + 4, padT + 12);
+  }
+
+  // Hooke's law line F = kx
+  chartCtx.strokeStyle = 'rgba(96,165,250,0.4)';
+  chartCtx.lineWidth = 1;
+  chartCtx.beginPath();
+  for (var xi = 0; xi <= maxX; xi += 0.005) {
+    var fi = springK * xi;
+    if (fi > maxF) break;
+    var cpx = padL + (xi / maxX) * plotW;
+    var cpy = padT + plotH - (fi / maxF) * plotH;
+    if (xi === 0) chartCtx.moveTo(cpx, cpy);
+    else chartCtx.lineTo(cpx, cpy);
+  }
+  chartCtx.stroke();
+
+  // plot history points
+  chartCtx.fillStyle = 'rgba(96,165,250,0.6)';
+  for (var hi = 0; hi < chartHistory.length; hi++) {
+    var hp = chartHistory[hi];
+    var hpx = padL + (hp.x / maxX) * plotW;
+    var hpy = padT + plotH - (hp.f / maxF) * plotH;
+    if (hpx >= padL && hpx <= padL + plotW && hpy >= padT && hpy <= padT + plotH) {
+      chartCtx.beginPath();
+      chartCtx.arc(hpx, hpy, 2, 0, Math.PI * 2);
+      chartCtx.fill();
+    }
+  }
+
+  // current point (big dot)
+  var cx = getExtension();
+  var cf = appliedForce;
+  var dotPx = padL + (cx / maxX) * plotW;
+  var dotPy = padT + plotH - (cf / maxF) * plotH;
+  if (dotPx >= padL && dotPx <= padL + plotW && dotPy >= padT && dotPy <= padT + plotH) {
+    // glow
+    chartCtx.fillStyle = isOverLimit() ? 'rgba(248,113,113,0.3)' : 'rgba(96,165,250,0.3)';
+    chartCtx.beginPath();
+    chartCtx.arc(dotPx, dotPy, 8, 0, Math.PI * 2);
+    chartCtx.fill();
+    // dot
+    chartCtx.fillStyle = isOverLimit() ? '#f87171' : '#60a5fa';
+    chartCtx.beginPath();
+    chartCtx.arc(dotPx, dotPy, 4, 0, Math.PI * 2);
+    chartCtx.fill();
+  }
+}
+
+// ── Scene update ──────────────────────────────────────────────────
+function updateScene() {
+  var x = getExtension();
+  var pe = getPE();
+  var overLimit = isOverLimit();
+
+  // update block position
+  var springEndX = -3.7 + NATURAL_LENGTH + x * SCALE;
+  var blockX = springEndX + 0.4;
+  block.position.set(blockX, 0, 0);
+
+  // color block red if over limit
+  if (overLimit) {
+    blockMat.color.setHex(0xef4444);
+    blockMat.emissive.setHex(0x991b1b);
+  } else {
+    blockMat.color.setHex(currentMaterial ? MATERIALS[currentMaterial].color : 0x3b82f6);
+    blockMat.emissive.setHex(0x1d4ed8);
+  }
+
+  // rebuild spring
+  var totalSpringLen = NATURAL_LENGTH + x * SCALE;
+  buildSpring(totalSpringLen);
+
+  // update spring color
+  if (overLimit) {
+    springColor = 0xf87171;
+  } else {
+    springColor = 0x60a5fa;
+  }
+
+  // force arrows
+  var arrowLen = Math.max(0.3, Math.min(x * SCALE * 0.8, 3));
+
+  // applied force (yellow, right side of block, pointing right)
+  appliedArrow.position.set(blockX + 0.5, 0, 0);
+  appliedArrow.setLength(arrowLen, 0.2, 0.12);
+
+  // restoring force (red, left side of block, pointing left)
+  restoreArrow.position.set(blockX - 0.5, 0, 0);
+  restoreArrow.setLength(arrowLen, 0.2, 0.12);
+
+  // labels
+  appliedLabel.position.set(blockX + 0.5 + arrowLen / 2, 0.7, 0);
+  restoreLabel.position.set(blockX - 0.5 - arrowLen / 2, -0.7, 0);
+
+  // extension label
+  var extMidX = -3.7 + NATURAL_LENGTH + (x * SCALE) / 2;
+  extLabel.position.set(extMidX, -1.6, 0);
+  // update ext label text
+  updateExtLabel(x);
+
+  // hide arrows when F=0
+  appliedArrow.visible = appliedForce > 0;
+  restoreArrow.visible = appliedForce > 0;
+  appliedLabel.visible = appliedForce > 0;
+  restoreLabel.visible = appliedForce > 0;
+
+  // ── UI updates ─────────────────────────────────────────────────
+  document.getElementById('statX').textContent = x.toFixed(3) + ' m';
+  document.getElementById('statF').textContent = appliedForce.toFixed(1) + ' N';
+  document.getElementById('statPE').textContent = pe.toFixed(2) + ' J';
+
+  var limitEl = document.getElementById('statLimit');
+  if (overLimit) {
+    limitEl.textContent = 'EXCEEDED';
+    limitEl.className = 'stat-value warn';
+  } else {
+    limitEl.textContent = 'OK';
+    limitEl.className = 'stat-value accent';
+  }
+
+  document.getElementById('liveX').textContent = x.toFixed(3) + ' m';
+  document.getElementById('livePE').textContent = pe.toFixed(2) + ' J';
+  document.getElementById('liveFs').textContent = (-appliedForce).toFixed(1) + ' N';
+
+  // energy bar
+  var maxPE = 20;
+  var pePct = Math.min((pe / maxPE) * 100, 100);
+  document.getElementById('peBar').style.width = pePct + '%';
+  document.getElementById('peBar').style.background = overLimit
+    ? 'linear-gradient(90deg,#ef4444,#f87171)'
+    : 'linear-gradient(90deg,#8b5cf6,#a78bfa)';
+  document.getElementById('peLabel').textContent = pe.toFixed(2) + ' J';
+
+  // chart history
+  if (appliedForce > 0) {
+    chartHistory.push({ x: x, f: appliedForce });
+    if (chartHistory.length > 500) chartHistory.shift();
+  }
+}
+
+function updateExtLabel(x) {
+  // recreate sprite texture for extension label
+  var cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 64;
+  var cx = cv.getContext('2d');
+  cx.font = 'bold 22px sans-serif';
+  cx.fillStyle = isOverLimit() ? '#f87171' : '#60a5fa';
+  cx.textAlign = 'center';
+  cx.fillText('x = ' + x.toFixed(3) + ' m', 128, 40);
+  extLabel.material.map.dispose();
+  extLabel.material.map = new THREE.CanvasTexture(cv);
+  extLabel.material.needsUpdate = true;
+}
+
+// ── Slider bindings ───────────────────────────────────────────────
+var sliderK = document.getElementById('sk');
+var sliderF = document.getElementById('sf');
+
+sliderK.addEventListener('input', function() {
+  springK = parseInt(this.value, 10);
+  document.getElementById('vk').textContent = springK + ' N/m';
+  currentMaterial = null;
+  document.getElementById('matInfo').textContent = 'Current: Custom';
+  updateScene();
+  drawChart();
+});
+
+sliderF.addEventListener('input', function() {
+  appliedForce = parseInt(this.value, 10);
+  document.getElementById('vf').textContent = appliedForce + ' N';
+  updateScene();
+  drawChart();
+});
+
+// ── Material presets ──────────────────────────────────────────────
+var matBtns = document.querySelectorAll('.material-btn');
+for (var mi = 0; mi < matBtns.length; mi++) {
+  matBtns[mi].addEventListener('click', function() {
+    var matKey = this.getAttribute('data-mat');
+    var mat = MATERIALS[matKey];
+    currentMaterial = matKey;
+    springK = mat.k;
+    elasticLimitX = mat.limitX;
+    sliderK.value = springK;
+    document.getElementById('vk').textContent = springK + ' N/m';
+    document.getElementById('matInfo').textContent = 'Current: ' + mat.name + ' (limit: ' + mat.limitX + ' m)';
+    updateScene();
+    drawChart();
+  });
+}
+
+// ── Reset button ──────────────────────────────────────────────────
+document.getElementById('btnReset').addEventListener('click', function() {
+  springK = 200;
+  appliedForce = 50;
+  elasticLimitX = 0.5;
+  currentMaterial = null;
+  sliderK.value = 200;
+  sliderF.value = 50;
+  document.getElementById('vk').textContent = '200 N/m';
+  document.getElementById('vf').textContent = '50 N';
+  document.getElementById('matInfo').textContent = 'Current: Custom';
+  chartHistory = [];
+  updateScene();
+  drawChart();
+});
+
+// ── Random experiment ─────────────────────────────────────────────
+document.getElementById('btnRandom').addEventListener('click', function() {
+  var keys = Object.keys(MATERIALS);
+  var rk = keys[Math.floor(Math.random() * keys.length)];
+  var mat = MATERIALS[rk];
+  currentMaterial = rk;
+  springK = mat.k;
+  elasticLimitX = mat.limitX;
+  appliedForce = Math.round((Math.random() * 150 + 10) / 5) * 5;
+  sliderK.value = springK;
+  sliderF.value = appliedForce;
+  document.getElementById('vk').textContent = springK + ' N/m';
+  document.getElementById('vf').textContent = appliedForce + ' N';
+  document.getElementById('matInfo').textContent = 'Current: ' + mat.name + ' (limit: ' + mat.limitX + ' m)';
+  chartHistory = [];
+  updateScene();
+  drawChart();
+});
+
+// ── Quiz logic ────────────────────────────────────────────────────
+document.querySelectorAll('#quiz1 input').forEach(function(inp) {
+  inp.addEventListener('change', function() {
+    var fb = document.getElementById('q1fb');
+    if (this.value === 'b') {
+      fb.textContent = 'Correct! PE = 0.5 * 400 * 0.04 = 8 J';
+      fb.className = 'quiz-feedback correct';
+    } else {
+      fb.textContent = 'Not quite. PE = 0.5 * k * x^2 = 0.5 * 400 * (0.2)^2 = 8 J';
+      fb.className = 'quiz-feedback wrong';
+    }
+  });
+});
+document.querySelectorAll('#quiz2 input').forEach(function(inp) {
+  inp.addEventListener('change', function() {
+    var fb = document.getElementById('q2fb');
+    if (this.value === 'b') {
+      fb.textContent = 'Correct! F = kx, so x = F/k. Double F means double x.';
+      fb.className = 'quiz-feedback correct';
+    } else {
+      fb.textContent = 'Remember: x = F/k. If F doubles, x doubles (linear relationship).';
+      fb.className = 'quiz-feedback wrong';
+    }
+  });
+});
+
+// ── Resize handler ────────────────────────────────────────────────
+function onResize() {
+  if (!renderer || !wrap) return;
+  var w = wrap.clientWidth;
+  var h = wrap.clientHeight;
+  if (w === 0 || h === 0) return;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+
+  // resize chart canvas
+  var cw = chartCanvas.parentElement;
+  chartCanvas.width = cw.clientWidth * Math.min(window.devicePixelRatio, 2);
+  chartCanvas.height = cw.clientHeight * Math.min(window.devicePixelRatio, 2);
+  chartCanvas.style.width = cw.clientWidth + 'px';
+  chartCanvas.style.height = cw.clientHeight + 'px';
+  chartCtx.scale(Math.min(window.devicePixelRatio, 2), Math.min(window.devicePixelRatio, 2));
+  drawChart();
+}
+window.addEventListener('resize', onResize);
+
+// ── Animation loop ────────────────────────────────────────────────
+function animate() {
+  if (controls) controls.update();
+  if (renderer && scene && camera) {
+    renderer.render(scene, camera);
+  }
+}
+
+try {
+  renderer.setAnimationLoop(animate);
+} catch (e) {
+  console.error('Animation loop error:', e);
+}
+
+// ── Initial setup ─────────────────────────────────────────────────
+setTimeout(function() {
+  onResize();
+  updateScene();
+  drawChart();
+}, 50);
+
+</script>
+</body>
+</html>

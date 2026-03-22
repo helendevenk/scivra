@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
 import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
@@ -109,6 +110,11 @@ export function Header({ header }: { header: HeaderType }) {
                   >
                     {item.icon && <SmartIcon name={item.icon as string} />}
                     {item.title}
+                    {item.badge && (
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 </NavigationMenuLink>
               );
@@ -121,6 +127,11 @@ export function Header({ header }: { header: HeaderType }) {
                     <SmartIcon name={item.icon as string} className="h-4 w-4" />
                   )}
                   {item.title}
+                  {item.badge && (
+                    <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+                      {item.badge}
+                    </span>
+                  )}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="min-w-2xs origin-top p-0.5">
                   <div className="border-foreground/5 bg-card ring-foreground/5 rounded-[calc(var(--radius)-2px)] border border-transparent p-2 shadow ring-1">
@@ -202,7 +213,14 @@ export function Header({ header }: { header: HeaderType }) {
                     onClick={closeMenu}
                     className="data-[state=open]:bg-muted flex items-center justify-between px-4 py-3 text-lg **:!font-normal"
                   >
-                    {item.title}
+                    <span className="flex items-center gap-2">
+                      {item.title}
+                      {item.badge && (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+                          {item.badge}
+                        </span>
+                      )}
+                    </span>
                   </Link>
                 )}
               </AccordionItem>

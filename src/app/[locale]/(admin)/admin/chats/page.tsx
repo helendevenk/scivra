@@ -17,9 +17,8 @@ export default async function ChatsPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Check if user has permission to read api keys
   await requirePermission({
-    code: PERMISSIONS.AITASKS_READ,
+    code: PERMISSIONS.CHATS_READ,
     redirectUrl: '/admin/no-permission',
     locale,
   });

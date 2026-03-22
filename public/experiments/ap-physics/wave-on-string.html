@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave on a String — NeonPhysics AP Physics 1</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(168,85,247,.08));border-bottom:1px solid rgba(56,189,248,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.4);color:#7dd3fc;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 360px;gap:0;height:calc(100vh - 90px)}
+    .canvas-wrap{position:relative}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.88);border:1px solid rgba(56,189,248,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(12px);min-width:230px}
+    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .cyan{color:#22d3ee} .violet{color:#c084fc} .green{color:#4ade80} .pink{color:#f472b6} .amber{color:#fbbf24}
+    .sidebar{background:rgba(15,23,42,.95);border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .mode-row{display:flex;gap:8px;margin-bottom:14px}
+    .mode-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:10px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+    .mode-btn.active{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.5);color:#7dd3fc}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#22d3ee;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(56,189,248,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#38bdf8;cursor:pointer}
+    .btn-row{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#0ea5e9;color:#fff}
+    .btn-primary:hover{background:#0284c7}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1)}
+    .btn-accent{background:rgba(168,85,247,.2);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+    .btn-accent:hover{background:rgba(168,85,247,.3)}
+    .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .toggle-label{font-size:12px;color:#94a3b8}
+    .toggle{position:relative;width:40px;height:22px;background:rgba(255,255,255,.1);border-radius:11px;cursor:pointer;transition:background .2s}
+    .toggle.on{background:rgba(56,189,248,.4)}
+    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#e2e8f0;transition:transform .2s}
+    .toggle.on::after{transform:translateX(18px)}
+    .formula-box{background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .preset-btn{display:block;width:100%;padding:9px 12px;margin-bottom:8px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#cbd5e1;font-size:12px;cursor:pointer;text-align:left;transition:all .15s}
+    .preset-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#e0f2fe}
+    .preset-btn .preset-name{font-weight:600;color:#7dd3fc;margin-bottom:2px}
+    .preset-btn .preset-desc{font-size:10px;color:#64748b}
+    .quiz-box{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
+    .quiz-q{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
+    .quiz-opt{display:block;width:100%;padding:7px 10px;margin-bottom:5px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;text-align:left;transition:all .15s}
+    .quiz-opt:hover{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2)}
+    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-opt.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+    .quiz-feedback{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:5px;display:none}
+    .quiz-feedback.show{display:block}
+    .quiz-feedback.correct{background:rgba(34,197,94,.1);color:#86efac}
+    .quiz-feedback.wrong{background:rgba(239,68,68,.1);color:#fca5a5}
+    .legend-row{display:flex;gap:12px;margin-top:8px}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+    .legend-dot{width:10px;height:6px;border-radius:3px}
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Wave on a String</h1>
+  <p class="subtitle">Transverse waves, amplitude, frequency, wavelength, wave speed, standing waves, and reflection</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row"><span class="stat-label">Wave Speed v</span><span class="stat-value cyan" id="statV">--</span></div>
+      <div class="stat-row"><span class="stat-label">Wavelength &lambda;</span><span class="stat-value violet" id="statLambda">--</span></div>
+      <div class="stat-row"><span class="stat-label">Frequency f</span><span class="stat-value pink" id="statFreq">--</span></div>
+      <div class="stat-row"><span class="stat-label">Linear Density &mu;</span><span class="stat-value amber" id="statMu">--</span></div>
+      <div class="stat-row"><span class="stat-label">Harmonic Mode</span><span class="stat-value green" id="statHarmonic">--</span></div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#22d3ee"></div>string</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>envelope</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>node</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Wave Mode</div>
+      <div class="mode-row">
+        <div class="mode-btn active" id="modeCont" onclick="setWaveMode('continuous')">Continuous</div>
+        <div class="mode-btn" id="modePulse" onclick="setWaveMode('pulse')">Single Pulse</div>
+      </div>
+
+      <div class="section-title">Boundary Condition</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Fixed End</span>
+        <div class="toggle" id="boundaryToggle" onclick="toggleBoundary()"></div>
+        <span class="toggle-label">Free End</span>
+      </div>
+
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Frequency</span><span class="param-val" id="vFreq">2.00 Hz</span></div>
+        <input type="range" id="sFreq" min="0.5" max="5" value="2" step="0.1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Amplitude</span><span class="param-val" id="vAmp">2.00 cm</span></div>
+        <input type="range" id="sAmp" min="0.5" max="5" value="2" step="0.1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Tension</span><span class="param-val" id="vTens">10.0 N</span></div>
+        <input type="range" id="sTens" min="1" max="20" value="10" step="0.5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Damping</span><span class="param-val" id="vDamp">0.00</span></div>
+        <input type="range" id="sDamp" min="0" max="1" value="0" step="0.02">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">Pause</button>
+        <button class="btn btn-ghost" onclick="resetSim()">Reset</button>
+        <button class="btn btn-accent" onclick="randomize()">Random</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <button class="preset-btn" onclick="applyPreset('standing')">
+        <div class="preset-name">Standing Waves</div>
+        <div class="preset-desc">Both ends fixed, frequency matched to fundamental</div>
+      </button>
+      <button class="preset-btn" onclick="applyPreset('freeEnd')">
+        <div class="preset-name">Free End Reflection</div>
+        <div class="preset-desc">One end free, observe reflected pulse</div>
+      </button>
+      <button class="preset-btn" onclick="applyPreset('singlePulse')">
+        <div class="preset-name">Single Pulse</div>
+        <div class="preset-desc">Watch a single pulse travel and reflect</div>
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Wave speed from frequency and wavelength</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Wave speed from tension and linear density</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Standing wave harmonics (fixed-fixed)</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AP Practice</div>
+      <div class="quiz-box" id="quiz1">
+        <div class="quiz-q">1. A string with tension 80 N and linear density 0.05 kg/m carries a wave. What is the wave speed?</div>
+        <button class="quiz-opt" onclick="checkQuiz(1,'a',this)">A) 20 m/s</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,'b',this)">B) 40 m/s</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,'c',this)">C) 1600 m/s</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,'d',this)">D) 4 m/s</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div class="quiz-box" id="quiz2">
+        <div class="quiz-q">2. A 2.0 m string fixed at both ends vibrates in its 3rd harmonic at 150 Hz. What is the wave speed on the string?</div>
+        <button class="quiz-opt" onclick="checkQuiz(2,'a',this)">A) 75 m/s</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,'b',this)">B) 100 m/s</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,'c',this)">C) 200 m/s</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,'d',this)">D) 300 m/s</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+try {
+
+// ─── State ──────────────────────────────────────────────────────
+var frequency = 2.0;
+var amplitude = 2.0;
+var tension = 10.0;
+var damping = 0.0;
+var linearDensity = 0.01;
+var waveMode = 'continuous';
+var freeEnd = false;
+var running = true;
+var simTime = 0;
+
+// String physics
+var STRING_LENGTH = 12;
+var NUM_SEGMENTS = 200;
+var segLen = STRING_LENGTH / NUM_SEGMENTS;
+
+// Wave simulation arrays
+var yPos = new Float64Array(NUM_SEGMENTS + 1);
+var yVel = new Float64Array(NUM_SEGMENTS + 1);
+var yPrev = new Float64Array(NUM_SEGMENTS + 1);
+
+// Pulse state
+var pulseSent = false;
+var pulsePhase = 0;
+
+// ─── Computed values ────────────────────────────────────────────
+function waveSpeed() {
+  return Math.sqrt(tension / linearDensity);
+}
+
+function wavelength() {
+  return waveSpeed() / frequency;
+}
+
+function fundamentalFreq() {
+  return waveSpeed() / (2 * STRING_LENGTH);
+}
+
+function harmonicNumber() {
+  var fn = fundamentalFreq();
+  if (fn < 0.001) return 0;
+  var n = Math.round(frequency / fn);
+  var ratio = frequency / fn;
+  if (Math.abs(ratio - n) < 0.15 && n >= 1) return n;
+  return 0;
+}
+
+// ─── Three.js Setup ─────────────────────────────────────────────
+var wrap = document.getElementById('canvasWrap');
+var canvas = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
+
+var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(0, 6, 14);
+camera.lookAt(0, 0, 0);
+
+var controls = (typeof THREE.OrbitControls !== 'undefined')
+  ? new THREE.OrbitControls(camera, renderer.domElement) : null;
+if (controls) {
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 5;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+}
+
+// ─── Lights (4 lights) ─────────────────────────────────────────
+var ambientLight = new THREE.AmbientLight(0x334466, 0.6);
+scene.add(ambientLight);
+
+var dirLight = new THREE.DirectionalLight(0xaaccff, 0.9);
+dirLight.position.set(8, 15, 10);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(1024, 1024);
+scene.add(dirLight);
+
+var pointLight1 = new THREE.PointLight(0x38bdf8, 2, 25);
+pointLight1.position.set(-6, 4, 3);
+scene.add(pointLight1);
+
+var pointLight2 = new THREE.PointLight(0xa855f7, 1.5, 20);
+pointLight2.position.set(6, 3, -2);
+scene.add(pointLight2);
+
+// ─── Ground plane ───────────────────────────────────────────────
+var groundGeo = new THREE.PlaneGeometry(40, 40);
+var groundMat = new THREE.MeshStandardMaterial({
+  color: 0x0c1525,
+  roughness: 0.9,
+  metalness: 0.1
+});
+var ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -3;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grid helper
+var gridHelper = new THREE.GridHelper(30, 30, 0x1e3a5f, 0x162033);
+gridHelper.position.y = -2.99;
+scene.add(gridHelper);
+
+// ─── String (sphere chain) ──────────────────────────────────────
+var stringGroup = new THREE.Group();
+scene.add(stringGroup);
+
+var sphereGeo = new THREE.SphereGeometry(0.08, 12, 8);
+var sphereMat = new THREE.MeshStandardMaterial({
+  color: 0x22d3ee,
+  emissive: 0x0891b2,
+  emissiveIntensity: 0.4,
+  roughness: 0.3,
+  metalness: 0.6
+});
+
+var spheres = [];
+for (var i = 0; i <= NUM_SEGMENTS; i++) {
+  var sphere = new THREE.Mesh(sphereGeo, sphereMat.clone());
+  var xp = -STRING_LENGTH / 2 + i * segLen;
+  sphere.position.set(xp, 0, 0);
+  sphere.castShadow = true;
+  stringGroup.add(sphere);
+  spheres.push(sphere);
+}
+
+// Connecting lines
+var linePositions = new Float32Array((NUM_SEGMENTS + 1) * 3);
+var lineGeo = new THREE.BufferGeometry();
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+var lineMat = new THREE.LineBasicMaterial({ color: 0x22d3ee, linewidth: 2, transparent: true, opacity: 0.6 });
+var stringLine = new THREE.Line(lineGeo, lineMat);
+scene.add(stringLine);
+
+// ─── Envelope lines (for standing waves) ────────────────────────
+var envPositionsUp = new Float32Array((NUM_SEGMENTS + 1) * 3);
+var envPositionsDn = new Float32Array((NUM_SEGMENTS + 1) * 3);
+var envGeoUp = new THREE.BufferGeometry();
+envGeoUp.setAttribute('position', new THREE.BufferAttribute(envPositionsUp, 3));
+var envGeoDn = new THREE.BufferGeometry();
+envGeoDn.setAttribute('position', new THREE.BufferAttribute(envPositionsDn, 3));
+var envMat = new THREE.LineDashedMaterial({ color: 0xc084fc, dashSize: 0.2, gapSize: 0.1, transparent: true, opacity: 0.5 });
+var envLineUp = new THREE.Line(envGeoUp, envMat.clone());
+var envLineDn = new THREE.Line(envGeoDn, envMat.clone());
+envLineUp.visible = false;
+envLineDn.visible = false;
+scene.add(envLineUp, envLineDn);
+
+// ─── Node markers (standing wave) ──────────────────────────────
+var nodeMarkers = [];
+var nodeGeo = new THREE.SphereGeometry(0.18, 16, 12);
+var nodeMat = new THREE.MeshStandardMaterial({
+  color: 0xfbbf24,
+  emissive: 0xf59e0b,
+  emissiveIntensity: 0.8,
+  roughness: 0.2,
+  metalness: 0.5
+});
+for (var mi = 0; mi < 20; mi++) {
+  var marker = new THREE.Mesh(nodeGeo, nodeMat);
+  marker.visible = false;
+  scene.add(marker);
+  nodeMarkers.push(marker);
+}
+
+// Node glow (point lights at nodes)
+var nodeGlows = [];
+for (var gi = 0; gi < 20; gi++) {
+  var glow = new THREE.PointLight(0xfbbf24, 0, 3);
+  scene.add(glow);
+  nodeGlows.push(glow);
+}
+
+// ─── Measurement overlay lines ──────────────────────────────────
+// Wavelength measurement line
+var wlLineMat = new THREE.LineBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.7 });
+var wlLineGeo = new THREE.BufferGeometry();
+var wlPositions = new Float32Array(6);
+wlLineGeo.setAttribute('position', new THREE.BufferAttribute(wlPositions, 3));
+var wlLine = new THREE.Line(wlLineGeo, wlLineMat);
+scene.add(wlLine);
+
+// Amplitude measurement line
+var ampLineMat = new THREE.LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.7 });
+var ampLineGeo = new THREE.BufferGeometry();
+var ampPositions = new Float32Array(6);
+ampLineGeo.setAttribute('position', new THREE.BufferAttribute(ampPositions, 3));
+var ampLine = new THREE.Line(ampLineGeo, ampLineMat);
+scene.add(ampLine);
+
+// Wavelength label sprite
+function makeTextSprite(text, color) {
+  var cnv = document.createElement('canvas');
+  cnv.width = 256;
+  cnv.height = 64;
+  var ctx = cnv.getContext('2d');
+  ctx.font = 'bold 28px -apple-system, sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 128, 40);
+  var tex = new THREE.CanvasTexture(cnv);
+  var mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  var sprite = new THREE.Sprite(mat);
+  sprite.scale.set(2, 0.5, 1);
+  return sprite;
+}
+
+var wlLabel = makeTextSprite('', '#c084fc');
+scene.add(wlLabel);
+var ampLabel = makeTextSprite('', '#f472b6');
+scene.add(ampLabel);
+
+// ─── Fixed end posts ────────────────────────────────────────────
+var postGeo = new THREE.CylinderGeometry(0.12, 0.15, 2.5, 8);
+var postMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.7 });
+var postLeft = new THREE.Mesh(postGeo, postMat);
+postLeft.position.set(-STRING_LENGTH / 2, -0.25, 0);
+postLeft.castShadow = true;
+scene.add(postLeft);
+
+var postRight = new THREE.Mesh(postGeo, postMat.clone());
+postRight.position.set(STRING_LENGTH / 2, -0.25, 0);
+postRight.castShadow = true;
+scene.add(postRight);
+
+// Right end indicator (ring for free end)
+var ringGeo = new THREE.TorusGeometry(0.3, 0.06, 12, 24);
+var ringMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, emissive: 0x22c55e, emissiveIntensity: 0.5 });
+var freeRing = new THREE.Mesh(ringGeo, ringMat);
+freeRing.position.set(STRING_LENGTH / 2, 0, 0);
+freeRing.rotation.y = Math.PI / 2;
+freeRing.visible = false;
+scene.add(freeRing);
+
+// ─── Wave Simulation (finite difference) ────────────────────────
+function resetWave() {
+  yPos.fill(0);
+  yVel.fill(0);
+  yPrev.fill(0);
+  pulseSent = false;
+  pulsePhase = 0;
+  simTime = 0;
+}
+
+function stepWave(dt) {
+  var v = waveSpeed();
+  var c = v * dt / segLen;
+
+  // CFL stability: limit courant number
+  if (c > 0.9) c = 0.9;
+  var c2 = c * c;
+  var dampFactor = 1.0 - damping * dt * 4;
+  if (dampFactor < 0) dampFactor = 0;
+
+  // Drive left end
+  var driveAmp = amplitude * 0.5;
+  if (waveMode === 'continuous') {
+    yPos[0] = driveAmp * Math.sin(2 * Math.PI * frequency * simTime);
+  } else {
+    // Single pulse
+    if (!pulseSent) {
+      pulsePhase += dt * frequency * 2 * Math.PI;
+      if (pulsePhase < 2 * Math.PI) {
+        yPos[0] = driveAmp * Math.sin(pulsePhase) * Math.exp(-pulsePhase * 0.15);
+      } else {
+        yPos[0] = 0;
+        pulseSent = true;
+      }
+    } else {
+      yPos[0] = 0;
+    }
+  }
+
+  // Finite difference wave equation
+  var yNew = new Float64Array(NUM_SEGMENTS + 1);
+  for (var i = 1; i < NUM_SEGMENTS; i++) {
+    yNew[i] = 2 * yPos[i] - yPrev[i] + c2 * (yPos[i + 1] - 2 * yPos[i] + yPos[i - 1]);
+    yNew[i] *= dampFactor;
+  }
+
+  // Boundary conditions at right end
+  if (freeEnd) {
+    // Free end: dy/dx = 0 at right boundary
+    yNew[NUM_SEGMENTS] = yNew[NUM_SEGMENTS - 1];
+  } else {
+    // Fixed end: y = 0
+    yNew[NUM_SEGMENTS] = 0;
+  }
+
+  // Left end is driven
+  yNew[0] = yPos[0];
+
+  // Swap
+  for (var j = 0; j <= NUM_SEGMENTS; j++) {
+    yPrev[j] = yPos[j];
+    yPos[j] = yNew[j];
+  }
+}
+
+// ─── Update 3D visuals ─────────────────────────────────────────
+function updateVisuals() {
+  var hn = harmonicNumber();
+  var isStanding = (hn > 0 && waveMode === 'continuous' && !freeEnd && damping < 0.05);
+
+  // Update spheres and line
+  for (var i = 0; i <= NUM_SEGMENTS; i++) {
+    var xp = -STRING_LENGTH / 2 + i * segLen;
+    var yp = yPos[i];
+    spheres[i].position.set(xp, yp, 0);
+
+    // Color by displacement
+    var norm = Math.abs(yp) / (amplitude * 0.5 + 0.01);
+    norm = Math.min(norm, 1);
+    var mat = spheres[i].material;
+    mat.emissiveIntensity = 0.3 + norm * 0.7;
+
+    linePositions[i * 3] = xp;
+    linePositions[i * 3 + 1] = yp;
+    linePositions[i * 3 + 2] = 0;
+  }
+  lineGeo.attributes.position.needsUpdate = true;
+
+  // Envelope for standing waves
+  if (isStanding) {
+    envLineUp.visible = true;
+    envLineDn.visible = true;
+    for (var ei = 0; ei <= NUM_SEGMENTS; ei++) {
+      var xpe = -STRING_LENGTH / 2 + ei * segLen;
+      var envY = amplitude * 0.5 * Math.abs(Math.sin(hn * Math.PI * ei / NUM_SEGMENTS));
+      envPositionsUp[ei * 3] = xpe;
+      envPositionsUp[ei * 3 + 1] = envY;
+      envPositionsUp[ei * 3 + 2] = 0.01;
+      envPositionsDn[ei * 3] = xpe;
+      envPositionsDn[ei * 3 + 1] = -envY;
+      envPositionsDn[ei * 3 + 2] = 0.01;
+    }
+    envGeoUp.attributes.position.needsUpdate = true;
+    envGeoDn.attributes.position.needsUpdate = true;
+    envLineUp.computeLineDistances();
+    envLineDn.computeLineDistances();
+  } else {
+    envLineUp.visible = false;
+    envLineDn.visible = false;
+  }
+
+  // Node markers for standing waves
+  var nodesShown = 0;
+  if (isStanding) {
+    for (var ni = 0; ni <= hn; ni++) {
+      var nodeX = -STRING_LENGTH / 2 + ni * (STRING_LENGTH / hn);
+      if (ni < nodeMarkers.length) {
+        nodeMarkers[ni].position.set(nodeX, 0, 0);
+        nodeMarkers[ni].visible = true;
+        nodeGlows[ni].position.set(nodeX, 0.3, 0);
+        nodeGlows[ni].intensity = 1.5 + Math.sin(simTime * 3) * 0.5;
+        nodesShown++;
+      }
+    }
+  }
+  for (var hi = nodesShown; hi < nodeMarkers.length; hi++) {
+    nodeMarkers[hi].visible = false;
+    nodeGlows[hi].intensity = 0;
+  }
+
+  // Measurement lines
+  var lam = wavelength();
+  if (lam < STRING_LENGTH && waveMode === 'continuous') {
+    var startX = -STRING_LENGTH / 2;
+    var endX = startX + lam;
+    var mY = amplitude * 0.5 + 1.2;
+    wlPositions[0] = startX; wlPositions[1] = mY; wlPositions[2] = 0;
+    wlPositions[3] = endX; wlPositions[4] = mY; wlPositions[5] = 0;
+    wlLineGeo.attributes.position.needsUpdate = true;
+    wlLine.visible = true;
+    wlLabel.position.set((startX + endX) / 2, mY + 0.5, 0);
+    updateSpriteText(wlLabel, '\u03BB = ' + lam.toFixed(2) + ' m', '#c084fc');
+    wlLabel.visible = true;
+  } else {
+    wlLine.visible = false;
+    wlLabel.visible = false;
+  }
+
+  // Amplitude line
+  var ampMeasureX = -STRING_LENGTH / 2 + 1;
+  ampPositions[0] = ampMeasureX; ampPositions[1] = 0; ampPositions[2] = 0.05;
+  ampPositions[3] = ampMeasureX; ampPositions[4] = amplitude * 0.5; ampPositions[5] = 0.05;
+  ampLineGeo.attributes.position.needsUpdate = true;
+  ampLine.visible = (waveMode === 'continuous');
+  ampLabel.position.set(ampMeasureX - 0.8, amplitude * 0.25, 0.05);
+  updateSpriteText(ampLabel, 'A = ' + amplitude.toFixed(1) + ' cm', '#f472b6');
+  ampLabel.visible = (waveMode === 'continuous');
+
+  // Free end ring
+  if (freeEnd) {
+    freeRing.visible = true;
+    freeRing.position.y = yPos[NUM_SEGMENTS];
+    postRight.material.color.setHex(0x334155);
+    postRight.material.emissive = new THREE.Color(0x000000);
+  } else {
+    freeRing.visible = false;
+    postRight.material.color.setHex(0x475569);
+  }
+
+  // Update stats
+  var v = waveSpeed();
+  var lam2 = wavelength();
+  document.getElementById('statV').textContent = v.toFixed(2) + ' m/s';
+  document.getElementById('statLambda').textContent = lam2.toFixed(2) + ' m';
+  document.getElementById('statFreq').textContent = frequency.toFixed(2) + ' Hz';
+  document.getElementById('statMu').textContent = (linearDensity * 1000).toFixed(1) + ' g/m';
+  var hn2 = harmonicNumber();
+  document.getElementById('statHarmonic').textContent = hn2 > 0 ? ('n = ' + hn2) : '--';
+}
+
+function updateSpriteText(sprite, text, color) {
+  var cnv = document.createElement('canvas');
+  cnv.width = 256;
+  cnv.height = 64;
+  var ctx = cnv.getContext('2d');
+  ctx.font = 'bold 24px -apple-system, sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 128, 40);
+  if (sprite.material.map) sprite.material.map.dispose();
+  sprite.material.map = new THREE.CanvasTexture(cnv);
+  sprite.material.needsUpdate = true;
+}
+
+// ─── Render Loop ────────────────────────────────────────────────
+var clock = new THREE.Clock();
+
+function onResize() {
+  var w = wrap.clientWidth;
+  var h = wrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+
+function animate() {
+  var dt = Math.min(clock.getDelta(), 0.033);
+  if (running) {
+    simTime += dt;
+    // Sub-step for stability
+    var subSteps = 8;
+    var subDt = dt / subSteps;
+    for (var s = 0; s < subSteps; s++) {
+      stepWave(subDt);
+    }
+  }
+  updateVisuals();
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+renderer.setAnimationLoop(animate);
+onResize();
+
+// ─── UI Controls ────────────────────────────────────────────────
+var sFreq = document.getElementById('sFreq');
+var sAmp = document.getElementById('sAmp');
+var sTens = document.getElementById('sTens');
+var sDamp = document.getElementById('sDamp');
+
+sFreq.addEventListener('input', function() {
+  frequency = parseFloat(this.value);
+  document.getElementById('vFreq').textContent = frequency.toFixed(2) + ' Hz';
+});
+sAmp.addEventListener('input', function() {
+  amplitude = parseFloat(this.value);
+  document.getElementById('vAmp').textContent = amplitude.toFixed(2) + ' cm';
+});
+sTens.addEventListener('input', function() {
+  tension = parseFloat(this.value);
+  document.getElementById('vTens').textContent = tension.toFixed(1) + ' N';
+});
+sDamp.addEventListener('input', function() {
+  damping = parseFloat(this.value);
+  document.getElementById('vDamp').textContent = damping.toFixed(2);
+});
+
+function setWaveMode(mode) {
+  waveMode = mode;
+  document.getElementById('modeCont').classList.toggle('active', mode === 'continuous');
+  document.getElementById('modePulse').classList.toggle('active', mode === 'pulse');
+  if (mode === 'pulse') {
+    pulseSent = false;
+    pulsePhase = 0;
+  }
+  resetWave();
+}
+
+function toggleBoundary() {
+  freeEnd = !freeEnd;
+  document.getElementById('boundaryToggle').classList.toggle('on', freeEnd);
+  resetWave();
+}
+
+function togglePlay() {
+  running = !running;
+  document.getElementById('btnPlay').textContent = running ? 'Pause' : 'Play';
+}
+
+function resetSim() {
+  resetWave();
+  running = true;
+  document.getElementById('btnPlay').textContent = 'Pause';
+}
+
+function randomize() {
+  frequency = 0.5 + Math.random() * 4.5;
+  amplitude = 0.5 + Math.random() * 4.5;
+  tension = 1 + Math.random() * 19;
+  damping = Math.random() * 0.5;
+  sFreq.value = frequency;
+  sAmp.value = amplitude;
+  sTens.value = tension;
+  sDamp.value = damping;
+  document.getElementById('vFreq').textContent = frequency.toFixed(2) + ' Hz';
+  document.getElementById('vAmp').textContent = amplitude.toFixed(2) + ' cm';
+  document.getElementById('vTens').textContent = tension.toFixed(1) + ' N';
+  document.getElementById('vDamp').textContent = damping.toFixed(2);
+  resetWave();
+}
+
+function applyPreset(name) {
+  resetWave();
+  if (name === 'standing') {
+    freeEnd = false;
+    document.getElementById('boundaryToggle').classList.remove('on');
+    waveMode = 'continuous';
+    document.getElementById('modeCont').classList.add('active');
+    document.getElementById('modePulse').classList.remove('active');
+    tension = 10;
+    damping = 0;
+    linearDensity = 0.01;
+    var fn = Math.sqrt(tension / linearDensity) / (2 * STRING_LENGTH);
+    frequency = fn;
+    amplitude = 3.0;
+    updateSliders();
+  } else if (name === 'freeEnd') {
+    freeEnd = true;
+    document.getElementById('boundaryToggle').classList.add('on');
+    waveMode = 'continuous';
+    document.getElementById('modeCont').classList.add('active');
+    document.getElementById('modePulse').classList.remove('active');
+    frequency = 1.5;
+    amplitude = 3.0;
+    tension = 10;
+    damping = 0.1;
+    updateSliders();
+  } else if (name === 'singlePulse') {
+    freeEnd = false;
+    document.getElementById('boundaryToggle').classList.remove('on');
+    waveMode = 'pulse';
+    document.getElementById('modeCont').classList.remove('active');
+    document.getElementById('modePulse').classList.add('active');
+    frequency = 2.0;
+    amplitude = 4.0;
+    tension = 15;
+    damping = 0.02;
+    pulseSent = false;
+    pulsePhase = 0;
+    updateSliders();
+  }
+  running = true;
+  document.getElementById('btnPlay').textContent = 'Pause';
+}
+
+function updateSliders() {
+  sFreq.value = frequency;
+  sAmp.value = amplitude;
+  sTens.value = tension;
+  sDamp.value = damping;
+  document.getElementById('vFreq').textContent = frequency.toFixed(2) + ' Hz';
+  document.getElementById('vAmp').textContent = amplitude.toFixed(2) + ' cm';
+  document.getElementById('vTens').textContent = tension.toFixed(1) + ' N';
+  document.getElementById('vDamp').textContent = damping.toFixed(2);
+}
+
+// ─── Quiz ───────────────────────────────────────────────────────
+var quizAnswered = { 1: false, 2: false };
+var quizCorrect = { 1: 'b', 2: 'c' };
+var quizExplanations = {
+  1: 'v = sqrt(T/mu) = sqrt(80/0.05) = sqrt(1600) = 40 m/s',
+  2: 'f_3 = 3v/(2L), so v = f_3 * 2L / 3 = 150 * 2 * 2.0 / 3 = 200 m/s'
+};
+
+function checkQuiz(qNum, answer, btn) {
+  if (quizAnswered[qNum]) return;
+  quizAnswered[qNum] = true;
+  var fb = document.getElementById('fb' + qNum);
+  var isCorrect = (answer === quizCorrect[qNum]);
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) {
+    var parent = btn.parentElement;
+    var opts = parent.querySelectorAll('.quiz-opt');
+    opts.forEach(function(o) {
+      if (o.textContent.charAt(0).toLowerCase() === quizCorrect[qNum]) {
+        o.classList.add('correct');
+      }
+    });
+  }
+  fb.textContent = (isCorrect ? 'Correct! ' : 'Incorrect. ') + quizExplanations[qNum];
+  fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+}
+
+// ─── KaTeX Formulas ─────────────────────────────────────────────
+function renderFormulas() {
+  try {
+    katex.render('v = f \\lambda', document.getElementById('f1'), { displayMode: true, throwOnError: false });
+    katex.render('v = \\sqrt{\\dfrac{T}{\\mu}}', document.getElementById('f2'), { displayMode: true, throwOnError: false });
+    katex.render('f_n = \\dfrac{n v}{2 L}, \\quad n = 1, 2, 3, \\ldots', document.getElementById('f3'), { displayMode: true, throwOnError: false });
+  } catch (e) {
+    // KaTeX not loaded, ignore
+  }
+}
+
+if (typeof katex !== 'undefined') {
+  renderFormulas();
+} else {
+  window.addEventListener('load', renderFormulas);
+}
+
+} catch (err) {
+  console.error('Wave on a String initialization error:', err);
+  var errDiv = document.createElement('div');
+  errDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e293b;color:#f87171;padding:24px;border-radius:12px;border:1px solid #ef4444;font-size:14px;max-width:400px;text-align:center;z-index:9999';
+  errDiv.textContent = 'Failed to initialize: ' + err.message;
+  document.body.appendChild(errDiv);
+}
+</script>
+</body>
+</html>

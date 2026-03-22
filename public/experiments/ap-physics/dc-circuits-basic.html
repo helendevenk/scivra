@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC Circuits — Ohm's Law & Series/Parallel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* ── UI Panel ── */
+  #ui { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: rgba(13,17,23,0.92); border-right: 1px solid rgba(59,130,246,0.2); padding: 16px; overflow-y: auto; backdrop-filter: blur(8px); z-index: 10; }
+  .panel-title { font-size: 12px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .section { margin-bottom: 16px; padding: 12px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
+  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+  /* Circuit type toggle */
+  .toggle-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .toggle-btn { flex: 1; padding: 7px 0; font-size: 11px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .toggle-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+  .toggle-btn:hover:not(.active) { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 10px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px; }
+  .slider-name { color: #c9d1d9; }
+  .slider-val { color: #60a5fa; font-weight: 700; min-width: 60px; text-align: right; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+  .pro-badge { display: inline-block; font-size: 9px; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 3px; padding: 1px 5px; margin-left: 4px; }
+  .slider-locked { opacity: 0.45; pointer-events: none; }
+
+  /* Formulas */
+  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; }
+  .formula-eq { font-size: 13px; color: #93c5fd; font-weight: 700; letter-spacing: 0.05em; }
+  .formula-desc { font-size: 10px; color: #7d8590; margin-top: 2px; }
+
+  /* Data readout */
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-cell { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.15); border-radius: 6px; padding: 8px; text-align: center; }
+  .data-cell-label { font-size: 9px; color: #7d8590; text-transform: uppercase; }
+  .data-cell-value { font-size: 14px; font-weight: 700; color: #60a5fa; margin-top: 2px; }
+  .data-cell-unit { font-size: 9px; color: #7d8590; }
+
+  /* Info panel right */
+  #info { position: fixed; top: 12px; right: 12px; width: 220px; background: rgba(13,17,23,0.88); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(8px); }
+  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; }
+
+  /* FPS */
+  #fps { position: fixed; bottom: 8px; right: 8px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+</style>
+</head>
+<body>
+<div id="canvas-container"><canvas id="c"></canvas></div>
+
+<div id="ui">
+  <div class="panel-title">⚡ DC Circuits</div>
+
+  <!-- Circuit type -->
+  <div class="section">
+    <div class="section-label">Circuit Type</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" id="btn-series" onclick="setCircuit('series')">Series</button>
+      <button class="toggle-btn" id="btn-parallel" onclick="setCircuit('parallel')">Parallel</button>
+    </div>
+
+    <!-- Voltage -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Battery Voltage</span><span class="slider-val" id="v-val">12.0 V</span></div>
+      <input type="range" id="slider-v" min="1" max="24" step="0.5" value="12" oninput="updateParam('voltage',this.value)">
+    </div>
+    <!-- R1 -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Resistor R₁</span><span class="slider-val" id="r1-val">10.0 Ω</span></div>
+      <input type="range" id="slider-r1" min="1" max="100" step="1" value="10" oninput="updateParam('R1',this.value)">
+    </div>
+    <!-- R2 -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Resistor R₂</span><span class="slider-val" id="r2-val">20.0 Ω</span></div>
+      <input type="range" id="slider-r2" min="1" max="100" step="1" value="20" oninput="updateParam('R2',this.value)">
+    </div>
+    <!-- R3 (Pro) -->
+    <div class="slider-row slider-locked" id="r3-row">
+      <div class="slider-label"><span class="slider-name">Resistor R₃<span class="pro-badge">PRO</span></span><span class="slider-val" id="r3-val">— Ω</span></div>
+      <input type="range" id="slider-r3" min="1" max="100" step="1" value="30" disabled>
+    </div>
+    <!-- Internal R (Pro) -->
+    <div class="slider-row slider-locked" id="rint-row">
+      <div class="slider-label"><span class="slider-name">Internal R<span class="pro-badge">PRO</span></span><span class="slider-val" id="rint-val">— Ω</span></div>
+      <input type="range" id="slider-rint" min="0" max="5" step="0.1" value="0" disabled>
+    </div>
+  </div>
+
+  <!-- Live data -->
+  <div class="section">
+    <div class="section-label">Live Measurements</div>
+    <div class="data-grid">
+      <div class="data-cell"><div class="data-cell-label">R_eq</div><div class="data-cell-value" id="req-disp">30.0</div><div class="data-cell-unit">Ω</div></div>
+      <div class="data-cell"><div class="data-cell-label">I_total</div><div class="data-cell-value" id="itot-disp">0.40</div><div class="data-cell-unit">A</div></div>
+      <div class="data-cell"><div class="data-cell-label">P_total</div><div class="data-cell-value" id="ptot-disp">4.80</div><div class="data-cell-unit">W</div></div>
+      <div class="data-cell"><div class="data-cell-label">V_R1</div><div class="data-cell-value" id="vr1-disp">4.00</div><div class="data-cell-unit">V</div></div>
+    </div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="section">
+    <div class="section-label">Key Formulas</div>
+    <div class="formula-box"><div class="formula-eq">V = I × R</div><div class="formula-desc">Ohm's Law</div></div>
+    <div class="formula-box"><div class="formula-eq">R_s = R₁ + R₂</div><div class="formula-desc">Series equivalent resistance</div></div>
+    <div class="formula-box"><div class="formula-eq">1/R_p = 1/R₁ + 1/R₂</div><div class="formula-desc">Parallel equivalent resistance</div></div>
+    <div class="formula-box"><div class="formula-eq">P = I × V = I²R</div><div class="formula-desc">Power dissipated</div></div>
+  </div>
+</div>
+
+<div id="info">
+  <h3>How to Read This</h3>
+  <p>Glowing dots are electrons flowing through the circuit. Dot speed = current magnitude. Brighter wires = higher current. Switch between Series and Parallel to see how R_eq and current distribution change.</p>
+</div>
+
+<div id="fps">-- fps</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  circuitType: 'series', // 'series' | 'parallel'
+  voltage: 12,
+  R1: 10,
+  R2: 20,
+  R3: null, // pro locked
+  Rint: 0,  // pro locked
+};
+
+// ── Derived ────────────────────────────────────────────────────────────────
+function calcCircuit() {
+  const { voltage, R1, R2, circuitType } = state;
+  let Req;
+  if (circuitType === 'series') {
+    Req = R1 + R2;
+  } else {
+    Req = 1 / (1/R1 + 1/R2);
+  }
+  const Itotal = voltage / Req;
+  const Ptotal = voltage * Itotal;
+  let VR1, VR2, IR1, IR2;
+  if (circuitType === 'series') {
+    IR1 = IR2 = Itotal;
+    VR1 = IR1 * R1;
+    VR2 = IR2 * R2;
+  } else {
+    VR1 = VR2 = voltage;
+    IR1 = VR1 / R1;
+    IR2 = VR2 / R2;
+  }
+  return { Req, Itotal, Ptotal, VR1, VR2, IR1, IR2 };
+}
+
+// ── UI Update ──────────────────────────────────────────────────────────────
+function refreshUI() {
+  const d = calcCircuit();
+  document.getElementById('req-disp').textContent  = d.Req.toFixed(2);
+  document.getElementById('itot-disp').textContent = d.Itotal.toFixed(3);
+  document.getElementById('ptot-disp').textContent = d.Ptotal.toFixed(2);
+  document.getElementById('vr1-disp').textContent  = d.VR1.toFixed(2);
+}
+
+function updateParam(name, val) {
+  val = parseFloat(val);
+  if (name === 'voltage') {
+    state.voltage = val;
+    document.getElementById('v-val').textContent = val.toFixed(1) + ' V';
+  } else if (name === 'R1') {
+    state.R1 = val;
+    document.getElementById('r1-val').textContent = val.toFixed(1) + ' Ω';
+  } else if (name === 'R2') {
+    state.R2 = val;
+    document.getElementById('r2-val').textContent = val.toFixed(1) + ' Ω';
+  }
+  refreshUI();
+  rebuildParticles();
+}
+
+function setCircuit(type) {
+  state.circuitType = type;
+  document.getElementById('btn-series').classList.toggle('active', type === 'series');
+  document.getElementById('btn-parallel').classList.toggle('active', type === 'parallel');
+  refreshUI();
+  rebuildCircuitMesh();
+  rebuildParticles();
+}
+
+// ── Three.js Setup ─────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0d1117, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(0, 0, 8);
+camera.lookAt(0, 0, 0);
+
+// Ambient + directional light
+scene.add(new THREE.AmbientLight(0x1a2744, 2));
+const dirLight = new THREE.DirectionalLight(0x3b82f6, 1.5);
+dirLight.position.set(5, 8, 5);
+scene.add(dirLight);
+
+// ── Circuit Geometry ───────────────────────────────────────────────────────
+// We draw wires as TubeGeometry paths and resistors as box meshes.
+// Circuit bounding box: ±2.5 x ±1.5
+const WIRE_R = 0.04;
+const BATTERY_COLOR = 0x22c55e;
+const R1_COLOR = 0x3b82f6;
+const R2_COLOR = 0xf59e0b;
+const WIRE_COLOR = 0x4ade80;
+
+let circuitGroup = new THREE.Group();
+scene.add(circuitGroup);
+
+function makeTube(points, color, radius, opacity) {
+  radius = radius || WIRE_R;
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geo = new THREE.TubeGeometry(curve, points.length * 4, radius, 6, false);
+  const mat = new THREE.MeshStandardMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: opacity !== undefined ? opacity : 0.6,
+    roughness: 0.3,
+    metalness: 0.6,
+    transparent: true,
+    opacity: opacity !== undefined ? Math.min(1, opacity + 0.2) : 0.9,
+  });
+  return new THREE.Mesh(geo, mat);
+}
+
+function makeResistorBox(cx, cy, color, label) {
+  const geo = new THREE.BoxGeometry(0.8, 0.3, 0.3);
+  const mat = new THREE.MeshStandardMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: 0.5,
+    roughness: 0.3,
+    metalness: 0.7,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(cx, cy, 0);
+  return mesh;
+}
+
+function makeBattery(cx, cy) {
+  const group = new THREE.Group();
+  // Body
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.25, 0.25, 0.8, 12),
+    new THREE.MeshStandardMaterial({ color: BATTERY_COLOR, emissive: BATTERY_COLOR, emissiveIntensity: 0.5, roughness: 0.3 })
+  );
+  body.rotation.z = Math.PI / 2;
+  group.add(body);
+  // +/- caps
+  const capGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.15, 8);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xaaaaaa, emissiveIntensity: 0.3 });
+  const capP = new THREE.Mesh(capGeo, capMat);
+  capP.rotation.z = Math.PI / 2;
+  capP.position.x = 0.47;
+  group.add(capP);
+  group.position.set(cx, cy, 0);
+  return group;
+}
+
+// Wire paths for series and parallel circuits
+function buildSeriesPaths() {
+  // Battery at left: (-2.2, 0)
+  // R1 at top-right: (0.5, 1.2)
+  // R2 at bottom-right: (0.5, -1.2)
+  // Outer loop rectangle corners: (-2.2,1.5), (2.5,1.5), (2.5,-1.5), (-2.2,-1.5)
+  return {
+    outerLoop: [
+      new THREE.Vector3(-2.2, 0.35, 0),  // battery top
+      new THREE.Vector3(-2.2, 1.5, 0),
+      new THREE.Vector3(-0.05, 1.5, 0),  // before R1
+    ],
+    r1Seg: [
+      new THREE.Vector3(-0.05, 1.5, 0),
+      new THREE.Vector3(0.95, 1.5, 0),   // after R1
+    ],
+    midSeg: [
+      new THREE.Vector3(0.95, 1.5, 0),
+      new THREE.Vector3(2.5, 1.5, 0),
+      new THREE.Vector3(2.5, -1.5, 0),
+      new THREE.Vector3(0.95, -1.5, 0),  // before R2
+    ],
+    r2Seg: [
+      new THREE.Vector3(0.95, -1.5, 0),
+      new THREE.Vector3(-0.05, -1.5, 0), // after R2
+    ],
+    returnSeg: [
+      new THREE.Vector3(-0.05, -1.5, 0),
+      new THREE.Vector3(-2.2, -1.5, 0),
+      new THREE.Vector3(-2.2, -0.35, 0), // battery bottom
+    ],
+  };
+}
+
+function buildParallelPaths() {
+  // Battery at left (-2.2,0)
+  // Both R1 and R2 in parallel between x=-0.1 and x=1.1
+  // R1 at (0.5, 0.9), R2 at (0.5, -0.9)
+  return {
+    topBus: [
+      new THREE.Vector3(-2.2, 0.35, 0),
+      new THREE.Vector3(-2.2, 1.3, 0),
+      new THREE.Vector3(2.2, 1.3, 0),
+    ],
+    bottomBus: [
+      new THREE.Vector3(-2.2, -0.35, 0),
+      new THREE.Vector3(-2.2, -1.3, 0),
+      new THREE.Vector3(2.2, -1.3, 0),
+    ],
+    r1Top: [new THREE.Vector3(-0.05, 1.3, 0), new THREE.Vector3(-0.05, 0.9, 0)],
+    r1Bot: [new THREE.Vector3(1.05, 0.9, 0),  new THREE.Vector3(1.05, 1.3, 0)],
+    r2Top: [new THREE.Vector3(-0.05, -1.3, 0), new THREE.Vector3(-0.05, -0.9, 0)],
+    r2Bot: [new THREE.Vector3(1.05, -0.9, 0),  new THREE.Vector3(1.05, -1.3, 0)],
+    rightBus: [
+      new THREE.Vector3(2.2, 1.3, 0),
+      new THREE.Vector3(2.2, -1.3, 0),
+    ],
+  };
+}
+
+function rebuildCircuitMesh() {
+  while (circuitGroup.children.length) circuitGroup.remove(circuitGroup.children[0]);
+
+  const d = calcCircuit();
+  const maxI = Math.max(d.IR1, d.IR2, 0.01);
+  const i1Intensity = d.IR1 / maxI;
+  const i2Intensity = d.IR2 / maxI;
+
+  if (state.circuitType === 'series') {
+    const p = buildSeriesPaths();
+    circuitGroup.add(makeTube(p.outerLoop,  WIRE_COLOR, WIRE_R, 0.5));
+    circuitGroup.add(makeTube(p.r1Seg,      R1_COLOR,   WIRE_R * 2, i1Intensity));
+    circuitGroup.add(makeTube(p.midSeg,     WIRE_COLOR, WIRE_R, 0.5));
+    circuitGroup.add(makeTube(p.r2Seg,      R2_COLOR,   WIRE_R * 2, i2Intensity));
+    circuitGroup.add(makeTube(p.returnSeg,  WIRE_COLOR, WIRE_R, 0.5));
+    // Resistor boxes
+    circuitGroup.add(makeResistorBox(0.45, 1.5, R1_COLOR));
+    circuitGroup.add(makeResistorBox(0.45, -1.5, R2_COLOR));
+  } else {
+    const p = buildParallelPaths();
+    circuitGroup.add(makeTube(p.topBus,    WIRE_COLOR, WIRE_R, 0.5));
+    circuitGroup.add(makeTube(p.bottomBus, WIRE_COLOR, WIRE_R, 0.5));
+    circuitGroup.add(makeTube(p.rightBus,  WIRE_COLOR, WIRE_R, 0.5));
+    circuitGroup.add(makeTube(p.r1Top,     R1_COLOR,   WIRE_R * 1.5, i1Intensity * 0.8));
+    circuitGroup.add(makeTube(p.r1Bot,     R1_COLOR,   WIRE_R * 1.5, i1Intensity * 0.8));
+    circuitGroup.add(makeTube(p.r2Top,     R2_COLOR,   WIRE_R * 1.5, i2Intensity * 0.8));
+    circuitGroup.add(makeTube(p.r2Bot,     R2_COLOR,   WIRE_R * 1.5, i2Intensity * 0.8));
+    // Resistor boxes
+    circuitGroup.add(makeResistorBox(0.5, 0.9, R1_COLOR));
+    circuitGroup.add(makeResistorBox(0.5, -0.9, R2_COLOR));
+  }
+
+  // Battery (always)
+  circuitGroup.add(makeBattery(-2.2, 0));
+
+  // Label points (small glowing spheres at junctions)
+  const juncGeo = new THREE.SphereGeometry(0.07, 8, 8);
+  const juncMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1 });
+  const addJunc = (x, y) => {
+    const m = new THREE.Mesh(juncGeo, juncMat);
+    m.position.set(x, y, 0);
+    circuitGroup.add(m);
+  };
+  if (state.circuitType === 'series') {
+    addJunc(-2.2, 1.5); addJunc(2.5, 1.5); addJunc(2.5, -1.5); addJunc(-2.2, -1.5);
+  } else {
+    addJunc(-2.2, 1.3); addJunc(2.2, 1.3); addJunc(2.2, -1.3); addJunc(-2.2, -1.3);
+    addJunc(-0.05, 1.3); addJunc(-0.05, -1.3); addJunc(1.05, 1.3); addJunc(1.05, -1.3);
+  }
+}
+
+// ── Particle System ────────────────────────────────────────────────────────
+const PARTICLE_COUNT = 180;
+let particles = [];
+let particleSystem;
+
+function makeParticleSystem() {
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(PARTICLE_COUNT * 3);
+  const colors    = new Float32Array(PARTICLE_COUNT * 3);
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.09,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  return new THREE.Points(geo, mat);
+}
+
+// Waypoints define the particle path(s) for each circuit type
+function getWaypoints() {
+  if (state.circuitType === 'series') {
+    return [[
+      [-2.2, -0.35], [-2.2, -1.5], [2.5, -1.5], [2.5, 1.5], [-2.2, 1.5], [-2.2, 0.35],
+    ]];
+  } else {
+    // Two parallel loops sharing battery segment
+    return [
+      [[-2.2, -0.35], [-2.2, -1.3], [2.2, -1.3], [2.2, 1.3], [-2.2, 1.3], [-2.2, 0.35]],
+      [[-2.2, -0.35], [-2.2, -1.3], [1.05, -1.3], [1.05, -0.9], [0.5, -0.9], [-0.05, -0.9], [-0.05, -1.3], [-2.2, -1.3]],
+    ];
+  }
+}
+
+function pathLength(wp) {
+  let len = 0;
+  for (let i = 1; i < wp.length; i++) {
+    const dx = wp[i][0] - wp[i-1][0];
+    const dy = wp[i][1] - wp[i-1][1];
+    len += Math.sqrt(dx*dx + dy*dy);
+  }
+  return len;
+}
+
+function samplePath(wp, t) {
+  // t in [0,1]
+  let totalLen = pathLength(wp);
+  let target = t * totalLen;
+  let acc = 0;
+  for (let i = 1; i < wp.length; i++) {
+    const dx = wp[i][0] - wp[i-1][0];
+    const dy = wp[i][1] - wp[i-1][1];
+    const seg = Math.sqrt(dx*dx + dy*dy);
+    if (acc + seg >= target) {
+      const frac = (target - acc) / seg;
+      return [wp[i-1][0] + dx * frac, wp[i-1][1] + dy * frac];
+    }
+    acc += seg;
+  }
+  return wp[wp.length-1];
+}
+
+function rebuildParticles() {
+  if (particleSystem) scene.remove(particleSystem);
+  particleSystem = makeParticleSystem();
+  scene.add(particleSystem);
+
+  const d = calcCircuit();
+  const paths = getWaypoints();
+  particles = [];
+
+  // Distribute particles proportionally to current magnitude
+  const currents = state.circuitType === 'series'
+    ? [d.Itotal]
+    : [d.IR1, d.IR2];
+  const totalI = currents.reduce((a, b) => a + b, 0);
+
+  let pIdx = 0;
+  paths.forEach((wp, pi) => {
+    const frac = totalI > 0 ? currents[pi] / totalI : 1 / paths.length;
+    const count = Math.round(PARTICLE_COUNT * frac);
+    const speed = 0.12 * (currents[pi] || 0.01); // speed proportional to current
+    // Clamp for visibility
+    const actualSpeed = Math.max(0.03, Math.min(0.35, speed));
+    for (let j = 0; j < count && pIdx < PARTICLE_COUNT; j++, pIdx++) {
+      particles.push({ wp, t: Math.random(), speed: actualSpeed, pathIndex: pi });
+    }
+  });
+  // Fill remaining
+  while (pIdx < PARTICLE_COUNT) {
+    particles.push({ wp: paths[0], t: Math.random(), speed: 0.05, pathIndex: 0 });
+    pIdx++;
+  }
+}
+
+function updateParticles(dt) {
+  if (!particleSystem) return;
+  const pos = particleSystem.geometry.attributes.position.array;
+  const col = particleSystem.geometry.attributes.color.array;
+  const d = calcCircuit();
+
+  particles.forEach((p, i) => {
+    p.t = (p.t + p.speed * dt) % 1;
+    const [x, y] = samplePath(p.wp, p.t);
+    pos[i*3]   = x;
+    pos[i*3+1] = y;
+    pos[i*3+2] = (Math.random() - 0.5) * 0.05; // slight z jitter
+
+    // Color: green for main wire, blue for R1 branch, amber for R2 branch
+    const ci = p.pathIndex;
+    if (state.circuitType === 'series') {
+      // pulse brightness with t
+      const b = 0.7 + 0.3 * Math.sin(p.t * Math.PI * 6);
+      col[i*3]   = 0.26 * b;
+      col[i*3+1] = 0.87 * b;
+      col[i*3+2] = 0.50 * b;
+    } else {
+      if (ci === 0) { col[i*3]=0.23; col[i*3+1]=0.51; col[i*3+2]=1.0; }
+      else          { col[i*3]=0.95; col[i*3+1]=0.62; col[i*3+2]=0.07; }
+    }
+  });
+
+  particleSystem.geometry.attributes.position.needsUpdate = true;
+  particleSystem.geometry.attributes.color.needsUpdate = true;
+}
+
+// ── Resize ─────────────────────────────────────────────────────────────────
+function onResize() {
+  const W = window.innerWidth, H = window.innerHeight;
+  renderer.setSize(W, H);
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// ── Animation Loop ─────────────────────────────────────────────────────────
+let lastT = 0, frames = 0, fpsTimer = 0;
+const fpsEl = document.getElementById('fps');
+
+function animate(t) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((t - lastT) / 1000, 0.05);
+  lastT = t;
+
+  // Gentle camera bob
+  camera.position.x = Math.sin(t * 0.0003) * 0.3;
+  camera.position.y = Math.cos(t * 0.0002) * 0.15;
+  camera.lookAt(0, 0, 0);
+
+  updateParticles(dt);
+
+  renderer.render(scene, camera);
+
+  // FPS
+  frames++;
+  fpsTimer += dt;
+  if (fpsTimer >= 1) {
+    fpsEl.textContent = frames + ' fps';
+    frames = 0;
+    fpsTimer = 0;
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+try {
+  rebuildCircuitMesh();
+  rebuildParticles();
+  refreshUI();
+  animate(0);
+} catch(e) {
+  document.body.innerHTML = '<div style="color:#ef4444;padding:20px;font-family:monospace">Error: ' + e.message + '</div>';
+}
+</script>
+</body>
+</html>

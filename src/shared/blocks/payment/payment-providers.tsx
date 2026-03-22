@@ -39,9 +39,9 @@ export function PaymentProviders({
   const { setIsShowPaymentModal } = useAppContext();
 
   const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
+  const locale = useLocale();
 
   if (callbackUrl) {
-    const locale = useLocale();
     if (
       locale !== defaultLocale &&
       callbackUrl.startsWith('/') &&

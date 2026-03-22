@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atomic Interactions — NeonPhysics AP Physics 1</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(245,158,11,.07));border-bottom:1px solid rgba(251,146,60,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 360px;gap:0;height:calc(100vh - 90px)}
+    .canvas-wrap{position:relative}
+    canvas#c{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.92);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:240px}
+    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .orange{color:#fb923c} .red{color:#fca5a5} .blue{color:#60a5fa} .green{color:#86efac} .yellow{color:#fde68a} .cyan{color:#22d3ee} .purple{color:#c4b5fd}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f97316;cursor:pointer}
+    input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f97316;border:none;cursor:pointer}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .btn{padding:8px 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#f97316;color:#fff}
+    .btn-primary:hover{background:#ea580c}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1)}
+    .btn-ghost.active{background:rgba(251,146,60,.15);color:#fb923c;border-color:rgba(251,146,60,.3)}
+    .formula-box{background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .graph-wrap{position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin-top:8px}
+    .graph-wrap canvas{width:100%;height:auto;display:block}
+    .field-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+    .legend-dot{width:10px;height:10px;border-radius:50%}
+    .quiz-section{padding:18px 20px}
+    .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
+    .quiz-q-title{font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:10px}
+    .quiz-option{display:block;padding:8px 12px;margin-bottom:6px;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:12px;color:#cbd5e1;transition:all .15s}
+    .quiz-option:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+    .quiz-option.disabled{pointer-events:none;opacity:.7}
+    .quiz-explain{display:none;margin-top:8px;padding:10px 12px;background:rgba(59,130,246,.08);border-radius:6px;font-size:11px;color:#93c5fd;line-height:1.5}
+    .quiz-explain.show{display:block}
+    .eq-marker{position:absolute;background:rgba(34,197,94,.85);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;pointer-events:none;white-space:nowrap}
+    @media(max-width:800px){
+      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
+      .sidebar{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 1</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Atomic Interactions</h1>
+  <p class="subtitle">Explore the Lennard-Jones potential &mdash; how atoms attract and repel each other</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row"><span class="stat-label">Separation r</span><span class="stat-value orange" id="statR">1.12 &sigma;</span></div>
+      <div class="stat-row"><span class="stat-label">Potential V(r)</span><span class="stat-value cyan" id="statV">&mdash;</span></div>
+      <div class="stat-row"><span class="stat-label">Force F(r)</span><span class="stat-value yellow" id="statF">&mdash;</span></div>
+      <div class="stat-row"><span class="stat-label">Regime</span><span class="stat-value green" id="statRegime">Equilibrium</span></div>
+      <div class="field-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Atom A</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div>Atom B</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Repulsion</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Attraction</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Lennard-Jones Potential</div>
+      <div class="formula-box">
+        <div id="formulaV"></div>
+        <div class="formula-desc">Pair potential energy between two neutral atoms</div>
+      </div>
+      <div class="formula-box" style="margin-top:6px">
+        <div id="formulaF"></div>
+        <div class="formula-desc">Interatomic force (negative gradient of potential)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Separation r</span><span class="param-val" id="valR">1.12 &sigma;</span></div>
+        <input type="range" id="sliderR" min="0.5" max="5" step="0.01" value="1.12">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Epsilon &epsilon;</span><span class="param-val" id="valEps">1.00 eV</span></div>
+        <input type="range" id="sliderEps" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Sigma &sigma;</span><span class="param-val" id="valSig">1.00 &Aring;</span></div>
+        <input type="range" id="sliderSig" min="0.5" max="2" step="0.01" value="1">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost active" data-preset="equilibrium">Equilibrium</button>
+        <button class="btn btn-ghost" data-preset="compressed">Compressed</button>
+        <button class="btn btn-ghost" data-preset="stretched">Stretched</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Potential Energy V(r)</div>
+      <div class="graph-wrap">
+        <canvas id="graphV" width="640" height="320"></canvas>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Force F(r)</div>
+      <div class="graph-wrap">
+        <canvas id="graphF" width="640" height="320"></canvas>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Knowledge Check</div>
+
+      <div class="quiz-q" id="q1">
+        <div class="quiz-q-title">1. At what separation does the Lennard-Jones potential reach its minimum (equilibrium)?</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">A. r = &sigma;</div>
+        <div class="quiz-option" data-correct="true" onclick="checkQuiz(this)">B. r = 2<sup>1/6</sup>&sigma; &asymp; 1.122&sigma;</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">C. r = 2&sigma;</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">D. r = &sigma;/2</div>
+        <div class="quiz-explain">The equilibrium distance is found by setting F = -dV/dr = 0. Solving gives r<sub>min</sub> = 2<sup>1/6</sup>&sigma; &asymp; 1.122&sigma;, where the potential energy equals -&epsilon; (the well depth).</div>
+      </div>
+
+      <div class="quiz-q" id="q2">
+        <div class="quiz-q-title">2. Which term in the Lennard-Jones potential dominates at very short distances (r &laquo; &sigma;)?</div>
+        <div class="quiz-option" data-correct="true" onclick="checkQuiz(this)">A. The (σ/r)<sup>12</sup> repulsive term</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">B. The (σ/r)<sup>6</sup> attractive term</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">C. Both terms are equal</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">D. Neither — the potential is zero</div>
+        <div class="quiz-explain">At very short distances, r<sup>-12</sup> grows much faster than r<sup>-6</sup>. The repulsive (σ/r)<sup>12</sup> term models Pauli repulsion from overlapping electron clouds and completely dominates, causing V(r) to rise steeply toward +&infin;.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Quiz Logic ---
+function checkQuiz(el) {
+  const q = el.closest('.quiz-q');
+  if (q.classList.contains('answered')) return;
+  q.classList.add('answered');
+  const options = q.querySelectorAll('.quiz-option');
+  options.forEach(o => {
+    o.classList.add('disabled');
+    if (o.dataset.correct === 'true') o.classList.add('correct');
+  });
+  if (el.dataset.correct !== 'true') el.classList.add('wrong');
+  q.querySelector('.quiz-explain').classList.add('show');
+}
+
+// --- KaTeX Formulas ---
+document.addEventListener('DOMContentLoaded', () => {
+  katex.render('V(r) = 4\\varepsilon\\left[\\left(\\frac{\\sigma}{r}\\right)^{12} - \\left(\\frac{\\sigma}{r}\\right)^{6}\\right]', document.getElementById('formulaV'), {displayMode: true});
+  katex.render('F(r) = -\\frac{dV}{dr} = \\frac{24\\varepsilon}{r}\\left[2\\left(\\frac{\\sigma}{r}\\right)^{12} - \\left(\\frac{\\sigma}{r}\\right)^{6}\\right]', document.getElementById('formulaF'), {displayMode: true});
+});
+
+// --- Physics ---
+function ljPotential(r, eps, sig) {
+  const s = sig / r;
+  const s6 = Math.pow(s, 6);
+  return 4 * eps * (s6 * s6 - s6);
+}
+
+function ljForce(r, eps, sig) {
+  const s = sig / r;
+  const s6 = Math.pow(s, 6);
+  return (24 * eps / r) * (2 * s6 * s6 - s6);
+}
+
+// --- State ---
+let rVal = 1.12, epsVal = 1.0, sigVal = 1.0;
+let isDragging3D = false;
+
+const sliderR = document.getElementById('sliderR');
+const sliderEps = document.getElementById('sliderEps');
+const sliderSig = document.getElementById('sliderSig');
+
+// --- Three.js Setup ---
+const wrap = document.getElementById('canvasWrap');
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0f172a);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(0, 2, 8);
+
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 3;
+controls.maxDistance = 20;
+
+// Lighting
+const ambLight = new THREE.AmbientLight(0x334466, 0.6);
+scene.add(ambLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+dirLight.position.set(5, 8, 5);
+scene.add(dirLight);
+const pointLight = new THREE.PointLight(0x60a5fa, 0.4, 20);
+pointLight.position.set(-3, 3, 0);
+scene.add(pointLight);
+
+// Atom materials
+const matA = new THREE.MeshStandardMaterial({color: 0x60a5fa, emissive: 0x1e40af, emissiveIntensity: 0.3, roughness: 0.3, metalness: 0.1});
+const matB = new THREE.MeshStandardMaterial({color: 0xf472b6, emissive: 0x9d174d, emissiveIntensity: 0.3, roughness: 0.3, metalness: 0.1});
+
+// Atom meshes
+const atomGeo = new THREE.SphereGeometry(0.5, 32, 32);
+const atomA = new THREE.Mesh(atomGeo, matA);
+const atomB = new THREE.Mesh(atomGeo, matB);
+scene.add(atomA);
+scene.add(atomB);
+
+// Glow shells
+const glowGeo = new THREE.SphereGeometry(0.62, 32, 32);
+const glowMatA = new THREE.MeshBasicMaterial({color: 0x60a5fa, transparent: true, opacity: 0.08});
+const glowMatB = new THREE.MeshBasicMaterial({color: 0xf472b6, transparent: true, opacity: 0.08});
+const glowA = new THREE.Mesh(glowGeo, glowMatA);
+const glowB = new THREE.Mesh(glowGeo, glowMatB);
+scene.add(glowA);
+scene.add(glowB);
+
+// Spring visualization (coil between atoms)
+const springGroup = new THREE.Group();
+scene.add(springGroup);
+
+function buildSpring(rDist, forceVal) {
+  while (springGroup.children.length > 0) springGroup.remove(springGroup.children[0]);
+
+  const coils = 12;
+  const radius = 0.15;
+  const pts = [];
+  const startX = -rDist / 2 + 0.55;
+  const endX = rDist / 2 - 0.55;
+  const len = endX - startX;
+  if (len < 0.1) return;
+
+  const segments = coils * 16;
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const x = startX + t * len;
+    const angle = t * coils * Math.PI * 2;
+    const y = Math.sin(angle) * radius;
+    const z = Math.cos(angle) * radius;
+    pts.push(new THREE.Vector3(x, y, z));
+  }
+
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const tubeGeo = new THREE.TubeGeometry(curve, segments, 0.02, 6, false);
+
+  // Color based on force: red=repulsive(F>0), blue=attractive(F<0)
+  let springColor, emissiveColor;
+  if (forceVal > 0.05) {
+    const t = Math.min(forceVal / 5, 1);
+    springColor = new THREE.Color().lerpColors(new THREE.Color(0xfbbf24), new THREE.Color(0xef4444), t);
+    emissiveColor = new THREE.Color(0x7f1d1d);
+  } else if (forceVal < -0.05) {
+    const t = Math.min(Math.abs(forceVal) / 2, 1);
+    springColor = new THREE.Color().lerpColors(new THREE.Color(0xfbbf24), new THREE.Color(0x3b82f6), t);
+    emissiveColor = new THREE.Color(0x1e3a5f);
+  } else {
+    springColor = new THREE.Color(0x22c55e);
+    emissiveColor = new THREE.Color(0x14532d);
+  }
+
+  const springMat = new THREE.MeshStandardMaterial({color: springColor, emissive: emissiveColor, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.3});
+  const springMesh = new THREE.Mesh(tubeGeo, springMat);
+  springGroup.add(springMesh);
+}
+
+// Equilibrium marker (ring)
+const eqRingGeo = new THREE.RingGeometry(0.7, 0.75, 64);
+const eqRingMat = new THREE.MeshBasicMaterial({color: 0x22c55e, transparent: true, opacity: 0.4, side: THREE.DoubleSide});
+const eqRingA = new THREE.Mesh(eqRingGeo, eqRingMat);
+eqRingA.rotation.y = Math.PI / 2;
+scene.add(eqRingA);
+const eqRingB = eqRingA.clone();
+scene.add(eqRingB);
+
+// Equilibrium dashed line
+const eqLineGeo = new THREE.BufferGeometry();
+const eqLineMat = new THREE.LineDashedMaterial({color: 0x22c55e, dashSize: 0.15, gapSize: 0.1, transparent: true, opacity: 0.5});
+const eqLine = new THREE.Line(eqLineGeo, eqLineMat);
+scene.add(eqLine);
+
+// Force arrow
+const arrowGroup = new THREE.Group();
+scene.add(arrowGroup);
+
+function buildArrows(rDist, forceVal) {
+  while (arrowGroup.children.length > 0) arrowGroup.remove(arrowGroup.children[0]);
+  if (Math.abs(forceVal) < 0.01) return;
+
+  const arrowLen = Math.min(Math.abs(forceVal) * 0.3, 1.5);
+  const arrowColor = forceVal > 0 ? 0xef4444 : 0x3b82f6;
+
+  // Arrow on atom A (force direction)
+  const dirA = forceVal > 0 ? new THREE.Vector3(-1, 0, 0) : new THREE.Vector3(1, 0, 0);
+  const arrowA = new THREE.ArrowHelper(dirA, new THREE.Vector3(-rDist / 2, 0, 0), arrowLen, arrowColor, 0.2, 0.12);
+  arrowGroup.add(arrowA);
+
+  // Arrow on atom B
+  const dirB = forceVal > 0 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(-1, 0, 0);
+  const arrowB = new THREE.ArrowHelper(dirB, new THREE.Vector3(rDist / 2, 0, 0), arrowLen, arrowColor, 0.2, 0.12);
+  arrowGroup.add(arrowB);
+}
+
+// Grid helper
+const gridHelper = new THREE.GridHelper(20, 20, 0x1e293b, 0x1e293b);
+gridHelper.position.y = -1.5;
+scene.add(gridHelper);
+
+// --- Drag atom B in 3D ---
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+let dragOffset = new THREE.Vector3();
+
+canvas.addEventListener('pointerdown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects([atomB, glowB]);
+  if (hits.length > 0) {
+    isDragging3D = true;
+    controls.enabled = false;
+    const camDir = new THREE.Vector3();
+    camera.getWorldDirection(camDir);
+    dragPlane.setFromNormalAndCoplanarPoint(camDir, atomB.position);
+    const pt = new THREE.Vector3();
+    raycaster.ray.intersectPlane(dragPlane, pt);
+    dragOffset.copy(atomB.position).sub(pt);
+  }
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!isDragging3D) return;
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const pt = new THREE.Vector3();
+  raycaster.ray.intersectPlane(dragPlane, pt);
+  pt.add(dragOffset);
+  // Constrain to x-axis drag
+  const newR = Math.max(0.5 * sigVal, Math.min(5 * sigVal, Math.abs(pt.x * 2)));
+  rVal = newR / sigVal;
+  sliderR.value = rVal;
+  updateAll();
+});
+
+canvas.addEventListener('pointerup', () => {
+  if (isDragging3D) {
+    isDragging3D = false;
+    controls.enabled = true;
+  }
+});
+
+// --- Graphs (Canvas 2D) ---
+function drawGraph(canvasId, computeFn, label, yLabel, markEq, markEps) {
+  const cv = document.getElementById(canvasId);
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const dpr = Math.min(window.devicePixelRatio, 2);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, W, H);
+
+  // Compute data
+  const rMin = 0.5, rMax = 5;
+  const N = 400;
+  const data = [];
+  let yMin = Infinity, yMax = -Infinity;
+  for (let i = 0; i <= N; i++) {
+    const r = rMin + (rMax - rMin) * i / N;
+    let val = computeFn(r * sigVal, epsVal, sigVal);
+    if (!isFinite(val)) val = 100;
+    val = Math.max(-10, Math.min(10, val));
+    data.push({r, val});
+    if (val < yMin) yMin = val;
+    if (val > yMax) yMax = val;
+  }
+
+  // Clamp y range
+  const yPad = (yMax - yMin) * 0.15 || 1;
+  yMin -= yPad;
+  yMax += yPad;
+  if (yMin < -5) yMin = -5;
+  if (yMax > 10) yMax = 10;
+
+  const margin = {left: 55, right: 20, top: 20, bottom: 35};
+  const pw = W - margin.left - margin.right;
+  const ph = H - margin.top - margin.bottom;
+
+  function xPx(r) { return margin.left + (r - rMin) / (rMax - rMin) * pw; }
+  function yPx(v) { return margin.top + (1 - (v - yMin) / (yMax - yMin)) * ph; }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  const yTicks = 5;
+  for (let i = 0; i <= yTicks; i++) {
+    const v = yMin + (yMax - yMin) * i / yTicks;
+    const y = yPx(v);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, y);
+    ctx.lineTo(W - margin.right, y);
+    ctx.stroke();
+    ctx.fillStyle = '#475569';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(1), margin.left - 6, y + 3);
+  }
+
+  // X grid
+  for (let r = 1; r <= 5; r++) {
+    const x = xPx(r);
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.moveTo(x, margin.top);
+    ctx.lineTo(x, H - margin.bottom);
+    ctx.stroke();
+    ctx.fillStyle = '#475569';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(r + 'σ', x, H - margin.bottom + 14);
+  }
+
+  // Zero line
+  if (yMin < 0 && yMax > 0) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, yPx(0));
+    ctx.lineTo(W - margin.right, yPx(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Curve
+  ctx.strokeStyle = canvasId === 'graphV' ? '#22d3ee' : '#fbbf24';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let started = false;
+  for (const d of data) {
+    const px = xPx(d.r);
+    const py = yPx(d.val);
+    if (py < margin.top - 5 || py > H - margin.bottom + 5) {
+      started = false;
+      continue;
+    }
+    if (!started) { ctx.moveTo(px, py); started = true; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Current position marker
+  const curVal = computeFn(rVal * sigVal, epsVal, sigVal);
+  const clampedVal = Math.max(yMin, Math.min(yMax, isFinite(curVal) ? curVal : 0));
+  const cx = xPx(rVal);
+  const cy = yPx(clampedVal);
+  if (cy >= margin.top && cy <= H - margin.bottom) {
+    // Vertical line at current r
+    ctx.strokeStyle = 'rgba(251,146,60,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(cx, margin.top);
+    ctx.lineTo(cx, H - margin.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fb923c';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Mark equilibrium r_min
+  if (markEq) {
+    const rEq = Math.pow(2, 1/6);
+    const eqX = xPx(rEq);
+    ctx.strokeStyle = 'rgba(34,197,94,0.6)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(eqX, margin.top);
+    ctx.lineTo(eqX, H - margin.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#22c55e';
+    ctx.font = 'bold 10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('r_min', eqX, margin.top - 5);
+  }
+
+  // Mark epsilon depth
+  if (markEps && canvasId === 'graphV') {
+    const epsY = yPx(-epsVal);
+    if (epsY >= margin.top && epsY <= H - margin.bottom) {
+      ctx.strokeStyle = 'rgba(196,181,253,0.5)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, epsY);
+      ctx.lineTo(W - margin.right, epsY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#c4b5fd';
+      ctx.font = 'bold 10px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText('-ε', margin.left + 4, epsY - 5);
+    }
+  }
+
+  // Axis labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('r / σ', W / 2, H - 4);
+
+  ctx.save();
+  ctx.translate(12, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+}
+
+// --- Update All ---
+function updateAll() {
+  const r = rVal * sigVal;
+  const V = ljPotential(r, epsVal, sigVal);
+  const F = ljForce(r, epsVal, sigVal);
+
+  // Update stat display
+  document.getElementById('statR').textContent = rVal.toFixed(2) + ' σ';
+  document.getElementById('statV').textContent = (isFinite(V) ? V.toFixed(3) : '∞') + ' eV';
+  document.getElementById('statF').textContent = (isFinite(F) ? F.toFixed(3) : '∞') + ' eV/Å';
+  document.getElementById('valR').innerHTML = rVal.toFixed(2) + ' &sigma;';
+  document.getElementById('valEps').textContent = epsVal.toFixed(2) + ' eV';
+  document.getElementById('valSig').innerHTML = sigVal.toFixed(2) + ' &Aring;';
+
+  // Regime
+  const rEq = Math.pow(2, 1/6) * sigVal;
+  let regime = 'Equilibrium';
+  let regimeClass = 'green';
+  if (r < rEq * 0.95) { regime = 'Repulsive'; regimeClass = 'red'; }
+  else if (r > rEq * 1.05) { regime = 'Attractive'; regimeClass = 'blue'; }
+  const regimeEl = document.getElementById('statRegime');
+  regimeEl.textContent = regime;
+  regimeEl.className = 'stat-value ' + regimeClass;
+
+  // 3D positions
+  const halfDist = (rVal * sigVal) / sigVal * 1.5;
+  atomA.position.set(-halfDist, 0, 0);
+  atomB.position.set(halfDist, 0, 0);
+  glowA.position.copy(atomA.position);
+  glowB.position.copy(atomB.position);
+
+  // Glow pulse based on force
+  const glowIntensity = Math.min(0.25, Math.abs(F) * 0.05);
+  glowMatA.opacity = 0.08 + glowIntensity;
+  glowMatB.opacity = 0.08 + glowIntensity;
+
+  // Equilibrium markers
+  const eqHalf = (rEq / sigVal) * 1.5;
+  eqRingA.position.set(-eqHalf, 0, 0);
+  eqRingB.position.set(eqHalf, 0, 0);
+
+  // Equilibrium line
+  const eqPts = [new THREE.Vector3(-eqHalf, 0, 0), new THREE.Vector3(eqHalf, 0, 0)];
+  eqLine.geometry.dispose();
+  eqLine.geometry = new THREE.BufferGeometry().setFromPoints(eqPts);
+  eqLine.computeLineDistances();
+
+  // Spring
+  buildSpring(halfDist * 2, F);
+
+  // Force arrows
+  buildArrows(halfDist * 2, F);
+
+  // Atom emissive based on regime
+  if (F > 0.05) {
+    matA.emissive.setHex(0x7f1d1d);
+    matB.emissive.setHex(0x7f1d1d);
+    matA.emissiveIntensity = Math.min(0.8, F * 0.15);
+    matB.emissiveIntensity = Math.min(0.8, F * 0.15);
+  } else if (F < -0.05) {
+    matA.emissive.setHex(0x1e3a5f);
+    matB.emissive.setHex(0x1e3a5f);
+    matA.emissiveIntensity = Math.min(0.6, Math.abs(F) * 0.15);
+    matB.emissiveIntensity = Math.min(0.6, Math.abs(F) * 0.15);
+  } else {
+    matA.emissive.setHex(0x14532d);
+    matB.emissive.setHex(0x14532d);
+    matA.emissiveIntensity = 0.4;
+    matB.emissiveIntensity = 0.4;
+  }
+
+  // Graphs
+  drawGraph('graphV', ljPotential, 'V(r)', 'V / eV', true, true);
+  drawGraph('graphF', ljForce, 'F(r)', 'F / eV·Å⁻¹', true, false);
+}
+
+// --- Slider Events ---
+sliderR.addEventListener('input', () => { rVal = parseFloat(sliderR.value); updateAll(); });
+sliderEps.addEventListener('input', () => { epsVal = parseFloat(sliderEps.value); updateAll(); });
+sliderSig.addEventListener('input', () => { sigVal = parseFloat(sliderSig.value); updateAll(); });
+
+// --- Presets ---
+const presets = {
+  equilibrium: {r: 1.12, eps: 1.0, sig: 1.0},
+  compressed: {r: 0.85, eps: 1.0, sig: 1.0},
+  stretched: {r: 3.0, eps: 1.0, sig: 1.0}
+};
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = presets[btn.dataset.preset];
+    rVal = p.r; epsVal = p.eps; sigVal = p.sig;
+    sliderR.value = rVal;
+    sliderEps.value = epsVal;
+    sliderSig.value = sigVal;
+    updateAll();
+  });
+});
+
+// --- Resize ---
+function onResize() {
+  const rect = wrap.getBoundingClientRect();
+  renderer.setSize(rect.width, rect.height, false);
+  camera.aspect = rect.width / rect.height;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+
+// --- Animation Loop ---
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+
+  // Subtle atom breathing
+  const t = Date.now() * 0.003;
+  const breathe = 1 + Math.sin(t) * 0.02;
+  atomA.scale.setScalar(breathe);
+  atomB.scale.setScalar(breathe);
+  glowA.scale.setScalar(breathe * 1.24);
+  glowB.scale.setScalar(breathe * 1.24);
+
+  renderer.render(scene, camera);
+}
+
+// --- Init ---
+onResize();
+updateAll();
+animate();
+</script>
+</body>
+</html>

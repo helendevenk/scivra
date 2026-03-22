@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     const tag = url.searchParams.get('tag') || undefined;
     const q = url.searchParams.get('q') || undefined;
     const author = url.searchParams.get('author') || undefined;
+    const verified = url.searchParams.get('verified') === 'true';
 
     const result = await getGalleryList({
       cursor,
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
       tag,
       q,
       author,
+      verified: verified || undefined,
     });
 
     // If user is logged in, batch check like status

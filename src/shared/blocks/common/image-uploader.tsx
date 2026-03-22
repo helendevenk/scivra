@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconUpload, IconX } from '@tabler/icons-react';

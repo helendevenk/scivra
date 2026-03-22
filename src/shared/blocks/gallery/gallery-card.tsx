@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, GitFork, Heart } from 'lucide-react';
+import { BadgeCheck, Eye, GitFork, Heart } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -19,6 +19,7 @@ interface GalleryItem {
   likeCount: number;
   forkCount: number;
   tags: string[] | null;
+  validationScore: number | null;
   createdAt: string;
   isLiked?: boolean;
 }
@@ -44,10 +45,19 @@ export function GalleryCard({ item, onLike, onTagClick }: GalleryCardProps) {
           {item.prompt}
         </h3>
 
-        {/* Tags */}
-        {item.tags && item.tags.length > 0 && (
+        {/* Tags + Verified badge */}
+        {((item.tags && item.tags.length > 0) || (item.validationScore !== null && item.validationScore >= 70)) && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {item.tags.slice(0, 3).map((tag) => (
+            {item.validationScore !== null && item.validationScore >= 70 && (
+              <Badge
+                variant="default"
+                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-0.5"
+              >
+                <BadgeCheck className="h-3 w-3" />
+                {t('badge.verified')}
+              </Badge>
+            )}
+            {item.tags?.slice(0, 3).map((tag) => (
               <Badge
                 key={tag}
                 variant="secondary"

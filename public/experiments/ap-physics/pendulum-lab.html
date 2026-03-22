@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pendulum Lab — NeonPhysics AP Physics 1</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(99,102,241,.08));border-bottom:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:14px;flex-shrink:0}
+    .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px}
+    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;letter-spacing:-.3px}
+    .main-layout{display:flex;height:calc(100vh - 52px);overflow:hidden}
+    .left-panel{width:300px;min-width:260px;background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
+    .canvas-wrap{flex:1;position:relative;background:#0f172a}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .bottom-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);border-top:1px solid rgba(59,130,246,.15);padding:12px 20px;backdrop-filter:blur(8px);display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap}
+    .slider-group{flex:1;min-width:140px}
+    .slider-label{display:flex;justify-content:space-between;margin-bottom:4px}
+    .slider-name{font-size:11px;color:#94a3b8}
+    .slider-val{font-size:11px;font-weight:600;color:#60a5fa;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;outline:none;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
+    .btn-group{display:flex;gap:6px;align-items:center;flex-shrink:0}
+    .btn{padding:7px 14px;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#3b82f6;color:#fff}
+    .btn-primary:hover{background:#2563eb}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
+    .btn-preset{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.25);font-size:10px;padding:5px 10px;border-radius:5px}
+    .btn-preset:hover{background:rgba(251,191,36,.2)}
+    .btn-preset.active{background:rgba(251,191,36,.25);border-color:rgba(251,191,36,.5)}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .info-text{font-size:11px;color:#94a3b8;line-height:1.6}
+    .info-text strong{color:#e2e8f0}
+    .overlay-stats{position:absolute;top:14px;left:14px;background:rgba(13,17,23,.88);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 16px;min-width:190px;backdrop-filter:blur(8px)}
+    .stat-row{display:flex;justify-content:space-between;gap:14px;margin-bottom:6px}
+    .stat-row:last-child{margin-bottom:0}
+    .stat-label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .stat-value{font-size:12px;font-weight:600;color:#e2e8f0;font-variant-numeric:tabular-nums}
+    .stat-value.accent{color:#60a5fa}
+    .energy-panel{position:absolute;top:14px;right:14px;background:rgba(13,17,23,.88);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 16px;width:160px;backdrop-filter:blur(8px)}
+    .energy-title{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-weight:700}
+    .energy-bar-row{margin-bottom:8px}
+    .energy-bar-header{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px}
+    .energy-bar-name{font-weight:600}
+    .energy-bar-val{font-variant-numeric:tabular-nums}
+    .ek-color{color:#3b82f6}
+    .pe-color{color:#ef4444}
+    .te-color{color:#22c55e}
+    .bar-track{height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:5px;transition:width .05s linear}
+    .bar-fill-ke{background:linear-gradient(90deg,#2563eb,#3b82f6)}
+    .bar-fill-pe{background:linear-gradient(90deg,#dc2626,#ef4444)}
+    .total-line{margin-top:6px;border-top:1px dashed rgba(34,197,94,.3);padding-top:6px}
+    .fps-badge{position:absolute;bottom:90px;left:14px;background:rgba(13,17,23,.7);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;font-size:10px;color:#475569;font-variant-numeric:tabular-nums}
+    .quiz-section{padding:16px 18px}
+    .quiz-q{background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;padding:12px;margin-bottom:10px}
+    .quiz-q-text{font-size:12px;color:#e2e8f0;margin-bottom:8px;line-height:1.5}
+    .quiz-opts label{display:block;font-size:11px;color:#94a3b8;padding:4px 8px;border-radius:4px;cursor:pointer;margin-bottom:2px;transition:background .1s}
+    .quiz-opts label:hover{background:rgba(255,255,255,.04)}
+    .quiz-opts input[type=radio]{margin-right:6px;accent-color:#3b82f6}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:6px;display:none}
+    .quiz-feedback.correct{display:block;background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.2)}
+    .quiz-feedback.wrong{display:block;background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+    .quiz-check{margin-top:8px;padding:5px 14px;background:#6366f1;color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer}
+    .quiz-check:hover{background:#4f46e5}
+    .katex{font-size:.85em!important}
+    @media(max-width:900px){
+      .main-layout{flex-direction:column}
+      .left-panel{width:100%;height:auto;max-height:35vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+      .bottom-bar{flex-direction:column;gap:10px;padding:10px 14px}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">AP PHYSICS 1</span>
+  <h1>Pendulum Lab</h1>
+</div>
+
+<div class="main-layout">
+  <div class="left-panel">
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Period of a simple pendulum</div></div>
+      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Angular position (small angle approx.)</div></div>
+      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Energy conservation</div></div>
+      <div class="formula-box"><div id="f4"></div><div class="formula-desc">Angular frequency</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Simple Harmonic Motion</div>
+      <div class="info-text">
+        A simple pendulum exhibits <strong>approximately simple harmonic motion</strong> for small angles. The restoring torque is proportional to the angular displacement.<br><br>
+        The period depends only on <strong>string length</strong> and <strong>gravity</strong> — it is independent of mass and (for small angles) amplitude.<br><br>
+        At large angles, the motion becomes <strong>nonlinear</strong>: the period increases and the waveform is no longer purely sinusoidal. Try the "Large Angle" preset to see this effect.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Energy Conservation</div>
+      <div class="info-text">
+        In an ideal pendulum (no friction), <strong>total mechanical energy is conserved</strong>. At the highest point, all energy is gravitational PE. At the lowest point, all energy is kinetic.<br><br>
+        <strong>KE = 1/2 m v<sup>2</sup></strong> where v = L * omega<br>
+        <strong>PE = m g L (1 - cos theta)</strong><br><br>
+        Watch the energy bars on the right to see this exchange in real time.
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quick Quiz</div>
+      <div class="quiz-q" id="q1">
+        <div class="quiz-q-text">1. If you double the string length, the period will:</div>
+        <div class="quiz-opts">
+          <label><input type="radio" name="q1" value="a"> Double</label>
+          <label><input type="radio" name="q1" value="b"> Increase by a factor of sqrt(2)</label>
+          <label><input type="radio" name="q1" value="c"> Stay the same</label>
+          <label><input type="radio" name="q1" value="d"> Quadruple</label>
+        </div>
+        <button class="quiz-check" onclick="checkQuiz('q1','b','T = 2pi*sqrt(L/g). Doubling L multiplies T by sqrt(2) ~ 1.414.')">Check</button>
+        <div class="quiz-feedback" id="q1fb"></div>
+      </div>
+      <div class="quiz-q" id="q2">
+        <div class="quiz-q-text">2. At the bottom of the swing, the pendulum has:</div>
+        <div class="quiz-opts">
+          <label><input type="radio" name="q2" value="a"> Maximum PE, zero KE</label>
+          <label><input type="radio" name="q2" value="b"> Maximum KE, zero PE</label>
+          <label><input type="radio" name="q2" value="c"> Equal KE and PE</label>
+          <label><input type="radio" name="q2" value="d"> Zero total energy</label>
+        </div>
+        <button class="quiz-check" onclick="checkQuiz('q2','b','At the lowest point, height is minimum (PE=0 by reference) and speed is maximum (KE is max).')">Check</button>
+        <div class="quiz-feedback" id="q2fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+
+    <div class="overlay-stats">
+      <div class="stat-row"><span class="stat-label">Period T</span><span class="stat-value accent" id="statT">2.01 s</span></div>
+      <div class="stat-row"><span class="stat-label">Angle</span><span class="stat-value" id="statAngle">30.0 deg</span></div>
+      <div class="stat-row"><span class="stat-label">Velocity</span><span class="stat-value" id="statVel">0.00 m/s</span></div>
+      <div class="stat-row"><span class="stat-label">Ang. Vel.</span><span class="stat-value" id="statOmega">0.00 rad/s</span></div>
+      <div class="stat-row"><span class="stat-label">Measured T</span><span class="stat-value accent" id="statMeasT">-- s</span></div>
+    </div>
+
+    <div class="energy-panel">
+      <div class="energy-title">Energy</div>
+      <div class="energy-bar-row">
+        <div class="energy-bar-header"><span class="energy-bar-name ek-color">KE</span><span class="energy-bar-val ek-color" id="keVal">0.00 J</span></div>
+        <div class="bar-track"><div class="bar-fill bar-fill-ke" id="keBar" style="width:0%"></div></div>
+      </div>
+      <div class="energy-bar-row">
+        <div class="energy-bar-header"><span class="energy-bar-name pe-color">PE</span><span class="energy-bar-val pe-color" id="peVal">0.00 J</span></div>
+        <div class="bar-track"><div class="bar-fill bar-fill-pe" id="peBar" style="width:0%"></div></div>
+      </div>
+      <div class="total-line">
+        <div class="energy-bar-header"><span class="energy-bar-name te-color">Total</span><span class="energy-bar-val te-color" id="teVal">0.00 J</span></div>
+      </div>
+    </div>
+
+    <div class="fps-badge" id="fpsBadge">-- FPS</div>
+
+    <div class="bottom-bar">
+      <div class="slider-group">
+        <div class="slider-label"><span class="slider-name">String Length</span><span class="slider-val" id="vLen">1.00 m</span></div>
+        <input type="range" id="sLen" min="0.1" max="3" value="1" step="0.05">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span class="slider-name">Bob Mass</span><span class="slider-val" id="vMass">1.0 kg</span></div>
+        <input type="range" id="sMass" min="0.1" max="5" value="1" step="0.1">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span class="slider-name">Gravity</span><span class="slider-val" id="vGrav">9.8 m/s2</span></div>
+        <input type="range" id="sGrav" min="1" max="20" value="9.8" step="0.1">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span class="slider-name">Initial Angle</span><span class="slider-val" id="vAngle">30 deg</span></div>
+        <input type="range" id="sAngle" min="5" max="90" value="30" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btnPlay">Pause</button>
+        <button class="btn btn-ghost" id="btnReset">Reset</button>
+        <button class="btn btn-ghost" id="btnRandom">Random</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-preset" id="preEarth" onclick="applyPreset(9.8,1,30,'preEarth')">Earth</button>
+        <button class="btn btn-preset" id="preMoon" onclick="applyPreset(1.6,1,30,'preMoon')">Moon</button>
+        <button class="btn btn-preset" id="preLarge" onclick="applyPreset(9.8,1,80,'preLarge')">Large Angle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ─── Quiz ─────────────────────────────────────────────────────────────
+function checkQuiz(qId, correct, explanation) {
+  var sel = document.querySelector('input[name="' + qId + '"]:checked');
+  var fb = document.getElementById(qId + 'fb');
+  if (!sel) return;
+  if (sel.value === correct) {
+    fb.className = 'quiz-feedback correct';
+    fb.textContent = 'Correct! ' + explanation;
+  } else {
+    fb.className = 'quiz-feedback wrong';
+    fb.textContent = 'Incorrect. ' + explanation;
+  }
+}
+
+// ─── KaTeX formulas ───────────────────────────────────────────────────
+try {
+  katex.render('T = 2\\pi\\sqrt{\\dfrac{L}{g}}', document.getElementById('f1'), {displayMode:true});
+  katex.render('\\theta(t) = \\theta_0 \\cos(\\omega t)', document.getElementById('f2'), {displayMode:true});
+  katex.render('E = mgh = \\tfrac{1}{2}mv^2', document.getElementById('f3'), {displayMode:true});
+  katex.render('\\omega = \\sqrt{\\dfrac{g}{L}}', document.getElementById('f4'), {displayMode:true});
+} catch(e) { console.warn('KaTeX render failed:', e); }
+
+// ─── Physics State ────────────────────────────────────────────────────
+var stringLen = 1.0;
+var bobMass = 1.0;
+var gravity = 9.8;
+var initAngleDeg = 30;
+var theta = initAngleDeg * Math.PI / 180;
+var omega = 0;
+var running = true;
+var simTime = 0;
+
+// Period measurement
+var lastSign = (theta >= 0) ? 1 : -1;
+var zeroCrossCount = 0;
+var zeroCrossTime = 0;
+var measuredPeriod = null;
+
+// ─── Three.js Setup ──────────────────────────────────────────────────
+var wrap = document.getElementById('canvasWrap');
+var canvas = document.getElementById('c');
+var renderer, scene, camera, controls;
+
+try {
+  renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.02);
+
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 2, 7);
+  camera.lookAt(0, 0, 0);
+
+  // OrbitControls
+  if (typeof THREE.OrbitControls !== 'undefined') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 0, 0);
+  }
+
+  // ─── Lighting (4 lights) ───────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0x334466, 0.6));
+
+  var dirLight = new THREE.DirectionalLight(0x6699ff, 1.0);
+  dirLight.position.set(5, 10, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+
+  var ptLight1 = new THREE.PointLight(0x3b82f6, 1.5, 20);
+  ptLight1.position.set(-3, 4, 3);
+  scene.add(ptLight1);
+
+  var ptLight2 = new THREE.PointLight(0x8b5cf6, 0.8, 15);
+  ptLight2.position.set(3, 2, -2);
+  scene.add(ptLight2);
+
+  // ─── Ground Grid ───────────────────────────────────────────────────
+  var gridHelper = new THREE.GridHelper(12, 24, 0x1e3a5f, 0x0f1f3a);
+  gridHelper.position.y = -4;
+  scene.add(gridHelper);
+
+  // ─── Support Structure ─────────────────────────────────────────────
+  var supportMat = new THREE.MeshStandardMaterial({color:0x334155, metalness:0.7, roughness:0.3});
+
+  // Vertical post
+  var postGeo = new THREE.CylinderGeometry(0.06, 0.06, 5, 16);
+  var post = new THREE.Mesh(postGeo, supportMat);
+  post.position.set(0, 0.5, 0);
+  scene.add(post);
+
+  // Horizontal beam at top
+  var beamGeo = new THREE.BoxGeometry(3, 0.1, 0.15);
+  var beam = new THREE.Mesh(beamGeo, supportMat);
+  beam.position.set(0, 3.0, 0);
+  scene.add(beam);
+
+  // Pivot point indicator
+  var pivotGeo = new THREE.SphereGeometry(0.06, 16, 16);
+  var pivotMat = new THREE.MeshStandardMaterial({color:0xfbbf24, emissive:0xfbbf24, emissiveIntensity:0.5});
+  var pivotMesh = new THREE.Mesh(pivotGeo, pivotMat);
+  pivotMesh.position.set(0, 3.0, 0);
+  scene.add(pivotMesh);
+
+  // ─── String (Line) ─────────────────────────────────────────────────
+  var stringGeo = new THREE.BufferGeometry();
+  var stringPositions = new Float32Array(6);
+  stringGeo.setAttribute('position', new THREE.BufferAttribute(stringPositions, 3));
+  var stringMat = new THREE.LineBasicMaterial({color:0x94a3b8, linewidth:2});
+  var stringLine = new THREE.Line(stringGeo, stringMat);
+  scene.add(stringLine);
+
+  // ─── Bob (metallic sphere) ─────────────────────────────────────────
+  var bobRadius = 0.25;
+  var bobMat = new THREE.MeshStandardMaterial({
+    color: 0x3b82f6,
+    emissive: 0x1d4ed8,
+    emissiveIntensity: 0.3,
+    metalness: 0.8,
+    roughness: 0.2
+  });
+  var bobMesh = new THREE.Mesh(new THREE.SphereGeometry(bobRadius, 32, 32), bobMat);
+  bobMesh.castShadow = true;
+  scene.add(bobMesh);
+
+  // Glow shell
+  var glowMat = new THREE.MeshBasicMaterial({
+    color: 0x60a5fa,
+    transparent: true,
+    opacity: 0.12,
+    side: THREE.BackSide
+  });
+  var glowMesh = new THREE.Mesh(new THREE.SphereGeometry(bobRadius * 1.4, 32, 32), glowMat);
+  bobMesh.add(glowMesh);
+
+  // ─── Angle Arc Indicator ───────────────────────────────────────────
+  var arcMat = new THREE.LineBasicMaterial({color:0xfbbf24, transparent:true, opacity:0.6});
+  var arcLine = new THREE.Line(new THREE.BufferGeometry(), arcMat);
+  scene.add(arcLine);
+
+  // ─── Velocity Arrow ────────────────────────────────────────────────
+  var arrowHelper = new THREE.ArrowHelper(
+    new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0),
+    0.5, 0x22c55e, 0.08, 0.06
+  );
+  arrowHelper.visible = false;
+  scene.add(arrowHelper);
+
+  // ─── Trail Arc ─────────────────────────────────────────────────────
+  var trailMat = new THREE.LineBasicMaterial({color:0x3b82f6, transparent:true, opacity:0.25});
+  var trailLine = new THREE.Line(new THREE.BufferGeometry(), trailMat);
+  scene.add(trailLine);
+
+} catch(e) {
+  console.error('Three.js initialization failed:', e);
+}
+
+// ─── Helper: update bob position from theta ──────────────────────────
+var PIVOT_Y = 3.0;
+
+function getBobPos(th, len) {
+  return {
+    x: len * Math.sin(th),
+    y: PIVOT_Y - len * Math.cos(th)
+  };
+}
+
+function updateTrailArc() {
+  var maxAngle = initAngleDeg * Math.PI / 180;
+  var segments = 48;
+  var pts = [];
+  for (var i = 0; i <= segments; i++) {
+    var a = -maxAngle + (2 * maxAngle * i / segments);
+    pts.push(stringLen * Math.sin(a), PIVOT_Y - stringLen * Math.cos(a), 0);
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  trailLine.geometry.dispose();
+  trailLine.geometry = geo;
+}
+
+function updateAngleArc(currentTheta) {
+  var segments = 24;
+  var arcRadius = Math.min(stringLen * 0.35, 0.8);
+  var sign = currentTheta >= 0 ? 1 : -1;
+  var absTheta = Math.abs(currentTheta);
+  var pts = [];
+  for (var i = 0; i <= segments; i++) {
+    var a = -absTheta * sign * i / segments;
+    pts.push(arcRadius * Math.sin(a), PIVOT_Y - arcRadius * Math.cos(a), 0);
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  arcLine.geometry.dispose();
+  arcLine.geometry = geo;
+}
+
+// ─── Physics Step (Velocity Verlet) ──────────────────────────────────
+function physicsStep(dt) {
+  // Cap dt
+  if (dt > 0.02) dt = 0.02;
+
+  // alpha = -(g/L) * sin(theta) — full nonlinear
+  var alpha1 = -(gravity / stringLen) * Math.sin(theta);
+
+  // Half-step velocity
+  var omegaHalf = omega + 0.5 * alpha1 * dt;
+
+  // Full-step position
+  theta = theta + omegaHalf * dt;
+
+  // New acceleration at new position
+  var alpha2 = -(gravity / stringLen) * Math.sin(theta);
+
+  // Full-step velocity
+  omega = omegaHalf + 0.5 * alpha2 * dt;
+
+  simTime += dt;
+
+  // Period measurement: detect zero crossings (theta crosses zero going positive)
+  var currentSign = (theta >= 0) ? 1 : -1;
+  if (lastSign === -1 && currentSign === 1) {
+    zeroCrossCount++;
+    if (zeroCrossCount === 1) {
+      zeroCrossTime = simTime;
+    } else if (zeroCrossCount === 2) {
+      measuredPeriod = simTime - zeroCrossTime;
+      zeroCrossCount = 0;
+    }
+  }
+  lastSign = currentSign;
+}
+
+// ─── Update 3D Scene ─────────────────────────────────────────────────
+function updateScene() {
+  var bp = getBobPos(theta, stringLen);
+
+  // String
+  var posArr = stringLine.geometry.attributes.position.array;
+  posArr[0] = 0; posArr[1] = PIVOT_Y; posArr[2] = 0;
+  posArr[3] = bp.x; posArr[4] = bp.y; posArr[5] = 0;
+  stringLine.geometry.attributes.position.needsUpdate = true;
+
+  // Bob
+  bobMesh.position.set(bp.x, bp.y, 0);
+
+  // Scale bob by mass (subtle)
+  var scale = 0.7 + 0.15 * bobMass;
+  bobMesh.scale.set(scale, scale, scale);
+
+  // Angle arc
+  updateAngleArc(theta);
+
+  // Velocity arrow
+  var v = stringLen * omega;
+  var speed = Math.abs(v);
+  if (speed > 0.01) {
+    arrowHelper.visible = true;
+    // Tangential direction
+    var tx = Math.cos(theta);
+    var ty = Math.sin(theta);
+    var dir = new THREE.Vector3(tx * Math.sign(omega), ty * Math.sign(omega), 0).normalize();
+    arrowHelper.setDirection(dir);
+    arrowHelper.setLength(Math.min(speed * 0.4, 2), 0.08, 0.06);
+    arrowHelper.position.set(bp.x, bp.y, 0);
+  } else {
+    arrowHelper.visible = false;
+  }
+
+  // Energy
+  var v2 = (stringLen * omega) * (stringLen * omega);
+  var ke = 0.5 * bobMass * v2;
+  var h = stringLen * (1 - Math.cos(theta));
+  var pe = bobMass * gravity * h;
+  var te = ke + pe;
+
+  // Update energy bars
+  var maxE = te > 0.001 ? te : 1;
+  document.getElementById('keBar').style.width = (ke / maxE * 100) + '%';
+  document.getElementById('peBar').style.width = (pe / maxE * 100) + '%';
+  document.getElementById('keVal').textContent = ke.toFixed(2) + ' J';
+  document.getElementById('peVal').textContent = pe.toFixed(2) + ' J';
+  document.getElementById('teVal').textContent = te.toFixed(2) + ' J';
+
+  // Stats
+  var theoreticalT = 2 * Math.PI * Math.sqrt(stringLen / gravity);
+  document.getElementById('statT').textContent = theoreticalT.toFixed(3) + ' s';
+  document.getElementById('statAngle').textContent = (theta * 180 / Math.PI).toFixed(1) + ' deg';
+  document.getElementById('statVel').textContent = (stringLen * omega).toFixed(2) + ' m/s';
+  document.getElementById('statOmega').textContent = omega.toFixed(2) + ' rad/s';
+  document.getElementById('statMeasT').textContent = measuredPeriod !== null ? measuredPeriod.toFixed(3) + ' s' : '-- s';
+}
+
+// ─── Slider bindings ─────────────────────────────────────────────────
+var sLen = document.getElementById('sLen');
+var sMass = document.getElementById('sMass');
+var sGrav = document.getElementById('sGrav');
+var sAngle = document.getElementById('sAngle');
+
+sLen.addEventListener('input', function() {
+  stringLen = parseFloat(this.value);
+  document.getElementById('vLen').textContent = stringLen.toFixed(2) + ' m';
+  resetSim();
+});
+sMass.addEventListener('input', function() {
+  bobMass = parseFloat(this.value);
+  document.getElementById('vMass').textContent = bobMass.toFixed(1) + ' kg';
+});
+sGrav.addEventListener('input', function() {
+  gravity = parseFloat(this.value);
+  document.getElementById('vGrav').textContent = gravity.toFixed(1) + ' m/s2';
+  resetSim();
+});
+sAngle.addEventListener('input', function() {
+  initAngleDeg = parseInt(this.value);
+  document.getElementById('vAngle').textContent = initAngleDeg + ' deg';
+  resetSim();
+});
+
+// ─── Buttons ─────────────────────────────────────────────────────────
+document.getElementById('btnPlay').addEventListener('click', function() {
+  running = !running;
+  this.textContent = running ? 'Pause' : 'Play';
+});
+
+document.getElementById('btnReset').addEventListener('click', function() {
+  resetSim();
+});
+
+document.getElementById('btnRandom').addEventListener('click', function() {
+  stringLen = 0.1 + Math.random() * 2.9;
+  bobMass = 0.1 + Math.random() * 4.9;
+  gravity = 1 + Math.random() * 19;
+  initAngleDeg = 5 + Math.floor(Math.random() * 85);
+  sLen.value = stringLen;
+  sMass.value = bobMass;
+  sGrav.value = gravity;
+  sAngle.value = initAngleDeg;
+  document.getElementById('vLen').textContent = stringLen.toFixed(2) + ' m';
+  document.getElementById('vMass').textContent = bobMass.toFixed(1) + ' kg';
+  document.getElementById('vGrav').textContent = gravity.toFixed(1) + ' m/s2';
+  document.getElementById('vAngle').textContent = initAngleDeg + ' deg';
+  resetSim();
+});
+
+function resetSim() {
+  theta = initAngleDeg * Math.PI / 180;
+  omega = 0;
+  simTime = 0;
+  zeroCrossCount = 0;
+  zeroCrossTime = 0;
+  measuredPeriod = null;
+  lastSign = (theta >= 0) ? 1 : -1;
+  updateTrailArc();
+  clearPresetHighlight();
+}
+
+// ─── Presets ─────────────────────────────────────────────────────────
+function clearPresetHighlight() {
+  document.querySelectorAll('.btn-preset').forEach(function(b) { b.classList.remove('active'); });
+}
+
+function applyPreset(g, l, angle, btnId) {
+  gravity = g;
+  stringLen = l;
+  initAngleDeg = angle;
+  sGrav.value = g;
+  sLen.value = l;
+  sAngle.value = angle;
+  document.getElementById('vGrav').textContent = g.toFixed(1) + ' m/s2';
+  document.getElementById('vLen').textContent = l.toFixed(2) + ' m';
+  document.getElementById('vAngle').textContent = angle + ' deg';
+  clearPresetHighlight();
+  document.getElementById(btnId).classList.add('active');
+  resetSim();
+}
+
+// ─── FPS Counter ─────────────────────────────────────────────────────
+var frameCount = 0;
+var fpsTime = performance.now();
+var fpsDisplay = document.getElementById('fpsBadge');
+
+function updateFPS() {
+  frameCount++;
+  var now = performance.now();
+  if (now - fpsTime >= 1000) {
+    fpsDisplay.textContent = frameCount + ' FPS';
+    frameCount = 0;
+    fpsTime = now;
+  }
+}
+
+// ─── Resize ──────────────────────────────────────────────────────────
+function onResize() {
+  if (!renderer || !camera) return;
+  var w = wrap.clientWidth;
+  var h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+
+// ─── Animation Loop ──────────────────────────────────────────────────
+var lastTime = null;
+
+function animate(timestamp) {
+  if (lastTime === null) lastTime = timestamp;
+  var dtReal = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (running && dtReal > 0 && dtReal < 0.1) {
+    // Sub-step for stability
+    var steps = Math.ceil(dtReal / 0.002);
+    var subDt = dtReal / steps;
+    for (var i = 0; i < steps; i++) {
+      physicsStep(subDt);
+    }
+  }
+
+  updateScene();
+  updateFPS();
+
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+// ─── Init ────────────────────────────────────────────────────────────
+try {
+  onResize();
+  updateTrailArc();
+  updateScene();
+  renderer.setAnimationLoop(animate);
+} catch(e) {
+  console.error('Animation loop failed to start:', e);
+}
+
+</script>
+</body>
+</html>

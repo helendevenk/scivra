@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diffusion &amp; Brownian Motion — NeonPhysics AP Physics 2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+  .header{padding:14px 24px;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));border-bottom:1px solid rgba(99,102,241,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .badges{display:flex;gap:8px;align-items:center}
+  .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-ap{background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc}
+  .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+  .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+  .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+  .layout{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 80px)}
+  .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+  .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+  .param-row{margin-bottom:12px}
+  .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+  .param-name{font-size:12px;color:#94a3b8}
+  .param-val{font-size:12px;font-weight:600;color:#a5b4fc;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(99,102,241,.2);border-radius:2px;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#6366f1;cursor:pointer}
+  .btn{display:inline-block;padding:7px 12px;border:1px solid rgba(99,102,241,.3);border-radius:6px;background:rgba(99,102,241,.08);color:#a5b4fc;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+  .btn:hover{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.5)}
+  .btn.active{background:rgba(99,102,241,.25);border-color:#6366f1;color:#e0e7ff}
+  .btn-row{display:flex;gap:6px;flex-wrap:wrap}
+  .btn-barrier{padding:7px 14px;border:1px solid rgba(251,191,36,.3);border-radius:6px;background:rgba(251,191,36,.08);color:#fcd34d;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+  .btn-barrier:hover{background:rgba(251,191,36,.18)}
+  .btn-barrier.removed{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#86efac}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
+  .stat-card-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .stat-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+  .v-indigo{color:#a5b4fc}.v-purple{color:#c4b5fd}.v-teal{color:#5eead4}.v-amber{color:#fcd34d}.v-rose{color:#fda4af}
+  .formula-box{background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+  .formula-holder{min-height:24px}
+  .formula-desc{font-size:10px;color:#64748b;margin-top:3px}
+  .canvas-area{position:relative;display:grid;grid-template-rows:1fr 180px}
+  .threejs-wrap{position:relative;overflow:hidden}
+  #threeCanvas{display:block;width:100%;height:100%}
+  .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-variant-numeric:tabular-nums;pointer-events:none}
+  .hist-wrap{background:#060c12;border-top:1px solid rgba(255,255,255,.06);position:relative}
+  #histCanvas{display:block;width:100%;height:100%}
+  .hist-label{position:absolute;top:8px;left:12px;font-size:11px;color:#64748b;pointer-events:none}
+  .quiz-section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
+  .quiz-q-title{font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:10px}
+  .quiz-option{display:block;padding:8px 12px;margin-bottom:6px;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:12px;color:#cbd5e1;transition:all .15s}
+  .quiz-option:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+  .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+  .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+  .quiz-option.disabled{pointer-events:none;opacity:.7}
+  .quiz-explain{display:none;margin-top:8px;padding:10px 12px;background:rgba(59,130,246,.08);border-radius:6px;font-size:11px;color:#93c5fd;line-height:1.5}
+  .quiz-explain.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Diffusion &amp; Brownian Motion</h1>
+  <p>Molecular diffusion, concentration gradients, and Fick's Law</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+
+    <div class="section">
+      <div class="section-title">Parameters</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Temperature (K)</span>
+          <span class="param-val" id="lblT">300</span>
+        </div>
+        <input type="range" id="sliderT" min="100" max="500" step="5" value="300">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Number of Particles</span>
+          <span class="param-val" id="lblN">200</span>
+        </div>
+        <input type="range" id="sliderN" min="50" max="500" step="10" value="200">
+      </div>
+
+      <div class="param-row" style="margin-bottom:0">
+        <button class="btn-barrier" id="btnBarrier">Remove Barrier</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div class="btn-row">
+        <button class="btn" id="preset1">Cold Slow</button>
+        <button class="btn" id="preset2">Room Temp</button>
+        <button class="btn" id="preset3">Hot Rapid</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Temperature</div>
+        <div class="stat-card-value v-indigo" id="statT">300 K</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Particles</div>
+        <div class="stat-card-value v-purple" id="statN">200</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Avg Speed</div>
+        <div class="stat-card-value v-teal" id="statV">0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Mixing %</div>
+        <div class="stat-card-value v-amber" id="statMix">0%</div>
+      </div>
+      <div class="stat-card" style="grid-column:span 2">
+        <div class="stat-card-label">Diffusion Flux J</div>
+        <div class="stat-card-value v-rose" id="statJ">0.00</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Equations</div>
+      <div class="formula-box">
+        <div class="formula-holder" id="f1"></div>
+        <div class="formula-desc">Fick's First Law of Diffusion</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-holder" id="f2"></div>
+        <div class="formula-desc">RMS speed proportional to sqrt(T)</div>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quick Quiz</div>
+      <div class="quiz-q" id="quiz1">
+        <div class="quiz-q-title">1. If the temperature is doubled, the average molecular speed:</div>
+        <div class="quiz-option" data-answer="a">A) Doubles</div>
+        <div class="quiz-option" data-answer="b" data-correct="true">B) Increases by a factor of &radic;2</div>
+        <div class="quiz-option" data-answer="c">C) Quadruples</div>
+        <div class="quiz-option" data-answer="d">D) Stays the same</div>
+        <div class="quiz-explain" id="explain1">Correct! The RMS speed v &prop; &radic;T, so doubling T increases speed by &radic;2 &approx; 1.41&times;.</div>
+      </div>
+      <div class="quiz-q" id="quiz2">
+        <div class="quiz-q-title">2. In Fick's Law J = &minus;D(dC/dx), a steeper concentration gradient means:</div>
+        <div class="quiz-option" data-answer="a" data-correct="true">A) Greater diffusion flux</div>
+        <div class="quiz-option" data-answer="b">B) Smaller diffusion flux</div>
+        <div class="quiz-option" data-answer="c">C) No effect on flux</div>
+        <div class="quiz-option" data-answer="d">D) Diffusion stops</div>
+        <div class="quiz-explain" id="explain2">Correct! A larger concentration gradient (dC/dx) produces a larger magnitude of flux J. Diffusion naturally moves particles from high to low concentration.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <div class="threejs-wrap" id="threeWrap">
+      <canvas id="threeCanvas"></canvas>
+      <div class="fps-badge" id="fpsBadge">60 FPS</div>
+    </div>
+    <div class="hist-wrap">
+      <canvas id="histCanvas"></canvas>
+      <div class="hist-label">Concentration Distribution (left &harr; right)</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+
+  // ── State ──────────────────────────────────────────────────────────
+  var temperature = 300;
+  var numParticles = 200;
+  var barrierUp = true;
+  var particles = [];
+
+  // Container dimensions (world units)
+  var BOX_W = 12, BOX_H = 6, BOX_D = 6;
+  var HALF_W = BOX_W / 2;
+  var HALF_H = BOX_H / 2;
+  var HALF_D = BOX_D / 2;
+  var PARTICLE_R = 0.08;
+
+  // ── Three.js Setup ─────────────────────────────────────────────────
+  var canvas3 = $('threeCanvas');
+  var wrap3 = $('threeWrap');
+
+  var renderer, scene, camera, controls;
+
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas3, antialias: true, alpha: false });
+  } catch (e) {
+    wrap3.innerHTML = '<p style="padding:40px;color:#f87171;">WebGL not supported.</p>';
+    return;
+  }
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(0, 5, 16);
+  camera.lookAt(0, 0, 0);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 8;
+  controls.maxDistance = 35;
+
+  // ── Lighting (4 lights) ────────────────────────────────────────────
+  var ambLight = new THREE.AmbientLight(0x1a1a3a, 1.8);
+  scene.add(ambLight);
+
+  var keyLight = new THREE.DirectionalLight(0x6366f1, 1.2);
+  keyLight.position.set(8, 12, 10);
+  scene.add(keyLight);
+
+  var fillLight = new THREE.DirectionalLight(0x9333ea, 0.6);
+  fillLight.position.set(-6, 4, -8);
+  scene.add(fillLight);
+
+  var rimLight = new THREE.PointLight(0x06b6d4, 0.8, 40);
+  rimLight.position.set(0, -6, 8);
+  scene.add(rimLight);
+
+  // ── Container (wireframe box) ──────────────────────────────────────
+  var boxGeo = new THREE.BoxGeometry(BOX_W, BOX_H, BOX_D);
+  var boxEdges = new THREE.EdgesGeometry(boxGeo);
+  var boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({
+    color: 0x6366f1, transparent: true, opacity: 0.4
+  }));
+  scene.add(boxLine);
+
+  // Transparent faces
+  var boxFaceMat = new THREE.MeshPhysicalMaterial({
+    color: 0x6366f1, transparent: true, opacity: 0.04,
+    roughness: 0.1, metalness: 0.0, side: THREE.DoubleSide
+  });
+  var boxFace = new THREE.Mesh(boxGeo, boxFaceMat);
+  scene.add(boxFace);
+
+  // ── Barrier (center divider) ───────────────────────────────────────
+  var barrierGeo = new THREE.PlaneGeometry(BOX_D, BOX_H);
+  var barrierMat = new THREE.MeshPhysicalMaterial({
+    color: 0xfbbf24, transparent: true, opacity: 0.35,
+    roughness: 0.3, metalness: 0.1, side: THREE.DoubleSide
+  });
+  var barrierMesh = new THREE.Mesh(barrierGeo, barrierMat);
+  barrierMesh.rotation.y = Math.PI / 2;
+  barrierMesh.position.set(0, 0, 0);
+  scene.add(barrierMesh);
+
+  // Barrier edge lines
+  var barrierEdgeGeo = new THREE.EdgesGeometry(barrierGeo);
+  var barrierEdge = new THREE.LineSegments(barrierEdgeGeo, new THREE.LineBasicMaterial({
+    color: 0xfbbf24, transparent: true, opacity: 0.6
+  }));
+  barrierEdge.rotation.y = Math.PI / 2;
+  scene.add(barrierEdge);
+
+  // ── Particle System ────────────────────────────────────────────────
+  var RED_COLOR = new THREE.Color(0xf87171);
+  var BLUE_COLOR = new THREE.Color(0x60a5fa);
+
+  var particleGeo = new THREE.SphereGeometry(PARTICLE_R, 8, 6);
+  var redMat = new THREE.MeshStandardMaterial({ color: RED_COLOR, emissive: 0xf87171, emissiveIntensity: 0.3 });
+  var blueMat = new THREE.MeshStandardMaterial({ color: BLUE_COLOR, emissive: 0x60a5fa, emissiveIntensity: 0.3 });
+
+  // Use InstancedMesh for performance
+  var maxParticles = 500;
+  var redInstanced = new THREE.InstancedMesh(particleGeo, redMat, maxParticles);
+  var blueInstanced = new THREE.InstancedMesh(particleGeo, blueMat, maxParticles);
+  redInstanced.count = 0;
+  blueInstanced.count = 0;
+  scene.add(redInstanced);
+  scene.add(blueInstanced);
+
+  var dummyMatrix = new THREE.Matrix4();
+
+  function speedFactor() {
+    // v_rms proportional to sqrt(T), normalized so T=300 gives factor 1.0
+    return Math.sqrt(temperature / 300);
+  }
+
+  function createParticles() {
+    particles = [];
+    var half = Math.floor(numParticles / 2);
+    var margin = PARTICLE_R * 2;
+
+    // Red particles on the left half
+    for (var i = 0; i < half; i++) {
+      var px = -HALF_W + margin + Math.random() * (HALF_W - margin * 2);
+      var py = -HALF_H + margin + Math.random() * (BOX_H - margin * 2);
+      var pz = -HALF_D + margin + Math.random() * (BOX_D - margin * 2);
+      var sf = speedFactor();
+      particles.push({
+        x: px, y: py, z: pz,
+        vx: (Math.random() - 0.5) * 0.06 * sf,
+        vy: (Math.random() - 0.5) * 0.06 * sf,
+        vz: (Math.random() - 0.5) * 0.06 * sf,
+        type: 0 // red
+      });
+    }
+
+    // Blue particles on the right half
+    for (var j = 0; j < half; j++) {
+      var bx = margin + Math.random() * (HALF_W - margin * 2);
+      var by = -HALF_H + margin + Math.random() * (BOX_H - margin * 2);
+      var bz = -HALF_D + margin + Math.random() * (BOX_D - margin * 2);
+      var sf2 = speedFactor();
+      particles.push({
+        x: bx, y: by, z: bz,
+        vx: (Math.random() - 0.5) * 0.06 * sf2,
+        vy: (Math.random() - 0.5) * 0.06 * sf2,
+        vz: (Math.random() - 0.5) * 0.06 * sf2,
+        type: 1 // blue
+      });
+    }
+
+    redInstanced.count = half;
+    blueInstanced.count = half;
+  }
+
+  createParticles();
+
+  function updateParticleVelocities() {
+    var sf = speedFactor();
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var curSpeed = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+      if (curSpeed > 0.0001) {
+        var targetSpeed = 0.06 * sf;
+        var scale = targetSpeed / curSpeed;
+        // Gradually adjust speed (smooth transition)
+        var blend = 0.05;
+        p.vx *= (1 - blend) + blend * scale;
+        p.vy *= (1 - blend) + blend * scale;
+        p.vz *= (1 - blend) + blend * scale;
+      }
+    }
+  }
+
+  // ── Simulation Step ────────────────────────────────────────────────
+  var BASE_STEP = 0.06;
+  var BROWNIAN_STRENGTH = 0.012;
+
+  function stepSimulation() {
+    var sf = speedFactor();
+    var brownian = BROWNIAN_STRENGTH * sf;
+    var wallMin = PARTICLE_R;
+    var wallMaxX = HALF_W - PARTICLE_R;
+    var wallMaxY = HALF_H - PARTICLE_R;
+    var wallMaxZ = HALF_D - PARTICLE_R;
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+
+      // Brownian random kicks
+      p.vx += (Math.random() - 0.5) * brownian;
+      p.vy += (Math.random() - 0.5) * brownian;
+      p.vz += (Math.random() - 0.5) * brownian;
+
+      // Speed limiting
+      var spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+      var maxSpd = 0.12 * sf;
+      if (spd > maxSpd) {
+        var ratio = maxSpd / spd;
+        p.vx *= ratio;
+        p.vy *= ratio;
+        p.vz *= ratio;
+      }
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.z += p.vz;
+
+      // Wall collisions
+      if (p.x < -wallMaxX) { p.x = -wallMaxX; p.vx = Math.abs(p.vx); }
+      if (p.x > wallMaxX) { p.x = wallMaxX; p.vx = -Math.abs(p.vx); }
+      if (p.y < -wallMaxY) { p.y = -wallMaxY; p.vy = Math.abs(p.vy); }
+      if (p.y > wallMaxY) { p.y = wallMaxY; p.vy = -Math.abs(p.vy); }
+      if (p.z < -wallMaxZ) { p.z = -wallMaxZ; p.vz = Math.abs(p.vz); }
+      if (p.z > wallMaxZ) { p.z = wallMaxZ; p.vz = -Math.abs(p.vz); }
+
+      // Barrier collision (if up, block crossing x=0)
+      if (barrierUp) {
+        if (p.type === 0 && p.x > -PARTICLE_R) {
+          p.x = -PARTICLE_R;
+          p.vx = -Math.abs(p.vx);
+        }
+        if (p.type === 1 && p.x < PARTICLE_R) {
+          p.x = PARTICLE_R;
+          p.vx = Math.abs(p.vx);
+        }
+      }
+    }
+  }
+
+  function updateInstancedMeshes() {
+    var ri = 0, bi = 0;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      dummyMatrix.makeTranslation(p.x, p.y, p.z);
+      if (p.type === 0) {
+        redInstanced.setMatrixAt(ri, dummyMatrix);
+        ri++;
+      } else {
+        blueInstanced.setMatrixAt(bi, dummyMatrix);
+        bi++;
+      }
+    }
+    redInstanced.instanceMatrix.needsUpdate = true;
+    blueInstanced.instanceMatrix.needsUpdate = true;
+  }
+
+  // ── Stats Calculation ──────────────────────────────────────────────
+  function calcStats() {
+    var totalSpeed = 0;
+    var redLeft = 0, redRight = 0, blueLeft = 0, blueRight = 0;
+    var totalRed = 0, totalBlue = 0;
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+      totalSpeed += spd;
+
+      if (p.type === 0) {
+        totalRed++;
+        if (p.x < 0) redLeft++; else redRight++;
+      } else {
+        totalBlue++;
+        if (p.x < 0) blueLeft++; else blueRight++;
+      }
+    }
+
+    var avgSpeed = particles.length > 0 ? totalSpeed / particles.length : 0;
+
+    // Mixing percentage: 0% = fully separated, 100% = perfectly mixed
+    // Perfect mix: each side has 50% red, 50% blue
+    var mixScore = 0;
+    if (totalRed > 0 && totalBlue > 0) {
+      var leftTotal = redLeft + blueLeft;
+      var rightTotal = redRight + blueRight;
+      if (leftTotal > 0 && rightTotal > 0) {
+        var leftRedFrac = redLeft / leftTotal;
+        var rightBlueFrac = blueRight / rightTotal;
+        // When separated: leftRedFrac~1, rightBlueFrac~1 → mix=0
+        // When mixed: leftRedFrac~0.5, rightBlueFrac~0.5 → mix=100
+        var deviation = (Math.abs(leftRedFrac - 0.5) + Math.abs(rightBlueFrac - 0.5)) / 1.0;
+        mixScore = Math.max(0, Math.min(100, (1 - deviation) * 100));
+      }
+    }
+
+    // Fick's flux approximation: J proportional to concentration gradient
+    var dC = 0;
+    var leftCount = redLeft + blueLeft;
+    var rightCount = redRight + blueRight;
+    if (leftCount + rightCount > 0) {
+      var concLeft = redLeft / Math.max(1, leftCount);
+      var concRight = redRight / Math.max(1, rightCount);
+      dC = Math.abs(concLeft - concRight);
+    }
+    var diffCoeff = 0.01 * speedFactor();
+    var flux = diffCoeff * dC;
+
+    $('statT').textContent = temperature + ' K';
+    $('statN').textContent = particles.length;
+    $('statV').textContent = (avgSpeed * 100).toFixed(1);
+    $('statMix').textContent = mixScore.toFixed(0) + '%';
+    $('statJ').textContent = flux.toFixed(4);
+
+    return {
+      redLeft: redLeft, redRight: redRight,
+      blueLeft: blueLeft, blueRight: blueRight,
+      totalRed: totalRed, totalBlue: totalBlue
+    };
+  }
+
+  // ── Histogram (Canvas 2D) ──────────────────────────────────────────
+  var histCanvas = $('histCanvas');
+  var histCtx = histCanvas.getContext('2d');
+
+  function drawHistogram(stats) {
+    var w = histCanvas.width;
+    var h = histCanvas.height;
+    histCtx.clearRect(0, 0, w, h);
+
+    var numBins = 10;
+    var bins = [];
+    for (var b = 0; b < numBins; b++) {
+      bins.push({ red: 0, blue: 0 });
+    }
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var normX = (p.x + HALF_W) / BOX_W;
+      var binIdx = Math.min(numBins - 1, Math.max(0, Math.floor(normX * numBins)));
+      if (p.type === 0) bins[binIdx].red++;
+      else bins[binIdx].blue++;
+    }
+
+    var maxCount = 1;
+    for (var b2 = 0; b2 < numBins; b2++) {
+      var total = bins[b2].red + bins[b2].blue;
+      if (total > maxCount) maxCount = total;
+    }
+
+    var margin = { left: 50, right: 20, top: 30, bottom: 30 };
+    var plotW = w - margin.left - margin.right;
+    var plotH = h - margin.top - margin.bottom;
+    var barW = plotW / numBins;
+
+    // Axes
+    histCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+    histCtx.lineWidth = 1;
+    histCtx.beginPath();
+    histCtx.moveTo(margin.left, margin.top);
+    histCtx.lineTo(margin.left, h - margin.bottom);
+    histCtx.lineTo(w - margin.right, h - margin.bottom);
+    histCtx.stroke();
+
+    // Axis labels
+    histCtx.fillStyle = '#475569';
+    histCtx.font = '10px -apple-system, sans-serif';
+    histCtx.textAlign = 'center';
+    histCtx.fillText('Left', margin.left + plotW * 0.15, h - 8);
+    histCtx.fillText('Center', margin.left + plotW * 0.5, h - 8);
+    histCtx.fillText('Right', margin.left + plotW * 0.85, h - 8);
+
+    histCtx.save();
+    histCtx.translate(12, margin.top + plotH / 2);
+    histCtx.rotate(-Math.PI / 2);
+    histCtx.fillText('Count', 0, 0);
+    histCtx.restore();
+
+    // Center line
+    histCtx.strokeStyle = 'rgba(251,191,36,0.3)';
+    histCtx.setLineDash([4, 4]);
+    histCtx.beginPath();
+    var centerX = margin.left + plotW / 2;
+    histCtx.moveTo(centerX, margin.top);
+    histCtx.lineTo(centerX, h - margin.bottom);
+    histCtx.stroke();
+    histCtx.setLineDash([]);
+
+    // Bars
+    for (var b3 = 0; b3 < numBins; b3++) {
+      var x = margin.left + b3 * barW;
+
+      // Red bar
+      var redH = (bins[b3].red / maxCount) * plotH;
+      histCtx.fillStyle = 'rgba(248,113,113,0.7)';
+      histCtx.fillRect(x + 2, h - margin.bottom - redH, barW / 2 - 2, redH);
+
+      // Blue bar (side by side)
+      var blueH = (bins[b3].blue / maxCount) * plotH;
+      histCtx.fillStyle = 'rgba(96,165,250,0.7)';
+      histCtx.fillRect(x + barW / 2 + 1, h - margin.bottom - blueH, barW / 2 - 3, blueH);
+    }
+
+    // Legend
+    histCtx.fillStyle = 'rgba(248,113,113,0.9)';
+    histCtx.fillRect(w - 120, 10, 10, 10);
+    histCtx.fillStyle = '#94a3b8';
+    histCtx.font = '10px -apple-system, sans-serif';
+    histCtx.textAlign = 'left';
+    histCtx.fillText('Red (Type A)', w - 105, 19);
+
+    histCtx.fillStyle = 'rgba(96,165,250,0.9)';
+    histCtx.fillRect(w - 120, 24, 10, 10);
+    histCtx.fillStyle = '#94a3b8';
+    histCtx.fillText('Blue (Type B)', w - 105, 33);
+  }
+
+  // ── FPS Counter ────────────────────────────────────────────────────
+  var fpsFrames = 0;
+  var fpsTime = performance.now();
+
+  function updateFPS() {
+    fpsFrames++;
+    var now = performance.now();
+    if (now - fpsTime >= 1000) {
+      $('fpsBadge').textContent = fpsFrames + ' FPS';
+      fpsFrames = 0;
+      fpsTime = now;
+    }
+  }
+
+  // ── Animation Loop ─────────────────────────────────────────────────
+  var statsCounter = 0;
+  var lastStats = { redLeft: 0, redRight: 0, blueLeft: 0, blueRight: 0, totalRed: 0, totalBlue: 0 };
+
+  function animate() {
+    stepSimulation();
+    updateInstancedMeshes();
+
+    statsCounter++;
+    if (statsCounter % 6 === 0) {
+      lastStats = calcStats();
+      drawHistogram(lastStats);
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+    updateFPS();
+  }
+
+  renderer.setAnimationLoop(animate);
+
+  // ── Resize Handler ─────────────────────────────────────────────────
+  function handleResize() {
+    var w3 = wrap3.clientWidth;
+    var h3 = wrap3.clientHeight;
+    if (w3 > 0 && h3 > 0) {
+      renderer.setSize(w3, h3);
+      camera.aspect = w3 / h3;
+      camera.updateProjectionMatrix();
+    }
+
+    var histWrap = histCanvas.parentElement;
+    var wh = histWrap.clientWidth;
+    var hh = histWrap.clientHeight;
+    if (wh > 0 && hh > 0) {
+      var dpr = Math.min(window.devicePixelRatio, 2);
+      histCanvas.width = wh * dpr;
+      histCanvas.height = hh * dpr;
+      histCanvas.style.width = wh + 'px';
+      histCanvas.style.height = hh + 'px';
+      histCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+
+  window.addEventListener('resize', handleResize);
+  handleResize();
+
+  // ── UI Controls ────────────────────────────────────────────────────
+  $('sliderT').addEventListener('input', function() {
+    temperature = parseInt(this.value, 10);
+    $('lblT').textContent = temperature;
+    updateParticleVelocities();
+  });
+
+  $('sliderN').addEventListener('input', function() {
+    numParticles = parseInt(this.value, 10);
+    $('lblN').textContent = numParticles;
+    createParticles();
+  });
+
+  $('btnBarrier').addEventListener('click', function() {
+    barrierUp = !barrierUp;
+    barrierMesh.visible = barrierUp;
+    barrierEdge.visible = barrierUp;
+    if (barrierUp) {
+      this.textContent = 'Remove Barrier';
+      this.classList.remove('removed');
+      // Re-segregate particles
+      createParticles();
+    } else {
+      this.textContent = 'Restore Barrier';
+      this.classList.add('removed');
+    }
+  });
+
+  // ── Presets ─────────────────────────────────────────────────────────
+  function highlightPreset(btn) {
+    var btns = document.querySelectorAll('.btn-row .btn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    btn.classList.add('active');
+  }
+
+  function applyPreset(temp, n, removeBarrier) {
+    temperature = temp;
+    numParticles = n;
+    $('sliderT').value = temp;
+    $('sliderN').value = n;
+    $('lblT').textContent = temp;
+    $('lblN').textContent = n;
+
+    // Always start with barrier, then optionally remove
+    barrierUp = true;
+    barrierMesh.visible = true;
+    barrierEdge.visible = true;
+    $('btnBarrier').textContent = 'Remove Barrier';
+    $('btnBarrier').classList.remove('removed');
+
+    createParticles();
+
+    if (removeBarrier) {
+      // Small delay before removing barrier for visual effect
+      setTimeout(function() {
+        barrierUp = false;
+        barrierMesh.visible = false;
+        barrierEdge.visible = false;
+        $('btnBarrier').textContent = 'Restore Barrier';
+        $('btnBarrier').classList.add('removed');
+      }, 500);
+    }
+  }
+
+  $('preset1').addEventListener('click', function() {
+    applyPreset(150, 200, true);
+    highlightPreset(this);
+  });
+
+  $('preset2').addEventListener('click', function() {
+    applyPreset(300, 200, true);
+    highlightPreset(this);
+  });
+
+  $('preset3').addEventListener('click', function() {
+    applyPreset(500, 200, true);
+    highlightPreset(this);
+  });
+
+  // ── Quiz Logic ─────────────────────────────────────────────────────
+  document.querySelectorAll('.quiz-q').forEach(function(qBlock) {
+    var options = qBlock.querySelectorAll('.quiz-option');
+    var explain = qBlock.querySelector('.quiz-explain');
+    options.forEach(function(opt) {
+      opt.addEventListener('click', function() {
+        if (opt.classList.contains('disabled')) return;
+        options.forEach(function(o) { o.classList.add('disabled'); });
+        if (opt.getAttribute('data-correct') === 'true') {
+          opt.classList.add('correct');
+        } else {
+          opt.classList.add('wrong');
+          options.forEach(function(o) {
+            if (o.getAttribute('data-correct') === 'true') o.classList.add('correct');
+          });
+        }
+        explain.classList.add('show');
+      });
+    });
+  });
+
+  // ── KaTeX Formulas ─────────────────────────────────────────────────
+  function renderFormulas() {
+    try {
+      katex.render('J = -D \\frac{dC}{dx}', $('f1'), { displayMode: true, throwOnError: false });
+      katex.render('v_{\\text{rms}} \\propto \\sqrt{T}', $('f2'), { displayMode: true, throwOnError: false });
+    } catch (e) {
+      $('f1').textContent = 'J = -D (dC/dx)';
+      $('f2').textContent = 'v_rms proportional to sqrt(T)';
+    }
+  }
+
+  // KaTeX loads deferred, wait for it
+  if (typeof katex !== 'undefined') {
+    renderFormulas();
+  } else {
+    var katexCheck = setInterval(function() {
+      if (typeof katex !== 'undefined') {
+        clearInterval(katexCheck);
+        renderFormulas();
+      }
+    }, 100);
+    // Give up after 5 seconds
+    setTimeout(function() { clearInterval(katexCheck); }, 5000);
+  }
+
+})();
+</script>
+</body>
+</html>

@@ -52,7 +52,7 @@ export function LearningPathCard({ path, progress }: LearningPathCardProps) {
 
   return (
     <Link href={`/learn/${path.slug}`} className="group block">
-      <Card className="h-full border-neon-cyan/10 bg-surface-dark transition-all hover:border-neon-cyan/30 hover:shadow-lg">
+      <Card className="h-full border-primary/10 bg-card transition-all hover:border-primary/30 hover:shadow-lg">
         <CardContent className="space-y-3 p-5">
           <div className="flex items-center justify-between">
             <Badge variant="secondary" className="text-xs">
@@ -61,7 +61,7 @@ export function LearningPathCard({ path, progress }: LearningPathCardProps) {
             <span className="text-xs text-muted-foreground">{path.level}</span>
           </div>
 
-          <h3 className="line-clamp-2 text-base font-medium transition-colors group-hover:text-neon-cyan">
+          <h3 className="line-clamp-2 text-base font-medium transition-colors group-hover:text-primary">
             {title}
           </h3>
 
@@ -78,7 +78,7 @@ export function LearningPathCard({ path, progress }: LearningPathCardProps) {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 {isCompleted ? (
-                  <span className="flex items-center gap-1 text-neon-green">
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                     <CheckCircle className="h-3.5 w-3.5" />
                     {t('card.completed')}
                   </span>
@@ -95,7 +95,7 @@ export function LearningPathCard({ path, progress }: LearningPathCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan"
+            className="w-full text-primary hover:bg-primary/10 hover:text-primary"
           >
             {actionLabel}
           </Button>

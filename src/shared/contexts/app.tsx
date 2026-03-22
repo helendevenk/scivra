@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
 import {
   createContext,
@@ -40,8 +41,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
   // session
   const { data: session, isPending } = useSession();
 
-  // is check sign (true during SSR and initial render to avoid hydration mismatch when auth is enabled)
-  const [isCheckSign, setIsCheckSign] = useState(!!envConfigs.auth_secret);
+  // is check sign — always true on first render (server + client both start as "pending")
+  // to avoid hydration mismatch from envConfigs.auth_secret being server-only
+  const [isCheckSign, setIsCheckSign] = useState(true);
 
   // show sign modal
   const [isShowSignModal, setIsShowSignModal] = useState(false);

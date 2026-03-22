@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buoyancy: Basics — NeonPhysics AP Physics</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(59,130,246,.08));border-bottom:1px solid rgba(6,182,212,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(6,182,212,.2);border:1px solid rgba(6,182,212,.4);color:#67e8f9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 100px)}
+    .canvas-wrap{position:relative;background:#060e1a}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:260px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .metric-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
+    .metric-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-cyan{color:#22d3ee}.val-blue{color:#60a5fa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-purple{color:#a78bfa}
+    .float-indicator{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;font-size:13px;font-weight:700;margin-top:6px;letter-spacing:1px;justify-content:center}
+    .fi-float{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#86efac}
+    .fi-sink{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#22d3ee;font-variant-numeric:tabular-nums}
+    .selector-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .mat-btn{padding:6px 11px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+    .mat-btn:hover{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#67e8f9}
+    .mat-btn.active{background:rgba(6,182,212,.2);border-color:rgba(6,182,212,.5);color:#67e8f9}
+    .preset-btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.1);color:#67e8f9;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+    .preset-btn:hover{background:rgba(6,182,212,.25);border-color:rgba(6,182,212,.5)}
+    .preset-btn.active{background:rgba(6,182,212,.3);border-color:#06b6d4;color:#fff}
+    .formula-box{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .density-compare{display:flex;gap:12px;align-items:flex-end;height:120px;padding:12px;background:rgba(255,255,255,.03);border-radius:8px;margin-top:8px}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+    .bar-fill{width:40px;border-radius:4px 4px 0 0;transition:height .4s ease;min-height:4px}
+    .bar-label{font-size:10px;color:#64748b;margin-top:6px;text-align:center}
+    .bar-value{font-size:11px;font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums}
+    .quiz-section{padding:18px 20px}
+    .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-bottom:12px}
+    .quiz-q p{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
+    .quiz-opt{display:block;width:100%;text-align:left;padding:7px 10px;margin-bottom:4px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;transition:all .15s}
+    .quiz-opt:hover{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:#67e8f9}
+    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-opt.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171}
+    .quiz-opt:disabled{cursor:default;opacity:.7}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:5px;display:none}
+    .quiz-feedback.show{display:block}
+    .quiz-feedback.correct-fb{background:rgba(34,197,94,.1);color:#86efac}
+    .quiz-feedback.wrong-fb{background:rgba(239,68,68,.08);color:#f87171}
+    @media(max-width:768px){
+      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
+      .sidebar{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
+      .overlay{min-width:200px;padding:10px 14px}
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Buoyancy: Basics</h1>
+  <p class="subtitle">Simplified introduction to buoyant force, density comparison, and sink-or-float conditions</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Buoyant Force</div>
+          <div class="metric-val val-green" id="fbDisplay">0.00 N</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Weight</div>
+          <div class="metric-val val-amber" id="wDisplay">0.00 N</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Object Density</div>
+          <div class="metric-val val-cyan" id="objRhoDisplay">0 kg/m3</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Fluid Density</div>
+          <div class="metric-val val-blue" id="fluidRhoDisplay">0 kg/m3</div>
+        </div>
+      </div>
+      <div class="float-indicator fi-float" id="floatIndicator">FLOATS</div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Object Material</div>
+      <div class="selector-grid" id="matBtns">
+        <button class="mat-btn active" onclick="setMaterial('wood')">Wood</button>
+        <button class="mat-btn" onclick="setMaterial('styrofoam')">Styrofoam</button>
+        <button class="mat-btn" onclick="setMaterial('brick')">Brick</button>
+        <button class="mat-btn" onclick="setMaterial('iron')">Iron</button>
+        <button class="mat-btn" onclick="setMaterial('lead')">Lead</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Fluid</div>
+      <div class="selector-grid" id="fluidBtns">
+        <button class="mat-btn" onclick="setFluid('air')">Air</button>
+        <button class="mat-btn active" onclick="setFluid('water')">Water</button>
+        <button class="mat-btn" onclick="setFluid('honey')">Honey</button>
+        <button class="mat-btn" onclick="setFluid('mercury')">Mercury</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="preset-btn" onclick="applyPreset('woodWater')">Wood in Water</button>
+        <button class="preset-btn" onclick="applyPreset('brickWater')">Brick in Water</button>
+        <button class="preset-btn" onclick="applyPreset('brickMercury')">Brick in Mercury</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Density Comparison</div>
+      <div class="density-compare">
+        <div class="bar-col">
+          <div class="bar-value val-cyan" id="barObjVal">600</div>
+          <div class="bar-fill" id="barObj" style="height:10%;background:linear-gradient(to top,#0891b2,#22d3ee)"></div>
+          <div class="bar-label">Object</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-value val-blue" id="barFluidVal">1000</div>
+          <div class="bar-fill" id="barFluid" style="height:10%;background:linear-gradient(to top,#2563eb,#60a5fa)"></div>
+          <div class="bar-label">Fluid</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div id="f1"></div>
+        <div class="formula-desc">Buoyant force equals weight of displaced fluid</div>
+      </div>
+      <div class="formula-box">
+        <div id="f2"></div>
+        <div class="formula-desc">Object floats when its density is less than the fluid</div>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-q" id="q1">
+        <p>Q1: A wooden block (density 600 kg/m3) is placed in water (1000 kg/m3). What happens?</p>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'A')">A) It sinks to the bottom</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'B')">B) It floats, partially submerged</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'C')">C) It hovers in the middle</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'D')">D) It dissolves</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div class="quiz-q" id="q2">
+        <p>Q2: A brick sinks in water but floats in mercury. What can you conclude?</p>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'A')">A) The brick is lighter than water</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'B')">B) Mercury is less dense than the brick</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'C')">C) The brick's density is between water and mercury</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'D')">D) Buoyancy does not depend on fluid density</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+try {
+  var G = 9.81;
+  var V_OBJ = 0.001;
+
+  var materials = {
+    wood:      { density: 600,   color: 0xc8a25c, name: 'Wood' },
+    styrofoam: { density: 30,    color: 0xe8e8e8, name: 'Styrofoam' },
+    brick:     { density: 1920,  color: 0xb5543a, name: 'Brick' },
+    iron:      { density: 7874,  color: 0x8899aa, name: 'Iron' },
+    lead:      { density: 11340, color: 0x505560, name: 'Lead' }
+  };
+
+  var fluids = {
+    air:     { density: 1.225,  color: 0x1a2744, opacity: 0.05, name: 'Air' },
+    water:   { density: 1000,   color: 0x0ea5e9, opacity: 0.35, name: 'Water' },
+    honey:   { density: 1420,   color: 0xdaa520, opacity: 0.55, name: 'Honey' },
+    mercury: { density: 13534,  color: 0xc0c0c0, opacity: 0.75, name: 'Mercury' }
+  };
+
+  var state = {
+    material: 'wood',
+    fluid: 'water'
+  };
+
+  function getRho() { return materials[state.material].density; }
+  function getFluidRho() { return fluids[state.fluid].density; }
+
+  /* Renderer */
+  var canvas = document.getElementById('c');
+  var wrap = document.getElementById('canvasWrap');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0f172a, 30, 60);
+
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+  camera.position.set(5, 3.5, 7);
+  camera.lookAt(0, 0, 0);
+
+  var controls = (typeof THREE.OrbitControls !== 'undefined')
+    ? new THREE.OrbitControls(camera, renderer.domElement)
+    : null;
+  if (controls) {
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 4;
+    controls.maxDistance = 25;
+    controls.target.set(0, 0, 0);
+  }
+
+  /* Lighting */
+  scene.add(new THREE.AmbientLight(0x334466, 1.2));
+  var dirLight = new THREE.DirectionalLight(0xeef4ff, 2.0);
+  dirLight.position.set(6, 10, 8);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+
+  var fillLight = new THREE.DirectionalLight(0x6ee7f9, 0.6);
+  fillLight.position.set(-6, 4, -4);
+  scene.add(fillLight);
+
+  var pointLight = new THREE.PointLight(0x22d3ee, 0.8, 20);
+  pointLight.position.set(0, 8, 0);
+  scene.add(pointLight);
+
+  /* Tank dimensions */
+  var TW = 4.5, TH = 5.5, TD = 3.5;
+  var TANK_BOTTOM = -2.5;
+  var WATER_REST_Y = 1.2;
+
+  /* Tank walls */
+  var tankMat = new THREE.MeshPhysicalMaterial({
+    color: 0x1e3a5f, transparent: true, opacity: 0.12,
+    side: THREE.DoubleSide, roughness: 0.1, transmission: 0.6
+  });
+  var wallDefs = [
+    { p: [-TW/2, TANK_BOTTOM+TH/2, 0], s: [0.08, TH, TD] },
+    { p: [TW/2, TANK_BOTTOM+TH/2, 0], s: [0.08, TH, TD] },
+    { p: [0, TANK_BOTTOM, 0], s: [TW, 0.08, TD] },
+    { p: [0, TANK_BOTTOM+TH/2, -TD/2], s: [TW, TH, 0.08] },
+    { p: [0, TANK_BOTTOM+TH/2, TD/2], s: [TW, TH, 0.08] }
+  ];
+  wallDefs.forEach(function(w) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w.s[0], w.s[1], w.s[2]), tankMat);
+    m.position.set(w.p[0], w.p[1], w.p[2]);
+    scene.add(m);
+  });
+
+  /* Tank edge lines */
+  var edgeMat = new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.3 });
+  var edgeDefs = [
+    [[-TW/2, TANK_BOTTOM, -TD/2], [-TW/2, TANK_BOTTOM+TH, -TD/2]],
+    [[TW/2, TANK_BOTTOM, -TD/2], [TW/2, TANK_BOTTOM+TH, -TD/2]],
+    [[-TW/2, TANK_BOTTOM, TD/2], [-TW/2, TANK_BOTTOM+TH, TD/2]],
+    [[TW/2, TANK_BOTTOM, TD/2], [TW/2, TANK_BOTTOM+TH, TD/2]]
+  ];
+  edgeDefs.forEach(function(e) {
+    var g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(e[0][0], e[0][1], e[0][2]),
+      new THREE.Vector3(e[1][0], e[1][1], e[1][2])
+    ]);
+    scene.add(new THREE.Line(g, edgeMat));
+  });
+
+  /* Fluid body */
+  var fluidGeo = new THREE.BoxGeometry(TW-0.1, 1, TD-0.1);
+  var fluidMat = new THREE.MeshPhysicalMaterial({
+    color: fluids.water.color, transparent: true, opacity: fluids.water.opacity,
+    roughness: 0.05, transmission: 0.5, side: THREE.DoubleSide
+  });
+  var fluidMesh = new THREE.Mesh(fluidGeo, fluidMat);
+  scene.add(fluidMesh);
+
+  /* Fluid surface */
+  var surfGeo = new THREE.PlaneGeometry(TW-0.1, TD-0.1);
+  var surfMat = new THREE.MeshPhysicalMaterial({
+    color: 0x38bdf8, transparent: true, opacity: 0.4,
+    roughness: 0.0, metalness: 0.1, side: THREE.DoubleSide
+  });
+  var surfMesh = new THREE.Mesh(surfGeo, surfMat);
+  surfMesh.rotation.x = -Math.PI/2;
+  scene.add(surfMesh);
+
+  /* Object cube */
+  var OBJ_SIZE = 0.9;
+  var objMat = new THREE.MeshStandardMaterial({
+    color: materials.wood.color, roughness: 0.45, metalness: 0.2
+  });
+  var objMesh = new THREE.Mesh(new THREE.BoxGeometry(OBJ_SIZE, OBJ_SIZE, OBJ_SIZE), objMat);
+  objMesh.castShadow = true;
+  scene.add(objMesh);
+
+  /* Force arrows */
+  var arrowUp = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 1, 0x34d399, 0.18, 0.1
+  );
+  scene.add(arrowUp);
+  var arrowDown = new THREE.ArrowHelper(
+    new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0, 0), 1, 0xfbbf24, 0.18, 0.1
+  );
+  scene.add(arrowDown);
+
+  /* 3D status text via sprite */
+  function makeTextSprite(text, color) {
+    var cv = document.createElement('canvas');
+    cv.width = 512; cv.height = 128;
+    var ctx = cv.getContext('2d');
+    ctx.font = 'bold 64px -apple-system, sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 64);
+    var tex = new THREE.CanvasTexture(cv);
+    var mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    var sp = new THREE.Sprite(mat);
+    sp.scale.set(3, 0.75, 1);
+    return sp;
+  }
+
+  var spriteFloat = makeTextSprite('FLOATS', '#86efac');
+  var spriteSink = makeTextSprite('SINKS', '#f87171');
+  spriteFloat.visible = false;
+  spriteSink.visible = false;
+  scene.add(spriteFloat);
+  scene.add(spriteSink);
+
+  /* Grid helper */
+  var grid = new THREE.GridHelper(12, 12, 0x1e3a5f, 0x0f1e33);
+  grid.position.y = TANK_BOTTOM - 0.1;
+  scene.add(grid);
+
+  /* Physics */
+  function compute() {
+    var rhoObj = getRho();
+    var rhoFluid = getFluidRho();
+    var mass = rhoObj * V_OBJ;
+    var weight = mass * G;
+    var ratio = rhoObj / rhoFluid;
+    var halfH = OBJ_SIZE / 2;
+
+    var subFrac, Fb, objY;
+
+    if (rhoFluid < 2) {
+      subFrac = 1.0;
+      Fb = rhoFluid * V_OBJ * G;
+      objY = TANK_BOTTOM + 0.08 + halfH;
+    } else if (ratio >= 1) {
+      subFrac = 1.0;
+      Fb = rhoFluid * V_OBJ * G;
+      var sinkDepth = Math.min((ratio - 1) * 0.4, WATER_REST_Y - TANK_BOTTOM - 0.08 - halfH);
+      objY = WATER_REST_Y - halfH - sinkDepth;
+      objY = Math.max(TANK_BOTTOM + 0.08 + halfH, objY);
+    } else {
+      subFrac = ratio;
+      Fb = weight;
+      var subDepth = subFrac * OBJ_SIZE;
+      objY = WATER_REST_Y - subDepth + halfH;
+    }
+
+    return {
+      weight: weight,
+      Fb: Fb,
+      rhoObj: rhoObj,
+      rhoFluid: rhoFluid,
+      ratio: ratio,
+      subFrac: subFrac,
+      objY: objY,
+      floats: ratio < 1 && rhoFluid > 2
+    };
+  }
+
+  var animObjY = 3;
+  var time = 0;
+
+  function updateScene() {
+    var p = compute();
+
+    /* Smooth object Y */
+    var targetY = p.objY;
+    animObjY += (targetY - animObjY) * 0.06;
+    objMesh.position.set(0, animObjY, 0);
+
+    /* Gentle bobbing for floating objects */
+    if (p.floats) {
+      objMesh.position.y += Math.sin(time * 1.5) * 0.02;
+    }
+
+    /* Object material color */
+    objMat.color.setHex(materials[state.material].color);
+
+    /* Fluid appearance */
+    var fl = fluids[state.fluid];
+    fluidMat.color.setHex(fl.color);
+    fluidMat.opacity = fl.opacity;
+    surfMat.color.setHex(fl.color);
+    surfMat.opacity = fl.opacity * 0.8;
+
+    /* Fluid body scale and position */
+    var fluidHeight = WATER_REST_Y - TANK_BOTTOM;
+    if (fl.density < 2) { fluidHeight = 0; }
+    fluidMesh.scale.y = Math.max(0.001, fluidHeight);
+    fluidMesh.position.y = TANK_BOTTOM + fluidHeight / 2;
+    surfMesh.position.y = (fl.density < 2) ? TANK_BOTTOM - 1 : WATER_REST_Y;
+    surfMesh.visible = fl.density > 2;
+    fluidMesh.visible = fl.density > 2;
+
+    /* Force arrows */
+    var maxArrowLen = 2.5;
+    var maxForce = Math.max(p.Fb, p.weight, 0.01);
+    var fbLen = Math.max(0.15, (p.Fb / maxForce) * maxArrowLen);
+    var wLen = Math.max(0.15, (p.weight / maxForce) * maxArrowLen);
+
+    arrowUp.position.set(-OBJ_SIZE * 0.7, animObjY, 0);
+    arrowUp.setLength(fbLen, 0.18, 0.1);
+
+    arrowDown.position.set(OBJ_SIZE * 0.7, animObjY, 0);
+    arrowDown.setLength(wLen, 0.18, 0.1);
+
+    /* Hide buoyancy arrow in air */
+    arrowUp.visible = fl.density > 2;
+
+    /* Status sprites */
+    var spriteY = animObjY + OBJ_SIZE + 0.6;
+    spriteFloat.position.set(0, spriteY, 0);
+    spriteSink.position.set(0, spriteY, 0);
+
+    if (fl.density < 2) {
+      spriteFloat.visible = false;
+      spriteSink.visible = true;
+    } else {
+      spriteFloat.visible = p.floats;
+      spriteSink.visible = !p.floats;
+    }
+
+    /* UI updates */
+    document.getElementById('fbDisplay').textContent = p.Fb.toFixed(2) + ' N';
+    document.getElementById('wDisplay').textContent = p.weight.toFixed(2) + ' N';
+    document.getElementById('objRhoDisplay').textContent = p.rhoObj.toLocaleString() + ' kg/m\u00B3';
+    document.getElementById('fluidRhoDisplay').textContent = (p.rhoFluid < 2 ? p.rhoFluid.toFixed(3) : p.rhoFluid.toLocaleString()) + ' kg/m\u00B3';
+
+    /* Float indicator */
+    var fi = document.getElementById('floatIndicator');
+    if (fl.density < 2) {
+      fi.textContent = 'SINKS (in air)';
+      fi.className = 'float-indicator fi-sink';
+    } else if (p.floats) {
+      fi.textContent = 'FLOATS';
+      fi.className = 'float-indicator fi-float';
+    } else {
+      fi.textContent = 'SINKS';
+      fi.className = 'float-indicator fi-sink';
+    }
+
+    /* Density comparison bars */
+    var maxRho = Math.max(p.rhoObj, p.rhoFluid, 1);
+    var objBarH = Math.max(3, (p.rhoObj / maxRho) * 85);
+    var fluidBarH = Math.max(3, (p.rhoFluid / maxRho) * 85);
+    document.getElementById('barObj').style.height = objBarH + '%';
+    document.getElementById('barFluid').style.height = fluidBarH + '%';
+    document.getElementById('barObjVal').textContent = p.rhoObj < 2 ? p.rhoObj.toFixed(3) : p.rhoObj.toLocaleString();
+    document.getElementById('barFluidVal').textContent = p.rhoFluid < 2 ? p.rhoFluid.toFixed(3) : p.rhoFluid.toLocaleString();
+  }
+
+  /* Resize */
+  function onResize() {
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    if (w === 0 || h === 0) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+  window.addEventListener('resize', onResize);
+
+  /* Animation loop */
+  function animate() {
+    requestAnimationFrame(animate);
+    time += 0.016;
+    if (controls) controls.update();
+    updateScene();
+    onResize();
+    renderer.render(scene, camera);
+  }
+
+  /* Selector logic */
+  window.setMaterial = function(key) {
+    state.material = key;
+    animObjY = 3;
+    var btns = document.getElementById('matBtns').querySelectorAll('.mat-btn');
+    btns.forEach(function(b) {
+      b.classList.toggle('active', b.textContent.toLowerCase().indexOf(key) !== -1
+        || (key === 'styrofoam' && b.textContent === 'Styrofoam')
+        || (key === 'wood' && b.textContent === 'Wood')
+        || (key === 'brick' && b.textContent === 'Brick')
+        || (key === 'iron' && b.textContent === 'Iron')
+        || (key === 'lead' && b.textContent === 'Lead'));
+    });
+    clearActiveByParent('matBtns', key);
+  };
+
+  window.setFluid = function(key) {
+    state.fluid = key;
+    animObjY = 3;
+    clearActiveByParent('fluidBtns', key);
+  };
+
+  function clearActiveByParent(parentId, key) {
+    var names = {
+      wood: 'Wood', styrofoam: 'Styrofoam', brick: 'Brick', iron: 'Iron', lead: 'Lead',
+      air: 'Air', water: 'Water', honey: 'Honey', mercury: 'Mercury'
+    };
+    var btns = document.getElementById(parentId).querySelectorAll('.mat-btn');
+    btns.forEach(function(b) {
+      b.classList.toggle('active', b.textContent === names[key]);
+    });
+  }
+
+  window.applyPreset = function(name) {
+    if (name === 'woodWater') {
+      state.material = 'wood';
+      state.fluid = 'water';
+    } else if (name === 'brickWater') {
+      state.material = 'brick';
+      state.fluid = 'water';
+    } else if (name === 'brickMercury') {
+      state.material = 'brick';
+      state.fluid = 'mercury';
+    }
+    animObjY = 3;
+    clearActiveByParent('matBtns', state.material);
+    clearActiveByParent('fluidBtns', state.fluid);
+  };
+
+  /* Quiz */
+  var quizAnswers = { 1: 'B', 2: 'C' };
+  var quizExplanations = {
+    1: { correct: 'Correct! Since wood (600) is less dense than water (1000), it floats with 60% submerged.', wrong: 'Not quite. Compare the densities: wood (600) < water (1000), so the wood floats partially submerged.' },
+    2: { correct: 'Correct! Brick density (~1920) is greater than water (1000) but less than mercury (13534).', wrong: 'Think about it: the brick sinks in water but floats in mercury. Its density must be between the two.' }
+  };
+
+  window.checkQuiz = function(qNum, btn, choice) {
+    var container = document.getElementById('q' + qNum);
+    var opts = container.querySelectorAll('.quiz-opt');
+    var fb = document.getElementById('fb' + qNum);
+    opts.forEach(function(o) { o.disabled = true; });
+
+    var isCorrect = choice === quizAnswers[qNum];
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    if (!isCorrect) {
+      opts.forEach(function(o) {
+        if (o.textContent.charAt(0) === quizAnswers[qNum]) {
+          o.classList.add('correct');
+        }
+      });
+    }
+    fb.textContent = isCorrect ? quizExplanations[qNum].correct : quizExplanations[qNum].wrong;
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  };
+
+  /* KaTeX formulas */
+  katex.render('F_b = \\rho_{\\text{fluid}} \\cdot V_{\\text{submerged}} \\cdot g', document.getElementById('f1'), { displayMode: true });
+  katex.render('\\text{Float: } \\rho_{\\text{object}} < \\rho_{\\text{fluid}} \\quad | \\quad \\text{Sink: } \\rho_{\\text{object}} > \\rho_{\\text{fluid}}', document.getElementById('f2'), { displayMode: true });
+
+  /* Start */
+  animObjY = 3;
+  animate();
+
+} catch (e) {
+  console.error('Buoyancy Basics init error:', e);
+  document.body.innerHTML = '<div style="color:#f87171;padding:40px;text-align:center"><h2>Failed to initialize</h2><p>' + e.message + '</p></div>';
+}
+</script>
+</body>
+</html>

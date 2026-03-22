@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单电路 - Simple Circuit | 互动教学</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%);
+            --bg-gradient: linear-gradient(180deg, #0F172A 0%, #164E63 50%, #155E75 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #F8FAFC;
+            --text-secondary: #CBD5E1;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            padding: 20px;
+            z-index: 10;
+        }
+        .slider-container {
+            margin: 15px 0;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2DD4BF 0%, #5EEAD4 100%);
+            cursor: pointer;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--primary-gradient);
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="control-panel glass-panel">
+        <h3 style="margin-bottom: 15px; font-size: 18px;">控制面板</h3>
+
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>电压 (V)</span>
+                <span id="voltage-value">5.0</span>
+            </div>
+            <input type="range" id="voltage-slider" min="0" max="12" step="0.5" value="5">
+        </div>
+
+        <button class="btn" id="toggle-circuit">开关电路</button>
+        <button class="btn" id="reset-btn">重置</button>
+    </div>
+
+    <script>
+        // OrbitControls 内联简化版
+        THREE.OrbitControls = function(camera, domElement) {
+            this.camera = camera;
+            this.domElement = domElement;
+            this.enabled = true;
+            this.target = new THREE.Vector3();
+            this.minDistance = 0;
+            this.maxDistance = Infinity;
+            this.minPolarAngle = 0;
+            this.maxPolarAngle = Math.PI;
+            this.enableDamping = false;
+            this.dampingFactor = 0.05;
+            this.enableZoom = true;
+            this.zoomSpeed = 1.0;
+            this.enableRotate = true;
+            this.rotateSpeed = 1.0;
+            this.enablePan = true;
+            this.panSpeed = 1.0;
+
+            const scope = this;
+            const STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_DOLLY_PAN: 4 };
+            let state = STATE.NONE;
+            const EPS = 0.000001;
+            const spherical = new THREE.Spherical();
+            const sphericalDelta = new THREE.Spherical();
+            let scale = 1;
+            const panOffset = new THREE.Vector3();
+            let zoomChanged = false;
+            const rotateStart = new THREE.Vector2();
+            const rotateEnd = new THREE.Vector2();
+            const rotateDelta = new THREE.Vector2();
+            const panStart = new THREE.Vector2();
+            const panEnd = new THREE.Vector2();
+            const panDelta = new THREE.Vector2();
+            const dollyStart = new THREE.Vector2();
+            const dollyEnd = new THREE.Vector2();
+            const dollyDelta = new THREE.Vector2();
+
+            this.update = function() {
+                const offset = new THREE.Vector3();
+                const quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0, 1, 0));
+                const quatInverse = quat.clone().invert();
+                const lastPosition = new THREE.Vector3();
+                const lastQuaternion = new THREE.Quaternion();
+
+                return function update() {
+                    const position = scope.camera.position;
+                    offset.copy(position).sub(scope.target);
+                    offset.applyQuaternion(quat);
+                    spherical.setFromVector3(offset);
+
+                    if (scope.enableDamping) {
+                        spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+                        spherical.phi += sphericalDelta.phi * scope.dampingFactor;
+                    } else {
+                        spherical.theta += sphericalDelta.theta;
+                        spherical.phi += sphericalDelta.phi;
+                    }
+
+                    spherical.theta = Math.max(scope.minAzimuthAngle, Math.min(scope.maxAzimuthAngle, spherical.theta));
+                    spherical.phi = Math.max(scope.minPolarAngle, Math.min(scope.maxPolarAngle, spherical.phi));
+                    spherical.makeSafe();
+                    spherical.radius *= scale;
+                    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+
+                    scope.target.add(panOffset);
+                    offset.setFromSpherical(spherical);
+                    offset.applyQuaternion(quatInverse);
+                    position.copy(scope.target).add(offset);
+                    scope.camera.lookAt(scope.target);
+
+                    if (scope.enableDamping === true) {
+                        sphericalDelta.theta *= (1 - scope.dampingFactor);
+                        sphericalDelta.phi *= (1 - scope.dampingFactor);
+                        panOffset.multiplyScalar(1 - scope.dampingFactor);
+                    } else {
+                        sphericalDelta.set(0, 0, 0);
+                        panOffset.set(0, 0, 0);
+                    }
+
+                    scale = 1;
+
+                    if (zoomChanged || lastPosition.distanceToSquared(scope.camera.position) > EPS || 8 * (1 - lastQuaternion.dot(scope.camera.quaternion)) > EPS) {
+                        lastPosition.copy(scope.camera.position);
+                        lastQuaternion.copy(scope.camera.quaternion);
+                        zoomChanged = false;
+                        return true;
+                    }
+                    return false;
+                };
+            }();
+
+            this.reset = function() {
+                scope.target.copy(scope.target0);
+                scope.camera.position.copy(scope.position0);
+                scope.camera.zoom = scope.zoom0;
+                scope.camera.updateProjectionMatrix();
+                state = STATE.NONE;
+            };
+
+            function rotateLeft(angle) {
+                sphericalDelta.theta -= angle;
+            }
+
+            function rotateUp(angle) {
+                sphericalDelta.phi -= angle;
+            }
+
+            function dollyIn(dollyScale) {
+                scale /= dollyScale;
+            }
+
+            function dollyOut(dollyScale) {
+                scale *= dollyScale;
+            }
+
+            function handleMouseDownRotate(event) {
+                rotateStart.set(event.clientX, event.clientY);
+            }
+
+            function handleMouseDownDolly(event) {
+                dollyStart.set(event.clientX, event.clientY);
+            }
+
+            function handleMouseMoveRotate(event) {
+                rotateEnd.set(event.clientX, event.clientY);
+                rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(scope.rotateSpeed);
+                const element = scope.domElement;
+                rotateLeft(2 * Math.PI * rotateDelta.x / element.clientHeight);
+                rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight);
+                rotateStart.copy(rotateEnd);
+                scope.update();
+            }
+
+            function handleMouseWheel(event) {
+                if (event.deltaY < 0) {
+                    dollyOut(0.95);
+                } else if (event.deltaY > 0) {
+                    dollyIn(0.95);
+                }
+                scope.update();
+            }
+
+            function onMouseDown(event) {
+                if (scope.enabled === false) return;
+                event.preventDefault();
+                if (event.button === 0) {
+                    state = STATE.ROTATE;
+                    handleMouseDownRotate(event);
+                }
+                document.addEventListener('mousemove', onMouseMove, false);
+                document.addEventListener('mouseup', onMouseUp, false);
+            }
+
+            function onMouseMove(event) {
+                if (scope.enabled === false) return;
+                event.preventDefault();
+                if (state === STATE.ROTATE) {
+                    handleMouseMoveRotate(event);
+                }
+            }
+
+            function onMouseUp() {
+                if (scope.enabled === false) return;
+                document.removeEventListener('mousemove', onMouseMove, false);
+                document.removeEventListener('mouseup', onMouseUp, false);
+                state = STATE.NONE;
+            }
+
+            function onMouseWheel(event) {
+                if (scope.enabled === false || scope.enableZoom === false || state !== STATE.NONE) return;
+                event.preventDefault();
+                event.stopPropagation();
+                handleMouseWheel(event);
+            }
+
+            this.domElement.addEventListener('mousedown', onMouseDown, false);
+            this.domElement.addEventListener('wheel', onMouseWheel, false);
+
+            this.target0 = this.target.clone();
+            this.position0 = this.camera.position.clone();
+            this.zoom0 = this.camera.zoom;
+        };
+
+        // 场景初始化
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1e);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 5, 10);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 5;
+        controls.maxDistance = 20;
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        // 光照
+        const ambientLight = new THREE.AmbientLight(0x404040, 1);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 10, 5);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
+        // 创建电路组件
+        const batteryGeometry = new THREE.BoxGeometry(2, 1, 0.8);
+        const batteryMaterial = new THREE.MeshStandardMaterial({ color: 0xe74c3c, metalness: 0.6, roughness: 0.3 });
+        const battery = new THREE.Mesh(batteryGeometry, batteryMaterial);
+        battery.position.set(-4, 0.5, 0);
+        battery.castShadow = true;
+        scene.add(battery);
+
+        const wireGeometry = new THREE.CylinderGeometry(0.05, 0.05, 3, 16);
+        const wireMaterial = new THREE.MeshStandardMaterial({ color: 0xf39c12, metalness: 0.8, roughness: 0.2 });
+
+        const wire1 = new THREE.Mesh(wireGeometry, wireMaterial);
+        wire1.position.set(-2.5, 0.5, 0);
+        wire1.rotation.z = Math.PI / 2;
+        scene.add(wire1);
+
+        const bulbGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const bulbMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3,
+            emissive: 0xffff00,
+            emissiveIntensity: 0
+        });
+        const bulb = new THREE.Mesh(bulbGeometry, bulbMaterial);
+        bulb.position.set(0, 0.5, 0);
+        bulb.castShadow = true;
+        scene.add(bulb);
+
+        const filamentGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const filamentMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff6b00,
+            emissive: 0xff6b00,
+            emissiveIntensity: 0
+        });
+        const filament = new THREE.Mesh(filamentGeometry, filamentMaterial);
+        filament.position.set(0, 0.5, 0);
+        scene.add(filament);
+
+        const wire2 = new THREE.Mesh(wireGeometry, wireMaterial);
+        wire2.position.set(2.5, 0.5, 0);
+        wire2.rotation.z = Math.PI / 2;
+        scene.add(wire2);
+
+        const switchGeometry = new THREE.BoxGeometry(0.8, 0.3, 0.6);
+        const switchMaterial = new THREE.MeshStandardMaterial({ color: 0x34495e, roughness: 0.5 });
+        const switchBox = new THREE.Mesh(switchGeometry, switchMaterial);
+        switchBox.position.set(4, 0.5, 0);
+        switchBox.castShadow = true;
+        scene.add(switchBox);
+
+        const leverGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.3);
+        const leverMaterial = new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.4 });
+        const lever = new THREE.Mesh(leverGeometry, leverMaterial);
+        lever.position.set(4, 0.65, 0);
+        scene.add(lever);
+
+        // 地面
+        const groundGeometry = new THREE.PlaneGeometry(20, 20);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.8 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.5;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // 粒子系统（电流）
+        const particleCount = 50;
+        const particleGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        const particleColors = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount; i++) {
+            particlePositions[i * 3] = 0;
+            particlePositions[i * 3 + 1] = 0;
+            particlePositions[i * 3 + 2] = 0;
+            particleColors[i * 3] = 0;
+            particleColors[i * 3 + 1] = 1;
+            particleColors[i * 3 + 2] = 1;
+        }
+
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.08,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8
+        });
+        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        particleSystem.visible = false;
+        scene.add(particleSystem);
+
+        // 电路路径
+        const circuitPath = [
+            {x: -4, y: 0.5, z: 0},
+            {x: -2.5, y: 0.5, z: 0},
+            {x: 0, y: 0.5, z: 0},
+            {x: 2.5, y: 0.5, z: 0},
+            {x: 4, y: 0.5, z: 0},
+            {x: 5, y: 0.5, z: 0},
+            {x: 5, y: -0.5, z: 0},
+            {x: -4, y: -0.5, z: 0}
+        ];
+
+        const particles = [];
+        for (let i = 0; i < particleCount; i++) {
+            const pathIndex = Math.floor(Math.random() * circuitPath.length);
+            const startPos = circuitPath[pathIndex];
+            particles.push({
+                position: new THREE.Vector3(startPos.x, startPos.y, startPos.z),
+                pathIndex: pathIndex,
+                progress: Math.random()
+            });
+        }
+
+        // 状态
+        let circuitOn = false;
+        let voltage = 5.0;
+
+        // 控制
+        document.getElementById('voltage-slider').addEventListener('input', (e) => {
+            voltage = parseFloat(e.target.value);
+            document.getElementById('voltage-value').textContent = voltage.toFixed(1);
+            if (circuitOn) {
+                const intensity = voltage / 12;
+                bulbMaterial.emissiveIntensity = intensity * 0.5;
+                filamentMaterial.emissiveIntensity = intensity * 2;
+            }
+        });
+
+        document.getElementById('toggle-circuit').addEventListener('click', () => {
+            circuitOn = !circuitOn;
+            if (circuitOn) {
+                const intensity = voltage / 12;
+                bulbMaterial.emissiveIntensity = intensity * 0.5;
+                filamentMaterial.emissiveIntensity = intensity * 2;
+                lever.rotation.z = -0.3;
+                particleSystem.visible = true;
+            } else {
+                bulbMaterial.emissiveIntensity = 0;
+                filamentMaterial.emissiveIntensity = 0;
+                lever.rotation.z = 0;
+                particleSystem.visible = false;
+            }
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            circuitOn = false;
+            voltage = 5.0;
+            document.getElementById('voltage-slider').value = 5;
+            document.getElementById('voltage-value').textContent = '5.0';
+            bulbMaterial.emissiveIntensity = 0;
+            filamentMaterial.emissiveIntensity = 0;
+            lever.rotation.z = 0;
+            particleSystem.visible = false;
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 0, 0);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (circuitOn) {
+                particles.forEach((p, i) => {
+                    p.progress += 0.01 * (voltage / 5);
+                    if (p.progress >= 1) {
+                        p.progress = 0;
+                        p.pathIndex = (p.pathIndex + 1) % circuitPath.length;
+                    }
+
+                    const current = circuitPath[p.pathIndex];
+                    const next = circuitPath[(p.pathIndex + 1) % circuitPath.length];
+
+                    p.position.x = current.x + (next.x - current.x) * p.progress;
+                    p.position.y = current.y + (next.y - current.y) * p.progress;
+                    p.position.z = current.z + (next.z - current.z) * p.progress;
+
+                    particlePositions[i * 3] = p.position.x;
+                    particlePositions[i * 3 + 1] = p.position.y;
+                    particlePositions[i * 3 + 2] = p.position.z;
+                });
+
+                particleGeometry.attributes.position.needsUpdate = true;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // 响应式
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

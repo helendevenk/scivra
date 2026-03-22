@@ -1,0 +1,7 @@
+export const AUTOPILOT_MODEL = 'claude-haiku-4-5-20251001';
+export const AUTOPILOT_MAX_STEPS = 20;
+export const AUTOPILOT_MAX_TOKENS = 1024;
+export const AUTOPILOT_TEMPERATURE = 0.3;
+export const AUTOPILOT_TIMEOUT_MS = 30000;
+export const AUTOPILOT_FREE_SESSIONS_PER_VIZ = 1;
+export const AUTOPILOT_STEP_DELAY_MS = 800;

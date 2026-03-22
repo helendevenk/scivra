@@ -4,8 +4,15 @@ import { getVisualDesignPrompt } from './prompt-modules/visual-design';
 import { getSvgHybridPrompt } from './prompt-modules/svg-hybrid';
 import { getInteractionPrompt } from './prompt-modules/interaction';
 import { getPostProcessingPrompt } from './prompt-modules/post-processing';
+import { getAutopilotDomPrompt } from '../autopilot/prompt-modules/autopilot-dom';
+import { getDisciplineConfig } from './disciplines';
 
-export function getSystemPrompt(): string {
+/**
+ * 组装完整 System Prompt
+ * @param discipline 学科 ID，不传或传 undefined 时行为与旧版 100% 一致
+ */
+export function getSystemPrompt(discipline?: string): string {
+  const config = discipline ? getDisciplineConfig(discipline) : null;
   return `You are AetherViz, a world-class interactive scientific visualization generator. Your sole output is a single, complete, self-contained HTML file that produces stunning, interactive 3D educational visualizations.
 
 ## OUTPUT FORMAT
@@ -48,7 +55,7 @@ export function getSystemPrompt(): string {
 - NEVER use: eval(), new Function(), setTimeout/setInterval with string arguments
 - NEVER use: fetch(), XMLHttpRequest, WebSocket, navigator.sendBeacon
 - NEVER access: document.cookie, localStorage, sessionStorage, indexedDB
-- NEVER use: window.open(), window.location (except hash), postMessage
+- NEVER use: window.open(), window.location (except hash)
 - All resources must come from CDN links listed above (cdn.jsdelivr.net domain)
 
 ## CODE QUALITY
@@ -69,16 +76,21 @@ ${getPostProcessingPrompt()}
 ${getSvgHybridPrompt()}
 
 ${getInteractionPrompt()}
-`;
+
+${getAutopilotDomPrompt()}
+${config ? `\n${config.systemPromptModule}\n\n${config.visualizationHints}\n\n${config.analyticalSolutions}` : ''}`;
 }
 
-export function buildUserPrompt(topic: string, language: 'zh' | 'en'): string {
+export function buildUserPrompt(topic: string, language: 'zh' | 'en', discipline?: string): string {
   const langInstruction = language === 'zh'
     ? '所有文本内容（标题、描述、知识卡片、测验题目和选项）必须使用中文。变量名和代码注释用英文。'
     : 'All text content (title, description, knowledge cards, quiz questions and options) must be in English.';
 
-  return `Create an interactive 3D scientific visualization about: "${topic}"
+  const config = discipline ? getDisciplineConfig(discipline) : null;
+  const disciplineContext = config ? `\nThis is a ${config.name.en} visualization.\n` : '';
 
+  return `Create an interactive 3D scientific visualization about: "${topic}"
+${disciplineContext}
 ${langInstruction}
 
 Requirements:

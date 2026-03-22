@@ -60,6 +60,14 @@ export const PERMISSIONS = {
   AITASKS_READ: 'admin.ai-tasks.read',
   AITASKS_WRITE: 'admin.ai-tasks.write',
   AITASKS_DELETE: 'admin.ai-tasks.delete',
+
+  // Chats
+  CHATS_READ: 'admin.chats.read',
+  CHATS_WRITE: 'admin.chats.write',
+
+  // Learning Paths
+  LEARNING_PATHS_READ: 'admin.learning-paths.read',
+  LEARNING_PATHS_WRITE: 'admin.learning-paths.write',
 } as const;
 
 /**

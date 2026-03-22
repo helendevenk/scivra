@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';

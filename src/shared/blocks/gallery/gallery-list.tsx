@@ -5,6 +5,8 @@ import { Eye, GitFork, Heart, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { BadgeCheck } from 'lucide-react';
+
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -26,6 +28,7 @@ interface GalleryItem {
   likeCount: number;
   forkCount: number;
   tags: string[] | null;
+  validationScore: number | null;
   createdAt: string;
   isLiked?: boolean;
 }
@@ -44,6 +47,7 @@ export function GalleryList({ initialTag }: GalleryListProps) {
   const [sort, setSort] = useState<SortOption>('latest');
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState(initialTag || '');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +64,7 @@ export function GalleryList({ initialTag }: GalleryListProps) {
         params.set('sort', sort);
         if (search) params.set('q', search);
         if (tag) params.set('tag', tag);
+        if (verifiedOnly) params.set('verified', 'true');
 
         const res = await fetch(`/api/gallery?${params}`);
         const json = await res.json();
@@ -80,7 +85,7 @@ export function GalleryList({ initialTag }: GalleryListProps) {
         setLoadingMore(false);
       }
     },
-    [sort, search, tag, t]
+    [sort, search, tag, verifiedOnly, t]
   );
 
   // Initial load + reload on filter change
@@ -151,6 +156,18 @@ export function GalleryList({ initialTag }: GalleryListProps) {
           />
         </div>
         <div className="flex gap-1">
+          <Button
+            variant={verifiedOnly ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setVerifiedOnly(!verifiedOnly)}
+            className={cn(
+              verifiedOnly && 'bg-emerald-600 hover:bg-emerald-700 text-white'
+            )}
+          >
+            <BadgeCheck className="h-4 w-4 mr-1" />
+            {t('filter.verified')}
+          </Button>
+          <span className="w-px bg-border mx-1" />
           {sortOptions.map((opt) => (
             <Button
               key={opt.key}

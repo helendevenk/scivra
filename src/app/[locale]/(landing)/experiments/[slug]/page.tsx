@@ -6,7 +6,10 @@ import {
 } from "@/shared/lib/experiments/registry";
 import { getSignUser } from "@/shared/models/user";
 import { getCurrentSubscription } from "@/shared/models/subscription";
-import { subscriptionToTier } from "@/shared/lib/experiments/access";
+import {
+  subscriptionToTier,
+  canAccessExperiment,
+} from "@/shared/lib/experiments/access";
 import { ExperimentClient } from "./ExperimentClient";
 import type { Metadata } from "next";
 import type { Tier } from "@/shared/types/experiment";
@@ -48,5 +51,13 @@ export default async function ExperimentPage({ params }: Props) {
     // Not logged in — default to free tier
   }
 
-  return <ExperimentClient experiment={experiment} userTier={userTier} />;
+  const canAccess = canAccessExperiment(experiment.id, userTier);
+
+  return (
+    <ExperimentClient
+      experiment={experiment}
+      userTier={userTier}
+      canAccess={canAccess}
+    />
+  );
 }

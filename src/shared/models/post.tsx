@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { getMDXComponents } from '@/mdx-components';
 import { and, count, desc, eq, like } from 'drizzle-orm';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
@@ -142,7 +143,7 @@ export async function getPostsCount({
 
 // get single post, both from local file and database
 // database post has higher priority
-export async function getPost({
+export const getPost = cache(async function getPost({
   slug,
   locale,
   postPrefix = '/blog/',
@@ -195,7 +196,7 @@ export async function getPost({
   const localPost = await getLocalPost({ slug, locale, postPrefix });
 
   return localPost;
-}
+});
 
 export async function getLocalPost({
   slug,

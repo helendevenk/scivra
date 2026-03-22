@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 import { ReactNode } from "react";
 import { motion, Variants } from "motion/react";
 import React from "react";

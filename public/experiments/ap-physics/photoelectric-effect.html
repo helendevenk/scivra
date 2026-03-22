@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photoelectric Effect — NeonPhysics AP Physics</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(234,179,8,.08),rgba(251,146,60,.06));border-bottom:1px solid rgba(234,179,8,.2);flex-shrink:0}
+    .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .badge{background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.35);color:#fde68a;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
+    .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
+    .layout{display:flex;flex:1;overflow:hidden}
+    .canvas-wrap{flex:1;position:relative;background:#08090f}
+    canvas{display:block;width:100%;height:100%}
+    .fps{position:absolute;bottom:10px;right:12px;font-size:10px;color:#334155;font-family:monospace;font-variant-numeric:tabular-nums}
+    .overlay{position:absolute;top:12px;left:12px;background:rgba(8,9,15,.92);border:1px solid rgba(234,179,8,.2);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px);min-width:210px}
+    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px;align-items:center}
+    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+    .yellow{color:#fbbf24} .orange{color:#fb923c} .blue{color:#60a5fa} .green{color:#4ade80} .red{color:#f87171} .violet{color:#c084fc}
+    .status-ok{color:#4ade80;font-weight:700;font-size:12px}
+    .status-no{color:#f87171;font-weight:700;font-size:12px}
+    .sidebar{width:280px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+    .param-name{font-size:11px;color:#94a3b8}
+    .param-val{font-size:11px;font-weight:700;color:#fbbf24;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(234,179,8,.2);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#eab308;cursor:pointer;box-shadow:0 0 6px rgba(234,179,8,.6)}
+    .formula-box{background:rgba(234,179,8,.04);border:1px solid rgba(234,179,8,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px}
+    .formula-text{font-family:'Courier New',monospace;font-size:12px;color:#fde68a;letter-spacing:.3px}
+    .formula-desc{font-size:10px;color:#475569;margin-top:3px}
+    .key-insight{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.2);border-radius:7px;padding:10px 12px;margin-top:4px}
+    .key-insight-title{font-size:10px;font-weight:700;color:#93c5fd;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+    .key-insight-text{font-size:10px;color:#64748b;line-height:1.6}
+    .ammeter{position:absolute;bottom:12px;left:12px;background:rgba(8,9,15,.92);border:1px solid rgba(96,165,250,.25);border-radius:8px;padding:10px 14px;min-width:160px}
+    .ammeter-title{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+    .ammeter-value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:#60a5fa;line-height:1}
+    .ammeter-unit{font-size:10px;color:#475569;margin-top:2px}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Photoelectric Effect</h1>
+  <p class="subtitle">Photon energy, work function, and electron ejection (Na metal)</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+
+    <div class="overlay">
+      <div class="stat-row">
+        <span class="stat-label">Photon Energy E</span>
+        <span class="stat-value yellow" id="statE">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Work Function φ</span>
+        <span class="stat-value orange">2.28 eV</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">KE<sub style="font-size:9px">max</sub></span>
+        <span class="stat-value blue" id="statKE">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Threshold f₀</span>
+        <span class="stat-value violet">5.51×10¹⁴ Hz</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Status</span>
+        <span id="statStatus" class="status-no">✗ Below threshold</span>
+      </div>
+    </div>
+
+    <div class="ammeter">
+      <div class="ammeter-title">Photoelectric Current</div>
+      <div class="ammeter-value" id="ammeter">0.00</div>
+      <div class="ammeter-unit">μA</div>
+    </div>
+
+    <div class="fps" id="fps">0 FPS</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Light Source Controls</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Light Frequency</span>
+          <span class="param-val" id="valFreq">6.0 ×10¹⁴ Hz</span>
+        </div>
+        <input type="range" id="sliderFreq" min="40" max="100" step="1" value="60">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Light Intensity</span>
+          <span class="param-val" id="valIntensity">50 W/m²</span>
+        </div>
+        <input type="range" id="sliderIntensity" min="1" max="100" step="1" value="50">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Physical Constants</div>
+      <div style="font-size:10px;color:#64748b;line-height:2">
+        <div>h = 6.626 × 10⁻³⁴ J·s</div>
+        <div>φ (Na) = 2.28 eV = 3.65 × 10⁻¹⁹ J</div>
+        <div>f₀ = φ/h ≈ 5.51 × 10¹⁴ Hz</div>
+        <div>1 eV = 1.602 × 10⁻¹⁹ J</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Equations</div>
+      <div class="formula-box">
+        <div class="formula-text">E = hf</div>
+        <div class="formula-desc">Photon energy — depends only on frequency</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">KE_max = hf − φ</div>
+        <div class="formula-desc">Max kinetic energy of ejected electron</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">f₀ = φ / h</div>
+        <div class="formula-desc">Threshold frequency — no ejection below this</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Conceptual Insight</div>
+      <div class="key-insight">
+        <div class="key-insight-title">Intensity vs Frequency</div>
+        <div class="key-insight-text">
+          <strong style="color:#93c5fd">Intensity</strong> controls how many photons arrive per second — more photons → more electrons (if above threshold), but each electron gets the same energy.<br><br>
+          <strong style="color:#fde68a">Frequency</strong> controls how much energy each photon carries. Only frequency determines if electrons are ejected at all.
+        </div>
+      </div>
+      <div class="key-insight" style="margin-top:8px;background:rgba(234,179,8,.05);border-color:rgba(234,179,8,.2)">
+        <div class="key-insight-title" style="color:#fde68a">Classical Prediction (Wrong)</div>
+        <div class="key-insight-text">
+          Classical wave theory predicted that any frequency should eject electrons if the wave is intense enough. Experiment proved otherwise — only frequency matters for ejection.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Physical constants ────────────────────────────────────────────────────
+  var H       = 6.626e-34;   // Planck's constant J·s
+  var PHI_J   = 3.65e-19;    // Work function Na in Joules
+  var PHI_EV  = 2.28;        // Work function Na in eV
+  var EV      = 1.602e-19;   // 1 eV in Joules
+  var F0      = PHI_J / H;   // Threshold frequency ≈ 5.51e14 Hz
+
+  // ── App state ──────────────────────────────────────────────────────────────
+  var state = {
+    freqX10: 60,   // slider value: 60 → 6.0e14 Hz
+    intensity: 50, // 1–100
+    time: 0,
+    ejecting: false
+  };
+
+  // ── Particle pools ─────────────────────────────────────────────────────────
+  var MAX_PHOTONS   = 30;
+  var MAX_ELECTRONS = 20;
+  var photons   = [];
+  var electrons = [];
+
+  // ── Three.js setup ─────────────────────────────────────────────────────────
+  var canvas = document.getElementById('c');
+  var wrap   = document.getElementById('canvasWrap');
+  var renderer, scene, camera;
+  var fpsEl = document.getElementById('fps');
+  var fpsCount = 0, fpsLast = performance.now();
+
+  // Static scene objects (rebuilt on resize only)
+  var staticObjects = [];
+  // Dynamic objects (photons/electrons, updated every frame)
+
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x08090f, 1);
+
+    scene = new THREE.Scene();
+
+    var W = wrap.clientWidth, H_px = wrap.clientHeight;
+    camera = new THREE.PerspectiveCamera(50, W / H_px, 0.1, 200);
+    camera.position.set(0, 2, 18);
+    camera.lookAt(0, 0, 0);
+
+    renderer.setSize(W, H_px);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    var keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    keyLight.position.set(5, 8, 10);
+    scene.add(keyLight);
+    var fillLight = new THREE.PointLight(0x3b82f6, 1.5, 30);
+    fillLight.position.set(6, 2, 5);
+    scene.add(fillLight);
+    var backLight = new THREE.PointLight(0xfbbf24, 0.8, 20);
+    backLight.position.set(-8, 3, 3);
+    scene.add(backLight);
+
+  } catch(e) {
+    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">WebGL init failed: ' + e.message + '</div>';
+    return;
+  }
+
+  // ── Build static scene ─────────────────────────────────────────────────────
+  function buildStaticScene() {
+    for (var i = 0; i < staticObjects.length; i++) {
+      var obj = staticObjects[i];
+      scene.remove(obj);
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) obj.material.dispose();
+    }
+    staticObjects = [];
+
+    // ── Metal plate (cathode) — left side at x = -4 ──
+    var plateGeo = new THREE.BoxGeometry(0.4, 5, 2.5);
+    var plateMat = new THREE.MeshPhongMaterial({
+      color: 0x374151,
+      emissive: 0x1f2937,
+      emissiveIntensity: 0.3,
+      shininess: 120,
+      specular: 0x6b7280
+    });
+    var plateMesh = new THREE.Mesh(plateGeo, plateMat);
+    plateMesh.position.set(-4, 0, 0);
+    scene.add(plateMesh);
+    staticObjects.push(plateMesh);
+
+    // Glowing edge on plate
+    var edgeGeo = new THREE.EdgesGeometry(plateGeo);
+    var edgeMat = new THREE.LineBasicMaterial({ color: 0x6b7280 });
+    var edgeLine = new THREE.LineSegments(edgeGeo, edgeMat);
+    edgeLine.position.set(-4, 0, 0);
+    scene.add(edgeLine);
+    staticObjects.push(edgeLine);
+
+    // ── Collector plate (anode) — right side at x = +6 ──
+    var collGeo = new THREE.BoxGeometry(0.3, 4.5, 2.2);
+    var collMat = new THREE.MeshPhongMaterial({
+      color: 0x92400e,
+      emissive: 0x451a03,
+      emissiveIntensity: 0.5,
+      shininess: 200,
+      specular: 0xfbbf24
+    });
+    var collMesh = new THREE.Mesh(collGeo, collMat);
+    collMesh.position.set(6, 0, 0);
+    scene.add(collMesh);
+    staticObjects.push(collMesh);
+
+    var collEdgeGeo = new THREE.EdgesGeometry(collGeo);
+    var collEdgeMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
+    var collEdgeLine = new THREE.LineSegments(collEdgeGeo, collEdgeMat);
+    collEdgeLine.position.set(6, 0, 0);
+    scene.add(collEdgeLine);
+    staticObjects.push(collEdgeLine);
+
+    // ── Connecting wire (bottom) ──
+    var wirePts = [
+      new THREE.Vector3(-4, -3, 0),
+      new THREE.Vector3(-4, -3.6, 0),
+      new THREE.Vector3(6,  -3.6, 0),
+      new THREE.Vector3(6,  -3, 0)
+    ];
+    var wireGeo = new THREE.BufferGeometry().setFromPoints(wirePts);
+    var wireMat = new THREE.LineBasicMaterial({ color: 0x374151 });
+    var wire = new THREE.Line(wireGeo, wireMat);
+    scene.add(wire);
+    staticObjects.push(wire);
+
+    // ── Grid lines (background atmosphere) ──
+    var gridMat = new THREE.LineBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.6 });
+    for (var gx = -10; gx <= 10; gx += 2) {
+      var gg = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(gx, -5, -1), new THREE.Vector3(gx, 5, -1)
+      ]);
+      var gl = new THREE.Line(gg, gridMat);
+      scene.add(gl); staticObjects.push(gl);
+    }
+    for (var gy = -4; gy <= 4; gy += 2) {
+      var gh = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-10, gy, -1), new THREE.Vector3(10, gy, -1)
+      ]);
+      var ghl = new THREE.Line(gh, gridMat);
+      scene.add(ghl); staticObjects.push(ghl);
+    }
+
+    // ── Label: "Na" text approximated by geometry ──
+    // Small indicator sphere on plate surface
+    var naSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 12, 8),
+      new THREE.MeshPhongMaterial({ color: 0x6b7280, emissive: 0x374151, emissiveIntensity: 0.5 })
+    );
+    naSphere.position.set(-3.7, 2.2, 0);
+    scene.add(naSphere); staticObjects.push(naSphere);
+  }
+
+  // ── Particle: Photon ───────────────────────────────────────────────────────
+  function spawnPhoton() {
+    if (photons.length >= MAX_PHOTONS) return;
+    var freq = state.freqX10 * 1e13; // Hz
+    var energy_ev = (H * freq) / EV;
+    // Color based on frequency (UV = violet, visible = yellow/orange, IR = red)
+    var t = (state.freqX10 - 40) / 60; // 0 at 40, 1 at 100
+    var r = Math.min(1, 2 - 2 * t);
+    var g = Math.min(1, 2 * t);
+    var b = t > 0.5 ? (2 * t - 1) : 0;
+    var col = new THREE.Color(Math.max(0.4, r), Math.max(0.1, g), Math.max(0.1, b));
+
+    // Spawn position: random y in [-2,2], fixed x = -12, random z [-0.8,0.8]
+    var yPos = (Math.random() - 0.5) * 4;
+    var zPos = (Math.random() - 0.5) * 1.6;
+
+    var geo = new THREE.SphereGeometry(0.12 + 0.08 * t, 10, 8);
+    var mat = new THREE.MeshPhongMaterial({
+      color: col, emissive: col, emissiveIntensity: 1.2, shininess: 200
+    });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(-12, yPos, zPos);
+    scene.add(mesh);
+
+    photons.push({
+      mesh: mesh,
+      vy: 0,
+      speed: 3.5 + Math.random() * 1.0,
+      alive: true,
+      yTarget: yPos,
+      zPos: zPos
+    });
+  }
+
+  // ── Particle: Electron ─────────────────────────────────────────────────────
+  function spawnElectron(yOrigin, zOrigin, ke_ev) {
+    if (electrons.length >= MAX_ELECTRONS) return;
+    var speed = 2.0 + ke_ev * 0.8;
+    var vy = (Math.random() - 0.5) * 1.5;
+    var vz = (Math.random() - 0.5) * 0.5;
+
+    var geo = new THREE.SphereGeometry(0.09, 10, 8);
+    var mat = new THREE.MeshPhongMaterial({
+      color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 1.5, shininess: 300
+    });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(-3.6, yOrigin, zOrigin);
+    scene.add(mesh);
+
+    // Trail geometry (updated each frame)
+    var trailPts = [];
+    for (var i = 0; i < 8; i++) trailPts.push(new THREE.Vector3(-3.6, yOrigin, zOrigin));
+    var trailGeo = new THREE.BufferGeometry().setFromPoints(trailPts);
+    var trailMat = new THREE.LineBasicMaterial({ color: 0x1d4ed8, transparent: true, opacity: 0.5 });
+    var trail = new THREE.Line(trailGeo, trailMat);
+    scene.add(trail);
+
+    electrons.push({
+      mesh: mesh,
+      trail: trail,
+      trailPts: trailPts,
+      speed: speed,
+      vy: vy,
+      vz: vz,
+      alive: true
+    });
+  }
+
+  // ── No-ejection flash ──────────────────────────────────────────────────────
+  var flashObjects = [];
+  var flashTimer = 0;
+
+  function triggerFlash() {
+    // Remove old flashes
+    for (var i = 0; i < flashObjects.length; i++) {
+      scene.remove(flashObjects[i]);
+      if (flashObjects[i].geometry) flashObjects[i].geometry.dispose();
+      if (flashObjects[i].material) flashObjects[i].material.dispose();
+    }
+    flashObjects = [];
+    flashTimer = 0.4; // seconds
+
+    // Ring on plate surface
+    var ringGeo = new THREE.RingGeometry(0.3, 0.45, 24);
+    var ringMat = new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.set(-3.5, (Math.random() - 0.5) * 3, 0.5);
+    ring.rotation.y = Math.PI / 2;
+    scene.add(ring);
+    flashObjects.push(ring);
+  }
+
+  // ── HUD Update ─────────────────────────────────────────────────────────────
+  function updateHUD() {
+    var freq = state.freqX10 * 1e13;
+    var energy_j = H * freq;
+    var energy_ev = energy_j / EV;
+    var ke_ev = energy_ev - PHI_EV;
+    var ejecting = freq >= F0;
+
+    document.getElementById('statE').textContent = energy_ev.toFixed(2) + ' eV';
+    if (ejecting) {
+      document.getElementById('statKE').textContent = ke_ev.toFixed(2) + ' eV';
+      document.getElementById('statStatus').textContent = '✓ Photoelectrons ejected';
+      document.getElementById('statStatus').className = 'status-ok';
+      // Current proportional to intensity
+      var current = (ke_ev * state.intensity * 0.012).toFixed(2);
+      document.getElementById('ammeter').textContent = current;
+    } else {
+      document.getElementById('statKE').textContent = '0 eV';
+      document.getElementById('statStatus').textContent = '✗ Below threshold';
+      document.getElementById('statStatus').className = 'status-no';
+      document.getElementById('ammeter').textContent = '0.00';
+    }
+
+    state.ejecting = ejecting;
+  }
+
+  // ── Spawn rate ─────────────────────────────────────────────────────────────
+  var spawnAccum = 0;
+  var flashAccum = 0;
+
+  // ── Animation loop ─────────────────────────────────────────────────────────
+  var lastTime = performance.now();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    try {
+      var now = performance.now();
+      var dt  = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      state.time += dt;
+
+      // Spawn photons based on intensity
+      var spawnRate = 1 + state.intensity * 0.18; // photons/sec
+      spawnAccum += dt * spawnRate;
+      while (spawnAccum >= 1) {
+        spawnPhoton();
+        spawnAccum -= 1;
+      }
+
+      // Move photons
+      for (var i = photons.length - 1; i >= 0; i--) {
+        var p = photons[i];
+        if (!p.alive) continue;
+        p.mesh.position.x += p.speed * dt;
+
+        // Hit metal plate (x ≈ -4 to -3.6)
+        if (p.mesh.position.x >= -3.8) {
+          if (state.ejecting) {
+            var freq = state.freqX10 * 1e13;
+            var ke_ev = (H * freq) / EV - PHI_EV;
+            spawnElectron(p.mesh.position.y, p.mesh.position.z, ke_ev);
+          } else {
+            // Flash every 0.3s to avoid spam
+            flashAccum += dt;
+            if (flashAccum >= 0.3) {
+              triggerFlash();
+              flashAccum = 0;
+            }
+          }
+          // Remove photon
+          scene.remove(p.mesh);
+          p.mesh.geometry.dispose(); p.mesh.material.dispose();
+          photons.splice(i, 1);
+          continue;
+        }
+
+        // Remove if too far left (escaped)
+        if (p.mesh.position.x < -14) {
+          scene.remove(p.mesh);
+          p.mesh.geometry.dispose(); p.mesh.material.dispose();
+          photons.splice(i, 1);
+        }
+      }
+
+      // Move electrons
+      for (var j = electrons.length - 1; j >= 0; j--) {
+        var e = electrons[j];
+        if (!e.alive) continue;
+        e.mesh.position.x += e.speed * dt;
+        e.mesh.position.y += e.vy * dt;
+        e.mesh.position.z += e.vz * dt;
+
+        // Update trail
+        e.trailPts.unshift(e.mesh.position.clone());
+        e.trailPts.pop();
+        e.trail.geometry.setFromPoints(e.trailPts);
+        e.trail.computeLineDistances();
+
+        // Reached collector plate or flew off screen
+        if (e.mesh.position.x >= 6 || e.mesh.position.x > 9 || Math.abs(e.mesh.position.y) > 6) {
+          scene.remove(e.mesh); scene.remove(e.trail);
+          e.mesh.geometry.dispose(); e.mesh.material.dispose();
+          e.trail.geometry.dispose(); e.trail.material.dispose();
+          electrons.splice(j, 1);
+        }
+      }
+
+      // Flash fade
+      if (flashTimer > 0) {
+        flashTimer -= dt;
+        for (var k = 0; k < flashObjects.length; k++) {
+          if (flashObjects[k].material) {
+            flashObjects[k].material.opacity = Math.max(0, flashTimer / 0.4 * 0.9);
+          }
+        }
+        if (flashTimer <= 0) {
+          for (var m = 0; m < flashObjects.length; m++) {
+            scene.remove(flashObjects[m]);
+            if (flashObjects[m].geometry) flashObjects[m].geometry.dispose();
+            if (flashObjects[m].material) flashObjects[m].material.dispose();
+          }
+          flashObjects = [];
+        }
+      }
+
+      // Gentle camera sway
+      camera.position.x = Math.sin(state.time * 0.1) * 0.3;
+      camera.position.y = 2 + Math.cos(state.time * 0.07) * 0.2;
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+
+      // FPS
+      fpsCount++;
+      if (now - fpsLast >= 1000) {
+        fpsEl.textContent = fpsCount + ' FPS';
+        fpsCount = 0;
+        fpsLast = now;
+      }
+    } catch(err) {
+      // Swallow render errors to prevent black screen
+    }
+  }
+
+  // ── UI Bindings ────────────────────────────────────────────────────────────
+  document.getElementById('sliderFreq').addEventListener('input', function() {
+    state.freqX10 = parseInt(this.value);
+    var displayVal = (state.freqX10 / 10).toFixed(1);
+    document.getElementById('valFreq').textContent = displayVal + ' ×10¹⁴ Hz';
+    updateHUD();
+  });
+
+  document.getElementById('sliderIntensity').addEventListener('input', function() {
+    state.intensity = parseInt(this.value);
+    document.getElementById('valIntensity').textContent = state.intensity + ' W/m²';
+    updateHUD();
+  });
+
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  function onResize() {
+    try {
+      var W = wrap.clientWidth, H = wrap.clientHeight;
+      if (W < 1 || H < 1) return;
+      camera.aspect = W / H;
+      camera.updateProjectionMatrix();
+      renderer.setSize(W, H);
+    } catch(e) {}
+  }
+  window.addEventListener('resize', onResize);
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  try {
+    buildStaticScene();
+    updateHUD();
+    animate();
+  } catch(e) {
+    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">Scene build failed: ' + e.message + '</div>';
+  }
+
+})();
+</script>
+</body>
+</html>

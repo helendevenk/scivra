@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build a Nucleus — NeonPhysics AP Physics 2</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(245,158,11,.07));border-bottom:1px solid rgba(251,146,60,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 360px;gap:0;height:calc(100vh - 90px)}
+    .canvas-wrap{position:relative}
+    canvas#c{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.92);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:260px}
+    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .orange{color:#fb923c} .red{color:#fca5a5} .blue{color:#60a5fa} .green{color:#86efac} .yellow{color:#fde68a} .cyan{color:#22d3ee} .purple{color:#c4b5fd} .pink{color:#f9a8d4}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f97316;cursor:pointer}
+    input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f97316;border:none;cursor:pointer}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .btn{padding:8px 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-primary{background:#f97316;color:#fff}
+    .btn-primary:hover{background:#ea580c}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+    .btn-ghost:hover{background:rgba(255,255,255,.1)}
+    .btn-ghost.active{background:rgba(251,146,60,.15);color:#fb923c;border-color:rgba(251,146,60,.3)}
+    .formula-box{background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .graph-wrap{position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin-top:8px}
+    .graph-wrap canvas{width:100%;height:auto;display:block}
+    .field-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+    .legend-dot{width:10px;height:10px;border-radius:50%}
+    .stability-indicator{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600}
+    .stability-stable{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .stability-unstable{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fde68a}
+    .stability-radioactive{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+    .stability-dot{width:10px;height:10px;border-radius:50%;animation:pulse 1.5s infinite}
+    .stability-stable .stability-dot{background:#22c55e}
+    .stability-unstable .stability-dot{background:#f59e0b;animation:pulse 1s infinite}
+    .stability-radioactive .stability-dot{background:#ef4444;animation:pulse .5s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .element-display{text-align:center;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:10px}
+    .element-symbol{font-size:36px;font-weight:700;color:#f0f4ff;line-height:1.2}
+    .element-symbol sup{font-size:18px;color:#fb923c;vertical-align:super}
+    .element-symbol sub{font-size:14px;color:#60a5fa;vertical-align:sub}
+    .element-name{font-size:12px;color:#94a3b8;margin-top:2px}
+    .quiz-section{padding:18px 20px}
+    .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
+    .quiz-q-title{font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:10px}
+    .quiz-option{display:block;padding:8px 12px;margin-bottom:6px;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:12px;color:#cbd5e1;transition:all .15s}
+    .quiz-option:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+    .quiz-option.disabled{pointer-events:none;opacity:.7}
+    .quiz-explain{display:none;margin-top:8px;padding:10px 12px;background:rgba(59,130,246,.08);border-radius:6px;font-size:11px;color:#93c5fd;line-height:1.5}
+    .quiz-explain.show{display:block}
+    .nuclear-force-toggle{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .toggle-label{font-size:12px;color:#94a3b8}
+    .toggle-switch{position:relative;width:36px;height:20px;background:rgba(255,255,255,.1);border-radius:10px;cursor:pointer;transition:background .2s}
+    .toggle-switch.on{background:rgba(251,146,60,.5)}
+    .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+    .toggle-switch.on::after{transform:translateX(16px)}
+    @media(max-width:800px){
+      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
+      .sidebar{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Build a Nucleus</h1>
+  <p class="subtitle">Explore nuclear structure &mdash; protons, neutrons, binding energy, and isotopes</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row"><span class="stat-label">Element</span><span class="stat-value orange" id="statElement">C-12</span></div>
+      <div class="stat-row"><span class="stat-label">Mass Number A</span><span class="stat-value cyan" id="statA">12</span></div>
+      <div class="stat-row"><span class="stat-label">Binding Energy</span><span class="stat-value yellow" id="statBE">92.16 MeV</span></div>
+      <div class="stat-row"><span class="stat-label">BE per Nucleon</span><span class="stat-value green" id="statBEperA">7.68 MeV</span></div>
+      <div class="stat-row"><span class="stat-label">Stability</span><span class="stat-value" id="statStability"><span class="green">Stable</span></span></div>
+      <div class="field-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Proton</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Neutron</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(251,146,60,.3)"></div>Nuclear Force Range</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Nuclear Composition</div>
+      <div class="element-display">
+        <div class="element-symbol" id="elemDisplay"><sup>12</sup>C<sub>6</sub></div>
+        <div class="element-name" id="elemName">Carbon-12</div>
+      </div>
+      <div id="stabilityIndicator" class="stability-indicator stability-stable">
+        <div class="stability-dot"></div>
+        <span>Stable Isotope</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Formulas</div>
+      <div class="formula-box">
+        <div id="formulaA"></div>
+        <div class="formula-desc">Mass number = protons + neutrons</div>
+      </div>
+      <div class="formula-box" style="margin-top:6px">
+        <div id="formulaBE"></div>
+        <div class="formula-desc">Binding energy from mass defect</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Protons (Z)</span><span class="param-val" id="valZ">6</span></div>
+        <input type="range" id="sliderZ" min="1" max="20" step="1" value="6">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Neutrons (N)</span><span class="param-val" id="valN">6</span></div>
+        <input type="range" id="sliderN" min="0" max="20" step="1" value="6">
+      </div>
+      <div class="nuclear-force-toggle">
+        <div class="toggle-switch on" id="toggleForce" onclick="toggleNuclearForce()"></div>
+        <span class="toggle-label">Show Nuclear Force Range</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost active" data-z="6" data-n="6" onclick="applyPreset(this)">Carbon-12</button>
+        <button class="btn btn-ghost" data-z="2" data-n="2" onclick="applyPreset(this)">Helium-4</button>
+        <button class="btn btn-ghost" data-z="92" data-n="146" onclick="applyPreset(this)">Uranium-238</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Binding Energy per Nucleon</div>
+      <div class="graph-wrap">
+        <canvas id="graphBE" width="640" height="360"></canvas>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Knowledge Check</div>
+
+      <div class="quiz-q" id="q1">
+        <div class="quiz-q-title">1. Which nucleus has the highest binding energy per nucleon, making it the most stable?</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">A. Hydrogen-1 (1 proton)</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">B. Helium-4 (2p + 2n)</div>
+        <div class="quiz-option" data-correct="true" onclick="checkQuiz(this)">C. Iron-56 (26p + 30n)</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">D. Uranium-238 (92p + 146n)</div>
+        <div class="quiz-explain">Iron-56 sits at the peak of the binding energy curve with ~8.79 MeV per nucleon. Nuclei lighter than Fe-56 can release energy by fusion; nuclei heavier than Fe-56 can release energy by fission. This is why Fe-56 is the most tightly bound nucleus.</div>
+      </div>
+
+      <div class="quiz-q" id="q2">
+        <div class="quiz-q-title">2. A carbon-12 nucleus has 6 protons and 6 neutrons. What is its mass number A?</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">A. 6</div>
+        <div class="quiz-option" data-correct="true" onclick="checkQuiz(this)">B. 12</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">C. 72</div>
+        <div class="quiz-option" data-correct="false" onclick="checkQuiz(this)">D. 36</div>
+        <div class="quiz-explain">The mass number A = Z + N, where Z is the number of protons and N is the number of neutrons. For carbon-12: A = 6 + 6 = 12. The mass number represents the total number of nucleons (protons + neutrons) in the nucleus.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Element Data ---
+var ELEMENTS = [
+  '',
+  'Hydrogen','Helium','Lithium','Beryllium','Boron',
+  'Carbon','Nitrogen','Oxygen','Fluorine','Neon',
+  'Sodium','Magnesium','Aluminum','Silicon','Phosphorus',
+  'Sulfur','Chlorine','Argon','Potassium','Calcium',
+  'Scandium','Titanium','Vanadium','Chromium','Manganese',
+  'Iron','Cobalt','Nickel','Copper','Zinc',
+  'Gallium','Germanium','Arsenic','Selenium','Bromine',
+  'Krypton','Rubidium','Strontium','Yttrium','Zirconium',
+  'Niobium','Molybdenum','Technetium','Ruthenium','Rhodium',
+  'Palladium','Silver','Cadmium','Indium','Tin',
+  'Antimony','Tellurium','Iodine','Xenon','Cesium',
+  'Barium','Lanthanum','Cerium','Praseodymium','Neodymium',
+  'Promethium','Samarium','Europium','Gadolinium','Terbium',
+  'Dysprosium','Holmium','Erbium','Thulium','Ytterbium',
+  'Lutetium','Hafnium','Tantalum','Tungsten','Rhenium',
+  'Osmium','Iridium','Platinum','Gold','Mercury',
+  'Thallium','Lead','Bismuth','Polonium','Astatine',
+  'Radon','Francium','Radium','Actinium','Thorium',
+  'Protactinium','Uranium'
+];
+var SYMBOLS = [
+  '',
+  'H','He','Li','Be','B','C','N','O','F','Ne',
+  'Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca',
+  'Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn',
+  'Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr',
+  'Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn',
+  'Sb','Te','I','Xe','Cs','Ba','La','Ce','Pr','Nd',
+  'Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb',
+  'Lu','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg',
+  'Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
+  'Pa','U'
+];
+
+// Stable isotope lookup (Z -> set of stable N values)
+var STABLE_ISOTOPES = {
+  1:[0,1],2:[1,2],3:[3,4],4:[5],5:[5,6],6:[6,7],7:[7,8],8:[8,9,10],9:[10],10:[10,11,12],
+  11:[12],12:[12,13,14],13:[14],14:[14,15,16],15:[16],16:[16,17,18,20],17:[18,20],18:[18,20,22],
+  19:[20,22],20:[20,22,24,26,28]
+};
+
+// Semi-empirical mass formula coefficients (Weizsacker)
+var aV = 15.56, aS = 17.23, aC = 0.697, aA = 23.285, aP = 12.0;
+
+function calcBindingEnergy(Z, N) {
+  var A = Z + N;
+  if (A <= 0 || Z <= 0) return 0;
+  if (A === 1) return 0; // single nucleon
+
+  var volume = aV * A;
+  var surface = -aS * Math.pow(A, 2/3);
+  var coulomb = -aC * Z * (Z - 1) / Math.pow(A, 1/3);
+  var asymmetry = -aA * Math.pow(N - Z, 2) / A;
+
+  // Pairing term
+  var delta = 0;
+  if (Z % 2 === 0 && N % 2 === 0) delta = aP / Math.pow(A, 0.5);
+  else if (Z % 2 === 1 && N % 2 === 1) delta = -aP / Math.pow(A, 0.5);
+
+  var BE = volume + surface + coulomb + asymmetry + delta;
+  return Math.max(0, BE);
+}
+
+function getStability(Z, N) {
+  if (Z === 0 || (Z + N) === 0) return 'unstable';
+  var stableNs = STABLE_ISOTOPES[Z];
+  if (stableNs && stableNs.indexOf(N) !== -1) return 'stable';
+  // Check if close to stability line
+  var idealN = Z <= 20 ? Z : Z * 1.5;
+  var diff = Math.abs(N - idealN) / Math.max(idealN, 1);
+  if (diff < 0.15 && Z <= 82) return 'unstable';
+  return 'radioactive';
+}
+
+// --- Quiz Logic ---
+function checkQuiz(el) {
+  var q = el.closest('.quiz-q');
+  if (q.classList.contains('answered')) return;
+  q.classList.add('answered');
+  var options = q.querySelectorAll('.quiz-option');
+  options.forEach(function(o) {
+    o.classList.add('disabled');
+    if (o.getAttribute('data-correct') === 'true') o.classList.add('correct');
+  });
+  if (el.getAttribute('data-correct') !== 'true') el.classList.add('wrong');
+  q.querySelector('.quiz-explain').classList.add('show');
+}
+
+// --- Nuclear Force Toggle ---
+var showNuclearForce = true;
+function toggleNuclearForce() {
+  showNuclearForce = !showNuclearForce;
+  document.getElementById('toggleForce').classList.toggle('on', showNuclearForce);
+  updateForceVisualization();
+}
+
+// --- Three.js Scene ---
+var scene, camera, renderer, controls;
+var nucleonGroup, forceRangeMesh;
+var protonMeshes = [], neutronMeshes = [];
+var currentZ = 6, currentN = 6;
+var animationTargets = [];
+
+function initScene() {
+  var wrap = document.getElementById('canvasWrap');
+  var canvas = document.getElementById('c');
+  var w = wrap.clientWidth, h = wrap.clientHeight;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+
+  camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 500);
+  camera.position.set(8, 6, 8);
+
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 3;
+  controls.maxDistance = 50;
+
+  // Lights
+  var ambient = new THREE.AmbientLight(0x334466, 0.6);
+  scene.add(ambient);
+  var dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(5, 10, 7);
+  scene.add(dirLight);
+  var pointLight = new THREE.PointLight(0xfb923c, 0.4, 30);
+  pointLight.position.set(-5, 5, -5);
+  scene.add(pointLight);
+
+  nucleonGroup = new THREE.Group();
+  scene.add(nucleonGroup);
+
+  // Nuclear force range sphere (transparent)
+  var forceGeo = new THREE.SphereGeometry(1, 32, 32);
+  var forceMat = new THREE.MeshBasicMaterial({
+    color: 0xfb923c,
+    transparent: true,
+    opacity: 0.06,
+    wireframe: false,
+    side: THREE.DoubleSide
+  });
+  forceRangeMesh = new THREE.Mesh(forceGeo, forceMat);
+  scene.add(forceRangeMesh);
+
+  // Force range wireframe
+  var wireGeo = new THREE.SphereGeometry(1, 16, 16);
+  var wireMat = new THREE.MeshBasicMaterial({
+    color: 0xfb923c,
+    transparent: true,
+    opacity: 0.12,
+    wireframe: true
+  });
+  forceRangeMesh.wireHelper = new THREE.Mesh(wireGeo, wireMat);
+  scene.add(forceRangeMesh.wireHelper);
+
+  // Grid helper
+  var grid = new THREE.GridHelper(20, 20, 0x1e293b, 0x1e293b);
+  grid.position.y = -5;
+  scene.add(grid);
+
+  buildNucleus(currentZ, currentN);
+  updateAll();
+
+  window.addEventListener('resize', onResize);
+  animate();
+}
+
+function onResize() {
+  var wrap = document.getElementById('canvasWrap');
+  var w = wrap.clientWidth, h = wrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+// --- Nucleon positioning using Fibonacci sphere ---
+function fibonacciSphere(index, total) {
+  var goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  var y = 1 - (index / (total - 1)) * 2;
+  if (total === 1) y = 0;
+  var radius = Math.sqrt(1 - y * y);
+  var theta = goldenAngle * index;
+  return new THREE.Vector3(
+    Math.cos(theta) * radius,
+    y,
+    Math.sin(theta) * radius
+  );
+}
+
+function getNucleonPositions(Z, N) {
+  var A = Z + N;
+  if (A === 0) return [];
+
+  // Nuclear radius: R = r0 * A^(1/3), r0 ~ 1.2 fm (visual units)
+  var r0 = 0.8;
+  var R = r0 * Math.pow(A, 1/3);
+
+  var positions = [];
+
+  if (A === 1) {
+    positions.push(new THREE.Vector3(0, 0, 0));
+    return positions;
+  }
+
+  // Use shell-based packing for a more realistic look
+  var placed = 0;
+  var shell = 0;
+  while (placed < A) {
+    var shellR = shell === 0 ? 0 : R * (shell / Math.ceil(Math.pow(A, 1/3)));
+    var shellCapacity;
+    if (shell === 0) {
+      shellCapacity = 1;
+    } else {
+      // Surface area proportional capacity
+      shellCapacity = Math.max(1, Math.floor(4 * Math.PI * shellR * shellR / (1.2 * 1.2)));
+      shellCapacity = Math.min(shellCapacity, A - placed);
+    }
+
+    for (var i = 0; i < shellCapacity && placed < A; i++) {
+      if (shell === 0) {
+        positions.push(new THREE.Vector3(0, 0, 0));
+      } else {
+        var pos = fibonacciSphere(i, shellCapacity);
+        pos.multiplyScalar(shellR);
+        // Add slight randomness for realism
+        pos.x += (Math.random() - 0.5) * 0.15;
+        pos.y += (Math.random() - 0.5) * 0.15;
+        pos.z += (Math.random() - 0.5) * 0.15;
+        positions.push(pos);
+      }
+      placed++;
+    }
+    shell++;
+    if (shell > 20) break; // safety
+  }
+
+  return positions;
+}
+
+var protonMat = new THREE.MeshPhongMaterial({
+  color: 0xef4444,
+  emissive: 0x7f1d1d,
+  emissiveIntensity: 0.3,
+  shininess: 60
+});
+var neutronMat = new THREE.MeshPhongMaterial({
+  color: 0x3b82f6,
+  emissive: 0x1e3a5f,
+  emissiveIntensity: 0.3,
+  shininess: 60
+});
+
+function buildNucleus(Z, N) {
+  // Clear existing
+  while (nucleonGroup.children.length > 0) {
+    var child = nucleonGroup.children[0];
+    nucleonGroup.remove(child);
+    if (child.geometry) child.geometry.dispose();
+  }
+  protonMeshes = [];
+  neutronMeshes = [];
+  animationTargets = [];
+
+  var A = Z + N;
+  if (A === 0) {
+    updateForceVisualization();
+    return;
+  }
+
+  var positions = getNucleonPositions(Z, N);
+  var nucleonRadius = 0.4;
+  var geo = new THREE.SphereGeometry(nucleonRadius, 16, 16);
+
+  // Interleave protons and neutrons for natural distribution
+  var nucleonTypes = [];
+  for (var i = 0; i < Z; i++) nucleonTypes.push('p');
+  for (var j = 0; j < N; j++) nucleonTypes.push('n');
+
+  // Shuffle for visual distribution
+  for (var k = nucleonTypes.length - 1; k > 0; k--) {
+    var rand = Math.floor(Math.random() * (k + 1));
+    var tmp = nucleonTypes[k];
+    nucleonTypes[k] = nucleonTypes[rand];
+    nucleonTypes[rand] = tmp;
+  }
+
+  for (var idx = 0; idx < A; idx++) {
+    var mat = nucleonTypes[idx] === 'p' ? protonMat : neutronMat;
+    var mesh = new THREE.Mesh(geo, mat);
+    var target = positions[idx];
+
+    // Start at origin for animation
+    mesh.position.set(0, 0, 0);
+    mesh.scale.set(0.01, 0.01, 0.01);
+
+    nucleonGroup.add(mesh);
+
+    if (nucleonTypes[idx] === 'p') {
+      protonMeshes.push(mesh);
+    } else {
+      neutronMeshes.push(mesh);
+    }
+
+    animationTargets.push({
+      mesh: mesh,
+      target: target.clone(),
+      delay: idx * 30
+    });
+  }
+
+  updateForceVisualization();
+
+  // Adjust camera for large nuclei
+  var r0 = 0.8;
+  var viewR = r0 * Math.pow(A, 1/3) + 3;
+  var camDist = Math.max(8, viewR * 2.5);
+  camera.position.set(camDist * 0.7, camDist * 0.5, camDist * 0.7);
+  controls.update();
+}
+
+function updateForceVisualization() {
+  var A = currentZ + currentN;
+  if (A === 0) {
+    forceRangeMesh.visible = false;
+    forceRangeMesh.wireHelper.visible = false;
+    return;
+  }
+  var r0 = 0.8;
+  var nuclearR = r0 * Math.pow(A, 1/3);
+  // Nuclear force range ~ 1.5 fm beyond nuclear surface
+  var forceRange = nuclearR + 1.2;
+  forceRangeMesh.scale.set(forceRange, forceRange, forceRange);
+  forceRangeMesh.wireHelper.scale.set(forceRange, forceRange, forceRange);
+  forceRangeMesh.visible = showNuclearForce;
+  forceRangeMesh.wireHelper.visible = showNuclearForce;
+}
+
+// --- Animation Loop ---
+var clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  var dt = clock.getDelta();
+  var elapsed = clock.getElapsedTime();
+
+  // Animate nucleons into position
+  for (var i = 0; i < animationTargets.length; i++) {
+    var anim = animationTargets[i];
+    var t = Math.max(0, (elapsed * 1000 - anim.startTime) / 400);
+    if (t > 0 && t < 1) {
+      t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+      anim.mesh.position.lerpVectors(new THREE.Vector3(0,0,0), anim.target, t);
+      var s = t;
+      anim.mesh.scale.set(s, s, s);
+    } else if (t >= 1) {
+      anim.mesh.position.copy(anim.target);
+      anim.mesh.scale.set(1, 1, 1);
+    }
+  }
+
+  // Gentle rotation of nucleus
+  nucleonGroup.rotation.y += 0.003;
+
+  // Subtle breathing for force range
+  if (forceRangeMesh.visible) {
+    var breath = 1 + Math.sin(elapsed * 2) * 0.02;
+    var A = currentZ + currentN;
+    var r0 = 0.8;
+    var nuclearR = r0 * Math.pow(A, 1/3);
+    var forceRange = nuclearR + 1.2;
+    var s = forceRange * breath;
+    forceRangeMesh.scale.set(s, s, s);
+    forceRangeMesh.wireHelper.scale.set(s, s, s);
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// --- Binding Energy Curve Graph ---
+function drawBECurve() {
+  var canvas = document.getElementById('graphBE');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = 'rgba(15,23,42,0.95)';
+  ctx.fillRect(0, 0, W, H);
+
+  var padL = 60, padR = 30, padT = 30, padB = 50;
+  var plotW = W - padL - padR;
+  var plotH = H - padT - padB;
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT);
+  ctx.lineTo(padL, padT + plotH);
+  ctx.lineTo(padL + plotW, padT + plotH);
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Mass Number A', padL + plotW / 2, H - 8);
+  ctx.save();
+  ctx.translate(14, padT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('BE/A (MeV)', 0, 0);
+  ctx.restore();
+
+  // Compute data points for the curve (A = 2 to 240)
+  var maxA = 240;
+  var maxBEperA = 9;
+  var data = [];
+
+  // Use ideal Z for each A (minimizes energy)
+  for (var a = 2; a <= maxA; a++) {
+    var bestZ = Math.round(a / (2 + 0.015 * Math.pow(a, 2/3)));
+    bestZ = Math.max(1, Math.min(a - 1, bestZ));
+    var n = a - bestZ;
+    var be = calcBindingEnergy(bestZ, n);
+    var bePerA = be / a;
+    data.push({ a: a, bePerA: bePerA, z: bestZ });
+  }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  for (var g = 0; g <= maxBEperA; g += 2) {
+    var gy = padT + plotH - (g / maxBEperA) * plotH;
+    ctx.beginPath();
+    ctx.moveTo(padL, gy);
+    ctx.lineTo(padL + plotW, gy);
+    ctx.stroke();
+    ctx.fillStyle = '#475569';
+    ctx.textAlign = 'right';
+    ctx.fillText(g.toString(), padL - 8, gy + 4);
+  }
+  for (var ga = 0; ga <= maxA; ga += 40) {
+    var gx = padL + (ga / maxA) * plotW;
+    ctx.beginPath();
+    ctx.moveTo(gx, padT);
+    ctx.lineTo(gx, padT + plotH);
+    ctx.stroke();
+    ctx.fillStyle = '#475569';
+    ctx.textAlign = 'center';
+    ctx.fillText(ga.toString(), gx, padT + plotH + 18);
+  }
+
+  // Draw curve
+  ctx.beginPath();
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 2;
+  for (var d = 0; d < data.length; d++) {
+    var px = padL + (data[d].a / maxA) * plotW;
+    var py = padT + plotH - (Math.min(data[d].bePerA, maxBEperA) / maxBEperA) * plotH;
+    if (d === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Mark some notable nuclei
+  var markers = [
+    { a: 4, label: 'He-4', color: '#86efac' },
+    { a: 12, label: 'C-12', color: '#fde68a' },
+    { a: 56, label: 'Fe-56', color: '#fb923c' },
+    { a: 238, label: 'U-238', color: '#c4b5fd' }
+  ];
+
+  for (var m = 0; m < markers.length; m++) {
+    var mk = markers[m];
+    var mkData = data[mk.a - 2];
+    if (!mkData) continue;
+    var mx = padL + (mkData.a / maxA) * plotW;
+    var my = padT + plotH - (Math.min(mkData.bePerA, maxBEperA) / maxBEperA) * plotH;
+
+    ctx.beginPath();
+    ctx.arc(mx, my, 4, 0, Math.PI * 2);
+    ctx.fillStyle = mk.color;
+    ctx.fill();
+
+    ctx.fillStyle = mk.color;
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(mk.label, mx, my - 10);
+  }
+
+  // Mark current nucleus
+  var curA = currentZ + currentN;
+  if (curA >= 2) {
+    var curBE = calcBindingEnergy(currentZ, currentN);
+    var curBEperA = curBE / curA;
+    var cx = padL + (curA / maxA) * plotW;
+    var cy = padT + plotH - (Math.min(curBEperA, maxBEperA) / maxBEperA) * plotH;
+
+    // Highlight ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#f97316';
+    ctx.fill();
+
+    var sym = currentZ <= 92 ? SYMBOLS[currentZ] : 'X';
+    ctx.fillStyle = '#f97316';
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    var labelY = cy - 14;
+    if (labelY < padT + 10) labelY = cy + 18;
+    ctx.fillText(sym + '-' + curA, cx, labelY);
+  }
+
+  // Fe-56 peak annotation
+  ctx.fillStyle = 'rgba(251,146,60,0.5)';
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  var feX = padL + (56 / maxA) * plotW + 12;
+  var feData = data[54];
+  var feY = padT + plotH - (Math.min(feData.bePerA, maxBEperA) / maxBEperA) * plotH;
+  ctx.fillText('← Peak stability', feX, feY + 4);
+
+  // Fusion / Fission regions
+  ctx.fillStyle = 'rgba(96,165,250,0.25)';
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('← Fusion releases energy', padL + plotW * 0.15, padT + 16);
+  ctx.fillText('Fission releases energy →', padL + plotW * 0.75, padT + 16);
+}
+
+// --- Presets ---
+function applyPreset(btn) {
+  document.querySelectorAll('.btn-row .btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var z = parseInt(btn.getAttribute('data-z'));
+  var n = parseInt(btn.getAttribute('data-n'));
+
+  // Handle Uranium-238 (exceeds slider range)
+  var isUranium = z === 92 && n === 146;
+
+  if (!isUranium) {
+    document.getElementById('sliderZ').value = z;
+    document.getElementById('sliderN').value = n;
+  }
+
+  currentZ = z;
+  currentN = n;
+
+  // Rebuild with animation timing
+  var startTime = clock.getElapsedTime() * 1000;
+  buildNucleus(z, n);
+  for (var i = 0; i < animationTargets.length; i++) {
+    animationTargets[i].startTime = startTime + animationTargets[i].delay;
+  }
+
+  updateAll();
+}
+
+// --- Update All UI ---
+function updateAll() {
+  var Z = currentZ;
+  var N = currentN;
+  var A = Z + N;
+
+  // Update slider labels
+  document.getElementById('valZ').textContent = Z;
+  document.getElementById('valN').textContent = N;
+
+  // Element info
+  var sym = Z <= 92 ? SYMBOLS[Z] : '?';
+  var name = Z <= 92 ? ELEMENTS[Z] : 'Unknown';
+
+  document.getElementById('statElement').textContent = sym + '-' + A;
+  document.getElementById('statA').textContent = A;
+
+  // Element display
+  document.getElementById('elemDisplay').innerHTML =
+    '<sup>' + A + '</sup>' + sym + '<sub>' + Z + '</sub>';
+  document.getElementById('elemName').textContent = name + '-' + A;
+
+  // Binding energy
+  var BE = calcBindingEnergy(Z, N);
+  var BEperA = A > 0 ? BE / A : 0;
+  document.getElementById('statBE').textContent = BE.toFixed(2) + ' MeV';
+  document.getElementById('statBEperA').textContent = BEperA.toFixed(2) + ' MeV';
+
+  // Stability
+  var stability = getStability(Z, N);
+  var stabilityEl = document.getElementById('statStability');
+  var indicatorEl = document.getElementById('stabilityIndicator');
+
+  if (stability === 'stable') {
+    stabilityEl.innerHTML = '<span class="green">Stable</span>';
+    indicatorEl.className = 'stability-indicator stability-stable';
+    indicatorEl.querySelector('span').textContent = 'Stable Isotope';
+  } else if (stability === 'unstable') {
+    stabilityEl.innerHTML = '<span class="yellow">Unstable</span>';
+    indicatorEl.className = 'stability-indicator stability-unstable';
+    indicatorEl.querySelector('span').textContent = 'Unstable — Beta Decay Likely';
+  } else {
+    stabilityEl.innerHTML = '<span class="red">Radioactive</span>';
+    indicatorEl.className = 'stability-indicator stability-radioactive';
+    indicatorEl.querySelector('span').textContent = 'Radioactive — Highly Unstable';
+  }
+
+  // Draw binding energy curve
+  drawBECurve();
+}
+
+// --- Slider events ---
+document.getElementById('sliderZ').addEventListener('input', function() {
+  currentZ = parseInt(this.value);
+  document.querySelectorAll('.btn-row .btn').forEach(function(b) { b.classList.remove('active'); });
+
+  var startTime = clock.getElapsedTime() * 1000;
+  buildNucleus(currentZ, currentN);
+  for (var i = 0; i < animationTargets.length; i++) {
+    animationTargets[i].startTime = startTime + animationTargets[i].delay;
+  }
+  updateAll();
+});
+
+document.getElementById('sliderN').addEventListener('input', function() {
+  currentN = parseInt(this.value);
+  document.querySelectorAll('.btn-row .btn').forEach(function(b) { b.classList.remove('active'); });
+
+  var startTime = clock.getElapsedTime() * 1000;
+  buildNucleus(currentZ, currentN);
+  for (var i = 0; i < animationTargets.length; i++) {
+    animationTargets[i].startTime = startTime + animationTargets[i].delay;
+  }
+  updateAll();
+});
+
+// --- Init ---
+window.addEventListener('DOMContentLoaded', function() {
+  initScene();
+
+  // Render KaTeX formulas
+  katex.render('A = Z + N', document.getElementById('formulaA'), { displayMode: true });
+  katex.render('BE = \\Delta m \\times c^2', document.getElementById('formulaBE'), { displayMode: true });
+
+  // Initial animation
+  var startTime = clock.getElapsedTime() * 1000;
+  for (var i = 0; i < animationTargets.length; i++) {
+    animationTargets[i].startTime = startTime + animationTargets[i].delay;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Solar System — NeonPhysics AP Physics C</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(251,146,60,.10),rgba(234,179,8,.06));border-bottom:1px solid rgba(251,146,60,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .header-left{display:flex;align-items:center;gap:12px}
+    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff}
+    .fps-display{font-size:11px;color:#64748b;font-variant-numeric:tabular-nums}
+    .main-layout{display:flex;height:calc(100vh - 52px)}
+    .left-panel{width:320px;min-width:320px;background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
+    .canvas-wrap{flex:1;position:relative;background:#0f172a}
+    canvas{display:block;width:100%!important;height:100%!important}
+    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .formula-box{background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.12);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px;line-height:1.4}
+    .slider-group{margin-bottom:10px}
+    .slider-label{display:flex;justify-content:space-between;margin-bottom:4px}
+    .slider-name{font-size:11px;color:#94a3b8}
+    .slider-val{font-size:11px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fb923c;cursor:pointer}
+    .btn{padding:7px 14px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+    .btn-play{background:#22c55e;color:#fff}
+    .btn-play:hover{background:#16a34a}
+    .btn-pause{background:#ef4444;color:#fff}
+    .btn-pause:hover{background:#dc2626}
+    .btn-reset{background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.12)}
+    .btn-reset:hover{background:rgba(255,255,255,.12)}
+    .btn-preset{background:rgba(251,146,60,.12);color:#fdba74;border:1px solid rgba(251,146,60,.25)}
+    .btn-preset:hover{background:rgba(251,146,60,.2)}
+    .btn-preset.active{background:rgba(251,146,60,.3);border-color:#fb923c}
+    .preset-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+    .controls-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .body-config{background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid #666}
+    .body-config-title{font-size:11px;font-weight:700;margin-bottom:8px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .metric-card{background:rgba(255,255,255,.03);border-radius:6px;padding:7px 10px}
+    .metric-title{font-size:9px;color:#475569;text-transform:uppercase;margin-bottom:3px}
+    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-orange{color:#fb923c}.val-sky{color:#38bdf8}.val-violet{color:#a78bfa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-rose{color:#fb7185}
+    .quiz-section{margin-top:4px}
+    .quiz-q{background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+    .quiz-q-title{font-size:11px;font-weight:600;color:#e2e8f0;margin-bottom:8px}
+    .quiz-option{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:#cbd5e1;font-size:11px;cursor:pointer;transition:all .15s}
+    .quiz-option:hover{background:rgba(255,255,255,.08)}
+    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+    .quiz-explanation{font-size:10px;color:#64748b;margin-top:6px;display:none;line-height:1.4}
+    .overlay-metrics{position:absolute;top:12px;left:12px;background:rgba(15,23,42,.85);border:1px solid rgba(251,146,60,.2);border-radius:8px;padding:10px 14px;backdrop-filter:blur(6px);pointer-events:none}
+    .overlay-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+    .overlay-row:last-child{margin-bottom:0}
+    .overlay-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .overlay-text{font-size:11px;font-variant-numeric:tabular-nums}
+    .bottom-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);padding:12px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .speed-group{display:flex;align-items:center;gap:8px}
+    .speed-group .slider-name{font-size:11px;color:#94a3b8;white-space:nowrap}
+    .speed-group input[type=range]{width:120px}
+    .toggle-label{font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:6px;cursor:pointer}
+    .toggle-label input{accent-color:#fb923c}
+    @media(max-width:900px){
+      .main-layout{flex-direction:column}
+      .left-panel{width:100%;min-width:0;max-height:40vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+      .canvas-wrap{min-height:50vh}
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <span class="badge">AP PHYSICS C</span>
+    <span class="badge badge-free">FREE</span>
+    <h1>My Solar System</h1>
+  </div>
+  <span class="fps-display" id="fpsDisplay">60 FPS</span>
+</div>
+
+<div class="main-layout">
+  <div class="left-panel">
+    <div class="section">
+      <div class="section-title">Newton's Law of Gravitation</div>
+      <div class="formula-box" id="formulaGrav"></div>
+      <div class="formula-desc">Every mass attracts every other mass. The force is proportional to the product of the two masses and inversely proportional to the square of the distance between their centers.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Newton's Second Law</div>
+      <div class="formula-box" id="formulaN2"></div>
+      <div class="formula-desc">The net gravitational force on each body determines its acceleration. With multiple bodies, forces from all other bodies are summed vectorially.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div class="preset-row">
+        <button class="btn btn-preset active" onclick="loadPreset('sunEarth')">Sun-Earth</button>
+        <button class="btn btn-preset" onclick="loadPreset('sunEarthMoon')">Sun-Earth-Moon</button>
+        <button class="btn btn-preset" onclick="loadPreset('figureEight')">Figure Eight</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Simulation Controls</div>
+      <div class="controls-row">
+        <button class="btn btn-play" id="btnPlayPause" onclick="togglePlay()">&#9654; Play</button>
+        <button class="btn btn-reset" onclick="resetSim()">Reset</button>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="slider-name">Body Count</span>
+          <span class="slider-val" id="valBodyCount">2</span>
+        </div>
+        <input type="range" min="2" max="4" step="1" value="2" id="sliderBodyCount" oninput="onBodyCountChange(this.value)">
+      </div>
+    </div>
+
+    <div class="section" id="bodyConfigSection">
+      <!-- Body config sliders injected here -->
+    </div>
+
+    <div class="section">
+      <div class="section-title">Live Metrics</div>
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Total Energy</div>
+          <div class="metric-val val-orange" id="metricEnergy">0.00</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Time Elapsed</div>
+          <div class="metric-val val-sky" id="metricTime">0.0 s</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Mergers</div>
+          <div class="metric-val val-rose" id="metricMergers">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Bodies Active</div>
+          <div class="metric-val val-green" id="metricBodies">2</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section quiz-section">
+      <div class="section-title">Knowledge Check</div>
+      <div class="quiz-q">
+        <div class="quiz-q-title">Q1: In a two-body Sun-Earth system, if the Earth's mass were doubled while keeping its orbit radius the same, what happens to the gravitational force on it?</div>
+        <button class="quiz-option" onclick="checkQuiz(this,'q1',false)">A) Force stays the same</button>
+        <button class="quiz-option" onclick="checkQuiz(this,'q1',true)">B) Force doubles</button>
+        <button class="quiz-option" onclick="checkQuiz(this,'q1',false)">C) Force quadruples</button>
+        <button class="quiz-option" onclick="checkQuiz(this,'q1',false)">D) Force halves</button>
+        <div class="quiz-explanation" id="q1exp">Correct! F = Gm&#8321;m&#8322;/r&#178;. Doubling m&#8322; doubles the force, since the equation is linear in each mass.</div>
+      </div>
+      <div class="quiz-q">
+        <div class="quiz-q-title">Q2: The "Figure Eight" orbit is an example of which type of problem in classical mechanics?</div>
+        <button class="quiz-option" onclick="checkQuiz(this,'q2',false)">A) Two-body problem</button>
+        <button class="quiz-option" onclick="checkQuiz(this,'q2',false)">B) Central force problem</button>
+        <button class="quiz-option" onclick="checkQuiz(this,'q2',true)">C) Three-body problem with a special periodic solution</button>
+        <button class="quiz-option" onclick="checkQuiz(this,'q2',false)">D) Kepler orbit</button>
+        <div class="quiz-explanation" id="q2exp">Correct! The Figure Eight is a remarkable periodic solution to the three-body problem discovered by Moore (1993) and proven by Chenciner &amp; Montgomery (2000). Three equal masses chase each other along a single figure-8 shaped curve.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="overlay-metrics" id="overlayMetrics"></div>
+    <div class="bottom-bar">
+      <div class="speed-group">
+        <span class="slider-name">Speed</span>
+        <input type="range" min="0.1" max="5" step="0.1" value="1" id="sliderSpeed">
+        <span class="slider-val" id="valSpeed">1.0x</span>
+      </div>
+      <label class="toggle-label"><input type="checkbox" id="chkTrails" checked> Trails</label>
+      <label class="toggle-label"><input type="checkbox" id="chkArrows" checked> Force Arrows</label>
+      <label class="toggle-label"><input type="checkbox" id="chkStarfield"> Starfield</label>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KaTeX formulas
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  katex.render('F = \\frac{G\\,m_1\\,m_2}{r^2}', document.getElementById('formulaGrav'), {displayMode:true});
+  katex.render('\\vec{F}_{\\text{net}} = m\\,\\vec{a}', document.getElementById('formulaN2'), {displayMode:true});
+});
+
+// ============================================================
+// Quiz
+// ============================================================
+function checkQuiz(btn, qid, correct) {
+  var parent = btn.parentElement;
+  var opts = parent.querySelectorAll('.quiz-option');
+  opts.forEach(function(o){ o.disabled = true; o.style.pointerEvents = 'none'; });
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (correct) {
+    document.getElementById(qid + 'exp').style.display = 'block';
+  } else {
+    opts.forEach(function(o) {
+      if (o.getAttribute('onclick') && o.getAttribute('onclick').indexOf('true') > -1) o.classList.add('correct');
+    });
+    document.getElementById(qid + 'exp').style.display = 'block';
+  }
+}
+
+// ============================================================
+// Constants & State
+// ============================================================
+var G = 500;
+var SOFTENING = 0.5;
+var TRAIL_LEN = 600;
+var MERGE_DIST = 1.2;
+var DT_BASE = 0.002;
+
+var BODY_COLORS = [0xfbbf24, 0x38bdf8, 0x34d399, 0xf472b6];
+var BODY_COLOR_HEX = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6'];
+var BODY_NAMES = ['Body A (Star)', 'Body B', 'Body C', 'Body D'];
+
+var playing = false;
+var simTime = 0;
+var mergerCount = 0;
+var bodies = [];
+var bodyCount = 2;
+
+// ============================================================
+// Presets
+// ============================================================
+var PRESETS = {
+  sunEarth: {
+    count: 2,
+    bodies: [
+      { mass: 200, px: 0,  py: 0, vx: 0, vy: 0 },
+      { mass: 1,   px: 12, py: 0, vx: 0, vy: 2.9 }
+    ]
+  },
+  sunEarthMoon: {
+    count: 3,
+    bodies: [
+      { mass: 200, px: 0,   py: 0,  vx: 0, vy: 0 },
+      { mass: 5,   px: 12,  py: 0,  vx: 0, vy: 2.9 },
+      { mass: 0.1, px: 13.5, py: 0, vx: 0, vy: 3.8 }
+    ]
+  },
+  figureEight: {
+    count: 3,
+    bodies: [
+      { mass: 10, px: -4.87,  py: 0, vx: 0, vy: -5.09 },
+      { mass: 10, px: 4.87,   py: 0, vx: 0, vy: -5.09 },
+      { mass: 10, px: 0,      py: 0, vx: 0, vy: 10.18 }
+    ]
+  }
+};
+
+var currentPreset = 'sunEarth';
+
+// ============================================================
+// Three.js Setup
+// ============================================================
+var scene, camera, renderer, controls;
+var bodyMeshes = [], trailLines = [], trailGeoms = [], trailPositions = [];
+var arrowHelpers = [];
+var starfieldObj = null;
+
+function initThree() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+
+  camera = new THREE.PerspectiveCamera(55, 1, 0.1, 2000);
+  camera.position.set(0, 25, 35);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  var wrap = document.getElementById('canvasWrap');
+  wrap.insertBefore(renderer.domElement, wrap.firstChild);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 5;
+  controls.maxDistance = 200;
+
+  // Ambient + point light
+  scene.add(new THREE.AmbientLight(0x334466, 0.6));
+  var pLight = new THREE.PointLight(0xfbbf24, 1.5, 200);
+  pLight.position.set(0, 0, 0);
+  scene.add(pLight);
+
+  // Grid helper
+  var grid = new THREE.GridHelper(80, 40, 0x1e293b, 0x1e293b);
+  grid.position.y = -0.5;
+  scene.add(grid);
+
+  onResize();
+  window.addEventListener('resize', onResize);
+}
+
+function onResize() {
+  var wrap = document.getElementById('canvasWrap');
+  var w = wrap.clientWidth;
+  var h = wrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+// ============================================================
+// Starfield
+// ============================================================
+function createStarfield() {
+  if (starfieldObj) return;
+  var count = 2000;
+  var geo = new THREE.BufferGeometry();
+  var pos = new Float32Array(count * 3);
+  for (var i = 0; i < count; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 600;
+    pos[i*3+1] = (Math.random() - 0.5) * 600;
+    pos[i*3+2] = (Math.random() - 0.5) * 600;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({ color: 0xaabbcc, size: 0.3, sizeAttenuation: true });
+  starfieldObj = new THREE.Points(geo, mat);
+  scene.add(starfieldObj);
+}
+
+function removeStarfield() {
+  if (!starfieldObj) return;
+  scene.remove(starfieldObj);
+  starfieldObj.geometry.dispose();
+  starfieldObj.material.dispose();
+  starfieldObj = null;
+}
+
+// ============================================================
+// Body Meshes & Trails
+// ============================================================
+function clearBodies() {
+  bodyMeshes.forEach(function(m) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); });
+  bodyMeshes = [];
+  trailLines.forEach(function(l) { scene.remove(l); l.geometry.dispose(); l.material.dispose(); });
+  trailLines = [];
+  trailGeoms = [];
+  trailPositions = [];
+  arrowHelpers.forEach(function(a) { scene.remove(a); });
+  arrowHelpers = [];
+}
+
+function bodyRadius(mass) {
+  return Math.max(0.3, Math.pow(mass, 1/3) * 0.25);
+}
+
+function createBodyMeshes() {
+  clearBodies();
+  for (var i = 0; i < bodies.length; i++) {
+    var b = bodies[i];
+    var r = bodyRadius(b.mass);
+    var geo = new THREE.SphereGeometry(r, 32, 24);
+    var color = new THREE.Color(BODY_COLORS[i % BODY_COLORS.length]);
+    var mat;
+    if (i === 0 && b.mass > 50) {
+      // Star: emissive glow
+      mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
+    } else {
+      mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.2 });
+    }
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(b.px, 0, b.py);
+    scene.add(mesh);
+    bodyMeshes.push(mesh);
+
+    // Trail
+    var maxPts = TRAIL_LEN;
+    var tPos = new Float32Array(maxPts * 3);
+    for (var j = 0; j < maxPts; j++) {
+      tPos[j*3] = b.px; tPos[j*3+1] = 0; tPos[j*3+2] = b.py;
+    }
+    var tGeo = new THREE.BufferGeometry();
+    tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
+    tGeo.setDrawRange(0, 0);
+    var tMat = new THREE.LineBasicMaterial({ color: BODY_COLORS[i % BODY_COLORS.length], transparent: true, opacity: 0.5 });
+    var tLine = new THREE.Line(tGeo, tMat);
+    scene.add(tLine);
+    trailLines.push(tLine);
+    trailGeoms.push(tGeo);
+    trailPositions.push({ data: tPos, head: 0, count: 0 });
+  }
+}
+
+function updateTrail(idx, x, z) {
+  var tp = trailPositions[idx];
+  if (!tp) return;
+  var h = tp.head;
+  tp.data[h*3] = x;
+  tp.data[h*3+1] = 0;
+  tp.data[h*3+2] = z;
+  tp.head = (h + 1) % TRAIL_LEN;
+  if (tp.count < TRAIL_LEN) tp.count++;
+
+  // Rebuild draw order for continuous line
+  var geo = trailGeoms[idx];
+  var attr = geo.getAttribute('position');
+  var arr = attr.array;
+  var start = (tp.head - tp.count + TRAIL_LEN) % TRAIL_LEN;
+  for (var i = 0; i < tp.count; i++) {
+    var si = ((start + i) % TRAIL_LEN) * 3;
+    arr[i*3] = tp.data[si];
+    arr[i*3+1] = tp.data[si+1];
+    arr[i*3+2] = tp.data[si+2];
+  }
+  attr.needsUpdate = true;
+  geo.setDrawRange(0, tp.count);
+}
+
+// ============================================================
+// Force Arrows
+// ============================================================
+function updateArrows() {
+  arrowHelpers.forEach(function(a) { scene.remove(a); });
+  arrowHelpers = [];
+  if (!document.getElementById('chkArrows').checked) return;
+
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    var fx = 0, fz = 0;
+    for (var j = 0; j < bodies.length; j++) {
+      if (i === j || bodies[j].merged) continue;
+      var dx = bodies[j].px - bodies[i].px;
+      var dz = bodies[j].py - bodies[i].py;
+      var dist2 = dx*dx + dz*dz + SOFTENING*SOFTENING;
+      var dist = Math.sqrt(dist2);
+      var f = G * bodies[i].mass * bodies[j].mass / dist2;
+      fx += f * dx / dist;
+      fz += f * dz / dist;
+    }
+    var fmag = Math.sqrt(fx*fx + fz*fz);
+    if (fmag < 0.01) continue;
+    var dir = new THREE.Vector3(fx/fmag, 0, fz/fmag);
+    var len = Math.min(Math.log(fmag + 1) * 2, 8);
+    var arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(bodies[i].px, 0, bodies[i].py), len, BODY_COLORS[i % BODY_COLORS.length], len*0.2, len*0.1);
+    scene.add(arrow);
+    arrowHelpers.push(arrow);
+  }
+}
+
+// ============================================================
+// Physics — Velocity Verlet
+// ============================================================
+function computeAccelerations() {
+  for (var i = 0; i < bodies.length; i++) {
+    bodies[i].ax = 0;
+    bodies[i].ay = 0;
+  }
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    for (var j = i + 1; j < bodies.length; j++) {
+      if (bodies[j].merged) continue;
+      var dx = bodies[j].px - bodies[i].px;
+      var dy = bodies[j].py - bodies[i].py;
+      var dist2 = dx*dx + dy*dy + SOFTENING*SOFTENING;
+      var dist = Math.sqrt(dist2);
+      var fOverDist = G / (dist2 * dist);
+
+      bodies[i].ax += fOverDist * bodies[j].mass * dx;
+      bodies[i].ay += fOverDist * bodies[j].mass * dy;
+      bodies[j].ax -= fOverDist * bodies[i].mass * dx;
+      bodies[j].ay -= fOverDist * bodies[i].mass * dy;
+    }
+  }
+}
+
+function stepPhysics(dt) {
+  // Velocity Verlet
+  computeAccelerations();
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    bodies[i].px += bodies[i].vx * dt + 0.5 * bodies[i].ax * dt * dt;
+    bodies[i].py += bodies[i].vy * dt + 0.5 * bodies[i].ay * dt * dt;
+    bodies[i].vx += 0.5 * bodies[i].ax * dt;
+    bodies[i].vy += 0.5 * bodies[i].ay * dt;
+  }
+  var oldAx = bodies.map(function(b) { return b.ax; });
+  var oldAy = bodies.map(function(b) { return b.ay; });
+  computeAccelerations();
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    bodies[i].vx += 0.5 * bodies[i].ax * dt;
+    bodies[i].vy += 0.5 * bodies[i].ay * dt;
+  }
+
+  // Collision detection & merge
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    for (var j = i + 1; j < bodies.length; j++) {
+      if (bodies[j].merged) continue;
+      var dx = bodies[j].px - bodies[i].px;
+      var dy = bodies[j].py - bodies[i].py;
+      var dist = Math.sqrt(dx*dx + dy*dy);
+      var ri = bodyRadius(bodies[i].mass);
+      var rj = bodyRadius(bodies[j].mass);
+      if (dist < (ri + rj) * MERGE_DIST) {
+        // Merge j into i (conserve momentum)
+        var totalM = bodies[i].mass + bodies[j].mass;
+        bodies[i].vx = (bodies[i].mass * bodies[i].vx + bodies[j].mass * bodies[j].vx) / totalM;
+        bodies[i].vy = (bodies[i].mass * bodies[i].vy + bodies[j].mass * bodies[j].vy) / totalM;
+        bodies[i].px = (bodies[i].mass * bodies[i].px + bodies[j].mass * bodies[j].px) / totalM;
+        bodies[i].py = (bodies[i].mass * bodies[i].py + bodies[j].mass * bodies[j].py) / totalM;
+        bodies[i].mass = totalM;
+        bodies[j].merged = true;
+        mergerCount++;
+        // Update mesh size
+        var newR = bodyRadius(totalM);
+        bodyMeshes[i].geometry.dispose();
+        bodyMeshes[i].geometry = new THREE.SphereGeometry(newR, 32, 24);
+        // Hide merged body
+        bodyMeshes[j].visible = false;
+        trailLines[j].visible = false;
+      }
+    }
+  }
+}
+
+function totalEnergy() {
+  var ke = 0, pe = 0;
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    var v2 = bodies[i].vx * bodies[i].vx + bodies[i].vy * bodies[i].vy;
+    ke += 0.5 * bodies[i].mass * v2;
+    for (var j = i + 1; j < bodies.length; j++) {
+      if (bodies[j].merged) continue;
+      var dx = bodies[j].px - bodies[i].px;
+      var dy = bodies[j].py - bodies[i].py;
+      var dist = Math.sqrt(dx*dx + dy*dy + SOFTENING*SOFTENING);
+      pe -= G * bodies[i].mass * bodies[j].mass / dist;
+    }
+  }
+  return ke + pe;
+}
+
+// ============================================================
+// UI — Body Config Sliders
+// ============================================================
+function buildBodyConfigs() {
+  var container = document.getElementById('bodyConfigSection');
+  container.innerHTML = '<div class="section-title">Body Configuration</div>';
+  for (var i = 0; i < bodyCount; i++) {
+    var b = bodies[i] || { mass: 1, px: 0, py: 0, vx: 0, vy: 0 };
+    var borderColor = BODY_COLOR_HEX[i % BODY_COLOR_HEX.length];
+    var massMax = i === 0 ? 500 : 100;
+    var massVal = b.mass;
+    var html = '<div class="body-config" style="border-left-color:' + borderColor + '">';
+    html += '<div class="body-config-title" style="color:' + borderColor + '">' + BODY_NAMES[i] + '</div>';
+    html += '<div class="slider-group"><div class="slider-label"><span class="slider-name">Mass</span><span class="slider-val" id="valMass' + i + '">' + massVal.toFixed(1) + '</span></div>';
+    html += '<input type="range" min="0.1" max="' + massMax + '" step="0.1" value="' + massVal + '" data-body="' + i + '" data-prop="mass" onchange="onBodySlider(this)" oninput="onBodySlider(this)"></div>';
+    html += '<div class="slider-group"><div class="slider-label"><span class="slider-name">Position X</span><span class="slider-val" id="valPx' + i + '">' + b.px.toFixed(1) + '</span></div>';
+    html += '<input type="range" min="-30" max="30" step="0.1" value="' + b.px + '" data-body="' + i + '" data-prop="px" onchange="onBodySlider(this)" oninput="onBodySlider(this)"></div>';
+    html += '<div class="slider-group"><div class="slider-label"><span class="slider-name">Velocity Y</span><span class="slider-val" id="valVy' + i + '">' + b.vy.toFixed(1) + '</span></div>';
+    html += '<input type="range" min="-15" max="15" step="0.1" value="' + b.vy + '" data-body="' + i + '" data-prop="vy" onchange="onBodySlider(this)" oninput="onBodySlider(this)"></div>';
+    html += '</div>';
+    container.innerHTML += html;
+  }
+}
+
+function onBodySlider(el) {
+  var idx = parseInt(el.getAttribute('data-body'));
+  var prop = el.getAttribute('data-prop');
+  var val = parseFloat(el.value);
+  if (!bodies[idx]) return;
+
+  if (prop === 'mass') {
+    bodies[idx].mass = val;
+    document.getElementById('valMass' + idx).textContent = val.toFixed(1);
+    if (!playing) {
+      var r = bodyRadius(val);
+      bodyMeshes[idx].geometry.dispose();
+      bodyMeshes[idx].geometry = new THREE.SphereGeometry(r, 32, 24);
+    }
+  } else if (prop === 'px') {
+    bodies[idx].px = val;
+    document.getElementById('valPx' + idx).textContent = val.toFixed(1);
+    if (!playing) bodyMeshes[idx].position.set(val, 0, bodies[idx].py);
+  } else if (prop === 'vy') {
+    bodies[idx].vy = val;
+    document.getElementById('valVy' + idx).textContent = val.toFixed(1);
+  }
+}
+
+function onBodyCountChange(val) {
+  val = parseInt(val);
+  document.getElementById('valBodyCount').textContent = val;
+  bodyCount = val;
+  // Adjust bodies array
+  while (bodies.length < val) {
+    var idx = bodies.length;
+    var angle = (idx / val) * Math.PI * 2;
+    bodies.push({ mass: 1, px: Math.cos(angle)*10, py: Math.sin(angle)*10, vx: -Math.sin(angle)*2.5, vy: Math.cos(angle)*2.5, ax: 0, ay: 0, merged: false });
+  }
+  while (bodies.length > val) {
+    bodies.pop();
+  }
+  buildBodyConfigs();
+  createBodyMeshes();
+  simTime = 0;
+  mergerCount = 0;
+  updateOverlay();
+}
+
+// ============================================================
+// Presets
+// ============================================================
+function loadPreset(name) {
+  currentPreset = name;
+  document.querySelectorAll('.btn-preset').forEach(function(b) { b.classList.remove('active'); });
+  event.target.classList.add('active');
+
+  var p = PRESETS[name];
+  bodyCount = p.count;
+  document.getElementById('sliderBodyCount').value = p.count;
+  document.getElementById('valBodyCount').textContent = p.count;
+
+  bodies = [];
+  for (var i = 0; i < p.bodies.length; i++) {
+    var bd = p.bodies[i];
+    bodies.push({ mass: bd.mass, px: bd.px, py: bd.py, vx: bd.vx, vy: bd.vy, ax: 0, ay: 0, merged: false });
+  }
+
+  buildBodyConfigs();
+  createBodyMeshes();
+  simTime = 0;
+  mergerCount = 0;
+  playing = false;
+  updatePlayBtn();
+  updateOverlay();
+}
+
+// ============================================================
+// Play/Pause/Reset
+// ============================================================
+function togglePlay() {
+  playing = !playing;
+  updatePlayBtn();
+}
+
+function updatePlayBtn() {
+  var btn = document.getElementById('btnPlayPause');
+  if (playing) {
+    btn.innerHTML = '&#10074;&#10074; Pause';
+    btn.className = 'btn btn-pause';
+  } else {
+    btn.innerHTML = '&#9654; Play';
+    btn.className = 'btn btn-play';
+  }
+}
+
+function resetSim() {
+  playing = false;
+  updatePlayBtn();
+  loadPreset(currentPreset);
+}
+
+// ============================================================
+// Overlay
+// ============================================================
+function updateOverlay() {
+  var el = document.getElementById('overlayMetrics');
+  var html = '';
+  for (var i = 0; i < bodies.length; i++) {
+    if (bodies[i].merged) continue;
+    html += '<div class="overlay-row">';
+    html += '<div class="overlay-dot" style="background:' + BODY_COLOR_HEX[i] + '"></div>';
+    html += '<span class="overlay-text" style="color:' + BODY_COLOR_HEX[i] + '">' + BODY_NAMES[i] + ' m=' + bodies[i].mass.toFixed(1) + '</span>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+
+  // Side panel metrics
+  var activeCount = bodies.filter(function(b) { return !b.merged; }).length;
+  document.getElementById('metricEnergy').textContent = totalEnergy().toFixed(1);
+  document.getElementById('metricTime').textContent = simTime.toFixed(1) + ' s';
+  document.getElementById('metricMergers').textContent = mergerCount;
+  document.getElementById('metricBodies').textContent = activeCount;
+}
+
+// ============================================================
+// Animation Loop
+// ============================================================
+var frameTimes = [];
+var trailCounter = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  var now = performance.now();
+  frameTimes.push(now);
+  while (frameTimes.length > 0 && frameTimes[0] < now - 1000) frameTimes.shift();
+  document.getElementById('fpsDisplay').textContent = frameTimes.length + ' FPS';
+
+  var speed = parseFloat(document.getElementById('sliderSpeed').value);
+  document.getElementById('valSpeed').textContent = speed.toFixed(1) + 'x';
+
+  if (playing) {
+    var substeps = Math.max(1, Math.round(speed * 4));
+    var dt = DT_BASE * speed / substeps;
+    for (var s = 0; s < substeps; s++) {
+      stepPhysics(dt);
+    }
+    simTime += DT_BASE * speed;
+
+    // Update mesh positions and trails
+    trailCounter++;
+    for (var i = 0; i < bodies.length; i++) {
+      if (bodies[i].merged) continue;
+      bodyMeshes[i].position.set(bodies[i].px, 0, bodies[i].py);
+      if (document.getElementById('chkTrails').checked && trailCounter % 2 === 0) {
+        updateTrail(i, bodies[i].px, bodies[i].py);
+      }
+    }
+
+    // Force arrows every 4 frames
+    if (trailCounter % 4 === 0) updateArrows();
+
+    // Metrics
+    if (trailCounter % 10 === 0) updateOverlay();
+  }
+
+  // Show/hide trails
+  var showTrails = document.getElementById('chkTrails').checked;
+  trailLines.forEach(function(l) {
+    if (l.visible !== false) l.material.visible = showTrails;
+  });
+
+  // Starfield toggle
+  if (document.getElementById('chkStarfield').checked) {
+    createStarfield();
+  } else {
+    removeStarfield();
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ============================================================
+// Init
+// ============================================================
+initThree();
+loadPreset('sunEarth');
+animate();
+</script>
+</body>
+</html>

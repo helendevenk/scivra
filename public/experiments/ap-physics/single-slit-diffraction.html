@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Single-Slit Diffraction | NeonPhysics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Courier New', monospace; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 280px; min-width: 280px; background: #161b22; border-right: 1px solid #30363d;
+    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; z-index: 10;
+  }
+  #panel h2 { font-size: 14px; color: #58a6ff; letter-spacing: 1px; text-transform: uppercase; }
+  #panel h3 { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+  .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
+  .ctrl-row { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl-label { font-size: 11px; color: #8b949e; display: flex; justify-content: space-between; }
+  .ctrl-label span { color: #e6edf3; }
+  input[type=range] {
+    width: 100%; height: 4px; appearance: none; background: #30363d; border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #58a6ff; cursor: pointer;
+  }
+
+  .pro-tag {
+    display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: bold;
+    background: #1f3d2e; color: #3fb950; border: 1px solid #238636; margin-left: 4px; vertical-align: middle;
+  }
+
+  .data-block { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .data-row { display: flex; justify-content: space-between; font-size: 11px; }
+  .data-label { color: #8b949e; }
+  .data-val { color: #58a6ff; font-weight: bold; }
+
+  .formula-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 10px; font-size: 10px; color: #6e7681; line-height: 1.6; }
+  .formula-box .f { color: #a5d6ff; font-style: italic; }
+
+  .wavelength-swatch { width: 100%; height: 6px; border-radius: 3px; margin-top: 4px; background: linear-gradient(to right, #8b00ff, #0000ff, #00ffff, #00ff00, #ffff00, #ff7f00, #ff0000); }
+
+  #fps { font-size: 10px; color: #484f58; text-align: right; margin-top: auto; }
+  #canvas-container { flex: 1; position: relative; overflow: hidden; }
+  canvas#c { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <div>
+    <h2>Single-Slit Diffraction</h2>
+    <h3>Fraunhofer Diffraction Pattern</h3>
+  </div>
+
+  <div class="ctrl-group">
+    <div class="ctrl-row">
+      <div class="ctrl-label">Slit Width a <span id="lbl-a">5.0 μm</span></div>
+      <input type="range" id="sl-a" min="0.5" max="20" value="5" step="0.1">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Wavelength λ <span id="lbl-wl">550 nm</span></div>
+      <input type="range" id="sl-wl" min="380" max="780" value="550" step="5">
+      <div class="wavelength-swatch"></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Screen Distance L <span id="lbl-dist">2.0 m</span></div>
+      <input type="range" id="sl-dist" min="0.5" max="5" value="2" step="0.1">
+      <div style="font-size:9px; color:#3fb950; margin-top:2px;">PRO feature (unlocked)</div>
+    </div>
+  </div>
+
+  <div class="data-block">
+    <div class="data-row"><span class="data-label">Central Max Width</span><span class="data-val" id="d-cmw">— mm</span></div>
+    <div class="data-row"><span class="data-label">1st Dark Fringe</span><span class="data-val" id="d-1df">± — mm</span></div>
+    <div class="data-row"><span class="data-label">λ/a ratio</span><span class="data-val" id="d-ratio">—</span></div>
+    <div class="data-row"><span class="data-label">Fringe spacing Δy</span><span class="data-val" id="d-fsp">— mm</span></div>
+  </div>
+
+  <div class="formula-box">
+    <div class="f">a·sin θ = mλ  (dark fringes)</div>
+    <div class="f">Δy ≈ λL/a</div>
+    <div style="margin-top:4px">I(θ) = I₀[sin(β/2)/(β/2)]²</div>
+    <div style="color:#484f58">β = 2πa·sin(θ)/λ</div>
+  </div>
+
+  <div id="fps">FPS: —</div>
+</div>
+
+<div id="canvas-container">
+  <canvas id="c"></canvas>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  let renderer, scene, camera;
+  let barrierMesh, slitLineMesh, screenMesh, screenTexture, screenCanvas, screenCtx;
+  let laserBeams = [];
+  let diffRayLines = [];
+  let lastFpsTime = performance.now(), frameCount = 0;
+  let lastTime = performance.now();
+  let animTime = 0;
+
+  // World layout (orthographic 2D side view)
+  // x: -12 (left) to +12 (right)
+  // y: -6 to +6
+  const WORLD_W = 24, WORLD_H = 12;
+  const LASER_X = -10;
+  const BARRIER_X = -2;
+  const SCREEN_X = 9;
+
+  let slitWidth = 5;    // μm
+  let wavelength = 550; // nm
+  let screenDist = 2;   // m
+
+  const container = document.getElementById('canvas-container');
+
+  function wavelengthToRGB(wl) {
+    let r, g, b;
+    if (wl >= 380 && wl < 440) { r = -(wl - 440) / 60; g = 0; b = 1; }
+    else if (wl >= 440 && wl < 490) { r = 0; g = (wl - 440) / 50; b = 1; }
+    else if (wl >= 490 && wl < 510) { r = 0; g = 1; b = -(wl - 510) / 20; }
+    else if (wl >= 510 && wl < 580) { r = (wl - 510) / 70; g = 1; b = 0; }
+    else if (wl >= 580 && wl < 645) { r = 1; g = -(wl - 645) / 65; b = 0; }
+    else if (wl >= 645 && wl <= 780) { r = 1; g = 0; b = 0; }
+    else { r = 0; g = 0; b = 0; }
+    // Intensity factor at edges
+    let factor = 1;
+    if (wl < 420) factor = 0.3 + 0.7 * (wl - 380) / 40;
+    else if (wl > 700) factor = 0.3 + 0.7 * (780 - wl) / 80;
+    return { r: Math.round(r * factor * 255), g: Math.round(g * factor * 255), b: Math.round(b * factor * 255) };
+  }
+
+  function buildDiffractionPattern() {
+    const W = 512, H = 512;
+    if (!screenCanvas) {
+      screenCanvas = document.createElement('canvas');
+      screenCanvas.width = W; screenCanvas.height = H;
+      screenCtx = screenCanvas.getContext('2d');
+    }
+
+    screenCtx.fillStyle = '#0a0e14';
+    screenCtx.fillRect(0, 0, W, H);
+
+    const rgb = wavelengthToRGB(wavelength);
+    const a_m = slitWidth * 1e-6;   // meters
+    const lam_m = wavelength * 1e-9; // meters
+
+    // Screen height in physical units (world y range maps to screen height)
+    // World screen height ≈ WORLD_H in world units = 12
+    // Physical screen height: let's say 0.1 m per world unit
+    const physPerWorld = 0.01; // 0.01 m per world unit
+    const screenHeightPhys = WORLD_H * physPerWorld;
+
+    for (let py = 0; py < H; py++) {
+      const yNorm = (py / H - 0.5); // -0.5 to 0.5
+      const y_phys = yNorm * screenHeightPhys;
+      const sinTheta = y_phys / Math.sqrt(y_phys * y_phys + screenDist * screenDist);
+
+      let intensity;
+      const beta = Math.PI * a_m * sinTheta / lam_m;
+      if (Math.abs(beta) < 1e-10) {
+        intensity = 1;
+      } else {
+        const sinc = Math.sin(beta) / beta;
+        intensity = sinc * sinc;
+      }
+
+      // Draw horizontal line
+      const alpha = Math.pow(intensity, 0.7);
+      screenCtx.fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+      screenCtx.fillRect(0, py, W, 1);
+    }
+
+    if (!screenTexture) {
+      screenTexture = new THREE.CanvasTexture(screenCanvas);
+    } else {
+      screenTexture.needsUpdate = true;
+    }
+  }
+
+  function init() {
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x0d1117);
+    container.appendChild(renderer.domElement);
+
+    scene = new THREE.Scene();
+
+    const aspect = container.clientWidth / container.clientHeight;
+    const h2 = WORLD_H / 2;
+    camera = new THREE.OrthographicCamera(-h2 * aspect, h2 * aspect, h2, -h2, 0.1, 100);
+    camera.position.z = 10;
+
+    buildScene();
+    resize();
+    window.addEventListener('resize', resize);
+  }
+
+  function buildScene() {
+    buildDiffractionPattern();
+
+    // Laser source: glowing dot
+    const laserGeo = new THREE.CircleGeometry(0.25, 16);
+    const rgb = wavelengthToRGB(wavelength);
+    const laserColor = new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255);
+    const laserMat = new THREE.MeshBasicMaterial({ color: laserColor });
+    const laserMesh = new THREE.Mesh(laserGeo, laserMat);
+    laserMesh.position.set(LASER_X, 0, 0);
+    laserMesh.name = 'laser';
+    scene.add(laserMesh);
+
+    // Laser glow
+    const glowGeo = new THREE.CircleGeometry(0.5, 16);
+    const glowMat = new THREE.MeshBasicMaterial({ color: laserColor, transparent: true, opacity: 0.3 });
+    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    glowMesh.position.set(LASER_X, 0, -0.01);
+    glowMesh.name = 'laserGlow';
+    scene.add(glowMesh);
+
+    // Laser label
+    // (will be drawn in 2D overlay)
+
+    // Barrier: two gray rects with gap (slit)
+    rebuildBarrier();
+
+    // Screen: colored by diffraction pattern
+    const screenH = WORLD_H * 0.9;
+    const screenGeo = new THREE.PlaneGeometry(0.3, screenH);
+    const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture });
+    screenMesh = new THREE.Mesh(screenGeo, screenMat);
+    screenMesh.position.set(SCREEN_X, 0, 0);
+    scene.add(screenMesh);
+
+    // Screen frame
+    const frameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.35, screenH + 0.1, 0.1));
+    const frameMat = new THREE.LineBasicMaterial({ color: 0x30363d });
+    scene.add(new THREE.LineSegments(frameGeo, frameMat));
+    scene.get = scene.getObjectByName; // not needed
+
+    // Incident beam (left of barrier)
+    updateBeams();
+  }
+
+  function rebuildBarrier() {
+    ['barrier_top', 'barrier_bot', 'slit_line'].forEach(name => {
+      const obj = scene.getObjectByName(name);
+      if (obj) { scene.remove(obj); if (obj.geometry) obj.geometry.dispose(); }
+    });
+
+    const worldSlitH = (slitWidth / 1000) * 2; // very tiny slit, visual representation
+    const visSlitH = Math.max(0.05, Math.min(1.5, worldSlitH * 300));
+    const barrierH = (WORLD_H / 2 - visSlitH / 2);
+
+    const mat = new THREE.MeshBasicMaterial({ color: 0x484f58 });
+
+    const topGeo = new THREE.PlaneGeometry(0.4, barrierH);
+    const topMesh = new THREE.Mesh(topGeo, mat);
+    topMesh.position.set(BARRIER_X, WORLD_H / 4 + visSlitH / 4, 0);
+    topMesh.name = 'barrier_top';
+    scene.add(topMesh);
+
+    const botGeo = new THREE.PlaneGeometry(0.4, barrierH);
+    const botMesh = new THREE.Mesh(botGeo, mat.clone());
+    botMesh.position.set(BARRIER_X, -(WORLD_H / 4 + visSlitH / 4), 0);
+    botMesh.name = 'barrier_bot';
+    scene.add(botMesh);
+
+    // Slit bright line
+    const slitGeo = new THREE.PlaneGeometry(0.08, visSlitH);
+    const rgb = wavelengthToRGB(wavelength);
+    const slitMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255) });
+    const slitLine = new THREE.Mesh(slitGeo, slitMat);
+    slitLine.position.set(BARRIER_X, 0, 0.01);
+    slitLine.name = 'slit_line';
+    scene.add(slitLine);
+  }
+
+  function updateBeams() {
+    // Remove old beams/rays
+    ['beam_in', ...Array.from({length: 20}, (_, i) => 'dray_' + i)].forEach(name => {
+      const obj = scene.getObjectByName(name);
+      if (obj) scene.remove(obj);
+    });
+
+    const rgb = wavelengthToRGB(wavelength);
+    const beamColor = new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255);
+
+    // Incoming beam
+    const pts = [
+      new THREE.Vector3(LASER_X + 0.3, 0, 0),
+      new THREE.Vector3(BARRIER_X - 0.2, 0, 0)
+    ];
+    const beamGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const beamMat = new THREE.LineBasicMaterial({ color: beamColor, opacity: 0.8, transparent: true });
+    const beamLine = new THREE.Line(beamGeo, beamMat);
+    beamLine.name = 'beam_in';
+    scene.add(beamLine);
+
+    // Diffracted rays: from slit to screen at various angles
+    const a_m = slitWidth * 1e-6;
+    const lam_m = wavelength * 1e-9;
+    const screenHeightPhys = WORLD_H * 0.01;
+    const numRays = 9;
+
+    for (let i = 0; i < numRays; i++) {
+      const yNorm = (i / (numRays - 1) - 0.5);
+      const y_phys = yNorm * screenHeightPhys;
+      const sinTheta = y_phys / Math.sqrt(y_phys * y_phys + screenDist * screenDist);
+      const beta = Math.PI * a_m * sinTheta / lam_m;
+      let intensity = 1;
+      if (Math.abs(beta) > 1e-10) {
+        const sinc = Math.sin(beta) / beta;
+        intensity = sinc * sinc;
+      }
+
+      if (intensity < 0.05) continue;
+
+      const screenY = yNorm * WORLD_H * 0.9;
+      const rayPts = [
+        new THREE.Vector3(BARRIER_X, 0, 0),
+        new THREE.Vector3(SCREEN_X, screenY, 0)
+      ];
+      const rayGeo = new THREE.BufferGeometry().setFromPoints(rayPts);
+      const rayMat = new THREE.LineBasicMaterial({
+        color: beamColor,
+        transparent: true,
+        opacity: intensity * 0.35
+      });
+      const rayLine = new THREE.Line(rayGeo, rayMat);
+      rayLine.name = 'dray_' + i;
+      scene.add(rayLine);
+    }
+  }
+
+  function updateLaserColor() {
+    const rgb = wavelengthToRGB(wavelength);
+    const col = new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255);
+
+    const laser = scene.getObjectByName('laser');
+    if (laser) laser.material.color.copy(col);
+    const laserGlow = scene.getObjectByName('laserGlow');
+    if (laserGlow) { laserGlow.material.color.copy(col); }
+    const slitLine = scene.getObjectByName('slit_line');
+    if (slitLine) slitLine.material.color.copy(col);
+  }
+
+  function updateScreenTexture() {
+    buildDiffractionPattern();
+    if (screenMesh) screenMesh.material.map = screenTexture;
+  }
+
+  function calcData() {
+    const a_m = slitWidth * 1e-6;
+    const lam_m = wavelength * 1e-9;
+    const L = screenDist;
+
+    const firstDark_m = lam_m * L / a_m;
+    const centralMaxWidth_m = 2 * firstDark_m;
+    const fringeSpacing_m = lam_m * L / a_m;
+
+    document.getElementById('d-cmw').textContent = (centralMaxWidth_m * 1000).toFixed(2) + ' mm';
+    document.getElementById('d-1df').textContent = '± ' + (firstDark_m * 1000).toFixed(2) + ' mm';
+    document.getElementById('d-ratio').textContent = (lam_m / a_m * 1000).toFixed(4);
+    document.getElementById('d-fsp').textContent = (fringeSpacing_m * 1000).toFixed(2) + ' mm';
+  }
+
+  function resize() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    renderer.setSize(w, h);
+    const aspect = w / h;
+    const h2 = WORLD_H / 2;
+    camera.left = -h2 * aspect;
+    camera.right = h2 * aspect;
+    camera.top = h2;
+    camera.bottom = -h2;
+    camera.updateProjectionMatrix();
+  }
+
+  // 2D overlay labels
+  let labelCanvas2 = null;
+  function drawLabels() {
+    if (!labelCanvas2) {
+      labelCanvas2 = document.createElement('canvas');
+      labelCanvas2.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
+      container.appendChild(labelCanvas2);
+    }
+    const w = container.clientWidth, h = container.clientHeight;
+    labelCanvas2.width = w; labelCanvas2.height = h;
+    const ctx = labelCanvas2.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    const aspect = w / h;
+    const camH = WORLD_H;
+    const camW = camH * aspect;
+
+    function ws(wx, wy) {
+      return { x: (wx / camW + 0.5) * w, y: (0.5 - wy / camH) * h };
+    }
+
+    ctx.font = '11px Courier New';
+    ctx.textAlign = 'center';
+
+    // Laser label
+    const lp = ws(LASER_X, 2.5);
+    ctx.fillStyle = '#e6edf3';
+    ctx.fillText('LASER', lp.x, lp.y);
+    const rgb = wavelengthToRGB(wavelength);
+    ctx.fillStyle = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
+    ctx.fillText(wavelength + ' nm', lp.x, lp.y + 14);
+
+    // Barrier label
+    const bp = ws(BARRIER_X, WORLD_H / 2 - 0.5);
+    ctx.fillStyle = '#8b949e';
+    ctx.fillText('SLIT', bp.x, bp.y - 10);
+    ctx.fillStyle = '#e6edf3';
+    ctx.fillText(slitWidth.toFixed(1) + ' μm', bp.x, bp.y + 2);
+
+    // Screen label
+    const sp = ws(SCREEN_X, WORLD_H / 2 - 0.5);
+    ctx.fillStyle = '#8b949e';
+    ctx.fillText('SCREEN', sp.x, sp.y - 10);
+    ctx.fillStyle = '#e6edf3';
+    ctx.fillText('L = ' + screenDist.toFixed(1) + ' m', sp.x, sp.y + 2);
+
+    // Dark fringe markers on screen
+    const a_m = slitWidth * 1e-6;
+    const lam_m = wavelength * 1e-9;
+    const firstDark_m = lam_m * screenDist / a_m;
+    const physH = WORLD_H * 0.01;
+    const firstDarkWorld = (firstDark_m / physH) * WORLD_H * 0.9 * 0.5;
+
+    if (firstDarkWorld < WORLD_H * 0.45) {
+      [firstDarkWorld, -firstDarkWorld].forEach(yw => {
+        const dp = ws(SCREEN_X + 0.5, yw);
+        ctx.fillStyle = '#484f58';
+        ctx.font = '9px Courier New';
+        ctx.textAlign = 'left';
+        ctx.fillText('m=1', dp.x, dp.y + 3);
+      });
+    }
+  }
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now; animTime += dt;
+
+    frameCount++;
+    if (now - lastFpsTime >= 1000) {
+      document.getElementById('fps').textContent = 'FPS: ' + frameCount;
+      frameCount = 0; lastFpsTime = now;
+    }
+
+    // Animate laser glow pulsing
+    const laserGlow = scene.getObjectByName('laserGlow');
+    if (laserGlow) {
+      laserGlow.material.opacity = 0.2 + 0.15 * Math.sin(animTime * 4);
+    }
+
+    calcData();
+    drawLabels();
+
+    try { renderer.render(scene, camera); } catch(e) { console.warn(e); }
+  }
+
+  // Controls
+  document.getElementById('sl-a').addEventListener('input', function() {
+    slitWidth = +this.value;
+    document.getElementById('lbl-a').textContent = slitWidth.toFixed(1) + ' μm';
+    rebuildBarrier();
+    updateBeams();
+    updateScreenTexture();
+  });
+
+  document.getElementById('sl-wl').addEventListener('input', function() {
+    wavelength = +this.value;
+    document.getElementById('lbl-wl').textContent = wavelength + ' nm';
+    updateLaserColor();
+    updateBeams();
+    updateScreenTexture();
+  });
+
+  document.getElementById('sl-dist').addEventListener('input', function() {
+    screenDist = +this.value;
+    document.getElementById('lbl-dist').textContent = screenDist.toFixed(1) + ' m';
+    updateBeams();
+    updateScreenTexture();
+  });
+
+  try {
+    init();
+    animate(performance.now());
+  } catch(e) {
+    console.error('Init failed:', e);
+    document.body.innerHTML += '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f85149;font-size:14px;background:#161b22;padding:20px;border-radius:8px;border:1px solid #f85149;">Error: ' + e.message + '</div>';
+  }
+})();
+</script>
+</body>
+</html>

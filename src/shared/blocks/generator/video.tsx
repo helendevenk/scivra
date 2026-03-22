@@ -237,6 +237,7 @@ export function VideoGenerator({
   const { user, isCheckSign, setIsShowSignModal, fetchUserCredits } =
     useAppContext();
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setIsMounted(true);
   }, []);

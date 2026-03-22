@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculus Grapher — Function, Derivative & Integral</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas#bg { display: block; }
+
+  /* ── UI Panel ── */
+  #ui { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); padding: 14px; overflow-y: auto; backdrop-filter: blur(8px); z-index: 10; }
+  #ui::-webkit-scrollbar { width: 4px; }
+  #ui::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  .panel-title { font-size: 13px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .section { margin-bottom: 12px; padding: 10px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
+  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+  /* Presets */
+  .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .preset-btn { padding: 5px 8px; font-size: 10px; font-weight: 600; border-radius: 5px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .preset-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+  .preset-btn:hover:not(.active) { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 8px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 11px; }
+  .slider-name { color: #c9d1d9; }
+  .slider-val { color: #60a5fa; font-weight: 700; min-width: 70px; text-align: right; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+
+  /* Checkboxes */
+  .check-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 11px; color: #c9d1d9; cursor: pointer; }
+  .check-row input[type=checkbox] { accent-color: #3b82f6; cursor: pointer; }
+
+  /* Formulas (KaTeX) */
+  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; text-align: center; }
+  .formula-desc { font-size: 10px; color: #7d8590; margin-top: 3px; }
+
+  /* Data readout */
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .data-cell { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.15); border-radius: 6px; padding: 6px; text-align: center; }
+  .data-cell-label { font-size: 9px; color: #7d8590; text-transform: uppercase; }
+  .data-cell-value { font-size: 13px; font-weight: 700; color: #60a5fa; margin-top: 1px; }
+
+  /* ── Main Graph Area ── */
+  #graph-area { position: fixed; top: 0; left: 300px; right: 0; bottom: 0; display: flex; flex-direction: column; padding: 10px 14px; gap: 6px; z-index: 5; }
+  .graph-wrapper { flex: 1; position: relative; min-height: 0; }
+  .graph-wrapper canvas { width: 100%; height: 100%; border-radius: 8px; border: 1px solid rgba(59,130,246,0.15); background: rgba(15,23,42,0.95); display: block; }
+  .graph-label { position: absolute; top: 6px; left: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; pointer-events: none; z-index: 2; }
+  .graph-label.fn { color: #60a5fa; }
+  .graph-label.deriv { color: #f59e0b; }
+  .graph-label.integ { color: #22c55e; }
+  .graph-hint { position: absolute; top: 6px; right: 10px; font-size: 9px; color: #7d8590; pointer-events: none; z-index: 2; }
+
+  /* Tangent info tooltip */
+  #tangent-info { position: fixed; display: none; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; padding: 6px 10px; font-size: 10px; color: #e6edf3; z-index: 20; pointer-events: none; backdrop-filter: blur(4px); }
+  #tangent-info .slope-val { color: #f59e0b; font-weight: 700; }
+
+  /* Quiz */
+  #quiz-panel { position: fixed; bottom: 12px; left: 312px; width: 380px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 14px; z-index: 10; backdrop-filter: blur(8px); max-height: 280px; overflow-y: auto; }
+  .quiz-title { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .quiz-q { font-size: 11px; color: #c9d1d9; margin-bottom: 6px; line-height: 1.4; }
+  .quiz-opt { display: block; width: 100%; text-align: left; padding: 5px 8px; margin-bottom: 3px; font-size: 10px; font-family: inherit; border-radius: 4px; border: 1px solid rgba(59,130,246,0.2); background: transparent; color: #c9d1d9; cursor: pointer; transition: all 0.15s; }
+  .quiz-opt:hover { border-color: rgba(59,130,246,0.5); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #22c55e; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #ef4444; }
+  .quiz-feedback { font-size: 10px; margin-top: 4px; margin-bottom: 8px; line-height: 1.3; }
+
+  /* Info */
+  #info { position: fixed; top: 12px; right: 12px; width: 220px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(8px); }
+  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; }
+
+  /* FPS */
+  #fps { position: fixed; bottom: 8px; right: 8px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"><canvas id="bg"></canvas></div>
+
+<!-- ── Graph Area ── -->
+<div id="graph-area">
+  <div class="graph-wrapper" id="wrap-fn">
+    <span class="graph-label fn">f(x) &mdash; Original Function</span>
+    <span class="graph-hint" id="hint-fn">Drag to draw (Custom mode) | Hover for tangent</span>
+    <canvas id="cvs-fn"></canvas>
+  </div>
+  <div class="graph-wrapper" id="wrap-deriv">
+    <span class="graph-label deriv">f'(x) &mdash; Derivative</span>
+    <span class="graph-hint">Auto-computed from f(x)</span>
+    <canvas id="cvs-deriv"></canvas>
+  </div>
+  <div class="graph-wrapper" id="wrap-integ">
+    <span class="graph-label integ">&int;f(x)dx &mdash; Integral</span>
+    <span class="graph-hint">Area under the curve</span>
+    <canvas id="cvs-integ"></canvas>
+  </div>
+</div>
+
+<div id="tangent-info">Slope: <span class="slope-val">0.00</span></div>
+
+<!-- ── UI Panel ── -->
+<div id="ui">
+  <div class="panel-title">~ Calculus Grapher</div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="section-label">Function Presets</div>
+    <div class="preset-row">
+      <button class="preset-btn active" data-fn="sin">Sine Wave</button>
+      <button class="preset-btn" data-fn="quadratic">Quadratic</button>
+      <button class="preset-btn" data-fn="cubic">Cubic</button>
+      <button class="preset-btn" data-fn="abs">|x|</button>
+      <button class="preset-btn" data-fn="step">Step</button>
+      <button class="preset-btn" data-fn="custom">Custom Draw</button>
+    </div>
+  </div>
+
+  <!-- Parameters -->
+  <div class="section" id="param-section">
+    <div class="section-label">Parameters</div>
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Amplitude (A)</span><span class="slider-val" id="val-amp">1.00</span></div>
+      <input type="range" id="sl-amp" min="0.1" max="3" step="0.05" value="1">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Frequency (B)</span><span class="slider-val" id="val-freq">1.00</span></div>
+      <input type="range" id="sl-freq" min="0.1" max="4" step="0.05" value="1">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">X Range</span><span class="slider-val" id="val-xrange">&pm;6.0</span></div>
+      <input type="range" id="sl-xrange" min="2" max="12" step="0.5" value="6">
+    </div>
+  </div>
+
+  <!-- Display Options -->
+  <div class="section">
+    <div class="section-label">Display</div>
+    <label class="check-row"><input type="checkbox" id="chk-tangent" checked> Show Tangent Line</label>
+    <label class="check-row"><input type="checkbox" id="chk-integral-fill" checked> Show Integral Shading</label>
+    <label class="check-row"><input type="checkbox" id="chk-grid" checked> Show Grid</label>
+    <label class="check-row"><input type="checkbox" id="chk-crosshair"> Crosshair Cursor</label>
+  </div>
+
+  <!-- Data Readout -->
+  <div class="section">
+    <div class="section-label">Cursor Data</div>
+    <div class="data-grid">
+      <div class="data-cell"><div class="data-cell-label">x</div><div class="data-cell-value" id="rd-x">--</div></div>
+      <div class="data-cell"><div class="data-cell-label">f(x)</div><div class="data-cell-value" id="rd-fx">--</div></div>
+      <div class="data-cell"><div class="data-cell-label">f'(x)</div><div class="data-cell-value" id="rd-dfx">--</div></div>
+      <div class="data-cell"><div class="data-cell-label">&int;f(x)dx</div><div class="data-cell-value" id="rd-ifx">--</div></div>
+    </div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="section">
+    <div class="section-label">Relationships</div>
+    <div class="formula-box" id="formula1"></div>
+    <div class="formula-box" id="formula2"></div>
+    <div class="formula-box" id="formula3"></div>
+  </div>
+
+  <!-- Instructions -->
+  <div class="section">
+    <div class="section-label">How to Use</div>
+    <p style="font-size:10px; color:#7d8590; line-height:1.5;">
+      1. Select a preset or choose "Custom Draw" to sketch your own function.<br>
+      2. Hover over f(x) graph to see the tangent line and slope.<br>
+      3. The derivative and integral are computed automatically.<br>
+      4. Adjust amplitude, frequency, and range with sliders.
+    </p>
+  </div>
+</div>
+
+<!-- ── Info Panel ── -->
+<div id="info">
+  <h3>Calculus Grapher</h3>
+  <p>Visualize the fundamental relationship between a function, its derivative, and its integral. The derivative shows the rate of change (slope) at each point. The integral shows the accumulated area under the curve.</p>
+</div>
+
+<!-- ── Quiz ── -->
+<div id="quiz-panel">
+  <div class="quiz-title">Quiz</div>
+
+  <div class="quiz-q">Q1: If f(x) = x&sup2;, what is f'(x)?</div>
+  <button class="quiz-opt" data-q="1" data-a="a">A) x</button>
+  <button class="quiz-opt" data-q="1" data-a="b">B) 2x</button>
+  <button class="quiz-opt" data-q="1" data-a="c">C) x&sup3;/3</button>
+  <button class="quiz-opt" data-q="1" data-a="d">D) 2</button>
+  <div class="quiz-feedback" id="fb1"></div>
+
+  <div class="quiz-q">Q2: If f'(x) = 0 for all x in an interval, what can you say about f(x)?</div>
+  <button class="quiz-opt" data-q="2" data-a="a">A) f(x) = 0</button>
+  <button class="quiz-opt" data-q="2" data-a="b">B) f(x) is increasing</button>
+  <button class="quiz-opt" data-q="2" data-a="c">C) f(x) is constant on that interval</button>
+  <button class="quiz-opt" data-q="2" data-a="d">D) f(x) is undefined</button>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+
+<div id="fps"></div>
+
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ================================================================
+     BACKGROUND 3D SCENE (subtle grid + floating curves)
+     ================================================================ */
+  const bgCanvas = document.getElementById('bg');
+  const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 3, 8);
+  camera.lookAt(0, 0, 0);
+
+  /* floating grid */
+  const gridHelper = new THREE.GridHelper(20, 40, 0x1e3a5f, 0x0f2440);
+  gridHelper.position.y = -2;
+  scene.add(gridHelper);
+
+  /* ambient curve geometry */
+  function makeBgCurve(color, yOffset, fn) {
+    const pts = [];
+    for (let i = -50; i <= 50; i++) {
+      const x = i * 0.2;
+      pts.push(new THREE.Vector3(x, fn(x) + yOffset, 0));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.12 });
+    return new THREE.Line(geo, mat);
+  }
+  scene.add(makeBgCurve(0x3b82f6, 0, x => Math.sin(x * 0.5)));
+  scene.add(makeBgCurve(0xf59e0b, 1.5, x => Math.cos(x * 0.5) * 0.5));
+  scene.add(makeBgCurve(0x22c55e, -1.5, x => 0.3 * Math.sin(x * 0.3) + 0.2 * Math.cos(x * 0.7)));
+
+  const ambLight = new THREE.AmbientLight(0x3b82f6, 0.3);
+  scene.add(ambLight);
+
+  function resizeBg() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  resizeBg();
+
+  let bgTime = 0;
+  function animBg() {
+    bgTime += 0.003;
+    gridHelper.position.y = -2 + Math.sin(bgTime * 0.5) * 0.15;
+    camera.position.x = Math.sin(bgTime * 0.2) * 0.5;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animBg);
+  }
+  animBg();
+
+  /* ================================================================
+     KaTeX FORMULAS
+     ================================================================ */
+  katex.render("f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}", document.getElementById('formula1'), { throwOnError: false });
+  katex.render("\\int_a^b f(x)\\,dx = F(b) - F(a)", document.getElementById('formula2'), { throwOnError: false });
+  katex.render("\\frac{d}{dx}\\int_a^x f(t)\\,dt = f(x)", document.getElementById('formula3'), { throwOnError: false });
+
+  /* ================================================================
+     GRAPH ENGINE
+     ================================================================ */
+  const cvsFn = document.getElementById('cvs-fn');
+  const cvsDeriv = document.getElementById('cvs-deriv');
+  const cvsInteg = document.getElementById('cvs-integ');
+  const ctxFn = cvsFn.getContext('2d');
+  const ctxDeriv = cvsDeriv.getContext('2d');
+  const ctxInteg = cvsInteg.getContext('2d');
+
+  /* State */
+  let currentPreset = 'sin';
+  let amp = 1.0, freq = 1.0, xRange = 6.0;
+  let showTangent = true, showIntegralFill = true, showGrid = true, showCrosshair = false;
+  let hoverX = null; // x-value under cursor on f(x) graph
+  let mouseCanvasX = null, mouseCanvasY = null;
+  let isDrawing = false;
+  let customPoints = []; // {x, y} in math coords, sorted by x
+
+  /* Preset functions */
+  const presets = {
+    sin:       x => amp * Math.sin(freq * x),
+    quadratic: x => amp * (freq * x) * (freq * x) / 4,
+    cubic:     x => amp * Math.pow(freq * x, 3) / 20,
+    abs:       x => amp * Math.abs(freq * x),
+    step:      x => (x >= 0 ? amp : -amp * 0.5),
+    custom:    null
+  };
+
+  function getF(x) {
+    if (currentPreset === 'custom') {
+      return interpolateCustom(x);
+    }
+    return presets[currentPreset](x);
+  }
+
+  /* Custom curve interpolation (linear) */
+  function interpolateCustom(x) {
+    if (customPoints.length === 0) return 0;
+    if (customPoints.length === 1) return customPoints[0].y;
+    if (x <= customPoints[0].x) return customPoints[0].y;
+    if (x >= customPoints[customPoints.length - 1].x) return customPoints[customPoints.length - 1].y;
+    for (let i = 0; i < customPoints.length - 1; i++) {
+      if (x >= customPoints[i].x && x <= customPoints[i + 1].x) {
+        const t = (x - customPoints[i].x) / (customPoints[i + 1].x - customPoints[i].x);
+        return customPoints[i].y * (1 - t) + customPoints[i + 1].y * t;
+      }
+    }
+    return 0;
+  }
+
+  /* Numerical derivative */
+  function getDeriv(x) {
+    const h = 0.001;
+    return (getF(x + h) - getF(x - h)) / (2 * h);
+  }
+
+  /* Numerical integral from -xRange to x using trapezoidal */
+  function getIntegral(x) {
+    const n = 200;
+    const a = -xRange;
+    const dx = (x - a) / n;
+    if (Math.abs(dx) < 1e-12) return 0;
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+      const x0 = a + i * dx;
+      const x1 = a + (i + 1) * dx;
+      sum += (getF(x0) + getF(x1)) * 0.5 * dx;
+    }
+    return sum;
+  }
+
+  /* ── Canvas sizing ── */
+  function resizeGraphs() {
+    [cvsFn, cvsDeriv, cvsInteg].forEach(c => {
+      const rect = c.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio, 2);
+      c.width = rect.width * dpr;
+      c.height = rect.height * dpr;
+      c.style.width = rect.width + 'px';
+      c.style.height = rect.height + 'px';
+      c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+    });
+  }
+
+  /* ── Coordinate transforms ── */
+  function getTransform(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    const pad = 30;
+    return {
+      w, h, pad,
+      xToCanvas: x => pad + (x + xRange) / (2 * xRange) * (w - 2 * pad),
+      yToCanvas: (y, yMin, yMax) => pad + (yMax - y) / (yMax - yMin) * (h - 2 * pad),
+      canvasToX: cx => -xRange + (cx - pad) / (w - 2 * pad) * 2 * xRange,
+      canvasToY: (cy, yMin, yMax) => yMax - (cy - pad) / (h - 2 * pad) * (yMax - yMin)
+    };
+  }
+
+  /* ── Compute Y range for a function ── */
+  function computeYRange(fn, samples) {
+    let yMin = Infinity, yMax = -Infinity;
+    for (let i = 0; i <= samples; i++) {
+      const x = -xRange + (2 * xRange * i) / samples;
+      const y = fn(x);
+      if (isFinite(y)) {
+        if (y < yMin) yMin = y;
+        if (y > yMax) yMax = y;
+      }
+    }
+    const margin = Math.max(Math.abs(yMax - yMin) * 0.15, 0.5);
+    return { yMin: yMin - margin, yMax: yMax + margin };
+  }
+
+  /* ── Draw grid ── */
+  function drawGrid(ctx, t, yMin, yMax) {
+    if (!showGrid) return;
+    ctx.strokeStyle = 'rgba(59,130,246,0.08)';
+    ctx.lineWidth = 0.5;
+
+    // vertical lines
+    const xStep = xRange <= 4 ? 0.5 : (xRange <= 8 ? 1 : 2);
+    for (let x = Math.ceil(-xRange / xStep) * xStep; x <= xRange; x += xStep) {
+      const cx = t.xToCanvas(x);
+      ctx.beginPath(); ctx.moveTo(cx, t.pad); ctx.lineTo(cx, t.h - t.pad); ctx.stroke();
+    }
+    // horizontal lines
+    const ySpan = yMax - yMin;
+    const yStep = ySpan <= 4 ? 0.5 : (ySpan <= 10 ? 1 : Math.ceil(ySpan / 10));
+    for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+      const cy = t.yToCanvas(y, yMin, yMax);
+      ctx.beginPath(); ctx.moveTo(t.pad, cy); ctx.lineTo(t.w - t.pad, cy); ctx.stroke();
+    }
+  }
+
+  /* ── Draw axes ── */
+  function drawAxes(ctx, t, yMin, yMax) {
+    ctx.strokeStyle = 'rgba(59,130,246,0.25)';
+    ctx.lineWidth = 1;
+    // x-axis
+    if (yMin <= 0 && yMax >= 0) {
+      const cy = t.yToCanvas(0, yMin, yMax);
+      ctx.beginPath(); ctx.moveTo(t.pad, cy); ctx.lineTo(t.w - t.pad, cy); ctx.stroke();
+    }
+    // y-axis
+    if (-xRange <= 0 && xRange >= 0) {
+      const cx = t.xToCanvas(0);
+      ctx.beginPath(); ctx.moveTo(cx, t.pad); ctx.lineTo(cx, t.h - t.pad); ctx.stroke();
+    }
+    // tick labels
+    ctx.fillStyle = 'rgba(125,133,144,0.6)';
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    const xStep = xRange <= 4 ? 1 : (xRange <= 8 ? 2 : 4);
+    for (let x = Math.ceil(-xRange / xStep) * xStep; x <= xRange; x += xStep) {
+      if (x === 0) continue;
+      const cx = t.xToCanvas(x);
+      const axisY = (yMin <= 0 && yMax >= 0) ? t.yToCanvas(0, yMin, yMax) : t.h - t.pad;
+      ctx.fillText(x.toString(), cx, axisY + 12);
+    }
+  }
+
+  /* ── Draw a curve ── */
+  function drawCurve(ctx, t, yMin, yMax, fn, color, lineWidth) {
+    const samples = Math.min(Math.floor(t.w), 600);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth || 2;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= samples; i++) {
+      const x = -xRange + (2 * xRange * i) / samples;
+      const y = fn(x);
+      if (!isFinite(y)) { started = false; continue; }
+      const cx = t.xToCanvas(x);
+      const cy = t.yToCanvas(y, yMin, yMax);
+      if (!started) { ctx.moveTo(cx, cy); started = true; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+  }
+
+  /* ── Draw integral fill ── */
+  function drawIntegralFill(ctx, t, yMin, yMax) {
+    if (!showIntegralFill) return;
+    const samples = 300;
+    const zeroY = t.yToCanvas(0, yMin, yMax);
+
+    for (let i = 0; i < samples; i++) {
+      const x0 = -xRange + (2 * xRange * i) / samples;
+      const x1 = -xRange + (2 * xRange * (i + 1)) / samples;
+      const y0 = getF(x0);
+      const y1 = getF(x1);
+      if (!isFinite(y0) || !isFinite(y1)) continue;
+
+      const cx0 = t.xToCanvas(x0);
+      const cx1 = t.xToCanvas(x1);
+      const cy0 = t.yToCanvas(y0, yMin, yMax);
+      const cy1 = t.yToCanvas(y1, yMin, yMax);
+
+      const avg = (y0 + y1) / 2;
+      ctx.fillStyle = avg >= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
+      ctx.beginPath();
+      ctx.moveTo(cx0, zeroY);
+      ctx.lineTo(cx0, cy0);
+      ctx.lineTo(cx1, cy1);
+      ctx.lineTo(cx1, zeroY);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  /* ── Draw tangent line ── */
+  function drawTangentLine(ctx, t, yMin, yMax) {
+    if (!showTangent || hoverX === null) return;
+    const y = getF(hoverX);
+    const slope = getDeriv(hoverX);
+    if (!isFinite(y) || !isFinite(slope)) return;
+
+    const tangentLen = xRange * 0.4;
+    const x0 = hoverX - tangentLen;
+    const x1 = hoverX + tangentLen;
+    const y0 = y + slope * (x0 - hoverX);
+    const y1 = y + slope * (x1 - hoverX);
+
+    ctx.strokeStyle = 'rgba(245,158,11,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(t.xToCanvas(x0), t.yToCanvas(y0, yMin, yMax));
+    ctx.lineTo(t.xToCanvas(x1), t.yToCanvas(y1, yMin, yMax));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // dot at point
+    const cx = t.xToCanvas(hoverX);
+    const cy = t.yToCanvas(y, yMin, yMax);
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* ── Draw vertical indicator on deriv/integ ── */
+  function drawVerticalIndicator(ctx, t, yMin, yMax, fn, color) {
+    if (hoverX === null) return;
+    const y = fn(hoverX);
+    if (!isFinite(y)) return;
+    const cx = t.xToCanvas(hoverX);
+    const cy = t.yToCanvas(y, yMin, yMax);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath(); ctx.moveTo(cx, t.pad); ctx.lineTo(cx, t.h - t.pad); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* ── Draw crosshair ── */
+  function drawCrosshair(ctx, t) {
+    if (!showCrosshair || mouseCanvasX === null) return;
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(mouseCanvasX, t.pad); ctx.lineTo(mouseCanvasX, t.h - t.pad); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(t.pad, mouseCanvasY); ctx.lineTo(t.w - t.pad, mouseCanvasY); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  /* ── Custom drawing dots ── */
+  function drawCustomDots(ctx, t, yMin, yMax) {
+    if (currentPreset !== 'custom') return;
+    ctx.fillStyle = 'rgba(96,165,250,0.6)';
+    for (const p of customPoints) {
+      const cx = t.xToCanvas(p.x);
+      const cy = t.yToCanvas(p.y, yMin, yMax);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /* ================================================================
+     MAIN RENDER
+     ================================================================ */
+  function render() {
+    resizeGraphs();
+
+    /* ── f(x) graph ── */
+    const tFn = getTransform(cvsFn);
+    ctxFn.clearRect(0, 0, tFn.w, tFn.h);
+    const fnRange = computeYRange(getF, 400);
+    drawGrid(ctxFn, tFn, fnRange.yMin, fnRange.yMax);
+    drawAxes(ctxFn, tFn, fnRange.yMin, fnRange.yMax);
+    drawIntegralFill(ctxFn, tFn, fnRange.yMin, fnRange.yMax);
+    drawCurve(ctxFn, tFn, fnRange.yMin, fnRange.yMax, getF, 'rgba(96,165,250,0.9)', 2.5);
+    drawCustomDots(ctxFn, tFn, fnRange.yMin, fnRange.yMax);
+    drawTangentLine(ctxFn, tFn, fnRange.yMin, fnRange.yMax);
+    drawCrosshair(ctxFn, tFn);
+
+    /* ── f'(x) graph ── */
+    const tD = getTransform(cvsDeriv);
+    ctxDeriv.clearRect(0, 0, tD.w, tD.h);
+    const dRange = computeYRange(getDeriv, 400);
+    drawGrid(ctxDeriv, tD, dRange.yMin, dRange.yMax);
+    drawAxes(ctxDeriv, tD, dRange.yMin, dRange.yMax);
+    drawCurve(ctxDeriv, tD, dRange.yMin, dRange.yMax, getDeriv, 'rgba(245,158,11,0.9)', 2.5);
+    drawVerticalIndicator(ctxDeriv, tD, dRange.yMin, dRange.yMax, getDeriv, '#f59e0b');
+
+    /* ── integral graph ── */
+    const tI = getTransform(cvsInteg);
+    ctxInteg.clearRect(0, 0, tI.w, tI.h);
+    const iRange = computeYRange(getIntegral, 400);
+    drawGrid(ctxInteg, tI, iRange.yMin, iRange.yMax);
+    drawAxes(ctxInteg, tI, iRange.yMin, iRange.yMax);
+    drawCurve(ctxInteg, tI, iRange.yMin, iRange.yMax, getIntegral, 'rgba(34,197,94,0.9)', 2.5);
+    drawVerticalIndicator(ctxInteg, tI, iRange.yMin, iRange.yMax, getIntegral, '#22c55e');
+
+    // integral area fill on the integral graph
+    if (showIntegralFill) {
+      const samples = 300;
+      const zeroY = tI.yToCanvas(0, iRange.yMin, iRange.yMax);
+      for (let i = 0; i < samples; i++) {
+        const x0 = -xRange + (2 * xRange * i) / samples;
+        const x1 = -xRange + (2 * xRange * (i + 1)) / samples;
+        const y0 = getIntegral(x0);
+        const y1 = getIntegral(x1);
+        if (!isFinite(y0) || !isFinite(y1)) continue;
+        ctx = ctxInteg;
+        const cx0 = tI.xToCanvas(x0), cx1 = tI.xToCanvas(x1);
+        const cy0 = tI.yToCanvas(y0, iRange.yMin, iRange.yMax);
+        const cy1 = tI.yToCanvas(y1, iRange.yMin, iRange.yMax);
+        ctx.fillStyle = ((y0 + y1) / 2) >= 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
+        ctx.beginPath();
+        ctx.moveTo(cx0, zeroY); ctx.lineTo(cx0, cy0); ctx.lineTo(cx1, cy1); ctx.lineTo(cx1, zeroY);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    /* ── Update data readout ── */
+    if (hoverX !== null) {
+      document.getElementById('rd-x').textContent = hoverX.toFixed(2);
+      document.getElementById('rd-fx').textContent = getF(hoverX).toFixed(3);
+      document.getElementById('rd-dfx').textContent = getDeriv(hoverX).toFixed(3);
+      document.getElementById('rd-ifx').textContent = getIntegral(hoverX).toFixed(3);
+    }
+
+    /* ── Tangent info tooltip ── */
+    const tip = document.getElementById('tangent-info');
+    if (showTangent && hoverX !== null) {
+      const slope = getDeriv(hoverX);
+      tip.querySelector('.slope-val').textContent = slope.toFixed(3);
+      tip.style.display = 'block';
+      const fnRect = cvsFn.getBoundingClientRect();
+      const cx = tFn.xToCanvas(hoverX);
+      const cy = tFn.yToCanvas(getF(hoverX), fnRange.yMin, fnRange.yMax);
+      tip.style.left = (fnRect.left + cx + 12) + 'px';
+      tip.style.top = (fnRect.top + cy - 20) + 'px';
+    } else {
+      tip.style.display = 'none';
+    }
+  }
+
+  /* ================================================================
+     EVENT HANDLERS
+     ================================================================ */
+
+  /* Mouse tracking on f(x) canvas */
+  cvsFn.addEventListener('mousemove', e => {
+    const rect = cvsFn.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    mouseCanvasX = mx;
+    mouseCanvasY = my;
+    const t = getTransform(cvsFn);
+    const x = t.canvasToX(mx);
+    if (x >= -xRange && x <= xRange) {
+      hoverX = x;
+    } else {
+      hoverX = null;
+    }
+
+    // custom drawing
+    if (currentPreset === 'custom' && isDrawing) {
+      const yRange = computeYRange(getF, 400);
+      const y = t.canvasToY(my, yRange.yMin, yRange.yMax);
+      addCustomPoint(x, y);
+    }
+
+    render();
+  });
+
+  cvsFn.addEventListener('mouseleave', () => {
+    hoverX = null;
+    mouseCanvasX = null;
+    mouseCanvasY = null;
+    isDrawing = false;
+    document.getElementById('rd-x').textContent = '--';
+    document.getElementById('rd-fx').textContent = '--';
+    document.getElementById('rd-dfx').textContent = '--';
+    document.getElementById('rd-ifx').textContent = '--';
+    render();
+  });
+
+  cvsFn.addEventListener('mousedown', e => {
+    if (currentPreset !== 'custom') return;
+    isDrawing = true;
+    const rect = cvsFn.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const t = getTransform(cvsFn);
+    const x = t.canvasToX(mx);
+    const yRange = computeYRange(x => 0, 10);
+    const defaultRange = { yMin: -3, yMax: 3 };
+    const yr = customPoints.length > 0 ? computeYRange(getF, 400) : defaultRange;
+    const y = t.canvasToY(my, yr.yMin, yr.yMax);
+    addCustomPoint(x, y);
+    render();
+  });
+
+  cvsFn.addEventListener('mouseup', () => { isDrawing = false; });
+
+  function addCustomPoint(x, y) {
+    if (x < -xRange || x > xRange) return;
+    // remove nearby points to avoid overcrowding
+    customPoints = customPoints.filter(p => Math.abs(p.x - x) > 0.03);
+    customPoints.push({ x, y });
+    customPoints.sort((a, b) => a.x - b.x);
+  }
+
+  /* Preset buttons */
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPreset = btn.dataset.fn;
+      if (currentPreset === 'custom') {
+        customPoints = [];
+        document.getElementById('hint-fn').textContent = 'Click and drag to draw your function';
+      } else {
+        document.getElementById('hint-fn').textContent = 'Hover for tangent line';
+      }
+      render();
+    });
+  });
+
+  /* Sliders */
+  const slAmp = document.getElementById('sl-amp');
+  const slFreq = document.getElementById('sl-freq');
+  const slXRange = document.getElementById('sl-xrange');
+
+  slAmp.addEventListener('input', () => {
+    amp = parseFloat(slAmp.value);
+    document.getElementById('val-amp').textContent = amp.toFixed(2);
+    render();
+  });
+  slFreq.addEventListener('input', () => {
+    freq = parseFloat(slFreq.value);
+    document.getElementById('val-freq').textContent = freq.toFixed(2);
+    render();
+  });
+  slXRange.addEventListener('input', () => {
+    xRange = parseFloat(slXRange.value);
+    document.getElementById('val-xrange').innerHTML = '&pm;' + xRange.toFixed(1);
+    render();
+  });
+
+  /* Checkboxes */
+  document.getElementById('chk-tangent').addEventListener('change', e => { showTangent = e.target.checked; render(); });
+  document.getElementById('chk-integral-fill').addEventListener('change', e => { showIntegralFill = e.target.checked; render(); });
+  document.getElementById('chk-grid').addEventListener('change', e => { showGrid = e.target.checked; render(); });
+  document.getElementById('chk-crosshair').addEventListener('change', e => { showCrosshair = e.target.checked; render(); });
+
+  /* Window resize */
+  window.addEventListener('resize', () => {
+    resizeBg();
+    render();
+  });
+
+  /* ================================================================
+     QUIZ
+     ================================================================ */
+  const answers = { '1': 'b', '2': 'c' };
+  const explanations = {
+    '1': 'The power rule gives d/dx(x^2) = 2x. The derivative of x^n is n*x^(n-1).',
+    '2': 'If the derivative is zero everywhere on an interval, the function has no rate of change — it must be constant on that interval (by the Mean Value Theorem).'
+  };
+
+  document.querySelectorAll('.quiz-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const q = btn.dataset.q;
+      const a = btn.dataset.a;
+      const fb = document.getElementById('fb' + q);
+      // disable all options for this question
+      document.querySelectorAll(`.quiz-opt[data-q="${q}"]`).forEach(b => {
+        b.style.pointerEvents = 'none';
+        if (b.dataset.a === answers[q]) b.classList.add('correct');
+      });
+      if (a !== answers[q]) {
+        btn.classList.add('wrong');
+        fb.innerHTML = '<span style="color:#ef4444;">Incorrect.</span> ' + explanations[q];
+      } else {
+        fb.innerHTML = '<span style="color:#22c55e;">Correct!</span> ' + explanations[q];
+      }
+    });
+  });
+
+  /* ================================================================
+     FPS COUNTER
+     ================================================================ */
+  let frameCount = 0, lastFpsTime = performance.now();
+  function fpsLoop() {
+    frameCount++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      document.getElementById('fps').textContent = frameCount + ' fps';
+      frameCount = 0;
+      lastFpsTime = now;
+    }
+    requestAnimationFrame(fpsLoop);
+  }
+  fpsLoop();
+
+  /* Initial render */
+  render();
+
+})();
+</script>
+</body>
+</html>

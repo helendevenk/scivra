@@ -60,6 +60,21 @@ import { chemicalEquilibrium } from "./data/chemical-equilibrium";
 import { atomicStructure } from "./data/atomic-structure";
 import { acidBasePh } from "./data/acid-base-ph";
 import { electrochemistry } from "./data/electrochemistry";
+// Wave 7 — AP Physics gap-fill (Batch 1–3)
+import { dcCircuitsBasic } from "./data/dc-circuits-basic";
+import { geometricOpticsLenses } from "./data/geometric-optics-lenses";
+import { photoelectricEffect } from "./data/photoelectric-effect";
+import { idealGasThermodynamics } from "./data/ideal-gas-thermodynamics";
+import { electromagneticInduction } from "./data/electromagnetic-induction";
+import { electricPotentialVoltage } from "./data/electric-potential-voltage";
+import { capacitorsRcCircuits } from "./data/capacitors-rc-circuits";
+import { bernoulliFluidDynamics } from "./data/bernoulli-fluid-dynamics";
+import { workEnergyTheorem } from "./data/work-energy-theorem";
+import { kinematicsGraphs } from "./data/kinematics-graphs";
+import { nuclearDecay } from "./data/nuclear-decay";
+import { dopplerEffect } from "./data/doppler-effect";
+import { singleSlitDiffraction } from "./data/single-slit-diffraction";
+import { heatEngines } from "./data/heat-engines";
 
 const experiments: Experiment[] = [
   // Wave 1 — original 4
@@ -109,6 +124,21 @@ const experiments: Experiment[] = [
   k5DayNightSeasons,
   k5MoonPhases,
   k5Magnetism,
+  // Wave 7 — AP Physics gap-fill (Batch 1–3)
+  dcCircuitsBasic,
+  geometricOpticsLenses,
+  photoelectricEffect,
+  idealGasThermodynamics,
+  electromagneticInduction,
+  electricPotentialVoltage,
+  capacitorsRcCircuits,
+  bernoulliFluidDynamics,
+  workEnergyTheorem,
+  kinematicsGraphs,
+  nuclearDecay,
+  dopplerEffect,
+  singleSlitDiffraction,
+  heatEngines,
   // Wave 6 — Middle School 6-8 (MS-01 to MS-09)
   msNewtonsLaws,
   msEnergyConservation,

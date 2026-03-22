@@ -42,12 +42,12 @@ function classifyError(status: number): OpenRouterError['errorType'] {
 
 export async function callOpenRouter(params: CallOpenRouterParams): Promise<CallOpenRouterResult> {
   const configs = await getAllConfigs();
-  const apiKey = configs.openrouter_api_key;
+  const apiKey = process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
   if (!apiKey) {
     throw new OpenRouterError('OpenRouter API key not configured', 401, 'invalid_key');
   }
 
-  const baseUrl = configs.openrouter_base_url || UPG_OPENROUTER_DEFAULT_BASE_URL;
+  const baseUrl = process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url || UPG_OPENROUTER_DEFAULT_BASE_URL;
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
 
   const controller = new AbortController();

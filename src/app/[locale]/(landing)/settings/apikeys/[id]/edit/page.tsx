@@ -2,7 +2,6 @@ import { getTranslations } from 'next-intl/server';
 
 import { Empty } from '@/shared/blocks/common';
 import { FormCard } from '@/shared/blocks/form';
-import { getNonceStr } from '@/shared/lib/hash';
 import {
   findApikeyById,
   updateApikey,
@@ -72,8 +71,6 @@ export default async function EditApiKeyPage({
         if (!title?.trim()) {
           throw new Error('title is required');
         }
-
-        const key = `sk-${getNonceStr(32)}`;
 
         const updatedApikey: UpdateApikey = {
           title: title.trim(),

@@ -5,9 +5,9 @@ interface StandardsBadgeProps {
 }
 
 const BADGE_COLORS: Record<string, string> = {
-  ngss: "border-neon-green/30 text-neon-green bg-neon-green/10",
-  gcse: "border-neon-orange/30 text-neon-orange bg-neon-orange/10",
-  ap: "border-neon-purple/30 text-neon-purple bg-neon-purple/10",
+  ngss: "border-emerald-600/30 text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-400/30",
+  gcse: "border-amber-600/30 text-amber-600 bg-amber-500/10 dark:text-amber-400 dark:border-amber-400/30",
+  ap: "border-violet-600/30 text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:border-violet-400/30",
 };
 
 export function StandardsBadge({ standards }: StandardsBadgeProps) {

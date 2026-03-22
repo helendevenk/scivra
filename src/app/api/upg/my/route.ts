@@ -16,8 +16,11 @@ export async function GET(request: Request) {
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
     const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get('pageSize') || '20', 10)));
 
+    const q = url.searchParams.get('q') || undefined;
+    const status = url.searchParams.get('status') || undefined;
+
     const [generations, total] = await Promise.all([
-      getUpgGenerationsByUserId(user.id, page, pageSize),
+      getUpgGenerationsByUserId(user.id, page, pageSize, q, status),
       getUpgGenerationsCount(user.id),
     ]);
 

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rutherford Scattering | NeonPhysics</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 300px; min-width: 300px; background: #1e293b; border-right: 1px solid #334155;
+    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
+  }
+  .panel-header { padding: 16px; background: #0f172a; border-bottom: 1px solid #334155; }
+  .panel-header h2 { font-size: 13px; color: #f59e0b; letter-spacing: 0.05em; text-transform: uppercase; }
+  .panel-header h1 { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid #1e293b; }
+  .section-title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .control-row { margin-bottom: 12px; }
+  .control-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 5px; color: #cbd5e1; }
+  .control-label .val { color: #f59e0b; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  input[type=range] { width: 100%; height: 4px; appearance: none; background: #334155; border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #f59e0b; cursor: pointer; }
+
+  .preset-btns { display: flex; flex-direction: column; gap: 6px; }
+  .preset-btn {
+    padding: 8px 12px; border: 1px solid #334155; border-radius: 6px;
+    background: #1e293b; color: #cbd5e1; font-size: 12px; cursor: pointer;
+    font-weight: 600; transition: all 0.15s; text-align: left;
+  }
+  .preset-btn:hover { background: #334155; border-color: #f59e0b; }
+  .preset-btn.active { background: #f59e0b; border-color: #fbbf24; color: #0f172a; }
+  .preset-desc { font-size: 10px; color: #94a3b8; margin-top: 2px; font-weight: 400; }
+  .preset-btn.active .preset-desc { color: #451a03; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn { flex: 1; padding: 8px 6px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #cbd5e1; font-size: 12px; cursor: pointer; transition: background 0.15s; font-weight: 600; }
+  .btn:hover { background: #334155; }
+  .btn.primary { background: #d97706; border-color: #f59e0b; color: #fff; }
+  .btn.primary:hover { background: #f59e0b; }
+
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-item { background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; text-align: center; }
+  .data-item .d-label { font-size: 10px; color: #94a3b8; margin-bottom: 3px; }
+  .data-item .d-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .formula-box {
+    background: #0f172a; border: 1px solid #1e293b; border-radius: 6px;
+    padding: 12px; text-align: center; overflow-x: auto;
+  }
+  .formula-box .katex { font-size: 0.85em; }
+  .formula-row { margin-bottom: 8px; }
+  .formula-row:last-child { margin-bottom: 0; }
+  .formula-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+
+  .quiz-section { padding: 14px 16px; }
+  .quiz-q { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.5; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .quiz-opt {
+    padding: 7px 10px; border: 1px solid #334155; border-radius: 5px;
+    background: #1e293b; color: #cbd5e1; font-size: 11px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quiz-opt:hover { background: #334155; }
+  .quiz-opt.correct { background: #065f46; border-color: #10b981; color: #a7f3d0; }
+  .quiz-opt.wrong { background: #7f1d1d; border-color: #ef4444; color: #fca5a5; }
+  .quiz-opt.disabled { pointer-events: none; opacity: 0.6; }
+  .quiz-opt.disabled.correct { opacity: 1; }
+  .quiz-feedback { font-size: 11px; padding: 6px 8px; border-radius: 4px; margin-bottom: 10px; line-height: 1.4; }
+  .quiz-feedback.correct-fb { background: #064e3b; color: #6ee7b7; }
+  .quiz-feedback.wrong-fb { background: #450a0a; color: #fca5a5; }
+
+  .fps-badge { position: fixed; top: 10px; right: 10px; background: rgba(15,23,42,0.8); border: 1px solid #334155; border-radius: 4px; padding: 3px 8px; font-size: 11px; color: #94a3b8; z-index: 100; }
+
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  #three-canvas { display: block; }
+
+  .angle-overlay {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(15,23,42,0.88); border: 1px solid #334155; border-radius: 8px;
+    padding: 10px 14px; pointer-events: none; font-size: 12px; color: #cbd5e1;
+  }
+  .angle-overlay .angle-val { font-size: 20px; font-weight: 700; color: #f59e0b; }
+  .angle-overlay .angle-unit { font-size: 12px; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <div class="panel-header">
+    <h2>AP Physics</h2>
+    <h1>Rutherford Scattering</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Parameters</div>
+    <div class="control-row">
+      <div class="control-label">Alpha Energy <span class="val" id="energy-val">5.0 MeV</span></div>
+      <input type="range" id="sl-energy" min="1" max="10" step="0.1" value="5">
+    </div>
+    <div class="control-row">
+      <div class="control-label">Impact Parameter (b) <span class="val" id="impact-val">2.0 fm</span></div>
+      <input type="range" id="sl-impact" min="0" max="5" step="0.1" value="2">
+    </div>
+    <div class="control-row">
+      <div class="control-label">Nucleus Charge (Z) <span class="val" id="charge-val">79 (Au)</span></div>
+      <input type="range" id="sl-charge" min="1" max="100" step="1" value="79">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Presets</div>
+    <div class="preset-btns">
+      <div class="preset-btn active" data-preset="gold">
+        Gold Foil (Z=79)
+        <div class="preset-desc">Classic Geiger-Marsden experiment</div>
+      </div>
+      <div class="preset-btn" data-preset="headon">
+        Head-on Collision (b=0)
+        <div class="preset-desc">180° backscatter, closest approach</div>
+      </div>
+      <div class="preset-btn" data-preset="carbon">
+        Carbon (Z=6)
+        <div class="preset-desc">Light nucleus, small deflection</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="btn-row">
+      <button class="btn primary" id="btn-fire">Fire</button>
+      <button class="btn" id="btn-multi">Multi-Fire</button>
+      <button class="btn" id="btn-reset">Clear</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Live Data</div>
+    <div class="data-grid">
+      <div class="data-item"><div class="d-label">Scattering Angle</div><div class="d-val" id="d-angle" style="color:#f59e0b;">--</div></div>
+      <div class="data-item"><div class="d-label">Closest Approach</div><div class="d-val" id="d-dist" style="color:#38bdf8;">--</div></div>
+      <div class="data-item"><div class="d-label">Impact Param b</div><div class="d-val" id="d-impact" style="color:#a78bfa;">--</div></div>
+      <div class="data-item"><div class="d-label">cot(θ/2)</div><div class="d-val" id="d-cot" style="color:#34d399;">--</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Formulas</div>
+    <div class="formula-box">
+      <div class="formula-row">
+        <div class="formula-label">Scattering Relation</div>
+        <div id="formula1"></div>
+      </div>
+      <div class="formula-row">
+        <div class="formula-label">Distance of Closest Approach</div>
+        <div id="formula2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section quiz-section">
+    <div class="section-title">Quiz</div>
+    <div class="quiz-q"><strong>Q1:</strong> In Rutherford scattering, what causes most alpha particles to pass through the gold foil with little or no deflection?</div>
+    <div class="quiz-opts" id="q1-opts">
+      <div class="quiz-opt" data-q="1" data-a="a">A. The alpha particles are too fast to be deflected</div>
+      <div class="quiz-opt" data-q="1" data-a="b">B. The atom is mostly empty space, so most alphas miss the nucleus</div>
+      <div class="quiz-opt" data-q="1" data-a="c">C. Gold atoms have no electric charge</div>
+      <div class="quiz-opt" data-q="1" data-a="d">D. The electrons shield the nuclear charge completely</div>
+    </div>
+    <div id="q1-fb"></div>
+
+    <div class="quiz-q"><strong>Q2:</strong> If you double the kinetic energy of the alpha particles, what happens to the distance of closest approach in a head-on collision?</div>
+    <div class="quiz-opts" id="q2-opts">
+      <div class="quiz-opt" data-q="2" data-a="a">A. It doubles</div>
+      <div class="quiz-opt" data-q="2" data-a="b">B. It stays the same</div>
+      <div class="quiz-opt" data-q="2" data-a="c">C. It is halved</div>
+      <div class="quiz-opt" data-q="2" data-a="d">D. It decreases by a factor of 4</div>
+    </div>
+    <div id="q2-fb"></div>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="three-canvas"></canvas>
+  <div class="angle-overlay" id="angle-overlay" style="display:none;">
+    <div>Scattering Angle</div>
+    <span class="angle-val" id="ov-angle">--</span><span class="angle-unit">°</span>
+  </div>
+</div>
+
+<div class="fps-badge" id="fps">-- fps</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  // --- KaTeX formulas ---
+  katex.render(String.raw`\cot\!\left(\frac{\theta}{2}\right) = \frac{2Eb}{kZe^2}`, document.getElementById('formula1'), { displayMode: true, throwOnError: false });
+  katex.render(String.raw`d = \frac{kZe^2}{2E}\!\left(1 + \frac{1}{\sin(\theta/2)}\right)`, document.getElementById('formula2'), { displayMode: true, throwOnError: false });
+
+  // --- Quiz ---
+  const answers = { 1: 'b', 2: 'c' };
+  const explanations = {
+    '1-correct': 'Correct! Rutherford concluded that the atom is mostly empty space with a tiny, dense nucleus. Most alpha particles pass far from it.',
+    '1-wrong': 'Incorrect. The correct answer is B. The atom is mostly empty space — the nucleus occupies a tiny fraction of the volume, so most alphas sail right through.',
+    '2-correct': 'Correct! d = kZe²/(2E), so doubling E halves d. The alpha gets closer before all kinetic energy converts to potential energy.',
+    '2-wrong': 'Incorrect. The correct answer is C. Since d ∝ 1/E, doubling the energy halves the closest approach distance.'
+  };
+
+  document.querySelectorAll('.quiz-opt').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      var q = this.dataset.q;
+      var a = this.dataset.a;
+      var isCorrect = a === answers[q];
+      var container = document.getElementById('q' + q + '-opts');
+      var fb = document.getElementById('q' + q + '-fb');
+      container.querySelectorAll('.quiz-opt').forEach(function(o) {
+        o.classList.add('disabled');
+        if (o.dataset.a === answers[q]) o.classList.add('correct');
+      });
+      if (!isCorrect) this.classList.add('wrong');
+      fb.className = 'quiz-feedback ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+      fb.textContent = explanations[q + '-' + (isCorrect ? 'correct' : 'wrong')];
+    });
+  });
+
+  // --- Three.js Setup ---
+  var canvas = document.getElementById('three-canvas');
+  var wrap = document.getElementById('canvas-wrap');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
+  camera.position.set(0, 40, 60);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 0, 0);
+
+  function resize() {
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // --- Lighting ---
+  scene.add(new THREE.AmbientLight(0x334155, 0.6));
+  var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(10, 20, 15);
+  scene.add(dirLight);
+  var pointLight = new THREE.PointLight(0xfbbf24, 2, 40);
+  pointLight.position.set(0, 0, 0);
+  scene.add(pointLight);
+
+  // --- Gold Foil background ---
+  var foilGeo = new THREE.PlaneGeometry(60, 60);
+  var foilMat = new THREE.MeshStandardMaterial({
+    color: 0xd4a847, transparent: true, opacity: 0.08,
+    side: THREE.DoubleSide, metalness: 0.8, roughness: 0.3
+  });
+  var foil = new THREE.Mesh(foilGeo, foilMat);
+  foil.rotation.y = Math.PI / 2;
+  foil.position.x = 0;
+  scene.add(foil);
+
+  // Foil grid lines
+  var gridMat = new THREE.LineBasicMaterial({ color: 0xd4a847, transparent: true, opacity: 0.12 });
+  for (var gi = -30; gi <= 30; gi += 3) {
+    var geoV = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, gi, -30), new THREE.Vector3(0, gi, 30)]);
+    scene.add(new THREE.Line(geoV, gridMat));
+    var geoH = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -30, gi), new THREE.Vector3(0, 30, gi)]);
+    scene.add(new THREE.Line(geoH, gridMat));
+  }
+
+  // --- Nucleus ---
+  var nucleusGeo = new THREE.SphereGeometry(1.2, 32, 32);
+  var nucleusMat = new THREE.MeshStandardMaterial({
+    color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.8,
+    metalness: 0.6, roughness: 0.2
+  });
+  var nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
+  scene.add(nucleus);
+
+  // Nucleus glow
+  var glowGeo = new THREE.SphereGeometry(2.0, 32, 32);
+  var glowMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.12 });
+  var glow = new THREE.Mesh(glowGeo, glowMat);
+  scene.add(glow);
+
+  // Outer glow ring
+  var glow2Geo = new THREE.SphereGeometry(3.5, 32, 32);
+  var glow2Mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.04 });
+  scene.add(new THREE.Mesh(glow2Geo, glow2Mat));
+
+  // --- Axis helpers (subtle) ---
+  var axMat = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.3 });
+  var axGeoX = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-50, 0, 0), new THREE.Vector3(50, 0, 0)]);
+  scene.add(new THREE.Line(axGeoX, axMat));
+  var axGeoZ = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -50), new THREE.Vector3(0, 0, 50)]);
+  scene.add(new THREE.Line(axGeoZ, axMat));
+
+  // --- Physics constants (scaled for visual) ---
+  // k * Z * 2e (alpha charge) * e in MeV*fm = 1.44 * Z * 2 MeV*fm
+  // Using k*e^2 = 1.44 MeV*fm, alpha charge = 2e
+  var KE2 = 1.44; // MeV*fm for unit charges
+  var SCALE = 3.0; // fm to scene units
+
+  // --- Sliders ---
+  var slEnergy = document.getElementById('sl-energy');
+  var slImpact = document.getElementById('sl-impact');
+  var slCharge = document.getElementById('sl-charge');
+  var energyVal = document.getElementById('energy-val');
+  var impactVal = document.getElementById('impact-val');
+  var chargeVal = document.getElementById('charge-val');
+
+  function getEnergy() { return parseFloat(slEnergy.value); }
+  function getImpact() { return parseFloat(slImpact.value); }
+  function getCharge() { return parseInt(slCharge.value); }
+
+  function elementName(z) {
+    var names = {1:'H',2:'He',3:'Li',4:'Be',5:'B',6:'C',7:'N',8:'O',9:'F',10:'Ne',
+      11:'Na',12:'Mg',13:'Al',14:'Si',15:'P',16:'S',17:'Cl',18:'Ar',19:'K',20:'Ca',
+      26:'Fe',29:'Cu',47:'Ag',50:'Sn',79:'Au',82:'Pb',92:'U'};
+    return names[z] || 'Z=' + z;
+  }
+
+  function updateLabels() {
+    energyVal.textContent = getEnergy().toFixed(1) + ' MeV';
+    impactVal.textContent = getImpact().toFixed(1) + ' fm';
+    chargeVal.textContent = getCharge() + ' (' + elementName(getCharge()) + ')';
+  }
+
+  slEnergy.addEventListener('input', updateLabels);
+  slImpact.addEventListener('input', updateLabels);
+  slCharge.addEventListener('input', function() { updateLabels(); updateNucleusSize(); });
+
+  function updateNucleusSize() {
+    var z = getCharge();
+    var r = 0.6 + 0.6 * Math.pow(z / 79, 1/3);
+    nucleus.scale.setScalar(r);
+    glow.scale.setScalar(r);
+  }
+
+  // --- Presets ---
+  var presetBtns = document.querySelectorAll('.preset-btn');
+  presetBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      presetBtns.forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      var p = this.dataset.preset;
+      if (p === 'gold') { slEnergy.value = 5; slImpact.value = 2; slCharge.value = 79; }
+      else if (p === 'headon') { slEnergy.value = 5; slImpact.value = 0; slCharge.value = 79; }
+      else if (p === 'carbon') { slEnergy.value = 5; slImpact.value = 3; slCharge.value = 6; }
+      updateLabels();
+      updateNucleusSize();
+    });
+  });
+
+  // --- Scattering calculation ---
+  // cot(theta/2) = 2Eb / (k * Z_nucleus * Z_alpha * e^2)
+  // Z_alpha = 2, so k*Z*Z_alpha*e^2 = 1.44 * Z * 2
+  function calcScatterAngle(E, b, Z) {
+    if (b < 0.001) return Math.PI; // head-on → 180°
+    var a = KE2 * Z * 2; // k * Z * 2e * e in MeV*fm
+    var cotHalf = 2 * E * b / a;
+    var halfAngle = Math.atan(1 / cotHalf);
+    return 2 * halfAngle;
+  }
+
+  function calcClosestApproach(E, theta, Z) {
+    var a = KE2 * Z * 2;
+    var sinHalf = Math.sin(theta / 2);
+    if (sinHalf < 0.0001) sinHalf = 0.0001;
+    return (a / (2 * E)) * (1 + 1 / sinHalf);
+  }
+
+  // --- Trajectory computation (numerical, Coulomb force) ---
+  function computeTrajectory(E, b, Z) {
+    var a = KE2 * Z * 2; // coupling constant MeV*fm
+    // Start far away on -x axis
+    var startX = -80; // fm
+    var startY = b;   // fm (impact parameter is perpendicular offset)
+
+    // Initial velocity: all in +x direction
+    // E = 0.5 * m * v^2 → v = sqrt(2E/m)
+    // We use unit mass, scale velocity so KE = E
+    var v = Math.sqrt(2 * E);
+    var vx = v, vy = 0;
+    var x = startX, y = startY;
+    var dt = 0.02;
+    var points = [];
+    var maxSteps = 12000;
+
+    for (var i = 0; i < maxSteps; i++) {
+      points.push({ x: x, y: y });
+
+      var r2 = x * x + y * y;
+      var r = Math.sqrt(r2);
+      if (r < 0.3) { // too close, bounce
+        break;
+      }
+
+      // Coulomb force: F = a / r^2, repulsive (outward)
+      var F = a / r2;
+      var ax = F * x / r; // unit mass
+      var ay = F * y / r;
+
+      vx += ax * dt;
+      vy += ay * dt;
+      x += vx * dt;
+      y += vy * dt;
+
+      // Stop when far away on the other side
+      if (x > 80 || x < -100 || Math.abs(y) > 80) break;
+    }
+
+    return points;
+  }
+
+  // --- Active particles ---
+  var particles = []; // { mesh, trail, trailLine, points, idx, done }
+
+  var alphaMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xdc2626, emissiveIntensity: 0.5 });
+  var alphaGeo = new THREE.SphereGeometry(0.4, 16, 16);
+
+  function spawnParticle(E, b, Z) {
+    var traj = computeTrajectory(E, b, Z);
+    if (traj.length < 5) return null;
+
+    var mesh = new THREE.Mesh(alphaGeo, alphaMat);
+    mesh.position.set(traj[0].x * SCALE / 10, 0, traj[0].y * SCALE / 10);
+    scene.add(mesh);
+
+    // Trail
+    var trailPositions = new Float32Array(traj.length * 3);
+    var trailGeo = new THREE.BufferGeometry();
+    trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+    trailGeo.setDrawRange(0, 0);
+
+    // Color based on impact parameter
+    var hue = (b / 5) * 0.3; // 0 (red) to 0.3 (green-ish)
+    var trailColor = new THREE.Color().setHSL(hue, 0.9, 0.6);
+    var trailMat = new THREE.LineBasicMaterial({ color: trailColor, transparent: true, opacity: 0.7 });
+    var trailLine = new THREE.Line(trailGeo, trailMat);
+    scene.add(trailLine);
+
+    var p = {
+      mesh: mesh,
+      trailGeo: trailGeo,
+      trailLine: trailLine,
+      trailPositions: trailPositions,
+      points: traj,
+      idx: 0,
+      done: false,
+      E: E, b: b, Z: Z
+    };
+    particles.push(p);
+    return p;
+  }
+
+  function updateParticles() {
+    var speed = 8; // points per frame
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      if (p.done) continue;
+
+      p.idx = Math.min(p.idx + speed, p.points.length - 1);
+      var pt = p.points[p.idx];
+      p.mesh.position.set(pt.x * SCALE / 10, 0, pt.y * SCALE / 10);
+
+      // Update trail
+      for (var j = 0; j <= p.idx; j++) {
+        var pp = p.points[j];
+        p.trailPositions[j * 3] = pp.x * SCALE / 10;
+        p.trailPositions[j * 3 + 1] = 0;
+        p.trailPositions[j * 3 + 2] = pp.y * SCALE / 10;
+      }
+      p.trailGeo.attributes.position.needsUpdate = true;
+      p.trailGeo.setDrawRange(0, p.idx + 1);
+
+      if (p.idx >= p.points.length - 1) {
+        p.done = true;
+      }
+    }
+
+    // Update live data for most recent particle
+    var last = null;
+    for (var k = particles.length - 1; k >= 0; k--) {
+      if (particles[k].done || particles[k].idx > 10) { last = particles[k]; break; }
+    }
+    if (last) {
+      var theta = calcScatterAngle(last.E, last.b, last.Z);
+      var deg = theta * 180 / Math.PI;
+      var dClosest = calcClosestApproach(last.E, theta, last.Z);
+      var cotHalf = last.b < 0.001 ? 0 : 1 / Math.tan(theta / 2);
+
+      document.getElementById('d-angle').textContent = deg.toFixed(1) + '°';
+      document.getElementById('d-dist').textContent = dClosest.toFixed(2) + ' fm';
+      document.getElementById('d-impact').textContent = last.b.toFixed(1) + ' fm';
+      document.getElementById('d-cot').textContent = cotHalf.toFixed(3);
+
+      document.getElementById('ov-angle').textContent = deg.toFixed(1);
+      document.getElementById('angle-overlay').style.display = 'block';
+    }
+  }
+
+  function clearParticles() {
+    for (var i = 0; i < particles.length; i++) {
+      scene.remove(particles[i].mesh);
+      scene.remove(particles[i].trailLine);
+      particles[i].trailGeo.dispose();
+      particles[i].trailLine.material.dispose();
+    }
+    particles = [];
+    document.getElementById('d-angle').textContent = '--';
+    document.getElementById('d-dist').textContent = '--';
+    document.getElementById('d-impact').textContent = '--';
+    document.getElementById('d-cot').textContent = '--';
+    document.getElementById('angle-overlay').style.display = 'none';
+  }
+
+  // --- Buttons ---
+  document.getElementById('btn-fire').addEventListener('click', function() {
+    spawnParticle(getEnergy(), getImpact(), getCharge());
+  });
+
+  document.getElementById('btn-multi').addEventListener('click', function() {
+    var E = getEnergy(), Z = getCharge();
+    var bValues = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
+    for (var i = 0; i < bValues.length; i++) {
+      spawnParticle(E, bValues[i], Z);
+    }
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', clearParticles);
+
+  // --- Angle measurement arc ---
+  function drawAngleArc(theta) {
+    // Remove old arc
+    if (scene.getObjectByName('angleArc')) {
+      scene.remove(scene.getObjectByName('angleArc'));
+    }
+    if (theta < 0.02) return;
+
+    var arcRadius = 8;
+    var segments = 40;
+    var arcPoints = [];
+    // Arc from incoming direction (negative x) sweeping theta
+    var startAngle = Math.PI; // incoming from -x
+    var endAngle = Math.PI - theta;
+    for (var i = 0; i <= segments; i++) {
+      var a = startAngle + (endAngle - startAngle) * (i / segments);
+      arcPoints.push(new THREE.Vector3(Math.cos(a) * arcRadius, 0.1, Math.sin(a) * arcRadius));
+    }
+    var arcGeo = new THREE.BufferGeometry().setFromPoints(arcPoints);
+    var arcLine = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.6 }));
+    arcLine.name = 'angleArc';
+    scene.add(arcLine);
+  }
+
+  // --- Nucleus pulse animation ---
+  var pulseTime = 0;
+
+  // --- FPS counter ---
+  var fpsEl = document.getElementById('fps');
+  var frameCount = 0, lastFpsTime = performance.now();
+
+  // --- Animate ---
+  function animate() {
+    requestAnimationFrame(animate);
+
+    pulseTime += 0.02;
+    var pulse = 1 + 0.05 * Math.sin(pulseTime * 2);
+    glow.scale.setScalar(pulse * 1.8);
+    glowMat.opacity = 0.10 + 0.04 * Math.sin(pulseTime * 3);
+    pointLight.intensity = 1.5 + 0.5 * Math.sin(pulseTime * 2.5);
+
+    updateParticles();
+
+    // Draw angle arc for last active particle
+    var last = null;
+    for (var k = particles.length - 1; k >= 0; k--) {
+      if (particles[k].done || particles[k].idx > 10) { last = particles[k]; break; }
+    }
+    if (last) {
+      var theta = calcScatterAngle(last.E, last.b, last.Z);
+      drawAngleArc(theta);
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+
+    frameCount++;
+    var now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      fpsEl.textContent = frameCount + ' fps';
+      frameCount = 0;
+      lastFpsTime = now;
+    }
+  }
+
+  updateLabels();
+  updateNucleusSize();
+  animate();
+
+  // Fire initial demo
+  setTimeout(function() {
+    document.getElementById('btn-multi').click();
+  }, 500);
+
+})();
+</script>
+</body>
+</html>

@@ -16,7 +16,7 @@ export type Tier = "free" | "pro" | "max";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 /** Release wave */
-export type Wave = 1 | 2 | 3 | 4 | 5 | 6;
+export type Wave = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 /** Adjustable parameter for an experiment */
 export interface Parameter {

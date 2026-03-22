@@ -70,14 +70,14 @@ export function LearningPathDetail({
       </div>
 
       {progress && (
-        <Card className="border-neon-cyan/10 bg-surface-dark">
+        <Card className="border-primary/10 bg-card">
           <CardContent className="space-y-2 p-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
                 {t('detail.progress')}
               </span>
               {isCompleted ? (
-                <span className="flex items-center gap-1 text-neon-green">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                   <CheckCircle className="h-4 w-4" />
                   {t('card.completed')}
                 </span>
@@ -105,7 +105,7 @@ export function LearningPathDetail({
             return (
               <div key={node.id}>
                 {node.locked ? (
-                  <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-surface-dark/50 p-4 opacity-60">
+                  <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/50 p-4 opacity-60">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -124,25 +124,25 @@ export function LearningPathDetail({
                     className="group block"
                   >
                     <div
-                      className={`flex items-center gap-3 rounded-lg border p-4 transition-all hover:border-neon-cyan/30 hover:shadow-sm ${
+                      className={`flex items-center gap-3 rounded-lg border p-4 transition-all hover:border-primary/30 hover:shadow-sm ${
                         isCurrent
-                          ? 'border-neon-cyan/40 bg-neon-cyan/5'
-                          : 'border-border/50 bg-surface-dark'
+                          ? 'border-primary/40 bg-primary/5'
+                          : 'border-border/50 bg-card'
                       }`}
                     >
                       <div
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                           isDone
-                            ? 'bg-neon-green/10'
+                            ? 'bg-emerald-500/10'
                             : isCurrent
-                              ? 'bg-neon-cyan/10'
+                              ? 'bg-primary/10'
                               : 'bg-muted'
                         }`}
                       >
                         {isDone ? (
-                          <CheckCircle className="h-4 w-4 text-neon-green" />
+                          <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         ) : isCurrent ? (
-                          <Play className="h-4 w-4 text-neon-cyan" />
+                          <Play className="h-4 w-4 text-primary" />
                         ) : (
                           <span className="text-xs text-muted-foreground">
                             {node.orderIndex + 1}
@@ -150,14 +150,14 @@ export function LearningPathDetail({
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium group-hover:text-neon-cyan">
+                        <p className="text-sm font-medium group-hover:text-primary">
                           {node.orderIndex + 1}. {nodeTitle}
                         </p>
                       </div>
                       {isDone && (
                         <Badge
                           variant="secondary"
-                          className="text-xs text-neon-green"
+                          className="text-xs text-emerald-600 dark:text-emerald-400"
                         >
                           {t('detail.node_completed')}
                         </Badge>
@@ -165,7 +165,7 @@ export function LearningPathDetail({
                       {isCurrent && (
                         <Badge
                           variant="secondary"
-                          className="text-xs text-neon-cyan"
+                          className="text-xs text-primary"
                         >
                           {t('detail.node_current')}
                         </Badge>

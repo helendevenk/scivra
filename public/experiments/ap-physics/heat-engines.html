@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heat Engines & Carnot Cycle | NeonPhysics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Courier New', monospace; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 280px; min-width: 280px; background: #161b22; border-right: 1px solid #30363d;
+    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; z-index: 10;
+  }
+  #panel h2 { font-size: 14px; color: #58a6ff; letter-spacing: 1px; text-transform: uppercase; }
+  #panel h3 { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+  .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
+  .ctrl-row { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl-label { font-size: 11px; color: #8b949e; display: flex; justify-content: space-between; align-items: center; }
+  .ctrl-label span { color: #e6edf3; }
+  input[type=range] {
+    width: 100%; height: 4px; appearance: none; background: #30363d; border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #58a6ff; cursor: pointer;
+  }
+
+  .data-block { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .data-row { display: flex; justify-content: space-between; font-size: 11px; }
+  .data-label { color: #8b949e; }
+  .data-val { color: #58a6ff; font-weight: bold; }
+  .data-val.hot { color: #ff7b72; }
+  .data-val.cold { color: #79c0ff; }
+  .data-val.work { color: #3fb950; }
+
+  .efficiency-bar-wrap { position: relative; height: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; margin-top: 2px; }
+  #eff-bar { height: 100%; background: linear-gradient(to right, #3fb950, #d29922, #f85149); transition: width 0.3s; border-radius: 6px; }
+
+  .formula-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 10px; font-size: 10px; color: #6e7681; line-height: 1.6; }
+  .formula-box .f { color: #a5d6ff; font-style: italic; }
+
+  #fps { font-size: 10px; color: #484f58; text-align: right; margin-top: auto; }
+  #main-area { flex: 1; display: flex; flex-direction: column; }
+  #engine-view { flex: 1; position: relative; min-height: 0; }
+  #pv-view { height: 220px; border-top: 1px solid #30363d; position: relative; }
+  canvas.three-canvas { display: block; width: 100%; height: 100%; }
+  #pv-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <div>
+    <h2>Heat Engines</h2>
+    <h3>Carnot Cycle Analysis</h3>
+  </div>
+
+  <div class="ctrl-group">
+    <div class="ctrl-row">
+      <div class="ctrl-label">T_hot <span id="lbl-th">800 K</span></div>
+      <input type="range" id="sl-th" min="400" max="1200" value="800" step="10">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">T_cold <span id="lbl-tc">300 K</span></div>
+      <input type="range" id="sl-tc" min="200" max="400" value="300" step="5">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Q_in (heat input) <span id="lbl-qin">1000 J</span></div>
+      <input type="range" id="sl-qin" min="100" max="10000" value="1000" step="100">
+    </div>
+  </div>
+
+  <div class="data-block">
+    <div class="data-row"><span class="data-label">Carnot Efficiency</span><span class="data-val work" id="d-eff">—%</span></div>
+    <div class="efficiency-bar-wrap"><div id="eff-bar" style="width:0%"></div></div>
+    <div class="data-row" style="margin-top:4px"><span class="data-label">W_net</span><span class="data-val work" id="d-wnet">— J</span></div>
+    <div class="data-row"><span class="data-label">Q_rejected</span><span class="data-val cold" id="d-qrej">— J</span></div>
+    <div class="data-row"><span class="data-label">COP (refrigerator)</span><span class="data-val" id="d-cop">—</span></div>
+    <div class="data-row"><span class="data-label">T_H / T_C ratio</span><span class="data-val hot" id="d-tratio">—</span></div>
+  </div>
+
+  <div class="formula-box">
+    <div class="f">e_Carnot = 1 - T_C / T_H</div>
+    <div class="f">W = Q_H - Q_C</div>
+    <div class="f">e = W / Q_H</div>
+    <div style="margin-top:4px; color:#484f58">COP_ref = T_C / (T_H - T_C)</div>
+  </div>
+
+  <div id="fps">FPS: —</div>
+</div>
+
+<div id="main-area">
+  <div id="engine-view">
+    <canvas id="engine-canvas" class="three-canvas"></canvas>
+  </div>
+  <div id="pv-view">
+    <canvas id="pv-canvas"></canvas>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // Params
+  let T_hot = 800, T_cold = 300, Q_in = 1000;
+
+  // Three.js
+  let renderer, scene, camera;
+  let pistonMesh, crankGroup, flywheelMesh;
+  let hotParticles = [], coldParticles = [];
+  let animTime = 0;
+  let lastTime = performance.now(), lastFpsTime = performance.now(), frameCount = 0;
+
+  // PV canvas
+  let pvCanvas, pvCtx;
+  let cycleProgress = 0; // 0..1
+
+  const engineContainer = document.getElementById('engine-view');
+  const pvContainer = document.getElementById('pv-view');
+
+  // World bounds for engine view
+  const EW = 16, EH = 10;
+
+  // ---- Three.js Engine Scene ----
+  function initEngine() {
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('engine-canvas') });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x0d1117);
+
+    scene = new THREE.Scene();
+    const aspect = engineContainer.clientWidth / engineContainer.clientHeight;
+    camera = new THREE.OrthographicCamera(-EW / 2 * aspect / 1, EW / 2 * aspect / 1, EH / 2, -EH / 2, 0.1, 100);
+    camera.position.z = 10;
+
+    buildEngine();
+    resizeEngine();
+    window.addEventListener('resize', resizeEngine);
+  }
+
+  function buildEngine() {
+    // Hot source (top right)
+    const hotGeo = new THREE.PlaneGeometry(2.5, 1.5);
+    const hotMat = new THREE.MeshBasicMaterial({ color: 0xff4444 });
+    const hotMesh = new THREE.Mesh(hotGeo, hotMat);
+    hotMesh.position.set(4.5, 3, 0);
+    hotMesh.name = 'hotSource';
+    scene.add(hotMesh);
+
+    // Hot source glow
+    const hotGlowGeo = new THREE.PlaneGeometry(3, 2);
+    const hotGlowMat = new THREE.MeshBasicMaterial({ color: 0xff6644, transparent: true, opacity: 0.2 });
+    const hotGlow = new THREE.Mesh(hotGlowGeo, hotGlowMat);
+    hotGlow.position.set(4.5, 3, -0.01);
+    hotGlow.name = 'hotGlow';
+    scene.add(hotGlow);
+
+    // Cold sink (bottom right)
+    const coldGeo = new THREE.PlaneGeometry(2.5, 1.5);
+    const coldMat = new THREE.MeshBasicMaterial({ color: 0x1e6fa8 });
+    const coldMesh = new THREE.Mesh(coldGeo, coldMat);
+    coldMesh.position.set(4.5, -3, 0);
+    coldMesh.name = 'coldSource';
+    scene.add(coldMesh);
+
+    const coldGlowGeo = new THREE.PlaneGeometry(3, 2);
+    const coldGlowMat = new THREE.MeshBasicMaterial({ color: 0x58a6ff, transparent: true, opacity: 0.2 });
+    const coldGlow = new THREE.Mesh(coldGlowGeo, coldGlowMat);
+    coldGlow.position.set(4.5, -3, -0.01);
+    coldGlow.name = 'coldGlow';
+    scene.add(coldGlow);
+
+    // Cylinder (transparent tube)
+    const cylOuterGeo = new THREE.PlaneGeometry(2.2, 5.5);
+    const cylMat = new THREE.MeshBasicMaterial({ color: 0x21262d, transparent: true, opacity: 0.5 });
+    scene.add(new THREE.Mesh(cylOuterGeo, cylMat)).position.set(-2, 0, -0.05);
+
+    // Cylinder border lines
+    const cylBorderPts = [
+      new THREE.Vector3(-3.1, 2.75, 0), new THREE.Vector3(-3.1, -2.75, 0),
+      new THREE.Vector3(-0.9, -2.75, 0), new THREE.Vector3(-0.9, 2.75, 0)
+    ];
+    const borderGeo = new THREE.BufferGeometry().setFromPoints([
+      cylBorderPts[0], cylBorderPts[1], cylBorderPts[1], cylBorderPts[2],
+      cylBorderPts[2], cylBorderPts[3], cylBorderPts[3], cylBorderPts[0]
+    ]);
+    scene.add(new THREE.LineSegments(borderGeo, new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.5, transparent: true })));
+
+    // Piston
+    const pistonGeo = new THREE.PlaneGeometry(1.8, 0.5);
+    const pistonMat = new THREE.MeshBasicMaterial({ color: 0xadbac7 });
+    pistonMesh = new THREE.Mesh(pistonGeo, pistonMat);
+    pistonMesh.position.set(-2, 0, 0.1);
+    scene.add(pistonMesh);
+
+    // Piston rod
+    const rodGeo = new THREE.PlaneGeometry(0.12, 2.5);
+    const rodMat = new THREE.MeshBasicMaterial({ color: 0x8b949e });
+    const rodMesh = new THREE.Mesh(rodGeo, rodMat);
+    rodMesh.position.set(-2, -1.8, 0.1);
+    rodMesh.name = 'pistonRod';
+    scene.add(rodMesh);
+
+    // Crank group
+    crankGroup = new THREE.Group();
+    crankGroup.position.set(-2, -3.5, 0.2);
+    scene.add(crankGroup);
+
+    const crankArmGeo = new THREE.PlaneGeometry(0.15, 1.2);
+    const crankMat = new THREE.MeshBasicMaterial({ color: 0x8b949e });
+    const crankArm = new THREE.Mesh(crankArmGeo, crankMat);
+    crankArm.position.set(0, 0.6, 0);
+    crankGroup.add(crankArm);
+
+    // Flywheel
+    const fwGeo = new THREE.RingGeometry(0.6, 0.85, 24);
+    const fwMat = new THREE.MeshBasicMaterial({ color: 0x8b949e, side: THREE.DoubleSide });
+    flywheelMesh = new THREE.Mesh(fwGeo, fwMat);
+    flywheelMesh.position.set(-2, -3.5, 0.15);
+    scene.add(flywheelMesh);
+
+    // Flywheel spoke
+    const spokePts = [new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0.7, 0)];
+    const spokeGeo = new THREE.BufferGeometry().setFromPoints(spokePts);
+    const spokeMesh = new THREE.Line(spokeGeo, new THREE.LineBasicMaterial({ color: 0x6e7681 }));
+    flywheelMesh.add(spokeMesh);
+
+    // Work arrow (connecting piston to flywheel area)
+    const arrowPts = [new THREE.Vector3(-5, 0, 0), new THREE.Vector3(-6.5, 0, 0)];
+    const arrowGeo = new THREE.BufferGeometry().setFromPoints(arrowPts);
+    const arrowLine = new THREE.Line(arrowGeo, new THREE.LineBasicMaterial({ color: 0x3fb950, opacity: 0.7, transparent: true }));
+    arrowLine.name = 'workArrow';
+    scene.add(arrowLine);
+
+    // "W" label will go on overlay
+  }
+
+  // Hot/cold particles
+  function spawnParticle(type) {
+    const isHot = type === 'hot';
+    const geo = new THREE.CircleGeometry(0.1, 8);
+    const mat = new THREE.MeshBasicMaterial({
+      color: isHot ? 0xff7b56 : 0x58a6ff,
+      transparent: true, opacity: 0.9
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    // Hot: from hotSource to cylinder top
+    // Cold: from cylinder bottom to coldSource
+    const startX = isHot ? 3.2 : -1.0;
+    const startY = isHot ? 2.8 : -pistonMesh.position.y + 0.5;
+    const endX = isHot ? -1.0 : 3.2;
+    const endY = isHot ? 1.5 : -3.0;
+
+    mesh.position.set(startX, startY, 0.3);
+    scene.add(mesh);
+
+    const p = { mesh, startX, startY, endX, endY, t: 0, type };
+    isHot ? hotParticles.push(p) : coldParticles.push(p);
+  }
+
+  let hotSpawnTimer = 0, coldSpawnTimer = 0;
+
+  function updateParticles(dt) {
+    const efficiency = 1 - T_cold / T_hot;
+    const spawnRate = 0.08 + (1 - efficiency) * 0.1;
+
+    hotSpawnTimer += dt;
+    if (hotSpawnTimer > spawnRate) { hotSpawnTimer = 0; spawnParticle('hot'); }
+    coldSpawnTimer += dt;
+    if (coldSpawnTimer > spawnRate * 1.5) { coldSpawnTimer = 0; spawnParticle('cold'); }
+
+    const allParticles = [...hotParticles, ...coldParticles];
+    for (let i = allParticles.length - 1; i >= 0; i--) {
+      const p = allParticles[i];
+      p.t += dt * 1.2;
+      const eased = p.t < 1 ? p.t : 1;
+      p.mesh.position.x = p.startX + (p.endX - p.startX) * eased;
+      p.mesh.position.y = p.startY + (p.endY - p.startY) * eased;
+      p.mesh.material.opacity = 1 - Math.pow(eased, 2);
+
+      if (p.t >= 1) {
+        scene.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        p.mesh.material.dispose();
+        const arr = p.type === 'hot' ? hotParticles : coldParticles;
+        const idx = arr.indexOf(p);
+        if (idx !== -1) arr.splice(idx, 1);
+      }
+    }
+  }
+
+  function updatePiston(dt) {
+    const period = 2.0;
+    const phase = (animTime % period) / period * Math.PI * 2;
+    const pistonY = Math.sin(phase) * 1.8;
+    pistonMesh.position.y = pistonY;
+
+    const rod = scene.getObjectByName('pistonRod');
+    if (rod) {
+      rod.position.y = pistonY - 1.8;
+    }
+
+    crankGroup.rotation.z = phase;
+    if (flywheelMesh) flywheelMesh.rotation.z = phase;
+
+    // Glow
+    const hotGlow = scene.getObjectByName('hotGlow');
+    if (hotGlow) hotGlow.material.opacity = 0.15 + 0.1 * Math.sin(animTime * 2);
+    const coldGlow = scene.getObjectByName('coldGlow');
+    if (coldGlow) coldGlow.material.opacity = 0.15 + 0.08 * Math.sin(animTime * 2 + Math.PI);
+  }
+
+  function resizeEngine() {
+    const w = engineContainer.clientWidth;
+    const h = engineContainer.clientHeight;
+    renderer.setSize(w, h);
+    const aspect = w / h;
+    camera.left = -EW / 2 * aspect;
+    camera.right = EW / 2 * aspect;
+    camera.top = EH / 2;
+    camera.bottom = -EH / 2;
+    camera.updateProjectionMatrix();
+  }
+
+  // Engine overlay labels
+  let engineOverlay = null;
+  function drawEngineOverlay() {
+    if (!engineOverlay) {
+      engineOverlay = document.createElement('canvas');
+      engineOverlay.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
+      engineContainer.appendChild(engineOverlay);
+    }
+    const w = engineContainer.clientWidth, h = engineContainer.clientHeight;
+    engineOverlay.width = w; engineOverlay.height = h;
+    const ctx = engineOverlay.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    const aspect = w / h;
+    const camW = EW * aspect;
+    const camH = EH;
+
+    function ws(wx, wy) {
+      return { x: (wx / camW + 0.5) * w, y: (0.5 - wy / camH) * h };
+    }
+
+    ctx.font = 'bold 12px Courier New';
+    ctx.textAlign = 'center';
+
+    // Hot source label
+    const hp = ws(4.5, 4.5);
+    ctx.fillStyle = '#ff7b72';
+    ctx.fillText('HOT SOURCE', hp.x, hp.y);
+    ctx.font = '11px Courier New';
+    ctx.fillStyle = '#ffa198';
+    ctx.fillText('T_H = ' + T_hot + ' K', hp.x, hp.y + 14);
+
+    // Cold sink label
+    const cp = ws(4.5, -4.2);
+    ctx.font = 'bold 12px Courier New';
+    ctx.fillStyle = '#58a6ff';
+    ctx.fillText('COLD SINK', cp.x, cp.y);
+    ctx.font = '11px Courier New';
+    ctx.fillStyle = '#79c0ff';
+    ctx.fillText('T_C = ' + T_cold + ' K', cp.x, cp.y + 14);
+
+    // Cylinder label
+    const cylP = ws(-2, 4.2);
+    ctx.font = '10px Courier New';
+    ctx.fillStyle = '#8b949e';
+    ctx.fillText('CYLINDER', cylP.x, cylP.y);
+
+    // Work output label
+    const workP = ws(-6, 0.6);
+    ctx.font = 'bold 13px Courier New';
+    ctx.fillStyle = '#3fb950';
+    ctx.fillText('W_net', workP.x, workP.y);
+    ctx.font = '11px Courier New';
+    const eff = 1 - T_cold / T_hot;
+    const wnet = (eff * Q_in).toFixed(0);
+    ctx.fillText(wnet + ' J', workP.x, workP.y + 14);
+
+    // Arrow →
+    const a1 = ws(-5.2, 0), a2 = ws(-7, 0);
+    ctx.strokeStyle = '#3fb950';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(a1.x, a1.y);
+    ctx.lineTo(a2.x, a2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrowhead
+    ctx.fillStyle = '#3fb950';
+    ctx.beginPath();
+    ctx.moveTo(a2.x - 6, a2.y - 5);
+    ctx.lineTo(a2.x, a2.y);
+    ctx.lineTo(a2.x - 6, a2.y + 5);
+    ctx.fill();
+  }
+
+  // ---- PV Diagram (2D Canvas) ----
+  function initPV() {
+    pvCanvas = document.getElementById('pv-canvas');
+    pvCtx = pvCanvas.getContext('2d');
+    window.addEventListener('resize', resizePV);
+    resizePV();
+  }
+
+  function resizePV() {
+    pvCanvas.width = pvContainer.clientWidth;
+    pvCanvas.height = pvContainer.clientHeight;
+  }
+
+  function drawPV() {
+    const W = pvCanvas.width, H = pvCanvas.height;
+    if (W === 0 || H === 0) return;
+    const ctx = pvCtx;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0a0e14';
+    ctx.fillRect(0, 0, W, H);
+
+    const pad = { top: 20, right: 20, bottom: 40, left: 55 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    // V: 0.5 ~ 5 L, P: 0.5 ~ 10 atm
+    const Vmin = 0.5, Vmax = 5, Pmin = 0.5, Pmax = 10;
+
+    function toScreen(V, P) {
+      return {
+        x: pad.left + (V - Vmin) / (Vmax - Vmin) * plotW,
+        y: pad.top + (1 - (P - Pmin) / (Pmax - Pmin)) * plotH
+      };
+    }
+
+    // Grid
+    ctx.strokeStyle = '#1c2128';
+    ctx.lineWidth = 1;
+    for (let v = 1; v <= 5; v++) {
+      const sx = pad.left + (v - Vmin) / (Vmax - Vmin) * plotW;
+      ctx.beginPath(); ctx.moveTo(sx, pad.top); ctx.lineTo(sx, pad.top + plotH); ctx.stroke();
+    }
+    for (let p = 1; p <= 10; p++) {
+      const sy = pad.top + (1 - (p - Pmin) / (Pmax - Pmin)) * plotH;
+      ctx.beginPath(); ctx.moveTo(pad.left, sy); ctx.lineTo(pad.left + plotW, sy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, pad.top + plotH);
+    ctx.lineTo(pad.left + plotW, pad.top + plotH);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('V (L)', pad.left + plotW / 2, H - 6);
+    ctx.save();
+    ctx.translate(14, pad.top + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('P (atm)', 0, 0);
+    ctx.restore();
+
+    // Tick labels
+    ctx.fillStyle = '#484f58';
+    ctx.font = '9px Courier New';
+    for (let v = 1; v <= 5; v++) {
+      const sx = pad.left + (v - Vmin) / (Vmax - Vmin) * plotW;
+      ctx.fillText(v, sx, pad.top + plotH + 12);
+    }
+    ctx.textAlign = 'right';
+    for (let p = 2; p <= 10; p += 2) {
+      const sy = pad.top + (1 - (p - Pmin) / (Pmax - Pmin)) * plotH;
+      ctx.fillText(p, pad.left - 4, sy + 3);
+    }
+
+    // Carnot cycle points (parameterized with T_hot/T_cold)
+    // Isotherms: PV = nRT = const
+    // Use normalized: V1=1, V2=3 (isothermal expansion at T_H)
+    // V3, V4 from adiabatic relations
+    const gamma = 1.4;
+    const V1 = 1.0, V2 = 3.0;
+    // P1 on hot isotherm
+    const P1 = T_hot / 100; // scaled so it fits in plot
+    const P2 = P1 * V1 / V2; // isothermal: P1V1 = P2V2
+
+    // Adiabatic expansion: P2 * V2^γ = P3 * V3^γ
+    // Isothermal compression at T_cold: P3 * V3 = P4 * V4
+    // Adiabatic compression: P4 * V4^γ = P1 * V1^γ
+    const scale = 1 / (T_hot / 100); // normalize to fit
+    const Tnorm_H = T_hot / 100 * scale;
+    const Tnorm_C = T_cold / 100 * scale;
+    const ratio = T_hot / T_cold;
+
+    // Clamp to plot range
+    const p1 = Math.min(Pmax - 0.2, Math.max(Pmin + 0.1, T_hot / 120));
+    const v1 = 1.0;
+    const v2 = Math.min(Vmax - 0.2, v1 * (T_hot / T_cold) * (1 / (gamma - 1) * 0.6 + 1));
+    const p2 = p1 * v1 / v2;
+    // Adiabatic to v3
+    const v3 = Math.min(Vmax - 0.1, v2 * Math.pow(T_hot / T_cold, 1 / (gamma - 1)) * 0.5);
+    const p3 = p2 * Math.pow(v2 / v3, gamma);
+    const v4 = v1 * Math.pow(p1 / p3, 1 / gamma) * Math.pow(v1, 1) / v1;
+    const p4 = p3 * v3 / v4;
+
+    // Clamp all to valid range
+    const clampV = v => Math.min(Vmax - 0.05, Math.max(Vmin + 0.05, v));
+    const clampP = p => Math.min(Pmax - 0.05, Math.max(Pmin + 0.05, p));
+    const cv1 = clampV(v1), cp1 = clampP(p1);
+    const cv2 = clampV(v2), cp2 = clampP(p2);
+    const cv3 = clampV(v3), cp3 = clampP(p3);
+    const cv4 = clampV(v4), cp4 = clampP(p4);
+
+    // Draw filled cycle area
+    ctx.save();
+    ctx.beginPath();
+    // Segment 1: Isothermal expansion (T_H), v1→v2
+    const pts1 = buildIsotherm(cv1, cp1, cv2, ctx, toScreen, false);
+    // Segment 2: Adiabatic expansion v2→v3
+    const pts2 = buildAdiabat(cv2, cp2, cv3, ctx, toScreen, false);
+    // Segment 3: Isothermal compression (T_C), v3→v4
+    const pts3 = buildIsotherm(cv3, cp3, cv4, ctx, toScreen, false);
+    // Segment 4: Adiabatic compression v4→v1
+    const pts4 = buildAdiabat(cv4, cp4, cv1, ctx, toScreen, false);
+
+    // Fill
+    ctx.beginPath();
+    const allPts = [...pts1, ...pts2, ...pts3, ...pts4];
+    if (allPts.length > 0) {
+      ctx.moveTo(allPts[0].x, allPts[0].y);
+      allPts.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(63,185,80,0.08)';
+      ctx.fill();
+    }
+
+    // Draw segments with colors
+    drawCurve(pts1, '#ff7b72', ctx); // isothermal expansion - hot - red
+    drawCurveWithArrow(pts2, '#d29922', ctx); // adiabatic expansion - orange
+    drawCurve(pts3, '#58a6ff', ctx); // isothermal compression - cold - blue
+    drawCurveWithArrow(pts4, '#3fb950', ctx); // adiabatic compression - green
+
+    ctx.restore();
+
+    // Labels for segments
+    ctx.font = '9px Courier New';
+    const mid1 = pts1[Math.floor(pts1.length / 2)] || toScreen(cv1, cp1);
+    ctx.fillStyle = '#ff7b72'; ctx.textAlign = 'left';
+    ctx.fillText('1→2 isothermal (T_H)', mid1.x + 5, mid1.y - 8);
+    const mid2 = pts2[Math.floor(pts2.length / 2)] || toScreen(cv2, cp2);
+    ctx.fillStyle = '#d29922'; ctx.textAlign = 'left';
+    ctx.fillText('2→3 adiabatic', mid2.x + 5, mid2.y - 4);
+    const mid3 = pts3[Math.floor(pts3.length / 2)] || toScreen(cv3, cp3);
+    ctx.fillStyle = '#58a6ff'; ctx.textAlign = 'right';
+    ctx.fillText('3→4 isothermal (T_C)', mid3.x - 5, mid3.y + 12);
+    const mid4 = pts4[Math.floor(pts4.length / 2)] || toScreen(cv4, cp4);
+    ctx.fillStyle = '#3fb950'; ctx.textAlign = 'right';
+    ctx.fillText('4→1 adiabatic', mid4.x - 5, mid4.y - 4);
+
+    // W_net label in center
+    const cx = allPts.reduce((s, p) => s + p.x, 0) / (allPts.length || 1);
+    const cy = allPts.reduce((s, p) => s + p.y, 0) / (allPts.length || 1);
+    ctx.font = 'bold 11px Courier New';
+    ctx.fillStyle = '#3fb950';
+    ctx.textAlign = 'center';
+    const eff = 1 - T_cold / T_hot;
+    ctx.fillText('W = ' + (eff * Q_in).toFixed(0) + ' J', cx, cy);
+
+    // Moving state point
+    const phase = cycleProgress;
+    let stateV, stateP;
+    if (phase < 0.25) {
+      const t = phase / 0.25;
+      const idx = Math.floor(t * (pts1.length - 1));
+      const pt = pts1[Math.min(idx, pts1.length - 1)];
+      stateV = pt ? pt.V || cv1 : cv1;
+      stateP = pt ? pt.P || cp1 : cp1;
+      const sc = pt || toScreen(cv1, cp1);
+      drawStatePoint(sc.x, sc.y, ctx);
+    } else if (phase < 0.5) {
+      const t = (phase - 0.25) / 0.25;
+      const idx = Math.floor(t * (pts2.length - 1));
+      const pt = pts2[Math.min(idx, pts2.length - 1)];
+      const sc = pt || toScreen(cv2, cp2);
+      drawStatePoint(sc.x, sc.y, ctx);
+    } else if (phase < 0.75) {
+      const t = (phase - 0.5) / 0.25;
+      const idx = Math.floor(t * (pts3.length - 1));
+      const pt = pts3[Math.min(idx, pts3.length - 1)];
+      const sc = pt || toScreen(cv3, cp3);
+      drawStatePoint(sc.x, sc.y, ctx);
+    } else {
+      const t = (phase - 0.75) / 0.25;
+      const idx = Math.floor(t * (pts4.length - 1));
+      const pt = pts4[Math.min(idx, pts4.length - 1)];
+      const sc = pt || toScreen(cv4, cp4);
+      drawStatePoint(sc.x, sc.y, ctx);
+    }
+
+    // Corner points labels
+    [
+      { v: cv1, p: cp1, label: 'A', dx: -12, dy: -5 },
+      { v: cv2, p: cp2, label: 'B', dx: 5, dy: -5 },
+      { v: cv3, p: cp3, label: 'C', dx: 5, dy: 10 },
+      { v: cv4, p: cp4, label: 'D', dx: -12, dy: 10 }
+    ].forEach(({ v, p, label, dx, dy }) => {
+      const sc = toScreen(v, p);
+      ctx.fillStyle = '#e6edf3';
+      ctx.font = 'bold 10px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, sc.x + dx, sc.y + dy);
+    });
+
+    // Title
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px Courier New';
+    ctx.textAlign = 'left';
+    ctx.fillText('P-V Diagram — Carnot Cycle', pad.left + 5, pad.top - 6);
+  }
+
+  function buildIsotherm(v1, p1, v2, ctx, toScreen, draw) {
+    const pts = [];
+    const n = 30;
+    const C = p1 * v1; // PV = const
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const V = v1 + (v2 - v1) * t;
+      const P = C / V;
+      const sc = toScreen(V, P);
+      sc.V = V; sc.P = P;
+      pts.push(sc);
+    }
+    return pts;
+  }
+
+  function buildAdiabat(v1, p1, v2, ctx, toScreen, draw) {
+    const gamma = 1.4;
+    const pts = [];
+    const n = 30;
+    const C = p1 * Math.pow(v1, gamma);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const V = v1 + (v2 - v1) * t;
+      const P = C / Math.pow(V, gamma);
+      const sc = toScreen(V, P);
+      sc.V = V; sc.P = P;
+      pts.push(sc);
+    }
+    return pts;
+  }
+
+  function drawCurve(pts, color, ctx) {
+    if (pts.length < 2) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  }
+
+  function drawCurveWithArrow(pts, color, ctx) {
+    drawCurve(pts, color, ctx);
+    if (pts.length < 2) return;
+    const mid = Math.floor(pts.length / 2);
+    const p1 = pts[mid - 1], p2 = pts[mid];
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const angle = Math.atan2(dy, dx);
+    ctx.fillStyle = color;
+    ctx.save();
+    ctx.translate(p2.x, p2.y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-8, -4);
+    ctx.lineTo(-8, 4);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStatePoint(x, y, ctx) {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#e6edf3';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function updateUI() {
+    const eff = Math.max(0, 1 - T_cold / T_hot);
+    const wnet = eff * Q_in;
+    const qrej = Q_in - wnet;
+    const cop = T_cold / (T_hot - T_cold);
+
+    document.getElementById('d-eff').textContent = (eff * 100).toFixed(1) + '%';
+    document.getElementById('eff-bar').style.width = (eff * 100) + '%';
+    document.getElementById('d-wnet').textContent = wnet.toFixed(1) + ' J';
+    document.getElementById('d-qrej').textContent = qrej.toFixed(1) + ' J';
+    document.getElementById('d-cop').textContent = cop.toFixed(3);
+    document.getElementById('d-tratio').textContent = (T_hot / T_cold).toFixed(2);
+  }
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    animTime += dt;
+
+    cycleProgress = (animTime % 4) / 4;
+
+    frameCount++;
+    if (now - lastFpsTime >= 1000) {
+      document.getElementById('fps').textContent = 'FPS: ' + frameCount;
+      frameCount = 0; lastFpsTime = now;
+    }
+
+    updatePiston(dt);
+    updateParticles(dt);
+    updateUI();
+    drawPV();
+    drawEngineOverlay();
+
+    try { renderer.render(scene, camera); } catch(e) { console.warn(e); }
+  }
+
+  // Controls
+  document.getElementById('sl-th').addEventListener('input', function() {
+    T_hot = +this.value;
+    if (T_cold >= T_hot) { T_cold = T_hot - 50; document.getElementById('sl-tc').value = T_cold; document.getElementById('lbl-tc').textContent = T_cold + ' K'; }
+    document.getElementById('lbl-th').textContent = T_hot + ' K';
+  });
+  document.getElementById('sl-tc').addEventListener('input', function() {
+    T_cold = +this.value;
+    if (T_cold >= T_hot) { T_cold = T_hot - 50; this.value = T_cold; }
+    document.getElementById('lbl-tc').textContent = T_cold + ' K';
+  });
+  document.getElementById('sl-qin').addEventListener('input', function() {
+    Q_in = +this.value;
+    document.getElementById('lbl-qin').textContent = Q_in + ' J';
+  });
+
+  window.addEventListener('resize', () => { resizeEngine(); resizePV(); });
+
+  try {
+    initEngine();
+    initPV();
+    animate(performance.now());
+  } catch(e) {
+    console.error('Init failed:', e);
+    document.body.innerHTML += '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f85149;font-size:14px;background:#161b22;padding:20px;border-radius:8px;border:1px solid #f85149;">Error: ' + e.message + '</div>';
+  }
+})();
+</script>
+</body>
+</html>

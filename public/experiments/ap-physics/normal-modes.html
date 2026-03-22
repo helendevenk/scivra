@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Normal Modes — Standing Waves & Vibration Patterns</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas#c { display: block; }
+
+  /* ── UI Panel ── */
+  #ui { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); padding: 14px; overflow-y: auto; backdrop-filter: blur(8px); z-index: 10; }
+  #ui::-webkit-scrollbar { width: 4px; }
+  #ui::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  .panel-title { font-size: 13px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .section { margin-bottom: 12px; padding: 10px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
+  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 8px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 11px; }
+  .slider-name { color: #c9d1d9; }
+  .slider-val { color: #60a5fa; font-weight: 700; min-width: 70px; text-align: right; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+
+  /* Presets */
+  .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .preset-btn { padding: 5px 8px; font-size: 10px; font-weight: 600; border-radius: 5px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .preset-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+  .preset-btn:hover:not(.active) { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
+
+  /* Checkboxes for mode stacking */
+  .mode-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 6px; }
+  .mode-cb-label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #c9d1d9; cursor: pointer; padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(59,130,246,0.12); transition: all 0.15s; }
+  .mode-cb-label:hover { border-color: rgba(59,130,246,0.4); }
+  .mode-cb-label.checked { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #60a5fa; }
+  .mode-cb-label input { display: none; }
+
+  /* Data readout */
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .data-cell { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.15); border-radius: 6px; padding: 6px; text-align: center; }
+  .data-cell-label { font-size: 9px; color: #7d8590; text-transform: uppercase; }
+  .data-cell-value { font-size: 13px; font-weight: 700; color: #60a5fa; margin-top: 1px; }
+  .data-cell-unit { font-size: 9px; color: #7d8590; }
+  .data-cell.highlight { border-color: rgba(245,158,11,0.5); }
+  .data-cell.highlight .data-cell-value { color: #f59e0b; }
+
+  /* Formulas (KaTeX) */
+  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; text-align: center; }
+  .formula-desc { font-size: 10px; color: #7d8590; margin-top: 3px; }
+
+  /* 2D waveform canvas */
+  .canvas-section { margin-bottom: 8px; }
+  .canvas-section canvas { width: 100%; border-radius: 6px; border: 1px solid rgba(59,130,246,0.15); background: rgba(15,23,42,0.9); }
+
+  /* Quiz */
+  #quiz-panel { position: fixed; bottom: 12px; left: 312px; width: 360px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 14px; z-index: 10; backdrop-filter: blur(8px); max-height: 280px; overflow-y: auto; }
+  .quiz-title { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .quiz-q { font-size: 11px; color: #c9d1d9; margin-bottom: 6px; line-height: 1.4; }
+  .quiz-opt { display: block; width: 100%; text-align: left; padding: 5px 8px; margin-bottom: 3px; font-size: 10px; font-family: inherit; border-radius: 4px; border: 1px solid rgba(59,130,246,0.2); background: transparent; color: #c9d1d9; cursor: pointer; transition: all 0.15s; }
+  .quiz-opt:hover { border-color: rgba(59,130,246,0.5); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #22c55e; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #ef4444; }
+  .quiz-feedback { font-size: 10px; margin-top: 4px; margin-bottom: 8px; line-height: 1.3; }
+
+  /* Info panel */
+  #info { position: fixed; top: 12px; right: 12px; width: 220px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(8px); }
+  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; }
+
+  /* FPS */
+  #fps { position: fixed; bottom: 8px; right: 8px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+</style>
+</head>
+<body>
+<div id="canvas-container"><canvas id="c"></canvas></div>
+
+<div id="ui">
+  <div class="panel-title">~ Normal Modes</div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="section-label">Presets</div>
+    <div class="preset-row">
+      <button class="preset-btn" id="pre-fundamental" onclick="applyPreset('fundamental')">Fundamental</button>
+      <button class="preset-btn" id="pre-third" onclick="applyPreset('third')">Third Harmonic</button>
+      <button class="preset-btn" id="pre-super" onclick="applyPreset('superposition')">Superposition</button>
+    </div>
+
+    <!-- Mode n -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Mode n</span><span class="slider-val" id="n-val">1</span></div>
+      <input type="range" id="slider-n" min="1" max="8" step="1" value="1" oninput="updateSlider('mode',this.value)">
+    </div>
+    <!-- Tension -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Tension T</span><span class="slider-val" id="t-val">5.0 N</span></div>
+      <input type="range" id="slider-t" min="1" max="20" step="0.5" value="5" oninput="updateSlider('tension',this.value)">
+    </div>
+    <!-- Amplitude -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Amplitude A</span><span class="slider-val" id="a-val">0.50</span></div>
+      <input type="range" id="slider-a" min="0.1" max="2" step="0.05" value="0.5" oninput="updateSlider('amplitude',this.value)">
+    </div>
+
+    <!-- Mode Stacking -->
+    <div class="section-label" style="margin-top:8px;">Mode Stacking</div>
+    <div class="mode-stack" id="mode-stack"></div>
+  </div>
+
+  <!-- Live Data -->
+  <div class="section">
+    <div class="section-label">Live Measurements</div>
+    <div class="data-grid">
+      <div class="data-cell highlight"><div class="data-cell-label">Frequency</div><div class="data-cell-value" id="freq-disp">--</div><div class="data-cell-unit">Hz</div></div>
+      <div class="data-cell"><div class="data-cell-label">Wavelength</div><div class="data-cell-value" id="wl-disp">--</div><div class="data-cell-unit">m</div></div>
+      <div class="data-cell"><div class="data-cell-label">Wave Speed</div><div class="data-cell-value" id="v-disp">--</div><div class="data-cell-unit">m/s</div></div>
+      <div class="data-cell"><div class="data-cell-label">Nodes</div><div class="data-cell-value" id="nodes-disp">--</div><div class="data-cell-unit">(n-1)</div></div>
+    </div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="section">
+    <div class="section-label">Key Equations</div>
+    <div class="formula-box" id="formula1"></div>
+    <div class="formula-desc">Frequency of nth harmonic</div>
+    <div class="formula-box" id="formula2" style="margin-top:6px;"></div>
+    <div class="formula-desc">Number of interior nodes = n - 1</div>
+  </div>
+
+  <!-- 2D waveform -->
+  <div class="section">
+    <div class="section-label">Waveform Profile</div>
+    <div class="canvas-section">
+      <canvas id="waveCanvas" width="272" height="100"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Info -->
+<div id="info">
+  <h3>About Normal Modes</h3>
+  <p>A standing wave forms when two identical waves travel in opposite directions and interfere. The nth normal mode of a string fixed at both ends has n half-wavelengths fitting in the string length L. Nodes (zero displacement) are marked red; antinodes (maximum displacement) are marked blue.</p>
+</div>
+
+<!-- Quiz -->
+<div id="quiz-panel">
+  <div class="quiz-title">Quiz</div>
+
+  <div class="quiz-q">Q1: A string of length 2 m is fixed at both ends. For the 3rd harmonic, how many nodes are there (excluding the endpoints)?</div>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,false)">A) 1</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,true)">B) 2</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,false)">C) 3</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,false)">D) 4</button>
+  <div class="quiz-feedback" id="fb1"></div>
+
+  <div class="quiz-q">Q2: If the tension in a vibrating string is quadrupled while all other parameters stay the same, the fundamental frequency will:</div>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,true)">A) Double</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,false)">B) Quadruple</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,false)">C) Halve</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,false)">D) Stay the same</button>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+
+<div id="fps"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+"use strict";
+
+/* ── Parameters ── */
+const params = {
+  mode: 1,
+  tension: 5,
+  amplitude: 0.5,
+  mu: 0.01,        // linear density kg/m
+  L: 4,            // string length (3D units)
+  activeModes: [1] // modes to superpose
+};
+
+const STRING_SEGMENTS = 200;
+const NODE_RADIUS = 0.08;
+const ANTINODE_RADIUS = 0.06;
+
+/* ── Three.js Setup ── */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0f172a);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 2.5, 6);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+controls.minDistance = 3;
+controls.maxDistance = 15;
+
+/* ── Lighting ── */
+scene.add(new THREE.AmbientLight(0x334466, 0.6));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(3, 5, 4);
+scene.add(dirLight);
+
+/* ── Grid / Reference ── */
+const gridHelper = new THREE.GridHelper(10, 20, 0x1e3a5f, 0x0f2030);
+gridHelper.position.y = -1.5;
+scene.add(gridHelper);
+
+/* ── Fixed End Posts ── */
+function createPost(x) {
+  const geo = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.6, roughness: 0.4 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, -0.3, 0);
+  scene.add(mesh);
+  // top sphere
+  const sGeo = new THREE.SphereGeometry(0.1, 12, 12);
+  const sMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.5, roughness: 0.3 });
+  const sMesh = new THREE.Mesh(sGeo, sMat);
+  sMesh.position.set(x, 0.3, 0);
+  scene.add(sMesh);
+}
+const halfL = params.L / 2;
+createPost(-halfL);
+createPost(halfL);
+
+/* ── String (TubeGeometry rebuilt each frame) ── */
+let stringMesh = null;
+const stringMaterial = new THREE.MeshStandardMaterial({
+  color: 0x60a5fa,
+  emissive: 0x1e40af,
+  emissiveIntensity: 0.3,
+  metalness: 0.2,
+  roughness: 0.5
+});
+
+/* ── Node & Antinode Markers ── */
+let markerGroup = new THREE.Group();
+scene.add(markerGroup);
+
+const nodeMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 0.4 });
+const antinodeMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x3b82f6, emissiveIntensity: 0.5 });
+
+function clearMarkers() {
+  while (markerGroup.children.length) {
+    const c = markerGroup.children[0];
+    c.geometry.dispose();
+    markerGroup.remove(c);
+  }
+}
+
+function addMarker(x, y, isNode) {
+  const r = isNode ? NODE_RADIUS : ANTINODE_RADIUS;
+  const geo = new THREE.SphereGeometry(r, 12, 12);
+  const mesh = new THREE.Mesh(geo, isNode ? nodeMat : antinodeMat);
+  mesh.position.set(x, y, 0);
+  markerGroup.add(mesh);
+}
+
+/* ── Mode Label Sprites ── */
+let labelGroup = new THREE.Group();
+scene.add(labelGroup);
+
+function clearLabels() {
+  while (labelGroup.children.length) {
+    const c = labelGroup.children[0];
+    c.material.map.dispose();
+    c.material.dispose();
+    labelGroup.remove(c);
+  }
+}
+
+function createTextSprite(text, color) {
+  const cnv = document.createElement('canvas');
+  cnv.width = 128; cnv.height = 64;
+  const ctx = cnv.getContext('2d');
+  ctx.font = 'bold 28px monospace';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 32);
+  const tex = new THREE.CanvasTexture(cnv);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.6, 0.3, 1);
+  return sprite;
+}
+
+/* ── Compute displacement ── */
+function displacement(x_norm, t, modes, amp) {
+  // x_norm: 0..1 along string
+  let y = 0;
+  for (let i = 0; i < modes.length; i++) {
+    const n = modes[i];
+    const freq = computeFrequency(n);
+    const omega = 2 * Math.PI * freq;
+    y += amp * Math.sin(n * Math.PI * x_norm) * Math.cos(omega * t);
+  }
+  // normalize if superposition
+  if (modes.length > 1) y /= Math.sqrt(modes.length);
+  return y;
+}
+
+function computeFrequency(n) {
+  const v = Math.sqrt(params.tension / params.mu);
+  return n / (2 * params.L) * v;
+}
+
+function computeWaveSpeed() {
+  return Math.sqrt(params.tension / params.mu);
+}
+
+/* ── Rebuild string geometry ── */
+function buildString(t) {
+  const points = [];
+  const modes = params.activeModes;
+  for (let i = 0; i <= STRING_SEGMENTS; i++) {
+    const frac = i / STRING_SEGMENTS;
+    const x = -halfL + frac * params.L;
+    const y = displacement(frac, t, modes, params.amplitude);
+    points.push(new THREE.Vector3(x, y, 0));
+  }
+
+  if (stringMesh) {
+    stringMesh.geometry.dispose();
+    scene.remove(stringMesh);
+  }
+
+  const curve = new THREE.CatmullRomCurve3(points);
+  const tubeGeo = new THREE.TubeGeometry(curve, STRING_SEGMENTS, 0.025, 8, false);
+  stringMesh = new THREE.Mesh(tubeGeo, stringMaterial);
+  scene.add(stringMesh);
+}
+
+/* ── Update markers for single mode ── */
+function updateMarkers() {
+  clearMarkers();
+  clearLabels();
+
+  // Only show node/antinode markers for single mode
+  if (params.activeModes.length !== 1) return;
+
+  const n = params.activeModes[0];
+
+  // Nodes at x = k/n * L for k=1..n-1 (interior nodes)
+  for (let k = 1; k < n; k++) {
+    const frac = k / n;
+    const x = -halfL + frac * params.L;
+    addMarker(x, 0, true);
+
+    const label = createTextSprite('N', '#ef4444');
+    label.position.set(x, -0.25, 0);
+    labelGroup.add(label);
+  }
+
+  // Antinodes at x = (2k-1)/(2n) * L for k=1..n
+  for (let k = 1; k <= n; k++) {
+    const frac = (2 * k - 1) / (2 * n);
+    const x = -halfL + frac * params.L;
+    addMarker(x, 0, false);
+
+    const label = createTextSprite('A', '#3b82f6');
+    label.position.set(x, -0.25, 0);
+    labelGroup.add(label);
+  }
+}
+
+/* ── Update readouts ── */
+function updateReadouts() {
+  const n = params.mode;
+  const freq = computeFrequency(n);
+  const v = computeWaveSpeed();
+  const wavelength = 2 * params.L / n;
+
+  document.getElementById('freq-disp').textContent = freq.toFixed(2);
+  document.getElementById('wl-disp').textContent = wavelength.toFixed(3);
+  document.getElementById('v-disp').textContent = v.toFixed(2);
+  document.getElementById('nodes-disp').textContent = (n - 1).toString();
+}
+
+/* ── 2D Waveform Canvas ── */
+const waveCanvas = document.getElementById('waveCanvas');
+const wCtx = waveCanvas.getContext('2d');
+
+function drawWaveform(t) {
+  const W = waveCanvas.width;
+  const H = waveCanvas.height;
+  wCtx.clearRect(0, 0, W, H);
+
+  // grid
+  wCtx.strokeStyle = 'rgba(59,130,246,0.1)';
+  wCtx.lineWidth = 0.5;
+  for (let i = 0; i <= 10; i++) {
+    const x = (i / 10) * W;
+    wCtx.beginPath(); wCtx.moveTo(x, 0); wCtx.lineTo(x, H); wCtx.stroke();
+  }
+  wCtx.beginPath(); wCtx.moveTo(0, H / 2); wCtx.lineTo(W, H / 2); wCtx.stroke();
+
+  // envelope (max displacement)
+  wCtx.strokeStyle = 'rgba(59,130,246,0.2)';
+  wCtx.lineWidth = 1;
+  wCtx.setLineDash([3, 3]);
+  const modes = params.activeModes;
+  // positive envelope
+  wCtx.beginPath();
+  for (let i = 0; i <= W; i++) {
+    const frac = i / W;
+    let env = 0;
+    for (let m = 0; m < modes.length; m++) {
+      env += Math.abs(Math.sin(modes[m] * Math.PI * frac));
+    }
+    if (modes.length > 1) env /= Math.sqrt(modes.length);
+    env *= params.amplitude;
+    const py = H / 2 - env * (H / 2) / 2.2;
+    i === 0 ? wCtx.moveTo(i, py) : wCtx.lineTo(i, py);
+  }
+  wCtx.stroke();
+  // negative envelope
+  wCtx.beginPath();
+  for (let i = 0; i <= W; i++) {
+    const frac = i / W;
+    let env = 0;
+    for (let m = 0; m < modes.length; m++) {
+      env += Math.abs(Math.sin(modes[m] * Math.PI * frac));
+    }
+    if (modes.length > 1) env /= Math.sqrt(modes.length);
+    env *= params.amplitude;
+    const py = H / 2 + env * (H / 2) / 2.2;
+    i === 0 ? wCtx.moveTo(i, py) : wCtx.lineTo(i, py);
+  }
+  wCtx.stroke();
+  wCtx.setLineDash([]);
+
+  // wave
+  wCtx.strokeStyle = '#60a5fa';
+  wCtx.lineWidth = 2;
+  wCtx.shadowColor = '#3b82f6';
+  wCtx.shadowBlur = 4;
+  wCtx.beginPath();
+  for (let i = 0; i <= W; i++) {
+    const frac = i / W;
+    const y = displacement(frac, t, modes, params.amplitude);
+    const py = H / 2 - y * (H / 2) / 2.2;
+    i === 0 ? wCtx.moveTo(i, py) : wCtx.lineTo(i, py);
+  }
+  wCtx.stroke();
+  wCtx.shadowBlur = 0;
+}
+
+/* ── Slider updates ── */
+function updateSlider(param, val) {
+  val = parseFloat(val);
+  switch (param) {
+    case 'mode':
+      params.mode = Math.round(val);
+      document.getElementById('n-val').textContent = params.mode;
+      // If not in superposition preset, set single mode
+      if (!superpositionActive) {
+        params.activeModes = [params.mode];
+        updateModeCheckboxes();
+      }
+      break;
+    case 'tension':
+      params.tension = val;
+      document.getElementById('t-val').textContent = val.toFixed(1) + ' N';
+      break;
+    case 'amplitude':
+      params.amplitude = val;
+      document.getElementById('a-val').textContent = val.toFixed(2);
+      break;
+  }
+  updateReadouts();
+  updateMarkers();
+  clearPresetButtons();
+}
+
+/* ── Mode stacking checkboxes ── */
+let superpositionActive = false;
+
+function buildModeCheckboxes() {
+  const container = document.getElementById('mode-stack');
+  container.innerHTML = '';
+  for (let n = 1; n <= 8; n++) {
+    const label = document.createElement('label');
+    label.className = 'mode-cb-label' + (params.activeModes.includes(n) ? ' checked' : '');
+    label.id = 'mcb-' + n;
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = params.activeModes.includes(n);
+    cb.addEventListener('change', function () {
+      superpositionActive = true;
+      if (this.checked) {
+        if (!params.activeModes.includes(n)) params.activeModes.push(n);
+      } else {
+        params.activeModes = params.activeModes.filter(m => m !== n);
+        if (params.activeModes.length === 0) {
+          params.activeModes = [1];
+          this.checked = true;
+        }
+      }
+      params.activeModes.sort((a, b) => a - b);
+      updateModeCheckboxes();
+      updateMarkers();
+      updateReadouts();
+      clearPresetButtons();
+    });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode('n=' + n));
+    container.appendChild(label);
+  }
+}
+
+function updateModeCheckboxes() {
+  for (let n = 1; n <= 8; n++) {
+    const el = document.getElementById('mcb-' + n);
+    if (!el) continue;
+    const cb = el.querySelector('input');
+    cb.checked = params.activeModes.includes(n);
+    el.className = 'mode-cb-label' + (params.activeModes.includes(n) ? ' checked' : '');
+  }
+}
+
+/* ── Presets ── */
+function clearPresetButtons() {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
+
+function applyPreset(name) {
+  clearPresetButtons();
+  switch (name) {
+    case 'fundamental':
+      params.mode = 1;
+      params.tension = 5;
+      params.amplitude = 0.5;
+      params.activeModes = [1];
+      superpositionActive = false;
+      document.getElementById('pre-fundamental').classList.add('active');
+      break;
+    case 'third':
+      params.mode = 3;
+      params.tension = 5;
+      params.amplitude = 0.5;
+      params.activeModes = [3];
+      superpositionActive = false;
+      document.getElementById('pre-third').classList.add('active');
+      break;
+    case 'superposition':
+      params.mode = 1;
+      params.tension = 5;
+      params.amplitude = 0.5;
+      params.activeModes = [1, 3];
+      superpositionActive = true;
+      document.getElementById('pre-super').classList.add('active');
+      break;
+  }
+  // sync sliders
+  document.getElementById('slider-n').value = params.mode;
+  document.getElementById('n-val').textContent = params.mode;
+  document.getElementById('slider-t').value = params.tension;
+  document.getElementById('t-val').textContent = params.tension.toFixed(1) + ' N';
+  document.getElementById('slider-a').value = params.amplitude;
+  document.getElementById('a-val').textContent = params.amplitude.toFixed(2);
+
+  updateModeCheckboxes();
+  updateReadouts();
+  updateMarkers();
+}
+
+/* ── Quiz ── */
+const quizAnswered = {};
+function checkQuiz(btn, qNum, isCorrect) {
+  if (quizAnswered[qNum]) return;
+  quizAnswered[qNum] = true;
+  const fb = document.getElementById('fb' + qNum);
+  if (isCorrect) {
+    btn.classList.add('correct');
+    if (qNum === 1) {
+      fb.innerHTML = '<span style="color:#22c55e">Correct!</span> For the 3rd harmonic (n=3), there are n-1 = 2 interior nodes.';
+    } else {
+      fb.innerHTML = '<span style="color:#22c55e">Correct!</span> Since f ~ sqrt(T), quadrupling T doubles the frequency.';
+    }
+  } else {
+    btn.classList.add('wrong');
+    // highlight correct
+    const parent = btn.parentElement;
+    const opts = parent.querySelectorAll('.quiz-opt');
+    if (qNum === 1) {
+      opts[1].classList.add('correct');
+      fb.innerHTML = '<span style="color:#ef4444">Incorrect.</span> For n=3, interior nodes = n-1 = 2. The endpoints are fixed but not counted as interior nodes.';
+    } else {
+      opts[0].classList.add('correct');
+      fb.innerHTML = '<span style="color:#ef4444">Incorrect.</span> f = n/(2L) * sqrt(T/mu). If T -> 4T, then sqrt(4T) = 2*sqrt(T), so frequency doubles.';
+    }
+  }
+}
+
+/* ── KaTeX Render ── */
+function renderFormulas() {
+  katex.render("f_n = \\frac{n}{2L}\\sqrt{\\frac{T}{\\mu}}", document.getElementById('formula1'), { displayMode: true, throwOnError: false });
+  katex.render("\\text{Interior nodes} = n - 1", document.getElementById('formula2'), { displayMode: true, throwOnError: false });
+}
+
+/* ── Glow line for string (additive) ── */
+let glowMesh = null;
+const glowMaterial = new THREE.MeshBasicMaterial({
+  color: 0x3b82f6,
+  transparent: true,
+  opacity: 0.15,
+  depthWrite: false
+});
+
+function buildGlow(t) {
+  if (glowMesh) {
+    glowMesh.geometry.dispose();
+    scene.remove(glowMesh);
+  }
+  const points = [];
+  const modes = params.activeModes;
+  for (let i = 0; i <= STRING_SEGMENTS; i++) {
+    const frac = i / STRING_SEGMENTS;
+    const x = -halfL + frac * params.L;
+    const y = displacement(frac, t, modes, params.amplitude);
+    points.push(new THREE.Vector3(x, y, 0));
+  }
+  const curve = new THREE.CatmullRomCurve3(points);
+  const tubeGeo = new THREE.TubeGeometry(curve, STRING_SEGMENTS, 0.08, 8, false);
+  glowMesh = new THREE.Mesh(tubeGeo, glowMaterial);
+  scene.add(glowMesh);
+}
+
+/* ── Antinode pulsing ── */
+function updateAntinodePulse(t) {
+  if (params.activeModes.length !== 1) return;
+  const n = params.activeModes[0];
+  const freq = computeFrequency(n);
+  const omega = 2 * Math.PI * freq;
+  const cosVal = Math.abs(Math.cos(omega * t));
+
+  // Update antinode marker sizes
+  let antinodeIdx = 0;
+  for (let i = 0; i < markerGroup.children.length; i++) {
+    const child = markerGroup.children[i];
+    if (child.material === antinodeMat) {
+      const scale = 0.7 + 0.6 * cosVal;
+      child.scale.set(scale, scale, scale);
+      // Also update Y position
+      const k = antinodeIdx + 1;
+      const frac = (2 * k - 1) / (2 * n);
+      child.position.y = displacement(frac, t, params.activeModes, params.amplitude);
+      antinodeIdx++;
+    } else if (child.material === nodeMat) {
+      child.position.y = 0; // nodes stay at 0
+    }
+  }
+}
+
+/* ── Resize ── */
+function onResize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+/* ── Animation Loop ── */
+let clock = new THREE.Clock();
+let frameCount = 0;
+let lastFpsTime = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  buildString(t);
+  buildGlow(t);
+  updateAntinodePulse(t);
+  drawWaveform(t);
+
+  controls.update();
+  renderer.render(scene, camera);
+
+  // FPS counter
+  frameCount++;
+  if (t - lastFpsTime >= 1) {
+    document.getElementById('fps').textContent = Math.round(frameCount / (t - lastFpsTime)) + ' fps';
+    frameCount = 0;
+    lastFpsTime = t;
+  }
+}
+
+/* ── Init ── */
+renderFormulas();
+buildModeCheckboxes();
+applyPreset('fundamental');
+animate();
+</script>
+</body>
+</html>

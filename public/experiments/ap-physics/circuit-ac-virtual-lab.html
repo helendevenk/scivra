@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circuit Construction Kit: AC — Virtual Lab</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas#c { display: block; }
+
+  /* ── UI Panel ── */
+  #ui { position: fixed; top: 0; left: 0; width: 310px; height: 100vh; background: rgba(15,23,42,0.93); border-right: 1px solid rgba(59,130,246,0.2); padding: 12px; overflow-y: auto; backdrop-filter: blur(10px); z-index: 10; }
+  #ui::-webkit-scrollbar { width: 4px; }
+  #ui::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  .panel-title { font-size: 13px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .panel-subtitle { font-size: 9px; color: #7d8590; margin-bottom: 10px; letter-spacing: 0.05em; }
+  .section { margin-bottom: 10px; padding: 9px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
+  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 7px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 11px; }
+  .slider-name { color: #c9d1d9; }
+  .slider-val { color: #60a5fa; font-weight: 700; min-width: 70px; text-align: right; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+
+  /* Presets */
+  .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .preset-btn { padding: 5px 8px; font-size: 10px; font-weight: 600; border-radius: 5px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .preset-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
+  .preset-btn:hover:not(.active) { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
+
+  /* Data readout */
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .data-cell { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.15); border-radius: 6px; padding: 5px; text-align: center; }
+  .data-cell-label { font-size: 9px; color: #7d8590; text-transform: uppercase; }
+  .data-cell-value { font-size: 13px; font-weight: 700; color: #60a5fa; margin-top: 1px; }
+  .data-cell-unit { font-size: 9px; color: #7d8590; }
+  .data-cell.resonance { border-color: rgba(245,158,11,0.5); }
+  .data-cell.resonance .data-cell-value { color: #f59e0b; }
+  .data-cell.highlight { border-color: rgba(34,197,94,0.5); }
+  .data-cell.highlight .data-cell-value { color: #22c55e; }
+
+  /* Formulas (KaTeX) */
+  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 7px 10px; margin-bottom: 4px; text-align: center; }
+  .formula-desc { font-size: 9px; color: #7d8590; margin-top: 2px; }
+
+  /* Canvas displays */
+  .canvas-section { margin-bottom: 6px; }
+  .canvas-section canvas { width: 100%; border-radius: 6px; border: 1px solid rgba(59,130,246,0.15); background: rgba(15,23,42,0.9); }
+
+  /* Quiz */
+  #quiz-panel { position: fixed; bottom: 12px; left: 322px; width: 370px; background: rgba(15,23,42,0.93); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 14px; z-index: 10; backdrop-filter: blur(10px); max-height: 280px; overflow-y: auto; }
+  .quiz-title { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .quiz-q { font-size: 11px; color: #c9d1d9; margin-bottom: 6px; line-height: 1.4; }
+  .quiz-opt { display: block; width: 100%; text-align: left; padding: 5px 8px; margin-bottom: 3px; font-size: 10px; font-family: inherit; border-radius: 4px; border: 1px solid rgba(59,130,246,0.2); background: transparent; color: #c9d1d9; cursor: pointer; transition: all 0.15s; }
+  .quiz-opt:hover { border-color: rgba(59,130,246,0.5); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #22c55e; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #ef4444; }
+  .quiz-feedback { font-size: 10px; margin-top: 4px; margin-bottom: 8px; line-height: 1.3; }
+
+  /* Info panel */
+  #info { position: fixed; top: 12px; right: 12px; width: 230px; background: rgba(15,23,42,0.90); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(10px); }
+  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; }
+
+  /* FPS */
+  #fps { position: fixed; bottom: 8px; right: 8px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+</style>
+</head>
+<body>
+<div id="canvas-container"><canvas id="c"></canvas></div>
+
+<div id="ui">
+  <div class="panel-title">~ AC Virtual Lab</div>
+  <div class="panel-subtitle">RLC Circuit Construction Kit</div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="section-label">Presets</div>
+    <div class="preset-row">
+      <button class="preset-btn" id="pre-purer" onclick="applyPreset('purer')">Pure R</button>
+      <button class="preset-btn" id="pre-rlhp" onclick="applyPreset('rlhp')">RL High Pass</button>
+      <button class="preset-btn" id="pre-resonance" onclick="applyPreset('resonance')">RLC Resonance</button>
+    </div>
+
+    <!-- AC Voltage -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">AC Voltage (V0)</span><span class="slider-val" id="v-val">120 V</span></div>
+      <input type="range" id="slider-v" min="1" max="240" step="1" value="120" oninput="updateSlider('voltage',this.value)">
+    </div>
+    <!-- Frequency -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Frequency</span><span class="slider-val" id="f-val">60 Hz</span></div>
+      <input type="range" id="slider-f" min="10" max="1000" step="1" value="60" oninput="updateSlider('frequency',this.value)">
+    </div>
+    <!-- Resistance -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Resistance R</span><span class="slider-val" id="r-val">100 &Omega;</span></div>
+      <input type="range" id="slider-r" min="1" max="500" step="1" value="100" oninput="updateSlider('resistance',this.value)">
+    </div>
+    <!-- Inductance -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Inductance L</span><span class="slider-val" id="l-val">100 mH</span></div>
+      <input type="range" id="slider-l" min="1" max="500" step="1" value="100" oninput="updateSlider('inductance',this.value)">
+    </div>
+    <!-- Capacitance -->
+    <div class="slider-row">
+      <div class="slider-label"><span class="slider-name">Capacitance C</span><span class="slider-val" id="c-val">100 &mu;F</span></div>
+      <input type="range" id="slider-c" min="1" max="500" step="1" value="100" oninput="updateSlider('capacitance',this.value)">
+    </div>
+  </div>
+
+  <!-- Live Data -->
+  <div class="section">
+    <div class="section-label">Live Measurements</div>
+    <div class="data-grid">
+      <div class="data-cell"><div class="data-cell-label">Z (Impedance)</div><div class="data-cell-value" id="z-disp">100.0</div><div class="data-cell-unit">&Omega;</div></div>
+      <div class="data-cell"><div class="data-cell-label">I_rms</div><div class="data-cell-value" id="i-disp">0.849</div><div class="data-cell-unit">A</div></div>
+      <div class="data-cell"><div class="data-cell-label">X_L</div><div class="data-cell-value" id="xl-disp">37.7</div><div class="data-cell-unit">&Omega;</div></div>
+      <div class="data-cell"><div class="data-cell-label">X_C</div><div class="data-cell-value" id="xc-disp">26.5</div><div class="data-cell-unit">&Omega;</div></div>
+      <div class="data-cell"><div class="data-cell-label">Phase &phi;</div><div class="data-cell-value" id="phi-disp">-6.4</div><div class="data-cell-unit">deg</div></div>
+      <div class="data-cell resonance"><div class="data-cell-label">f_resonance</div><div class="data-cell-value" id="fres-disp">50.3</div><div class="data-cell-unit">Hz</div></div>
+      <div class="data-cell highlight"><div class="data-cell-label">Power Factor</div><div class="data-cell-value" id="pf-disp">0.995</div><div class="data-cell-unit">cos&phi;</div></div>
+      <div class="data-cell"><div class="data-cell-label">P_avg</div><div class="data-cell-value" id="p-disp">72.0</div><div class="data-cell-unit">W</div></div>
+    </div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="section">
+    <div class="section-label">Key Formulas</div>
+    <div class="formula-box"><span id="eq1"></span><div class="formula-desc">AC Voltage Source</div></div>
+    <div class="formula-box"><span id="eq2"></span><div class="formula-desc">Impedance</div></div>
+    <div class="formula-box"><span id="eq3"></span><div class="formula-desc">Inductive &amp; Capacitive Reactance</div></div>
+    <div class="formula-box"><span id="eq4"></span><div class="formula-desc">Resonant Frequency</div></div>
+  </div>
+
+  <!-- Waveform Canvas -->
+  <div class="section canvas-section">
+    <div class="section-label">V(t) &amp; I(t) Waveform</div>
+    <canvas id="waveCanvas" width="286" height="110"></canvas>
+  </div>
+
+  <!-- Phasor Diagram -->
+  <div class="section canvas-section">
+    <div class="section-label">Phasor Diagram</div>
+    <canvas id="phasorCanvas" width="286" height="130"></canvas>
+  </div>
+</div>
+
+<div id="info">
+  <h3>AC Virtual Lab</h3>
+  <p>Build and explore series RLC circuits with alternating current. Electrons oscillate back and forth as the AC source reverses polarity. Watch the waveform to see V(t) and I(t) phase relationship. The rotating phasor diagram shows voltage and current vectors in real time.</p>
+  <p style="margin-top:6px;">Try adjusting frequency toward the resonant frequency (shown in gold) to see maximum current and power factor = 1.</p>
+  <p style="margin-top:6px;color:#60a5fa;font-size:9px;">Drag to orbit | Scroll to zoom</p>
+</div>
+
+<!-- Quiz -->
+<div id="quiz-panel">
+  <div class="quiz-title">Quiz</div>
+
+  <div class="quiz-q">1. In a series RLC circuit, when the driving frequency equals the resonant frequency f&#8320; = 1/(2&pi;&radic;LC), what happens to the impedance?</div>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,false)">A) Z becomes zero</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,true)">B) Z equals R (minimum impedance)</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,false)">C) Z equals X_L + X_C</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,1,false)">D) Z becomes infinite</button>
+  <div class="quiz-feedback" id="fb1"></div>
+
+  <div class="quiz-q">2. An RL circuit is driven at high frequency. As frequency increases, what happens to the current amplitude?</div>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,false)">A) Current increases without limit</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,true)">B) Current decreases because X_L = &omega;L grows</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,false)">C) Current stays the same</button>
+  <button class="quiz-opt" onclick="checkQuiz(this,2,false)">D) Current leads the voltage by 90&deg;</button>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+
+<div id="fps">-- fps</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+'use strict';
+
+// ── KaTeX Formulas ──────────────────────────────────────────────────────────
+try {
+  katex.render('V(t) = V_0 \\sin(\\omega t)', document.getElementById('eq1'), { displayMode: false });
+  katex.render('Z = \\sqrt{R^2 + (X_L - X_C)^2}', document.getElementById('eq2'), { displayMode: false });
+  katex.render('X_L = \\omega L, \\quad X_C = \\frac{1}{\\omega C}', document.getElementById('eq3'), { displayMode: false });
+  katex.render('f_0 = \\frac{1}{2\\pi\\sqrt{LC}}', document.getElementById('eq4'), { displayMode: false });
+} catch (e) {
+  console.warn('KaTeX render error:', e);
+}
+
+// ── State ───────────────────────────────────────────────────────────────────
+var state = {
+  voltage: 120,
+  frequency: 60,
+  resistance: 100,
+  capacitance: 100e-6,
+  inductance: 100e-3,
+  time: 0
+};
+
+// ── Physics Calculations ────────────────────────────────────────────────────
+function calcAC() {
+  var V0 = state.voltage;
+  var f = state.frequency;
+  var R = state.resistance;
+  var C = state.capacitance;
+  var L = state.inductance;
+  var omega = 2 * Math.PI * f;
+
+  var XL = omega * L;
+  var XC = (C > 0 && omega > 0) ? 1 / (omega * C) : 1e12;
+  var Z = Math.sqrt(R * R + (XL - XC) * (XL - XC));
+  var I0 = V0 / Z;
+  var Irms = I0 / Math.SQRT2;
+  var Vrms = V0 / Math.SQRT2;
+  var phi = Math.atan2(XL - XC, R);
+  var phiDeg = phi * 180 / Math.PI;
+  var fRes = (L > 0 && C > 0) ? 1 / (2 * Math.PI * Math.sqrt(L * C)) : 0;
+  var Pavg = Vrms * Irms * Math.cos(phi);
+  var powerFactor = Math.cos(phi);
+
+  return {
+    V0: V0, I0: I0, Irms: Irms, Vrms: Vrms, Z: Z,
+    XL: XL, XC: XC, R: R, phi: phi, phiDeg: phiDeg,
+    fRes: fRes, Pavg: Pavg, powerFactor: powerFactor,
+    omega: omega, f: f, L: L, C: C
+  };
+}
+
+// ── UI Updates ──────────────────────────────────────────────────────────────
+function refreshUI() {
+  var d = calcAC();
+  document.getElementById('z-disp').textContent = d.Z.toFixed(1);
+  document.getElementById('i-disp').textContent = d.Irms.toFixed(3);
+  document.getElementById('xl-disp').textContent = d.XL.toFixed(1);
+  document.getElementById('xc-disp').textContent = d.XC.toFixed(1);
+  document.getElementById('phi-disp').textContent = d.phiDeg.toFixed(1);
+  document.getElementById('fres-disp').textContent = d.fRes.toFixed(1);
+  document.getElementById('p-disp').textContent = d.Pavg.toFixed(1);
+  document.getElementById('pf-disp').textContent = d.powerFactor.toFixed(3);
+
+  // Highlight resonance cell when near resonance
+  var fResCell = document.getElementById('fres-disp').parentElement;
+  var nearRes = Math.abs(d.f - d.fRes) < d.fRes * 0.05;
+  fResCell.style.borderColor = nearRes ? 'rgba(245,158,11,0.8)' : 'rgba(245,158,11,0.5)';
+  fResCell.style.boxShadow = nearRes ? '0 0 8px rgba(245,158,11,0.3)' : 'none';
+}
+
+function updateSlider(name, val) {
+  val = parseFloat(val);
+  clearActivePreset();
+  switch (name) {
+    case 'voltage':
+      state.voltage = val;
+      document.getElementById('v-val').textContent = val + ' V';
+      break;
+    case 'frequency':
+      state.frequency = val;
+      document.getElementById('f-val').textContent = val + ' Hz';
+      break;
+    case 'resistance':
+      state.resistance = val;
+      document.getElementById('r-val').innerHTML = val + ' &Omega;';
+      break;
+    case 'capacitance':
+      state.capacitance = val * 1e-6;
+      document.getElementById('c-val').innerHTML = val + ' &mu;F';
+      break;
+    case 'inductance':
+      state.inductance = val * 1e-3;
+      document.getElementById('l-val').textContent = val + ' mH';
+      break;
+  }
+  refreshUI();
+}
+
+function clearActivePreset() {
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+}
+
+function setSliders(v, f, r, lmH, cuF) {
+  state.voltage = v;
+  state.frequency = f;
+  state.resistance = r;
+  state.inductance = lmH * 1e-3;
+  state.capacitance = cuF * 1e-6;
+  document.getElementById('slider-v').value = v;
+  document.getElementById('v-val').textContent = v + ' V';
+  document.getElementById('slider-f').value = f;
+  document.getElementById('f-val').textContent = f + ' Hz';
+  document.getElementById('slider-r').value = r;
+  document.getElementById('r-val').innerHTML = r + ' &Omega;';
+  document.getElementById('slider-l').value = lmH;
+  document.getElementById('l-val').textContent = lmH + ' mH';
+  document.getElementById('slider-c').value = cuF;
+  document.getElementById('c-val').innerHTML = cuF + ' &mu;F';
+}
+
+function applyPreset(name) {
+  clearActivePreset();
+  switch (name) {
+    case 'purer':
+      // Pure R: set L and C so XL ≈ XC at f=60Hz
+      // XL = XC → omega*L = 1/(omega*C) → L = 1/(omega^2 * C)
+      // At 60Hz, C=100uF: L = 1/((2pi*60)^2 * 100e-6) = 70.3mH
+      setSliders(120, 60, 100, 70, 100);
+      document.getElementById('pre-purer').classList.add('active');
+      break;
+    case 'rlhp':
+      // RL High Pass: large L, tiny C (max C to minimize XC)
+      setSliders(120, 500, 50, 300, 500);
+      document.getElementById('pre-rlhp').classList.add('active');
+      break;
+    case 'resonance':
+      // RLC Resonance: set f = 1/(2pi*sqrt(LC))
+      var Lres = 100e-3;
+      var Cres = 100e-6;
+      var fRes = 1 / (2 * Math.PI * Math.sqrt(Lres * Cres));
+      var fRound = Math.round(fRes);
+      setSliders(120, Math.min(fRound, 1000), 100, 100, 100);
+      document.getElementById('pre-resonance').classList.add('active');
+      break;
+  }
+  refreshUI();
+}
+
+// ── Quiz ────────────────────────────────────────────────────────────────────
+var quizAnswered = {};
+function checkQuiz(btn, qNum, isCorrect) {
+  if (quizAnswered[qNum]) return;
+  quizAnswered[qNum] = true;
+  var fb = document.getElementById('fb' + qNum);
+  if (isCorrect) {
+    btn.classList.add('correct');
+    fb.style.color = '#22c55e';
+    if (qNum === 1) fb.textContent = 'Correct! At resonance X_L = X_C, so they cancel and Z = R. Current is maximized and power factor equals 1.';
+    if (qNum === 2) fb.textContent = 'Correct! X_L = \u03C9L increases with frequency, raising impedance Z and reducing current amplitude I = V/Z.';
+  } else {
+    btn.classList.add('wrong');
+    fb.style.color = '#ef4444';
+    if (qNum === 1) fb.textContent = 'Incorrect. At resonance X_L = X_C, they cancel out, leaving Z = R (minimum impedance). Try the RLC Resonance preset!';
+    if (qNum === 2) fb.textContent = 'Incorrect. As frequency rises, X_L = \u03C9L grows, increasing total impedance Z, so current I = V/Z decreases.';
+    var siblings = btn.parentElement.querySelectorAll('.quiz-opt');
+    siblings.forEach(function(s) {
+      if (s !== btn) {
+        if (qNum === 1 && s.textContent.indexOf('Z equals R') >= 0) s.classList.add('correct');
+        if (qNum === 2 && s.textContent.indexOf('decreases because') >= 0) s.classList.add('correct');
+      }
+    });
+  }
+}
+
+// ── Three.js Setup ──────────────────────────────────────────────────────────
+var canvas, renderer, scene, camera, controls;
+var circuitGroup, electronGroup;
+var bulbGlow, bulbLight, srcMesh;
+var clock = new THREE.Clock();
+
+try {
+  canvas = document.getElementById('c');
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.012);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(14, 12, 18);
+  camera.lookAt(0, 0, 0);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 6;
+  controls.maxDistance = 45;
+  controls.target.set(0, 1, 0);
+
+  // ── Lighting ────────────────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0x334466, 0.5));
+
+  var dirLight = new THREE.DirectionalLight(0xaaccff, 0.9);
+  dirLight.position.set(10, 15, 8);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  dirLight.shadow.camera.near = 1;
+  dirLight.shadow.camera.far = 50;
+  dirLight.shadow.camera.left = -15;
+  dirLight.shadow.camera.right = 15;
+  dirLight.shadow.camera.top = 15;
+  dirLight.shadow.camera.bottom = -15;
+  scene.add(dirLight);
+
+  scene.add(new THREE.PointLight(0x3b82f6, 0.4, 30));
+  var pl2 = new THREE.PointLight(0x8b5cf6, 0.25, 25);
+  pl2.position.set(5, 8, -5);
+  scene.add(pl2);
+
+  // ── PCB Board (ground plane) ────────────────────────────────────────────
+  var pcbGeo = new THREE.BoxGeometry(16, 0.3, 12);
+  var pcbMat = new THREE.MeshStandardMaterial({ color: 0x0a3d2e, roughness: 0.8, metalness: 0.1 });
+  var pcb = new THREE.Mesh(pcbGeo, pcbMat);
+  pcb.position.set(0, -0.15, 0);
+  pcb.receiveShadow = true;
+  scene.add(pcb);
+
+  // PCB traces (decorative lines on the board)
+  var traceMat = new THREE.MeshStandardMaterial({ color: 0xb87333, metalness: 0.9, roughness: 0.3, emissive: 0x3a1a00, emissiveIntensity: 0.15 });
+  function addTrace(x1, z1, x2, z2) {
+    var dx = x2 - x1;
+    var dz = z2 - z1;
+    var len = Math.sqrt(dx * dx + dz * dz);
+    var geo = new THREE.BoxGeometry(len, 0.02, 0.12);
+    var m = new THREE.Mesh(geo, traceMat);
+    m.position.set((x1 + x2) / 2, 0.01, (z1 + z2) / 2);
+    m.rotation.y = Math.atan2(dz, dx);
+    scene.add(m);
+  }
+  // Main circuit traces on PCB
+  addTrace(-6, -4, 6, -4);
+  addTrace(6, -4, 6, 4);
+  addTrace(6, 4, -6, 4);
+  addTrace(-6, 4, -6, -4);
+  // Cross traces for decoration
+  for (var ti = -5; ti <= 5; ti += 2.5) {
+    addTrace(ti, -5.5, ti, -4.5);
+    addTrace(ti, 4.5, ti, 5.5);
+  }
+
+  // Grid helper (subtle)
+  var gridHelper = new THREE.GridHelper(30, 30, 0x1e3a5f, 0x0f2240);
+  gridHelper.position.y = -0.3;
+  scene.add(gridHelper);
+
+  // ── Circuit Materials ───────────────────────────────────────────────────
+  var wireMat = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x1e40af, emissiveIntensity: 0.3, metalness: 0.8, roughness: 0.2 });
+  var resistorMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0x92400e, emissiveIntensity: 0.2, metalness: 0.4, roughness: 0.6 });
+  var capacitorMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x166534, emissiveIntensity: 0.25, metalness: 0.5, roughness: 0.4 });
+  var inductorMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x581c87, emissiveIntensity: 0.35, metalness: 0.5, roughness: 0.4 });
+  var sourceMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x7f1d1d, emissiveIntensity: 0.4, metalness: 0.3, roughness: 0.5 });
+
+  circuitGroup = new THREE.Group();
+  scene.add(circuitGroup);
+
+  // ── Build Circuit on PCB ───────────────────────────────────────────────
+  var Y = 0.8;
+  var halfW = 6;
+  var halfH = 4;
+
+  function makeWire(x1, y1, z1, x2, y2, z2) {
+    var dir = new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1);
+    var len = dir.length();
+    var mid = new THREE.Vector3((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
+    var geo = new THREE.CylinderGeometry(0.07, 0.07, len, 8);
+    var mesh = new THREE.Mesh(geo, wireMat);
+    mesh.position.copy(mid);
+    mesh.castShadow = true;
+    if (Math.abs(dir.x) > Math.abs(dir.z)) {
+      mesh.rotation.z = Math.PI / 2;
+    } else if (Math.abs(dir.z) > 0.01) {
+      mesh.rotation.x = Math.PI / 2;
+    }
+    return mesh;
+  }
+
+  // ── AC Source (bottom-left) ─────────────────────────────────────────────
+  // Torus ring + inner sphere
+  var srcGeo = new THREE.TorusGeometry(0.7, 0.13, 12, 28);
+  srcMesh = new THREE.Mesh(srcGeo, sourceMat);
+  srcMesh.position.set(-halfW, Y, -halfH);
+  srcMesh.rotation.y = Math.PI / 2;
+  srcMesh.castShadow = true;
+  circuitGroup.add(srcMesh);
+
+  // Sine wave symbol inside source (small tube)
+  var sinePoints = [];
+  for (var si = 0; si <= 20; si++) {
+    var st = (si / 20) * Math.PI * 2;
+    sinePoints.push(new THREE.Vector3(0, Math.sin(st) * 0.25, (si / 20 - 0.5) * 0.8));
+  }
+  var sineCurve = new THREE.CatmullRomCurve3(sinePoints);
+  var sineGeo = new THREE.TubeGeometry(sineCurve, 20, 0.04, 6, false);
+  var sineMesh = new THREE.Mesh(sineGeo, new THREE.MeshStandardMaterial({ color: 0xff6b6b, emissive: 0xff4444, emissiveIntensity: 0.6 }));
+  sineMesh.position.set(-halfW, Y, -halfH);
+  circuitGroup.add(sineMesh);
+
+  // ── Bottom wire ─────────────────────────────────────────────────────────
+  circuitGroup.add(makeWire(-halfW + 0.9, Y, -halfH, halfW, Y, -halfH));
+
+  // ── Right wire ──────────────────────────────────────────────────────────
+  circuitGroup.add(makeWire(halfW, Y, -halfH, halfW, Y, halfH));
+
+  // ── Top wire with components ────────────────────────────────────────────
+  var topZ = halfH;
+  var compSpacing = 2.8;
+
+  // --- Resistor (rightmost) ---
+  var rX = halfW - 1.8;
+  var rBody = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.6, 12), resistorMat);
+  rBody.position.set(rX, Y, topZ);
+  rBody.rotation.z = Math.PI / 2;
+  rBody.castShadow = true;
+  circuitGroup.add(rBody);
+  // Color bands
+  var bandColors = [0xef4444, 0x000000, 0xf59e0b, 0xfbbf24, 0x7c3aed];
+  for (var bi = 0; bi < 5; bi++) {
+    var bandGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.06, 12);
+    var bandM = new THREE.Mesh(bandGeo, new THREE.MeshStandardMaterial({ color: bandColors[bi] }));
+    bandM.position.set(rX - 0.5 + bi * 0.25, Y, topZ);
+    bandM.rotation.z = Math.PI / 2;
+    circuitGroup.add(bandM);
+  }
+  // Lead wires
+  circuitGroup.add(makeWire(rX + 0.9, Y, topZ, rX + 1.4, Y, topZ));
+  circuitGroup.add(makeWire(rX - 0.9, Y, topZ, rX - 1.4, Y, topZ));
+
+  // --- Inductor (coil) ---
+  var lX = rX - compSpacing;
+  // Coil core
+  var coreMat = new THREE.MeshStandardMaterial({ color: 0x374151, metalness: 0.6, roughness: 0.4 });
+  var coreMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.4, 8), coreMat);
+  coreMesh.position.set(lX, Y, topZ);
+  coreMesh.rotation.z = Math.PI / 2;
+  circuitGroup.add(coreMesh);
+  // Coil windings (torii)
+  for (var ci = 0; ci < 8; ci++) {
+    var coilGeo = new THREE.TorusGeometry(0.3, 0.055, 8, 16, Math.PI);
+    var coilMesh = new THREE.Mesh(coilGeo, inductorMat);
+    coilMesh.position.set(lX - 0.55 + ci * 0.16, Y, topZ);
+    coilMesh.rotation.y = Math.PI / 2;
+    coilMesh.rotation.x = Math.PI / 2;
+    circuitGroup.add(coilMesh);
+  }
+
+  // --- Capacitor (two plates with gap) ---
+  var cX = lX - compSpacing;
+  var plateMat = capacitorMat;
+  var plateGeo = new THREE.BoxGeometry(0.08, 0.9, 0.9);
+  var plate1 = new THREE.Mesh(plateGeo, plateMat);
+  plate1.position.set(cX - 0.18, Y, topZ);
+  plate1.castShadow = true;
+  circuitGroup.add(plate1);
+  var plate2 = new THREE.Mesh(plateGeo, plateMat);
+  plate2.position.set(cX + 0.18, Y, topZ);
+  plate2.castShadow = true;
+  circuitGroup.add(plate2);
+  // Electric field lines between plates (decorative)
+  var fieldMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 0.5, transparent: true, opacity: 0.4 });
+  for (var fi = -0.25; fi <= 0.25; fi += 0.25) {
+    var fieldGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.28, 4);
+    var fieldLine = new THREE.Mesh(fieldGeo, fieldMat);
+    fieldLine.position.set(cX, Y + fi, topZ);
+    fieldLine.rotation.z = Math.PI / 2;
+    circuitGroup.add(fieldLine);
+  }
+
+  // --- Light Bulb (leftmost component) ---
+  var bX = cX - compSpacing;
+  // Bulb glass
+  var bulbGlassMat = new THREE.MeshStandardMaterial({
+    color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.1,
+    transparent: true, opacity: 0.7, roughness: 0.1, metalness: 0.0
+  });
+  bulbGlow = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), bulbGlassMat);
+  bulbGlow.position.set(bX, Y + 0.2, topZ);
+  bulbGlow.castShadow = true;
+  circuitGroup.add(bulbGlow);
+  // Filament
+  var filPts = [];
+  for (var fli = 0; fli <= 12; fli++) {
+    var ft = fli / 12;
+    filPts.push(new THREE.Vector3(0, -0.2 + ft * 0.4, Math.sin(ft * Math.PI * 4) * 0.06));
+  }
+  var filCurve = new THREE.CatmullRomCurve3(filPts);
+  var filGeo = new THREE.TubeGeometry(filCurve, 12, 0.015, 4, false);
+  var filMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xff8c00, emissiveIntensity: 0.8 });
+  var filMesh = new THREE.Mesh(filGeo, filMat);
+  filMesh.position.set(bX, Y + 0.2, topZ);
+  circuitGroup.add(filMesh);
+  // Bulb screw base
+  var baseGeo = new THREE.CylinderGeometry(0.22, 0.28, 0.35, 12);
+  var baseMat = new THREE.MeshStandardMaterial({ color: 0x6b7280, metalness: 0.85, roughness: 0.15 });
+  var baseMesh = new THREE.Mesh(baseGeo, baseMat);
+  baseMesh.position.set(bX, Y - 0.2, topZ);
+  circuitGroup.add(baseMesh);
+  // Bulb point light
+  bulbLight = new THREE.PointLight(0xfbbf24, 0, 10);
+  bulbLight.position.set(bX, Y + 0.8, topZ);
+  circuitGroup.add(bulbLight);
+
+  // ── Wire segments connecting components ─────────────────────────────────
+  circuitGroup.add(makeWire(halfW, Y, topZ, rX + 1.4, Y, topZ));
+  circuitGroup.add(makeWire(rX - 1.4, Y, topZ, lX + 0.7, Y, topZ));
+  circuitGroup.add(makeWire(lX - 0.7, Y, topZ, cX + 0.35, Y, topZ));
+  circuitGroup.add(makeWire(cX - 0.35, Y, topZ, bX + 0.5, Y, topZ));
+  circuitGroup.add(makeWire(bX - 0.5, Y, topZ, -halfW, Y, topZ));
+
+  // Left wire: top-left down to source
+  circuitGroup.add(makeWire(-halfW, Y, topZ, -halfW, Y, -halfH + 0.9));
+
+  // ── Junction nodes (solder points) ─────────────────────────────────────
+  var solderMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.9, roughness: 0.2 });
+  var solderGeo = new THREE.SphereGeometry(0.12, 8, 8);
+  var junctions = [
+    [halfW, Y, -halfH], [halfW, Y, topZ], [-halfW, Y, topZ]
+  ];
+  junctions.forEach(function(j) {
+    var sm = new THREE.Mesh(solderGeo, solderMat);
+    sm.position.set(j[0], j[1], j[2]);
+    circuitGroup.add(sm);
+  });
+
+  // ── Component Labels ───────────────────────────────────────────────────
+  function makeLabel(text, x, y, z, color) {
+    var cvs = document.createElement('canvas');
+    cvs.width = 128;
+    cvs.height = 48;
+    var ctx = cvs.getContext('2d');
+    ctx.fillStyle = color || '#60a5fa';
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, 64, 34);
+    var tex = new THREE.CanvasTexture(cvs);
+    var spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    var sprite = new THREE.Sprite(spriteMat);
+    sprite.position.set(x, y, z);
+    sprite.scale.set(1.5, 0.6, 1);
+    return sprite;
+  }
+
+  circuitGroup.add(makeLabel('R', rX, Y + 1.0, topZ, '#f59e0b'));
+  circuitGroup.add(makeLabel('L', lX, Y + 1.0, topZ, '#a855f7'));
+  circuitGroup.add(makeLabel('C', cX, Y + 1.0, topZ, '#22c55e'));
+  circuitGroup.add(makeLabel('AC', -halfW, Y + 1.3, -halfH, '#ef4444'));
+  circuitGroup.add(makeLabel('Bulb', bX, Y + 1.2, topZ, '#fbbf24'));
+
+  // ── Electrons ─────────────────────────────────────────────────────────
+  electronGroup = new THREE.Group();
+  scene.add(electronGroup);
+
+  var circuitPath = [
+    new THREE.Vector3(-halfW, Y, -halfH + 0.9),
+    new THREE.Vector3(-halfW, Y, -halfH),
+    new THREE.Vector3(halfW, Y, -halfH),
+    new THREE.Vector3(halfW, Y, topZ),
+    new THREE.Vector3(rX + 1.4, Y, topZ),
+    new THREE.Vector3(rX, Y, topZ),
+    new THREE.Vector3(rX - 1.4, Y, topZ),
+    new THREE.Vector3(lX + 0.7, Y, topZ),
+    new THREE.Vector3(lX, Y, topZ),
+    new THREE.Vector3(lX - 0.7, Y, topZ),
+    new THREE.Vector3(cX + 0.35, Y, topZ),
+    new THREE.Vector3(cX - 0.35, Y, topZ),
+    new THREE.Vector3(bX + 0.5, Y, topZ),
+    new THREE.Vector3(bX, Y, topZ),
+    new THREE.Vector3(bX - 0.5, Y, topZ),
+    new THREE.Vector3(-halfW, Y, topZ),
+    new THREE.Vector3(-halfW, Y, -halfH + 0.9)
+  ];
+
+  var pathLengths = [0];
+  var totalPathLen = 0;
+  for (var pi = 1; pi < circuitPath.length; pi++) {
+    var seg = circuitPath[pi].clone().sub(circuitPath[pi - 1]).length();
+    totalPathLen += seg;
+    pathLengths.push(totalPathLen);
+  }
+
+  var NUM_ELECTRONS = 50;
+  var electronMeshes = [];
+  var electronOffsets = [];
+  var electronGeo = new THREE.SphereGeometry(0.10, 8, 8);
+  var electronBaseMat = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 0.8 });
+  // Glow sphere around each electron
+  var glowGeo = new THREE.SphereGeometry(0.18, 6, 6);
+  var glowMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x3b82f6, emissiveIntensity: 1.0, transparent: true, opacity: 0.25 });
+
+  for (var ei = 0; ei < NUM_ELECTRONS; ei++) {
+    var eGroup = new THREE.Group();
+    var eMesh = new THREE.Mesh(electronGeo, electronBaseMat.clone());
+    eGroup.add(eMesh);
+    var eGlow = new THREE.Mesh(glowGeo, glowMat.clone());
+    eGroup.add(eGlow);
+    electronGroup.add(eGroup);
+    electronMeshes.push(eGroup);
+    electronOffsets.push(ei / NUM_ELECTRONS);
+  }
+
+  function getPointOnPath(t) {
+    t = ((t % 1) + 1) % 1;
+    var dist = t * totalPathLen;
+    for (var i = 1; i < pathLengths.length; i++) {
+      if (dist <= pathLengths[i]) {
+        var segStart = pathLengths[i - 1];
+        var segEnd = pathLengths[i];
+        var frac = (dist - segStart) / (segEnd - segStart);
+        return circuitPath[i - 1].clone().lerp(circuitPath[i], frac);
+      }
+    }
+    return circuitPath[circuitPath.length - 1].clone();
+  }
+
+  // ── Animation ─────────────────────────────────────────────────────────
+  var fpsFrames = 0;
+  var fpsTime = 0;
+
+  function animate() {
+    var dt = clock.getDelta();
+    state.time += dt;
+
+    var ac = calcAC();
+
+    // Electron flow — alternating direction with AC
+    var instantI = ac.I0 * Math.sin(ac.omega * state.time - ac.phi);
+    var normalizedSpeed = instantI / Math.max(ac.V0 / ac.R, 0.001);
+    var electronSpeed = normalizedSpeed * 0.35 * dt;
+
+    for (var i = 0; i < NUM_ELECTRONS; i++) {
+      electronOffsets[i] += electronSpeed;
+      electronOffsets[i] = ((electronOffsets[i] % 1) + 1) % 1;
+      var pos = getPointOnPath(electronOffsets[i]);
+      electronMeshes[i].position.copy(pos);
+
+      // Brightness scales with |I|
+      var brightness = Math.abs(instantI) / Math.max(ac.V0 / 50, 0.01);
+      brightness = Math.min(brightness, 1.5);
+      electronMeshes[i].children[0].material.emissiveIntensity = 0.3 + brightness * 0.7;
+      electronMeshes[i].children[1].material.opacity = 0.1 + brightness * 0.25;
+    }
+
+    // Bulb brightness proportional to Irms
+    var bulbBrightness = Math.min(ac.Irms / 2.0, 1.0);
+    bulbGlow.material.emissiveIntensity = bulbBrightness * 2.0;
+    bulbGlow.material.opacity = 0.3 + bulbBrightness * 0.7;
+    bulbLight.intensity = bulbBrightness * 3.0;
+
+    // AC source pulsing
+    srcMesh.material.emissiveIntensity = 0.2 + Math.abs(Math.sin(ac.omega * state.time)) * 0.6;
+
+    controls.update();
+    renderer.render(scene, camera);
+
+    drawWaveform(ac);
+    drawPhasor(ac);
+
+    // FPS
+    fpsFrames++;
+    fpsTime += dt;
+    if (fpsTime >= 1) {
+      document.getElementById('fps').textContent = Math.round(fpsFrames / fpsTime) + ' fps';
+      fpsFrames = 0;
+      fpsTime = 0;
+    }
+  }
+
+  renderer.setAnimationLoop(animate);
+
+  // ── Resize ──────────────────────────────────────────────────────────────
+  function onResize() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+} catch (err) {
+  console.error('Three.js initialization error:', err);
+  document.getElementById('canvas-container').innerHTML = '<p style="color:#ef4444;padding:40px;font-size:14px;">WebGL Error: ' + err.message + '</p>';
+}
+
+// ── Waveform Canvas ─────────────────────────────────────────────────────────
+function drawWaveform(ac) {
+  var cvs = document.getElementById('waveCanvas');
+  var ctx = cvs.getContext('2d');
+  var w = cvs.width;
+  var h = cvs.height;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = 'rgba(15,23,42,0.95)';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
+  ctx.lineWidth = 0.5;
+  // Horizontal center
+  ctx.beginPath();
+  ctx.moveTo(0, h / 2);
+  ctx.lineTo(w, h / 2);
+  ctx.stroke();
+  // Vertical grid
+  for (var gx = 0; gx < w; gx += w / 8) {
+    ctx.beginPath();
+    ctx.moveTo(gx, 0);
+    ctx.lineTo(gx, h);
+    ctx.stroke();
+  }
+  // Horizontal grid
+  for (var gy = 0; gy < h; gy += h / 4) {
+    ctx.beginPath();
+    ctx.moveTo(0, gy);
+    ctx.lineTo(w, gy);
+    ctx.stroke();
+  }
+
+  var periods = 3;
+  var T = 1 / ac.f;
+  var tRange = periods * T;
+  var yScaleV = (h / 2 - 8) / Math.max(ac.V0, 1);
+
+  // Voltage waveform (blue)
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (var px = 0; px < w; px++) {
+    var t = (px / w) * tRange + state.time;
+    var v = ac.V0 * Math.sin(ac.omega * t);
+    var py = h / 2 - v * yScaleV;
+    if (px === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Current waveform (yellow) — scaled to fill canvas
+  var iScale = (h / 2 - 8) / Math.max(ac.I0, 0.001);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (var px2 = 0; px2 < w; px2++) {
+    var t2 = (px2 / w) * tRange + state.time;
+    var iVal = ac.I0 * Math.sin(ac.omega * t2 - ac.phi);
+    var py2 = h / 2 - iVal * iScale;
+    if (px2 === 0) ctx.moveTo(px2, py2);
+    else ctx.lineTo(px2, py2);
+  }
+  ctx.stroke();
+
+  // Labels
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillText('V(t)', 4, 12);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText('I(t)', 4, 24);
+  ctx.fillStyle = '#7d8590';
+  ctx.font = '9px monospace';
+  ctx.fillText('\u03C6 = ' + ac.phiDeg.toFixed(1) + '\u00B0', w - 75, 12);
+
+  // Resonance marker
+  if (ac.fRes > 0 && Math.abs(ac.f - ac.fRes) < ac.fRes * 0.05) {
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('RESONANCE', w / 2 - 35, 12);
+  }
+}
+
+// ── Phasor Canvas ───────────────────────────────────────────────────────────
+function drawPhasor(ac) {
+  var cvs = document.getElementById('phasorCanvas');
+  var ctx = cvs.getContext('2d');
+  var w = cvs.width;
+  var h = cvs.height;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = 'rgba(15,23,42,0.95)';
+  ctx.fillRect(0, 0, w, h);
+
+  // Split canvas: left = rotating phasors, right = impedance triangle
+  var splitX = w * 0.5;
+
+  // ── Left: Rotating Phasor Diagram ──
+  var cx = splitX / 2;
+  var cy = h / 2;
+  var maxR = Math.min(splitX, h) / 2 - 16;
+
+  // Circle guide
+  ctx.strokeStyle = 'rgba(59,130,246,0.12)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Cross axes
+  ctx.beginPath();
+  ctx.moveTo(cx - maxR - 3, cy);
+  ctx.lineTo(cx + maxR + 3, cy);
+  ctx.moveTo(cx, cy - maxR - 3);
+  ctx.lineTo(cx, cy + maxR + 3);
+  ctx.stroke();
+
+  var angle = ac.omega * state.time;
+  var vLen = maxR * 0.88;
+  var iLen = maxR * 0.65;
+
+  // Voltage phasor (blue)
+  var vx = cx + vLen * Math.cos(angle);
+  var vy = cy - vLen * Math.sin(angle);
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(vx, vy);
+  ctx.stroke();
+  drawArrow(ctx, cx, cy, vx, vy, '#3b82f6');
+
+  // Current phasor (yellow)
+  var iAngle = angle - ac.phi;
+  var ix = cx + iLen * Math.cos(iAngle);
+  var iy = cy - iLen * Math.sin(iAngle);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(ix, iy);
+  ctx.stroke();
+  drawArrow(ctx, cx, cy, ix, iy, '#fbbf24');
+
+  // Phase arc
+  if (Math.abs(ac.phi) > 0.03) {
+    ctx.strokeStyle = 'rgba(239,68,68,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    var arcR = 20;
+    var startA = -iAngle;
+    var endA = -angle;
+    ctx.arc(cx, cy, arcR, Math.min(startA, endA), Math.max(startA, endA));
+    ctx.stroke();
+  }
+
+  // Labels
+  ctx.font = 'bold 10px monospace';
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillText('V', vx + 3, vy - 3);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText('I', ix + 3, iy - 3);
+
+  if (Math.abs(ac.phi) > 0.03) {
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '9px monospace';
+    ctx.fillText('\u03C6=' + ac.phiDeg.toFixed(1) + '\u00B0', cx + 22, cy - 6);
+  }
+
+  ctx.fillStyle = '#7d8590';
+  ctx.font = '8px monospace';
+  ctx.fillText('Phasor', 3, 10);
+
+  // ── Right: Impedance Triangle ──
+  var triOx = splitX + 15;
+  var triOy = h * 0.6;
+  var triW = w - splitX - 30;
+  var triH = h - 24;
+
+  var R = ac.R;
+  var X = ac.XL - ac.XC;
+  var Z = ac.Z;
+  var scaleMax = Math.max(Z, R, Math.abs(X), 1);
+  var triScale = Math.min(triW, triH * 0.7) / scaleMax * 0.75;
+
+  // R (horizontal, gold)
+  var rx = triOx + R * triScale;
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(triOx, triOy);
+  ctx.lineTo(rx, triOy);
+  ctx.stroke();
+
+  // X (vertical, purple)
+  var xy = triOy - X * triScale;
+  ctx.strokeStyle = '#a855f7';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(rx, triOy);
+  ctx.lineTo(rx, xy);
+  ctx.stroke();
+
+  // Z (hypotenuse, cyan)
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(triOx, triOy);
+  ctx.lineTo(rx, xy);
+  ctx.stroke();
+
+  // Right angle marker
+  if (Math.abs(X) > 1) {
+    var raSize = 5;
+    var xDir = X > 0 ? -1 : 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(rx - raSize, triOy);
+    ctx.lineTo(rx - raSize, triOy + xDir * raSize);
+    ctx.lineTo(rx, triOy + xDir * raSize);
+    ctx.stroke();
+  }
+
+  // Phase arc on triangle
+  if (Math.abs(X) > 1) {
+    ctx.strokeStyle = 'rgba(239,68,68,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    var triAngle2 = Math.atan2(-X * triScale, R * triScale);
+    if (triAngle2 < 0) {
+      ctx.arc(triOx, triOy, 14, triAngle2, 0);
+    } else {
+      ctx.arc(triOx, triOy, 14, 0, triAngle2);
+    }
+    ctx.stroke();
+  }
+
+  // Labels
+  ctx.font = 'bold 9px monospace';
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('R=' + R.toFixed(0), triOx + R * triScale * 0.35 - 5, triOy + 13);
+  ctx.fillStyle = '#a855f7';
+  var xLabelText = X >= 0 ? 'X=' + X.toFixed(0) : 'X=' + X.toFixed(0);
+  ctx.fillText(xLabelText, rx + 3, triOy + (xy - triOy) * 0.5);
+  ctx.fillStyle = '#22d3ee';
+  ctx.fillText('Z=' + Z.toFixed(0), triOx + (rx - triOx) * 0.25 - 5, triOy + (xy - triOy) * 0.5 - 6);
+
+  ctx.fillStyle = '#7d8590';
+  ctx.font = '8px monospace';
+  ctx.fillText('Impedance', splitX + 3, 10);
+
+  // Power factor display
+  ctx.fillStyle = ac.powerFactor > 0.95 ? '#22c55e' : (ac.powerFactor > 0.7 ? '#fbbf24' : '#ef4444');
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('PF=' + ac.powerFactor.toFixed(3), splitX + 3, h - 4);
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color) {
+  var dx = x2 - x1;
+  var dy = y2 - y1;
+  var len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 5) return;
+  var ux = dx / len;
+  var uy = dy / len;
+  var arrowLen = 7;
+  var arrowW = 3;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - ux * arrowLen + uy * arrowW, y2 - uy * arrowLen - ux * arrowW);
+  ctx.lineTo(x2 - ux * arrowLen - uy * arrowW, y2 - uy * arrowLen + ux * arrowW);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+refreshUI();
+</script>
+</body>
+</html>

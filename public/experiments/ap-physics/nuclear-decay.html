@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuclear Decay | NeonPhysics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 280px; min-width: 280px; background: #161b22; border-right: 1px solid #30363d;
+    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
+  }
+  .panel-header { padding: 16px; background: #0d1117; border-bottom: 1px solid #30363d; }
+  .panel-header h2 { font-size: 13px; color: #58a6ff; letter-spacing: 0.05em; text-transform: uppercase; }
+  .panel-header h1 { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid #21262d; }
+  .section-title { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .decay-btns { display: flex; gap: 6px; }
+  .decay-btn {
+    flex: 1; padding: 8px 4px; border: 1px solid #30363d; border-radius: 6px;
+    background: #21262d; color: #c9d1d9; font-size: 12px; cursor: pointer;
+    font-weight: 700; transition: all 0.15s; text-align: center;
+  }
+  .decay-btn.active-alpha { background: #f78166; border-color: #ff6b4a; color: #fff; }
+  .decay-btn.active-beta  { background: #3fb950; border-color: #56d364; color: #fff; }
+  .decay-btn.active-gamma { background: #a5d6ff; border-color: #79c0ff; color: #0d1117; }
+  .decay-btn:hover { background: #30363d; }
+
+  .control-row { margin-bottom: 12px; }
+  .control-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 5px; color: #c9d1d9; }
+  .control-label .val { color: #58a6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  input[type=range] { width: 100%; height: 4px; appearance: none; background: #30363d; border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #58a6ff; cursor: pointer; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn { flex: 1; padding: 8px 6px; border: 1px solid #30363d; border-radius: 6px; background: #21262d; color: #c9d1d9; font-size: 12px; cursor: pointer; transition: background 0.15s; font-weight: 600; }
+  .btn:hover { background: #30363d; }
+  .btn.primary { background: #1f6feb; border-color: #388bfd; color: #fff; }
+  .btn.primary:hover { background: #388bfd; }
+
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-item { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 8px; text-align: center; }
+  .data-item .d-label { font-size: 10px; color: #8b949e; margin-bottom: 3px; }
+  .data-item .d-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .data-item.rem .d-val { color: #3fb950; }
+  .data-item.hal .d-val { color: #e3b341; }
+  .data-item.rat .d-val { color: #a5d6ff; }
+  .data-item.lam .d-val { color: #f78166; }
+
+  .formula-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; font-size: 11px; color: #a5d6ff; line-height: 1.9; }
+  .formula-box .f-line { color: #8b949e; }
+  .formula-box .f-line span { color: #a5d6ff; }
+
+  .fps-badge { position: fixed; top: 10px; right: 10px; background: rgba(13,17,23,0.8); border: 1px solid #30363d; border-radius: 4px; padding: 3px 8px; font-size: 11px; color: #8b949e; z-index: 100; }
+
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  #three-canvas { display: block; }
+  #decay-canvas {
+    position: absolute; bottom: 16px; right: 16px;
+    background: rgba(13,17,23,0.88); border: 1px solid #30363d; border-radius: 8px;
+    pointer-events: none;
+  }
+
+  .shield-labels {
+    position: absolute; bottom: 240px; right: 16px;
+    display: flex; flex-direction: column; gap: 4px; pointer-events: none;
+  }
+  .shield-label {
+    font-size: 10px; color: #8b949e; background: rgba(13,17,23,0.7);
+    padding: 2px 6px; border-radius: 3px; text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <div class="panel-header">
+    <h2>AP Physics</h2>
+    <h1>Nuclear Decay</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Decay Type</div>
+    <div class="decay-btns">
+      <div class="decay-btn active-alpha" id="btn-alpha" data-type="alpha">α Alpha</div>
+      <div class="decay-btn" id="btn-beta" data-type="beta">β⁻ Beta</div>
+      <div class="decay-btn" id="btn-gamma" data-type="gamma">γ Gamma</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Half-Life</div>
+    <div class="control-row">
+      <div class="control-label">T½ (log scale) <span class="val" id="hl-val">1.00 yr</span></div>
+      <input type="range" id="halflife" min="-2" max="4" step="0.1" value="0">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="btn-row">
+      <button class="btn primary" id="btn-play">Pause</button>
+      <button class="btn" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Live Data</div>
+    <div class="data-grid">
+      <div class="data-item rem"><div class="d-label">Remaining (%)</div><div class="d-val" id="d-rem">100.0</div></div>
+      <div class="data-item hal"><div class="d-label">Half-Lives</div><div class="d-val" id="d-hal">0.00</div></div>
+      <div class="data-item rat"><div class="d-label">N/N₀</div><div class="d-val" id="d-rat">1.000</div></div>
+      <div class="data-item lam"><div class="d-label">λ (1/T½)</div><div class="d-val" id="d-lam">0.693</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Formulas</div>
+    <div class="formula-box">
+      <div class="f-line">N(t) = <span>N₀·(½)^(t/T½)</span></div>
+      <div class="f-line">λ = <span>ln2 / T½</span></div>
+      <div class="f-line">α: <span>A-4, Z-2</span></div>
+      <div class="f-line">β⁻: <span>n→p + e⁻ + ν̄</span></div>
+      <div class="f-line">γ: <span>excited → ground</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="three-canvas"></canvas>
+  <canvas id="decay-canvas" width="220" height="160"></canvas>
+</div>
+<div class="fps-badge" id="fps">FPS: --</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  let decayType = 'alpha';
+  let halfLifeLog = 0;   // log10 of years, controls animation speed
+  let playing = true;
+  let elapsed = 0;       // in half-lives
+  let N = 100;           // nucleon count (visual)
+  let decayEvents = [];  // animated particles flying out
+  let nextDecay = 2.0;   // seconds until next decay event
+  let nucleons = [];     // {mesh, isProton, origPos}
+  let flashTimer = 0;
+
+  const decayCanvas = document.getElementById('decay-canvas');
+  const dctx = decayCanvas.getContext('2d');
+  const wrap = document.getElementById('canvas-wrap');
+  const threeCanvas = document.getElementById('three-canvas');
+
+  // ── Three.js setup ─────────────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0d1117);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(0, 4, 14);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(5, 8, 5);
+  scene.add(dirLight);
+  const pointLight = new THREE.PointLight(0xffffff, 0.5, 20);
+  pointLight.position.set(0, 0, 5);
+  scene.add(pointLight);
+
+  // ── Nucleus builder ────────────────────────────────────────────────────────
+  const nucleusGroup = new THREE.Group();
+  scene.add(nucleusGroup);
+
+  const protonMat = new THREE.MeshLambertMaterial({ color: 0xff4444 });
+  const neutronMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+  const nucleonGeo = new THREE.SphereGeometry(0.32, 10, 10);
+
+  function buildNucleus() {
+    // Clear
+    while (nucleusGroup.children.length) nucleusGroup.remove(nucleusGroup.children[0]);
+    nucleons = [];
+
+    const count = Math.max(4, Math.min(N, 40));
+    const protons = Math.round(count * 0.45);
+    const neutrons = count - protons;
+
+    // Pack spheres in approximate sphere
+    const positions = [];
+    for (let i = 0; i < count; i++) {
+      const phi = Math.acos(1 - 2 * (i + 0.5) / count);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+      const r = 0.55 * Math.cbrt(count) * (0.7 + 0.3 * Math.random());
+      positions.push(new THREE.Vector3(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.cos(phi),
+        r * Math.sin(phi) * Math.sin(theta)
+      ));
+    }
+
+    for (let i = 0; i < count; i++) {
+      const isProton = i < protons;
+      const mesh = new THREE.Mesh(nucleonGeo, isProton ? protonMat : neutronMat);
+      mesh.position.copy(positions[i]);
+      nucleusGroup.add(mesh);
+      nucleons.push({ mesh, isProton, origPos: positions[i].clone() });
+    }
+  }
+
+  // ── Shielding barriers ─────────────────────────────────────────────────────
+  // Paper (white thin), Aluminum (silver), Lead (dark gray thick)
+  const shieldGroup = new THREE.Group();
+  scene.add(shieldGroup);
+
+  function buildShields() {
+    while (shieldGroup.children.length) shieldGroup.remove(shieldGroup.children[0]);
+
+    // Paper
+    const paperGeo = new THREE.BoxGeometry(0.05, 3, 2);
+    const paperMat = new THREE.MeshLambertMaterial({ color: 0xf0f0f0, transparent: true, opacity: 0.85 });
+    const paper = new THREE.Mesh(paperGeo, paperMat);
+    paper.position.set(3.5, 0.5, 0);
+    shieldGroup.add(paper);
+
+    // Aluminum
+    const alGeo = new THREE.BoxGeometry(0.2, 3, 2);
+    const alMat = new THREE.MeshLambertMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.8 });
+    const al = new THREE.Mesh(alGeo, alMat);
+    al.position.set(4.8, 0.5, 0);
+    shieldGroup.add(al);
+
+    // Lead
+    const pbGeo = new THREE.BoxGeometry(0.6, 3, 2);
+    const pbMat = new THREE.MeshLambertMaterial({ color: 0x444444, transparent: true, opacity: 0.9 });
+    const pb = new THREE.Mesh(pbGeo, pbMat);
+    pb.position.set(6.5, 0.5, 0);
+    shieldGroup.add(pb);
+
+    // Labels above
+    // (handled in UI overlay)
+  }
+
+  // ── Decay particle class ───────────────────────────────────────────────────
+  class DecayParticle {
+    constructor(type) {
+      this.type = type;
+      this.life = 1.0;
+      this.group = new THREE.Group();
+      scene.add(this.group);
+      this.group.position.set(0, 0, 0);
+
+      if (type === 'alpha') {
+        // 2 red + 2 gray spheres
+        const geo = new THREE.SphereGeometry(0.18, 8, 8);
+        const offsets = [[0.2,0.2,0],[0.2,-0.2,0],[-0.2,0.2,0],[-0.2,-0.2,0]];
+        offsets.forEach((o, i) => {
+          const m = new THREE.Mesh(geo, i < 2 ? protonMat : neutronMat);
+          m.position.set(...o);
+          this.group.add(m);
+        });
+        this.vel = new THREE.Vector3(1.8 + Math.random() * 0.4, 0.8 + Math.random() * 0.6, (Math.random() - 0.5) * 0.4);
+        this.stopX = 3.5;  // stopped by paper
+      } else if (type === 'beta') {
+        const geo = new THREE.SphereGeometry(0.1, 8, 8);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x58a6ff });
+        this.group.add(new THREE.Mesh(geo, mat));
+        this.vel = new THREE.Vector3(2.2 + Math.random() * 0.6, 0.5 + Math.random() * 0.8, (Math.random() - 0.5) * 0.6);
+        this.stopX = 4.8;  // stopped by aluminum
+      } else {
+        // gamma ray
+        const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(5, 0, 0)];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
+        this.line = new THREE.Line(geo, mat);
+        this.group.add(this.line);
+        this.vel = new THREE.Vector3(3.5, 0.2 + Math.random() * 0.5, 0);
+        this.stopX = Infinity;  // penetrates all
+        this.isgamma = true;
+      }
+
+      this.stopped = false;
+    }
+
+    update(dt) {
+      this.life -= dt * 0.5;
+      if (!this.stopped) {
+        this.group.position.x += this.vel.x * dt;
+        this.group.position.y += this.vel.y * dt;
+        this.group.position.z += this.vel.z * dt;
+        if (this.group.position.x >= this.stopX) {
+          this.stopped = true;
+          this.vel.set(0, 0, 0);
+        }
+      }
+      if (this.isgamma && this.line) {
+        this.line.material.opacity = Math.max(0, this.life);
+      }
+      if (!this.group.parent) return;
+      this.group.children.forEach(c => {
+        if (c.material && c.material.transparent !== undefined) {
+          c.material.transparent = true;
+          c.material.opacity = Math.max(0, this.life);
+        }
+      });
+    }
+
+    dispose() {
+      scene.remove(this.group);
+    }
+  }
+
+  // ── Nucleus wobble on decay ────────────────────────────────────────────────
+  let wobbleTimer = 0;
+  function triggerWobble() { wobbleTimer = 0.4; }
+
+  // ── Decay curve canvas ─────────────────────────────────────────────────────
+  function drawDecayCurve(halfLives) {
+    const w = decayCanvas.width, h = decayCanvas.height;
+    dctx.clearRect(0, 0, w, h);
+    dctx.fillStyle = 'rgba(13,17,23,0)';
+    dctx.fillRect(0, 0, w, h);
+
+    const pad = { l: 36, r: 14, t: 20, b: 30 };
+    const gw = w - pad.l - pad.r, gh = h - pad.t - pad.b;
+
+    // Title
+    dctx.fillStyle = '#c9d1d9'; dctx.font = 'bold 10px system-ui'; dctx.textAlign = 'center';
+    dctx.fillText('N(t) / N₀ Decay Curve', w / 2, 13);
+
+    // Grid
+    dctx.strokeStyle = '#21262d'; dctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + (i / 4) * gh;
+      dctx.beginPath(); dctx.moveTo(pad.l, y); dctx.lineTo(pad.l + gw, y); dctx.stroke();
+    }
+    for (let i = 0; i <= 5; i++) {
+      const x = pad.l + (i / 5) * gw;
+      dctx.beginPath(); dctx.moveTo(x, pad.t); dctx.lineTo(x, pad.t + gh); dctx.stroke();
+    }
+
+    const MAX_HL = 7;
+    const mapX = hl => pad.l + (hl / MAX_HL) * gw;
+    const mapY = n => pad.t + gh - n * gh;
+
+    // Curve
+    dctx.beginPath(); dctx.strokeStyle = '#3fb950'; dctx.lineWidth = 2;
+    for (let i = 0; i <= 100; i++) {
+      const hl = (i / 100) * MAX_HL;
+      const n = Math.pow(0.5, hl);
+      const px = mapX(hl), py = mapY(n);
+      if (i === 0) dctx.moveTo(px, py); else dctx.lineTo(px, py);
+    }
+    dctx.stroke();
+
+    // Current point
+    const curN = Math.pow(0.5, halfLives);
+    const cx = mapX(Math.min(halfLives, MAX_HL));
+    const cy = mapY(Math.max(0, curN));
+    dctx.fillStyle = '#3fb950';
+    dctx.beginPath(); dctx.arc(cx, cy, 4, 0, Math.PI * 2); dctx.fill();
+    // Vertical line
+    dctx.strokeStyle = '#ffffff33'; dctx.lineWidth = 1; dctx.setLineDash([3, 3]);
+    dctx.beginPath(); dctx.moveTo(cx, pad.t); dctx.lineTo(cx, pad.t + gh); dctx.stroke();
+    dctx.setLineDash([]);
+
+    // Axes
+    dctx.strokeStyle = '#484f58'; dctx.lineWidth = 1.5;
+    dctx.beginPath(); dctx.moveTo(pad.l, pad.t); dctx.lineTo(pad.l, pad.t + gh); dctx.stroke();
+    dctx.beginPath(); dctx.moveTo(pad.l, pad.t + gh); dctx.lineTo(pad.l + gw, pad.t + gh); dctx.stroke();
+
+    // Y ticks
+    dctx.fillStyle = '#8b949e'; dctx.font = '9px system-ui'; dctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const v = i / 4;
+      dctx.fillText((v * 100).toFixed(0) + '%', pad.l - 3, pad.t + gh - v * gh + 3);
+    }
+    // X label
+    dctx.textAlign = 'center'; dctx.fillText('Half-lives elapsed', pad.l + gw / 2, h - 2);
+  }
+
+  // ── FPS ─────────────────────────────────────────────────────────────────────
+  let frameCount = 0, lastFPSTime = performance.now();
+  const fpsEl = document.getElementById('fps');
+
+  // ── Resize ──────────────────────────────────────────────────────────────────
+  function onResize() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  buildNucleus();
+  buildShields();
+
+  let lastTime = performance.now();
+
+  function scheduleNextDecay() {
+    // Faster half-life = more frequent events
+    const baseInterval = 2.5 - halfLifeLog * 0.15;
+    nextDecay = Math.max(0.6, baseInterval + (Math.random() - 0.5) * 0.8);
+  }
+  scheduleNextDecay();
+
+  function triggerDecayEvent() {
+    if (!playing) return;
+    const p = new DecayParticle(decayType);
+    decayEvents.push(p);
+
+    if (decayType === 'beta') {
+      // Randomly flip a neutron to proton
+      const neutrons = nucleons.filter(n => !n.isProton);
+      if (neutrons.length > 0) {
+        const pick = neutrons[Math.floor(Math.random() * neutrons.length)];
+        pick.isProton = true;
+        pick.mesh.material = protonMat;
+        // Brief scale animation handled via wobble
+      }
+    }
+
+    if (decayType === 'gamma') {
+      flashTimer = 0.3;
+    }
+
+    triggerWobble();
+    scheduleNextDecay();
+
+    // Reduce N slightly (visual only)
+    if (decayType === 'alpha' && nucleons.length > 8) {
+      const toRemove = [];
+      for (let i = 0; i < 4; i++) {
+        const idx = nucleons.length - 1 - i;
+        if (idx >= 0) toRemove.push(idx);
+      }
+      toRemove.sort((a, b) => b - a);
+      toRemove.forEach(idx => {
+        nucleusGroup.remove(nucleons[idx].mesh);
+        nucleons.splice(idx, 1);
+      });
+    }
+  }
+
+  // ── Main loop ────────────────────────────────────────────────────────────────
+  let simTime = 0;
+  let decayTimer = 0;
+
+  function animate() {
+    try {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const rawDt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const dt = playing ? rawDt : 0;
+
+      frameCount++;
+      if (now - lastFPSTime >= 500) {
+        const f = Math.round(frameCount / ((now - lastFPSTime) / 1000));
+        frameCount = 0; lastFPSTime = now;
+        fpsEl.textContent = 'FPS: ' + f;
+      }
+
+      if (playing) {
+        simTime += dt;
+        // Elapsed half-lives: 1 real second = some fraction of a half-life
+        const speedFactor = 0.1 + (4 - halfLifeLog) * 0.04;
+        elapsed += dt * speedFactor;
+
+        decayTimer += dt;
+        if (decayTimer >= nextDecay) {
+          decayTimer = 0;
+          triggerDecayEvent();
+        }
+      }
+
+      // Nucleus rotation + wobble
+      nucleusGroup.rotation.y += dt * 0.25;
+      if (wobbleTimer > 0) {
+        wobbleTimer = Math.max(0, wobbleTimer - dt);
+        const wScale = 1 + 0.15 * Math.sin(wobbleTimer * 20);
+        nucleusGroup.scale.setScalar(wScale);
+      } else {
+        nucleusGroup.scale.setScalar(1);
+      }
+
+      // Flash (gamma)
+      if (flashTimer > 0) {
+        flashTimer = Math.max(0, flashTimer - dt);
+        const fInt = flashTimer / 0.3;
+        pointLight.intensity = 0.5 + fInt * 3;
+        pointLight.color.setHex(fInt > 0.5 ? 0xffffff : 0xaaaaff);
+      } else {
+        pointLight.intensity = 0.5;
+      }
+
+      // Update decay events
+      for (let i = decayEvents.length - 1; i >= 0; i--) {
+        decayEvents[i].update(dt);
+        if (decayEvents[i].life <= 0) {
+          decayEvents[i].dispose();
+          decayEvents.splice(i, 1);
+        }
+      }
+
+      // Stats
+      const ratio = Math.pow(0.5, elapsed);
+      const remaining = ratio * 100;
+      const lambda = Math.LN2;
+
+      document.getElementById('d-rem').textContent = remaining.toFixed(1);
+      document.getElementById('d-hal').textContent = elapsed.toFixed(2);
+      document.getElementById('d-rat').textContent = ratio.toFixed(4);
+      document.getElementById('d-lam').textContent = lambda.toFixed(4);
+
+      drawDecayCurve(elapsed);
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.error('Render error:', e);
+    }
+  }
+
+  // ── Decay type buttons ──────────────────────────────────────────────────────
+  ['alpha', 'beta', 'gamma'].forEach(type => {
+    document.getElementById('btn-' + type).addEventListener('click', function() {
+      decayType = type;
+      document.querySelectorAll('.decay-btn').forEach(b => {
+        b.className = 'decay-btn';
+      });
+      this.classList.add('active-' + type);
+    });
+  });
+
+  // ── Half-life slider ─────────────────────────────────────────────────────────
+  document.getElementById('halflife').addEventListener('input', function() {
+    halfLifeLog = parseFloat(this.value);
+    const hl = Math.pow(10, halfLifeLog);
+    const hlStr = hl < 0.1 ? hl.toExponential(1) : hl < 1000 ? hl.toFixed(2) : hl.toFixed(0);
+    document.getElementById('hl-val').textContent = hlStr + ' yr';
+    scheduleNextDecay();
+  });
+
+  // ── Play/Reset ───────────────────────────────────────────────────────────────
+  document.getElementById('btn-play').addEventListener('click', function() {
+    playing = !playing;
+    this.textContent = playing ? 'Pause' : 'Play';
+    this.className = playing ? 'btn primary' : 'btn';
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    elapsed = 0;
+    simTime = 0;
+    decayTimer = 0;
+    decayEvents.forEach(p => p.dispose());
+    decayEvents = [];
+    playing = true;
+    document.getElementById('btn-play').textContent = 'Pause';
+    document.getElementById('btn-play').className = 'btn primary';
+    buildNucleus();
+    scheduleNextDecay();
+  });
+
+  animate();
+})();
+</script>
+</body>
+</html>

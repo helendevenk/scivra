@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Under Pressure — NeonPhysics AP Physics</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
+    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(59,130,246,.08));border-bottom:1px solid rgba(6,182,212,.2)}
+    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .badge{background:rgba(6,182,212,.2);border:1px solid rgba(6,182,212,.4);color:#67e8f9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
+    .subtitle{color:#94a3b8;font-size:.9rem}
+    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 100px)}
+    .canvas-wrap{position:relative;background:#060e1a}
+    canvas#c{display:block;width:100%!important;height:100%!important}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:270px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .metric-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
+    .metric-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .val-cyan{color:#22d3ee}.val-blue{color:#60a5fa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-purple{color:#a78bfa}
+    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .param-row{margin-bottom:14px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#22d3ee;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(6,182,212,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#06b6d4;cursor:pointer}
+    .preset-btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.1);color:#67e8f9;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+    .preset-btn:hover{background:rgba(6,182,212,.25);border-color:rgba(6,182,212,.5)}
+    .preset-btn.active{background:rgba(6,182,212,.3);border-color:#06b6d4;color:#fff}
+    .formula-box{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
+    .graph-wrap{background:rgba(255,255,255,.03);border-radius:8px;padding:8px;margin-top:8px}
+    .graph-wrap canvas{width:100%;height:160px;border-radius:6px}
+    .quiz-section{padding:18px 20px}
+    .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-bottom:12px}
+    .quiz-q p{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
+    .quiz-opt{display:block;width:100%;text-align:left;padding:7px 10px;margin-bottom:4px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;transition:all .15s}
+    .quiz-opt:hover{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:#67e8f9}
+    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
+    .quiz-opt.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171}
+    .quiz-opt:disabled{cursor:default;opacity:.7}
+    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:5px;display:none}
+    .quiz-feedback.show{display:block}
+    .quiz-feedback.correct-fb{background:rgba(34,197,94,.1);color:#86efac}
+    .quiz-feedback.wrong-fb{background:rgba(239,68,68,.08);color:#f87171}
+    .probe-info{position:absolute;bottom:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:10px 14px;backdrop-filter:blur(8px);font-size:11px;color:#fbbf24}
+    .probe-info span{color:#fff;font-weight:700}
+    @media(max-width:768px){
+      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
+      .sidebar{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
+      .overlay{min-width:200px;padding:10px 14px}
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Under Pressure</h1>
+  <p class="subtitle">Pressure, fluid pressure, depth relationship, Pascal's law, and atmospheric pressure</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Surface Pressure P&#x2080;</div>
+          <div class="metric-val val-cyan" id="surfacePDisplay">101,325 Pa</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Fluid Pressure (&#x3C1;gh)</div>
+          <div class="metric-val val-blue" id="fluidPDisplay">98,100 Pa</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Total Pressure</div>
+          <div class="metric-val val-green" id="totalPDisplay">199,425 Pa</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Probe Depth</div>
+          <div class="metric-val val-amber" id="probeDepthDisplay">10.0 m</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Density</div>
+          <div class="metric-val val-purple" id="densityDisplay">1000 kg/m&#xB3;</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Gravity</div>
+          <div class="metric-val val-red" id="gravityDisplay">9.8 m/s&#xB2;</div>
+        </div>
+      </div>
+    </div>
+    <div class="probe-info" id="probeInfo">Drag the <span>yellow probe</span> up/down to measure pressure at different depths</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Fluid Density (&#x3C1;)</span>
+          <span class="param-val" id="densityVal">1000 kg/m&#xB3;</span>
+        </div>
+        <input type="range" id="densitySlider" min="500" max="13600" step="10" value="1000">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Depth (h)</span>
+          <span class="param-val" id="depthVal">10.0 m</span>
+        </div>
+        <input type="range" id="depthSlider" min="0" max="100" step="0.5" value="10">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Gravity (g)</span>
+          <span class="param-val" id="gravVal">9.8 m/s&#xB2;</span>
+        </div>
+        <input type="range" id="gravSlider" min="1" max="25" step="0.1" value="9.8">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="preset-btn" id="presetPool" onclick="applyPreset('pool')">Swimming Pool</button>
+        <button class="preset-btn" id="presetOcean" onclick="applyPreset('ocean')">Ocean Deep</button>
+        <button class="preset-btn" id="presetAtmo" onclick="applyPreset('atmo')">Atmosphere Layers</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pressure vs Depth</div>
+      <div class="graph-wrap">
+        <canvas id="graphCanvas" width="280" height="160"></canvas>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div id="f1"></div>
+        <div class="formula-desc">Pressure = Force / Area</div>
+      </div>
+      <div class="formula-box">
+        <div id="f2"></div>
+        <div class="formula-desc">Total pressure at depth h</div>
+      </div>
+      <div class="formula-box">
+        <div id="f3"></div>
+        <div class="formula-desc">Pascal's Law: pressure transmitted equally</div>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-q" id="q1">
+        <p>Q1: A diver descends from 10 m to 30 m depth in seawater (&#x3C1; = 1025 kg/m&#xB3;). By approximately how much does the pressure increase?</p>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'A')">A) 101,325 Pa</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'B')">B) 200,900 Pa</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'C')">C) 300,000 Pa</button>
+        <button class="quiz-opt" onclick="checkQuiz(1,this,'D')">D) 50,000 Pa</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div class="quiz-q" id="q2">
+        <p>Q2: According to Pascal's law, if you apply 100 Pa of additional pressure to an enclosed fluid, what happens at every other point in the fluid?</p>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'A')">A) Pressure increases by 100 Pa only at the bottom</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'B')">B) Pressure increases by 100 Pa everywhere equally</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'C')">C) Pressure decreases by 100 Pa at the top</button>
+        <button class="quiz-opt" onclick="checkQuiz(2,this,'D')">D) No change — pressure only depends on depth</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+try {
+  // ── State ──────────────────────────────────────────────────────────────────
+  var state = {
+    density: 1000,
+    depth: 10,
+    gravity: 9.8,
+    probeDepth: 10,
+    P0: 101325,
+    isAtmoMode: false
+  };
+
+  // ── DOM refs ───────────────────────────────────────────────────────────────
+  var densitySlider = document.getElementById('densitySlider');
+  var depthSlider = document.getElementById('depthSlider');
+  var gravSlider = document.getElementById('gravSlider');
+  var graphCanvas = document.getElementById('graphCanvas');
+  var graphCtx = graphCanvas.getContext('2d');
+
+  // ── Three.js Setup ─────────────────────────────────────────────────────────
+  var canvas = document.getElementById('c');
+  var wrap = document.getElementById('canvasWrap');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0f172a, 35, 70);
+
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+  camera.position.set(8, 6, 12);
+  camera.lookAt(0, 0, 0);
+
+  // OrbitControls
+  var controls = (typeof THREE.OrbitControls !== 'undefined')
+    ? new THREE.OrbitControls(camera, renderer.domElement)
+    : null;
+  if (controls) {
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 5;
+    controls.maxDistance = 35;
+    controls.target.set(0, 1, 0);
+  }
+
+  // ── Lighting (4 lights) ────────────────────────────────────────────────────
+  var ambientLight = new THREE.AmbientLight(0x334466, 1.2);
+  scene.add(ambientLight);
+
+  var dirLight = new THREE.DirectionalLight(0xeef4ff, 2.0);
+  dirLight.position.set(6, 12, 8);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+
+  var fillLight = new THREE.DirectionalLight(0x6ee7f9, 0.5);
+  fillLight.position.set(-6, 4, -4);
+  scene.add(fillLight);
+
+  var pointLight = new THREE.PointLight(0x22d3ee, 0.8, 25);
+  pointLight.position.set(0, 10, 0);
+  scene.add(pointLight);
+
+  // ── Constants ──────────────────────────────────────────────────────────────
+  var COL_RADIUS = 1.8;
+  var COL_HEIGHT = 8;
+  var COL_SEGMENTS = 48;
+  var COL_BASE_Y = -3;
+  var DEPTH_MARKS = 5;
+
+  // ── Fluid Column (transparent cylinder) ────────────────────────────────────
+  var colGeo = new THREE.CylinderGeometry(COL_RADIUS, COL_RADIUS, COL_HEIGHT, COL_SEGMENTS, 1, true);
+  var colMat = new THREE.MeshPhysicalMaterial({
+    color: 0x1e90ff,
+    transparent: true,
+    opacity: 0.18,
+    side: THREE.DoubleSide,
+    roughness: 0.1,
+    metalness: 0.0,
+    depthWrite: false
+  });
+  var fluidColumn = new THREE.Mesh(colGeo, colMat);
+  fluidColumn.position.y = COL_BASE_Y + COL_HEIGHT / 2;
+  scene.add(fluidColumn);
+
+  // Column top and bottom caps
+  var capGeo = new THREE.CircleGeometry(COL_RADIUS, COL_SEGMENTS);
+  var capMat = new THREE.MeshPhysicalMaterial({
+    color: 0x1e90ff, transparent: true, opacity: 0.12,
+    side: THREE.DoubleSide, depthWrite: false
+  });
+  var topCap = new THREE.Mesh(capGeo, capMat);
+  topCap.rotation.x = -Math.PI / 2;
+  topCap.position.y = COL_BASE_Y + COL_HEIGHT;
+  scene.add(topCap);
+
+  var bottomCap = new THREE.Mesh(capGeo.clone(), capMat.clone());
+  bottomCap.rotation.x = -Math.PI / 2;
+  bottomCap.position.y = COL_BASE_Y;
+  scene.add(bottomCap);
+  bottomCap.material.opacity = 0.25;
+
+  // ── Heatmap segments (stacked rings for color gradient) ────────────────────
+  var HEAT_SEGMENTS = 32;
+  var heatRings = [];
+  var segHeight = COL_HEIGHT / HEAT_SEGMENTS;
+  for (var i = 0; i < HEAT_SEGMENTS; i++) {
+    var ringGeo = new THREE.CylinderGeometry(
+      COL_RADIUS * 0.99, COL_RADIUS * 0.99, segHeight, COL_SEGMENTS, 1, false
+    );
+    var ringMat = new THREE.MeshBasicMaterial({
+      color: 0x0066ff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false
+    });
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.y = COL_BASE_Y + segHeight / 2 + i * segHeight;
+    scene.add(ring);
+    heatRings.push(ring);
+  }
+
+  // ── Depth markers (horizontal lines) ───────────────────────────────────────
+  var depthMarkers = [];
+  var depthLabels = [];
+  for (var d = 0; d <= DEPTH_MARKS; d++) {
+    var fraction = d / DEPTH_MARKS;
+    var ringLineGeo = new THREE.RingGeometry(COL_RADIUS - 0.02, COL_RADIUS + 0.05, COL_SEGMENTS);
+    var ringLineMat = new THREE.MeshBasicMaterial({
+      color: 0x94a3b8, transparent: true, opacity: 0.5, side: THREE.DoubleSide
+    });
+    var ringLine = new THREE.Mesh(ringLineGeo, ringLineMat);
+    ringLine.rotation.x = -Math.PI / 2;
+    ringLine.position.y = COL_BASE_Y + COL_HEIGHT - fraction * COL_HEIGHT;
+    scene.add(ringLine);
+    depthMarkers.push(ringLine);
+
+    // Depth label sprite
+    var labelCanvas = document.createElement('canvas');
+    labelCanvas.width = 128;
+    labelCanvas.height = 48;
+    var labelCtx = labelCanvas.getContext('2d');
+    labelCtx.fillStyle = '#94a3b8';
+    labelCtx.font = 'bold 28px sans-serif';
+    labelCtx.textAlign = 'left';
+    labelCtx.fillText('0 m', 4, 34);
+    var labelTex = new THREE.CanvasTexture(labelCanvas);
+    var labelSprite = new THREE.SpriteMaterial({ map: labelTex, transparent: true });
+    var sprite = new THREE.Sprite(labelSprite);
+    sprite.position.set(COL_RADIUS + 0.8, ringLine.position.y, 0);
+    sprite.scale.set(1.5, 0.6, 1);
+    scene.add(sprite);
+    depthLabels.push({ sprite: sprite, canvas: labelCanvas, ctx: labelCtx, texture: labelTex });
+  }
+
+  // ── Pressure Probe (yellow sphere, draggable along Y) ─────────────────────
+  var probeGeo = new THREE.SphereGeometry(0.25, 24, 24);
+  var probeMat = new THREE.MeshStandardMaterial({
+    color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.4, metalness: 0.3, roughness: 0.4
+  });
+  var probe = new THREE.Mesh(probeGeo, probeMat);
+  probe.position.set(0, COL_BASE_Y + COL_HEIGHT * 0.5, 0);
+  scene.add(probe);
+
+  // Probe rod (thin cylinder connecting probe to surface)
+  var rodGeo = new THREE.CylinderGeometry(0.03, 0.03, 1, 8);
+  var rodMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.2 });
+  var probeRod = new THREE.Mesh(rodGeo, rodMat);
+  scene.add(probeRod);
+
+  // Probe glow ring
+  var glowGeo = new THREE.RingGeometry(0.3, 0.55, 32);
+  var glowMat = new THREE.MeshBasicMaterial({
+    color: 0xfbbf24, transparent: true, opacity: 0.25, side: THREE.DoubleSide
+  });
+  var probeGlow = new THREE.Mesh(glowGeo, glowMat);
+  scene.add(probeGlow);
+
+  // ── Bubbles (particles rising from depth) ──────────────────────────────────
+  var MAX_BUBBLES = 60;
+  var bubbles = [];
+  var bubbleGeo = new THREE.SphereGeometry(0.06, 8, 8);
+  var bubbleMat = new THREE.MeshBasicMaterial({
+    color: 0x88ccff, transparent: true, opacity: 0.45
+  });
+
+  for (var b = 0; b < MAX_BUBBLES; b++) {
+    var bubble = new THREE.Mesh(bubbleGeo, bubbleMat.clone());
+    resetBubble(bubble);
+    scene.add(bubble);
+    bubbles.push(bubble);
+  }
+
+  function resetBubble(bbl) {
+    var angle = Math.random() * Math.PI * 2;
+    var r = Math.random() * COL_RADIUS * 0.85;
+    bbl.position.x = Math.cos(angle) * r;
+    bbl.position.z = Math.sin(angle) * r;
+    bbl.position.y = COL_BASE_Y + Math.random() * 0.5;
+    bbl.userData.speed = 0.005 + Math.random() * 0.02;
+    bbl.userData.wobblePhase = Math.random() * Math.PI * 2;
+    bbl.userData.wobbleAmp = 0.003 + Math.random() * 0.005;
+    var sc = 0.5 + Math.random() * 1.2;
+    bbl.scale.set(sc, sc, sc);
+  }
+
+  // ── Ground plane ───────────────────────────────────────────────────────────
+  var groundGeo = new THREE.PlaneGeometry(40, 40);
+  var groundMat = new THREE.MeshStandardMaterial({ color: 0x0a1628, roughness: 0.9 });
+  var ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = COL_BASE_Y - 0.01;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ── Grid helper ────────────────────────────────────────────────────────────
+  var gridHelper = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x0f1f3a);
+  gridHelper.position.y = COL_BASE_Y;
+  scene.add(gridHelper);
+
+  // ── Probe Dragging ─────────────────────────────────────────────────────────
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2();
+  var isDraggingProbe = false;
+  var dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  var intersectPoint = new THREE.Vector3();
+
+  canvas.addEventListener('pointerdown', function (e) {
+    updateMouse(e);
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObject(probe);
+    if (hits.length > 0) {
+      isDraggingProbe = true;
+      if (controls) controls.enabled = false;
+      canvas.style.cursor = 'grabbing';
+    }
+  });
+
+  canvas.addEventListener('pointermove', function (e) {
+    updateMouse(e);
+    if (isDraggingProbe) {
+      raycaster.setFromCamera(mouse, camera);
+      raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+      var newY = Math.max(COL_BASE_Y + 0.3, Math.min(COL_BASE_Y + COL_HEIGHT - 0.1, intersectPoint.y));
+      probe.position.y = newY;
+      var frac = 1 - (newY - COL_BASE_Y) / COL_HEIGHT;
+      state.probeDepth = frac * state.depth;
+      updateDisplays();
+    } else {
+      raycaster.setFromCamera(mouse, camera);
+      var hits = raycaster.intersectObject(probe);
+      canvas.style.cursor = hits.length > 0 ? 'grab' : 'default';
+    }
+  });
+
+  canvas.addEventListener('pointerup', function () {
+    if (isDraggingProbe) {
+      isDraggingProbe = false;
+      if (controls) controls.enabled = true;
+      canvas.style.cursor = 'default';
+    }
+  });
+
+  function updateMouse(e) {
+    var rect = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  // ── Color helpers ──────────────────────────────────────────────────────────
+  function pressureToColor(fraction) {
+    // fraction 0 (surface/low pressure) → 1 (deep/high pressure)
+    // Blue → Cyan → Yellow → Red
+    var r, g, bl;
+    if (fraction < 0.33) {
+      var t = fraction / 0.33;
+      r = Math.floor(30 + t * 0);
+      g = Math.floor(100 + t * 155);
+      bl = Math.floor(255 - t * 55);
+    } else if (fraction < 0.66) {
+      var t2 = (fraction - 0.33) / 0.33;
+      r = Math.floor(30 + t2 * 225);
+      g = Math.floor(255 - t2 * 55);
+      bl = Math.floor(200 - t2 * 150);
+    } else {
+      var t3 = (fraction - 0.66) / 0.34;
+      r = Math.floor(255);
+      g = Math.floor(200 - t3 * 170);
+      bl = Math.floor(50 - t3 * 50);
+    }
+    return new THREE.Color(r / 255, g / 255, bl / 255);
+  }
+
+  // ── Update functions ───────────────────────────────────────────────────────
+  function computePressure(depth) {
+    return state.P0 + state.density * state.gravity * depth;
+  }
+
+  function formatPressure(p) {
+    if (p >= 1e6) return (p / 1e6).toFixed(2) + ' MPa';
+    if (p >= 1e4) return Math.round(p).toLocaleString() + ' Pa';
+    return p.toFixed(1) + ' Pa';
+  }
+
+  function updateDisplays() {
+    var fluidP = state.density * state.gravity * state.probeDepth;
+    var totalP = state.P0 + fluidP;
+
+    document.getElementById('surfacePDisplay').textContent = formatPressure(state.P0);
+    document.getElementById('fluidPDisplay').textContent = formatPressure(fluidP);
+    document.getElementById('totalPDisplay').textContent = formatPressure(totalP);
+    document.getElementById('probeDepthDisplay').textContent = state.probeDepth.toFixed(1) + ' m';
+    document.getElementById('densityDisplay').textContent = state.density + ' kg/m\u00B3';
+    document.getElementById('gravityDisplay').textContent = state.gravity.toFixed(1) + ' m/s\u00B2';
+
+    document.getElementById('densityVal').textContent = state.density + ' kg/m\u00B3';
+    document.getElementById('depthVal').textContent = state.depth.toFixed(1) + ' m';
+    document.getElementById('gravVal').textContent = state.gravity.toFixed(1) + ' m/s\u00B2';
+
+    updateHeatmap();
+    updateDepthLabels();
+    drawGraph();
+  }
+
+  function updateHeatmap() {
+    for (var i = 0; i < HEAT_SEGMENTS; i++) {
+      var frac = i / HEAT_SEGMENTS;
+      var depthAtSeg = frac * state.depth;
+      var pAtSeg = computePressure(depthAtSeg);
+      var maxP = computePressure(state.depth);
+      var normP = maxP > state.P0 ? (pAtSeg - state.P0) / (maxP - state.P0) : 0;
+      var color = pressureToColor(normP);
+      heatRings[HEAT_SEGMENTS - 1 - i].material.color = color;
+      heatRings[HEAT_SEGMENTS - 1 - i].material.opacity = 0.06 + normP * 0.18;
+    }
+  }
+
+  function updateDepthLabels() {
+    for (var d = 0; d <= DEPTH_MARKS; d++) {
+      var fraction = d / DEPTH_MARKS;
+      var depthAtMark = fraction * state.depth;
+      var label = depthLabels[d];
+      label.ctx.clearRect(0, 0, 128, 48);
+      label.ctx.fillStyle = '#94a3b8';
+      label.ctx.font = 'bold 24px sans-serif';
+      label.ctx.textAlign = 'left';
+      label.ctx.fillText(depthAtMark.toFixed(1) + ' m', 4, 32);
+      label.texture.needsUpdate = true;
+    }
+  }
+
+  function updateFluidColor() {
+    // Denser fluids look more opaque and shift color
+    var normDensity = (state.density - 500) / (13600 - 500);
+    var baseOpacity = 0.12 + normDensity * 0.25;
+    colMat.opacity = baseOpacity;
+
+    if (state.density > 10000) {
+      // Mercury-like: silvery
+      colMat.color.setHex(0x8899aa);
+    } else if (state.density > 2000) {
+      // Dense fluid: deeper blue
+      colMat.color.setHex(0x1044aa);
+    } else {
+      // Water-like: light blue
+      colMat.color.setHex(0x1e90ff);
+    }
+  }
+
+  // ── Pressure vs Depth Graph (Canvas 2D) ────────────────────────────────────
+  function drawGraph() {
+    var w = graphCanvas.width;
+    var h = graphCanvas.height;
+    graphCtx.clearRect(0, 0, w, h);
+
+    // Background
+    graphCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    graphCtx.fillRect(0, 0, w, h);
+
+    var padL = 55, padR = 15, padT = 15, padB = 30;
+    var plotW = w - padL - padR;
+    var plotH = h - padT - padB;
+
+    // Axes
+    graphCtx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+    graphCtx.lineWidth = 1;
+    graphCtx.beginPath();
+    graphCtx.moveTo(padL, padT);
+    graphCtx.lineTo(padL, padT + plotH);
+    graphCtx.lineTo(padL + plotW, padT + plotH);
+    graphCtx.stroke();
+
+    // Labels
+    graphCtx.fillStyle = '#64748b';
+    graphCtx.font = '10px sans-serif';
+    graphCtx.textAlign = 'center';
+    graphCtx.fillText('Depth (m)', padL + plotW / 2, h - 4);
+
+    graphCtx.save();
+    graphCtx.translate(12, padT + plotH / 2);
+    graphCtx.rotate(-Math.PI / 2);
+    graphCtx.fillText('Pressure (Pa)', 0, 0);
+    graphCtx.restore();
+
+    // Data range
+    var maxDepth = Math.max(state.depth, 1);
+    var maxPressure = computePressure(maxDepth);
+
+    // Grid lines
+    graphCtx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+    for (var gy = 0; gy <= 4; gy++) {
+      var yy = padT + (gy / 4) * plotH;
+      graphCtx.beginPath();
+      graphCtx.moveTo(padL, yy);
+      graphCtx.lineTo(padL + plotW, yy);
+      graphCtx.stroke();
+      var pLabel = maxPressure - (gy / 4) * (maxPressure - state.P0);
+      graphCtx.fillStyle = '#475569';
+      graphCtx.font = '9px sans-serif';
+      graphCtx.textAlign = 'right';
+      if (pLabel >= 1e6) {
+        graphCtx.fillText((pLabel / 1e6).toFixed(1) + 'M', padL - 4, yy + 3);
+      } else {
+        graphCtx.fillText(Math.round(pLabel / 1000) + 'k', padL - 4, yy + 3);
+      }
+    }
+
+    // Depth ticks
+    for (var gx = 0; gx <= 4; gx++) {
+      var xx = padL + (gx / 4) * plotW;
+      graphCtx.fillStyle = '#475569';
+      graphCtx.font = '9px sans-serif';
+      graphCtx.textAlign = 'center';
+      graphCtx.fillText(((gx / 4) * maxDepth).toFixed(0), xx, padT + plotH + 14);
+    }
+
+    // Linear pressure line
+    graphCtx.strokeStyle = '#22d3ee';
+    graphCtx.lineWidth = 2;
+    graphCtx.beginPath();
+    var steps = 50;
+    for (var s = 0; s <= steps; s++) {
+      var depthS = (s / steps) * maxDepth;
+      var pressS = computePressure(depthS);
+      var px = padL + (depthS / maxDepth) * plotW;
+      var py = padT + plotH - ((pressS - state.P0) / (maxPressure - state.P0)) * plotH;
+      if (s === 0) graphCtx.moveTo(px, py);
+      else graphCtx.lineTo(px, py);
+    }
+    graphCtx.stroke();
+
+    // Gradient fill under curve
+    var gradient = graphCtx.createLinearGradient(0, padT, 0, padT + plotH);
+    gradient.addColorStop(0, 'rgba(34, 211, 238, 0.2)');
+    gradient.addColorStop(1, 'rgba(34, 211, 238, 0.02)');
+    graphCtx.lineTo(padL + plotW, padT + plotH);
+    graphCtx.lineTo(padL, padT + plotH);
+    graphCtx.closePath();
+    graphCtx.fillStyle = gradient;
+    graphCtx.fill();
+
+    // Probe marker
+    var probeX = padL + (state.probeDepth / maxDepth) * plotW;
+    var probeP = computePressure(state.probeDepth);
+    var probeY = padT + plotH - ((probeP - state.P0) / (maxPressure - state.P0)) * plotH;
+    graphCtx.beginPath();
+    graphCtx.arc(probeX, probeY, 5, 0, Math.PI * 2);
+    graphCtx.fillStyle = '#fbbf24';
+    graphCtx.fill();
+    graphCtx.strokeStyle = '#fff';
+    graphCtx.lineWidth = 1.5;
+    graphCtx.stroke();
+  }
+
+  // ── Presets ────────────────────────────────────────────────────────────────
+  function clearPresetActive() {
+    document.querySelectorAll('.preset-btn').forEach(function (b) { b.classList.remove('active'); });
+    state.isAtmoMode = false;
+  }
+
+  function applyPreset(name) {
+    clearPresetActive();
+    if (name === 'pool') {
+      state.density = 1000; state.depth = 3; state.gravity = 9.8;
+      document.getElementById('presetPool').classList.add('active');
+    } else if (name === 'ocean') {
+      state.density = 1025; state.depth = 100; state.gravity = 9.8;
+      document.getElementById('presetOcean').classList.add('active');
+    } else if (name === 'atmo') {
+      // Atmosphere: show air density, "depth" = altitude inverted concept
+      // Use air density ~1.225 kg/m3, depth up to 100 "equivalent meters" to show pressure drop
+      state.density = 1225; state.depth = 8.5; state.gravity = 9.8;
+      state.isAtmoMode = true;
+      document.getElementById('presetAtmo').classList.add('active');
+    }
+    densitySlider.value = state.density;
+    depthSlider.value = state.depth;
+    gravSlider.value = state.gravity;
+    state.probeDepth = state.depth * 0.5;
+    var probeFrac = 1 - state.probeDepth / state.depth;
+    probe.position.y = COL_BASE_Y + probeFrac * COL_HEIGHT;
+    updateFluidColor();
+    updateDisplays();
+  }
+  window.applyPreset = applyPreset;
+
+  // ── Slider events ──────────────────────────────────────────────────────────
+  densitySlider.addEventListener('input', function () {
+    clearPresetActive();
+    state.density = parseFloat(this.value);
+    updateFluidColor();
+    updateDisplays();
+  });
+
+  depthSlider.addEventListener('input', function () {
+    clearPresetActive();
+    state.depth = parseFloat(this.value);
+    if (state.probeDepth > state.depth) state.probeDepth = state.depth;
+    var probeFrac = state.depth > 0 ? 1 - state.probeDepth / state.depth : 1;
+    probe.position.y = COL_BASE_Y + probeFrac * COL_HEIGHT;
+    updateDisplays();
+  });
+
+  gravSlider.addEventListener('input', function () {
+    clearPresetActive();
+    state.gravity = parseFloat(this.value);
+    updateDisplays();
+  });
+
+  // ── Quiz ───────────────────────────────────────────────────────────────────
+  var quizAnswers = { 1: 'B', 2: 'B' };
+  var quizExplanations = {
+    1: 'Correct! \u0394P = \u03C1g\u0394h = 1025 \u00D7 9.8 \u00D7 20 \u2248 200,900 Pa (about 2 atm increase).',
+    2: 'Correct! Pascal\'s law states that pressure applied to an enclosed fluid is transmitted undiminished to every point in the fluid.'
+  };
+  var quizWrongExplanations = {
+    1: 'Incorrect. Use \u0394P = \u03C1g\u0394h = 1025 \u00D7 9.8 \u00D7 (30-10) \u2248 200,900 Pa.',
+    2: 'Incorrect. Pascal\'s law says the additional pressure is transmitted equally and undiminished to all points.'
+  };
+
+  function checkQuiz(qNum, btn, answer) {
+    var fb = document.getElementById('fb' + qNum);
+    var opts = document.querySelectorAll('#q' + qNum + ' .quiz-opt');
+    opts.forEach(function (o) { o.disabled = true; });
+
+    if (answer === quizAnswers[qNum]) {
+      btn.classList.add('correct');
+      fb.className = 'quiz-feedback show correct-fb';
+      fb.textContent = quizExplanations[qNum];
+    } else {
+      btn.classList.add('wrong');
+      fb.className = 'quiz-feedback show wrong-fb';
+      fb.textContent = quizWrongExplanations[qNum];
+      opts.forEach(function (o) {
+        if (o.textContent.charAt(0) === quizAnswers[qNum]) o.classList.add('correct');
+      });
+    }
+  }
+  window.checkQuiz = checkQuiz;
+
+  // ── KaTeX Formulas ─────────────────────────────────────────────────────────
+  katex.render('P = \\frac{F}{A}', document.getElementById('f1'), { displayMode: true, throwOnError: false });
+  katex.render('P = P_0 + \\rho g h', document.getElementById('f2'), { displayMode: true, throwOnError: false });
+  katex.render('P_1 = P_2 \\quad \\text{(Pascal\'s Law)}', document.getElementById('f3'), { displayMode: true, throwOnError: false });
+
+  // ── Animation Loop ─────────────────────────────────────────────────────────
+  var clock = new THREE.Clock();
+
+  function animate() {
+    var dt = clock.getDelta();
+    var time = clock.getElapsedTime();
+
+    // Update controls
+    if (controls) controls.update();
+
+    // Animate bubbles
+    for (var i = 0; i < bubbles.length; i++) {
+      var bbl = bubbles[i];
+      bbl.position.y += bbl.userData.speed;
+      bbl.position.x += Math.sin(time * 2 + bbl.userData.wobblePhase) * bbl.userData.wobbleAmp;
+      bbl.position.z += Math.cos(time * 1.5 + bbl.userData.wobblePhase) * bbl.userData.wobbleAmp;
+
+      // Expand as rising (less pressure)
+      var riseFrac = (bbl.position.y - COL_BASE_Y) / COL_HEIGHT;
+      var expansionScale = 1 + riseFrac * 0.6;
+      var baseScale = bbl.scale.x / (1 + ((bbl.position.y - bbl.userData.speed - COL_BASE_Y) / COL_HEIGHT) * 0.6 || 1);
+      bbl.scale.set(baseScale * expansionScale, baseScale * expansionScale, baseScale * expansionScale);
+
+      // Fade as approaching surface
+      bbl.material.opacity = 0.45 * (1 - riseFrac * 0.7);
+
+      if (bbl.position.y > COL_BASE_Y + COL_HEIGHT) {
+        resetBubble(bbl);
+      }
+    }
+
+    // Probe glow pulse
+    probeGlow.position.copy(probe.position);
+    probeGlow.lookAt(camera.position);
+    probeGlow.material.opacity = 0.15 + Math.sin(time * 3) * 0.1;
+
+    // Update probe rod
+    var rodTop = COL_BASE_Y + COL_HEIGHT;
+    var rodBottom = probe.position.y;
+    var rodLen = rodTop - rodBottom;
+    probeRod.scale.y = rodLen;
+    probeRod.position.set(0, rodBottom + rodLen / 2, 0);
+
+    // Render
+    var w = wrap.clientWidth;
+    var h = wrap.clientHeight;
+    if (w > 0 && h > 0) {
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    renderer.render(scene, camera);
+  }
+
+  renderer.setAnimationLoop(animate);
+
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  window.addEventListener('resize', function () {
+    var w = wrap.clientWidth;
+    var h = wrap.clientHeight;
+    if (w > 0 && h > 0) {
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    // Re-scale graph canvas
+    var graphWrap = graphCanvas.parentElement;
+    if (graphWrap) {
+      graphCanvas.width = graphWrap.clientWidth - 16;
+      drawGraph();
+    }
+  });
+
+  // ── Initial update ─────────────────────────────────────────────────────────
+  updateFluidColor();
+  updateDisplays();
+
+} catch (err) {
+  console.error('Pressure Lab initialization error:', err);
+  var errDiv = document.createElement('div');
+  errDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e293b;color:#f87171;padding:24px;border-radius:12px;border:1px solid rgba(248,113,113,.3);font-size:14px;max-width:400px;text-align:center;z-index:9999';
+  errDiv.innerHTML = '<strong>Initialization Error</strong><br><br>' + err.message + '<br><br><small>Check console for details</small>';
+  document.body.appendChild(errDiv);
+}
+</script>
+</body>
+</html>

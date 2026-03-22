@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy Skate Park: Basics | NeonPhysics</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  #panel {
+    width: 300px; min-width: 300px; background: #161b22; border-right: 1px solid #30363d;
+    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
+  }
+  .panel-header {
+    padding: 16px; background: #0f172a; border-bottom: 1px solid #30363d;
+  }
+  .panel-header h2 { font-size: 13px; color: #58a6ff; letter-spacing: 0.05em; text-transform: uppercase; }
+  .panel-header h1 { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid #21262d; }
+  .section-title { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .control-row { margin-bottom: 12px; }
+  .control-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; margin-bottom: 5px; color: #c9d1d9;
+  }
+  .control-label .val { color: #58a6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  input[type=range] {
+    width: 100%; height: 4px; appearance: none; background: #30363d;
+    border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: #58a6ff; cursor: pointer;
+  }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    flex: 1; padding: 8px 6px; border: 1px solid #30363d; border-radius: 6px;
+    background: #21262d; color: #c9d1d9; font-size: 12px; cursor: pointer;
+    transition: background 0.15s; font-weight: 600; min-width: 70px;
+  }
+  .btn:hover { background: #30363d; }
+  .btn.primary { background: #1f6feb; border-color: #388bfd; color: #fff; }
+  .btn.primary:hover { background: #388bfd; }
+  .btn.active { background: #238636; border-color: #3fb950; color: #fff; }
+
+  .preset-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .preset-btn {
+    padding: 5px 10px; border: 1px solid #30363d; border-radius: 4px;
+    background: #161b22; color: #8b949e; font-size: 11px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+  .preset-btn.active { border-color: #58a6ff; color: #58a6ff; background: #1f6feb22; }
+
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .data-item {
+    background: #0f172a; border: 1px solid #21262d; border-radius: 6px;
+    padding: 8px; text-align: center;
+  }
+  .data-item .d-label { font-size: 10px; color: #8b949e; margin-bottom: 3px; }
+  .data-item .d-val { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .data-item.ke .d-val { color: #388bfd; }
+  .data-item.pe .d-val { color: #f85149; }
+  .data-item.thermal .d-val { color: #f78166; }
+  .data-item.total .d-val { color: #3fb950; }
+  .data-item.speed .d-val { color: #e3b341; }
+  .data-item.height .d-val { color: #a5d6ff; }
+
+  .formula-box {
+    background: #0f172a; border: 1px solid #21262d; border-radius: 6px;
+    padding: 12px; line-height: 1.8;
+  }
+  .formula-box .katex { font-size: 0.9em; }
+  .formula-line { margin-bottom: 4px; }
+
+  .quiz-section { padding: 14px 16px; }
+  .quiz-q {
+    background: #0f172a; border: 1px solid #21262d; border-radius: 6px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .quiz-q p { font-size: 12px; margin-bottom: 8px; line-height: 1.5; }
+  .quiz-opt {
+    display: block; width: 100%; padding: 6px 10px; margin-bottom: 4px;
+    border: 1px solid #30363d; border-radius: 4px; background: #161b22;
+    color: #c9d1d9; font-size: 11px; cursor: pointer; text-align: left;
+    transition: all 0.15s;
+  }
+  .quiz-opt:hover { border-color: #58a6ff; }
+  .quiz-opt.correct { border-color: #3fb950; background: #23863622; color: #3fb950; }
+  .quiz-opt.wrong { border-color: #f85149; background: #da363422; color: #f85149; }
+  .quiz-feedback { font-size: 11px; margin-top: 6px; display: none; padding: 6px; border-radius: 4px; }
+
+  .fps-badge {
+    position: fixed; top: 10px; right: 10px; background: rgba(15,23,42,0.8);
+    border: 1px solid #30363d; border-radius: 4px; padding: 3px 8px;
+    font-size: 11px; color: #8b949e; font-variant-numeric: tabular-nums; z-index: 100;
+  }
+
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  #three-canvas { display: block; }
+  #energy-canvas {
+    position: absolute; bottom: 16px; right: 16px;
+    background: rgba(15,23,42,0.85); border: 1px solid #30363d;
+    border-radius: 8px; pointer-events: none;
+  }
+  #height-canvas {
+    position: absolute; bottom: 16px; left: 16px;
+    background: rgba(15,23,42,0.85); border: 1px solid #30363d;
+    border-radius: 8px; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <div class="panel-header">
+    <h2>AP Physics</h2>
+    <h1>Energy Skate Park: Basics</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Controls</div>
+    <div class="control-row">
+      <div class="control-label">Mass (kg) <span class="val" id="mass-val">3.0</span></div>
+      <input type="range" id="mass" min="1" max="10" step="0.5" value="3">
+    </div>
+    <div class="control-row">
+      <div class="control-label">Friction <span class="val" id="friction-val">0.00</span></div>
+      <input type="range" id="friction" min="0" max="0.5" step="0.01" value="0">
+    </div>
+    <div class="control-row">
+      <div class="control-label">Start Height (m) <span class="val" id="height-val">5.0</span></div>
+      <input type="range" id="startHeight" min="1" max="8" step="0.5" value="5">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Simulation</div>
+    <div class="btn-row">
+      <button class="btn primary" id="btn-play">Pause</button>
+      <button class="btn" id="btn-reset">Reset</button>
+    </div>
+    <div class="preset-row">
+      <button class="preset-btn active" data-preset="nofriction">No Friction</button>
+      <button class="preset-btn" data-preset="withfriction">With Friction</button>
+      <button class="preset-btn" data-preset="highramp">High Ramp</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Live Data</div>
+    <div class="data-grid">
+      <div class="data-item ke"><div class="d-label">KE (J)</div><div class="d-val" id="d-ke">0.00</div></div>
+      <div class="data-item pe"><div class="d-label">PE (J)</div><div class="d-val" id="d-pe">0.00</div></div>
+      <div class="data-item thermal"><div class="d-label">Thermal (J)</div><div class="d-val" id="d-thermal">0.00</div></div>
+      <div class="data-item total"><div class="d-label">Total E (J)</div><div class="d-val" id="d-total">0.00</div></div>
+      <div class="data-item speed"><div class="d-label">Speed (m/s)</div><div class="d-val" id="d-speed">0.00</div></div>
+      <div class="data-item height"><div class="d-label">Height (m)</div><div class="d-val" id="d-height">0.00</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Formulas</div>
+    <div class="formula-box" id="formula-box"></div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="section-title">Quiz</div>
+    <div class="quiz-q" id="quiz1">
+      <p><strong>Q1:</strong> A skater starts from rest at the top of a frictionless half-pipe. At the very bottom, which statement is true?</p>
+      <button class="quiz-opt" data-q="1" data-correct="false">PE is at maximum</button>
+      <button class="quiz-opt" data-q="1" data-correct="true">KE equals the initial PE</button>
+      <button class="quiz-opt" data-q="1" data-correct="false">Total energy has increased</button>
+      <button class="quiz-opt" data-q="1" data-correct="false">Speed is zero</button>
+      <div class="quiz-feedback" id="fb1"></div>
+    </div>
+    <div class="quiz-q" id="quiz2">
+      <p><strong>Q2:</strong> With friction present, the skater oscillates back and forth but rises to a lower height each time. Where does the "lost" energy go?</p>
+      <button class="quiz-opt" data-q="2" data-correct="false">It is destroyed</button>
+      <button class="quiz-opt" data-q="2" data-correct="false">It converts to extra KE</button>
+      <button class="quiz-opt" data-q="2" data-correct="true">It becomes thermal energy (heat)</button>
+      <button class="quiz-opt" data-q="2" data-correct="false">It leaves the system as light</button>
+      <div class="quiz-feedback" id="fb2"></div>
+    </div>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="three-canvas"></canvas>
+  <canvas id="energy-canvas" width="220" height="220"></canvas>
+  <canvas id="height-canvas" width="40" height="220"></canvas>
+</div>
+<div class="fps-badge" id="fps">FPS: --</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ── Formulas (KaTeX) ──────────────────────────────────────────────────────
+  var formulaHTML = '';
+  var formulas = [
+    'E_{total} = KE + PE + E_{thermal}',
+    'KE = \\tfrac{1}{2}mv^2',
+    'PE = mgh',
+    '\\Delta E_{thermal} = f_k \\cdot d'
+  ];
+  formulas.forEach(function(f) {
+    formulaHTML += '<div class="formula-line">' + katex.renderToString(f, { throwOnError: false, displayMode: false }) + '</div>';
+  });
+  document.getElementById('formula-box').innerHTML = formulaHTML;
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  var mass = 3, friction = 0, startHeight = 5;
+  var g = 9.8;
+  var playing = true;
+  var thermalAccum = 0;
+
+  // Track parameters: U-shaped half-pipe
+  var TRACK_HALF_WIDTH = 6;   // half-width of the U in x
+  var TRACK_DEPTH = 0.5;      // z half-width for the track surface
+  var trackPoints = [];       // populated in buildTrack
+  var trackLength = 0;        // arc length
+  var trackCurve = null;
+
+  // Skater state
+  var skaterParam = 0;        // 0..1 along curve
+  var skaterVelocity = 0;     // signed tangential velocity (+ = forward along curve)
+  var trail = [];
+  var MAX_TRAIL = 300;
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  var wrap = document.getElementById('canvas-wrap');
+  var threeCanvas = document.getElementById('three-canvas');
+  var energyCanvas = document.getElementById('energy-canvas');
+  var heightCanvas = document.getElementById('height-canvas');
+  var ectx = energyCanvas.getContext('2d');
+  var hctx = heightCanvas.getContext('2d');
+
+  // ── Three.js setup ────────────────────────────────────────────────────────
+  var renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a);
+  renderer.shadowMap.enabled = true;
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
+
+  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(0, 8, 16);
+  camera.lookAt(0, 3, 0);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 3, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 40;
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x8899bb, 0.5));
+  var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(8, 15, 10);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  scene.add(dirLight);
+  var rimLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+  rimLight.position.set(-5, 3, -8);
+  scene.add(rimLight);
+
+  // Grid
+  var gridHelper = new THREE.GridHelper(30, 30, 0x1e293b, 0x1e293b);
+  gridHelper.position.y = 0;
+  scene.add(gridHelper);
+
+  // ── Build track (U-shape / half-pipe) ─────────────────────────────────────
+  var trackMeshGroup = new THREE.Group();
+  scene.add(trackMeshGroup);
+
+  function buildTrack() {
+    // Clear old track
+    while (trackMeshGroup.children.length > 0) {
+      var ch = trackMeshGroup.children[0];
+      if (ch.geometry) ch.geometry.dispose();
+      if (ch.material) ch.material.dispose();
+      trackMeshGroup.remove(ch);
+    }
+
+    // Generate U-shaped curve points: left wall -> bottom -> right wall
+    // Parametric: x from -HALF_WIDTH to +HALF_WIDTH
+    // Shape: parabolic U -> y = startHeight * (x/HALF_WIDTH)^2
+    var numPts = 80;
+    trackPoints = [];
+    for (var i = 0; i <= numPts; i++) {
+      var t = i / numPts;
+      var x = -TRACK_HALF_WIDTH + 2 * TRACK_HALF_WIDTH * t;
+      var normalizedX = x / TRACK_HALF_WIDTH;
+      var y = startHeight * normalizedX * normalizedX;
+      trackPoints.push(new THREE.Vector3(x, y, 0));
+    }
+
+    trackCurve = new THREE.CatmullRomCurve3(trackPoints, false, 'catmullrom', 0.5);
+
+    // Calculate arc length
+    var lengths = trackCurve.getLengths(200);
+    trackLength = lengths[lengths.length - 1];
+
+    // Build track mesh: extruded tube-like surface
+    var trackShape = [];
+    var SEGS = 120;
+    for (var i = 0; i <= SEGS; i++) {
+      trackShape.push(trackCurve.getPointAt(i / SEGS));
+    }
+
+    // Create track surface as a series of quads
+    var trackGeo = new THREE.BufferGeometry();
+    var verts = [];
+    var indices = [];
+    var normals = [];
+    var uvs = [];
+    var trackW = 2.5; // z-width of track
+
+    for (var i = 0; i <= SEGS; i++) {
+      var pt = trackCurve.getPointAt(i / SEGS);
+      var tangent = trackCurve.getTangentAt(i / SEGS).normalize();
+      // Normal in the xz plane perpendicular to tangent
+      var up = new THREE.Vector3(0, 0, 1);
+      var idx = i * 2;
+
+      verts.push(pt.x, pt.y - 0.1, -trackW / 2);
+      verts.push(pt.x, pt.y - 0.1, trackW / 2);
+
+      // Approximate normal: pointing up from surface
+      var n = new THREE.Vector3(-tangent.y, tangent.x, 0).normalize();
+      normals.push(n.x, n.y, n.z);
+      normals.push(n.x, n.y, n.z);
+      uvs.push(i / SEGS, 0);
+      uvs.push(i / SEGS, 1);
+
+      if (i < SEGS) {
+        var a = idx, b = idx + 1, c = idx + 2, d = idx + 3;
+        indices.push(a, c, b);
+        indices.push(b, c, d);
+      }
+    }
+
+    trackGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    trackGeo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    trackGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    trackGeo.setIndex(indices);
+    trackGeo.computeVertexNormals();
+
+    var trackMat = new THREE.MeshPhongMaterial({
+      color: 0x334155,
+      specular: 0x4488ff,
+      shininess: 40,
+      side: THREE.DoubleSide
+    });
+    var trackMesh = new THREE.Mesh(trackGeo, trackMat);
+    trackMesh.receiveShadow = true;
+    trackMeshGroup.add(trackMesh);
+
+    // Side rails (thin tubes along the edges)
+    var railPtsL = [], railPtsR = [];
+    for (var i = 0; i <= SEGS; i++) {
+      var pt = trackCurve.getPointAt(i / SEGS);
+      railPtsL.push(new THREE.Vector3(pt.x, pt.y + 0.05, -trackW / 2));
+      railPtsR.push(new THREE.Vector3(pt.x, pt.y + 0.05, trackW / 2));
+    }
+    var railCurveL = new THREE.CatmullRomCurve3(railPtsL);
+    var railCurveR = new THREE.CatmullRomCurve3(railPtsR);
+    var railGeo1 = new THREE.TubeGeometry(railCurveL, SEGS, 0.06, 6, false);
+    var railGeo2 = new THREE.TubeGeometry(railCurveR, SEGS, 0.06, 6, false);
+    var railMat = new THREE.MeshPhongMaterial({ color: 0x58a6ff, emissive: 0x1a3a5c });
+    trackMeshGroup.add(new THREE.Mesh(railGeo1, railMat));
+    trackMeshGroup.add(new THREE.Mesh(railGeo2, railMat));
+
+    // Support pillars
+    for (var i = 0; i <= 6; i++) {
+      var t = i / 6;
+      var pt = trackCurve.getPointAt(t);
+      if (pt.y > 0.3) {
+        var pillarH = pt.y;
+        var pillarGeo = new THREE.CylinderGeometry(0.08, 0.08, pillarH, 6);
+        var pillarMat = new THREE.MeshPhongMaterial({ color: 0x475569 });
+        var pillar = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar.position.set(pt.x, pillarH / 2, 0);
+        trackMeshGroup.add(pillar);
+      }
+    }
+  }
+
+  // ── Skater (sphere) ───────────────────────────────────────────────────────
+  var skaterGeo = new THREE.SphereGeometry(0.35, 24, 24);
+  var skaterMat = new THREE.MeshPhongMaterial({
+    color: 0x388bfd,
+    emissive: 0x112244,
+    specular: 0x88bbff,
+    shininess: 60
+  });
+  var skaterMesh = new THREE.Mesh(skaterGeo, skaterMat);
+  skaterMesh.castShadow = true;
+  scene.add(skaterMesh);
+
+  // Glow around skater
+  var glowGeo = new THREE.SphereGeometry(0.5, 16, 16);
+  var glowMat = new THREE.MeshBasicMaterial({ color: 0x388bfd, transparent: true, opacity: 0.12 });
+  var glowMesh = new THREE.Mesh(glowGeo, glowMat);
+  scene.add(glowMesh);
+
+  // ── Velocity arrow ────────────────────────────────────────────────────────
+  var arrowGroup = new THREE.Group();
+  scene.add(arrowGroup);
+
+  function makeArrow(color) {
+    var grp = new THREE.Group();
+    var bodyGeo = new THREE.CylinderGeometry(0.04, 0.04, 1, 8);
+    var bodyMat = new THREE.MeshBasicMaterial({ color: color });
+    var body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.5;
+    grp.add(body);
+    var headGeo = new THREE.ConeGeometry(0.1, 0.25, 8);
+    var headMat = new THREE.MeshBasicMaterial({ color: color });
+    var head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 1.125;
+    grp.add(head);
+    return grp;
+  }
+
+  var velocityArrow = makeArrow(0xe3b341);
+  arrowGroup.add(velocityArrow);
+
+  // ── Trail line ────────────────────────────────────────────────────────────
+  var trailGeo = new THREE.BufferGeometry();
+  var trailPositions = new Float32Array(MAX_TRAIL * 3);
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+  trailGeo.setDrawRange(0, 0);
+  var trailMat = new THREE.LineBasicMaterial({ color: 0x388bfd, transparent: true, opacity: 0.4 });
+  var trailLine = new THREE.Line(trailGeo, trailMat);
+  scene.add(trailLine);
+
+  // ── Heat particles ────────────────────────────────────────────────────────
+  var MAX_PARTICLES = 150;
+  var particles = [];
+  var pGeo = new THREE.BufferGeometry();
+  var pPositions = new Float32Array(MAX_PARTICLES * 3);
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+  var pMat = new THREE.PointsMaterial({ color: 0xf78166, size: 0.1, transparent: true, opacity: 0.8 });
+  var pSystem = new THREE.Points(pGeo, pMat);
+  scene.add(pSystem);
+
+  // ── Height ruler ──────────────────────────────────────────────────────────
+  var rulerGroup = new THREE.Group();
+  scene.add(rulerGroup);
+
+  function buildRuler() {
+    while (rulerGroup.children.length) {
+      var c = rulerGroup.children[0];
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+      rulerGroup.remove(c);
+    }
+    var maxH = Math.ceil(startHeight) + 1;
+    // Vertical line
+    var lineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-TRACK_HALF_WIDTH - 1.2, 0, 0),
+      new THREE.Vector3(-TRACK_HALF_WIDTH - 1.2, maxH, 0)
+    ]);
+    var lineMat = new THREE.LineBasicMaterial({ color: 0x475569 });
+    rulerGroup.add(new THREE.Line(lineGeo, lineMat));
+
+    // Tick marks
+    for (var h = 0; h <= maxH; h++) {
+      var tickGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-TRACK_HALF_WIDTH - 1.4, h, 0),
+        new THREE.Vector3(-TRACK_HALF_WIDTH - 1.0, h, 0)
+      ]);
+      rulerGroup.add(new THREE.Line(tickGeo, lineMat));
+    }
+  }
+
+  // ── Physics helpers ───────────────────────────────────────────────────────
+  function getHeightAt(param) {
+    var pt = trackCurve.getPointAt(Math.max(0, Math.min(1, param)));
+    return Math.max(0, pt.y);
+  }
+
+  function getTangentAngle(param) {
+    var tangent = trackCurve.getTangentAt(Math.max(0.001, Math.min(0.999, param)));
+    return Math.atan2(tangent.y, tangent.x);
+  }
+
+  function resetSim() {
+    // Start on left wall at startHeight
+    // Find parameter where height = startHeight (left side, param near 0)
+    skaterParam = 0;
+    skaterVelocity = 0;
+    thermalAccum = 0;
+    trail = [];
+    particles = [];
+    trailGeo.setDrawRange(0, 0);
+  }
+
+  // ── Build everything ──────────────────────────────────────────────────────
+  function rebuild() {
+    buildTrack();
+    buildRuler();
+    resetSim();
+  }
+
+  rebuild();
+
+  // ── Physics step ──────────────────────────────────────────────────────────
+  function physicsStep(dt) {
+    if (!playing) return;
+    if (!trackCurve) return;
+
+    var subSteps = 8;
+    var subDt = dt / subSteps;
+
+    for (var s = 0; s < subSteps; s++) {
+      var param = skaterParam;
+      var tangent = trackCurve.getTangentAt(Math.max(0.001, Math.min(0.999, param)));
+      tangent.normalize();
+
+      // Gravity component along tangent
+      var gravAlongTangent = -g * tangent.y; // negative because gravity is down
+
+      // Friction: opposes velocity
+      var frictionAcc = 0;
+      if (friction > 0 && Math.abs(skaterVelocity) > 0.001) {
+        // Normal force depends on curvature + gravity component perpendicular to surface
+        var normalForce = mass * g * Math.abs(Math.sqrt(1 - tangent.y * tangent.y));
+        // Add centripetal contribution (approximate)
+        if (trackLength > 0) {
+          var speed2 = skaterVelocity * skaterVelocity;
+          // Estimate curvature from two nearby tangents
+          var dp = 0.005;
+          var t1 = trackCurve.getTangentAt(Math.max(0.001, Math.min(0.999, param - dp)));
+          var t2 = trackCurve.getTangentAt(Math.max(0.001, Math.min(0.999, param + dp)));
+          var dAngle = Math.atan2(t2.y, t2.x) - Math.atan2(t1.y, t1.x);
+          var ds = 2 * dp * trackLength;
+          var curvature = ds > 0 ? Math.abs(dAngle / ds) : 0;
+          normalForce += mass * speed2 * curvature;
+        }
+        var frictForce = friction * normalForce;
+        frictionAcc = -Math.sign(skaterVelocity) * frictForce / mass;
+
+        // Thermal energy from friction
+        thermalAccum += frictForce * Math.abs(skaterVelocity) * subDt;
+      }
+
+      var totalAcc = gravAlongTangent + frictionAcc;
+      skaterVelocity += totalAcc * subDt;
+
+      // Update position along curve
+      var ds = skaterVelocity * subDt;
+      var dParam = ds / trackLength;
+      skaterParam += dParam;
+
+      // Bounce off ends
+      if (skaterParam <= 0) {
+        skaterParam = 0;
+        skaterVelocity = Math.abs(skaterVelocity) * 0.98;
+      }
+      if (skaterParam >= 1) {
+        skaterParam = 1;
+        skaterVelocity = -Math.abs(skaterVelocity) * 0.98;
+      }
+    }
+  }
+
+  // ── Update visuals ────────────────────────────────────────────────────────
+  function updateSkater() {
+    if (!trackCurve) return;
+    var pt = trackCurve.getPointAt(Math.max(0, Math.min(1, skaterParam)));
+    skaterMesh.position.set(pt.x, pt.y + 0.35, 0);
+    glowMesh.position.copy(skaterMesh.position);
+
+    // Trail
+    trail.push(pt.x, pt.y + 0.35, 0);
+    if (trail.length > MAX_TRAIL * 3) trail.splice(0, 3);
+    var count = trail.length / 3;
+    for (var i = 0; i < count; i++) {
+      trailPositions[i * 3] = trail[i * 3];
+      trailPositions[i * 3 + 1] = trail[i * 3 + 1];
+      trailPositions[i * 3 + 2] = trail[i * 3 + 2];
+    }
+    trailGeo.attributes.position.needsUpdate = true;
+    trailGeo.setDrawRange(0, count);
+
+    // Velocity arrow
+    var speed = Math.abs(skaterVelocity);
+    if (speed > 0.1) {
+      velocityArrow.visible = true;
+      velocityArrow.position.copy(skaterMesh.position);
+      var tangent = trackCurve.getTangentAt(Math.max(0.001, Math.min(0.999, skaterParam)));
+      var angle = Math.atan2(tangent.y, tangent.x);
+      if (skaterVelocity < 0) angle += Math.PI;
+      velocityArrow.rotation.set(0, 0, angle - Math.PI / 2);
+      velocityArrow.scale.set(1, Math.min(speed * 0.15, 2), 1);
+    } else {
+      velocityArrow.visible = false;
+    }
+  }
+
+  // ── Heat particles ────────────────────────────────────────────────────────
+  function spawnHeatParticles(x, y) {
+    for (var i = 0; i < 2; i++) {
+      particles.push({
+        x: x, y: y, z: (Math.random() - 0.5) * 2,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: Math.random() * 1.5 + 0.5,
+        vz: (Math.random() - 0.5) * 1.5,
+        life: 1.0
+      });
+    }
+    if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES);
+  }
+
+  function updateParticles(dt) {
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.z += p.vz * dt;
+      p.vy -= 3 * dt;
+      p.life -= dt * 1.5;
+    }
+    particles = particles.filter(function(p) { return p.life > 0; });
+    for (var i = 0; i < MAX_PARTICLES; i++) {
+      if (i < particles.length) {
+        pPositions[i * 3] = particles[i].x;
+        pPositions[i * 3 + 1] = particles[i].y;
+        pPositions[i * 3 + 2] = particles[i].z;
+      } else {
+        pPositions[i * 3] = 0;
+        pPositions[i * 3 + 1] = -100;
+        pPositions[i * 3 + 2] = 0;
+      }
+    }
+    pGeo.attributes.position.needsUpdate = true;
+  }
+
+  // ── Energy bar chart ──────────────────────────────────────────────────────
+  function drawEnergyBars(ke, pe, thermal, totalE) {
+    var w = energyCanvas.width, h = energyCanvas.height;
+    ectx.clearRect(0, 0, w, h);
+
+    var barW = 35, gap = 14, topPad = 30, bottomPad = 35;
+    var maxH = h - topPad - bottomPad;
+    var initialE = mass * g * startHeight;
+    var maxE = Math.max(initialE, 1);
+
+    var bars = [
+      { label: 'KE', val: ke, color: '#388bfd' },
+      { label: 'PE', val: pe, color: '#f85149' },
+      { label: 'Thermal', val: thermal, color: '#f78166' }
+    ];
+
+    // Title
+    ectx.fillStyle = '#8b949e';
+    ectx.font = 'bold 11px system-ui';
+    ectx.textAlign = 'center';
+    ectx.fillText('Energy (J)', w / 2, 16);
+
+    // Total energy dashed line
+    var totalBarH = (totalE / maxE) * maxH;
+    var totalY = topPad + (maxH - totalBarH);
+    ectx.setLineDash([4, 3]);
+    ectx.strokeStyle = '#3fb950';
+    ectx.lineWidth = 1.5;
+    ectx.beginPath();
+    ectx.moveTo(gap - 4, totalY);
+    ectx.lineTo(w - gap + 4, totalY);
+    ectx.stroke();
+    ectx.setLineDash([]);
+
+    // Label for total
+    ectx.fillStyle = '#3fb950';
+    ectx.font = '9px system-ui';
+    ectx.textAlign = 'right';
+    ectx.fillText('Total: ' + totalE.toFixed(1), w - 6, totalY - 4);
+
+    bars.forEach(function(b, i) {
+      var bh = Math.max(0, (b.val / maxE) * maxH);
+      var bx = gap + i * (barW + gap);
+      var by = topPad + (maxH - bh);
+
+      // Background
+      ectx.fillStyle = b.color + '15';
+      ectx.fillRect(bx, topPad, barW, maxH);
+
+      // Bar
+      ectx.fillStyle = b.color;
+      ectx.fillRect(bx, by, barW, bh);
+
+      // Glow effect
+      ectx.fillStyle = b.color + '33';
+      ectx.fillRect(bx - 1, by - 1, barW + 2, bh + 2);
+
+      // Labels
+      ectx.fillStyle = '#c9d1d9';
+      ectx.font = 'bold 10px system-ui';
+      ectx.textAlign = 'center';
+      ectx.fillText(b.label, bx + barW / 2, h - 20);
+      ectx.font = '9px system-ui';
+      ectx.fillStyle = '#8b949e';
+      ectx.fillText(b.val.toFixed(1), bx + barW / 2, h - 8);
+    });
+  }
+
+  // ── Height ruler (2D overlay) ─────────────────────────────────────────────
+  function drawHeightRuler(currentH) {
+    var w = heightCanvas.width, h = heightCanvas.height;
+    hctx.clearRect(0, 0, w, h);
+
+    var topPad = 20, bottomPad = 10;
+    var barH = h - topPad - bottomPad;
+    var maxH = Math.ceil(startHeight) + 1;
+
+    // Axis
+    hctx.strokeStyle = '#475569';
+    hctx.lineWidth = 1;
+    hctx.beginPath();
+    hctx.moveTo(w - 10, topPad);
+    hctx.lineTo(w - 10, topPad + barH);
+    hctx.stroke();
+
+    // Ticks
+    hctx.fillStyle = '#8b949e';
+    hctx.font = '8px system-ui';
+    hctx.textAlign = 'right';
+    for (var i = 0; i <= maxH; i++) {
+      var y = topPad + barH - (i / maxH) * barH;
+      hctx.beginPath();
+      hctx.moveTo(w - 14, y);
+      hctx.lineTo(w - 6, y);
+      hctx.stroke();
+      hctx.fillText(i + '', w - 16, y + 3);
+    }
+
+    // Current height marker
+    var markerY = topPad + barH - (currentH / maxH) * barH;
+    hctx.fillStyle = '#58a6ff';
+    hctx.beginPath();
+    hctx.moveTo(w - 6, markerY);
+    hctx.lineTo(w, markerY - 4);
+    hctx.lineTo(w, markerY + 4);
+    hctx.fill();
+
+    // Label
+    hctx.fillStyle = '#8b949e';
+    hctx.font = 'bold 8px system-ui';
+    hctx.textAlign = 'center';
+    hctx.fillText('h(m)', w / 2, 12);
+  }
+
+  // ── FPS ────────────────────────────────────────────────────────────────────
+  var frameCount = 0, lastFPSTime = performance.now(), fps = 0;
+  var fpsEl = document.getElementById('fps');
+
+  // ── Resize ────────────────────────────────────────────────────────────────
+  function onResize() {
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // ── Main loop ─────────────────────────────────────────────────────────────
+  var lastTime = performance.now();
+
+  function animate() {
+    try {
+      requestAnimationFrame(animate);
+      var now = performance.now();
+      var rawDt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      // FPS
+      frameCount++;
+      if (now - lastFPSTime >= 500) {
+        fps = Math.round(frameCount / ((now - lastFPSTime) / 1000));
+        frameCount = 0;
+        lastFPSTime = now;
+        fpsEl.textContent = 'FPS: ' + fps;
+      }
+
+      // Physics
+      physicsStep(rawDt);
+
+      // Update visuals
+      updateSkater();
+
+      // Heat particles
+      if (friction > 0 && Math.abs(skaterVelocity) > 0.5 && playing) {
+        if (Math.random() < Math.abs(skaterVelocity) * 0.15) {
+          spawnHeatParticles(skaterMesh.position.x, skaterMesh.position.y - 0.3);
+        }
+      }
+      updateParticles(rawDt);
+
+      // Compute energy values
+      var currentH = getHeightAt(skaterParam);
+      var speed = Math.abs(skaterVelocity);
+      var ke = 0.5 * mass * speed * speed;
+      var pe = mass * g * currentH;
+      var totalE = ke + pe + thermalAccum;
+
+      // Update data display
+      document.getElementById('d-ke').textContent = ke.toFixed(2);
+      document.getElementById('d-pe').textContent = pe.toFixed(2);
+      document.getElementById('d-thermal').textContent = thermalAccum.toFixed(2);
+      document.getElementById('d-total').textContent = totalE.toFixed(2);
+      document.getElementById('d-speed').textContent = speed.toFixed(2);
+      document.getElementById('d-height').textContent = currentH.toFixed(2);
+
+      // Draw overlays
+      drawEnergyBars(ke, pe, thermalAccum, totalE);
+      drawHeightRuler(currentH);
+
+      // Glow pulse
+      var pulse = 0.08 + 0.05 * Math.sin(now * 0.003);
+      glowMat.opacity = pulse + speed * 0.01;
+
+      controls.update();
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.error('Render error:', e);
+    }
+  }
+
+  // ── Slider events ─────────────────────────────────────────────────────────
+  function bindSlider(id, valId, decimals, callback) {
+    var el = document.getElementById(id);
+    var valEl = document.getElementById(valId);
+    el.addEventListener('input', function() {
+      valEl.textContent = parseFloat(el.value).toFixed(decimals);
+      callback(parseFloat(el.value));
+    });
+  }
+
+  bindSlider('mass', 'mass-val', 1, function(v) { mass = v; resetSim(); });
+  bindSlider('friction', 'friction-val', 2, function(v) { friction = v; resetSim(); });
+  bindSlider('startHeight', 'height-val', 1, function(v) { startHeight = v; rebuild(); });
+
+  // ── Play/Reset buttons ────────────────────────────────────────────────────
+  document.getElementById('btn-play').addEventListener('click', function() {
+    playing = !playing;
+    this.textContent = playing ? 'Pause' : 'Play';
+    this.className = playing ? 'btn primary' : 'btn';
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    resetSim();
+    playing = true;
+    document.getElementById('btn-play').textContent = 'Pause';
+    document.getElementById('btn-play').className = 'btn primary';
+  });
+
+  // ── Presets ───────────────────────────────────────────────────────────────
+  var presets = {
+    nofriction: { mass: 3, friction: 0, startHeight: 5 },
+    withfriction: { mass: 3, friction: 0.15, startHeight: 5 },
+    highramp: { mass: 5, friction: 0, startHeight: 8 }
+  };
+
+  function applyPreset(name) {
+    var p = presets[name];
+    if (!p) return;
+
+    mass = p.mass;
+    friction = p.friction;
+    startHeight = p.startHeight;
+
+    document.getElementById('mass').value = p.mass;
+    document.getElementById('mass-val').textContent = p.mass.toFixed(1);
+    document.getElementById('friction').value = p.friction;
+    document.getElementById('friction-val').textContent = p.friction.toFixed(2);
+    document.getElementById('startHeight').value = p.startHeight;
+    document.getElementById('height-val').textContent = p.startHeight.toFixed(1);
+
+    // Update active preset button
+    document.querySelectorAll('.preset-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.preset === name);
+    });
+
+    rebuild();
+    playing = true;
+    document.getElementById('btn-play').textContent = 'Pause';
+    document.getElementById('btn-play').className = 'btn primary';
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      applyPreset(this.dataset.preset);
+    });
+  });
+
+  // ── Quiz ──────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.quiz-opt').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var q = this.dataset.q;
+      var correct = this.dataset.correct === 'true';
+      var fb = document.getElementById('fb' + q);
+
+      // Disable all options for this question
+      document.querySelectorAll('.quiz-opt[data-q="' + q + '"]').forEach(function(opt) {
+        opt.disabled = true;
+        if (opt.dataset.correct === 'true') {
+          opt.classList.add('correct');
+        }
+      });
+
+      if (correct) {
+        this.classList.add('correct');
+        fb.textContent = 'Correct! ' + (q === '1'
+          ? 'At the bottom of a frictionless half-pipe, all PE has converted to KE. Energy is conserved: KE_bottom = PE_top = mgh.'
+          : 'Friction converts mechanical energy into thermal energy (heat). Total energy is still conserved, but mechanical energy decreases.');
+        fb.style.color = '#3fb950';
+        fb.style.background = '#23863622';
+      } else {
+        this.classList.add('wrong');
+        fb.textContent = 'Not quite. ' + (q === '1'
+          ? 'Remember: in a frictionless system, energy is conserved. At the lowest point, PE = 0 and KE = initial PE.'
+          : 'Energy cannot be created or destroyed. Friction converts kinetic energy into thermal energy (heat), raising the temperature of the surfaces.');
+        fb.style.color = '#f85149';
+        fb.style.background = '#da363422';
+      }
+      fb.style.display = 'block';
+    });
+  });
+
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -29,6 +29,7 @@ export function SignInForm({
   const [loading, setLoading] = useState(false);
 
   const { configs } = useAppContext();
+  const locale = useLocale();
 
   const isGoogleAuthEnabled = configs.google_auth_enabled === 'true';
   const isGithubAuthEnabled = configs.github_auth_enabled === 'true';
@@ -37,7 +38,6 @@ export function SignInForm({
     (!isGoogleAuthEnabled && !isGithubAuthEnabled); // no social providers enabled, auto enable email auth
 
   if (callbackUrl) {
-    const locale = useLocale();
     if (
       locale !== defaultLocale &&
       callbackUrl.startsWith('/') &&

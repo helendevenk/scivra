@@ -16,7 +16,7 @@ export default async function AdminLearningPathsPage({
   setRequestLocale(locale);
 
   await requirePermission({
-    code: PERMISSIONS.POSTS_READ,
+    code: PERMISSIONS.LEARNING_PATHS_READ,
     redirectUrl: '/admin/no-permission',
     locale,
   });

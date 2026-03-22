@@ -1,4 +1,5 @@
 import { UPG_MAX_HTML_SIZE } from './constants';
+import { getDisciplineConfig } from './disciplines';
 
 interface QualityResult {
   passed: boolean;
@@ -14,7 +15,7 @@ const BLACKLIST_PATTERNS = [
   /\bsessionStorage\b/,
 ];
 
-export function checkQuality(html: string): QualityResult {
+export function checkQuality(html: string, discipline?: string): QualityResult {
   const issues: string[] = [];
   const warnings: string[] = [];
 
@@ -134,6 +135,21 @@ export function checkQuality(html: string): QualityResult {
   const hasDomReady = /DOMContentLoaded/.test(html);
   if (!hasDomReady) {
     warnings.push('Missing DOMContentLoaded handler — scripts may run before DOM is ready');
+  }
+
+  // === Discipline-specific checks ===
+  if (discipline) {
+    const config = getDisciplineConfig(discipline);
+    for (const rule of config.qualityRules) {
+      const result = rule.check(html);
+      if (!result.passed) {
+        if (rule.severity === 'error') {
+          issues.push(`[${discipline}] ${rule.description}: ${result.message}`);
+        } else {
+          warnings.push(`[${discipline}] ${rule.description}: ${result.message}`);
+        }
+      }
+    }
   }
 
   return {

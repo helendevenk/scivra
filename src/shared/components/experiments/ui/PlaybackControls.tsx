@@ -23,9 +23,7 @@ export function PlaybackControls({
     <div className="flex items-center gap-3">
       <button
         onClick={isPlaying ? onPause : onPlay}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-neon-cyan/30
-          bg-surface-raised-dark text-neon-cyan transition-shadow hover:shadow-neon
-          focus-visible:outline-2 focus-visible:outline-neon-cyan"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/30 bg-card text-primary transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary"
         aria-label={isPlaying ? "Pause simulation" : "Play simulation"}
       >
         {isPlaying ? (
@@ -54,8 +52,7 @@ export function PlaybackControls({
 
       <button
         onClick={onReset}
-        className="flex h-8 items-center rounded-md border border-neon-pink/30 bg-surface-raised-dark
-          px-3 text-xs text-neon-pink transition-shadow hover:shadow-neon-pink"
+        className="flex h-8 items-center rounded-md border border-rose-500/30 bg-card px-3 text-xs text-rose-500 transition-shadow hover:shadow-md dark:text-rose-400 dark:border-rose-400/30"
         aria-label="Reset simulation"
       >
         Reset
@@ -68,7 +65,7 @@ export function PlaybackControls({
             onClick={() => onSpeedChange(s)}
             className={`h-7 rounded px-2 text-xs transition-colors ${
               speed === s
-                ? "bg-neon-cyan/20 text-neon-cyan"
+                ? "bg-primary/20 text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             aria-label={`Set speed to ${s}x`}

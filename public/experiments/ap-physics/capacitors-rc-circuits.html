@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capacitors & RC Circuits — NeonPhysics AP Physics 2</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden}
+    .layout{display:flex;height:100vh;width:100vw}
+    .canvas-wrap{position:relative;flex:1;min-width:0;display:flex;flex-direction:column}
+    #c{display:block;flex:1;width:100%}
+    .chart-panel{position:relative;height:220px;background:#070b10;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+    #chartCanvas{display:block;width:100%;height:100%}
+    .chart-label{position:absolute;top:10px;left:14px;font-size:11px;color:#475569;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+    .chart-tau-label{position:absolute;top:26px;font-size:10px;color:#fbbf24}
+    .fps-badge{position:absolute;bottom:8px;right:14px;background:rgba(7,11,16,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:3px 8px;font-size:11px;color:#475569;font-variant-numeric:tabular-nums}
+    .overlay{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.92);border:1px solid rgba(99,179,237,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:190px}
+    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:7px}
+    .stat-row:last-child{margin-bottom:0}
+    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+    .orange{color:#fb923c}.red{color:#fca5a5}.blue{color:#60a5fa}.green{color:#86efac}.yellow{color:#fde68a}.cyan{color:#67e8f9}
+    .sidebar{width:290px;flex-shrink:0;background:#0f172a;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;display:flex;flex-direction:column}
+    .sidebar-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+    .badge-row{display:flex;gap:8px;margin-bottom:8px}
+    .badge{background:rgba(99,179,237,.15);border:1px solid rgba(99,179,237,.3);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    h1{font-size:1.1rem;font-weight:700;color:#f0f4ff;line-height:1.3}
+    .subtitle{color:#64748b;font-size:.8rem;margin-top:3px}
+    .section{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+    .param-row{margin-bottom:12px}
+    .param-row:last-child{margin-bottom:0}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(99,179,237,.2);border-radius:2px;cursor:pointer;outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#60a5fa;cursor:pointer}
+    .toggle-row{display:flex;gap:6px;margin-top:4px}
+    .toggle-btn{flex:1;padding:7px 0;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
+    .btn-charge{background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.25);color:#60a5fa}
+    .btn-charge.active{background:rgba(96,165,250,.3);border-color:#60a5fa}
+    .btn-discharge{background:rgba(252,165,165,.08);border:1px solid rgba(252,165,165,.18);color:#fca5a5}
+    .btn-discharge.active{background:rgba(252,165,165,.25);border-color:#fca5a5}
+    .btn-series{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);color:#fde68a}
+    .btn-series.active{background:rgba(251,191,36,.25);border-color:#fbbf24}
+    .btn-parallel{background:rgba(134,239,172,.1);border:1px solid rgba(134,239,172,.2);color:#86efac}
+    .btn-parallel.active{background:rgba(134,239,172,.25);border-color:#86efac}
+    .btn-single{background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.2);color:#67e8f9}
+    .btn-single.active{background:rgba(103,232,249,.25);border-color:#67e8f9}
+    .data-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .data-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:9px 11px}
+    .data-card-label{font-size:10px;color:#64748b;margin-bottom:3px}
+    .data-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#e8eaf0}
+    .equiv-box{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:10px 14px;margin-top:8px}
+    .equiv-label{font-size:10px;color:#fbbf24;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+    .equiv-value{font-size:13px;font-weight:700;color:#fde68a}
+    .katex-row{margin-top:6px;min-height:20px}
+    .formula-section{padding:14px 20px;flex:1}
+    .formula-box{background:rgba(99,179,237,.05);border:1px solid rgba(99,179,237,.12);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:#93c5fd;letter-spacing:.3px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:3px}
+    .reset-btn{width:100%;padding:8px 0;border-radius:7px;border:1px solid rgba(96,165,250,.3);background:rgba(96,165,250,.1);color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .15s}
+    .reset-btn:hover{background:rgba(96,165,250,.2)}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <div class="canvas-wrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row">
+        <span class="stat-label">Mode</span>
+        <span class="stat-value cyan" id="statMode">Single</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">&tau; = RC</span>
+        <span class="stat-value yellow" id="statTau">&mdash;</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Voltage V(t)</span>
+        <span class="stat-value blue" id="statVt">&mdash;</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Charge Q</span>
+        <span class="stat-value orange" id="statQ">&mdash;</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Energy U</span>
+        <span class="stat-value green" id="statU">&mdash;</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">C_eff</span>
+        <span class="stat-value yellow" id="statCeff">&mdash;</span>
+      </div>
+    </div>
+    <div class="chart-panel">
+      <canvas id="chartCanvas"></canvas>
+      <div class="chart-label">V(t) CHARGE / DISCHARGE CURVE</div>
+      <div class="fps-badge" id="fpsBadge">-- FPS</div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="badge-row">
+        <span class="badge">AP PHYSICS 2</span>
+        <span class="badge badge-free">FREE</span>
+      </div>
+      <h1>Capacitors &amp;<br>RC Circuits</h1>
+      <p class="subtitle">Charge accumulation, field lines, series/parallel, and V(t) curves with &tau; marking</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Circuit Parameters</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Capacitance C</span>
+          <span class="param-val" id="lblC">100 &mu;F</span>
+        </div>
+        <input type="range" id="sliderC" min="1" max="1000" value="100" step="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Resistance R</span>
+          <span class="param-val" id="lblR">10.0 k&Omega;</span>
+        </div>
+        <input type="range" id="sliderR" min="1" max="100" value="10" step="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Battery Voltage V&#8320;</span>
+          <span class="param-val" id="lblV0">12 V</span>
+        </div>
+        <input type="range" id="sliderV0" min="1" max="24" value="12" step="1">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Charge / Discharge</div>
+      <div class="toggle-row">
+        <button class="toggle-btn btn-charge active" id="btnCharge">&#9889; Charge</button>
+        <button class="toggle-btn btn-discharge" id="btnDischarge">&#8595; Discharge</button>
+      </div>
+      <button class="reset-btn" id="btnReset">&#8635; Reset Timer</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Capacitor Configuration</div>
+      <div class="toggle-row">
+        <button class="toggle-btn btn-single active" id="btnSingle">Single</button>
+        <button class="toggle-btn btn-series" id="btnSeries">Series</button>
+        <button class="toggle-btn btn-parallel" id="btnParallel">Parallel</button>
+      </div>
+      <div class="equiv-box" id="equivBox">
+        <div class="equiv-label">Equivalent Capacitance</div>
+        <div class="equiv-value" id="equivValue">100 &mu;F</div>
+        <div class="katex-row" id="equivFormula"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Real-time Data</div>
+      <div class="data-grid">
+        <div class="data-card">
+          <div class="data-card-label">&tau; = RC (s)</div>
+          <div class="data-card-value yellow" id="dataTau">&mdash;</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-label">V current (V)</div>
+          <div class="data-card-value blue" id="dataV">&mdash;</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-label">Q (&mu;C)</div>
+          <div class="data-card-value orange" id="dataQval">&mdash;</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-label">Energy (mJ)</div>
+          <div class="data-card-value green" id="dataUval">&mdash;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-section">
+      <div class="section-title">Key Formulas</div>
+      <div class="formula-box">
+        <div class="formula-text">C = Q / V</div>
+        <div class="formula-desc">Capacitance definition</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">V(t) = V&#8320;(1 &minus; e^(&minus;t/RC))</div>
+        <div class="formula-desc">Charging voltage vs time</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">V(t) = V&#8320; &middot; e^(&minus;t/RC)</div>
+        <div class="formula-desc">Discharging voltage vs time</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">&tau; = RC</div>
+        <div class="formula-desc">Time constant: 63.2% charged at t=&tau;</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">Series: 1/C_eq = 1/C&#8321; + 1/C&#8322;</div>
+        <div class="formula-desc">Series capacitance (smaller)</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">Parallel: C_eq = C&#8321; + C&#8322;</div>
+        <div class="formula-desc">Parallel capacitance (larger)</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">U = &frac12;CV&sup2;</div>
+        <div class="formula-desc">Energy stored in capacitor</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────────────────
+  var C_base = 100e-6;   // Farads (single capacitor)
+  var R      = 10e3;      // Ohms
+  var V0     = 12;        // Volts
+  var mode   = 'charge';  // 'charge' | 'discharge'
+  var config = 'single';  // 'single' | 'series' | 'parallel'
+  var tStart = performance.now();
+
+  function getCeff() {
+    if (config === 'series')   return C_base / 2;  // two identical in series
+    if (config === 'parallel') return C_base * 2;   // two identical in parallel
+    return C_base;
+  }
+  function getTau() { return R * getCeff(); }
+  function getVt(t) {
+    var tau = getTau();
+    if (tau < 1e-9) return mode === 'charge' ? V0 : 0;
+    return mode === 'charge'
+      ? V0 * (1 - Math.exp(-t / tau))
+      : V0 * Math.exp(-t / tau);
+  }
+
+  // ── Three.js setup ─────────────────────────────────────────────────
+  var canvas, renderer, scene, camera, controls;
+
+  try {
+    canvas   = document.getElementById('c');
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0f172a, 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    scene  = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, 1, 0.01, 200);
+    camera.position.set(4, 6, 12);
+    camera.lookAt(0, 0, 0);
+
+    // OrbitControls
+    controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 4;
+    controls.maxDistance = 30;
+    controls.maxPolarAngle = Math.PI * 0.85;
+    controls.target.set(0, 0, 0);
+
+    // ── Lighting (4 lights) ──────────────────────────────────────────
+    var ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambientLight);
+
+    var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(6, 10, 6);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    var fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
+    fillLight.position.set(-5, 3, -4);
+    scene.add(fillLight);
+
+    var rimLight = new THREE.PointLight(0x60a5fa, 0.4, 25);
+    rimLight.position.set(0, 8, -6);
+    scene.add(rimLight);
+
+    // ── Ground plane (subtle grid) ──────────────────────────────────
+    var gridHelper = new THREE.GridHelper(20, 20, 0x1e293b, 0x1e293b);
+    gridHelper.position.y = -3;
+    scene.add(gridHelper);
+
+  } catch(e) {
+    console.error('Three.js init failed:', e);
+  }
+
+  // ── Capacitor Plates ───────────────────────────────────────────────
+  var plateW = 4, plateH = 0.15, plateD = 3;
+  var plateSep = 2.2;
+  var plateGeo = new THREE.BoxGeometry(plateW, plateH, plateD);
+
+  // Single capacitor plates
+  var posPlate = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({
+    color: 0xc0c8d8, metalness: 0.75, roughness: 0.25
+  }));
+  posPlate.position.y = plateSep / 2;
+  posPlate.castShadow = true;
+  scene.add(posPlate);
+
+  var negPlate = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({
+    color: 0x8090a8, metalness: 0.75, roughness: 0.25
+  }));
+  negPlate.position.y = -plateSep / 2;
+  negPlate.castShadow = true;
+  scene.add(negPlate);
+
+  // Second capacitor plates (for series/parallel)
+  var posPlate2 = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({
+    color: 0xc0c8d8, metalness: 0.75, roughness: 0.25
+  }));
+  posPlate2.castShadow = true;
+  posPlate2.visible = false;
+  scene.add(posPlate2);
+
+  var negPlate2 = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({
+    color: 0x8090a8, metalness: 0.75, roughness: 0.25
+  }));
+  negPlate2.castShadow = true;
+  negPlate2.visible = false;
+  scene.add(negPlate2);
+
+  // Plate glow lights
+  var posLight = new THREE.PointLight(0xff4444, 0, 6);
+  posLight.position.set(0, plateSep / 2 + 0.5, 0);
+  scene.add(posLight);
+  var negLightGlow = new THREE.PointLight(0x4488ff, 0, 6);
+  negLightGlow.position.set(0, -plateSep / 2 - 0.5, 0);
+  scene.add(negLightGlow);
+
+  // ── "+" and "-" labels on plates ──────────────────────────────────
+  function makeTextSprite(text, color) {
+    var cnv = document.createElement('canvas');
+    cnv.width = 64; cnv.height = 64;
+    var ctx2 = cnv.getContext('2d');
+    ctx2.fillStyle = color;
+    ctx2.font = 'bold 48px sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'middle';
+    ctx2.fillText(text, 32, 32);
+    var tex = new THREE.CanvasTexture(cnv);
+    var mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    var sprite = new THREE.Sprite(mat);
+    sprite.scale.set(0.5, 0.5, 1);
+    return sprite;
+  }
+  var plusSprite = makeTextSprite('+', '#ff6666');
+  plusSprite.position.set(plateW / 2 + 0.4, plateSep / 2, 0);
+  scene.add(plusSprite);
+  var minusSprite = makeTextSprite('\u2013', '#6699ff');
+  minusSprite.position.set(plateW / 2 + 0.4, -plateSep / 2, 0);
+  scene.add(minusSprite);
+
+  // ── Charge Particles on Plates ─────────────────────────────────────
+  var MAX_PARTICLES = 50;
+  var posParticles = [], negParticlesArr = [];
+  var posParticleGroup = new THREE.Group();
+  var negParticleGroup = new THREE.Group();
+  scene.add(posParticleGroup);
+  scene.add(negParticleGroup);
+
+  // Second cap particle groups
+  var posParticles2 = [], negParticles2 = [];
+  var posParticleGroup2 = new THREE.Group();
+  var negParticleGroup2 = new THREE.Group();
+  posParticleGroup2.visible = false;
+  negParticleGroup2.visible = false;
+  scene.add(posParticleGroup2);
+  scene.add(negParticleGroup2);
+
+  var particleGeo = new THREE.SphereGeometry(0.07, 8, 8);
+
+  function createParticleSet(group, posArr, yBase, yOffset, isPositive) {
+    for (var i = 0; i < MAX_PARTICLES; i++) {
+      var px = (Math.random() - 0.5) * (plateW - 0.4);
+      var pz = (Math.random() - 0.5) * (plateD - 0.4);
+      var col = isPositive ? 0xff6666 : 0x6699ff;
+      var emis = isPositive ? 0xff2222 : 0x2244ff;
+      var mesh = new THREE.Mesh(particleGeo, new THREE.MeshStandardMaterial({
+        color: col, emissive: emis, emissiveIntensity: 0.9
+      }));
+      mesh.position.set(px, yBase + yOffset, pz);
+      mesh.userData.baseX = px;
+      mesh.userData.baseZ = pz;
+      mesh.userData.baseY = yBase + yOffset;
+      mesh.visible = false;
+      group.add(mesh);
+      posArr.push(mesh);
+    }
+  }
+
+  createParticleSet(posParticleGroup, posParticles, plateSep / 2, plateH / 2 + 0.1, true);
+  createParticleSet(negParticleGroup, negParticlesArr, -plateSep / 2, -(plateH / 2 + 0.1), false);
+  createParticleSet(posParticleGroup2, posParticles2, plateSep / 2, plateH / 2 + 0.1, true);
+  createParticleSet(negParticleGroup2, negParticles2, -plateSep / 2, -(plateH / 2 + 0.1), false);
+
+  // ── Electric Field Lines (curved tubes between plates) ─────────────
+  var fieldLineGroup = new THREE.Group();
+  scene.add(fieldLineGroup);
+  var fieldLines = [];
+  var FIELD_GRID = 4; // 4x4 grid of field lines
+
+  var fieldLineMat = new THREE.MeshStandardMaterial({
+    color: 0xfb923c,
+    emissive: 0xfb923c,
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.7
+  });
+
+  function buildFieldLines() {
+    // Clear old
+    for (var fi = 0; fi < fieldLines.length; fi++) {
+      fieldLineGroup.remove(fieldLines[fi]);
+      if (fieldLines[fi].geometry) fieldLines[fi].geometry.dispose();
+    }
+    fieldLines = [];
+
+    var yTop = plateSep / 2 - plateH / 2 - 0.05;
+    var yBot = -plateSep / 2 + plateH / 2 + 0.05;
+    var segments = 20;
+
+    for (var ix = 0; ix < FIELD_GRID; ix++) {
+      for (var iz = 0; iz < FIELD_GRID; iz++) {
+        var xPos = (ix - (FIELD_GRID - 1) / 2) * 0.9;
+        var zPos = (iz - (FIELD_GRID - 1) / 2) * 0.7;
+
+        var points = [];
+        for (var s = 0; s <= segments; s++) {
+          var t_frac = s / segments;
+          var y = yTop - t_frac * (yTop - yBot);
+          // slight curve for visual interest
+          var xOff = Math.sin(t_frac * Math.PI) * 0.08 * (ix - (FIELD_GRID - 1) / 2);
+          var zOff = Math.sin(t_frac * Math.PI) * 0.06 * (iz - (FIELD_GRID - 1) / 2);
+          points.push(new THREE.Vector3(xPos + xOff, y, zPos + zOff));
+        }
+
+        var curve = new THREE.CatmullRomCurve3(points);
+        var tubeGeo = new THREE.TubeGeometry(curve, 16, 0.02, 6, false);
+        var tubeMesh = new THREE.Mesh(tubeGeo, fieldLineMat.clone());
+        fieldLineGroup.add(tubeMesh);
+        fieldLines.push(tubeMesh);
+
+        // Arrow head (cone) at bottom
+        var arrowGeo = new THREE.ConeGeometry(0.06, 0.15, 6);
+        var arrowMesh = new THREE.Mesh(arrowGeo, fieldLineMat.clone());
+        arrowMesh.position.set(xPos, yBot - 0.08, zPos);
+        arrowMesh.rotation.x = Math.PI; // point downward
+        fieldLineGroup.add(arrowMesh);
+        fieldLines.push(arrowMesh);
+      }
+    }
+  }
+  buildFieldLines();
+
+  // Second cap field lines
+  var fieldLineGroup2 = new THREE.Group();
+  fieldLineGroup2.visible = false;
+  scene.add(fieldLineGroup2);
+  var fieldLines2 = [];
+
+  function buildFieldLines2(xOffset) {
+    for (var fi = 0; fi < fieldLines2.length; fi++) {
+      fieldLineGroup2.remove(fieldLines2[fi]);
+      if (fieldLines2[fi].geometry) fieldLines2[fi].geometry.dispose();
+    }
+    fieldLines2 = [];
+
+    var yTop = plateSep / 2 - plateH / 2 - 0.05;
+    var yBot = -plateSep / 2 + plateH / 2 + 0.05;
+    var segments = 20;
+    var grid = 3;
+
+    for (var ix = 0; ix < grid; ix++) {
+      for (var iz = 0; iz < grid; iz++) {
+        var xPos = xOffset + (ix - 1) * 0.9;
+        var zPos = (iz - 1) * 0.7;
+        var points = [];
+        for (var s = 0; s <= segments; s++) {
+          var t_frac = s / segments;
+          var y = yTop - t_frac * (yTop - yBot);
+          points.push(new THREE.Vector3(xPos, y, zPos));
+        }
+        var curve = new THREE.CatmullRomCurve3(points);
+        var tubeGeo = new THREE.TubeGeometry(curve, 12, 0.02, 6, false);
+        var tubeMesh = new THREE.Mesh(tubeGeo, fieldLineMat.clone());
+        fieldLineGroup2.add(tubeMesh);
+        fieldLines2.push(tubeMesh);
+
+        var arrowGeo = new THREE.ConeGeometry(0.06, 0.15, 6);
+        var arrowMesh = new THREE.Mesh(arrowGeo, fieldLineMat.clone());
+        arrowMesh.position.set(xPos, yBot - 0.08, zPos);
+        arrowMesh.rotation.x = Math.PI;
+        fieldLineGroup2.add(arrowMesh);
+        fieldLines2.push(arrowMesh);
+      }
+    }
+  }
+
+  // ── Wire connections (simple line geometry) ────────────────────────
+  var wireMat = new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 2 });
+
+  // Connection wires for series (visible when config=series)
+  var seriesWireGroup = new THREE.Group();
+  seriesWireGroup.visible = false;
+  scene.add(seriesWireGroup);
+
+  function buildSeriesWires() {
+    // Wire from cap1 neg plate to cap2 pos plate
+    var pts = [
+      new THREE.Vector3(plateW / 2 + 0.1, -plateSep / 2, 0),
+      new THREE.Vector3(plateW / 2 + 0.6, -plateSep / 2, 0),
+      new THREE.Vector3(plateW / 2 + 0.6, plateSep / 2, 3),
+      new THREE.Vector3(plateW / 2 + 0.1 + 5.5, plateSep / 2, 3),
+      new THREE.Vector3(plateW / 2 + 0.1 + 5.5, plateSep / 2, 0)
+    ];
+    var geo = new THREE.BufferGeometry().setFromPoints(pts);
+    seriesWireGroup.add(new THREE.Line(geo, wireMat));
+  }
+  buildSeriesWires();
+
+  // ── Layout management for configs ──────────────────────────────────
+  var SERIES_OFFSET = 5.5;
+  var PARALLEL_OFFSET_Y = 3.5;
+
+  function updateConfigLayout() {
+    var showSecond = config !== 'single';
+
+    posPlate2.visible = showSecond;
+    negPlate2.visible = showSecond;
+    posParticleGroup2.visible = showSecond;
+    negParticleGroup2.visible = showSecond;
+    fieldLineGroup2.visible = showSecond;
+    seriesWireGroup.visible = (config === 'series');
+
+    if (config === 'series') {
+      // Side by side
+      posPlate.position.set(-SERIES_OFFSET / 2, plateSep / 2, 0);
+      negPlate.position.set(-SERIES_OFFSET / 2, -plateSep / 2, 0);
+      posPlate2.position.set(SERIES_OFFSET / 2, plateSep / 2, 0);
+      negPlate2.position.set(SERIES_OFFSET / 2, -plateSep / 2, 0);
+
+      posParticleGroup.position.set(-SERIES_OFFSET / 2, 0, 0);
+      negParticleGroup.position.set(-SERIES_OFFSET / 2, 0, 0);
+      posParticleGroup2.position.set(SERIES_OFFSET / 2, 0, 0);
+      negParticleGroup2.position.set(SERIES_OFFSET / 2, 0, 0);
+
+      fieldLineGroup.position.set(-SERIES_OFFSET / 2, 0, 0);
+      buildFieldLines2(SERIES_OFFSET / 2);
+
+      plusSprite.position.set(-SERIES_OFFSET / 2 + plateW / 2 + 0.4, plateSep / 2, 0);
+      minusSprite.position.set(-SERIES_OFFSET / 2 + plateW / 2 + 0.4, -plateSep / 2, 0);
+
+    } else if (config === 'parallel') {
+      // Stacked vertically
+      var yShift = PARALLEL_OFFSET_Y / 2;
+      posPlate.position.set(0, yShift + plateSep / 2, 0);
+      negPlate.position.set(0, yShift - plateSep / 2, 0);
+      posPlate2.position.set(0, -yShift + plateSep / 2, 0);
+      negPlate2.position.set(0, -yShift - plateSep / 2, 0);
+
+      posParticleGroup.position.set(0, yShift, 0);
+      negParticleGroup.position.set(0, yShift, 0);
+      posParticleGroup2.position.set(0, -yShift, 0);
+      negParticleGroup2.position.set(0, -yShift, 0);
+
+      fieldLineGroup.position.set(0, yShift, 0);
+      buildFieldLines2(0);
+      fieldLineGroup2.position.set(0, -yShift, 0);
+
+      plusSprite.position.set(plateW / 2 + 0.4, yShift + plateSep / 2, 0);
+      minusSprite.position.set(plateW / 2 + 0.4, yShift - plateSep / 2, 0);
+
+    } else {
+      // Single - reset positions
+      posPlate.position.set(0, plateSep / 2, 0);
+      negPlate.position.set(0, -plateSep / 2, 0);
+
+      posParticleGroup.position.set(0, 0, 0);
+      negParticleGroup.position.set(0, 0, 0);
+
+      fieldLineGroup.position.set(0, 0, 0);
+
+      plusSprite.position.set(plateW / 2 + 0.4, plateSep / 2, 0);
+      minusSprite.position.set(plateW / 2 + 0.4, -plateSep / 2, 0);
+    }
+
+    updateEquivDisplay();
+  }
+
+  // ── KaTeX formula rendering ────────────────────────────────────────
+  function updateEquivDisplay() {
+    var cEff = getCeff();
+    var cUF = (cEff * 1e6);
+    var el = document.getElementById('equivValue');
+    var formulaEl = document.getElementById('equivFormula');
+
+    if (config === 'single') {
+      el.textContent = cUF.toFixed(1) + ' \u00B5F';
+      try {
+        katex.render('C_{eq} = C = ' + cUF.toFixed(1) + '\\;\\mu F', formulaEl, { throwOnError: false, displayMode: false });
+      } catch(e) { formulaEl.textContent = ''; }
+    } else if (config === 'series') {
+      el.textContent = cUF.toFixed(1) + ' \u00B5F';
+      try {
+        katex.render('\\frac{1}{C_{eq}} = \\frac{1}{C_1} + \\frac{1}{C_2} = ' + cUF.toFixed(1) + '\\;\\mu F', formulaEl, { throwOnError: false, displayMode: false });
+      } catch(e) { formulaEl.textContent = ''; }
+    } else {
+      el.textContent = cUF.toFixed(1) + ' \u00B5F';
+      try {
+        katex.render('C_{eq} = C_1 + C_2 = ' + cUF.toFixed(1) + '\\;\\mu F', formulaEl, { throwOnError: false, displayMode: false });
+      } catch(e) { formulaEl.textContent = ''; }
+    }
+    document.getElementById('statMode').textContent = config.charAt(0).toUpperCase() + config.slice(1);
+  }
+
+  // ── Resize ─────────────────────────────────────────────────────────
+  function onResize() {
+    try {
+      var w = canvas.clientWidth;
+      var h = canvas.clientHeight;
+      if (w > 0 && h > 0) {
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      resizeChart();
+    } catch(e) { /* ignore */ }
+  }
+  window.addEventListener('resize', onResize);
+
+  // ── Chart (2D canvas) ──────────────────────────────────────────────
+  var chartCanvas = document.getElementById('chartCanvas');
+  var ctx = chartCanvas.getContext('2d');
+
+  function resizeChart() {
+    try {
+      var panel = chartCanvas.parentElement;
+      var dpr = Math.min(window.devicePixelRatio, 2);
+      chartCanvas.width  = panel.clientWidth * dpr;
+      chartCanvas.height = panel.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
+      chartCanvas.style.width  = panel.clientWidth + 'px';
+      chartCanvas.style.height = panel.clientHeight + 'px';
+    } catch(e) { /* ignore */ }
+  }
+
+  function drawChart(tSec) {
+    try {
+      var dpr = Math.min(window.devicePixelRatio, 2);
+      var w = chartCanvas.width / dpr;
+      var h = chartCanvas.height / dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      var padL = 52, padR = 24, padT = 30, padB = 30;
+      var plotW = w - padL - padR;
+      var plotH = h - padT - padB;
+      if (plotW <= 0 || plotH <= 0) return;
+
+      var tau = getTau();
+      var xMax = Math.max(tau * 5, 0.001);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (var gi = 0; gi <= 4; gi++) {
+        var gy = padT + (gi / 4) * plotH;
+        ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+      }
+      for (var gj = 0; gj <= 5; gj++) {
+        var gx = padL + (gj / 5) * plotW;
+        ctx.beginPath(); ctx.moveTo(gx, padT); ctx.lineTo(gx, padT + plotH); ctx.stroke();
+      }
+
+      // Axes
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+
+      // Axis labels
+      ctx.fillStyle = '#475569';
+      ctx.font = '10px system-ui';
+      ctx.textAlign = 'right';
+      ctx.fillText('V\u2080', padL - 6, padT + 4);
+      ctx.fillText('0', padL - 6, padT + plotH + 4);
+      ctx.textAlign = 'left';
+      ctx.fillText('t', padL + plotW + 4, padT + plotH + 4);
+
+      // Y-axis voltage markers
+      ctx.fillStyle = '#334155';
+      ctx.font = '9px system-ui';
+      ctx.textAlign = 'right';
+      for (var vi = 1; vi <= 3; vi++) {
+        var vFrac = vi / 4;
+        var yPos = padT + plotH - vFrac * plotH;
+        ctx.fillText((vFrac * V0).toFixed(1), padL - 6, yPos + 3);
+      }
+
+      // Draw BOTH curves (charge and discharge) in faded colors
+      var chargeColor   = mode === 'charge'    ? '#60a5fa' : 'rgba(96,165,250,0.2)';
+      var dischargeColor = mode === 'discharge' ? '#fca5a5' : 'rgba(252,165,165,0.2)';
+      var steps = 200;
+
+      // Charge curve
+      ctx.strokeStyle = chargeColor;
+      ctx.lineWidth = mode === 'charge' ? 2.5 : 1;
+      ctx.beginPath();
+      for (var ci = 0; ci <= steps; ci++) {
+        var ct = (ci / steps) * xMax;
+        var cv = V0 * (1 - Math.exp(-ct / tau));
+        var cpx = padL + (ct / xMax) * plotW;
+        var cpy = padT + plotH - (cv / V0) * plotH;
+        ci === 0 ? ctx.moveTo(cpx, cpy) : ctx.lineTo(cpx, cpy);
+      }
+      ctx.stroke();
+
+      // Discharge curve
+      ctx.strokeStyle = dischargeColor;
+      ctx.lineWidth = mode === 'discharge' ? 2.5 : 1;
+      ctx.beginPath();
+      for (var di = 0; di <= steps; di++) {
+        var dt = (di / steps) * xMax;
+        var dv = V0 * Math.exp(-dt / tau);
+        var dpx = padL + (dt / xMax) * plotW;
+        var dpy = padT + plotH - (dv / V0) * plotH;
+        di === 0 ? ctx.moveTo(dpx, dpy) : ctx.lineTo(dpx, dpy);
+      }
+      ctx.stroke();
+
+      // Tau vertical line
+      var tauX = padL + (tau / xMax) * plotW;
+      if (tauX > padL && tauX < padL + plotW) {
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = 'rgba(251,191,36,0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(tauX, padT); ctx.lineTo(tauX, padT + plotH); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Tau label at top
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 10px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText('\u03C4 = ' + (tau >= 1 ? tau.toFixed(2) + 's' : (tau * 1000).toFixed(1) + 'ms'), tauX + 4, padT + 12);
+
+        // 63.2% marker on charge curve
+        var tau632Y = padT + plotH - 0.632 * plotH;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(251,191,36,0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padL, tau632Y); ctx.lineTo(tauX, tau632Y); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 63.2% dot on charge curve
+        ctx.beginPath();
+        ctx.arc(tauX, tau632Y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Label
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = '9px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText('63.2% V\u2080', tauX + 8, tau632Y + 3);
+
+        // 36.8% marker on discharge curve
+        var tau368Y = padT + plotH - 0.368 * plotH;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(251,191,36,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padL, tau368Y); ctx.lineTo(tauX, tau368Y); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(tauX, tau368Y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251,191,36,0.6)';
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(251,191,36,0.6)';
+        ctx.font = '9px system-ui';
+        ctx.fillText('36.8% V\u2080', tauX + 8, tau368Y + 3);
+      }
+
+      // Current time marker (moving dot)
+      var tClamped = Math.min(tSec, xMax);
+      var markerX = padL + (tClamped / xMax) * plotW;
+      var markerVt = getVt(tClamped);
+      var markerY = padT + plotH - (markerVt / V0) * plotH;
+
+      // Trailing glow
+      ctx.beginPath();
+      ctx.arc(markerX, markerY, 8, 0, Math.PI * 2);
+      var glowColor = mode === 'charge' ? 'rgba(96,165,250,0.25)' : 'rgba(252,165,165,0.25)';
+      ctx.fillStyle = glowColor;
+      ctx.fill();
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(markerX, markerY, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'charge' ? '#60a5fa' : '#fca5a5';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Current V text near marker
+      ctx.fillStyle = mode === 'charge' ? '#60a5fa' : '#fca5a5';
+      ctx.font = 'bold 10px system-ui';
+      ctx.textAlign = 'left';
+      var labelYOff = mode === 'charge' ? -12 : 16;
+      if (markerX < padL + plotW - 60) {
+        ctx.fillText(markerVt.toFixed(2) + ' V', markerX + 8, markerY + labelYOff);
+      }
+
+    } catch(e) { /* ignore */ }
+  }
+
+  // ── Update 3D scene based on charge level ─────────────────────────
+  function updateScene(vt, tNow) {
+    try {
+      var ratio = Math.min(1, Math.max(0, vt / V0));
+
+      // Field line opacity
+      var allFieldLines = fieldLines.concat(fieldLines2);
+      for (var fl = 0; fl < allFieldLines.length; fl++) {
+        allFieldLines[fl].material.opacity = ratio * 0.8;
+        allFieldLines[fl].material.transparent = true;
+        allFieldLines[fl].visible = ratio > 0.01;
+      }
+
+      // Plate glow
+      posLight.intensity = ratio * 1.8;
+      negLightGlow.intensity = ratio * 1.8;
+
+      // Particle visibility with accumulation animation
+      var visible = Math.round(ratio * MAX_PARTICLES);
+      var t3 = tNow * 0.001;
+
+      function animateParticles(arr, ySign, baseGroupY) {
+        for (var pi = 0; pi < arr.length; pi++) {
+          var p = arr[pi];
+          if (pi < visible) {
+            p.visible = true;
+            // Gentle float + slight scale pulse
+            p.position.y = p.userData.baseY + Math.sin(t3 * 1.8 + pi * 0.7) * 0.04 * ySign;
+            p.position.x = p.userData.baseX + Math.sin(t3 * 1.2 + pi * 1.3) * 0.02;
+            // Scale pulse for recently added particles
+            var freshness = Math.max(0, 1 - (visible - pi) / 5);
+            var s = 1 + freshness * Math.sin(t3 * 4) * 0.3;
+            p.scale.setScalar(s);
+          } else {
+            p.visible = false;
+          }
+        }
+      }
+
+      animateParticles(posParticles, 1, 0);
+      animateParticles(negParticlesArr, -1, 0);
+      if (config !== 'single') {
+        animateParticles(posParticles2, 1, 0);
+        animateParticles(negParticles2, -1, 0);
+      }
+
+      // Plate emissive glow
+      posPlate.material.emissive.setRGB(ratio * 0.35, 0, 0);
+      posPlate.material.emissiveIntensity = ratio;
+      negPlate.material.emissive.setRGB(0, 0, ratio * 0.35);
+      negPlate.material.emissiveIntensity = ratio;
+
+      if (config !== 'single') {
+        posPlate2.material.emissive.setRGB(ratio * 0.35, 0, 0);
+        posPlate2.material.emissiveIntensity = ratio;
+        negPlate2.material.emissive.setRGB(0, 0, ratio * 0.35);
+        negPlate2.material.emissiveIntensity = ratio;
+      }
+    } catch(e) { /* ignore */ }
+  }
+
+  // ── Stat updates ──────────────────────────────────────────────────
+  function updateStats(vt) {
+    try {
+      var tau = getTau();
+      var cEff = getCeff();
+      var Q   = cEff * vt;
+      var U   = 0.5 * cEff * vt * vt;
+
+      var tauStr = tau >= 1 ? tau.toFixed(2) + ' s' : (tau * 1e3).toFixed(1) + ' ms';
+      document.getElementById('statTau').textContent  = tauStr;
+      document.getElementById('statVt').textContent   = vt.toFixed(2) + ' V';
+      document.getElementById('statQ').textContent    = (Q * 1e6).toFixed(2) + ' \u00B5C';
+      document.getElementById('statU').textContent    = (U * 1e3).toFixed(3) + ' mJ';
+      document.getElementById('statCeff').textContent = (cEff * 1e6).toFixed(1) + ' \u00B5F';
+      document.getElementById('dataTau').textContent  = tauStr;
+      document.getElementById('dataV').textContent    = vt.toFixed(2);
+      document.getElementById('dataQval').textContent = (Q * 1e6).toFixed(2);
+      document.getElementById('dataUval').textContent = (U * 1e3).toFixed(3);
+    } catch(e) { /* ignore */ }
+  }
+
+  // ── Animation loop ─────────────────────────────────────────────────
+  var fpsTime = performance.now(), frameCount = 0, fps = 0;
+
+  function animate() {
+    try {
+      var now = performance.now();
+      var tSec = (now - tStart) * 0.001;
+      var vt = getVt(tSec);
+
+      if (controls) controls.update();
+      updateScene(vt, now);
+      updateStats(vt);
+      drawChart(tSec);
+
+      renderer.render(scene, camera);
+
+      frameCount++;
+      if (now - fpsTime > 1000) {
+        fps = frameCount; frameCount = 0; fpsTime = now;
+        document.getElementById('fpsBadge').textContent = fps + ' FPS';
+      }
+    } catch(e) { /* ignore */ }
+  }
+
+  // Use setAnimationLoop
+  try {
+    renderer.setAnimationLoop(animate);
+  } catch(e) {
+    console.error('setAnimationLoop failed:', e);
+  }
+
+  // ── Controls ──────────────────────────────────────────────────────
+  function resetTimer() { tStart = performance.now(); }
+
+  document.getElementById('sliderC').addEventListener('input', function() {
+    C_base = parseFloat(this.value) * 1e-6;
+    document.getElementById('lblC').textContent = this.value + ' \u00B5F';
+    updateEquivDisplay();
+    resetTimer();
+  });
+  document.getElementById('sliderR').addEventListener('input', function() {
+    R = parseFloat(this.value) * 1e3;
+    document.getElementById('lblR').textContent = parseFloat(this.value).toFixed(1) + ' k\u03A9';
+    resetTimer();
+  });
+  document.getElementById('sliderV0').addEventListener('input', function() {
+    V0 = parseFloat(this.value);
+    document.getElementById('lblV0').textContent = this.value + ' V';
+    resetTimer();
+  });
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btnCharge').className    = 'toggle-btn btn-charge'    + (m === 'charge'    ? ' active' : '');
+    document.getElementById('btnDischarge').className = 'toggle-btn btn-discharge' + (m === 'discharge' ? ' active' : '');
+    resetTimer();
+  }
+
+  function setConfig(c) {
+    config = c;
+    document.getElementById('btnSingle').className   = 'toggle-btn btn-single'   + (c === 'single'   ? ' active' : '');
+    document.getElementById('btnSeries').className   = 'toggle-btn btn-series'   + (c === 'series'   ? ' active' : '');
+    document.getElementById('btnParallel').className = 'toggle-btn btn-parallel' + (c === 'parallel' ? ' active' : '');
+    updateConfigLayout();
+    resetTimer();
+  }
+
+  document.getElementById('btnCharge').addEventListener('click', function() { setMode('charge'); });
+  document.getElementById('btnDischarge').addEventListener('click', function() { setMode('discharge'); });
+  document.getElementById('btnSingle').addEventListener('click', function() { setConfig('single'); });
+  document.getElementById('btnSeries').addEventListener('click', function() { setConfig('series'); });
+  document.getElementById('btnParallel').addEventListener('click', function() { setConfig('parallel'); });
+  document.getElementById('btnReset').addEventListener('click', resetTimer);
+
+  // ── Init ───────────────────────────────────────────────────────────
+  updateConfigLayout();
+  onResize();
+})();
+</script>
+</body>
+</html>

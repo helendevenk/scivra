@@ -2,127 +2,66 @@
 
 > 此文件是进度追踪的**唯一权威来源**
 
----
-
 ## 基本信息
 
 | 字段 | 值 |
 |------|-----|
-| 任务ID | TASK-WAVE1-AP-PHYSICS |
-| 开始时间 | 2026-03-18T00:00:00Z |
+| 任务 | Q2 2026 统一工作计划 |
+| 开始时间 | 2026-03-22T10:46:54Z |
 | 当前状态 | IN_PROGRESS |
-| 最后更新 | 2026-03-18T00:00:00Z |
+| 当前阶段 | Phase 0.5 ✅ 全部完成，准备进入 Phase BG |
+| 最后更新 | 2026-03-22T11:00:00Z |
 
----
+## 阶段进度
+
+| 阶段 | 状态 | 任务数 | 完成数 |
+|------|------|--------|--------|
+| Phase 0.5: 学科解耦 | ✅ 完成 | 11 | 11 |
+| Phase BG: 批量生成+内容 | 🔄 进行中 | 9 | 4 |
+| Phase 3.5: 验证+修正 | 🔄 进行中 | 8 | 8 |
+| Phase F1: AP Prep | ⬜ 待开始 | 5 | 0 |
+| Phase F2: Quest | ⬜ 待开始 | 5 | 0 |
+| Phase F3: Notebook | ⬜ 待开始 | 5 | 0 |
+| 集成联调 | ⬜ 待开始 | 3 | 0 |
 
 ## 当前任务
 
-**正在执行**: Wave 1.5 — AP Physics 4 个扩展实验（P-06 to P-09）
+**正在执行**: Phase 0.5 A1-A4 — 学科类型系统 + 配置 + 注册表 + Stub
 
-### Wave 1 — AP Physics 核心（P-01 to P-05）✅ COMPLETED
-- [x] P-01: simple-harmonic-motion.ts + .html ✅
-- [x] P-02: momentum-collisions.ts + .html ✅
-- [x] P-03: lorentz-force.ts + .html ✅
-- [x] P-04: electric-field-lines.ts + .html ✅
-- [x] P-05: wave-interference.ts + .html ✅
-- [x] registry.ts 更新（4→9个实验）✅
-
-### Wave 1.5 — AP Physics 扩展（P-06 to P-09）✅ COMPLETED
-- [x] P-06: circular-motion.ts ✅
-- [x] P-07: rotational-motion.ts ✅
-- [x] P-08: gravitational-fields.ts ✅
-- [x] P-09: fluid-statics.ts ✅
-- [x] circular-motion.html ✅
-- [x] rotational-motion.html ✅
-- [x] gravitational-fields.html ✅
-- [x] fluid-statics.html ✅
-- [x] registry.ts 更新（9→13个实验）✅
-
-**状态: Wave 1 + Wave 1.5 + Wave 3 + Wave 4 + Wave 5 + Wave 6 COMPLETED — 总计 50 个实验**
-
-### Wave 3 — AP Biology（B-01 to B-10）✅ COMPLETED
-- [x] B-01: dna-double-helix.ts + .html ✅
-- [x] B-02: protein-synthesis.ts + .html ✅
-- [x] B-03: mitosis.ts + .html ✅
-- [x] B-04: meiosis.ts + .html ✅
-- [x] B-05: cellular-respiration.ts + .html ✅
-- [x] B-06: photosynthesis.ts + .html ✅
-- [x] B-07: enzyme-kinetics.ts + .html ✅
-- [x] B-08: neuron-action-potential.ts + .html ✅
-- [x] B-09: membrane-transport.ts + .html ✅
-- [x] B-10: natural-selection.ts + .html ✅
-- [x] experiment.ts 扩展 category（新增 "biology", "chemistry"）✅
-- [x] registry.ts 更新（13→23个实验）✅
-
-### Wave 4 — AP Chemistry（C-01 to C-07）✅ COMPLETED
-- [x] C-01: molecular-bonding.ts + .html ✅
-- [x] C-02: reaction-kinetics.ts + .html ✅
-- [x] C-03: thermochemistry.ts + .html ✅
-- [x] C-04: chemical-equilibrium.ts + .html ✅
-- [x] C-05: atomic-structure.ts + .html ✅
-- [x] C-06: acid-base-ph.ts + .html ✅
-- [x] C-07: electrochemistry.ts + .html ✅
-- [x] registry.ts 更新（23→30个实验）✅
-
-### Wave 5 — Elementary K-5（K5-01 to K5-11）✅ COMPLETED
-- [x] K5-01: k5-force-motion.ts ✅
-- [x] K5-02: k5-states-of-matter.ts ✅
-- [x] K5-03: k5-light-propagation.ts ✅
-- [x] K5-04: k5-sound-waves.ts ✅
-- [x] K5-05: k5-simple-machines.ts ✅
-- [x] K5-06: k5-energy-conversion.ts ✅
-- [x] K5-07: k5-food-chain.ts ✅
-- [x] K5-08: k5-water-cycle.ts ✅
-- [x] K5-09: k5-day-night-seasons.ts ✅
-- [x] K5-10: k5-moon-phases.ts ✅
-- [x] K5-11: k5-magnetism.ts ✅
-- [x] experiment.ts 扩展 category（新增 "earth"），Wave 扩展至 6 ✅
-- [x] registry.ts 更新（30→41个实验）✅
-
-### Wave 6 — Middle School 6-8（MS-01 to MS-09）✅ COMPLETED
-- [x] MS-01: ms-newtons-laws.ts + .html ✅
-- [x] MS-02: ms-energy-conservation.ts + .html ✅
-- [x] MS-03: ms-chemical-reactions.ts + .html ✅
-- [x] MS-04: ms-atoms-molecules.ts + .html ✅
-- [x] MS-05: ms-plate-tectonics.ts + .html ✅
-- [x] MS-06: ms-photosynthesis-respiration.ts + .html ✅
-- [x] MS-07: ms-genetics.ts + .html ✅
-- [x] MS-08: ms-ecosystems.ts + .html ✅
-- [x] MS-09: ms-weather-systems.ts + .html ✅
-- [x] registry.ts 更新（41→50个实验）✅
-
----
+**A0 完成摘要**:
+- route.ts: 砍掉内联 AI 调用（原 104-146 行），改为调用 generateCore()
+- generate-core.ts: 加入 provider 选择逻辑（Anthropic proxy / OpenRouter），从 getAllConfigs() + 环境变量读取
+- route.ts 现在只负责: parse → auth → rate limit → lock → generateCore() → credits → quota
+- 验证: TS 零错误 + 87 tests 全过
 
 ## 迭代记录
 
 | 迭代 | 时间 | 完成内容 |
 |------|------|----------|
-| 1 | 2026-03-09T14:09:09Z | 初始化 RalphFree 任务 |
-| 2 | 2026-03-09T14:12:00Z | 创建目录结构、实验清单 JSON |
-| 3 | 2026-03-09T14:15:00Z | 生成第 1 个实验：力与运动 |
-| 4 | 2026-03-09T14:18:00Z | 生成第 2 个实验：光的传播 |
-| 5 | 2026-03-09T14:21:00Z | 生成第 3-5 个实验：昼夜与季节、月相变化、能量转换 |
-| 6 | 2026-03-09T14:25:00Z | 测试批次完成，开始 P0 剩余 5 个 |
-| 7 | 2026-03-09T14:35:00Z | 完成 P0 剩余 5 个：物质三态、声波、简单机械、食物链、水循环 |
-
----
-
-## 关键指标
-
-| 指标 | 当前值 | 目标值 |
-|------|--------|--------|
-| Wave 1+1.5 AP Physics | 13 | 13 |
-| Wave 3 AP Biology | 10 | 10 |
-| Wave 4 AP Chemistry | 7 | 7 |
-| Wave 5 Elementary K-5 | 11 | 11 |
-| Wave 6 Middle School | 9 | 9 |
-| 总实验数 | 50 | 50 |
-| 总进度 | 100% | 100% |
-
----
-
-## 备注
-
-- 使用 Claude Sonnet 4.6 直接生成 HTML
-- 所有实验包含完整的 3D 可视化、交互控制、公式渲染、知识卡片和测验
-- 性能优化：自适应渲染、设备检测
+| 0 | 2026-03-22 | RalphFree 初始化，TASK.md 填充完整计划 |
+| 1 | 2026-03-22 | ✅ A0: route.ts → generateCore()，provider 逻辑迁入，安全漏洞修复 |
+| 2 | 2026-03-22 | ✅ A1-A4: disciplines/ 类型系统 + physics 配置 + 注册表 + 4 stub |
+| 3 | 2026-03-22 | ✅ A5-A8: system-prompt 分层 + generate-core 接入 + quality-checker 扩展 + API 传递 discipline |
+| 4 | 2026-03-22 | ✅ A9: DisciplineSelector UI 组件 |
+| 5 | 2026-03-22 | ✅ A10: 回归测试 — 104 tests 全过，2 snapshots 写入，prompt 向后兼容确认 |
+| 6 | 2026-03-22 | ✅ BG1-BG3: CLI 脚本 + prompt 模板 + 物理质量检查 + P0 motion 6个配置 |
+| 7 | 2026-03-22 | ⚠️ BG6 PoC 脚本: zenmux 402，改为直接由 Claude 生成 HTML |
+| 8 | 2026-03-22 | ✅ BG6 PoC: friction-lab.html 生成完成 |
+| 9 | 2026-03-22 | ✅ P0 新建 14/14 完成: motion×6, waves×2, electro×4, thermo×2 |
+| 10 | 2026-03-22 | ✅ P0 升级 6/6 完成: gravitational-fields, momentum-collisions, electromagnetic-induction, capacitors-rc-circuits, k5-energy-conversion, k5-sound-waves |
+| 11 | 2026-03-22 | ✅ P1 批次1 5/5: balancing-act, vector-addition, bending-light, diffusion, buoyancy |
+| 12 | 2026-03-22 | ✅ P1 批次2 5/5: balloons-static-electricity, rutherford-scattering, color-vision, fourier-making-waves, generator |
+| 13 | 2026-03-22 | ✅ P1 批次3 重试成功 5/5 |
+| 14 | 2026-03-22 | ✅ P1 批次4 5/5: models-hydrogen-atom, molecules-and-light, faradays-em-lab, energy-skate-park-basics, john-travoltage |
+| 15 | 2026-03-22 | ✅ P1 批次5 5/5: gravity-force-lab-basics, masses-springs-basics, projectile-data-lab, geometric-optics-basics, buoyancy-basics |
+| 16 | 2026-03-22 | ✅ P2 5/5: keplers-laws, my-solar-system, plinko-probability, calculus-grapher, curve-fitting |
+| 17 | 2026-03-22 | ✅ P2 5/5: build-a-nucleus, quantum-measurement, circuit-dc-virtual-lab, circuit-ac-virtual-lab, quantum-coin-toss |
+| 18 | 2026-03-22 | ✅ P1 升级 3/3: k5-magnetism, atomic-structure, blackbody-spectrum |
+| 19 | 2026-03-22 | 🎉 Phase BG 全部完成！AP Physics HTML 总数：73 个。PhET 66 对标 100% 覆盖。 |
+| 20 | 2026-03-22 | ✅ B1a-B1c: 验证框架 + 5条物理规则 + DB 6字段+1索引 + generate-core 集成 |
+| 21 | 2026-03-22 | 📌 暂停点：B1d(UI Verified标签) + B3(refine修正) 待下次 session 继续 |
+| 22 | 2026-03-22 | ✅ B1d: UI Verified 标签 — Gallery 卡片/详情页绿色徽章 + 筛选按钮 + i18n |
+| 23 | 2026-03-22 | ✅ B3a: refine-core.ts — 修正管线（加载原始→构建上下文→调 LLM→清洗→存新版本） |
+| 24 | 2026-03-22 | ✅ B3b: /api/upg/[id]/refine — auth+限流+锁+积分扣除+退款保护 |
+| 25 | 2026-03-22 | ✅ B3c: model 函数(getVersionChain) + /api/upg/[id]/versions + 详情页 Refine 对话框 + 版本历史 UI |
+| 26 | 2026-03-22 | ✅ B3d: build 零错误 + 104 tests 全过 — Phase 3.5 全部完成 🎉 |

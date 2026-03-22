@@ -30,8 +30,8 @@ export default async function UpgPage({
         title: t('hero.title'),
         description: t('hero.description'),
         background_image: {
-          src: '/imgs/bg/tree.jpg',
-          alt: 'hero background',
+          src: '/imgs/bg/physics-hero.jpg',
+          alt: 'Physics visualization background',
         },
       },
       generator: {

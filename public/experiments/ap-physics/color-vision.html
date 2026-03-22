@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Vision — RGB Light Mixing &amp; Additive Color — NeonPhysics AP Physics</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.08));border-bottom:1px solid rgba(59,130,246,.2);flex-shrink:0}
+  .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
+  .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+  h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
+  .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
+  .layout{display:flex;flex:1;overflow:hidden}
+  .canvas-wrap{flex:1;position:relative;background:#0a0e16}
+  canvas{display:block;width:100%;height:100%}
+  .fps{position:absolute;bottom:10px;right:12px;font-size:10px;color:#334155;font-variant-numeric:tabular-nums;font-family:monospace}
+  .overlay{position:absolute;top:12px;left:12px;background:rgba(10,14,22,.92);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:14px 18px;backdrop-filter:blur(8px);min-width:240px}
+  .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px}
+  .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+  .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+  .blue{color:#60a5fa} .violet{color:#c084fc} .orange{color:#fb923c} .green{color:#4ade80} .red{color:#f87171} .yellow{color:#facc15} .cyan{color:#22d3ee} .white{color:#e8eaf0} .magenta{color:#f0abfc}
+  .color-swatch{width:36px;height:36px;border-radius:6px;border:2px solid rgba(255,255,255,.15);margin-top:6px}
+  .sidebar{width:300px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
+  .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+  .param-row{margin-bottom:14px}
+  .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+  .param-name{font-size:11px;color:#94a3b8}
+  .param-val{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+  .param-val.rv{color:#f87171}
+  .param-val.gv{color:#4ade80}
+  .param-val.bv{color:#60a5fa}
+  input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(59,130,246,.25);border-radius:2px;cursor:pointer;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
+  .slider-red::-webkit-slider-thumb{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.6)}
+  .slider-red{background:rgba(239,68,68,.25)!important}
+  .slider-green::-webkit-slider-thumb{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6)}
+  .slider-green{background:rgba(34,197,94,.25)!important}
+  .slider-blue::-webkit-slider-thumb{background:#3b82f6;box-shadow:0 0 6px rgba(59,130,246,.6)}
+  .slider-blue{background:rgba(59,130,246,.25)!important}
+  .formula-box{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px}
+  .formula-desc{font-size:10px;color:#475569;margin-top:3px}
+  .katex-display{margin:0!important}
+  .katex{font-size:1em!important}
+  .preset-btn{display:block;width:100%;padding:9px 12px;margin-bottom:8px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#cbd5e1;font-size:12px;cursor:pointer;text-align:left;transition:all .15s}
+  .preset-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#e0f2fe}
+  .preset-btn .preset-name{font-weight:600;color:#7dd3fc;margin-bottom:2px}
+  .preset-btn .preset-desc{font-size:10px;color:#64748b}
+  .color-wheel-wrap{position:relative;width:120px;height:120px;margin:8px auto}
+  .color-wheel-wrap canvas{border-radius:50%;border:2px solid rgba(255,255,255,.1)}
+  .wheel-marker{position:absolute;width:10px;height:10px;border-radius:50%;border:2px solid #fff;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 4px rgba(0,0,0,.5)}
+  .mix-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+  .mix-label{font-size:9px;padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8}
+  .mix-label.active{border-color:rgba(56,189,248,.4);color:#7dd3fc;background:rgba(56,189,248,.08)}
+  .quiz-box{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
+  .quiz-q{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
+  .quiz-opt{display:block;width:100%;padding:7px 10px;margin-bottom:5px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;text-align:left;transition:all .15s}
+  .quiz-opt:hover{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2)}
+  .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac;pointer-events:none}
+  .quiz-opt.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5;pointer-events:none}
+  .quiz-opt.disabled{pointer-events:none;opacity:.5}
+  .quiz-feedback{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:5px;display:none}
+  .quiz-feedback.show{display:block}
+  .quiz-feedback.correct{background:rgba(34,197,94,.1);color:#86efac}
+  .quiz-feedback.wrong{background:rgba(239,68,68,.1);color:#fca5a5}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AP PHYSICS</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Color Vision — RGB Light Mixing &amp; Additive Color</h1>
+  <p class="subtitle">Explore how red, green, and blue light combine to create all visible colors</p>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div class="overlay">
+      <div class="stat-row">
+        <span class="stat-label">RGB Value</span>
+        <span class="stat-value white" id="statRGB">rgb(128, 128, 128)</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">HEX Code</span>
+        <span class="stat-value cyan" id="statHEX">#808080</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">HSL</span>
+        <span class="stat-value violet" id="statHSL">hsl(0, 0%, 50%)</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Perceived Color</span>
+        <span class="stat-value yellow" id="statName">Gray</span>
+      </div>
+      <div class="color-swatch" id="colorSwatch"></div>
+    </div>
+    <div class="fps" id="fps">0 FPS</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Light Intensities</div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Red Intensity</span>
+          <span class="param-val rv" id="valR">128</span>
+        </div>
+        <input type="range" class="slider-red" id="sliderR" min="0" max="255" step="1" value="128">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Green Intensity</span>
+          <span class="param-val gv" id="valG">128</span>
+        </div>
+        <input type="range" class="slider-green" id="sliderG" min="0" max="255" step="1" value="128">
+      </div>
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Blue Intensity</span>
+          <span class="param-val bv" id="valB">128</span>
+        </div>
+        <input type="range" class="slider-blue" id="sliderB" min="0" max="255" step="1" value="128">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Color Wheel</div>
+      <div class="color-wheel-wrap">
+        <canvas id="wheelCanvas" width="120" height="120"></canvas>
+        <div class="wheel-marker" id="wheelMarker"></div>
+      </div>
+      <div class="mix-labels">
+        <span class="mix-label" id="lblWhite">White</span>
+        <span class="mix-label" id="lblYellow">Yellow (R+G)</span>
+        <span class="mix-label" id="lblCyan">Cyan (G+B)</span>
+        <span class="mix-label" id="lblMagenta">Magenta (R+B)</span>
+        <span class="mix-label" id="lblRed">Red</span>
+        <span class="mix-label" id="lblGreen">Green</span>
+        <span class="mix-label" id="lblBlue">Blue</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Theory</div>
+      <div class="formula-box">
+        <div id="formula1"></div>
+        <div class="formula-desc">Additive color mixing: light intensities add together</div>
+      </div>
+      <div class="formula-box">
+        <div id="formula2"></div>
+        <div class="formula-desc">Human vision: 3 cone types (S, M, L) respond to RGB wavelengths</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <button class="preset-btn" onclick="applyPreset(255,255,255)">
+        <div class="preset-name">White Light</div>
+        <div class="preset-desc">All three channels at maximum — R:255 G:255 B:255</div>
+      </button>
+      <button class="preset-btn" onclick="applyPreset(255,100,0)">
+        <div class="preset-name">Sunset Orange</div>
+        <div class="preset-desc">Warm orange glow — R:255 G:100 B:0</div>
+      </button>
+      <button class="preset-btn" onclick="applyPreset(0,255,255)">
+        <div class="preset-name">Cyan</div>
+        <div class="preset-desc">Green + Blue with no red — R:0 G:255 B:255</div>
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Quiz</div>
+      <div class="quiz-box" id="quiz1">
+        <div class="quiz-q">Q1: In additive color mixing, what color is produced when red and green light are combined at full intensity?</div>
+        <button class="quiz-opt" data-correct="false">A. Orange</button>
+        <button class="quiz-opt" data-correct="true">B. Yellow</button>
+        <button class="quiz-opt" data-correct="false">C. Brown</button>
+        <button class="quiz-opt" data-correct="false">D. Magenta</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div class="quiz-box" id="quiz2">
+        <div class="quiz-q">Q2: A monitor pixel shows equal intensities of R, G, and B at about 50%. What color does the viewer perceive?</div>
+        <button class="quiz-opt" data-correct="false">A. White</button>
+        <button class="quiz-opt" data-correct="true">B. Gray</button>
+        <button class="quiz-opt" data-correct="false">C. Black</button>
+        <button class="quiz-opt" data-correct="false">D. Cyan</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // --- Quiz ---
+  document.querySelectorAll('.quiz-box').forEach(function(box, qi){
+    var fb = box.querySelector('.quiz-feedback');
+    box.querySelectorAll('.quiz-opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var isCorrect = btn.getAttribute('data-correct') === 'true';
+        box.querySelectorAll('.quiz-opt').forEach(function(b){
+          if(b.getAttribute('data-correct') === 'true') b.classList.add('correct');
+          else if(b === btn && !isCorrect) b.classList.add('wrong');
+          b.classList.add('disabled');
+        });
+        fb.classList.add('show', isCorrect ? 'correct' : 'wrong');
+        if(qi === 0){
+          fb.textContent = isCorrect
+            ? 'Correct! Red + Green light = Yellow in additive mixing. This is why RGB screens can display yellow without a yellow subpixel.'
+            : 'Not quite. In additive color mixing (light), Red + Green = Yellow. This differs from subtractive mixing (paint/pigment).';
+        } else {
+          fb.textContent = isCorrect
+            ? 'Correct! Equal R, G, B at partial intensity produces gray. Only at full intensity (255,255,255) do we get white.'
+            : 'Not quite. Equal R=G=B at 50% produces a neutral gray. White requires all channels at maximum (255).';
+        }
+      });
+    });
+  });
+
+  // --- KaTeX ---
+  katex.render('C_{\\text{result}} = R \\cdot \\hat{r} + G \\cdot \\hat{g} + B \\cdot \\hat{b}', document.getElementById('formula1'), {displayMode:true});
+  katex.render('\\lambda_R \\approx 620\\text{-}750\\,\\text{nm},\\; \\lambda_G \\approx 495\\text{-}570\\,\\text{nm},\\; \\lambda_B \\approx 450\\text{-}495\\,\\text{nm}', document.getElementById('formula2'), {displayMode:true});
+
+  // --- Color Wheel ---
+  var wheelCvs = document.getElementById('wheelCanvas');
+  var wheelCtx = wheelCvs.getContext('2d');
+  var wheelR = 60;
+  (function drawWheel(){
+    for(var angle = 0; angle < 360; angle++){
+      var startRad = (angle - 1) * Math.PI / 180;
+      var endRad = (angle + 1) * Math.PI / 180;
+      wheelCtx.beginPath();
+      wheelCtx.moveTo(wheelR, wheelR);
+      wheelCtx.arc(wheelR, wheelR, wheelR, startRad, endRad);
+      wheelCtx.closePath();
+      wheelCtx.fillStyle = 'hsl(' + angle + ', 100%, 50%)';
+      wheelCtx.fill();
+    }
+    // center white
+    var grd = wheelCtx.createRadialGradient(wheelR, wheelR, 0, wheelR, wheelR, wheelR);
+    grd.addColorStop(0, 'rgba(255,255,255,1)');
+    grd.addColorStop(0.5, 'rgba(255,255,255,0.3)');
+    grd.addColorStop(1, 'rgba(255,255,255,0)');
+    wheelCtx.fillStyle = grd;
+    wheelCtx.fillRect(0, 0, 120, 120);
+  })();
+
+  // --- State ---
+  var R = 128, G = 128, B = 128;
+  var slR = document.getElementById('sliderR');
+  var slG = document.getElementById('sliderG');
+  var slB = document.getElementById('sliderB');
+
+  function rgbToHex(r, g, b){
+    return '#' + [r, g, b].map(function(v){ return v.toString(16).padStart(2, '0'); }).join('');
+  }
+  function rgbToHsl(r, g, b){
+    r /= 255; g /= 255; b /= 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h = 0, s = 0, l = (max + min) / 2;
+    if(max !== min){
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if(max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if(max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+
+  function getColorName(r, g, b){
+    if(r < 15 && g < 15 && b < 15) return 'Black';
+    if(r > 240 && g > 240 && b > 240) return 'White';
+    var hsl = rgbToHsl(r, g, b);
+    if(hsl.s < 10) return hsl.l > 50 ? 'Light Gray' : 'Dark Gray';
+    if(hsl.s < 20) return 'Gray';
+    var h = hsl.h;
+    if(h < 15 || h >= 345) return 'Red';
+    if(h < 45) return 'Orange';
+    if(h < 70) return 'Yellow';
+    if(h < 160) return 'Green';
+    if(h < 200) return 'Cyan';
+    if(h < 260) return 'Blue';
+    if(h < 290) return 'Violet';
+    if(h < 345) return 'Magenta';
+    return 'Red';
+  }
+
+  function updateMixLabels(r, g, b){
+    var t = 80;
+    document.getElementById('lblWhite').classList.toggle('active', r > 200 && g > 200 && b > 200);
+    document.getElementById('lblYellow').classList.toggle('active', r > t && g > t && b < t);
+    document.getElementById('lblCyan').classList.toggle('active', r < t && g > t && b > t);
+    document.getElementById('lblMagenta').classList.toggle('active', r > t && g < t && b > t);
+    document.getElementById('lblRed').classList.toggle('active', r > t && g < t && b < t);
+    document.getElementById('lblGreen').classList.toggle('active', r < t && g > t && b < t);
+    document.getElementById('lblBlue').classList.toggle('active', r < t && g < t && b > t);
+  }
+
+  function updateWheelMarker(r, g, b){
+    var hsl = rgbToHsl(r, g, b);
+    var marker = document.getElementById('wheelMarker');
+    if(hsl.s < 5){
+      marker.style.left = '60px';
+      marker.style.top = '60px';
+    } else {
+      var rad = hsl.h * Math.PI / 180;
+      var dist = (hsl.s / 100) * 55;
+      marker.style.left = (60 + Math.cos(rad) * dist) + 'px';
+      marker.style.top = (60 - Math.sin(rad) * dist) + 'px';
+    }
+    marker.style.backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+
+  function updateUI(){
+    document.getElementById('valR').textContent = R;
+    document.getElementById('valG').textContent = G;
+    document.getElementById('valB').textContent = B;
+    document.getElementById('statRGB').textContent = 'rgb(' + R + ', ' + G + ', ' + B + ')';
+    document.getElementById('statHEX').textContent = rgbToHex(R, G, B);
+    var hsl = rgbToHsl(R, G, B);
+    document.getElementById('statHSL').textContent = 'hsl(' + hsl.h + ', ' + hsl.s + '%, ' + hsl.l + '%)';
+    document.getElementById('statName').textContent = getColorName(R, G, B);
+    document.getElementById('colorSwatch').style.backgroundColor = 'rgb(' + R + ',' + G + ',' + B + ')';
+    updateMixLabels(R, G, B);
+    updateWheelMarker(R, G, B);
+  }
+
+  slR.addEventListener('input', function(){ R = parseInt(this.value); updateUI(); updateScene(); });
+  slG.addEventListener('input', function(){ G = parseInt(this.value); updateUI(); updateScene(); });
+  slB.addEventListener('input', function(){ B = parseInt(this.value); updateUI(); updateScene(); });
+
+  window.applyPreset = function(r, g, b){
+    R = r; G = g; B = b;
+    slR.value = r; slG.value = g; slB.value = b;
+    updateUI(); updateScene();
+  };
+
+  // --- Three.js Scene ---
+  var wrap = document.getElementById('canvasWrap');
+  var canvas = document.getElementById('c');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.8;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.015);
+
+  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 5, 12);
+  camera.lookAt(0, 1, 0);
+
+  var controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 5;
+  controls.maxDistance = 25;
+  controls.target.set(0, 1, 0);
+
+  // Ambient light
+  scene.add(new THREE.AmbientLight(0x111122, 0.3));
+
+  // Floor
+  var floorGeo = new THREE.PlaneGeometry(30, 30);
+  var floorMat = new THREE.MeshStandardMaterial({ color: 0x0a0e16, roughness: 0.95, metalness: 0 });
+  var floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Screen (white projection surface)
+  var screenGeo = new THREE.PlaneGeometry(6, 4);
+  var screenMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, metalness: 0, side: THREE.DoubleSide });
+  var screenMesh = new THREE.Mesh(screenGeo, screenMat);
+  screenMesh.position.set(0, 2, -3);
+  screenMesh.receiveShadow = true;
+  scene.add(screenMesh);
+
+  // Screen frame
+  var frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8, metalness: 0.3 });
+  var frameTop = new THREE.Mesh(new THREE.BoxGeometry(6.3, 0.15, 0.15), frameMat);
+  frameTop.position.set(0, 4.07, -3);
+  scene.add(frameTop);
+  var frameBot = new THREE.Mesh(new THREE.BoxGeometry(6.3, 0.15, 0.15), frameMat);
+  frameBot.position.set(0, -0.07, -3);
+  scene.add(frameBot);
+  var frameL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 4.3, 0.15), frameMat);
+  frameL.position.set(-3.07, 2, -3);
+  scene.add(frameL);
+  var frameR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 4.3, 0.15), frameMat);
+  frameR.position.set(3.07, 2, -3);
+  scene.add(frameR);
+
+  // Spotlight housings
+  var housingMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.6 });
+  var spotPositions = [
+    { x: -3, y: 5, z: 4, color: 0xff0000 },
+    { x: 0, y: 5.5, z: 5, color: 0x00ff00 },
+    { x: 3, y: 5, z: 4, color: 0x0000ff }
+  ];
+
+  var spotLights = [];
+  var spotCones = [];
+  var spotHelpers = [];
+
+  spotPositions.forEach(function(sp, i){
+    // Housing
+    var housing = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.6, 16), housingMat);
+    housing.position.set(sp.x, sp.y, sp.z);
+    housing.lookAt(0, 2, -3);
+    scene.add(housing);
+
+    // Lens glow
+    var glowMat = new THREE.MeshBasicMaterial({ color: sp.color, transparent: true, opacity: 0.8 });
+    var lens = new THREE.Mesh(new THREE.CircleGeometry(0.25, 16), glowMat);
+    lens.position.set(sp.x, sp.y, sp.z);
+    lens.lookAt(0, 2, -3);
+    scene.add(lens);
+
+    // Spotlight
+    var light = new THREE.SpotLight(sp.color, 2, 20, Math.PI / 6, 0.4, 1);
+    light.position.set(sp.x, sp.y, sp.z);
+    light.target.position.set(0, 2, -3);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 512;
+    light.shadow.mapSize.height = 512;
+    scene.add(light);
+    scene.add(light.target);
+    spotLights.push(light);
+
+    // Volume light cone (transparent cone mesh)
+    var dir = new THREE.Vector3(0, 2, -3).sub(new THREE.Vector3(sp.x, sp.y, sp.z));
+    var coneLen = dir.length();
+    var coneRadius = Math.tan(Math.PI / 6) * coneLen;
+    var coneGeo = new THREE.CylinderGeometry(0.1, coneRadius, coneLen, 32, 1, true);
+    var coneMat = new THREE.MeshBasicMaterial({
+      color: sp.color,
+      transparent: true,
+      opacity: 0.06,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    var cone = new THREE.Mesh(coneGeo, coneMat);
+    // Position at midpoint
+    var mid = new THREE.Vector3(sp.x, sp.y, sp.z).add(new THREE.Vector3(0, 2, -3)).multiplyScalar(0.5);
+    cone.position.copy(mid);
+    // Orient cone
+    cone.lookAt(0, 2, -3);
+    cone.rotateX(Math.PI / 2);
+    scene.add(cone);
+    spotCones.push({ mesh: cone, mat: coneMat, baseMat: glowMat });
+  });
+
+  // Small colored spheres at each light source for visual reference
+  var refSpheres = [];
+  spotPositions.forEach(function(sp){
+    var sph = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 16, 16),
+      new THREE.MeshBasicMaterial({ color: sp.color })
+    );
+    sph.position.set(sp.x, sp.y + 0.5, sp.z);
+    scene.add(sph);
+    refSpheres.push(sph);
+  });
+
+  // Grid helper
+  var grid = new THREE.GridHelper(20, 20, 0x1a2332, 0x111827);
+  grid.position.y = 0.01;
+  scene.add(grid);
+
+  function updateScene(){
+    var rN = R / 255, gN = G / 255, bN = B / 255;
+
+    // Update spotlight intensities
+    spotLights[0].intensity = rN * 3;
+    spotLights[1].intensity = gN * 3;
+    spotLights[2].intensity = bN * 3;
+
+    // Update cone opacities
+    spotCones[0].mat.opacity = rN * 0.08;
+    spotCones[1].mat.opacity = gN * 0.08;
+    spotCones[2].mat.opacity = bN * 0.08;
+
+    // Update lens glow
+    spotCones[0].baseMat.opacity = rN * 0.9 + 0.1;
+    spotCones[1].baseMat.opacity = gN * 0.9 + 0.1;
+    spotCones[2].baseMat.opacity = bN * 0.9 + 0.1;
+
+    // Reference sphere brightness
+    refSpheres[0].material.color.setRGB(rN, 0, 0);
+    refSpheres[1].material.color.setRGB(0, gN, 0);
+    refSpheres[2].material.color.setRGB(0, 0, bN);
+
+    // Screen tint to emphasize the mixed color (additive on white)
+    // We slightly tint the screen to show the projected color more clearly
+    var screenColor = new THREE.Color(
+      0.15 + rN * 0.85,
+      0.15 + gN * 0.85,
+      0.15 + bN * 0.85
+    );
+    screenMat.color.copy(screenColor);
+    screenMat.emissive.setRGB(rN * 0.15, gN * 0.15, bN * 0.15);
+  }
+
+  // --- Resize ---
+  function resize(){
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // --- FPS ---
+  var fpsEl = document.getElementById('fps');
+  var frameTimes = [];
+  var lastTime = performance.now();
+
+  // --- Animate ---
+  function animate(){
+    requestAnimationFrame(animate);
+    controls.update();
+
+    // Subtle cone pulsation
+    var t = performance.now() * 0.001;
+    spotCones.forEach(function(c, i){
+      var pulse = 1 + Math.sin(t * 2 + i * 2.1) * 0.015;
+      c.mesh.scale.set(pulse, 1, pulse);
+    });
+
+    renderer.render(scene, camera);
+
+    // FPS counter
+    var now = performance.now();
+    frameTimes.push(now - lastTime);
+    lastTime = now;
+    if(frameTimes.length > 60) frameTimes.shift();
+    if(frameTimes.length > 10){
+      var avg = frameTimes.reduce(function(a, b){ return a + b; }, 0) / frameTimes.length;
+      fpsEl.textContent = Math.round(1000 / avg) + ' FPS';
+    }
+  }
+
+  // Init
+  updateUI();
+  updateScene();
+  animate();
+})();
+</script>
+</body>
+</html>

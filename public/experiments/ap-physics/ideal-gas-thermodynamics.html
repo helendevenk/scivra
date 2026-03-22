@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ideal Gas Law &amp; PV Diagram — NeonPhysics AP Physics 2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));border-bottom:1px solid rgba(99,102,241,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px;align-items:center}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ap{background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 60px)}
+    .sidebar{background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#a5b4fc;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(99,102,241,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#6366f1;cursor:pointer}
+    .select-row{margin-bottom:12px}
+    .select-label{font-size:12px;color:#94a3b8;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+    select{width:100%;background:#161b22;border:1px solid rgba(255,255,255,.1);color:#e8eaf0;padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer}
+    select option{background:#161b22}
+    .pro-tag{font-size:9px;font-weight:700;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;padding:2px 6px;border-radius:10px}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
+    .stat-card-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .stat-card-value{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+    .v-indigo{color:#a5b4fc} .v-purple{color:#c4b5fd} .v-teal{color:#5eead4} .v-amber{color:#fcd34d} .v-rose{color:#fda4af}
+    .formula-box{background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:#c4b5fd;letter-spacing:.3px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:3px}
+    .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-variant-numeric:tabular-nums;pointer-events:none}
+    .canvas-area{position:relative;display:grid;grid-template-rows:1fr 200px}
+    .threejs-wrap{position:relative;overflow:hidden}
+    #threeCanvas{display:block;width:100%;height:100%}
+    .pv-wrap{background:#060c12;border-top:1px solid rgba(255,255,255,.06);position:relative}
+    #pvCanvas{display:block;width:100%;height:100%}
+    .pv-label{position:absolute;top:8px;left:12px;font-size:11px;color:#64748b;pointer-events:none}
+    .process-indicator{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 12px;border-radius:10px;pointer-events:none}
+    .pi-isothermal{background:rgba(99,102,241,.2);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)}
+    .pi-isobaric{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+    .pi-isochoric{background:rgba(251,191,36,.1);color:#fcd34d;border:1px solid rgba(251,191,36,.2)}
+    .pi-adiabatic{background:rgba(239,68,68,.12);color:#fda4af;border:1px solid rgba(239,68,68,.2)}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS 2</span>
+    <span class="badge badge-free">FREE</span>
+  </div>
+  <h1>Ideal Gas Law &amp; PV Diagram</h1>
+  <p>Cylinder-piston system with kinetic molecular theory visualization</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Temperature T (K)</span>
+          <span class="param-val" id="lblT">300</span>
+        </div>
+        <input type="range" id="sliderT" min="100" max="1000" step="10" value="300">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Pressure P (atm)</span>
+          <span class="param-val" id="lblP">1.0</span>
+        </div>
+        <input type="range" id="sliderP" min="0.1" max="10" step="0.1" value="1.0">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Amount n (mol)</span>
+          <span class="param-val" id="lblN">1.0</span>
+        </div>
+        <input type="range" id="sliderN" min="0.1" max="2" step="0.1" value="1.0">
+      </div>
+
+      <div class="select-row">
+        <div class="select-label">
+          <span>Process Type</span>
+        </div>
+        <select id="processSelect">
+          <option value="0">Isothermal (T = const)</option>
+          <option value="1">Isobaric (P = const)</option>
+          <option value="2">Isochoric (V = const) ★ PRO</option>
+          <option value="3">Adiabatic (Q = 0) ★ PRO</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Pressure P</div>
+        <div class="stat-card-value v-indigo" id="statP">1.00 atm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Volume V</div>
+        <div class="stat-card-value v-purple" id="statV">24.6 L</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Temperature T</div>
+        <div class="stat-card-value v-teal" id="statT">300 K</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Density n/V</div>
+        <div class="stat-card-value v-amber" id="statD">0.041</div>
+      </div>
+      <div class="stat-card" style="grid-column:span 2">
+        <div class="stat-card-label">Avg Kinetic Energy KE_avg</div>
+        <div class="stat-card-value v-rose" id="statKE">6.21 × 10⁻²¹ J</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Equations</div>
+      <div class="formula-box">
+        <div class="formula-text">PV = nRT</div>
+        <div class="formula-desc">Ideal Gas Law</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">W = P·ΔV</div>
+        <div class="formula-desc">Work done by gas</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">ΔU = Q - W</div>
+        <div class="formula-desc">First Law of Thermodynamics</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-text">KE_avg = (3/2)kT</div>
+        <div class="formula-desc">k = 1.381×10⁻²³ J/K</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <div class="threejs-wrap" id="threeWrap">
+      <canvas id="threeCanvas"></canvas>
+      <div class="fps-badge" id="fpsBadge">60 FPS</div>
+    </div>
+    <div class="pv-wrap">
+      <canvas id="pvCanvas"></canvas>
+      <div class="pv-label">PV Diagram</div>
+      <div class="process-indicator pi-isothermal" id="procLabel">Isothermal</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── Constants ──────────────────────────────────────────────────────────────
+  const R = 8.314;        // J/(mol·K)
+  const k_B = 1.381e-23;  // J/K
+  const ATM_TO_PA = 101325;
+  const L_TO_M3 = 1e-3;
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let T = 300, P = 1.0, n = 1.0, processType = 0;
+  let V = 0; // computed from PV=nRT
+
+  function computeV() {
+    // PV = nRT → V (Liters)
+    V = (n * R * T) / (P * ATM_TO_PA) / L_TO_M3;
+  }
+  computeV();
+
+  // ── Three.js Setup ─────────────────────────────────────────────────────────
+  const canvas3 = document.getElementById('threeCanvas');
+  const wrap3   = document.getElementById('threeWrap');
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas3, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x060c12, 1);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+  camera.position.set(0, 4, 14);
+  camera.lookAt(0, 0, 0);
+
+  // Lighting
+  const ambLight = new THREE.AmbientLight(0x1a1a3a, 1.5);
+  scene.add(ambLight);
+  const keyLight = new THREE.DirectionalLight(0x6366f1, 1.2);
+  keyLight.position.set(5, 10, 8);
+  scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0x9333ea, 0.6);
+  fillLight.position.set(-5, 3, -5);
+  scene.add(fillLight);
+  const rimLight = new THREE.DirectionalLight(0x06b6d4, 0.5);
+  rimLight.position.set(0, -5, 5);
+  scene.add(rimLight);
+
+  // ── Cylinder (glass tube) ──────────────────────────────────────────────────
+  const CYL_R = 2.0;
+  const CYL_H_MAX = 8.0;
+
+  // Wireframe ring for cylinder body
+  const cylGroup = new THREE.Group();
+  scene.add(cylGroup);
+
+  // Use cylinder geometry edges as glass-like walls
+  const cylGeo = new THREE.CylinderGeometry(CYL_R, CYL_R, CYL_H_MAX, 32, 1, true);
+  const cylEdgeMat = new THREE.MeshBasicMaterial({
+    color: 0x6366f1, wireframe: true, transparent: true, opacity: 0.18
+  });
+  const cylMesh = new THREE.Mesh(cylGeo, cylEdgeMat);
+  cylGroup.add(cylMesh);
+
+  // Bottom cap
+  const botGeo = new THREE.CircleGeometry(CYL_R, 32);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0x1e2040, metalness: 0.8, roughness: 0.2 });
+  const botCap = new THREE.Mesh(botGeo, capMat);
+  botCap.rotation.x = -Math.PI / 2;
+  botCap.position.y = -CYL_H_MAX / 2;
+  cylGroup.add(botCap);
+
+  // ── Piston ─────────────────────────────────────────────────────────────────
+  const pistonGeo = new THREE.CylinderGeometry(CYL_R * 0.97, CYL_R * 0.97, 0.3, 32);
+  const pistonMat = new THREE.MeshStandardMaterial({
+    color: 0x7c3aed, metalness: 0.9, roughness: 0.15,
+    emissive: 0x3b0764, emissiveIntensity: 0.3
+  });
+  const piston = new THREE.Mesh(pistonGeo, pistonMat);
+  scene.add(piston);
+
+  // Piston rod
+  const rodGeo = new THREE.CylinderGeometry(0.15, 0.15, 3, 8);
+  const rodMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 1, roughness: 0.1 });
+  const rod = new THREE.Mesh(rodGeo, rodMat);
+  scene.add(rod);
+
+  function updatePistonPosition() {
+    // Map V (liters) to cylinder height fraction
+    // V range: roughly 2L (P=10,T=100) to 160L (P=0.1,T=1000)
+    // Normalize to [0.15, 0.95] of CYL_H_MAX
+    const V_min = 0.5, V_max = 200;
+    const frac = Math.max(0.12, Math.min(0.96, (V - V_min) / (V_max - V_min)));
+    const pistonY = -CYL_H_MAX / 2 + frac * CYL_H_MAX;
+    piston.position.y = pistonY;
+    rod.position.y = pistonY + 1.65;
+    // Update cylinder height visual by scaling
+    const gasHeight = frac * CYL_H_MAX;
+    cylMesh.scale.y = frac;
+    cylMesh.position.y = -CYL_H_MAX / 2 + gasHeight / 2;
+    botCap.position.y = -CYL_H_MAX / 2;
+    return pistonY;
+  }
+
+  // ── Particle System (InstancedMesh) ────────────────────────────────────────
+  const PARTICLE_COUNT = 100;
+  const pGeo = new THREE.SphereGeometry(0.12, 6, 6);
+  const pMat = new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.1 });
+  const instancedParticles = new THREE.InstancedMesh(pGeo, pMat, PARTICLE_COUNT);
+  instancedParticles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(instancedParticles);
+
+  const positions = new Float32Array(PARTICLE_COUNT * 3);
+  const velocities = new Float32Array(PARTICLE_COUNT * 3);
+  const colors     = new Float32Array(PARTICLE_COUNT * 3);
+  const flashTimer = new Float32Array(PARTICLE_COUNT);
+
+  function initParticles() {
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r     = Math.random() * (CYL_R - 0.3);
+      positions[i*3]   = Math.cos(angle) * r;
+      positions[i*3+1] = (Math.random() - 0.5) * 4;
+      positions[i*3+2] = Math.sin(angle) * r;
+      const speed = 0.04;
+      velocities[i*3]   = (Math.random()-0.5)*speed;
+      velocities[i*3+1] = (Math.random()-0.5)*speed;
+      velocities[i*3+2] = (Math.random()-0.5)*speed;
+      flashTimer[i] = 0;
+    }
+  }
+  initParticles();
+
+  const _dummy = new THREE.Object3D();
+  const _color = new THREE.Color();
+
+  function updateParticles(dt) {
+    const pistonY = piston.position.y;
+    const bottomY = -CYL_H_MAX / 2;
+    // Speed scale: normalize T around 300K
+    const speedScale = Math.sqrt(T / 300) * 0.06;
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const ix = i*3, iy = i*3+1, iz = i*3+2;
+      // Normalize velocity magnitude to speedScale
+      const vx = velocities[ix], vy = velocities[iy], vz = velocities[iz];
+      const vmag = Math.sqrt(vx*vx+vy*vy+vz*vz) || 0.001;
+      const scale = speedScale / vmag;
+      velocities[ix] *= scale; velocities[iy] *= scale; velocities[iz] *= scale;
+
+      positions[ix] += velocities[ix];
+      positions[iy] += velocities[iy];
+      positions[iz] += velocities[iz];
+
+      // Wall collision: cylinder radial
+      const px = positions[ix], pz = positions[iz];
+      const dist = Math.sqrt(px*px+pz*pz);
+      if (dist > CYL_R - 0.15) {
+        const nx = px/dist, nz = pz/dist;
+        const dot = velocities[ix]*nx + velocities[iz]*nz;
+        velocities[ix] -= 2*dot*nx;
+        velocities[iz] -= 2*dot*nz;
+        positions[ix] = nx*(CYL_R-0.16);
+        positions[iz] = nz*(CYL_R-0.16);
+        flashTimer[i] = 0.15;
+      }
+      // Bottom cap
+      if (positions[iy] < bottomY + 0.15) {
+        positions[iy] = bottomY + 0.16;
+        velocities[iy] = Math.abs(velocities[iy]);
+        flashTimer[i] = 0.15;
+      }
+      // Piston
+      if (positions[iy] > pistonY - 0.2) {
+        positions[iy] = pistonY - 0.21;
+        velocities[iy] = -Math.abs(velocities[iy]);
+        flashTimer[i] = 0.15;
+      }
+
+      if (flashTimer[i] > 0) flashTimer[i] -= dt;
+
+      // Color: cool (blue) → hot (red) based on T
+      const t01 = (T - 100) / 900; // 0..1
+      const flash = flashTimer[i] > 0 ? 1.0 : 0.0;
+      if (flash > 0) {
+        _color.setRGB(1.0, 0.9, 0.5);
+      } else {
+        // Interpolate blue→white→red
+        const r = Math.min(1, t01 * 2);
+        const g = Math.max(0, 1 - Math.abs(t01 - 0.5) * 2.5);
+        const b = Math.max(0, 1 - t01 * 2);
+        _color.setRGB(0.2 + r*0.8, 0.3 + g*0.4, 0.9 - b*0.7);
+      }
+      instancedParticles.setColorAt(i, _color);
+
+      _dummy.position.set(positions[ix], positions[iy], positions[iz]);
+      _dummy.updateMatrix();
+      instancedParticles.setMatrixAt(i, _dummy.matrix);
+    }
+    instancedParticles.instanceMatrix.needsUpdate = true;
+    instancedParticles.instanceColor.needsUpdate = true;
+  }
+
+  // Cylinder wall glow based on pressure
+  function updateCylGlow() {
+    const p01 = (P - 0.1) / 9.9;
+    cylEdgeMat.opacity = 0.08 + p01 * 0.35;
+    const brightness = 0.5 + p01 * 0.5;
+    cylEdgeMat.color.setRGB(brightness * 0.39, brightness * 0.4, brightness);
+  }
+
+  // ── PV Canvas ──────────────────────────────────────────────────────────────
+  const pvCanvas = document.getElementById('pvCanvas');
+  const pvWrap   = document.getElementById('pv-wrap') || pvCanvas.parentElement;
+  let pvCtx = pvCanvas.getContext('2d');
+
+  function resizePV() {
+    pvCanvas.width  = pvCanvas.offsetWidth;
+    pvCanvas.height = pvCanvas.offsetHeight;
+  }
+
+  function drawPV() {
+    const w = pvCanvas.width, h = pvCanvas.height;
+    if (!w || !h) return;
+    pvCtx.clearRect(0, 0, w, h);
+
+    const pad = { l: 52, r: 20, t: 16, b: 40 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+
+    // Background
+    pvCtx.fillStyle = '#060c12';
+    pvCtx.fillRect(0, 0, w, h);
+
+    // Grid
+    pvCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+    pvCtx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const x = pad.l + (i/5)*cw;
+      const y = pad.t + (i/5)*ch;
+      pvCtx.beginPath(); pvCtx.moveTo(x, pad.t); pvCtx.lineTo(x, pad.t+ch); pvCtx.stroke();
+      pvCtx.beginPath(); pvCtx.moveTo(pad.l, y); pvCtx.lineTo(pad.l+cw, y); pvCtx.stroke();
+    }
+
+    // Axes
+    pvCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+    pvCtx.lineWidth = 1.5;
+    pvCtx.beginPath();
+    pvCtx.moveTo(pad.l, pad.t); pvCtx.lineTo(pad.l, pad.t+ch);
+    pvCtx.moveTo(pad.l, pad.t+ch); pvCtx.lineTo(pad.l+cw, pad.t+ch);
+    pvCtx.stroke();
+
+    // Axis labels
+    pvCtx.fillStyle = '#64748b';
+    pvCtx.font = '10px system-ui';
+    pvCtx.textAlign = 'center';
+    pvCtx.fillText('V (L)', pad.l + cw/2, h - 4);
+    pvCtx.save(); pvCtx.translate(14, pad.t + ch/2); pvCtx.rotate(-Math.PI/2);
+    pvCtx.fillText('P (atm)', 0, 0); pvCtx.restore();
+
+    const V_min = 1, V_max = 200;
+    const P_min = 0.05, P_max = 12;
+
+    function toX(v) { return pad.l + ((v - V_min)/(V_max - V_min)) * cw; }
+    function toY(p) { return pad.t + ch - ((p - P_min)/(P_max - P_min)) * ch; }
+
+    // Axis tick values
+    pvCtx.fillStyle = '#475569'; pvCtx.font = '9px system-ui';
+    pvCtx.textAlign = 'right';
+    [2,4,6,8,10].forEach(pv => {
+      if (pv <= P_max) pvCtx.fillText(pv, pad.l-4, toY(pv)+3);
+    });
+    pvCtx.textAlign = 'center';
+    [20,40,60,80,100,150].forEach(vv => {
+      if (vv <= V_max) pvCtx.fillText(vv, toX(vv), pad.t+ch+12);
+    });
+
+    // Isothermal curves (P = nRT / V) for several T values
+    const Tlines = [150, 300, 500, 700, 1000];
+    const Tcolors = ['#3730a3','#4338ca','#6366f1','#818cf8','#a5b4fc'];
+    pvCtx.lineWidth = 1;
+    Tlines.forEach((Tv, idx) => {
+      pvCtx.beginPath();
+      pvCtx.strokeStyle = Tcolors[idx] + '60';
+      let started = false;
+      for (let v = V_min; v <= V_max; v += 0.5) {
+        const pv_line = (n * R * Tv) / (v * L_TO_M3 * ATM_TO_PA);
+        if (pv_line < P_min || pv_line > P_max) { started = false; continue; }
+        const cx = toX(v), cy = toY(pv_line);
+        if (!started) { pvCtx.moveTo(cx, cy); started = true; }
+        else pvCtx.lineTo(cx, cy);
+      }
+      pvCtx.stroke();
+      // Label near T
+      const v_label = (n * R * Tv) / (6 * ATM_TO_PA * L_TO_M3);
+      if (v_label > V_min && v_label < V_max) {
+        pvCtx.fillStyle = Tcolors[idx] + '90';
+        pvCtx.font = '9px system-ui'; pvCtx.textAlign = 'left';
+        pvCtx.fillText(Tv+'K', toX(v_label)+3, toY(6)-2);
+      }
+    });
+
+    // Process path
+    pvCtx.lineWidth = 2;
+    if (processType === 0) {
+      // Isothermal: P = nRT/V, T fixed
+      pvCtx.beginPath(); pvCtx.strokeStyle = '#a5b4fc';
+      let started = false;
+      for (let v = V_min; v <= V_max; v += 0.5) {
+        const pv = (n * R * T) / (v * L_TO_M3 * ATM_TO_PA);
+        if (pv < P_min || pv > P_max) { started = false; continue; }
+        const cx = toX(v), cy = toY(pv);
+        if (!started) { pvCtx.moveTo(cx, cy); started = true; }
+        else pvCtx.lineTo(cx, cy);
+      }
+      pvCtx.stroke();
+    } else if (processType === 1) {
+      // Isobaric: P fixed, V/T = const
+      pvCtx.strokeStyle = '#86efac';
+      pvCtx.beginPath();
+      pvCtx.moveTo(toX(V_min), toY(P));
+      pvCtx.lineTo(toX(V_max), toY(P));
+      pvCtx.stroke();
+    } else if (processType === 2) {
+      // Isochoric: V fixed, P ∝ T
+      pvCtx.strokeStyle = '#fcd34d';
+      pvCtx.beginPath();
+      pvCtx.moveTo(toX(V), toY(P_min));
+      pvCtx.lineTo(toX(V), toY(P_max));
+      pvCtx.stroke();
+    } else if (processType === 3) {
+      // Adiabatic: PV^γ = const, γ=5/3 for monatomic
+      const gamma = 5/3;
+      const C = P * Math.pow(V, gamma);
+      pvCtx.beginPath(); pvCtx.strokeStyle = '#fda4af';
+      let started = false;
+      for (let v = V_min; v <= V_max; v += 0.5) {
+        const pv = C / Math.pow(v, gamma);
+        if (pv < P_min || pv > P_max) { started = false; continue; }
+        const cx = toX(v), cy = toY(pv);
+        if (!started) { pvCtx.moveTo(cx, cy); started = true; }
+        else pvCtx.lineTo(cx, cy);
+      }
+      pvCtx.stroke();
+    }
+
+    // Current state dot
+    const cx = toX(V), cy = toY(P);
+    if (cx > pad.l && cx < pad.l+cw && cy > pad.t && cy < pad.t+ch) {
+      pvCtx.beginPath();
+      pvCtx.arc(cx, cy, 5, 0, Math.PI*2);
+      pvCtx.fillStyle = '#ef4444';
+      pvCtx.fill();
+      pvCtx.beginPath();
+      pvCtx.arc(cx, cy, 9, 0, Math.PI*2);
+      pvCtx.strokeStyle = 'rgba(239,68,68,0.4)';
+      pvCtx.lineWidth = 2; pvCtx.stroke();
+    }
+  }
+
+  // ── UI Updates ─────────────────────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('statP').textContent = P.toFixed(2) + ' atm';
+    document.getElementById('statV').textContent = V.toFixed(1) + ' L';
+    document.getElementById('statT').textContent = T.toFixed(0) + ' K';
+    document.getElementById('statD').textContent = (n / V).toFixed(4) + ' mol/L';
+    const ke = 1.5 * k_B * T;
+    const exp = Math.floor(Math.log10(ke));
+    const man = ke / Math.pow(10, exp);
+    document.getElementById('statKE').textContent = man.toFixed(2) + ' × 10' + superScript(exp) + ' J';
+  }
+
+  function superScript(n) {
+    const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+    return String(n).split('').map(c=>map[c]||c).join('');
+  }
+
+  const procNames = ['Isothermal','Isobaric','Isochoric','Adiabatic'];
+  const procClasses = ['pi-isothermal','pi-isobaric','pi-isochoric','pi-adiabatic'];
+  function updateProcessLabel() {
+    const el = document.getElementById('procLabel');
+    el.textContent = procNames[processType];
+    el.className = 'process-indicator ' + procClasses[processType];
+  }
+
+  // ── Controls ───────────────────────────────────────────────────────────────
+  document.getElementById('sliderT').addEventListener('input', function() {
+    T = parseFloat(this.value);
+    document.getElementById('lblT').textContent = T;
+    computeV(); updateStats(); updateCylGlow(); drawPV();
+  });
+  document.getElementById('sliderP').addEventListener('input', function() {
+    P = parseFloat(this.value);
+    document.getElementById('lblP').textContent = P.toFixed(1);
+    computeV(); updateStats(); updateCylGlow(); drawPV();
+  });
+  document.getElementById('sliderN').addEventListener('input', function() {
+    n = parseFloat(this.value);
+    document.getElementById('lblN').textContent = n.toFixed(1);
+    computeV(); updateStats(); drawPV();
+  });
+  document.getElementById('processSelect').addEventListener('change', function() {
+    processType = parseInt(this.value);
+    updateProcessLabel(); drawPV();
+  });
+
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  function onResize() {
+    const w = wrap3.clientWidth, h = wrap3.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    resizePV(); drawPV();
+  }
+  window.addEventListener('resize', onResize);
+
+  // ── Render Loop ────────────────────────────────────────────────────────────
+  let lastTime = performance.now();
+  let frameCount = 0, fpsTimer = 0;
+
+  function animate() {
+    try {
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      frameCount++; fpsTimer += dt;
+      if (fpsTimer >= 1) {
+        document.getElementById('fpsBadge').textContent = frameCount + ' FPS';
+        frameCount = 0; fpsTimer = 0;
+      }
+
+      updateParticles(dt);
+      updatePistonPosition();
+
+      // Subtle camera drift
+      camera.position.x = Math.sin(now * 0.0002) * 1.5;
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+    } catch(e) {
+      console.error('Render error:', e);
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  try {
+    onResize();
+    updateStats();
+    updateCylGlow();
+    updateProcessLabel();
+    animate();
+    // Draw PV after first resize
+    setTimeout(() => { resizePV(); drawPV(); }, 100);
+  } catch(e) {
+    console.error('Init error:', e);
+  }
+
+})();
+</script>
+</body>
+</html>
