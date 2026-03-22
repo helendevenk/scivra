@@ -55,4 +55,7 @@ export const localeMessagesPaths = [
   'user-dashboard',
   'learn',
   'admin/learning-paths',
+  'ap-prep',
+  'quest',
+  'notebook',
 ];

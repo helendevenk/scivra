@@ -1,137 +1,123 @@
-# NeonPhysics v2 — Q2 2026 统一工作计划
+# Sprint 0: Foundation
 
-> 由 RalphFree v3.0 管理 | 2026-03-22
-> 计划文档: `docs/plans/2026-03-22-unified-work-plan.md`（CTO APPROVED）
-> 基于 Manus 上下文工程原则 + 4-File Pattern
+**Task ID**: TASK-20260322-S0
+**Started**: 2026-03-22T16:30:00Z
+**Quality Mode**: strict
+**Max Iterations**: 10
 
-## Goal
+## Objective
 
-执行 CTO 批准的 Q2 2026 统一工作计划（88 人天 / 18 周），按顺序完成：
-1. Phase 0.5: 学科解耦（7天）— A0 安全修复起步
-2. Phase BG: 批量生成管线 + PhET 66 对标内容（22天）
-3. Phase 3.5: 验证层 + 修正工具（9天）
-4. Phase F1: AP Prep Mode（20天）
-5. Phase F2: Physics Quest（16天）
-6. Phase F3: Lab Notebook AI（14天）
+Execute Sprint 0 of the NeonPhysics v2 frontend redesign. This sprint lays the foundation for the experiment-centric pivot without changing any user-facing behavior.
 
-## Criteria（验收标准）
+## Criteria
 
-> 每个 Phase 有独立验收，全部通过才算 COMPLETED
+- All `.edu-*` CSS classes renamed to `.np-*` with backward-compatible aliases
+- `data-subject` CSS system renders correct colors for 5 subjects (Physics/Chemistry/Biology/Earth/Math)
+- All 80+ experiment data files have `subject` and `gradeLevel` fields
+- `experimentAccess` table exists in schema with model + tests
+- `canAccessExperiment()` uses new 3-experiment lifetime limit logic
+- 301 redirects configured for `/upg/*` → `/create/*`
+- Layout group directories created (`(learn)`, `(create)`, `(dashboard)`)
+- Dashboard/Settings moved from `(landing)` to `(dashboard)`
+- `pnpm build` passes with zero errors
+- `pnpm test` passes
 
-- [ ] **Phase 0.5**: route.ts 不再直接调 LLM + prompt snapshot 一致 + 64 Vitest 通过 + TS 零错误
-- [ ] **Phase BG**: 66 个物理实验全部可运行 + 自动质量检查通过 + 注册到 registry
-- [ ] **Phase 3.5**: Verified 标签可用 + refine API 可用 + rate limiting + moderation
-- [ ] **Phase F1**: AP Physics 1 刷题链路可走通（选题→做题→判分→UPG解析→进度）
-- [ ] **Phase F2**: 3 个 Quest 可完成 + 排行榜可用
-- [ ] **Phase F3**: 笔记本创建→AI预填→PDF导出链路通
-- [ ] **集成**: 三模块联调通过 + Free/Pro 权限生效
+## Design Decisions
 
-## 任务信息
+### Selected: Incremental Migration with Deprecated Aliases
 
-| 字段 | 值 |
-|------|-----|
-| 计划文档 | `docs/plans/2026-03-22-unified-work-plan.md` |
-| CTO 评审 | `docs/plans/2026-03-22-unified-work-plan-cto-review.md` |
-| 最大迭代 | 50 次 |
-| 项目根目录 | `/Users/sky/Desktop/sciwangzhan/neonphysics-v2` |
+**Rationale**: CSS prefix `.edu-*` → `.np-*` done as rename + alias. Old names work for 30 days. This prevents breakage in any i18n JSON, markdown, or third-party references.
 
-## 分阶段任务清单
+### Selected: `experiment_access` Table (Not User Field)
 
-### Phase 0.5: 学科解耦（7天）
+**Rationale**: A separate table allows querying which specific experiments were accessed, not just a count. Needed for "you've already accessed this one" logic. Unique constraint on (userId, experimentId) prevents duplicates.
 
-> 实施规格: `docs/plans/2026-03-22-discipline-decoupling-implementation-spec.md`
+### Selected: Subject Colors from CTO Review Appendix
 
-- [x] **A0** 🔴 CRITICAL SECURITY: route.ts 迁移到 generateCore()（含 provider 选择逻辑迁移）
-- [x] A1: 学科类型系统 `disciplines/types.ts`
-- [x] A2: Physics 完整配置 `disciplines/physics.ts`
-- [x] A3: 注册表 `disciplines/index.ts`
-- [x] A4: Chemistry/Bio/Math/Earth stub ×4
-- [x] A5: System Prompt 分层（拆函数 + discipline 参数）
-- [x] A6: generate-core 接入 discipline
-- [x] A7: quality-checker 学科扩展
-- [x] A8: API route 传递 discipline
-- [x] A9: UI 学科选择器 DisciplineSelector
-- [x] A10: 回归测试（prompt snapshot + Vitest 104 tests 全过）
+**Rationale**: Physics=blue(250), Chemistry=green(145), Biology=amber(80), Earth=terracotta(25), Math=violet(310). These are FINAL per CTO review. Using `data-subject` CSS attribute for zero-runtime-cost contextual coloring.
 
-### Phase BG: 批量生成管线 + 内容（22天）
+### Selected: Layout Groups per CTO Architecture
 
-> 管线设计: `docs/plans/2026-03-22-upg-batch-generation-pipeline.md`
+**Rationale**: 5 active public groups: `(landing)` for public+experiments, `(learn)` for AP/Quest/Paths/Notebooks, `(create)` for UPG, `(dashboard)` for user panel. Experiments stay under `(landing)`.
 
-- [ ] BG1: CLI 批量生成脚本（callAnthropic 直连）
-- [ ] BG2: 结构化 Prompt 模板系统
-- [ ] BG3: 物理特定质量检查 checkPhysicsQuality
-- [ ] BG4: 自动截图审核（Playwright）
-- [ ] BG5: 注册集成工具
-- [ ] BG6: PoC 验证（friction-lab 全流程跑通）
-- [ ] P0: 14 个新实验 + 7 个升级 = 21 个生成任务
-- [ ] P1/P2: 33 个新实验 + 5 个升级 = 38 个生成任务
-- [ ] Schema 迁移: 14 张新表（审查SQL→本地测试→备份→推送）
+## Atomic Plan
 
-### Phase 3.5: 验证 + 修正工具（9天）
+- [ ] T1: CSS prefix migration — rename `.edu-*` to `.np-*` in theme-education.css, add deprecated aliases
+  Files: `src/config/style/theme-education.css`
+  Test: `grep -c "\.np-" src/config/style/theme-education.css` returns > 0
+  Expected: All `.edu-*` classes have `.np-*` equivalents + alias block
 
-- [ ] B1a: 验证框架（ValidationRule + 规则引擎）
-- [ ] B1b: 物理验证规则（5 条）
-- [ ] B1c: 集成到管线 + DB 字段
-- [ ] B1d: UI Verified 标签
-- [ ] B3a: refine-core 修正管线
-- [ ] B3b: refine API + moderation + 分布式锁
-- [ ] B3c: DB 字段 + 版本历史 UI
-- [ ] B3d: 手动测试修正流程
+- [ ] T2: CSS prefix migration — find-replace `.edu-` to `.np-` in all TSX files
+  Files: All `.tsx` files under `src/` referencing `edu-`
+  Test: `grep -r "edu-" src/ --include="*.tsx" | grep -v "deprecated"` returns 0 matches
+  Expected: All component references use `.np-*`
 
-### Phase F1: AP Prep Mode（20天）
+- [ ] T3: Subject color system — add `data-subject` CSS rules + dark mode variants
+  Files: `src/config/style/theme-education.css`
+  Test: CSS file contains `[data-subject="physics"]` through `[data-subject="math"]`
+  Expected: 5 subject definitions + dark mode variants
 
-> 设计文档: `docs/plans/2026-03-22-ap-prep-mode-design.md`
+- [ ] T4: Subject metadata — create subjects.ts constant
+  Files: `src/shared/lib/experiments/subjects.ts` (NEW)
+  Test: Import and assert 5 subjects with correct labels
+  Expected: SUBJECTS constant with physics/chemistry/biology/earth-science/math
 
-- [ ] F1-1: 数据基础（5 表 + seed）
-- [ ] F1-2: API 层（10 端点）
-- [ ] F1-3: 前端页面
-- [ ] F1-4: Admin 后台
-- [ ] F1-5: 测试 + 打磨
+- [ ] T5: Experiment types — add Subject and GradeLevel to Experiment interface
+  Files: `src/shared/types/experiment.ts`
+  Test: TypeScript compilation passes
+  Expected: `subject: Subject` and `gradeLevel: GradeLevel` in Experiment interface
 
-### Phase F2: Physics Quest（16天）
+- [ ] T6: Write test for experiment_access model FIRST (TDD)
+  Files: `src/shared/models/__tests__/experiment_access.test.ts` (NEW)
+  Test: `pnpm test src/shared/models/__tests__/experiment_access.test.ts` — should FAIL (no implementation)
+  Expected: Tests defined for getAccessedExperimentCount, hasAccessedExperiment, recordExperimentAccess
 
-> 设计文档: `docs/plans/2026-03-22-physics-quest-design.md`
+- [ ] T7: Add experimentAccess table to schema
+  Files: `src/config/db/schema.ts`
+  Test: `pnpm db:generate` succeeds
+  Expected: experimentAccess table with id, userId, experimentId, firstAccessedAt + indexes
 
-- [ ] F2-1: 数据基础（6 表 + 成就引擎）
-- [ ] F2-2: API 层（12 端点）
-- [ ] F2-3: 前端页面
-- [ ] F2-4: 周度挑战（Redis 排行榜）
-- [ ] F2-5: 种子内容 + 测试
+- [ ] T8: Implement experiment_access model (pass tests from T6)
+  Files: `src/shared/models/experiment_access.ts` (NEW)
+  Test: `pnpm test src/shared/models/__tests__/experiment_access.test.ts` — should PASS
+  Expected: All functions implemented and tests green
 
-### Phase F3: Lab Notebook AI（14天）
+- [ ] T9: Update access.ts — new canAccessExperiment signature with lifetime limit
+  Files: `src/shared/lib/experiments/access.ts`
+  Test: Existing tests still pass + new logic verified
+  Expected: canAccessExperiment(experimentId, userTier, accessedCount, alreadyAccessedThisExperiment)
 
-> 设计文档: `docs/plans/2026-03-22-lab-notebook-ai-design.md`
+- [ ] T10: Create experiment access API endpoint
+  Files: `src/app/api/experiments/access/route.ts` (NEW)
+  Test: Build succeeds, TypeScript compiles
+  Expected: GET returns accessedCount/accessedIds/limit, POST records access
 
-- [ ] F3-1: 数据层 + CRUD API
-- [ ] F3-2: AI 辅助
-- [ ] F3-3: 前端 UI
-- [ ] F3-4: PDF 导出
-- [ ] F3-5: 列表页 + 打磨
+- [ ] T11: Script to add subject/gradeLevel to all experiment data files
+  Files: `scripts/add-experiment-fields.ts` (NEW), 80+ data files
+  Test: Run script, verify 5 random files have correct fields
+  Expected: All experiment data files have subject and gradeLevel
 
-### 集成联调（7天）
+- [ ] T12: Update registry.ts with filter functions
+  Files: `src/shared/lib/experiments/registry.ts`
+  Test: Import and call getExperimentsBySubject('physics') returns > 0
+  Expected: getExperimentsBySubject(), getExperimentsByGradeLevel() functions added
 
-- [ ] 三模块端到端联调
-- [ ] Free/Pro 权限差异验证
-- [ ] 性能测试 + 部署准备
+- [ ] T13: 301 redirects for /upg/* → /create/*
+  Files: `next.config.mjs`
+  Test: `pnpm build` succeeds, redirect config in output
+  Expected: 8 redirect rules (with/without locale prefix)
 
-## Manus 工作规则
+- [ ] T14: Layout group directories — create (learn), (create), (dashboard)
+  Files: `src/app/[locale]/(learn)/layout.tsx`, `src/app/[locale]/(create)/layout.tsx`, `src/app/[locale]/(dashboard)/layout.tsx` (ALL NEW)
+  Test: `pnpm build` succeeds
+  Expected: Three new layout files, minimal wrappers
 
-1. **Read-Before-Decide** — 每次重大决策前重读本文件
-2. **2-Action Rule** — 每完成 2 个操作更新 STATUS.md
-3. **Never Hide Failures** — 错误立即记录到 errors.md（同类最多重试 2 次）
-4. **Store Don't Stuff** — 大量输出写入文件，对话只保留摘要
+- [ ] T15: Move dashboard/settings from (landing) to (dashboard)
+  Files: Move directories
+  Test: `pnpm build` succeeds, all imports resolve
+  Expected: Dashboard and settings pages under (dashboard) layout group
 
-## 关键参考文件
-
-- 项目基线: `CLAUDE.md`
-- 架构约束: `.claude/rules/architecture.md`
-- 编码规范: `.claude/rules/coding-standards.md`
-- 安全红线: `.claude/rules/safety.md`
-- UPG 生成管线: `src/shared/lib/upg/generate-core.ts`
-- Anthropic 客户端: `src/shared/lib/upg/anthropic-client.ts`
-- DB Schema: `src/config/db/schema.ts`
-- 实验注册表: `src/shared/lib/experiments/registry.ts`
-
-## 完成信号
-
-将 STATUS.md 状态更新为 `COMPLETED`，输出 `<promise>COMPLETE</promise>`。
+- [ ] T16: Final verification — build + test + grep audit
+  Files: None
+  Test: `pnpm build && pnpm test`
+  Expected: Zero errors, zero warnings related to edu-/np- migration

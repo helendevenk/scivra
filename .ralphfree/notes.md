@@ -1,22 +1,10 @@
-# 任务研究笔记
+# Sprint 0 Notes
 
-> 存储研究发现，避免填塞上下文
+## 2026-03-22 — Initialization
 
----
-
-## 技术调研
-
-（执行过程中记录）
-
----
-
-## 代码发现
-
-（执行过程中记录）
-
----
-
-## 决策记录
-
-| 时间 | 决策 | 理由 |
-|------|------|------|
+- Design docs finalized: `docs/plans/2026-03-22-frontend-design-final.md`
+- Dev plan finalized: `docs/plans/2026-03-22-frontend-dev-plan-final.md`
+- CTO review with founder decisions: `docs/plans/2026-03-22-frontend-redesign-cto-review.md`
+- Quality mode: strict (TDD enforced)
+- Subject colors finalized by CTO: Physics=250, Chemistry=145, Biology=80, Earth=25, Math=310
+- Free tier: 3 experiments lifetime per account, Pro $4.99/mo, Max $9.99/mo

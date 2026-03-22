@@ -297,23 +297,31 @@ const redirects = [
 ];
 ```
 
-## Part 6: Decisions Requiring Founder Input
+## Part 6: Founder Decisions (2026-03-22 CONFIRMED)
 
-1. **Route name: `/experiments` vs `/explore`?** CTO recommends `/experiments`. Override if you have a branding reason.
+1. **Route name** → ✅ `/experiments` (CTO recommendation accepted)
+2. **Gallery rename** → ✅ Keep `/gallery` (CTO recommendation accepted)
+3. **Font** → ✅ Keep Merriweather + Noto Sans for MVP (CTO recommendation accepted)
+4. **Dark mode** → ✅ Toggle option, light default (CTO recommendation accepted)
+5. **AP question sourcing** → ✅ AI-assisted + teacher review (CTO recommendation accepted)
+6. **Free tier** → ⚠️ OVERRIDE: **3 experiments TOTAL per account (lifetime)**. Any interaction = consumed. Not daily, not time-limited. Pro $4.99/mo = unlimited experiments. Max $9.99/mo = unlimited + advanced features (UPG, AI Notebook, Quest full access).
+7. **Launch scope** → ⚠️ OVERRIDE: **P0+P1 ship together** (13 weeks, not phased)
+8. **Math as subject** → ⚠️ OVERRIDE: **Include Math now** as 5th subject. Math=violet(310).
 
-2. **Gallery rename: keep `/gallery` or rename to `/community`?** CTO recommends keeping `/gallery`. Override if community-building is the top priority for that section.
+### Impact of Decision #6 (Lifetime 3-Experiment Limit)
 
-3. **Font: keep Merriweather or switch to Inter now?** CTO recommends keeping Merriweather for MVP, A/B testing Inter post-launch. Override if the "textbook" association is actively hurting the brand in user testing.
+This fundamentally changes the conversion funnel:
+- Previous model: generous daily quota → gradual paywall → conversion
+- New model: hard paywall after 3 experiments → conversion or leave
+- Requires: `experiment_access` table, paywall gate component, pricing page redesign
+- Risk: high bounce rate if first 3 experiments aren't compelling
+- Mitigation: curate the "first 3" experience carefully — default free experiments must be the best ones
 
-4. **Dark mode: toggle option or default?** CTO recommends toggle with light default. Override if user research shows strong dark mode preference in target demographic.
+### Final Documents
 
-5. **AP question sourcing: AI-generated with human review, or manually written?** This determines content timeline and cost. CTO recommends AI-assisted generation with a physics teacher reviewing 20% of questions. Budget: 1 teacher-reviewer, 2-3 weeks part-time.
-
-6. **Free tier: 4 experiments/day with 5-min limit, or 4 experiments/day with no time limit on revisits?** CTO recommends no time limit on revisits (simpler, more generous, reduces frustration).
-
-7. **Launch scope: all P0+P1 features, or P0 only for faster launch?** P0 alone (Nav + Landing + Explorer + Viewer + Pricing) can ship in 5 weeks. P0+P1 adds AP Prep and takes 13 weeks. CTO recommends P0 launch at Week 5, then P1 features incrementally.
-
-8. **Math as a subject: include in subject color system now or defer?** CTO recommends defer. Physics/Chemistry/Biology/Earth Science cover K12 science. Math experiments are a different category and adding them now expands scope.
+All decisions incorporated into:
+- `2026-03-22-frontend-design-final.md` — Authoritative design document
+- `2026-03-22-frontend-dev-plan-final.md` — Sprint-by-sprint implementation plan
 
 ## Appendix: Canonical Subject Color Definitions
 

@@ -9,6 +9,12 @@ export type PhysicsCategory =
   | "chemistry"
   | "earth"; // NEW: earth & space science
 
+/** Subject (cross-discipline) */
+export type Subject = "physics" | "chemistry" | "biology" | "earth-science" | "math";
+
+/** Grade level */
+export type GradeLevel = "K-2" | "3-5" | "6-8" | "9-12" | "AP";
+
 /** Subscription tier */
 export type Tier = "free" | "pro" | "max";
 
@@ -64,6 +70,8 @@ export interface Experiment {
   // Classification
   standards: Standards;
   category: PhysicsCategory;
+  subject: Subject;
+  gradeLevel: GradeLevel;
   tags: string[];
   difficulty: Difficulty;
 
