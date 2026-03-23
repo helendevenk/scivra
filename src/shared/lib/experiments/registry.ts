@@ -1,6 +1,8 @@
 import type {
   Experiment,
+  GradeLevel,
   PhysicsCategory,
+  Subject,
   Tier,
   Wave,
 } from "@/shared/types/experiment";
@@ -175,4 +177,14 @@ export function getExperimentsByTier(tier: Tier): Experiment[] {
 
 export function getExperimentsByWave(wave: Wave): Experiment[] {
   return experiments.filter((e) => e.wave === wave);
+}
+
+export function getExperimentsBySubject(subject: Subject): Experiment[] {
+  return experiments.filter((e) => e.subject === subject);
+}
+
+export function getExperimentsByGradeLevel(
+  gradeLevel: GradeLevel
+): Experiment[] {
+  return experiments.filter((e) => e.gradeLevel === gradeLevel);
 }

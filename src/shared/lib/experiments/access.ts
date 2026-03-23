@@ -1,4 +1,5 @@
-import type { Tier } from "@/shared/types/experiment";
+import type { Experiment, GradeLevel, Subject, Tier } from "@/shared/types/experiment";
+import { getAllExperiments } from "./registry";
 
 const TIER_LEVELS: Record<Tier, number> = {
   free: 0,
@@ -32,4 +33,22 @@ export function subscriptionToTier(planName: string | null): Tier {
   if (lower.includes("max") || lower.includes("enterprise")) return "max";
   if (lower.includes("pro") || lower.includes("premium")) return "pro";
   return "free";
+}
+
+interface AccessFilters {
+  subject?: Subject;
+  gradeLevel?: GradeLevel;
+}
+
+export function getAccessibleExperiments(
+  userTier: Tier,
+  filters?: AccessFilters
+): Experiment[] {
+  return getAllExperiments().filter((exp) => {
+    if (!canAccessExperiment(exp.id, userTier)) return false;
+    if (filters?.subject && exp.subject !== filters.subject) return false;
+    if (filters?.gradeLevel && exp.gradeLevel !== filters.gradeLevel)
+      return false;
+    return true;
+  });
 }

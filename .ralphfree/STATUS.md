@@ -9,8 +9,8 @@
 | 任务 | Q2 2026 统一工作计划 |
 | 开始时间 | 2026-03-22T10:46:54Z |
 | 当前状态 | IN_PROGRESS |
-| 当前阶段 | Phase F1/F2/F3 ✅ 全部完成，准备集成联调 |
-| 最后更新 | 2026-03-22T23:35:00Z |
+| 当前阶段 | 集成联调：experiment access TDD 完成 |
+| 最后更新 | 2026-03-23T09:02:00Z |
 
 ## 阶段进度
 
@@ -39,10 +39,12 @@
 | 29 | 2026-03-22 | ✅ Phase F2: Quest — 5 model + 7 API + 4 页面 + scoring + seed |
 | 30 | 2026-03-22 | ✅ Phase F3: Notebook — 3 model + AI engine + 9 API + editor + drawer |
 | 31 | 2026-03-22 | ✅ 三模块集成: build ✅ + 104 tests ✅ + worktree 合并清理 |
+| 32 | 2026-03-23 | ✅ experiment access TDD: 37 tests (RED→GREEN), 64 files subject/gradeLevel |
+| 33 | 2026-03-23 | ✅ 权限矩阵验证: 34 tests + Progress API access check + subscription 解析 |
 
 ## 剩余工作
 
 ### 集成联调（Week 18）
 - [x] 三模块 build 通过
-- [ ] Free/Pro 权限矩阵验证
+- [x] Free/Pro 权限矩阵验证
 - [ ] 性能测试 + 部署准备

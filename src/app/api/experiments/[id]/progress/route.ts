@@ -7,7 +7,12 @@ import {
   updateProgress,
 } from '@/shared/lib/usage/progress-service';
 import { getExperimentBySlug } from '@/shared/lib/experiments/registry';
+import {
+  canAccessExperiment,
+  subscriptionToTier,
+} from '@/shared/lib/experiments/access';
 import { getSignUser } from '@/shared/models/user';
+import { getCurrentSubscription } from '@/shared/models/subscription';
 import { respData, respErr } from '@/shared/lib/resp';
 import { captureServerError } from '@/extensions/monitoring/sentry';
 
@@ -34,10 +39,21 @@ export async function GET(
     const keyType = user ? 'user' : 'session';
     const keyValue = user ? user.id : getSessionId(request);
 
+    let planName: string | null = null;
+    if (user?.id) {
+      const sub = await getCurrentSubscription(user.id);
+      planName = sub?.planName ?? null;
+    }
+
+    const userTier = subscriptionToTier(planName);
+    if (!canAccessExperiment(experiment.id, userTier)) {
+      return respErr('experiment_locked');
+    }
+
     const quota = await getQuota({
       keyType,
       keyValue,
-      planName: null, // TODO: resolve from subscription
+      planName,
     });
 
     const progress = user ? await getProgress(user.id, slug) : null;
@@ -67,6 +83,17 @@ export async function POST(
     const keyType = user ? 'user' : 'session';
     const keyValue = user ? user.id : getSessionId(request);
 
+    let planName: string | null = null;
+    if (user?.id) {
+      const sub = await getCurrentSubscription(user.id);
+      planName = sub?.planName ?? null;
+    }
+
+    const userTier = subscriptionToTier(planName);
+    if (!canAccessExperiment(experiment.id, userTier)) {
+      return respErr('experiment_locked');
+    }
+
     // action: 'track_time' | 'complete_challenge' | 'save_parameters'
     switch (action) {
       case 'track_time': {
@@ -80,7 +107,7 @@ export async function POST(
           keyValue,
           experimentId: slug,
           seconds,
-          planName: null,
+          planName,
         });
 
         const progress = user ? await getProgress(user.id, slug) : null;
