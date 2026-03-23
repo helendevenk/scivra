@@ -62,20 +62,12 @@ test.describe('Experiments — Listing Page', () => {
     // Newton's Laws is tier: "free"
     await page.goto('/en/experiments/newtons-laws-of-motion');
 
-    // The playback controls should be visible (play/pause/reset)
-    // Free experiments render the 3D scene + playback controls without paywall
-    const sceneArea = page.locator('.aspect-video').first();
-    await expect(sceneArea).toBeVisible();
+    // Play/Reset buttons should be visible
+    await expect(page.getByRole('button', { name: 'Play simulation' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reset simulation' })).toBeVisible();
 
-    // There should be no "Upgrade to" text for free-tier parameters
-    // Check that the first parameter slider is not disabled
-    // Free experiment free-tier parameters should NOT show upgrade prompt
-    const upgradePrompts = page.locator('text=Upgrade to pro to unlock');
-    // Newton's Laws has 2 free params and 1 pro param, so at most 1 upgrade prompt
-    // but free params should definitely be interactive
-    const freeParamSliders = page
-      .locator('[role="slider"]')
-      .first();
+    // Free-tier parameter sliders should be interactive (not disabled)
+    const freeParamSliders = page.getByRole('slider').first();
     await expect(freeParamSliders).toBeVisible();
   });
 
