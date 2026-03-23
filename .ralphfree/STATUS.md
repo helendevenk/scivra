@@ -9,8 +9,8 @@
 | 任务 | Q2 2026 统一工作计划 |
 | 开始时间 | 2026-03-22T10:46:54Z |
 | 当前状态 | IN_PROGRESS |
-| 当前阶段 | 集成联调：experiment access TDD 完成 |
-| 最后更新 | 2026-03-23T09:02:00Z |
+| 当前阶段 | 测试 6 Phase 全完成，579 tests，CI 就绪 |
+| 最后更新 | 2026-03-23T13:20:00Z |
 
 ## 阶段进度
 
@@ -22,7 +22,10 @@
 | Phase F1: AP Prep | ✅ 完成 | 5 | 5 |
 | Phase F2: Quest | ✅ 完成 | 5 | 5 |
 | Phase F3: Notebook | ✅ 完成 | 5 | 5 |
-| 集成联调 | 🔄 进行中 | 3 | 1 |
+| 集成联调 | ✅ 完成 | 3 | 3 |
+| 测试覆盖 T1-T6 | ✅ 完成 | 6 | 6 |
+| CI Pipeline | ✅ 完成 | 1 | 1 |
+| 性能优化 | ✅ 完成 | 5 | 5 |
 
 ## 迭代记录
 
@@ -41,10 +44,20 @@
 | 31 | 2026-03-22 | ✅ 三模块集成: build ✅ + 104 tests ✅ + worktree 合并清理 |
 | 32 | 2026-03-23 | ✅ experiment access TDD: 37 tests (RED→GREEN), 64 files subject/gradeLevel |
 | 33 | 2026-03-23 | ✅ 权限矩阵验证: 34 tests + Progress API access check + subscription 解析 |
+| 34 | 2026-03-23 | ✅ 性能审计 + 66 张实验缩略图 Gemini 生成 + config 优化 |
+| 35 | 2026-03-23 | ✅ payment.ts 重构: 消除 80% 重复 + string→Date bug 修复 |
+| 36 | 2026-03-23 | ✅ T1 纯函数测试: 192 tests (20 files) |
+| 37 | 2026-03-23 | ✅ T2 Model 测试: 77 tests (6 files, mock DB) |
+| 38 | 2026-03-23 | ✅ T3 Service 测试: 71 tests (4 files) + GitHub Actions CI |
+| 39 | 2026-03-23 | ✅ T4 API Route 测试: 57 tests (6 files) |
+| 40 | 2026-03-23 | ✅ T5 Integration 测试: 45 tests (5 files) |
+| 41 | 2026-03-23 | ✅ T6 E2E Playwright: 25 tests (4 files) |
 
 ## 剩余工作
 
-### 集成联调（Week 18）
-- [x] 三模块 build 通过
-- [x] Free/Pro 权限矩阵验证
-- [ ] 性能测试 + 部署准备
+### 下一步（Week 19-20）
+- [ ] UPG 端到端联调（generate → view → my 主链路）
+- [ ] 付费系统对接（Stripe webhook 生产测试）
+- [ ] SEO 增强（sitemap + 博客内容）
+- [ ] Vercel 部署 + Cron 配置
+- [ ] v2.0 Beta 发布

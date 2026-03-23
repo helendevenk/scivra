@@ -86,7 +86,7 @@ export function createMockDb(): MockChain {
     'update', 'set', 'delete', 'onConflictDoUpdate', 'onConflictDoNothing',
   ];
   for (const method of queryMethods) {
-    (chain as Record<string, ReturnType<typeof vi.fn>>)[method].mockReturnValue(chain);
+    (chain as unknown as Record<string, ReturnType<typeof vi.fn>>)[method].mockReturnValue(chain);
   }
 
   // Terminal methods resolve with data

@@ -20,7 +20,7 @@
 
 - Tailwind CSS v4 + shadcn/ui (new-york variant)
 - 主题变量在 `src/config/style/theme-education.css`，不要硬编码颜色值
-- CSS 类名前缀 `.edu-*`（教育学术风主题）
+- CSS 类名前缀 `.np-*`（教育学术风主题，从 `.edu-*` 迁移，旧前缀有 deprecated 别名）
 - 响应式：mobile-first（`sm:` → `md:` → `lg:`）
 
 ## 数据库 (Drizzle ORM)

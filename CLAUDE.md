@@ -34,7 +34,7 @@
 | 存储 | Cloudflare R2 |
 | 邮件 | Resend |
 | 文档 | Fumadocs (MDX) |
-| 测试 | Vitest (unit, 64 tests) + Playwright (e2e) |
+| 测试 | Vitest (unit+integration, 579 tests) + Playwright (e2e, 37 tests) |
 | 部署 | Vercel (主) / Cloudflare Workers (备) |
 | 包管理 | pnpm |
 
@@ -168,7 +168,7 @@ src/
 
 | 维度 | 值 |
 |------|---|
-| CSS 前缀 | `.edu-*` |
+| CSS 前缀 | `.np-*`（从 `.edu-*` 迁移，旧前缀有 deprecated 别名） |
 | 主色调 | 学术蓝 oklch(0.50 0.20 250) |
 | 点缀色 | 学术金 oklch(0.75 0.15 75) |
 | 标题字体 | Merriweather (serif) |
@@ -202,7 +202,7 @@ src/
 - `upgDailyQuota` — 每日生成配额
 - `upgLike` — 点赞（多对多）
 
-## 当前状态（2026-03-16）
+## 当前状态（2026-03-23）
 
 ### 已完成 ✅
 - 工作区治理：代码库收敛为唯一 `neonphysics-v2`，冗余副本已删除
@@ -213,25 +213,35 @@ src/
 - 学习路径：Admin CRUD + 前端 UI + 进度追踪
 - 画廊 + 社交：like/fork/publish/search/tags
 - 致命 bug 修复：内存限流→Redis、XSS 加固、连接池扩容、积分退款机制
+- **Phase F1/F2/F3**：AP Prep + Physics Quest + Lab Notebook（14 新表 + 27 API + 14 页面）
+- **学科解耦**：5 学科 Subject/GradeLevel 类型 + 64 实验数据填充
+- **权限矩阵**：access control TDD（canAccessExperiment + getAccessibleExperiments + Progress API hardening）
+- **实验缩略图**：66 张 Gemini API 生成，统一学术蓝风格
+- **payment.ts 重构**：消除 handleCheckoutSuccess/handlePaymentSuccess 80% 重复 + 修复 string→Date bug
+- **测试体系**：175 → 579 tests（+231%），6 Phase 完成（T1 纯函数 → T6 E2E）
+- **CI Pipeline**：GitHub Actions（lint + unit-tests + coverage ratchet + build）
+- **实验 HTML 修复**：19 个实验 OrbitControls CDN + CapsuleGeometry + 语法修复
+- **性能优化**：next.config AVIF/WebP formats + poweredByHeader + shiki + 死资源清理
 
 ### 进行中 🟡
 - UPG 端到端联调（generate → view → my 主链路未完整跑通）
 - OrbitControls 不稳定（方案已设计：预编译到 `public/lib/`，未落地）
+- single-slit-diffraction.html 渲染 bug
 
 ### 未开始 ⬜
 - Phase 4：监控增强（Sentry 集成、Analytics Bridge）
 - Phase 5：SEO 增强（sitemap 优化、博客内容迁移）
-- Phase 6：E2E 测试补全
 - Phase 7：Vercel Cron 配置
 - 付费系统对接（Stripe webhook 生产测试）
 - 社交功能完善（评论、收藏）
 - 移动端优化
+- ISR 静态化（landing/pricing/listing 页面）
 
 ### 下一步优先级（推荐）
-1. 修复 OrbitControls → UPG 生成质量稳定
-2. UPG 端到端联调 → generate/view/my 链路跑通
-3. 接入 subscription 查询 → 配额系统识别 Pro/Max 用户
-4. Phase 4-7 逐步推进
+1. UPG 端到端联调 → generate/view/my 链路跑通
+2. 付费系统对接 → Stripe webhook 生产测试
+3. SEO + sitemap + 博客内容
+4. Vercel 部署 + Cron → v2.0 Beta 发布
 
 ## 常用命令
 
@@ -311,7 +321,12 @@ pnpm rbac:init          # 初始化 RBAC 角色/权限
 - `2026-03-17-frontend-optimization-plan.md` — 前端优化规划
 - `2026-03-17-frontend-product-analysis.md` — 前端产品分析
 
+**测试 & 质量**
+- `test-coverage-100-plan.md` — **100% 覆盖率测试计划**（1684 行，6 Phase 详细规格）
+- `test-coverage-100-cto-review.md` — CTO 评审（8 决策：mock 策略/CI/覆盖率目标）
+
 ### 完成报告（docs/reports/）
+- `2026-03-23-sprint-retrospective.md` — **Sprint 复盘（03-22~23，175→579 tests）**
 - `2026-03-10-final-summary.md` — **最终总结（Phase 1+2 汇总）**
 - `2026-03-09-phase-0-complete-retrospective.md` — Phase 0 完整复盘
 - `2026-03-10-phase1-completion.md` — Phase 1 完成报告
@@ -365,6 +380,9 @@ pnpm rbac:init          # 初始化 RBAC 角色/权限
 | CDN 版本策略 | UPG 用稳定版（r134）/ npm 用最新版 | UPG HTML 需独立运行，稳定性优先 | Phase 0.2 |
 | UI 方向 | edu-academic（np-one） | 契合教育定位，专业可读 | 2026-03-08 确认 |
 | 限流方案 | Redis 替代内存 Map | serverless 实例隔离，内存限流无效 | Phase 1 修复 |
+| DB Mock 策略 | vi.mock T2-T4，真实 Postgres T5 | 单一 typed mock factory，避免 mock 漂移 | CTO Review 2026-03-23 |
+| 覆盖率目标 | 90% shared / 80% api（ratchet） | 只升不降，CI 自动门控 | CTO Review 2026-03-23 |
+| payment.ts | 提取 4 个共享函数消除重复 | 避免维护两套相同逻辑的测试 | CTO Review 2026-03-23 |
 
 ## 竞品定位与护城河（2026-03-22 Novelty Check）
 
