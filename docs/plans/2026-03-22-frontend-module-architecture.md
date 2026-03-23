@@ -715,7 +715,7 @@ Existing design doc (2026-02-24). Needs expansion for new modules (AP progress, 
 
 ### Positioning
 
-The 8-second pitch. A first-time visitor (likely a student searching "AP Physics practice" or "interactive physics simulation") must understand: what this is, why it's better than PhET/Khan, and how to start -- in under 8 seconds. The pivot changes the hero from "AI generates anything" to "80+ curated experiments + AI-powered study tools."
+The 8-second pitch. A first-time visitor (likely a student searching "AP Physics practice" or "interactive physics simulation") must understand: what this is, why it's better than PhET/Khan, and how to start -- in under 8 seconds. The pivot changes the hero from "AI generates anything" to "110+ curated experiments across 5 subjects + AI-powered study tools."
 
 ### Priority: P0
 
@@ -741,7 +741,7 @@ First thing visitors see. Must reflect the new product positioning.
 ```
 1. Hero
    Headline: "See Physics Come Alive"
-   Subhead: "80+ interactive 3D experiments aligned to AP curriculum"
+   Subhead: "110+ interactive 3D experiments across Physics, Chemistry, Biology, Earth Science & Math"
    CTA: [Explore Experiments] [Try AP Prep Free]
    Visual: Rotating showcase of 3 experiment thumbnails
 

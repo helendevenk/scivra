@@ -26,7 +26,7 @@ updated: 2026-03-23T02:30:00Z
 | 阶段 | 内容 | 产出 |
 |------|------|------|
 | Phase 0.5 | 学科解耦 | 5 学科 Subject 类型 + GradeLevel + 104 tests |
-| Phase BG | 批量生成 | 73 个 AP Physics HTML + PhET 66 对标 100% |
+| Phase BG | 批量生成 | 111 个实验 HTML（73 AP Physics + 10 Bio + 7 Chem + 11 K5 + 9 MS），PhET 66 对标 100% |
 | Phase 3.5 | 验证修正 | 验证框架 5 条物理规则 + DB 6 字段 + UI Verified |
 | Phase F1 | AP Prep | 5 model + 11 API + 5 页面 + seed 30 题 |
 | Phase F2 | Quest | 5 model + 7 API + 4 页面 + scoring + seed |
@@ -40,7 +40,7 @@ updated: 2026-03-23T02:30:00Z
 | Access Control | TDD subject/gradeLevel | 37 tests RED→GREEN + 64 文件 |
 | 权限矩阵 | Free/Pro 验证 | 34 tests + Progress API hardening |
 | 性能审计 | DevOps 工程师分析 | next.config 优化 + AVIF/WebP |
-| 图片生成 | 66 张缩略图 | Gemini API 统一学术蓝风格 |
+| 图片生成 | 66 张缩略图（111 个实验中的前 66 张） | Gemini API 统一学术蓝风格 |
 | 死资源清理 | jimeng/zimg | -15MB |
 | payment 重构 | 消除 80% 重复 | 559→501 行 + 修复 string→Date bug |
 | T1 纯函数测试 | 9 个测试文件 | resp, moderator, quality, validators, physics, quest, hash, time, perf |

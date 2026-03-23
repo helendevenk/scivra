@@ -33,7 +33,7 @@
 |------|------|----------|
 | 0 | 2026-03-22 | RalphFree 初始化 |
 | 1-5 | 2026-03-22 | ✅ Phase 0.5: A0-A10 学科解耦，104 tests |
-| 6-19 | 2026-03-22 | ✅ Phase BG: 73 个 AP Physics HTML，PhET 66 对标 100% |
+| 6-19 | 2026-03-22 | ✅ Phase BG: 111 个实验 HTML（73 AP Physics + 10 Bio + 7 Chem + 11 K5 + 9 MS），PhET 66 对标 100% |
 | 20 | 2026-03-22 | ✅ B1a-B1c: 验证框架 + 5条物理规则 + DB 6字段 |
 | 21-22 | 2026-03-22 | ✅ B1d: UI Verified 标签（Gallery 卡片/详情页/筛选） |
 | 23-26 | 2026-03-22 | ✅ B3a-B3d: refine-core + API + 版本历史 UI |
@@ -44,7 +44,7 @@
 | 31 | 2026-03-22 | ✅ 三模块集成: build ✅ + 104 tests ✅ + worktree 合并清理 |
 | 32 | 2026-03-23 | ✅ experiment access TDD: 37 tests (RED→GREEN), 64 files subject/gradeLevel |
 | 33 | 2026-03-23 | ✅ 权限矩阵验证: 34 tests + Progress API access check + subscription 解析 |
-| 34 | 2026-03-23 | ✅ 性能审计 + 66 张实验缩略图 Gemini 生成 + config 优化 |
+| 34 | 2026-03-23 | ✅ 性能审计 + 66 张实验缩略图 Gemini 生成（111 个实验中的 66 张，待补齐）+ config 优化 |
 | 35 | 2026-03-23 | ✅ payment.ts 重构: 消除 80% 重复 + string→Date bug 修复 |
 | 36 | 2026-03-23 | ✅ T1 纯函数测试: 192 tests (20 files) |
 | 37 | 2026-03-23 | ✅ T2 Model 测试: 77 tests (6 files, mock DB) |

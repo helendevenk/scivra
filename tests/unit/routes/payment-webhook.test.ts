@@ -120,17 +120,20 @@ describe('POST /api/payment/notify/[provider]', () => {
     expect(mockGetProvider).toHaveBeenCalledWith('paypal');
   });
 
-  it('should return 500 for unknown provider', async () => {
+  // Webhook errors return 200 to prevent payment providers from retrying endlessly.
+  // Errors are logged and monitored via Sentry instead.
+  it('should return 200 with error message for unknown provider', async () => {
     mockGetProvider.mockReturnValue(null);
 
     const res = await POST(makeRequest(), makeParams('unknown'));
     const json = await res.json();
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    expect(json.code).toBe(-1);
     expect(json.message).toContain('payment provider not found');
   });
 
-  it('should return 500 when getPaymentEvent returns null (invalid signature)', async () => {
+  it('should return 200 with error when getPaymentEvent returns null (invalid signature)', async () => {
     const provider = {
       getPaymentEvent: vi.fn().mockResolvedValue(null),
     };
@@ -139,11 +142,12 @@ describe('POST /api/payment/notify/[provider]', () => {
     const res = await POST(makeRequest(), makeParams('stripe'));
     const json = await res.json();
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    expect(json.code).toBe(-1);
     expect(json.message).toContain('payment event not found');
   });
 
-  it('should return 500 when order not found for checkout event', async () => {
+  it('should return 200 with error when order not found for checkout event', async () => {
     const session = makePaymentSession();
     const provider = makeProviderMock(
       PaymentEventType.CHECKOUT_SUCCESS,
@@ -155,7 +159,8 @@ describe('POST /api/payment/notify/[provider]', () => {
     const res = await POST(makeRequest(), makeParams('stripe'));
     const json = await res.json();
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    expect(json.code).toBe(-1);
     expect(json.message).toContain('order not found');
   });
 
@@ -254,7 +259,8 @@ describe('POST /api/payment/notify/[provider]', () => {
     const res = await POST(makeRequest(), makeParams('stripe'));
     const json = await res.json();
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    expect(json.code).toBe(-1);
     expect(json.message).toContain('DB connection failed');
   });
 

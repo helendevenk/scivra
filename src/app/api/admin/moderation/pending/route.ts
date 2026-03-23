@@ -15,18 +15,12 @@ export async function GET(request: Request) {
     // 1. 认证和权限检查
     const user = await getUserInfo();
     if (!user) {
-      return new Response(JSON.stringify({ code: -1, message: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return respErr('Unauthorized');
     }
 
     const hasPermissionResult = await hasPermission(user.id, 'admin.moderation.read');
     if (!hasPermissionResult) {
-      return new Response(JSON.stringify({ code: -1, message: 'Forbidden: Admin permission required' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return respErr('Forbidden: Admin permission required');
     }
 
     // 2. 解析查询参数

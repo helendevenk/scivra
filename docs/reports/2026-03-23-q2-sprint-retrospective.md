@@ -14,7 +14,7 @@ updated: 2026-03-23T02:27:07Z
 | 时间 | 阶段 | 产出 |
 |------|------|------|
 | 03-22 10:46 | Phase 0.5 学科解耦 | A0-A10，disciplines/ 目录，104 tests |
-| 03-22 14:00 | Phase BG 内容生产 | 73 个 AP Physics HTML，PhET 66 对标 100% |
+| 03-22 14:00 | Phase BG 内容生产 | 111 个实验 HTML（73 AP Physics + 38 其他学科），PhET 66 物理对标 100% |
 | 03-22 20:00 | Phase 3.5 验证+修正 | 验证框架 + refine 管线 + UI Verified 标签 |
 | 03-22 22:00 | Schema 迁移 | 14 张新表 + learningStats 2 字段 |
 | 03-22 22:30 | Phase F1/F2/F3 并行 | 3 个 worktree agent 同时启动 |
@@ -113,7 +113,7 @@ updated: 2026-03-23T02:27:07Z
 | 物理正确性 | 高 | 截图只验证了视觉渲染，**公式计算是否准确未验证** |
 | F1/F2/F3 端到端 | 中 | 代码编译通过但未在真实数据库上跑过，需要 `db:push` + seed |
 | AP 题目版权 | 低 | 30 道题为原创，但风格模仿 AP 需要声明 "inspired by" |
-| 实验注册 | 高 | 73 个新实验 HTML 文件存在但**未注册到 registry.ts**，网站导航看不到 |
+| 实验注册 | 高 | 111 个实验 HTML 文件中大部分**未注册到 registry.ts**，网站导航看不到 |
 
 ## 五、下一步
 
@@ -121,7 +121,7 @@ updated: 2026-03-23T02:27:07Z
 
 1. **DB 推库** — `pnpm db:generate && pnpm db:push`（14 张新表）
 2. **跑 Seed** — `npx tsx scripts/seed-ap-prep.ts` + `scripts/seed-quests.ts`
-3. **实验注册** — 73 个新实验加入 `registry.ts` + `html-map.ts`
+3. **实验注册** — 111 个实验全部注册到 `registry.ts` + `html-map.ts`（目前仅部分注册）
 4. **端到端测试** — 本地 `pnpm dev` 走通 AP Prep/Quest/Notebook 全链路
 5. **物理正确性抽检** — 至少验证 10 个核心实验的参数响应是否符合物理定律
 

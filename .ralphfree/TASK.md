@@ -13,7 +13,7 @@ Execute Sprint 0 of the NeonPhysics v2 frontend redesign. This sprint lays the f
 
 - All `.edu-*` CSS classes renamed to `.np-*` with backward-compatible aliases
 - `data-subject` CSS system renders correct colors for 5 subjects (Physics/Chemistry/Biology/Earth/Math)
-- All 80+ experiment data files have `subject` and `gradeLevel` fields
+- All 111 experiment HTML files verified (QA 2026-03-23), 64 data files have `subject` and `gradeLevel` fields
 - `experimentAccess` table exists in schema with model + tests
 - `canAccessExperiment()` uses new 3-experiment lifetime limit logic
 - 301 redirects configured for `/upg/*` → `/create/*`

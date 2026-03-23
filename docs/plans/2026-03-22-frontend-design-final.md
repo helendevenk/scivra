@@ -40,7 +40,7 @@ NeonPhysics v2 is an **experiment-centric educational SaaS** for North American 
 
 | Dimension | PhET | NeonPhysics |
 |-----------|------|-------------|
-| Content model | 66 physics simulations, static library | 64+ experiments + AI-generated unlimited (UPG) |
+| Content model | 66 physics simulations, static library | 111 experiments (5 subjects) + AI-generated unlimited (UPG) |
 | AP alignment | None | Every experiment tagged to AP exam units with weight |
 | Progress tracking | No user accounts | Full progress tracking, streak, per-experiment completion |
 | Visual quality | 2010s flat UI, Java->HTML5 migration debt | Modern edu-academic design, 3D via R3F + HTML5 |
@@ -1568,7 +1568,7 @@ interface PageSEO {
 const SEO_TEMPLATES: Record<string, (params: unknown) => PageSEO> = {
   landing: () => ({
     title: 'NeonPhysics — Interactive Science Experiments for High School',
-    description: 'Explore 80+ interactive experiments in Physics, Chemistry, Biology, Earth Science, and Math. AP-aligned, 3D simulations, no installation required.',
+    description: 'Explore 110+ interactive experiments in Physics, Chemistry, Biology, Earth Science, and Math. AP-aligned, 3D simulations, no installation required.',
     canonical: 'https://neonphysics.com',
     ogType: 'website',
   }),
