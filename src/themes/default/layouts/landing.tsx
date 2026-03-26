@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 
+import { FaceProvider } from '@/shared/blocks/common/face-provider';
 import {
   Footer as FooterType,
   Header as HeaderType,
@@ -16,10 +17,12 @@ export default async function LandingLayout({
   footer: FooterType;
 }) {
   return (
-    <div className="min-h-screen w-full">
-      <Header header={header} />
-      {children}
-      <Footer footer={footer} />
-    </div>
+    <FaceProvider>
+      <div className="min-h-screen w-full">
+        <Header header={header} />
+        {children}
+        <Footer footer={footer} />
+      </div>
+    </FaceProvider>
   );
 }

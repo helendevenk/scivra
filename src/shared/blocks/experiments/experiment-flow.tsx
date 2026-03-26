@@ -78,7 +78,7 @@ export function ExperimentFlow({ experiment, userTier, canAccess, locale }: Expe
   const sim = useSimulation(defaultParams);
 
   const isWave1 = WAVE1_IDS.has(experiment.id);
-  const htmlPath = isWave1 ? null : getExperimentHtmlPath(experiment.id);
+  const htmlPath = isWave1 ? null : getExperimentHtmlPath(experiment.slug);
 
   const { hasInteracted } = useIframeInteraction({
     timeoutMs: 60000,

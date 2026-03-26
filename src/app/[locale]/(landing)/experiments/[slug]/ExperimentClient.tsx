@@ -126,7 +126,7 @@ export function ExperimentClient({ experiment, userTier, canAccess }: Experiment
   const sim = useSimulation(defaultParams);
 
   const isWave1 = WAVE1_IDS.has(experiment.id);
-  const htmlPath = isWave1 ? null : getExperimentHtmlPath(experiment.id);
+  const htmlPath = isWave1 ? null : getExperimentHtmlPath(experiment.slug);
 
   const liveData: SimulationData[] = Object.entries(sim.parameters).map(
     ([key, value]) => {
