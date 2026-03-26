@@ -14,6 +14,7 @@ export const photosynthesis: Experiment = {
     gcse: ["B2.3", "B2.4"],
     ap: ["2.A.2", "2.A.3"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

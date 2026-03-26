@@ -14,6 +14,7 @@ export const workEnergyTheorem: Experiment = {
     gcse: ["P4.2", "P4.3"],
     ap: ["INT-3.A", "INT-3.B", "INT-3.C", "INT-3.D"],
   },
+  primaryStandard: "ap-physics-1",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "AP",
@@ -88,23 +89,90 @@ export const workEnergyTheorem: Experiment = {
   instructions:
     "Set the block mass and incline angle. Press Play to release the block and observe its acceleration down the slope. Watch the energy bar chart showing KE, gravitational PE, and thermal energy. Enable friction via the μ slider (Pro) to see energy dissipation. Add an applied force pushing the block up the slope. The work readout shows W_gravity, W_friction, W_applied, and W_net — verify that W_net = ΔKE at every snapshot.",
 
+  hook: {
+    question: "If you push a box twice as far, do you do twice the work?",
+    context: "Only if the force stays constant — in the real world, friction, angles, and changing forces make the answer surprisingly nuanced.",
+    actionPrompt: "Apply a force on the incline and watch the work accumulate in real-time",
+  },
+
+  learningCards: [
+    {
+      id: "wet-lc1",
+      title: "What Is Work?",
+      content: "Work is energy transferred by a force acting over a displacement. Only the component of force parallel to the displacement does work. A force perpendicular to motion (like the normal force on a flat surface) does zero work, no matter how large it is.",
+      formula: { latex: "W = F \\cdot d \\cdot \\cos\\theta", description: "Work done by a constant force" },
+      relatedParameterId: "applied_force",
+    },
+    {
+      id: "wet-lc2",
+      title: "Kinetic Energy",
+      content: "Kinetic energy is the energy of motion: ½mv². It depends on both mass and the square of velocity — so doubling speed quadruples kinetic energy. This is why car crashes at high speed are so much more devastating than at low speed.",
+      formula: { latex: "KE = \\frac{1}{2}mv^2", description: "Kinetic energy" },
+      relatedParameterId: "mass",
+    },
+    {
+      id: "wet-lc3",
+      title: "The Work-Energy Theorem",
+      content: "The net work done on an object equals its change in kinetic energy. This powerful theorem connects force-based analysis (Newton's laws) with energy-based analysis. It works even when multiple forces act simultaneously — just sum all the work contributions.",
+      formula: { latex: "W_{net} = \\Delta KE = \\frac{1}{2}mv_f^2 - \\frac{1}{2}mv_i^2", description: "Net work equals change in kinetic energy" },
+      relatedParameterId: "angle",
+    },
+    {
+      id: "wet-lc4",
+      title: "Conservative vs Non-Conservative Forces",
+      content: "Gravity is conservative — work depends only on height change, not the path taken. Friction is non-conservative — it always removes mechanical energy as heat. On an incline with friction, the block gains less kinetic energy than gravity alone would provide because friction steals some as thermal energy.",
+      formula: { latex: "W_{friction} = -\\mu mg\\cos\\theta \\cdot d", description: "Work done by friction (always negative)" },
+      relatedParameterId: "friction_coeff",
+    },
+  ],
+
+  easterEggs: [
+    {
+      parameterId: "applied_force",
+      condition: "max",
+      effect: "extreme-acceleration-rocket-visual",
+      message: "100 N on that block? It's accelerating faster than a sports car!",
+    },
+    {
+      parameterId: "angle",
+      condition: "max",
+      effect: "nearly-vertical-cliff-visual",
+      message: "75° — that's not an incline, that's practically a cliff!",
+    },
+    {
+      parameterId: "friction_coeff",
+      condition: "max",
+      effect: "sticky-surface-glue-visual",
+      message: "μ = 0.8 — this surface is stickier than rubber on asphalt!",
+    },
+  ],
+
   challenges: [
     {
       id: "wet-c1",
       question: "A 5 kg block slides from rest at h = 2 m on a frictionless incline. What is its speed at the bottom?",
+      options: ["v ≈ 4.43 m/s", "v ≈ 6.26 m/s", "v ≈ 9.90 m/s", "v ≈ 3.13 m/s"],
+      correctAnswer: "v ≈ 6.26 m/s",
       hint: "W_net = W_gravity = mgh. Then ½mv² = mgh → v = √(2gh)",
+      relatedParameterId: "mass",
       tier: "free",
     },
     {
       id: "wet-c2",
       question: "With μ = 0.3 on a 30° incline, length d = 4 m, how much energy is lost to friction?",
+      options: ["W_f ≈ 50.9 J", "W_f ≈ 58.9 J", "W_f ≈ 29.4 J", "W_f ≈ 98.1 J"],
+      correctAnswer: "W_f ≈ 50.9 J",
       hint: "W_friction = μ·mg·cos30°·d. Normal force on incline = mg·cosθ",
+      relatedParameterId: "friction_coeff",
       tier: "free",
     },
     {
       id: "wet-c3",
       question: "A 5 kg block reaches 6 m/s after 10 seconds on the incline. What is the average power delivered by net force?",
+      options: ["P = 9 W", "P = 18 W", "P = 30 W", "P = 90 W"],
+      correctAnswer: "P = 9 W",
       hint: "W_net = ΔKE = ½mv². P_avg = W_net / t",
+      relatedParameterId: "mass",
       tier: "pro",
     },
   ],

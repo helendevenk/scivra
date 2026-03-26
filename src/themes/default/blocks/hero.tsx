@@ -8,6 +8,15 @@ import { Highlighter } from '@/shared/components/ui/highlighter';
 import { cn } from '@/shared/lib/utils';
 import { Section } from '@/shared/types/blocks/landing';
 
+import { HeroBackground } from './hero-background';
+
+interface SubjectButton {
+  title: string;
+  icon: string;
+  count: number;
+  url: string;
+}
+
 import { SocialAvatars } from './social-avatars';
 
 export function Hero({
@@ -27,11 +36,12 @@ export function Hero({
     <section
       id={section.id}
       className={cn(
-        `pt-24 pb-8 md:pt-36 md:pb-8`,
+        `relative overflow-hidden pt-24 pb-8 md:pt-36 md:pb-8`,
         section.className,
         className
       )}
     >
+      <HeroBackground />
       {section.announcement && (
         <Link
           href={section.announcement.url || ''}
@@ -91,6 +101,21 @@ export function Hero({
                   <span>{button.title}</span>
                 </Link>
               </Button>
+            ))}
+          </div>
+        )}
+
+        {section.subjects && (section.subjects as SubjectButton[]).length > 0 && (
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {(section.subjects as SubjectButton[]).map((subject, idx) => (
+              <Link
+                key={idx}
+                href={subject.url}
+                className="border-border hover:border-primary group flex flex-col items-center gap-1 rounded-lg border px-4 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:bg-primary/5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              >
+                <SmartIcon name={subject.icon} size={20} className="text-primary" />
+                <span className="text-foreground text-sm font-medium">{subject.title}</span>
+              </Link>
             ))}
           </div>
         )}

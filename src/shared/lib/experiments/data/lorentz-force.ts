@@ -14,6 +14,7 @@ export const lorentzForce: Experiment = {
     gcse: ["P7.5"],
     ap: ["3.C.3", "2.D.1", "2.D.2"],
   },
+  primaryStandard: "ap-physics-c",
   category: "electricity",
   subject: "physics",
   gradeLevel: "AP",

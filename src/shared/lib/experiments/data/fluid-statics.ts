@@ -14,6 +14,7 @@ export const fluidStatics: Experiment = {
     gcse: ["P5.1"],
     ap: ["3.C.4"],
   },
+  primaryStandard: "ap-physics-2",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "AP",

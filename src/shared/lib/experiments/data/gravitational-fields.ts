@@ -14,6 +14,7 @@ export const gravitationalFields: Experiment = {
     gcse: ["P5.5", "P15"],
     ap: ["3.C.1", "3.C.2", "3.G.1"],
   },
+  primaryStandard: "ap-physics-c",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "AP",

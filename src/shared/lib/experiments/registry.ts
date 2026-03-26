@@ -2,10 +2,62 @@ import type {
   Experiment,
   GradeLevel,
   PhysicsCategory,
+  PrimaryStandard,
   Subject,
   Tier,
   Wave,
 } from "@/shared/types/experiment";
+// Wave 8 — 50 missing AP Physics HTML experiments
+import { acCircuits } from "./data/ac-circuits";
+import { atomicInteractions } from "./data/atomic-interactions";
+import { balancingAct } from "./data/balancing-act";
+import { balloonsStaticElectricity } from "./data/balloons-static-electricity";
+import { bendingLight } from "./data/bending-light";
+import { blackbodySpectrum } from "./data/blackbody-spectrum";
+import { buildANucleus } from "./data/build-a-nucleus";
+import { buoyancy } from "./data/buoyancy";
+import { buoyancyBasics } from "./data/buoyancy-basics";
+import { calculusGrapher } from "./data/calculus-grapher";
+import { circuitAcVirtualLab } from "./data/circuit-ac-virtual-lab";
+import { circuitDcVirtualLab } from "./data/circuit-dc-virtual-lab";
+import { colorVision } from "./data/color-vision";
+import { coulombsLaw } from "./data/coulombs-law";
+import { curveFitting } from "./data/curve-fitting";
+import { densityLab } from "./data/density-lab";
+import { diffusion } from "./data/diffusion";
+import { energySkateParkBasics } from "./data/energy-skate-park-basics";
+import { faradaysElectromagneticLab } from "./data/faradays-electromagnetic-lab";
+import { forcesMotionBasics } from "./data/forces-motion-basics";
+import { fourierMakingWaves } from "./data/fourier-making-waves";
+import { frictionLab } from "./data/friction-lab";
+import { gasesIntro } from "./data/gases-intro";
+import { generator } from "./data/generator";
+import { geometricOpticsBasics } from "./data/geometric-optics-basics";
+import { gravityForceLabBasics } from "./data/gravity-force-lab-basics";
+import { gravityOrbits } from "./data/gravity-orbits";
+import { hookesLaw } from "./data/hookes-law";
+import { johnTravoltage } from "./data/john-travoltage";
+import { keplersLaws } from "./data/keplers-laws";
+import { magnetsAndElectromagnets } from "./data/magnets-and-electromagnets";
+import { massesSprings } from "./data/masses-springs";
+import { massesSpringsBasics } from "./data/masses-springs-basics";
+import { modelsHydrogenAtom } from "./data/models-hydrogen-atom";
+import { moleculesAndLight } from "./data/molecules-and-light";
+import { mySolarSystem } from "./data/my-solar-system";
+import { normalModes } from "./data/normal-modes";
+import { ohmsLaw } from "./data/ohms-law";
+import { pendulumLab } from "./data/pendulum-lab";
+import { plinkoProbability } from "./data/plinko-probability";
+import { pressureLab } from "./data/pressure-lab";
+import { projectileDataLab } from "./data/projectile-data-lab";
+import { quantumCoinToss } from "./data/quantum-coin-toss";
+import { quantumMeasurement } from "./data/quantum-measurement";
+import { resistanceWire } from "./data/resistance-wire";
+import { rutherfordScattering } from "./data/rutherford-scattering";
+import { statesOfMatterBasics } from "./data/states-of-matter-basics";
+import { vectorAddition } from "./data/vector-addition";
+import { waveOnString } from "./data/wave-on-string";
+import { wavesIntro } from "./data/waves-intro";
 import { newtonsLaws } from "./data/newtons-laws";
 import { projectileMotion } from "./data/projectile-motion";
 import { emSpectrum } from "./data/em-spectrum";
@@ -151,6 +203,57 @@ const experiments: Experiment[] = [
   msGenetics,
   msEcosystems,
   msWeatherSystems,
+  // Wave 8 — 50 AP Physics HTML experiments (registered)
+  acCircuits,
+  atomicInteractions,
+  balancingAct,
+  balloonsStaticElectricity,
+  bendingLight,
+  blackbodySpectrum,
+  buildANucleus,
+  buoyancy,
+  buoyancyBasics,
+  calculusGrapher,
+  circuitAcVirtualLab,
+  circuitDcVirtualLab,
+  colorVision,
+  coulombsLaw,
+  curveFitting,
+  densityLab,
+  diffusion,
+  energySkateParkBasics,
+  faradaysElectromagneticLab,
+  forcesMotionBasics,
+  fourierMakingWaves,
+  frictionLab,
+  gasesIntro,
+  generator,
+  geometricOpticsBasics,
+  gravityForceLabBasics,
+  gravityOrbits,
+  hookesLaw,
+  johnTravoltage,
+  keplersLaws,
+  magnetsAndElectromagnets,
+  massesSprings,
+  massesSpringsBasics,
+  modelsHydrogenAtom,
+  moleculesAndLight,
+  mySolarSystem,
+  normalModes,
+  ohmsLaw,
+  pendulumLab,
+  plinkoProbability,
+  pressureLab,
+  projectileDataLab,
+  quantumCoinToss,
+  quantumMeasurement,
+  resistanceWire,
+  rutherfordScattering,
+  statesOfMatterBasics,
+  vectorAddition,
+  waveOnString,
+  wavesIntro,
 ];
 
 export function getAllExperiments(): Experiment[] {
@@ -187,4 +290,38 @@ export function getExperimentsByGradeLevel(
   gradeLevel: GradeLevel
 ): Experiment[] {
   return experiments.filter((e) => e.gradeLevel === gradeLevel);
+}
+
+export function getExperimentsByStandard(
+  standard: PrimaryStandard
+): Experiment[] {
+  return experiments.filter((e) => e.primaryStandard === standard);
+}
+
+export function getStandardsForSubject(
+  subject: Subject
+): PrimaryStandard[] {
+  const standards = new Set<PrimaryStandard>();
+  for (const e of experiments) {
+    if (e.subject === subject) {
+      standards.add(e.primaryStandard);
+    }
+  }
+  return Array.from(standards);
+}
+
+export function getAllSubjectsWithCounts(): Array<{
+  subject: Subject;
+  count: number;
+}> {
+  const counts = new Map<Subject, number>();
+  for (const e of experiments) {
+    if (e.subject) {
+      counts.set(e.subject, (counts.get(e.subject) || 0) + 1);
+    }
+  }
+  return Array.from(counts.entries()).map(([subject, count]) => ({
+    subject,
+    count,
+  }));
 }

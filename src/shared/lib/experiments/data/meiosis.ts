@@ -14,6 +14,7 @@ export const meiosis: Experiment = {
     gcse: ["B1.3", "B1.4"],
     ap: ["3.A.2", "3.A.4"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

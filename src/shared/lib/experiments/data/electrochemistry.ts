@@ -14,6 +14,7 @@ export const electrochemistry: Experiment = {
     gcse: ["C8.1", "C8.2"],
     ap: ["9.A.1", "9.B.1", "9.C.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

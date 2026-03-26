@@ -14,6 +14,7 @@ export const msChemicalReactions: Experiment = {
     gcse: ["C3.1", "C3.2"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "6-8",

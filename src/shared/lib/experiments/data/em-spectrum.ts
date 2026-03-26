@@ -14,6 +14,7 @@ export const emSpectrum: Experiment = {
     gcse: ["P6.1", "P6.2"],
     ap: ["6.F.1", "6.F.2"],
   },
+  primaryStandard: "ngss-hs",
   category: "waves",
   subject: "physics",
   gradeLevel: "9-12",
@@ -100,7 +101,7 @@ export const emSpectrum: Experiment = {
   relatedExperiments: [],
 
   seoTitle:
-    "Electromagnetic Spectrum — Interactive 3D Visualization | SeePhysics",
+    "Electromagnetic Spectrum — Interactive 3D Visualization | Scivra",
   seoKeywords: [
     "electromagnetic spectrum",
     "wavelength frequency",

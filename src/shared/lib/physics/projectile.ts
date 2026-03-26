@@ -1,5 +1,5 @@
 /**
- * SeePhysics - Projectile Motion Physics Engine
+ * Scivra - Projectile Motion Physics Engine
  * Pure functions for projectile motion calculations (no air resistance).
  */
 

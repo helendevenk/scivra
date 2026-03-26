@@ -3,61 +3,57 @@
 > 此文件是进度追踪的**唯一权威来源**
 
 ## 基本信息
+- 任务: 首页 + 导航栏重新设计
+- 状态: **COMPLETED**
+- 迭代次数: 2/10
+- 开始时间: 2026-03-23T20:30:00Z
 
-| 字段 | 值 |
-|------|-----|
-| 任务 | Q2 2026 统一工作计划 |
-| 开始时间 | 2026-03-22T10:46:54Z |
-| 当前状态 | IN_PROGRESS |
-| 当前阶段 | 测试 6 Phase 全完成，579 tests，CI 就绪 |
-| 最后更新 | 2026-03-23T13:20:00Z |
+## 进度
 
-## 阶段进度
+### Phase 0: 已完成 ✅
+- [x] T0.1: 设计诊断 → `homepage-redesign-solution.md`
+- [x] T0.2: 中英文案 → `homepage-copy-en-zh.json`
 
-| 阶段 | 状态 | 任务数 | 完成数 |
-|------|------|--------|--------|
-| Phase 0.5: 学科解耦 | ✅ 完成 | 11 | 11 |
-| Phase BG: 批量生成+内容 | ✅ 完成 | 9 | 9 |
-| Phase 3.5: 验证+修正 | ✅ 完成 | 8 | 8 |
-| Phase F1: AP Prep | ✅ 完成 | 5 | 5 |
-| Phase F2: Quest | ✅ 完成 | 5 | 5 |
-| Phase F3: Notebook | ✅ 完成 | 5 | 5 |
-| 集成联调 | ✅ 完成 | 3 | 3 |
-| 测试覆盖 T1-T6 | ✅ 完成 | 6 | 6 |
-| CI Pipeline | ✅ 完成 | 1 | 1 |
-| 性能优化 | ✅ 完成 | 5 | 5 |
+### Phase 1: landing.json 更新 ✅
+- [x] T1.1: en/landing.json — hero/usage/stats/faq/cta 话术更新 + 新增 experiment_showcase/grade_levels
+- [x] T1.2: zh/landing.json — 同步中文版
+- [x] T1.3: page.tsx showSections — hero/experiment_showcase/grade_levels/usage/stats/faq/cta
+- [x] T1.4: header.nav — 精简为 3 项（学科▾/AI实验室/价格）
+- [x] T1.5: footer — Blog/Updates 保留在 footer
 
-## 迭代记录
+### Phase 2: 新建区块组件 ✅
+- [x] T2.1: experiment-showcase.tsx — 3 卡片跨学科精选
+- [x] T2.2: grade-levels.tsx — 5 年级段 + trust_badges
+- [x] T2.3: blocks/index.tsx 导出 + dynamic-page.tsx 注册
 
-| 迭代 | 时间 | 完成内容 |
-|------|------|----------|
-| 0 | 2026-03-22 | RalphFree 初始化 |
-| 1-5 | 2026-03-22 | ✅ Phase 0.5: A0-A10 学科解耦，104 tests |
-| 6-19 | 2026-03-22 | ✅ Phase BG: 111 个实验 HTML（73 AP Physics + 10 Bio + 7 Chem + 11 K5 + 9 MS），PhET 66 对标 100% |
-| 20 | 2026-03-22 | ✅ B1a-B1c: 验证框架 + 5条物理规则 + DB 6字段 |
-| 21-22 | 2026-03-22 | ✅ B1d: UI Verified 标签（Gallery 卡片/详情页/筛选） |
-| 23-26 | 2026-03-22 | ✅ B3a-B3d: refine-core + API + 版本历史 UI |
-| 27 | 2026-03-22 | ✅ Schema 迁移: 14 新表 + learningStats 2 字段 |
-| 28 | 2026-03-22 | ✅ Phase F1: AP Prep — 5 model + 11 API + 5 页面 + seed 30题 |
-| 29 | 2026-03-22 | ✅ Phase F2: Quest — 5 model + 7 API + 4 页面 + scoring + seed |
-| 30 | 2026-03-22 | ✅ Phase F3: Notebook — 3 model + AI engine + 9 API + editor + drawer |
-| 31 | 2026-03-22 | ✅ 三模块集成: build ✅ + 104 tests ✅ + worktree 合并清理 |
-| 32 | 2026-03-23 | ✅ experiment access TDD: 37 tests (RED→GREEN), 64 files subject/gradeLevel |
-| 33 | 2026-03-23 | ✅ 权限矩阵验证: 34 tests + Progress API access check + subscription 解析 |
-| 34 | 2026-03-23 | ✅ 性能审计 + 66 张实验缩略图 Gemini 生成（111 个实验中的 66 张，待补齐）+ config 优化 |
-| 35 | 2026-03-23 | ✅ payment.ts 重构: 消除 80% 重复 + string→Date bug 修复 |
-| 36 | 2026-03-23 | ✅ T1 纯函数测试: 192 tests (20 files) |
-| 37 | 2026-03-23 | ✅ T2 Model 测试: 77 tests (6 files, mock DB) |
-| 38 | 2026-03-23 | ✅ T3 Service 测试: 71 tests (4 files) + GitHub Actions CI |
-| 39 | 2026-03-23 | ✅ T4 API Route 测试: 57 tests (6 files) |
-| 40 | 2026-03-23 | ✅ T5 Integration 测试: 45 tests (5 files) |
-| 41 | 2026-03-23 | ✅ T6 E2E Playwright: 25 tests (4 files) |
+### Phase 3: Hero 改造 ✅
+- [x] T3.1: hero.tsx 学科按钮网格（section.subjects）
+- [x] T3.2: 单一 CTA
 
-## 剩余工作
+### Phase 4: 交互动效 ✅
+- [x] T4.1: 学科按钮 hover:-translate-y-0.5 + hover:shadow-md
+- [x] T4.2: Showcase 卡片 hover scale(1.03) + shadow-lg
+- [x] T4.3: Grade Levels 卡片 hover:border-primary
+- [x] T4.4: prefers-reduced-motion 适配（motion-reduce:transition-none）
 
-### 下一步（Week 19-20）
-- [ ] UPG 端到端联调（generate → view → my 主链路）
-- [ ] 付费系统对接（Stripe webhook 生产测试）
-- [ ] SEO 增强（sitemap + 博客内容）
-- [ ] Vercel 部署 + Cron 配置
-- [ ] v2.0 Beta 发布
+### Phase 5: 验收 ✅
+- [x] T5.1: 中文截图 — Hero/Showcase/GradeLevels/Usage/FAQ/CTA
+- [x] T5.2: pnpm build 通过（exit code 0）
+- [x] T5.3: 无 ShipAny 模板残留
+- [x] T5.4: 英文截图对比 — 中英文内容完整对应
+
+## 改动文件清单
+| 文件 | 改动类型 |
+|------|---------|
+| `src/config/locale/messages/en/landing.json` | 修改（话术+新区块数据+导航精简） |
+| `src/config/locale/messages/zh/landing.json` | 修改（同步） |
+| `src/app/[locale]/(landing)/page.tsx` | 修改（showSections 数组） |
+| `src/themes/default/blocks/hero.tsx` | 修改（学科按钮+motion-reduce） |
+| `src/themes/default/blocks/experiment-showcase.tsx` | **新建** |
+| `src/themes/default/blocks/grade-levels.tsx` | **新建** |
+| `src/themes/default/blocks/index.tsx` | 修改（导出新组件） |
+| `src/themes/default/pages/dynamic-page.tsx` | 修改（注册新 block） |
+
+## 截图证据
+- ZH: redesign-zh-hero/showcase/grades/faq-cta.png
+- EN: redesign-en-hero/showcase/grades-usage.png

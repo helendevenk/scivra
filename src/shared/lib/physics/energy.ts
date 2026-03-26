@@ -1,5 +1,5 @@
 /**
- * SeePhysics - Energy Conservation Physics Engine
+ * Scivra - Energy Conservation Physics Engine
  * Pure functions for energy conservation calculations (roller coaster).
  */
 

@@ -14,6 +14,7 @@ export const heatEngines: Experiment = {
     gcse: ["P2.4"],
     ap: ["TUL-3.A", "TUL-3.B", "TUL-3.C"],
   },
+  primaryStandard: "ap-physics-2",
   category: "thermodynamics",
   subject: "physics",
   gradeLevel: "AP",

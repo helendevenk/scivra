@@ -14,6 +14,7 @@ export const reactionKinetics: Experiment = {
     gcse: ["C6.1", "C6.2"],
     ap: ["4.A.1", "4.A.2", "4.B.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

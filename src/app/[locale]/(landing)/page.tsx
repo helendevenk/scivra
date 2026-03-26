@@ -17,11 +17,11 @@ export default async function LandingPage({
 
   const showSections = [
     'hero',
-    'introduce',
+    'experiment_showcase',
+    'grade_levels',
     'usage',
-    'features',
     'stats',
-    'subscribe',
+    'testimonials',
     'faq',
     'cta',
   ];

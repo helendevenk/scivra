@@ -1,14 +1,14 @@
-# SeePhysics v2
+# Scivra v2
 
-SeePhysics v2 是基于 ShipAny Template Two 二次开发的教育类 AI SaaS 项目，当前包含两条业务主线：
+Scivra v2 是基于 ShipAny Template Two 二次开发的教育类 AI SaaS 项目，当前包含两条业务主线：
 
 - **Curated Labs（精选实验）**：物理实验可视化与课程化能力。
 - **UPG（Universal Principle Generator）**：输入主题后生成交互式可视化内容。
 
 ## 当前状态
 
-- 主线仓库：`/Users/sky/Desktop/sciwangzhan/seephysics-v2`
-- 历史副本：已归档到 `/Users/sky/Desktop/sciwangzhan/archive/seephysics-v2-copy-2026-02-25`
+- 主线仓库：`/Users/sky/Desktop/sciwangzhan/scivra-v2`
+- 历史副本：已归档到 `/Users/sky/Desktop/sciwangzhan/archive/scivra-v2-copy-2026-02-25`
 - 统一状态看板：[`docs/WORKSPACE-STATUS.md`](./docs/WORKSPACE-STATUS.md)
 - 基线文档（单一真相）：[`docs/PROJECT-BASELINE.md`](./docs/PROJECT-BASELINE.md)
 
@@ -82,8 +82,8 @@ npm run db:push
 - [归档记录](./docs/ARCHIVE-LOG.md)
 
 ### 产品与计划（战略输入）
-- [SeePhysics 产品策划书](/Users/sky/Desktop/sciwangzhan/NeonPhysics-PRD.md)
-- [SeePhysics 开发计划书](/Users/sky/Desktop/sciwangzhan/NeonPhysics-DevPlan.md)
+- [Scivra 产品策划书](/Users/sky/Desktop/sciwangzhan/NeonPhysics-PRD.md)
+- [Scivra 开发计划书](/Users/sky/Desktop/sciwangzhan/NeonPhysics-DevPlan.md)
 - [UPG PRD](/Users/sky/Desktop/sciwangzhan/UPG-PRD.md)
 - [UPG 开发计划](/Users/sky/Desktop/sciwangzhan/UPG-DEV-PLAN.md)
 - [UPG CTO 评审](/Users/sky/Desktop/sciwangzhan/UPG-CTO-REVIEW.md)

@@ -14,6 +14,7 @@ export const atomicStructure: Experiment = {
     gcse: ["C2.1", "C2.2"],
     ap: ["1.A.1", "1.B.1", "1.C.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

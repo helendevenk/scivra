@@ -27,13 +27,13 @@ describe('buildExperimentJsonLd', () => {
   it('returns valid LearningResource schema', () => {
     const result = buildExperimentJsonLd({
       experiment: mockExperiment,
-      siteUrl: 'https://www.seephysics.com',
+      siteUrl: 'https://www.scivra.com',
     });
 
     expect(result['@context']).toBe('https://schema.org');
     expect(result['@type']).toBe('LearningResource');
     expect(result.name).toBe("Newton's Laws Interactive Simulation");
-    expect(result.url).toBe('https://www.seephysics.com/experiments/newtons-laws');
+    expect(result.url).toBe('https://www.scivra.com/experiments/newtons-laws');
     expect(result.isAccessibleForFree).toBe(true);
     expect(result.educationalLevel).toBe('Beginner');
   });
@@ -42,7 +42,7 @@ describe('buildExperimentJsonLd', () => {
     const exp = { ...mockExperiment, seoTitle: '' };
     const result = buildExperimentJsonLd({
       experiment: exp as unknown as Experiment,
-      siteUrl: 'https://www.seephysics.com',
+      siteUrl: 'https://www.scivra.com',
     });
     expect(result.name).toBe("Newton's Laws of Motion");
   });
@@ -51,7 +51,7 @@ describe('buildExperimentJsonLd', () => {
     const exp = { ...mockExperiment, tier: 'pro' as const };
     const result = buildExperimentJsonLd({
       experiment: exp as unknown as Experiment,
-      siteUrl: 'https://www.seephysics.com',
+      siteUrl: 'https://www.scivra.com',
     });
     expect(result.isAccessibleForFree).toBe(false);
   });
@@ -78,22 +78,22 @@ describe('buildExperimentJsonLd', () => {
   it('strips trailing slash from siteUrl', () => {
     const result = buildExperimentJsonLd({
       experiment: mockExperiment,
-      siteUrl: 'https://www.seephysics.com/',
+      siteUrl: 'https://www.scivra.com/',
     });
-    expect(result.url).toBe('https://www.seephysics.com/experiments/newtons-laws');
+    expect(result.url).toBe('https://www.scivra.com/experiments/newtons-laws');
   });
 });
 
 describe('buildWebsiteJsonLd', () => {
   it('returns valid WebSite schema', () => {
     const result = buildWebsiteJsonLd({
-      siteUrl: 'https://www.seephysics.com',
-      siteName: 'SeePhysics',
+      siteUrl: 'https://www.scivra.com',
+      siteName: 'Scivra',
     });
 
     expect(result['@context']).toBe('https://schema.org');
     expect(result['@type']).toBe('WebSite');
-    expect(result.name).toBe('SeePhysics');
-    expect(result.url).toBe('https://www.seephysics.com');
+    expect(result.name).toBe('Scivra');
+    expect(result.url).toBe('https://www.scivra.com');
   });
 });

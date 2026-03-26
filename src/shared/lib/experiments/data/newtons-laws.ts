@@ -14,6 +14,7 @@ export const newtonsLaws: Experiment = {
     gcse: ["P5.1", "P5.2"],
     ap: ["3.A.1", "3.A.2", "3.B.1"],
   },
+  primaryStandard: "ngss-hs",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "9-12",
@@ -93,7 +94,7 @@ export const newtonsLaws: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["projectile-motion", "roller-coaster"],
 
-  seoTitle: "Newton's Laws of Motion — Interactive 3D Simulation | SeePhysics",
+  seoTitle: "Newton's Laws of Motion — Interactive 3D Simulation | Scivra",
   seoKeywords: [
     "Newton's laws",
     "F=ma",

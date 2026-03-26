@@ -14,6 +14,7 @@ export const membraneTransport: Experiment = {
     gcse: ["B1.5", "B1.6"],
     ap: ["2.B.1", "2.B.2"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

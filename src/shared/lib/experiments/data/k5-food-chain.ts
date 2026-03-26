@@ -14,6 +14,7 @@ export const k5FoodChain: Experiment = {
     gcse: [],
     ap: [],
   },
+  primaryStandard: "elementary-k5",
   category: "biology",
   subject: "biology",
   gradeLevel: "3-5",

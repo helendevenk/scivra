@@ -14,6 +14,7 @@ export const neuronActionPotential: Experiment = {
     gcse: ["B5.1", "B5.2"],
     ap: ["3.D.2", "3.E.2"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

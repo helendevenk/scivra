@@ -14,6 +14,7 @@ export const msEcosystems: Experiment = {
     gcse: ["B3.1", "B3.2"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "biology",
   subject: "biology",
   gradeLevel: "6-8",

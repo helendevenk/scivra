@@ -12,7 +12,7 @@
 - **Curated Labs**：人工策划的物理实验 3D 可视化（React Three Fiber），课标对齐（NGSS/AP Physics）
 - **UPG（Universal Principle Generator）**：AI 实时生成零依赖 HTML 交互式可视化，用户输入任意科学问题 → 30-60 秒出结果
 
-竞争优势：PhET 有 2-3 年技术债（Java→HTML5 迁移），NeonPhysics 用赛博朋克/学术风 3D 视觉做差异化。
+竞争优势：PhET 有 2-3 年技术债（Java→HTML5 迁移），NeonPhysics 用 edu-academic 教育学术风 3D 交互实验 + AI 生成 + 社区 UGC 做差异化。
 
 商业模式：Freemium 订阅（Free 4 实验/5min 每日，Pro $4.99/月，Max 更高）+ UPG 积分消耗（10 积分/次生成）
 

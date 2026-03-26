@@ -14,6 +14,7 @@ export const electromagneticInduction: Experiment = {
     gcse: ["P7.3", "P7.4"],
     ap: ["CHA-4.B", "CHA-4.C", "CHA-4.D"],
   },
+  primaryStandard: "ap-physics-c",
   category: "electricity",
   subject: "physics",
   gradeLevel: "AP",

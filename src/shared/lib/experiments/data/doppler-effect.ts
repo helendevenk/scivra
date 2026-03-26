@@ -14,6 +14,7 @@ export const dopplerEffect: Experiment = {
     gcse: ["P6.4"],
     ap: ["WVS-1.B", "WVS-1.C"],
   },
+  primaryStandard: "ap-physics-1",
   category: "waves",
   subject: "physics",
   gradeLevel: "AP",
@@ -84,23 +85,88 @@ export const dopplerEffect: Experiment = {
   instructions:
     "Set source frequency (try 440 Hz — concert A) and drag the source speed slider. The circular wavefronts animate in real time showing compression ahead and expansion behind. The observer panel displays observed frequency and the percentage change from source frequency. Enable Pro parameters to reposition the observer or switch to water as the medium and notice how the much higher wave speed changes the effect.",
 
+  hook: {
+    question: "Why does an ambulance siren sound different as it passes you — even though the siren never changes pitch?",
+    context: "The siren emits the same frequency the entire time. What changes is the relative motion between the sound waves and your ears.",
+    actionPrompt: "Start the experiment →",
+  },
+
+  learningCards: [
+    {
+      id: "de-lc1",
+      title: "Wave Compression Ahead",
+      content: "When a source moves toward you, each successive wavefront is emitted from a position closer to you. The wavefronts pile up, shortening the wavelength and raising the frequency you hear. This is why an approaching siren sounds higher-pitched.",
+      relatedParameterId: "source_speed",
+    },
+    {
+      id: "de-lc2",
+      title: "The Doppler Formula",
+      content: "The observed frequency depends on both the source speed and the wave speed in the medium. When the source approaches, the denominator shrinks, increasing the observed frequency. When it recedes, the denominator grows, decreasing it.",
+      formula: { latex: "f_{obs} = f_s \\cdot \\frac{v}{v - v_s}", description: "Observed frequency for a source approaching a stationary observer" },
+      relatedParameterId: "source_frequency",
+    },
+    {
+      id: "de-lc3",
+      title: "Breaking the Sound Barrier",
+      content: "At Mach 1, the source travels as fast as its own sound waves. All wavefronts pile up at a single point, creating a massive pressure spike — the sonic boom. Beyond Mach 1, the source outruns its wavefronts, forming a cone-shaped shock wave.",
+      formula: { latex: "M = \\frac{v_s}{v_{sound}}", description: "Mach number: source speed divided by speed of sound" },
+      relatedParameterId: "source_speed",
+    },
+    {
+      id: "de-lc4",
+      title: "Doppler in Real Life",
+      content: "Radar speed guns bounce microwaves off moving cars and measure the frequency shift. Doppler ultrasound measures blood flow velocity. Astronomers use redshift to determine that distant galaxies are moving away from us — evidence for the expanding universe.",
+    },
+    {
+      id: "de-lc5",
+      title: "Medium Matters",
+      content: "The Doppler effect depends on the speed of sound in the medium. Sound travels at 343 m/s in air but 1,480 m/s in water. The same source speed produces a much smaller frequency shift in water because the waves travel so much faster relative to the source.",
+      relatedParameterId: "medium",
+    },
+  ],
+
+  easterEggs: [
+    {
+      parameterId: "source_speed",
+      condition: "specific",
+      triggerValue: 343,
+      effect: "sonic-boom-shockwave",
+      message: "BOOM! You've hit Mach 1 — the speed of sound in air. Chuck Yeager first broke the sound barrier in 1947 aboard the Bell X-1.",
+    },
+    {
+      parameterId: "source_speed",
+      condition: "max",
+      effect: "mach-cone-visualization",
+      message: "Mach 1.17! The source is supersonic — notice how the shock wave forms a cone. The faster you go, the narrower the Mach cone angle.",
+    },
+  ],
+
   challenges: [
     {
       id: "de-c1",
       question: "An ambulance moves toward an observer at 30 m/s with a siren at 800 Hz. What frequency does the observer hear? (v_sound = 343 m/s)",
+      options: ["≈ 723 Hz", "≈ 800 Hz", "≈ 877 Hz", "≈ 960 Hz"],
+      correctAnswer: "≈ 877 Hz",
       hint: "Observer stationary, source approaching: f_obs = f_s × v / (v − v_s)",
+      relatedParameterId: "source_speed",
       tier: "free",
     },
     {
       id: "de-c2",
       question: "The same ambulance is now moving away. How does the observed frequency compare to the source frequency?",
+      options: ["Higher than 800 Hz", "Exactly 800 Hz", "Lower than 800 Hz", "It depends on distance"],
+      correctAnswer: "Lower than 800 Hz",
       hint: "Source receding: f_obs = f_s × v / (v + v_s). Is it higher or lower than 800 Hz?",
+      relatedParameterId: "source_speed",
       tier: "free",
     },
     {
       id: "de-c3",
       question: "What happens to the wavefront pattern when source speed exactly equals the speed of sound (Mach 1)?",
+      options: ["Wavefronts spread out evenly", "Wavefronts pile up at one point creating a shock wave", "Wavefronts disappear entirely", "Wavefronts reverse direction"],
+      correctAnswer: "Wavefronts pile up at one point creating a shock wave",
       hint: "All wavefronts accumulate at the same point. What physical phenomenon does this produce?",
+      relatedParameterId: "source_speed",
       tier: "pro",
     },
   ],

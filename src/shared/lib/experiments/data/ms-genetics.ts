@@ -14,6 +14,7 @@ export const msGenetics: Experiment = {
     gcse: ["B6.1", "B6.2"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "biology",
   subject: "biology",
   gradeLevel: "6-8",

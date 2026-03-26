@@ -14,6 +14,7 @@ export const idealGasThermodynamics: Experiment = {
     gcse: ["P3.1", "P3.2"],
     ap: ["TUL-1.A", "TUL-1.B", "TUL-2.A"],
   },
+  primaryStandard: "ap-physics-2",
   category: "thermodynamics",
   subject: "physics",
   gradeLevel: "AP",

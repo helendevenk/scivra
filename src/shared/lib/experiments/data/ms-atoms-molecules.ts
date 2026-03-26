@@ -14,6 +14,7 @@ export const msAtomsMolecules: Experiment = {
     gcse: ["C2.1"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "6-8",

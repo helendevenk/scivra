@@ -1,5 +1,5 @@
 /**
- * SeePhysics - Mechanics Physics Engine
+ * Scivra - Mechanics Physics Engine
  * Pure functions for classical mechanics calculations.
  * All functions handle invalid inputs gracefully (return 0).
  */

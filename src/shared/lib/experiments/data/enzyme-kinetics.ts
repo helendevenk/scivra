@@ -14,6 +14,7 @@ export const enzymeKinetics: Experiment = {
     gcse: ["B2.5", "B2.6"],
     ap: ["2.A.3", "4.A.1"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

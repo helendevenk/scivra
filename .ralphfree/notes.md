@@ -1,10 +1,10 @@
-# Sprint 0 Notes
+# Homepage Redesign Notes
 
-## 2026-03-22 — Initialization
-
-- Design docs finalized: `docs/plans/2026-03-22-frontend-design-final.md`
-- Dev plan finalized: `docs/plans/2026-03-22-frontend-dev-plan-final.md`
-- CTO review with founder decisions: `docs/plans/2026-03-22-frontend-redesign-cto-review.md`
-- Quality mode: strict (TDD enforced)
-- Subject colors finalized by CTO: Physics=250, Chemistry=145, Biology=80, Earth=25, Math=310
-- Free tier: 3 experiments lifetime per account, Pro $4.99/mo, Max $9.99/mo
+## 2026-03-23 — 初始化
+- PRD 确认，文案生成完毕
+- 当前首页 8 个区块：hero/introduce/usage/features/stats/subscribe/faq/cta
+- 目标首页 7 个区块：hero/experiment_showcase/grade_levels/usage/stats/faq/cta
+- 移除：introduce/features/subscribe
+- 新增：experiment_showcase/grade_levels
+- 发现 ZH landing.json 有 Remix 图标残留（已修复为 Lucide）
+- 发现 ZH introduce 图片用 ShipAny 模板截图（已修复）

@@ -14,6 +14,7 @@ export const msNewtonsLaws: Experiment = {
     gcse: ["P2.1", "P2.2"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "6-8",

@@ -22,6 +22,9 @@ export * from './cta';
 export * from './subscribe';
 export * from './pricing';
 
+export * from './experiment-showcase';
+export * from './grade-levels';
+
 export * from './blog';
 export * from './blog-detail';
 export * from './page-detail';

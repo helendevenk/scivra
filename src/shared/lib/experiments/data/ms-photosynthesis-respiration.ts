@@ -14,6 +14,7 @@ export const msPhotosynthesisRespiration: Experiment = {
     gcse: ["B2.3", "B2.4"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "biology",
   subject: "biology",
   gradeLevel: "6-8",

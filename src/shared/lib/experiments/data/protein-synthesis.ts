@@ -14,6 +14,7 @@ export const proteinSynthesis: Experiment = {
     gcse: ["B13.3", "B13.4"],
     ap: ["3.A.1", "3.B.1"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

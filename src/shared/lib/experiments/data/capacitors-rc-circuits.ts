@@ -14,6 +14,7 @@ export const capacitorsRcCircuits: Experiment = {
     gcse: ["P6.5", "P6.6"],
     ap: ["CHA-2.E", "CHA-2.F", "CHA-4.A"],
   },
+  primaryStandard: "ap-physics-c",
   category: "electricity",
   subject: "physics",
   gradeLevel: "AP",

@@ -14,6 +14,7 @@ export const electricPotentialVoltage: Experiment = {
     gcse: ["P6.3", "P6.4"],
     ap: ["CHA-2.C", "CHA-2.D", "CHA-3.A"],
   },
+  primaryStandard: "ap-physics-c",
   category: "electricity",
   subject: "physics",
   gradeLevel: "AP",

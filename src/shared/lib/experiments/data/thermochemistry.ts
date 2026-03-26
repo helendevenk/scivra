@@ -14,6 +14,7 @@ export const thermochemistry: Experiment = {
     gcse: ["C6.3", "C6.4"],
     ap: ["5.A.1", "5.B.1", "5.C.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

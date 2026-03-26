@@ -1,16 +1,20 @@
 import type { MetadataRoute } from 'next';
 
 import { envConfigs } from '@/config';
-import { getAllExperiments } from '@/shared/lib/experiments/registry';
+import {
+  getAllExperiments,
+  getAllSubjectsWithCounts,
+  getStandardsForSubject,
+} from '@/shared/lib/experiments/registry';
 
 const locales = ['en', 'zh'];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = envConfigs.app_url || 'https://seephysics.com';
+  const baseUrl = envConfigs.app_url || 'https://scivra.com';
 
   const staticPages = [
     '',
-    '/experiments',
+    '/labs',
     '/upg',
     '/upg/my',
     '/pricing',
@@ -22,33 +26,62 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/cookie-policy',
   ];
 
-  const experimentSlugs = getAllExperiments().map((e) => e.slug);
+  const subjects = getAllSubjectsWithCounts();
+  const experiments = getAllExperiments();
 
   const blogSlugs = [
     'newtons-laws-with-vectors',
     'projectile-motion-common-mistakes',
-    'what-is-xxx',
   ];
 
   const entries: MetadataRoute.Sitemap = [];
 
+  // Static pages
   for (const page of staticPages) {
     for (const locale of locales) {
       const prefix = locale === 'en' ? '' : `/${locale}`;
       entries.push({
         url: `${baseUrl}${prefix}${page}`,
         lastModified: new Date(),
-        changeFrequency: page === '' ? 'daily' : 'weekly',
-        priority: page === '' ? 1.0 : 0.8,
+        changeFrequency: page === '' ? 'daily' : page === '/labs' ? 'monthly' : 'weekly',
+        priority: page === '' ? 1.0 : page === '/labs' ? 0.9 : 0.8,
       });
     }
   }
 
-  for (const slug of experimentSlugs) {
+  // /labs/{subject} pages
+  for (const { subject } of subjects) {
     for (const locale of locales) {
       const prefix = locale === 'en' ? '' : `/${locale}`;
       entries.push({
-        url: `${baseUrl}${prefix}/experiments/${slug}`,
+        url: `${baseUrl}${prefix}/labs/${subject}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.85,
+      });
+    }
+
+    // /labs/{subject}/{standard} pages
+    const standards = getStandardsForSubject(subject);
+    for (const standard of standards) {
+      for (const locale of locales) {
+        const prefix = locale === 'en' ? '' : `/${locale}`;
+        entries.push({
+          url: `${baseUrl}${prefix}/labs/${subject}/${standard}`,
+          lastModified: new Date(),
+          changeFrequency: 'monthly',
+          priority: 0.85,
+        });
+      }
+    }
+  }
+
+  // /labs/{subject}/{standard}/{slug} experiment pages
+  for (const exp of experiments) {
+    for (const locale of locales) {
+      const prefix = locale === 'en' ? '' : `/${locale}`;
+      entries.push({
+        url: `${baseUrl}${prefix}/labs/${exp.subject}/${exp.primaryStandard}/${exp.slug}`,
         lastModified: new Date(),
         changeFrequency: 'monthly',
         priority: 0.9,
@@ -56,6 +89,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
+  // Blog pages
   for (const slug of blogSlugs) {
     for (const locale of locales) {
       const prefix = locale === 'en' ? '' : `/${locale}`;

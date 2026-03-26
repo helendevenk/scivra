@@ -14,6 +14,7 @@ export const k5StatesOfMatter: Experiment = {
     gcse: [],
     ap: [],
   },
+  primaryStandard: "elementary-k5",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "3-5",

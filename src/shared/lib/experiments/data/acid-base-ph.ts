@@ -14,6 +14,7 @@ export const acidBasePh: Experiment = {
     gcse: ["C7.3", "C7.4"],
     ap: ["8.A.1", "8.B.1", "8.C.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

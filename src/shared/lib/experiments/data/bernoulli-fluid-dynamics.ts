@@ -14,6 +14,7 @@ export const bernoulliFluidDynamics: Experiment = {
     gcse: ["P5.5", "P5.6"],
     ap: ["FLD-1.A", "FLD-1.B", "FLD-1.C"],
   },
+  primaryStandard: "ap-physics-2",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "AP",

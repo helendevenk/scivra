@@ -14,6 +14,7 @@ export const k5Magnetism: Experiment = {
     gcse: [],
     ap: [],
   },
+  primaryStandard: "elementary-k5",
   category: "electricity",
   subject: "physics",
   gradeLevel: "3-5",

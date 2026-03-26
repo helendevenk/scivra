@@ -14,6 +14,7 @@ export const chemicalEquilibrium: Experiment = {
     gcse: ["C7.1", "C7.2"],
     ap: ["6.A.1", "6.B.1", "6.C.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

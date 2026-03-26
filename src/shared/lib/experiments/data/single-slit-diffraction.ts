@@ -14,6 +14,7 @@ export const singleSlitDiffraction: Experiment = {
     gcse: ["P7.1"],
     ap: ["WVS-1.D", "WVS-1.E"],
   },
+  primaryStandard: "ap-physics-2",
   category: "waves",
   subject: "physics",
   gradeLevel: "AP",

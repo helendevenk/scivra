@@ -14,6 +14,7 @@ export const k5WaterCycle: Experiment = {
     gcse: [],
     ap: [],
   },
+  primaryStandard: "elementary-k5",
   category: "earth",
   subject: "earth-science",
   gradeLevel: "3-5",

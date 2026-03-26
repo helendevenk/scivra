@@ -14,6 +14,7 @@ export const rollerCoaster: Experiment = {
     gcse: ["P1.1", "P1.3"],
     ap: ["4.C.1", "5.B.4"],
   },
+  primaryStandard: "ngss-hs",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "9-12",
@@ -110,7 +111,7 @@ export const rollerCoaster: Experiment = {
   relatedExperiments: ["newtons-laws"],
 
   seoTitle:
-    "Energy Conservation Roller Coaster — Interactive 3D Simulation | SeePhysics",
+    "Energy Conservation Roller Coaster — Interactive 3D Simulation | Scivra",
   seoKeywords: [
     "energy conservation",
     "roller coaster physics",

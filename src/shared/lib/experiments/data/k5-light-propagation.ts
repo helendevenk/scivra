@@ -14,6 +14,7 @@ export const k5LightPropagation: Experiment = {
     gcse: [],
     ap: [],
   },
+  primaryStandard: "elementary-k5",
   category: "waves",
   subject: "physics",
   gradeLevel: "3-5",

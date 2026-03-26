@@ -22,7 +22,7 @@ export type Tier = "free" | "pro" | "max";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 /** Release wave */
-export type Wave = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type Wave = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 /** Adjustable parameter for an experiment */
 export interface Parameter {
@@ -46,9 +46,53 @@ export interface Formula {
 export interface Challenge {
   id: string;
   question: string;
+  options?: string[];
+  correctAnswer?: string;
   hint: string;
+  relatedParameterId?: string;
   tier: Tier;
 }
+
+/** Primary standard for URL routing (e.g. ap-physics-1, ngss-hs) */
+export type PrimaryStandard =
+  | "ap-physics-1"
+  | "ap-physics-2"
+  | "ap-physics-c"
+  | "ap-chemistry"
+  | "ap-biology"
+  | "ngss-ms"
+  | "ngss-hs"
+  | "elementary-k5"
+  | "general";
+
+/** Narrative hook for experiment intro */
+export interface ExperimentHook {
+  question: string;
+  context?: string;
+  actionPrompt: string;
+}
+
+/** Structured learning card */
+export interface LearningCard {
+  id: string;
+  title: string;
+  content: string;
+  formula?: Formula;
+  relatedParameterId?: string;
+  illustration?: string;
+}
+
+/** Easter egg triggered by parameter extremes */
+export interface EasterEgg {
+  parameterId: string;
+  condition: "max" | "min" | "specific";
+  triggerValue?: number;
+  effect: string;
+  message: string;
+}
+
+/** Experiment stage in gated progression */
+export type ExperimentStage = "hook" | "explore" | "learn" | "challenge" | "summary";
 
 /** Curriculum standards mapping */
 export interface Standards {
@@ -69,6 +113,7 @@ export interface Experiment {
 
   // Classification
   standards: Standards;
+  primaryStandard: PrimaryStandard;
   category: PhysicsCategory;
   subject?: Subject;
   gradeLevel?: GradeLevel;
@@ -83,6 +128,9 @@ export interface Experiment {
   theory: string;
   instructions: string;
   challenges: Challenge[];
+  hook?: ExperimentHook;
+  learningCards?: LearningCard[];
+  easterEggs?: EasterEgg[];
 
   // Metadata
   wave: Wave;

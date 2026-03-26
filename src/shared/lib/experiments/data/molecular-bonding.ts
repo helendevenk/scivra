@@ -14,6 +14,7 @@ export const molecularBonding: Experiment = {
     gcse: ["C3.1", "C3.2"],
     ap: ["2.A.1", "2.A.2", "2.B.1"],
   },
+  primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "AP",

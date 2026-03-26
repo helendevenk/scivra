@@ -14,6 +14,7 @@ export const projectileMotion: Experiment = {
     gcse: ["P5.6"],
     ap: ["3.A.1", "3.E.1"],
   },
+  primaryStandard: "ngss-hs",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "9-12",
@@ -102,7 +103,7 @@ export const projectileMotion: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["newtons-laws"],
 
-  seoTitle: "Projectile Motion — Interactive 3D Simulation | SeePhysics",
+  seoTitle: "Projectile Motion — Interactive 3D Simulation | Scivra",
   seoKeywords: [
     "projectile motion",
     "trajectory",

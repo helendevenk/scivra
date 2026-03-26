@@ -241,14 +241,14 @@ export async function getSettingGroups() {
       name: 'affonso',
       title: t('groups.affonso'),
       description:
-        'custom your <a href="https://affonso.io?atp=seephysics" class="text-primary" target="_blank">Affonso</a> settings',
+        'custom your <a href="https://affonso.io?atp=scivra" class="text-primary" target="_blank">Affonso</a> settings',
       tab: 'affiliate',
     },
     {
       name: 'promotekit',
       title: t('groups.promotekit'),
       description:
-        'custom your <a href="https://www.promotekit.com?via=seephysics" class="text-primary" target="_blank">PromoteKit</a> settings',
+        'custom your <a href="https://www.promotekit.com?via=scivra" class="text-primary" target="_blank">PromoteKit</a> settings',
       tab: 'affiliate',
     },
     {
@@ -274,7 +274,7 @@ export async function getSettings() {
     {
       name: 'app_name',
       title: 'App Name',
-      placeholder: 'SeePhysics',
+      placeholder: 'Scivra',
       type: 'text',
       group: 'appinfo',
       tab: 'general',
@@ -283,7 +283,7 @@ export async function getSettings() {
       name: 'app_description',
       title: 'App Description',
       placeholder:
-        'SeePhysics is an interactive 3D physics simulation platform for education.',
+        'Scivra is an interactive 3D physics simulation platform for education.',
       type: 'textarea',
       group: 'appinfo',
       tab: 'general',
@@ -616,7 +616,7 @@ export async function getSettings() {
       name: 'plausible_domain',
       title: 'Plausible Domain',
       type: 'text',
-      placeholder: 'seephysics.com',
+      placeholder: 'scivra.com',
       group: 'plausible',
       tab: 'analytics',
     },

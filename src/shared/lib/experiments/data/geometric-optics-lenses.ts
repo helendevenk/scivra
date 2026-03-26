@@ -14,6 +14,7 @@ export const geometricOpticsLenses: Experiment = {
     gcse: ["P7.1", "P7.2"],
     ap: ["WVS-2.A", "WVS-2.B", "WVS-2.C"],
   },
+  primaryStandard: "ap-physics-2",
   category: "waves",
   subject: "physics",
   gradeLevel: "AP",

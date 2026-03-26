@@ -23,7 +23,7 @@ export function buildExperimentJsonLd(input: {
     isAccessibleForFree: experiment.tier === 'free',
     provider: {
       '@type': 'Organization',
-      name: 'SeePhysics',
+      name: 'Scivra',
       url: siteUrl,
     },
     about: {
@@ -85,7 +85,7 @@ export function buildLearningPathJsonLd(input: {
     url,
     provider: {
       '@type': 'Organization',
-      name: 'SeePhysics',
+      name: 'Scivra',
       url: siteUrl,
     },
     educationalLevel: mapDifficultyToLevel(level),

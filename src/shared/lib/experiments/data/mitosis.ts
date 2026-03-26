@@ -14,6 +14,7 @@ export const mitosis: Experiment = {
     gcse: ["B1.1", "B1.2"],
     ap: ["3.A.2", "3.A.3"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

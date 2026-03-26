@@ -14,6 +14,7 @@ export const photoelectricEffect: Experiment = {
     gcse: ["P8.1", "P8.2"],
     ap: ["MOD-1.A", "MOD-1.B", "MOD-1.C"],
   },
+  primaryStandard: "ap-physics-2",
   category: "modern",
   subject: "physics",
   gradeLevel: "AP",

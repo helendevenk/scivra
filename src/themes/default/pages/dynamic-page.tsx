@@ -2,6 +2,7 @@ import { getThemeBlock } from '@/core/theme';
 import type { DynamicPage as DynamicPageType } from '@/shared/types/blocks/landing';
 import {
   CTA,
+  ExperimentShowcase,
   FAQ,
   Features,
   FeaturesAccordion,
@@ -9,6 +10,7 @@ import {
   FeaturesList,
   FeaturesMedia,
   FeaturesStep,
+  GradeLevels,
   Hero,
   Logos,
   Showcases,
@@ -45,6 +47,10 @@ export default async function DynamicPage({
           switch (block) {
             case 'hero':
               return <Hero key={sectionKey} section={section} />;
+            case 'experiment-showcase':
+              return <ExperimentShowcase key={sectionKey} section={section} />;
+            case 'grade-levels':
+              return <GradeLevels key={sectionKey} section={section} />;
             case 'logos':
               return <Logos key={sectionKey} section={section} />;
             case 'features':

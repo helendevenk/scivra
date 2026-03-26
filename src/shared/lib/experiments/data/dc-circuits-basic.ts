@@ -14,6 +14,7 @@ export const dcCircuitsBasic: Experiment = {
     gcse: ["AQA P2.3", "AQA P2.4"],
     ap: ["CHA-2.A", "CHA-2.B", "CHA-2.C", "CHA-2.D"],
   },
+  primaryStandard: "ap-physics-2",
   category: "electricity",
   subject: "physics",
   gradeLevel: "AP",

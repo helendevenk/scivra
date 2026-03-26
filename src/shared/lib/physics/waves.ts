@@ -1,5 +1,5 @@
 /**
- * SeePhysics - Waves Physics Engine
+ * Scivra - Waves Physics Engine
  * Pure functions for wave and electromagnetic calculations.
  */
 

@@ -14,6 +14,7 @@ export const cellularRespiration: Experiment = {
     gcse: ["B2.1", "B2.2"],
     ap: ["2.A.2", "2.A.3"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

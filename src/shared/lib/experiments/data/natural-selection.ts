@@ -14,6 +14,7 @@ export const naturalSelection: Experiment = {
     gcse: ["B14.1", "B14.2", "B14.3"],
     ap: ["1.A.1", "1.A.2", "1.C.1"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

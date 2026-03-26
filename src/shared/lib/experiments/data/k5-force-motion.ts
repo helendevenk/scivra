@@ -14,6 +14,7 @@ export const k5ForceMotion: Experiment = {
     gcse: [],
     ap: [],
   },
+  primaryStandard: "elementary-k5",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "3-5",

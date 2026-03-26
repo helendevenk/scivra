@@ -158,10 +158,10 @@ describe('getExperimentsBySubject', () => {
     }
   });
 
-  it('should return empty array for subject with no experiments', async () => {
+  it('should return empty array for unknown subject', async () => {
     const mod = await import('@/shared/lib/experiments/registry') as Record<string, unknown>;
     const fn = mod.getExperimentsBySubject as (s: string) => unknown[];
-    const results = fn('math');
+    const results = fn('nonexistent-subject');
     expect(results).toEqual([]);
   });
 });

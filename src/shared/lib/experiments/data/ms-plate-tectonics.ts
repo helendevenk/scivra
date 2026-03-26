@@ -14,6 +14,7 @@ export const msPlateTectonics: Experiment = {
     gcse: ["P6.1"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "earth",
   subject: "earth-science",
   gradeLevel: "6-8",

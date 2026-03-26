@@ -14,6 +14,7 @@ export const msEnergyConservation: Experiment = {
     gcse: ["P1.1", "P1.2"],
     ap: [],
   },
+  primaryStandard: "ngss-ms",
   category: "mechanics",
   subject: "physics",
   gradeLevel: "6-8",

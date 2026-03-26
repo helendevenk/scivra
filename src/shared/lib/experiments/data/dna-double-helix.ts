@@ -14,6 +14,7 @@ export const dnaDoubleHelix: Experiment = {
     gcse: ["B13.1", "B13.2"],
     ap: ["3.A.1", "3.A.2"],
   },
+  primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",

@@ -14,6 +14,7 @@ export const nuclearDecay: Experiment = {
     gcse: ["P4.1", "P4.2", "P4.3"],
     ap: ["MOD-2.A", "MOD-2.B", "MOD-2.C"],
   },
+  primaryStandard: "ap-physics-2",
   category: "modern",
   subject: "physics",
   gradeLevel: "AP",
