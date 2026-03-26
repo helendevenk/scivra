@@ -9,6 +9,8 @@ import {
 } from '@/shared/models/lab_notebook';
 import { NOTEBOOK_FREE_MONTHLY_LIMIT } from '@/shared/lib/notebook/constants';
 import { prefillNotebook } from '@/shared/lib/notebook/notebook-ai';
+import { getCurrentSubscription } from '@/shared/models/subscription';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
 
 export async function POST(req: Request) {
   try {
@@ -32,13 +34,18 @@ export async function POST(req: Request) {
       autoFill?: boolean;
     } = body;
 
-    // Free tier quota check (2/month)
-    const monthlyCount = await getMonthlyNotebookCount(user.id);
-    if (monthlyCount >= NOTEBOOK_FREE_MONTHLY_LIMIT) {
-      // TODO: check if user is Pro, skip limit for Pro users
-      return respErr(
-        `Free tier limit reached (${NOTEBOOK_FREE_MONTHLY_LIMIT}/month). Upgrade to Pro for unlimited notebooks.`
-      );
+    // Pro/Max users bypass notebook quota
+    const sub = await getCurrentSubscription(user.id);
+    const tier = subscriptionToTier(sub?.planName ?? null);
+    const isPro = tier === 'pro' || tier === 'max';
+
+    if (!isPro) {
+      const monthlyCount = await getMonthlyNotebookCount(user.id);
+      if (monthlyCount >= NOTEBOOK_FREE_MONTHLY_LIMIT) {
+        return respErr(
+          `Free tier limit reached (${NOTEBOOK_FREE_MONTHLY_LIMIT}/month). Upgrade to Pro for unlimited notebooks.`
+        );
+      }
     }
 
     const notebookId = getUuid();

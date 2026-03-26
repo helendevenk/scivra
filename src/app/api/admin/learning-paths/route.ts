@@ -12,7 +12,9 @@ export async function GET() {
   try {
     const user = await getUserInfo();
     if (!user) return respErr('Unauthorized');
-    // TODO: check admin role when role field is available
+
+    const { canAccessAdmin } = await import('@/core/rbac/permission');
+    if (!(await canAccessAdmin(user.id))) return respErr('Forbidden');
 
     const paths = await getAdminLearningPaths();
     return respData(paths);
@@ -26,7 +28,9 @@ export async function POST(request: Request) {
   try {
     const user = await getUserInfo();
     if (!user) return respErr('Unauthorized');
-    // TODO: check admin role when role field is available
+
+    const { canAccessAdmin } = await import('@/core/rbac/permission');
+    if (!(await canAccessAdmin(user.id))) return respErr('Forbidden');
 
     const body = await request.json();
     const {

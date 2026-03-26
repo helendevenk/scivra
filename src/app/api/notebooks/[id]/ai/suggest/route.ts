@@ -3,7 +3,10 @@ import { getUserInfo } from '@/shared/models/user';
 import { findLabNotebookById } from '@/shared/models/lab_notebook';
 import { suggestForSection } from '@/shared/lib/notebook/notebook-ai';
 import type { NotebookSectionName } from '@/shared/lib/notebook/constants';
-import { NOTEBOOK_SECTIONS } from '@/shared/lib/notebook/constants';
+import { NOTEBOOK_SECTIONS, NOTEBOOK_AI_SUGGEST_CREDITS } from '@/shared/lib/notebook/constants';
+import { getCurrentSubscription } from '@/shared/models/subscription';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
+import { consumeCredits } from '@/shared/models/credit';
 
 export const maxDuration = 60;
 
@@ -17,8 +20,11 @@ export async function POST(
       return respErr('no auth, please sign in');
     }
 
-    // TODO: Pro-only check + 2 credits deduction
-    // For MVP, allow all authenticated users
+    const sub = await getCurrentSubscription(user.id);
+    const tier = subscriptionToTier(sub?.planName ?? null);
+    if (tier === 'free') {
+      return respErr('AI suggestions are a Pro feature. Upgrade to access.');
+    }
 
     const { id } = await params;
     const notebook = await findLabNotebookById(id);
@@ -44,6 +50,14 @@ export async function POST(
       data: notebook.data ?? undefined,
       analysis: notebook.analysis ?? undefined,
       conclusion: notebook.conclusion ?? undefined,
+    });
+
+    // Deduct credits after successful AI call
+    await consumeCredits({
+      userId: user.id,
+      credits: NOTEBOOK_AI_SUGGEST_CREDITS,
+      scene: 'notebook_ai_suggest',
+      description: `AI suggestion for ${section} section`,
     });
 
     return respData(result);

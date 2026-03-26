@@ -9,7 +9,8 @@ export async function PUT(
   try {
     const user = await getUserInfo();
     if (!user) return respErr('Unauthorized');
-    // TODO: check admin role when role field is available
+    const { canAccessAdmin } = await import('@/core/rbac/permission');
+    if (!(await canAccessAdmin(user.id))) return respErr('Forbidden');
 
     const { nodeId } = await params;
     const body = await request.json();
@@ -33,7 +34,8 @@ export async function DELETE(
   try {
     const user = await getUserInfo();
     if (!user) return respErr('Unauthorized');
-    // TODO: check admin role when role field is available
+    const { canAccessAdmin } = await import('@/core/rbac/permission');
+    if (!(await canAccessAdmin(user.id))) return respErr('Forbidden');
 
     const { nodeId } = await params;
     await deleteNodeWithReorder(nodeId);

@@ -4,6 +4,8 @@ import { findLabNotebookById } from '@/shared/models/lab_notebook';
 import { createExport } from '@/shared/models/lab_notebook_export';
 import { getUuid } from '@/shared/lib/hash';
 import { NOTEBOOK_SECTIONS } from '@/shared/lib/notebook/constants';
+import { getCurrentSubscription } from '@/shared/models/subscription';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
 
 function parseSectionContent(raw: string | null): string {
   if (!raw) return '(empty)';
@@ -63,7 +65,11 @@ export async function POST(
       return respErr('no auth, please sign in');
     }
 
-    // TODO: Pro-only check
+    const sub = await getCurrentSubscription(user.id);
+    const tier = subscriptionToTier(sub?.planName ?? null);
+    if (tier === 'free') {
+      return respErr('Notebook export is a Pro feature. Upgrade to access.');
+    }
 
     const { id } = await params;
     const notebook = await findLabNotebookById(id);

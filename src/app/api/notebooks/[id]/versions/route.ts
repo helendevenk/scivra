@@ -2,6 +2,8 @@ import { respData, respErr } from '@/shared/lib/resp';
 import { getUserInfo } from '@/shared/models/user';
 import { findLabNotebookById } from '@/shared/models/lab_notebook';
 import { getVersionsByNotebook } from '@/shared/models/lab_notebook_version';
+import { getCurrentSubscription } from '@/shared/models/subscription';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
 
 export async function GET(
   _req: Request,
@@ -13,7 +15,11 @@ export async function GET(
       return respErr('no auth, please sign in');
     }
 
-    // TODO: Pro-only check
+    const sub = await getCurrentSubscription(user.id);
+    const tier = subscriptionToTier(sub?.planName ?? null);
+    if (tier === 'free') {
+      return respErr('Version history is a Pro feature. Upgrade to access.');
+    }
 
     const { id } = await params;
     const notebook = await findLabNotebookById(id);

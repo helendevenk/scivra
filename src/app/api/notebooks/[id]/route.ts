@@ -7,6 +7,8 @@ import {
 } from '@/shared/models/lab_notebook';
 import { createVersion } from '@/shared/models/lab_notebook_version';
 import { NOTEBOOK_SECTIONS } from '@/shared/lib/notebook/constants';
+import { getCurrentSubscription } from '@/shared/models/subscription';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
 
 export async function GET(
   _req: Request,
@@ -78,9 +80,12 @@ export async function PATCH(
     const newVersion = (notebook.version ?? 1) + 1;
     updateData.version = newVersion;
 
-    // Create version snapshot for Pro users
-    // TODO: check subscription status; for now, always create versions
-    try {
+    // Create version snapshot (Pro/Max users only)
+    const sub = await getCurrentSubscription(user.id);
+    const tier = subscriptionToTier(sub?.planName ?? null);
+    const isPro = tier === 'pro' || tier === 'max';
+
+    if (isPro) try {
       await createVersion(id, notebook.version ?? 1, {
         hypothesis: notebook.hypothesis,
         method: notebook.method,
