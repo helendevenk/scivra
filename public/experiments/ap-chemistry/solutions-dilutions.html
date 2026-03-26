@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solutions & Dilutions — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 210px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.8rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; text-align: center; }
+    .formula-panel { max-width: 380px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Solutions & Dilutions <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">C₁V₁ = C₂V₂ — add water, watch concentration change</p>
+    </div>
+    <div class="panel controls">
+      <label>Solute:</label>
+      <select id="soluteSelect">
+        <option value="0">CuSO₄ (blue)</option>
+        <option value="1">KMnO₄ (purple)</option>
+        <option value="2">NaCl (colorless)</option>
+      </select>
+      <label>Initial Concentration (C₁): <span class="data-val" id="c1Display">1.00</span> mol/L</label>
+      <input type="range" id="c1Slider" min="1" max="200" value="100">
+      <label>Initial Volume (V₁): <span class="data-val" id="v1Display">10</span> mL</label>
+      <input type="range" id="v1Slider" min="1" max="100" value="10">
+      <label>Added Water: <span class="data-val" id="waterDisplay">0</span> mL</label>
+      <input type="range" id="waterSlider" min="0" max="500" value="0">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Solution Data</div>
+      <div class="big-val" id="c2Display">1.000</div>
+      <div style="text-align:center;font-size:0.65rem;color:#94a3b8;">Final Concentration C₂ (mol/L)</div>
+      <div class="data-row"><span>Final Volume V₂</span><span class="data-val" id="v2Display">10 mL</span></div>
+      <div class="data-row"><span>Moles of solute</span><span class="data-val" id="molesDisplay">0.0100</span></div>
+      <div class="data-row"><span>Dilution Factor</span><span class="data-val" id="dfDisplay">1.0×</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Dilution Equation</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SOLUTES = [
+  { name: 'CuSO₄', color: [0, 100, 200] },
+  { name: 'KMnO₄', color: [140, 0, 160] },
+  { name: 'NaCl', color: [180, 180, 180] }
+];
+
+let soluteIdx = 0, c1 = 1.0, v1 = 10, addedWater = 0;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function update() {
+  const v2 = v1 + addedWater;
+  const c2 = (c1 * v1) / v2;
+  const moles = c1 * v1 / 1000;
+  const df = v2 / v1;
+
+  document.getElementById('c2Display').textContent = c2.toFixed(3);
+  document.getElementById('v2Display').textContent = v2 + ' mL';
+  document.getElementById('molesDisplay').textContent = moles.toFixed(4);
+  document.getElementById('dfDisplay').textContent = df.toFixed(1) + '×';
+
+  draw(c1, c2, v1, v2);
+}
+
+function draw(c1Val, c2Val, v1Val, v2Val) {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const sc = SOLUTES[soluteIdx].color;
+  const isColorless = soluteIdx === 2;
+
+  // Beaker 1 (initial)
+  const b1x = w * 0.25, b1y = h * 0.42;
+  const bw = 100, bh = 160;
+  drawBeaker(b1x, b1y, bw, bh, c1Val, v1Val, 100, sc, isColorless, 'Initial');
+
+  // Arrow
+  ctx.fillStyle = '#10b981';
+  ctx.font = '24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('→', w * 0.45, h * 0.42);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('+ ' + addedWater + ' mL H₂O', w * 0.45, h * 0.45);
+
+  // Beaker 2 (diluted)
+  const b2x = w * 0.65, b2y = h * 0.42;
+  drawBeaker(b2x, b2y, bw, bh, c2Val, v2Val, 500, sc, isColorless, 'Diluted');
+
+  // Concentration bar chart (right side)
+  drawBarChart(w * 0.82, h * 0.2, w * 0.14, h * 0.55, c1Val, c2Val);
+}
+
+function drawBeaker(cx, cy, bw, bh, conc, vol, maxVol, color, isColorless, label) {
+  const fillH = bh * Math.min(vol / maxVol, 1);
+  const alpha = isColorless ? 0.1 : Math.min(conc * 0.8, 0.9);
+
+  // Solution fill
+  ctx.fillStyle = `rgba(${color[0]},${color[1]},${color[2]},${alpha})`;
+  ctx.fillRect(cx - bw/2, cy + bh/2 - fillH, bw, fillH);
+
+  // Beaker outline
+  ctx.strokeStyle = 'rgba(16,185,129,0.3)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - bw/2, cy - bh/2);
+  ctx.lineTo(cx - bw/2, cy + bh/2);
+  ctx.lineTo(cx + bw/2, cy + bh/2);
+  ctx.lineTo(cx + bw/2, cy - bh/2);
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, cx, cy - bh/2 - 12);
+  ctx.fillStyle = '#6ee7b7';
+  ctx.font = '13px JetBrains Mono, monospace';
+  ctx.fillText(conc.toFixed(3) + ' M', cx, cy + bh/2 + 20);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.fillText(vol + ' mL', cx, cy + bh/2 + 34);
+
+  // Graduation marks
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) {
+    const my = cy + bh/2 - bh * i/5;
+    ctx.beginPath();
+    ctx.moveTo(cx - bw/2, my);
+    ctx.lineTo(cx - bw/2 + 8, my);
+    ctx.stroke();
+  }
+}
+
+function drawBarChart(x, y, w, h, c1Val, c2Val) {
+  const maxC = Math.max(c1Val, 2.0);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Concentration', x + w/2, y - 8);
+
+  // C1 bar
+  const barW = w * 0.35;
+  const c1H = h * (c1Val / maxC);
+  ctx.fillStyle = 'rgba(16,185,129,0.6)';
+  ctx.fillRect(x, y + h - c1H, barW, c1H);
+  ctx.fillStyle = '#6ee7b7';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillText('C₁', x + barW/2, y + h + 14);
+  ctx.fillText(c1Val.toFixed(2), x + barW/2, y + h - c1H - 4);
+
+  // C2 bar
+  const c2H = h * (c2Val / maxC);
+  const c2x = x + w - barW;
+  ctx.fillStyle = 'rgba(16,185,129,0.3)';
+  ctx.fillRect(c2x, y + h - c2H, barW, c2H);
+  ctx.fillStyle = '#6ee7b7';
+  ctx.fillText('C₂', c2x + barW/2, y + h + 14);
+  ctx.fillText(c2Val.toFixed(3), c2x + barW/2, y + h - c2H - 4);
+
+  // Axis
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x - 4, y + h);
+  ctx.lineTo(x + w + 4, y + h);
+  ctx.stroke();
+}
+
+// Controls
+document.getElementById('soluteSelect').addEventListener('change', e => { soluteIdx = +e.target.value; update(); });
+document.getElementById('c1Slider').addEventListener('input', e => {
+  c1 = +e.target.value / 100;
+  document.getElementById('c1Display').textContent = c1.toFixed(2);
+  update();
+});
+document.getElementById('v1Slider').addEventListener('input', e => {
+  v1 = +e.target.value;
+  document.getElementById('v1Display').textContent = v1;
+  update();
+});
+document.getElementById('waterSlider').addEventListener('input', e => {
+  addedWater = +e.target.value;
+  document.getElementById('waterDisplay').textContent = addedWater;
+  update();
+});
+
+// Formula
+try {
+  katex.render('C_1 V_1 = C_2 V_2', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch(e) {}
+
+update();
+</script>
+</body>
+</html>
