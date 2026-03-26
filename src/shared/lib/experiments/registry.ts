@@ -7,7 +7,86 @@ import type {
   Tier,
   Wave,
 } from "@/shared/types/experiment";
-// Wave 8 — 50 missing AP Physics HTML experiments
+
+// Wave 1 — Original 4
+import { newtonsLaws } from "./data/newtons-laws";
+import { projectileMotion } from "./data/projectile-motion";
+import { emSpectrum } from "./data/em-spectrum";
+import { rollerCoaster } from "./data/roller-coaster";
+
+// Wave 2 — AP Physics (P-01 to P-09)
+import { simpleHarmonicMotion } from "./data/simple-harmonic-motion";
+import { momentumCollisions } from "./data/momentum-collisions";
+import { lorentzForce } from "./data/lorentz-force";
+import { electricFieldLines } from "./data/electric-field-lines";
+import { waveInterference } from "./data/wave-interference";
+import { circularMotion } from "./data/circular-motion";
+import { rotationalMotion } from "./data/rotational-motion";
+import { gravitationalFields } from "./data/gravitational-fields";
+import { fluidStatics } from "./data/fluid-statics";
+
+// Wave 3 — AP Biology (B-01 to B-10)
+import { dnaDoubleHelix } from "./data/dna-double-helix";
+import { proteinSynthesis } from "./data/protein-synthesis";
+import { mitosis } from "./data/mitosis";
+import { meiosis } from "./data/meiosis";
+import { cellularRespiration } from "./data/cellular-respiration";
+import { photosynthesis } from "./data/photosynthesis";
+import { enzymeKinetics } from "./data/enzyme-kinetics";
+import { neuronActionPotential } from "./data/neuron-action-potential";
+import { membraneTransport } from "./data/membrane-transport";
+import { naturalSelection } from "./data/natural-selection";
+
+// Wave 4 — AP Chemistry (C-01 to C-07)
+import { molecularBonding } from "./data/molecular-bonding";
+import { reactionKinetics } from "./data/reaction-kinetics";
+import { thermochemistry } from "./data/thermochemistry";
+import { chemicalEquilibrium } from "./data/chemical-equilibrium";
+import { atomicStructure } from "./data/atomic-structure";
+import { acidBasePh } from "./data/acid-base-ph";
+import { electrochemistry } from "./data/electrochemistry";
+
+// Wave 5 — Elementary K-5 (K5-01 to K5-11)
+import { k5ForceMotion } from "./data/k5-force-motion";
+import { k5StatesOfMatter } from "./data/k5-states-of-matter";
+import { k5LightPropagation } from "./data/k5-light-propagation";
+import { k5SoundWaves } from "./data/k5-sound-waves";
+import { k5SimpleMachines } from "./data/k5-simple-machines";
+import { k5EnergyConversion } from "./data/k5-energy-conversion";
+import { k5FoodChain } from "./data/k5-food-chain";
+import { k5WaterCycle } from "./data/k5-water-cycle";
+import { k5DayNightSeasons } from "./data/k5-day-night-seasons";
+import { k5MoonPhases } from "./data/k5-moon-phases";
+import { k5Magnetism } from "./data/k5-magnetism";
+
+// Wave 6 — Middle School 6-8 (MS-01 to MS-09)
+import { msNewtonsLaws } from "./data/ms-newtons-laws";
+import { msEnergyConservation } from "./data/ms-energy-conservation";
+import { msChemicalReactions } from "./data/ms-chemical-reactions";
+import { msAtomsMolecules } from "./data/ms-atoms-molecules";
+import { msPlateTectonics } from "./data/ms-plate-tectonics";
+import { msPhotosynthesisRespiration } from "./data/ms-photosynthesis-respiration";
+import { msGenetics } from "./data/ms-genetics";
+import { msEcosystems } from "./data/ms-ecosystems";
+import { msWeatherSystems } from "./data/ms-weather-systems";
+
+// Wave 7 — AP Physics gap-fill (14 experiments)
+import { dcCircuitsBasic } from "./data/dc-circuits-basic";
+import { geometricOpticsLenses } from "./data/geometric-optics-lenses";
+import { photoelectricEffect } from "./data/photoelectric-effect";
+import { idealGasThermodynamics } from "./data/ideal-gas-thermodynamics";
+import { electromagneticInduction } from "./data/electromagnetic-induction";
+import { electricPotentialVoltage } from "./data/electric-potential-voltage";
+import { capacitorsRcCircuits } from "./data/capacitors-rc-circuits";
+import { bernoulliFluidDynamics } from "./data/bernoulli-fluid-dynamics";
+import { workEnergyTheorem } from "./data/work-energy-theorem";
+import { kinematicsGraphs } from "./data/kinematics-graphs";
+import { nuclearDecay } from "./data/nuclear-decay";
+import { dopplerEffect } from "./data/doppler-effect";
+import { singleSlitDiffraction } from "./data/single-slit-diffraction";
+import { heatEngines } from "./data/heat-engines";
+
+// Wave 8 — 50 AP Physics HTML experiments
 import { acCircuits } from "./data/ac-circuits";
 import { atomicInteractions } from "./data/atomic-interactions";
 import { balancingAct } from "./data/balancing-act";
@@ -58,80 +137,19 @@ import { statesOfMatterBasics } from "./data/states-of-matter-basics";
 import { vectorAddition } from "./data/vector-addition";
 import { waveOnString } from "./data/wave-on-string";
 import { wavesIntro } from "./data/waves-intro";
-import { newtonsLaws } from "./data/newtons-laws";
-import { projectileMotion } from "./data/projectile-motion";
-import { emSpectrum } from "./data/em-spectrum";
-import { rollerCoaster } from "./data/roller-coaster";
-// Wave 2 — AP Physics (P-01 to P-05)
-import { simpleHarmonicMotion } from "./data/simple-harmonic-motion";
-import { momentumCollisions } from "./data/momentum-collisions";
-import { lorentzForce } from "./data/lorentz-force";
-import { electricFieldLines } from "./data/electric-field-lines";
-import { waveInterference } from "./data/wave-interference";
-// Wave 2 — AP Physics (P-06 to P-09)
-import { circularMotion } from "./data/circular-motion";
-import { rotationalMotion } from "./data/rotational-motion";
-import { gravitationalFields } from "./data/gravitational-fields";
-import { fluidStatics } from "./data/fluid-statics";
-// Wave 3 — AP Biology (B-01 to B-10)
-import { dnaDoubleHelix } from "./data/dna-double-helix";
-import { proteinSynthesis } from "./data/protein-synthesis";
-import { mitosis } from "./data/mitosis";
-import { meiosis } from "./data/meiosis";
-import { cellularRespiration } from "./data/cellular-respiration";
-import { photosynthesis } from "./data/photosynthesis";
-import { enzymeKinetics } from "./data/enzyme-kinetics";
-import { neuronActionPotential } from "./data/neuron-action-potential";
-import { membraneTransport } from "./data/membrane-transport";
-import { naturalSelection } from "./data/natural-selection";
-// Wave 6 — Middle School 6-8 (MS-01 to MS-09)
-import { msNewtonsLaws } from "./data/ms-newtons-laws";
-import { msEnergyConservation } from "./data/ms-energy-conservation";
-import { msChemicalReactions } from "./data/ms-chemical-reactions";
-import { msAtomsMolecules } from "./data/ms-atoms-molecules";
-import { msPlateTectonics } from "./data/ms-plate-tectonics";
-import { msPhotosynthesisRespiration } from "./data/ms-photosynthesis-respiration";
-import { msGenetics } from "./data/ms-genetics";
-import { msEcosystems } from "./data/ms-ecosystems";
-import { msWeatherSystems } from "./data/ms-weather-systems";
-// Wave 5 — Elementary K-5 (K5-01 to K5-11)
-import { k5ForceMotion } from "./data/k5-force-motion";
-import { k5StatesOfMatter } from "./data/k5-states-of-matter";
-import { k5LightPropagation } from "./data/k5-light-propagation";
-import { k5SoundWaves } from "./data/k5-sound-waves";
-import { k5SimpleMachines } from "./data/k5-simple-machines";
-import { k5EnergyConversion } from "./data/k5-energy-conversion";
-import { k5FoodChain } from "./data/k5-food-chain";
-import { k5WaterCycle } from "./data/k5-water-cycle";
-import { k5DayNightSeasons } from "./data/k5-day-night-seasons";
-import { k5MoonPhases } from "./data/k5-moon-phases";
-import { k5Magnetism } from "./data/k5-magnetism";
-// Wave 4 — AP Chemistry (C-01 to C-07)
-import { molecularBonding } from "./data/molecular-bonding";
-import { reactionKinetics } from "./data/reaction-kinetics";
-import { thermochemistry } from "./data/thermochemistry";
-import { chemicalEquilibrium } from "./data/chemical-equilibrium";
-import { atomicStructure } from "./data/atomic-structure";
-import { acidBasePh } from "./data/acid-base-ph";
-import { electrochemistry } from "./data/electrochemistry";
-// Wave 7 — AP Physics gap-fill (Batch 1–3)
-import { dcCircuitsBasic } from "./data/dc-circuits-basic";
-import { geometricOpticsLenses } from "./data/geometric-optics-lenses";
-import { photoelectricEffect } from "./data/photoelectric-effect";
-import { idealGasThermodynamics } from "./data/ideal-gas-thermodynamics";
-import { electromagneticInduction } from "./data/electromagnetic-induction";
-import { electricPotentialVoltage } from "./data/electric-potential-voltage";
-import { capacitorsRcCircuits } from "./data/capacitors-rc-circuits";
-import { bernoulliFluidDynamics } from "./data/bernoulli-fluid-dynamics";
-import { workEnergyTheorem } from "./data/work-energy-theorem";
-import { kinematicsGraphs } from "./data/kinematics-graphs";
-import { nuclearDecay } from "./data/nuclear-decay";
-import { dopplerEffect } from "./data/doppler-effect";
-import { singleSlitDiffraction } from "./data/single-slit-diffraction";
-import { heatEngines } from "./data/heat-engines";
+
+// Wave 9 — AP Chemistry Core (C-08 to C-17)
+import { balancingChemicalEquations } from "./data/balancing-chemical-equations";
+import { electronConfiguration } from "./data/electron-configuration";
+import { lewisStructures } from "./data/lewis-structures";
+import { beersLawLab } from "./data/beers-law-lab";
+import { solutionsDilutions } from "./data/solutions-dilutions";
+import { stoichiometry } from "./data/stoichiometry";
+import { calorimetry } from "./data/calorimetry";
+import { buildAMolecule } from "./data/build-a-molecule";
 
 const experiments: Experiment[] = [
-  // Wave 1 — original 4
+  // Wave 1 — Original 4
   newtonsLaws,
   projectileMotion,
   emSpectrum,
@@ -178,7 +196,17 @@ const experiments: Experiment[] = [
   k5DayNightSeasons,
   k5MoonPhases,
   k5Magnetism,
-  // Wave 7 — AP Physics gap-fill (Batch 1–3)
+  // Wave 6 — Middle School 6-8 (MS-01 to MS-09)
+  msNewtonsLaws,
+  msEnergyConservation,
+  msChemicalReactions,
+  msAtomsMolecules,
+  msPlateTectonics,
+  msPhotosynthesisRespiration,
+  msGenetics,
+  msEcosystems,
+  msWeatherSystems,
+  // Wave 7 — AP Physics gap-fill (14 experiments)
   dcCircuitsBasic,
   geometricOpticsLenses,
   photoelectricEffect,
@@ -193,17 +221,7 @@ const experiments: Experiment[] = [
   dopplerEffect,
   singleSlitDiffraction,
   heatEngines,
-  // Wave 6 — Middle School 6-8 (MS-01 to MS-09)
-  msNewtonsLaws,
-  msEnergyConservation,
-  msChemicalReactions,
-  msAtomsMolecules,
-  msPlateTectonics,
-  msPhotosynthesisRespiration,
-  msGenetics,
-  msEcosystems,
-  msWeatherSystems,
-  // Wave 8 — 50 AP Physics HTML experiments (registered)
+  // Wave 8 — 50 AP Physics HTML experiments
   acCircuits,
   atomicInteractions,
   balancingAct,
@@ -254,6 +272,15 @@ const experiments: Experiment[] = [
   vectorAddition,
   waveOnString,
   wavesIntro,
+  // Wave 9 — AP Chemistry Core (C-08 to C-17)
+  balancingChemicalEquations,
+  electronConfiguration,
+  lewisStructures,
+  beersLawLab,
+  solutionsDilutions,
+  stoichiometry,
+  calorimetry,
+  buildAMolecule,
 ];
 
 export function getAllExperiments(): Experiment[] {

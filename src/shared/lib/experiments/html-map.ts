@@ -1,6 +1,6 @@
 /**
- * Maps experiment ID → public HTML file path.
- * Wave 2-6 experiments use standalone HTML simulations (Three.js CDN).
+ * Maps experiment slug → public HTML file path.
+ * Wave 2+ experiments use standalone HTML simulations (Three.js CDN).
  * Wave 1 experiments use React Three Fiber components (see ExperimentClient).
  */
 export const EXPERIMENT_HTML_MAP: Record<string, string> = {
@@ -135,8 +135,20 @@ export const EXPERIMENT_HTML_MAP: Record<string, string> = {
   "ms-genetics": "/experiments/middle/ms-genetics.html",
   "ms-ecosystems": "/experiments/middle/ms-ecosystems.html",
   "ms-weather-systems": "/experiments/middle/ms-weather-systems.html",
+
+  // Wave 9 — AP Chemistry Core (C-08 to C-17)
+  "balancing-chemical-equations":
+    "/experiments/ap-chemistry/balancing-chemical-equations.html",
+  "electron-configuration":
+    "/experiments/ap-chemistry/electron-configuration.html",
+  "lewis-structures": "/experiments/ap-chemistry/lewis-structures.html",
+  "beers-law-lab": "/experiments/ap-chemistry/beers-law-lab.html",
+  "solutions-dilutions": "/experiments/ap-chemistry/solutions-dilutions.html",
+  "stoichiometry": "/experiments/ap-chemistry/stoichiometry.html",
+  "calorimetry": "/experiments/ap-chemistry/calorimetry.html",
+  "build-a-molecule": "/experiments/ap-chemistry/build-a-molecule.html",
 };
 
-export function getExperimentHtmlPath(id: string): string | null {
-  return EXPERIMENT_HTML_MAP[id] ?? null;
+export function getExperimentHtmlPath(slug: string): string | null {
+  return EXPERIMENT_HTML_MAP[slug] ?? null;
 }

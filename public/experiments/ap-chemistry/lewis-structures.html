@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lewis Structures — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+    .controls { display: flex; flex-direction: column; gap: 6px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 420px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .status-bar { text-align: center; padding: 6px; font-size: 0.8rem; font-weight: 600; }
+    .status-bar.correct { color: #22c55e; }
+    .status-bar.incorrect { color: #f97316; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .atom-circle { cursor: pointer; }
+    .atom-label { font-family: 'Segoe UI', sans-serif; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+    .bond-line { stroke-width: 3; cursor: pointer; }
+    .lone-pair { fill: #6ee7b7; }
+    .electron-dot { fill: #6ee7b7; }
+  </style>
+</head>
+<body>
+<svg id="svgCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Lewis Structures <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">Draw dot structures — click bonds to cycle, click atoms for lone pairs</p>
+    </div>
+    <div class="panel controls">
+      <label>Molecule:</label>
+      <select id="moleculeSelect"></select>
+      <button id="btnReset" style="margin-top:4px;">Reset</button>
+      <button id="btnCheck" style="margin-top:2px;">Check Structure</button>
+    </div>
+  </div>
+
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,60%);pointer-events:all;">
+    <div class="panel">
+      <div class="status-bar incorrect" id="statusBar">Click between atoms to add bonds, click atoms for lone pairs</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Electron Count</div>
+      <div class="data-row"><span>Total Valence e⁻</span><span class="data-val" id="totalE">0</span></div>
+      <div class="data-row"><span>Used e⁻</span><span class="data-val" id="usedE">0</span></div>
+      <div class="data-row"><span>Remaining</span><span class="data-val" id="remainE">0</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Formal Charge</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MOLECULES = [
+  { name: 'H₂O (Water)', atoms: [
+    { sym: 'O', x: 0.5, y: 0.45, valence: 6 },
+    { sym: 'H', x: 0.35, y: 0.55, valence: 1 },
+    { sym: 'H', x: 0.65, y: 0.55, valence: 1 }
+  ], bonds: [[0,1],[0,2]], totalE: 8,
+    answer: { bonds: { '0-1': 1, '0-2': 1 }, lonePairs: { 0: 2 } } },
+  { name: 'CO₂ (Carbon Dioxide)', atoms: [
+    { sym: 'C', x: 0.5, y: 0.45, valence: 4 },
+    { sym: 'O', x: 0.3, y: 0.45, valence: 6 },
+    { sym: 'O', x: 0.7, y: 0.45, valence: 6 }
+  ], bonds: [[0,1],[0,2]], totalE: 16,
+    answer: { bonds: { '0-1': 2, '0-2': 2 }, lonePairs: { 1: 2, 2: 2 } } },
+  { name: 'NH₃ (Ammonia)', atoms: [
+    { sym: 'N', x: 0.5, y: 0.4, valence: 5 },
+    { sym: 'H', x: 0.35, y: 0.55, valence: 1 },
+    { sym: 'H', x: 0.5, y: 0.6, valence: 1 },
+    { sym: 'H', x: 0.65, y: 0.55, valence: 1 }
+  ], bonds: [[0,1],[0,2],[0,3]], totalE: 8,
+    answer: { bonds: { '0-1': 1, '0-2': 1, '0-3': 1 }, lonePairs: { 0: 1 } } },
+  { name: 'HCN (Hydrogen Cyanide)', atoms: [
+    { sym: 'H', x: 0.3, y: 0.45, valence: 1 },
+    { sym: 'C', x: 0.5, y: 0.45, valence: 4 },
+    { sym: 'N', x: 0.7, y: 0.45, valence: 5 }
+  ], bonds: [[0,1],[1,2]], totalE: 10,
+    answer: { bonds: { '0-1': 1, '1-2': 3 }, lonePairs: { 2: 1 } } },
+  { name: 'CH₄ (Methane)', atoms: [
+    { sym: 'C', x: 0.5, y: 0.45, valence: 4 },
+    { sym: 'H', x: 0.35, y: 0.35, valence: 1 },
+    { sym: 'H', x: 0.65, y: 0.35, valence: 1 },
+    { sym: 'H', x: 0.35, y: 0.55, valence: 1 },
+    { sym: 'H', x: 0.65, y: 0.55, valence: 1 }
+  ], bonds: [[0,1],[0,2],[0,3],[0,4]], totalE: 8,
+    answer: { bonds: { '0-1': 1, '0-2': 1, '0-3': 1, '0-4': 1 }, lonePairs: {} } },
+  { name: 'O₂ (Oxygen)', atoms: [
+    { sym: 'O', x: 0.4, y: 0.45, valence: 6 },
+    { sym: 'O', x: 0.6, y: 0.45, valence: 6 }
+  ], bonds: [[0,1]], totalE: 12,
+    answer: { bonds: { '0-1': 2 }, lonePairs: { 0: 2, 1: 2 } } },
+  { name: 'N₂ (Nitrogen)', atoms: [
+    { sym: 'N', x: 0.4, y: 0.45, valence: 5 },
+    { sym: 'N', x: 0.6, y: 0.45, valence: 5 }
+  ], bonds: [[0,1]], totalE: 10,
+    answer: { bonds: { '0-1': 3 }, lonePairs: { 0: 1, 1: 1 } } },
+  { name: 'HF (Hydrogen Fluoride)', atoms: [
+    { sym: 'H', x: 0.4, y: 0.45, valence: 1 },
+    { sym: 'F', x: 0.6, y: 0.45, valence: 7 }
+  ], bonds: [[0,1]], totalE: 8,
+    answer: { bonds: { '0-1': 1 }, lonePairs: { 1: 3 } } },
+  { name: 'HCl (Hydrochloric Acid)', atoms: [
+    { sym: 'H', x: 0.4, y: 0.45, valence: 1 },
+    { sym: 'Cl', x: 0.6, y: 0.45, valence: 7 }
+  ], bonds: [[0,1]], totalE: 8,
+    answer: { bonds: { '0-1': 1 }, lonePairs: { 1: 3 } } },
+  { name: 'CCl₄ (Carbon Tetrachloride)', atoms: [
+    { sym: 'C', x: 0.5, y: 0.45, valence: 4 },
+    { sym: 'Cl', x: 0.35, y: 0.32, valence: 7 },
+    { sym: 'Cl', x: 0.65, y: 0.32, valence: 7 },
+    { sym: 'Cl', x: 0.35, y: 0.58, valence: 7 },
+    { sym: 'Cl', x: 0.65, y: 0.58, valence: 7 }
+  ], bonds: [[0,1],[0,2],[0,3],[0,4]], totalE: 32,
+    answer: { bonds: { '0-1': 1, '0-2': 1, '0-3': 1, '0-4': 1 }, lonePairs: { 1: 3, 2: 3, 3: 3, 4: 3 } } }
+];
+
+let currentMol = 0;
+let bondOrders = {};
+let lonePairs = {};
+const svg = document.getElementById('svgCanvas');
+const select = document.getElementById('moleculeSelect');
+
+MOLECULES.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = `${i + 1}. ${m.name}`;
+  select.appendChild(opt);
+});
+
+select.addEventListener('change', () => { currentMol = parseInt(select.value); resetStructure(); });
+document.getElementById('btnReset').addEventListener('click', resetStructure);
+document.getElementById('btnCheck').addEventListener('click', checkStructure);
+
+function resetStructure() {
+  const mol = MOLECULES[currentMol];
+  bondOrders = {};
+  lonePairs = {};
+  mol.bonds.forEach(([a, b]) => {
+    const key = `${Math.min(a,b)}-${Math.max(a,b)}`;
+    bondOrders[key] = 1;
+  });
+  mol.atoms.forEach((_, i) => { lonePairs[i] = 0; });
+  render();
+}
+
+function render() {
+  const mol = MOLECULES[currentMol];
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  // Draw bonds
+  mol.bonds.forEach(([a, b]) => {
+    const key = `${Math.min(a,b)}-${Math.max(a,b)}`;
+    const order = bondOrders[key] || 0;
+    const ax = mol.atoms[a].x * w, ay = mol.atoms[a].y * h;
+    const bx = mol.atoms[b].x * w, by = mol.atoms[b].y * h;
+    const dx = bx - ax, dy = by - ay;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const nx = -dy/len * 4, ny = dx/len * 4;
+
+    for (let i = 0; i < order; i++) {
+      const offset = (i - (order-1)/2) * 2;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', ax + nx * offset);
+      line.setAttribute('y1', ay + ny * offset);
+      line.setAttribute('x2', bx + nx * offset);
+      line.setAttribute('y2', by + ny * offset);
+      line.setAttribute('stroke', '#6ee7b7');
+      line.setAttribute('class', 'bond-line');
+      line.style.cursor = 'pointer';
+      line.addEventListener('click', () => {
+        bondOrders[key] = ((bondOrders[key] || 0) % 3) + 1;
+        render();
+      });
+      svg.appendChild(line);
+    }
+
+    // Invisible click area for bond
+    const clickLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    clickLine.setAttribute('x1', ax); clickLine.setAttribute('y1', ay);
+    clickLine.setAttribute('x2', bx); clickLine.setAttribute('y2', by);
+    clickLine.setAttribute('stroke', 'transparent');
+    clickLine.setAttribute('stroke-width', '20');
+    clickLine.style.cursor = 'pointer';
+    clickLine.addEventListener('click', () => {
+      bondOrders[key] = ((bondOrders[key] || 0) % 3) + 1;
+      render();
+    });
+    svg.appendChild(clickLine);
+  });
+
+  // Draw atoms and lone pairs
+  mol.atoms.forEach((atom, i) => {
+    const cx = atom.x * w, cy = atom.y * h;
+    const r = atom.sym === 'H' ? 18 : 24;
+
+    // Lone pair dots
+    const lp = lonePairs[i] || 0;
+    const lpPositions = [
+      [0, -r-10], [0, r+10], [-r-10, 0], [r+10, 0]
+    ];
+    for (let p = 0; p < lp && p < 4; p++) {
+      const [dx, dy] = lpPositions[p];
+      for (let d = 0; d < 2; d++) {
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', cx + dx + (d === 0 ? -3 : 3));
+        dot.setAttribute('cy', cy + dy);
+        dot.setAttribute('r', 2.5);
+        dot.setAttribute('class', 'electron-dot');
+        svg.appendChild(dot);
+      }
+    }
+
+    // Atom circle
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
+    circle.setAttribute('r', r);
+    circle.setAttribute('fill', 'rgba(15,23,42,0.95)');
+    circle.setAttribute('stroke', 'rgba(16,185,129,0.4)');
+    circle.setAttribute('stroke-width', '2');
+    circle.setAttribute('class', 'atom-circle');
+    circle.addEventListener('click', () => {
+      lonePairs[i] = ((lonePairs[i] || 0) + 1) % 5;
+      render();
+    });
+    svg.appendChild(circle);
+
+    // Atom label
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', cx); text.setAttribute('y', cy);
+    text.setAttribute('class', 'atom-label');
+    text.setAttribute('fill', atom.sym === 'H' ? '#94a3b8' : '#6ee7b7');
+    text.setAttribute('font-size', atom.sym === 'H' ? '14' : '18');
+    text.textContent = atom.sym;
+    svg.appendChild(text);
+  });
+
+  updateElectronCount();
+}
+
+function updateElectronCount() {
+  const mol = MOLECULES[currentMol];
+  const total = mol.totalE;
+  let used = 0;
+  for (const key in bondOrders) used += (bondOrders[key] || 0) * 2;
+  for (const key in lonePairs) used += (lonePairs[key] || 0) * 2;
+  document.getElementById('totalE').textContent = total;
+  document.getElementById('usedE').textContent = used;
+  const remain = total - used;
+  const el = document.getElementById('remainE');
+  el.textContent = remain;
+  el.style.color = remain === 0 ? '#22c55e' : remain < 0 ? '#ef4444' : '#f97316';
+}
+
+function checkStructure() {
+  const mol = MOLECULES[currentMol];
+  const ans = mol.answer;
+  let correct = true;
+
+  for (const key in ans.bonds) {
+    if ((bondOrders[key] || 0) !== ans.bonds[key]) { correct = false; break; }
+  }
+  if (correct && ans.lonePairs) {
+    for (const key in ans.lonePairs) {
+      if ((lonePairs[key] || 0) !== ans.lonePairs[key]) { correct = false; break; }
+    }
+  }
+
+  const bar = document.getElementById('statusBar');
+  if (correct) {
+    bar.textContent = '✓ Correct Lewis structure!';
+    bar.className = 'status-bar correct';
+  } else {
+    bar.textContent = '✗ Not quite — check bond orders and lone pairs';
+    bar.className = 'status-bar incorrect';
+  }
+}
+
+function renderFormulas() {
+  const el = document.getElementById('formulaDisplay');
+  el.innerHTML = '';
+  const tex = '\\text{FC} = V - N - \\tfrac{B}{2}';
+  const div = document.createElement('div');
+  try { katex.render(tex, div, { displayMode: true, throwOnError: false }); }
+  catch { div.textContent = tex; }
+  el.appendChild(div);
+  const desc = document.createElement('div');
+  desc.className = 'formula-desc';
+  desc.textContent = 'V = valence e⁻, N = nonbonding e⁻, B = bonding e⁻';
+  el.appendChild(desc);
+}
+
+window.addEventListener('resize', render);
+renderFormulas();
+resetStructure();
+</script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balancing Chemical Equations — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    button.active { background: rgba(16,185,129,0.35); border-color: #10b981; }
+
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+
+    .controls { display: flex; flex-direction: column; gap: 6px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+
+    .equation-display {
+      display: flex; align-items: center; gap: 4px;
+      flex-wrap: wrap; justify-content: center;
+      padding: 10px 0;
+    }
+
+    .term {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .coeff-controls { display: flex; gap: 2px; }
+    .coeff-btn {
+      width: 24px; height: 24px; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0; border-radius: 4px;
+    }
+    .coeff-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem; font-weight: 700;
+      color: #6ee7b7; min-width: 24px; text-align: center;
+    }
+    .formula-text { font-size: 0.75rem; color: #e2e8f0; }
+
+    .separator { font-size: 1.2rem; color: #94a3b8; padding: 0 4px; align-self: center; }
+    .arrow { font-size: 1.4rem; color: #10b981; padding: 0 8px; align-self: center; }
+
+    .atom-inventory {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 6px;
+    }
+    .atom-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.72rem;
+    }
+    .atom-symbol { font-weight: 600; color: #e2e8f0; }
+    .atom-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .atom-count.balanced { color: #22c55e; }
+    .atom-count.unbalanced { color: #ef4444; }
+
+    .status-bar {
+      text-align: center; padding: 8px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .status-bar.balanced { color: #22c55e; }
+    .status-bar.unbalanced { color: #f97316; }
+
+    .score-display { font-size: 0.7rem; color: #94a3b8; }
+    .score-display .data-val { color: #6ee7b7; font-size: 0.9rem; }
+
+    .formula-panel { max-width: 420px; }
+    .formula-panel .katex-display { font-size: 0.75rem; margin: 4px 0; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+
+    .data-panel { min-width: 200px; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Balancing Chemical Equations <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">Adjust coefficients to conserve mass — every atom must balance</p>
+    </div>
+    <div class="panel controls">
+      <label>Reaction:</label>
+      <select id="reactionSelect"></select>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <button id="btnReset">Reset</button>
+        <button id="btnHint">Hint</button>
+      </div>
+      <div class="score-display" style="margin-top:4px;">
+        Solved: <span class="data-val" id="scoreDisplay">0</span> / <span id="totalDisplay">8</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:all;width:90%;max-width:900px;">
+    <div class="panel" id="equationPanel">
+      <div class="equation-display" id="equationDisplay"></div>
+      <div class="status-bar unbalanced" id="statusBar">Not balanced — adjust coefficients</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div class="panel-title">Atom Inventory</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+        <div>
+          <div style="font-size:0.62rem;color:#10b981;margin-bottom:4px;font-weight:600;">Reactants</div>
+          <div id="leftAtoms"></div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:#10b981;margin-bottom:4px;font-weight:600;">Products</div>
+          <div id="rightAtoms"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Key Principle</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REACTIONS = [
+  { name: "Hydrogen + Oxygen → Water",
+    reactants: [{ formula: "H₂", atoms: { H: 2 } }, { formula: "O₂", atoms: { O: 2 } }],
+    products: [{ formula: "H₂O", atoms: { H: 2, O: 1 } }],
+    answer: [2, 1, 2] },
+  { name: "Iron + Oxygen → Iron(III) Oxide",
+    reactants: [{ formula: "Fe", atoms: { Fe: 1 } }, { formula: "O₂", atoms: { O: 2 } }],
+    products: [{ formula: "Fe₂O₃", atoms: { Fe: 2, O: 3 } }],
+    answer: [4, 3, 2] },
+  { name: "Methane Combustion",
+    reactants: [{ formula: "CH₄", atoms: { C: 1, H: 4 } }, { formula: "O₂", atoms: { O: 2 } }],
+    products: [{ formula: "CO₂", atoms: { C: 1, O: 2 } }, { formula: "H₂O", atoms: { H: 2, O: 1 } }],
+    answer: [1, 2, 1, 2] },
+  { name: "Nitrogen + Hydrogen → Ammonia",
+    reactants: [{ formula: "N₂", atoms: { N: 2 } }, { formula: "H₂", atoms: { H: 2 } }],
+    products: [{ formula: "NH₃", atoms: { N: 1, H: 3 } }],
+    answer: [1, 3, 2] },
+  { name: "Sodium + Water → Sodium Hydroxide + Hydrogen",
+    reactants: [{ formula: "Na", atoms: { Na: 1 } }, { formula: "H₂O", atoms: { H: 2, O: 1 } }],
+    products: [{ formula: "NaOH", atoms: { Na: 1, O: 1, H: 1 } }, { formula: "H₂", atoms: { H: 2 } }],
+    answer: [2, 2, 2, 1] },
+  { name: "Propane Combustion",
+    reactants: [{ formula: "C₃H₈", atoms: { C: 3, H: 8 } }, { formula: "O₂", atoms: { O: 2 } }],
+    products: [{ formula: "CO₂", atoms: { C: 1, O: 2 } }, { formula: "H₂O", atoms: { H: 2, O: 1 } }],
+    answer: [1, 5, 3, 4] },
+  { name: "Aluminum + Hydrochloric Acid",
+    reactants: [{ formula: "Al", atoms: { Al: 1 } }, { formula: "HCl", atoms: { H: 1, Cl: 1 } }],
+    products: [{ formula: "AlCl₃", atoms: { Al: 1, Cl: 3 } }, { formula: "H₂", atoms: { H: 2 } }],
+    answer: [2, 6, 2, 3] },
+  { name: "Photosynthesis",
+    reactants: [{ formula: "CO₂", atoms: { C: 1, O: 2 } }, { formula: "H₂O", atoms: { H: 2, O: 1 } }],
+    products: [{ formula: "C₆H₁₂O₆", atoms: { C: 6, H: 12, O: 6 } }, { formula: "O₂", atoms: { O: 2 } }],
+    answer: [6, 6, 1, 6] }
+];
+
+let currentReaction = 0;
+let coefficients = [];
+let solved = new Set();
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const select = document.getElementById('reactionSelect');
+
+REACTIONS.forEach((r, i) => {
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = `${i + 1}. ${r.name}`;
+  select.appendChild(opt);
+});
+
+select.addEventListener('change', () => { currentReaction = parseInt(select.value); resetCoefficients(); });
+document.getElementById('btnReset').addEventListener('click', resetCoefficients);
+document.getElementById('btnHint').addEventListener('click', showHint);
+
+function resetCoefficients() {
+  const r = REACTIONS[currentReaction];
+  coefficients = new Array(r.reactants.length + r.products.length).fill(1);
+  renderEquation();
+}
+
+function showHint() {
+  const r = REACTIONS[currentReaction];
+  const all = [...r.reactants, ...r.products];
+  for (let i = 0; i < coefficients.length; i++) {
+    if (coefficients[i] !== r.answer[i]) {
+      coefficients[i] = r.answer[i];
+      renderEquation();
+      return;
+    }
+  }
+}
+
+function getAtomCounts(compounds, coeffs, startIdx) {
+  const counts = {};
+  compounds.forEach((c, i) => {
+    const coeff = coeffs[startIdx + i];
+    for (const [atom, n] of Object.entries(c.atoms)) {
+      counts[atom] = (counts[atom] || 0) + n * coeff;
+    }
+  });
+  return counts;
+}
+
+function isBalanced() {
+  const r = REACTIONS[currentReaction];
+  const left = getAtomCounts(r.reactants, coefficients, 0);
+  const right = getAtomCounts(r.products, coefficients, r.reactants.length);
+  const allAtoms = new Set([...Object.keys(left), ...Object.keys(right)]);
+  for (const atom of allAtoms) {
+    if ((left[atom] || 0) !== (right[atom] || 0)) return false;
+  }
+  return true;
+}
+
+function renderEquation() {
+  const r = REACTIONS[currentReaction];
+  const display = document.getElementById('equationDisplay');
+  display.innerHTML = '';
+
+  const allCompounds = [...r.reactants, ...r.products];
+
+  allCompounds.forEach((compound, i) => {
+    if (i === r.reactants.length) {
+      const arrow = document.createElement('span');
+      arrow.className = 'arrow'; arrow.textContent = '→';
+      display.appendChild(arrow);
+    } else if (i > 0 && i !== r.reactants.length) {
+      const sep = document.createElement('span');
+      sep.className = 'separator'; sep.textContent = '+';
+      display.appendChild(sep);
+    }
+
+    const term = document.createElement('div');
+    term.className = 'term';
+
+    const controls = document.createElement('div');
+    controls.className = 'coeff-controls';
+
+    const btnMinus = document.createElement('button');
+    btnMinus.className = 'coeff-btn'; btnMinus.textContent = '−';
+    btnMinus.addEventListener('click', () => {
+      if (coefficients[i] > 1) { coefficients[i]--; renderEquation(); }
+    });
+
+    const coeffVal = document.createElement('span');
+    coeffVal.className = 'coeff-value'; coeffVal.textContent = coefficients[i];
+
+    const btnPlus = document.createElement('button');
+    btnPlus.className = 'coeff-btn'; btnPlus.textContent = '+';
+    btnPlus.addEventListener('click', () => {
+      if (coefficients[i] < 20) { coefficients[i]++; renderEquation(); }
+    });
+
+    controls.append(btnMinus, coeffVal, btnPlus);
+
+    const formulaText = document.createElement('span');
+    formulaText.className = 'formula-text'; formulaText.textContent = compound.formula;
+
+    term.append(controls, formulaText);
+    display.appendChild(term);
+  });
+
+  // Atom inventory
+  const leftCounts = getAtomCounts(r.reactants, coefficients, 0);
+  const rightCounts = getAtomCounts(r.products, coefficients, r.reactants.length);
+  const allAtoms = [...new Set([...Object.keys(leftCounts), ...Object.keys(rightCounts)])].sort();
+
+  const renderSide = (containerId, counts, otherCounts) => {
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    allAtoms.forEach(atom => {
+      const row = document.createElement('div');
+      row.className = 'atom-row';
+      const sym = document.createElement('span');
+      sym.className = 'atom-symbol'; sym.textContent = atom;
+      const cnt = document.createElement('span');
+      const val = counts[atom] || 0;
+      const otherVal = otherCounts[atom] || 0;
+      cnt.className = 'atom-count ' + (val === otherVal && val > 0 ? 'balanced' : 'unbalanced');
+      cnt.textContent = val;
+      row.append(sym, cnt);
+      el.appendChild(row);
+    });
+  };
+
+  renderSide('leftAtoms', leftCounts, rightCounts);
+  renderSide('rightAtoms', rightCounts, leftCounts);
+
+  // Status
+  const statusBar = document.getElementById('statusBar');
+  const balanced = isBalanced();
+  if (balanced) {
+    statusBar.textContent = '✓ Balanced! All atoms conserved.';
+    statusBar.className = 'status-bar balanced';
+    if (!solved.has(currentReaction)) {
+      solved.add(currentReaction);
+      document.getElementById('scoreDisplay').textContent = solved.size;
+    }
+  } else {
+    statusBar.textContent = 'Not balanced — adjust coefficients';
+    statusBar.className = 'status-bar unbalanced';
+  }
+}
+
+// Render KaTeX formulas
+function renderFormulas() {
+  const el = document.getElementById('formulaDisplay');
+  el.innerHTML = '';
+  const formulas = [
+    { tex: '\\sum n_{\\text{atoms, reactants}} = \\sum n_{\\text{atoms, products}}', desc: 'Conservation of Mass: atoms in = atoms out' },
+    { tex: 'a\\,A + b\\,B \\rightarrow c\\,C + d\\,D', desc: 'Coefficients a,b,c,d are smallest whole numbers' }
+  ];
+  formulas.forEach(f => {
+    const div = document.createElement('div');
+    try { katex.render(f.tex, div, { displayMode: true, throwOnError: false }); }
+    catch { div.textContent = f.tex; }
+    el.appendChild(div);
+    const desc = document.createElement('div');
+    desc.className = 'formula-desc'; desc.textContent = f.desc;
+    el.appendChild(desc);
+  });
+}
+
+// Background animation: floating atom symbols
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+const particles = [];
+function initParticles() {
+  const symbols = ['H', 'O', 'C', 'N', 'Fe', 'Na', 'Cl', 'Al', 'S'];
+  for (let i = 0; i < 40; i++) {
+    particles.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      symbol: symbols[Math.floor(Math.random() * symbols.length)],
+      size: 10 + Math.random() * 8,
+      alpha: 0.06 + Math.random() * 0.08
+    });
+  }
+}
+
+function drawBackground() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = '14px JetBrains Mono, monospace';
+
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = '#10b981';
+    ctx.font = `${p.size}px JetBrains Mono, monospace`;
+    ctx.fillText(p.symbol, p.x, p.y);
+  });
+
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(drawBackground);
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+initParticles();
+drawBackground();
+renderFormulas();
+resetCoefficients();
+</script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electron Configuration — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    button.active { background: rgba(16,185,129,0.35); border-color: #10b981; }
+    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .element-info {
+      text-align: center; margin-top: 4px;
+    }
+    .element-symbol { font-size: 1.8rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; }
+    .element-name { font-size: 0.7rem; color: #94a3b8; }
+    .config-text { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #6ee7b7; margin-top: 6px; word-break: break-all; }
+    .noble-gas-short { font-size: 0.65rem; color: #94a3b8; margin-top: 2px; }
+    .orbital-diagram {
+      display: flex; flex-wrap: wrap; gap: 3px; align-items: flex-end;
+      max-width: 500px;
+    }
+    .orbital-col { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .orbital-box {
+      width: 20px; height: 20px; border: 1px solid rgba(16,185,129,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem; border-radius: 2px;
+    }
+    .orbital-box.filled { background: rgba(16,185,129,0.15); }
+    .orbital-label { font-size: 0.55rem; color: #94a3b8; margin-top: 1px; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 420px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Electron Configuration <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">Aufbau principle — fill orbitals from lowest to highest energy</p>
+    </div>
+    <div class="panel controls">
+      <label>Atomic Number (Z): <span class="data-val" id="zDisplay">1</span></label>
+      <input type="range" id="zSlider" min="1" max="36" value="1">
+      <div class="element-info">
+        <div class="element-symbol" id="symbolDisplay">H</div>
+        <div class="element-name" id="nameDisplay">Hydrogen</div>
+      </div>
+      <div class="config-text" id="configDisplay">1s¹</div>
+      <div class="noble-gas-short" id="shortDisplay"></div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="max-width:540px;">
+      <div class="panel-title">Orbital Diagram</div>
+      <div class="orbital-diagram" id="orbitalDiagram"></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Filling Order</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ELEMENTS = [
+  '', 'H','He','Li','Be','B','C','N','O','F','Ne',
+  'Na','Mg','Al','Si','P','S','Cl','Ar',
+  'K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn',
+  'Ga','Ge','As','Se','Br','Kr'
+];
+const NAMES = [
+  '', 'Hydrogen','Helium','Lithium','Beryllium','Boron','Carbon','Nitrogen','Oxygen','Fluorine','Neon',
+  'Sodium','Magnesium','Aluminum','Silicon','Phosphorus','Sulfur','Chlorine','Argon',
+  'Potassium','Calcium','Scandium','Titanium','Vanadium','Chromium','Manganese','Iron','Cobalt','Nickel','Copper','Zinc',
+  'Gallium','Germanium','Arsenic','Selenium','Bromine','Krypton'
+];
+
+const ORBITAL_ORDER = [
+  { name: '1s', n: 1, l: 0, max: 2 },
+  { name: '2s', n: 2, l: 0, max: 2 },
+  { name: '2p', n: 2, l: 1, max: 6 },
+  { name: '3s', n: 3, l: 0, max: 2 },
+  { name: '3p', n: 3, l: 1, max: 6 },
+  { name: '4s', n: 4, l: 0, max: 2 },
+  { name: '3d', n: 3, l: 2, max: 10 },
+  { name: '4p', n: 4, l: 1, max: 6 },
+];
+
+const SUPERSCRIPTS = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','10':'¹⁰' };
+
+function getConfig(z) {
+  let remaining = z;
+  // Handle exceptions
+  if (z === 24) return [{ name:'1s',e:2 },{ name:'2s',e:2 },{ name:'2p',e:6 },{ name:'3s',e:2 },{ name:'3p',e:6 },{ name:'4s',e:1 },{ name:'3d',e:5 }]; // Cr
+  if (z === 29) return [{ name:'1s',e:2 },{ name:'2s',e:2 },{ name:'2p',e:6 },{ name:'3s',e:2 },{ name:'3p',e:6 },{ name:'4s',e:1 },{ name:'3d',e:10 }]; // Cu
+
+  const config = [];
+  for (const orb of ORBITAL_ORDER) {
+    if (remaining <= 0) break;
+    const e = Math.min(remaining, orb.max);
+    config.push({ name: orb.name, e });
+    remaining -= e;
+  }
+  return config;
+}
+
+function configToString(config) {
+  return config.map(o => `${o.name}${SUPERSCRIPTS[o.e] || o.e}`).join(' ');
+}
+
+function getNobleGasShort(z, config) {
+  const cores = [
+    { z: 2, sym: 'He', orbitals: 1 },
+    { z: 10, sym: 'Ne', orbitals: 3 },
+    { z: 18, sym: 'Ar', orbitals: 5 },
+  ];
+  for (let i = cores.length - 1; i >= 0; i--) {
+    if (z > cores[i].z) {
+      const valence = config.slice(cores[i].orbitals);
+      if (valence.length === 0) return '';
+      return `[${cores[i].sym}] ${valence.map(o => `${o.name}${SUPERSCRIPTS[o.e] || o.e}`).join(' ')}`;
+    }
+  }
+  return '';
+}
+
+function getShellElectrons(z) {
+  const config = getConfig(z);
+  const shells = [0, 0, 0, 0, 0]; // n=1..4
+  for (const o of config) {
+    const n = parseInt(o.name[0]);
+    shells[n] += o.e;
+  }
+  return shells;
+}
+
+// Canvas: Bohr model
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let currentZ = 1;
+let animPhase = 0;
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function drawBohrModel() {
+  const cx = canvas.width * 0.45;
+  const cy = canvas.height * 0.48;
+  const maxR = Math.min(canvas.width, canvas.height) * 0.28;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Nucleus
+  const nucleusR = 12 + currentZ * 0.3;
+  const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, nucleusR);
+  gradient.addColorStop(0, '#10b981');
+  gradient.addColorStop(1, 'rgba(16,185,129,0.2)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, nucleusR, 0, Math.PI * 2);
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(currentZ.toString(), cx, cy);
+
+  // Shells
+  const shells = getShellElectrons(currentZ);
+  const shellRadii = [0, maxR * 0.25, maxR * 0.5, maxR * 0.75, maxR];
+  const shellMaxE = [0, 2, 8, 18, 8]; // typical max for display
+
+  for (let n = 1; n <= 4; n++) {
+    if (shells[n] === 0) continue;
+    const r = shellRadii[n];
+
+    // Shell ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(16,185,129,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Shell label
+    ctx.fillStyle = 'rgba(16,185,129,0.4)';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.fillText(`n=${n}`, cx + r + 12, cy);
+
+    // Electrons
+    const eCount = shells[n];
+    for (let i = 0; i < eCount; i++) {
+      const angle = (i / eCount) * Math.PI * 2 + animPhase * (0.3 / n);
+      const ex = cx + r * Math.cos(angle);
+      const ey = cy + r * Math.sin(angle);
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(ex, ey, 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(16,185,129,0.15)';
+      ctx.fill();
+
+      // Electron
+      ctx.beginPath();
+      ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#6ee7b7';
+      ctx.fill();
+    }
+  }
+
+  animPhase += 0.008;
+  requestAnimationFrame(drawBohrModel);
+}
+
+function renderOrbitalDiagram() {
+  const config = getConfig(currentZ);
+  const container = document.getElementById('orbitalDiagram');
+  container.innerHTML = '';
+
+  for (const orb of ORBITAL_ORDER) {
+    const filled = config.find(c => c.name === orb.name);
+    const electrons = filled ? filled.e : 0;
+    const boxes = orb.max / 2; // number of orbital boxes
+
+    const col = document.createElement('div');
+    col.className = 'orbital-col';
+
+    for (let b = 0; b < boxes; b++) {
+      const box = document.createElement('div');
+      box.className = 'orbital-box' + (electrons > 0 ? ' filled' : '');
+
+      // Fill according to Hund's rule: first one arrow per box, then pair
+      let arrows = '';
+      const firstPass = Math.min(electrons, boxes);
+      const secondPass = Math.max(0, electrons - boxes);
+      if (b < firstPass) arrows += '↑';
+      if (b < secondPass) arrows += '↓';
+
+      box.textContent = arrows;
+      box.style.color = arrows ? '#6ee7b7' : 'transparent';
+      col.appendChild(box);
+    }
+
+    const label = document.createElement('div');
+    label.className = 'orbital-label';
+    label.textContent = orb.name;
+    col.appendChild(label);
+    container.appendChild(col);
+
+    if (electrons <= 0 && !filled) break; // stop showing empty orbitals after last filled
+  }
+}
+
+function update(z) {
+  currentZ = z;
+  document.getElementById('zDisplay').textContent = z;
+  document.getElementById('symbolDisplay').textContent = ELEMENTS[z];
+  document.getElementById('nameDisplay').textContent = NAMES[z];
+
+  const config = getConfig(z);
+  document.getElementById('configDisplay').textContent = configToString(config);
+  const short = getNobleGasShort(z, config);
+  document.getElementById('shortDisplay').textContent = short ? `Noble gas: ${short}` : '';
+
+  renderOrbitalDiagram();
+}
+
+document.getElementById('zSlider').addEventListener('input', (e) => update(parseInt(e.target.value)));
+
+// Render formulas
+function renderFormulas() {
+  const el = document.getElementById('formulaDisplay');
+  el.innerHTML = '';
+  const tex = '1s \\to 2s \\to 2p \\to 3s \\to 3p \\to 4s \\to 3d \\to 4p';
+  const div = document.createElement('div');
+  try { katex.render(tex, div, { displayMode: true, throwOnError: false }); }
+  catch { div.textContent = tex; }
+  el.appendChild(div);
+  const desc = document.createElement('div');
+  desc.className = 'formula-desc';
+  desc.textContent = 'Aufbau order: lower (n+l) fills first';
+  el.appendChild(desc);
+}
+
+renderFormulas();
+update(1);
+drawBohrModel();
+</script>
+</body>
+</html>

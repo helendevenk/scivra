@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build a Molecule — Scivra AP Chemistry</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { display: block; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    button.active { background: rgba(16,185,129,0.35); border-color: #10b981; }
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #6ee7b7; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 380px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .atom-legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .atom-chip {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.62rem; color: #e2e8f0;
+    }
+    .atom-dot { width: 10px; height: 10px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Build a Molecule <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">Explore VSEPR geometry in 3D — drag to rotate, scroll to zoom</p>
+    </div>
+    <div class="panel">
+      <label style="font-size:0.68rem;color:#94a3b8;">Molecule:</label>
+      <select id="molSelect"></select>
+      <div style="margin-top:6px;">
+        <button id="btnAngles">Toggle Angles</button>
+        <button id="btnReset" style="margin-left:4px;">Reset View</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" id="infoPanel" style="min-width:220px;">
+      <div class="panel-title">Molecule Info</div>
+      <div class="info-row">Formula: <span class="data-val" id="infoFormula">—</span></div>
+      <div class="info-row">Electron Geometry: <span class="data-val" id="infoEGeom">—</span></div>
+      <div class="info-row">Molecular Geometry: <span class="data-val" id="infoMGeom">—</span></div>
+      <div class="info-row">Bond Angle: <span class="data-val" id="infoAngle">—</span></div>
+      <div class="info-row">Polar: <span class="data-val" id="infoPolar">—</span></div>
+      <div class="atom-legend" id="atomLegend"></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">VSEPR Theory</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ATOM_COLORS = {
+  H: 0xffffff, C: 0x444444, N: 0x3333ff, O: 0xff3333,
+  F: 0x00ff00, Cl: 0x00ff00, S: 0xffff00, B: 0xff9999, P: 0xff8800
+};
+const ATOM_RADII = {
+  H: 0.3, C: 0.5, N: 0.48, O: 0.45,
+  F: 0.4, Cl: 0.55, S: 0.6, B: 0.5, P: 0.55
+};
+
+const MOLECULES = [
+  { name: "H₂O — Water", formula: "H₂O", eGeom: "Tetrahedral", mGeom: "Bent", angle: "104.5°", polar: "Yes",
+    atoms: [
+      { el: "O", pos: [0, 0, 0] },
+      { el: "H", pos: [-0.76, 0.59, 0] },
+      { el: "H", pos: [0.76, 0.59, 0] }
+    ],
+    bonds: [[0,1],[0,2]] },
+  { name: "CH₄ — Methane", formula: "CH₄", eGeom: "Tetrahedral", mGeom: "Tetrahedral", angle: "109.5°", polar: "No",
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "H", pos: [0.63, 0.63, 0.63] },
+      { el: "H", pos: [-0.63, -0.63, 0.63] },
+      { el: "H", pos: [-0.63, 0.63, -0.63] },
+      { el: "H", pos: [0.63, -0.63, -0.63] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4]] },
+  { name: "CO₂ — Carbon Dioxide", formula: "CO₂", eGeom: "Linear", mGeom: "Linear", angle: "180°", polar: "No",
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "O", pos: [-1.16, 0, 0] },
+      { el: "O", pos: [1.16, 0, 0] }
+    ],
+    bonds: [[0,1],[0,1],[0,2],[0,2]] },
+  { name: "NH₃ — Ammonia", formula: "NH₃", eGeom: "Tetrahedral", mGeom: "Trigonal Pyramidal", angle: "107°", polar: "Yes",
+    atoms: [
+      { el: "N", pos: [0, 0.35, 0] },
+      { el: "H", pos: [0, -0.3, 0.94] },
+      { el: "H", pos: [0.81, -0.3, -0.47] },
+      { el: "H", pos: [-0.81, -0.3, -0.47] }
+    ],
+    bonds: [[0,1],[0,2],[0,3]] },
+  { name: "BF₃ — Boron Trifluoride", formula: "BF₃", eGeom: "Trigonal Planar", mGeom: "Trigonal Planar", angle: "120°", polar: "No",
+    atoms: [
+      { el: "B", pos: [0, 0, 0] },
+      { el: "F", pos: [0, 1.3, 0] },
+      { el: "F", pos: [1.13, -0.65, 0] },
+      { el: "F", pos: [-1.13, -0.65, 0] }
+    ],
+    bonds: [[0,1],[0,2],[0,3]] },
+  { name: "PCl₅ — Phosphorus Pentachloride", formula: "PCl₅", eGeom: "Trigonal Bipyramidal", mGeom: "Trigonal Bipyramidal", angle: "90°/120°", polar: "No",
+    atoms: [
+      { el: "P", pos: [0, 0, 0] },
+      { el: "Cl", pos: [0, 1.8, 0] },
+      { el: "Cl", pos: [0, -1.8, 0] },
+      { el: "Cl", pos: [1.56, 0, 0] },
+      { el: "Cl", pos: [-0.78, 0, 1.35] },
+      { el: "Cl", pos: [-0.78, 0, -1.35] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4],[0,5]] },
+  { name: "SF₆ — Sulfur Hexafluoride", formula: "SF₆", eGeom: "Octahedral", mGeom: "Octahedral", angle: "90°", polar: "No",
+    atoms: [
+      { el: "S", pos: [0, 0, 0] },
+      { el: "F", pos: [1.6, 0, 0] },
+      { el: "F", pos: [-1.6, 0, 0] },
+      { el: "F", pos: [0, 1.6, 0] },
+      { el: "F", pos: [0, -1.6, 0] },
+      { el: "F", pos: [0, 0, 1.6] },
+      { el: "F", pos: [0, 0, -1.6] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6]] },
+  { name: "HCN — Hydrogen Cyanide", formula: "HCN", eGeom: "Linear", mGeom: "Linear", angle: "180°", polar: "Yes",
+    atoms: [
+      { el: "H", pos: [-2.0, 0, 0] },
+      { el: "C", pos: [-0.94, 0, 0] },
+      { el: "N", pos: [0.22, 0, 0] }
+    ],
+    bonds: [[0,1],[1,2],[1,2],[1,2]] },
+  { name: "H₂S — Hydrogen Sulfide", formula: "H₂S", eGeom: "Tetrahedral", mGeom: "Bent", angle: "92°", polar: "Yes",
+    atoms: [
+      { el: "S", pos: [0, 0, 0] },
+      { el: "H", pos: [-0.97, 0.58, 0] },
+      { el: "H", pos: [0.97, 0.58, 0] }
+    ],
+    bonds: [[0,1],[0,2]] },
+  { name: "CCl₄ — Carbon Tetrachloride", formula: "CCl₄", eGeom: "Tetrahedral", mGeom: "Tetrahedral", angle: "109.5°", polar: "No",
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "Cl", pos: [0.9, 0.9, 0.9] },
+      { el: "Cl", pos: [-0.9, -0.9, 0.9] },
+      { el: "Cl", pos: [-0.9, 0.9, -0.9] },
+      { el: "Cl", pos: [0.9, -0.9, -0.9] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4]] }
+];
+
+let scene, camera, renderer, controls;
+let molGroup;
+let showAngles = true;
+let angleSprites = [];
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 6);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  document.body.insertBefore(renderer.domElement, document.getElementById('ui'));
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2;
+  controls.maxDistance = 15;
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 5, 5);
+  scene.add(dirLight);
+  const dirLight2 = new THREE.DirectionalLight(0x6ee7b7, 0.3);
+  dirLight2.position.set(-3, -2, -3);
+  scene.add(dirLight2);
+
+  molGroup = new THREE.Group();
+  scene.add(molGroup);
+
+  window.addEventListener('resize', onResize);
+  animate();
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function clearMolecule() {
+  while (molGroup.children.length > 0) {
+    const child = molGroup.children[0];
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+      else child.material.dispose();
+    }
+    molGroup.remove(child);
+  }
+  angleSprites = [];
+}
+
+function buildMolecule(idx) {
+  clearMolecule();
+  const mol = MOLECULES[idx];
+
+  mol.atoms.forEach(a => {
+    const r = (ATOM_RADII[a.el] || 0.4) * 0.7;
+    const geo = new THREE.SphereGeometry(r, 32, 32);
+    const mat = new THREE.MeshPhongMaterial({
+      color: ATOM_COLORS[a.el] || 0xcccccc,
+      shininess: 80,
+      specular: 0x444444
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...a.pos);
+    molGroup.add(mesh);
+  });
+
+  const drawnBonds = {};
+  mol.bonds.forEach(([i, j]) => {
+    const key = `${Math.min(i,j)}-${Math.max(i,j)}`;
+    drawnBonds[key] = (drawnBonds[key] || 0) + 1;
+  });
+
+  Object.entries(drawnBonds).forEach(([key, order]) => {
+    const [i, j] = key.split('-').map(Number);
+    const a1 = new THREE.Vector3(...mol.atoms[i].pos);
+    const a2 = new THREE.Vector3(...mol.atoms[j].pos);
+    const dir = new THREE.Vector3().subVectors(a2, a1);
+    const len = dir.length();
+    const mid = new THREE.Vector3().addVectors(a1, a2).multiplyScalar(0.5);
+
+    const offsets = order === 1 ? [0] : order === 2 ? [-0.08, 0.08] : [-0.12, 0, 0.12];
+    const perp = new THREE.Vector3();
+    if (Math.abs(dir.x) < 0.9) perp.crossVectors(dir, new THREE.Vector3(1, 0, 0)).normalize();
+    else perp.crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+
+    offsets.forEach(off => {
+      const geo = new THREE.CylinderGeometry(0.06, 0.06, len, 8);
+      const mat = new THREE.MeshPhongMaterial({ color: 0x94a3b8, shininess: 40 });
+      const cyl = new THREE.Mesh(geo, mat);
+
+      const offset = perp.clone().multiplyScalar(off);
+      cyl.position.copy(mid).add(offset);
+
+      const axis = new THREE.Vector3(0, 1, 0);
+      cyl.quaternion.setFromUnitVectors(axis, dir.clone().normalize());
+      molGroup.add(cyl);
+    });
+  });
+
+  if (showAngles && mol.atoms.length > 2) {
+    const central = mol.atoms[0];
+    const cPos = new THREE.Vector3(...central.pos);
+    const bondedIndices = [...new Set(mol.bonds.flat().filter(i => i !== 0))];
+
+    for (let a = 0; a < bondedIndices.length; a++) {
+      for (let b = a + 1; b < bondedIndices.length; b++) {
+        const v1 = new THREE.Vector3(...mol.atoms[bondedIndices[a]].pos).sub(cPos).normalize();
+        const v2 = new THREE.Vector3(...mol.atoms[bondedIndices[b]].pos).sub(cPos).normalize();
+        const angle = Math.acos(Math.max(-1, Math.min(1, v1.dot(v2))));
+        const deg = (angle * 180 / Math.PI).toFixed(1);
+
+        const midDir = v1.clone().add(v2).normalize().multiplyScalar(0.8);
+        const labelPos = cPos.clone().add(midDir);
+
+        const canvas2 = document.createElement('canvas');
+        canvas2.width = 128; canvas2.height = 48;
+        const ctx2 = canvas2.getContext('2d');
+        ctx2.fillStyle = 'rgba(16,185,129,0.7)';
+        ctx2.font = 'bold 24px monospace';
+        ctx2.textAlign = 'center';
+        ctx2.fillText(deg + '°', 64, 32);
+
+        const tex = new THREE.CanvasTexture(canvas2);
+        const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+        const sprite = new THREE.Sprite(spriteMat);
+        sprite.position.copy(labelPos);
+        sprite.scale.set(0.8, 0.3, 1);
+        molGroup.add(sprite);
+        angleSprites.push(sprite);
+
+        if (angleSprites.length >= 6) break;
+      }
+      if (angleSprites.length >= 6) break;
+    }
+  }
+
+  document.getElementById('infoFormula').textContent = mol.formula;
+  document.getElementById('infoEGeom').textContent = mol.eGeom;
+  document.getElementById('infoMGeom').textContent = mol.mGeom;
+  document.getElementById('infoAngle').textContent = mol.angle;
+  document.getElementById('infoPolar').textContent = mol.polar;
+
+  const legendEl = document.getElementById('atomLegend');
+  legendEl.innerHTML = '';
+  const seen = new Set();
+  mol.atoms.forEach(a => {
+    if (seen.has(a.el)) return;
+    seen.add(a.el);
+    const chip = document.createElement('span');
+    chip.className = 'atom-chip';
+    const dot = document.createElement('span');
+    dot.className = 'atom-dot';
+    dot.style.background = '#' + (ATOM_COLORS[a.el] || 0xcccccc).toString(16).padStart(6, '0');
+    chip.appendChild(dot);
+    chip.appendChild(document.createTextNode(a.el));
+    legendEl.appendChild(chip);
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+const select = document.getElementById('molSelect');
+MOLECULES.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = m.name;
+  select.appendChild(opt);
+});
+select.addEventListener('change', () => buildMolecule(parseInt(select.value)));
+
+document.getElementById('btnAngles').addEventListener('click', () => {
+  showAngles = !showAngles;
+  buildMolecule(parseInt(select.value));
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  camera.position.set(0, 0, 6);
+  controls.reset();
+});
+
+function renderFormulas() {
+  const el = document.getElementById('formulaDisplay');
+  el.innerHTML = '';
+  const formulas = [
+    { tex: '2 \\rightarrow \\text{Linear}\\;(180°)', desc: '2 electron domains' },
+    { tex: '3 \\rightarrow \\text{Trig. Planar}\\;(120°)', desc: '3 electron domains' },
+    { tex: '4 \\rightarrow \\text{Tetrahedral}\\;(109.5°)', desc: '4 electron domains' }
+  ];
+  formulas.forEach(f => {
+    const div = document.createElement('div');
+    try { katex.render(f.tex, div, { displayMode: false, throwOnError: false }); }
+    catch { div.textContent = f.tex; }
+    el.appendChild(div);
+    const desc = document.createElement('div');
+    desc.className = 'formula-desc'; desc.textContent = f.desc;
+    el.appendChild(desc);
+  });
+}
+
+init();
+renderFormulas();
+buildMolecule(0);
+</script>
+</body>
+</html>

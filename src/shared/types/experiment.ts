@@ -22,7 +22,7 @@ export type Tier = "free" | "pro" | "max";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 /** Release wave */
-export type Wave = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type Wave = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 /** Adjustable parameter for an experiment */
 export interface Parameter {
@@ -137,6 +137,9 @@ export interface Experiment {
   tier: Tier;
   estimatedTime: number;
   relatedExperiments: string[];
+
+  // HTML path (undefined for Wave-1 RTF experiments)
+  htmlPath?: string;
 
   // SEO
   seoTitle: string;
