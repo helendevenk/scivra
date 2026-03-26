@@ -32,6 +32,7 @@ import {
   UPG_CREDITS_PER_GENERATION,
   UPG_CREDITS_PER_REGENERATION,
 } from '@/shared/lib/upg/constants';
+import { DisciplineSelector } from './DisciplineSelector';
 
 const MIN_PROMPT_LENGTH = 2;
 const MAX_PROMPT_LENGTH = 500;
@@ -64,6 +65,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
     useAppContext();
 
   const [prompt, setPrompt] = useState('');
+  const [discipline, setDiscipline] = useState('physics');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressStepText, setProgressStepText] = useState('');
@@ -183,6 +185,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
         body: JSON.stringify({
           prompt: trimmed,
           language: locale === 'en' ? 'en' : 'zh',
+          discipline,
           isRegenerate,
         }),
       });
@@ -297,6 +300,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
         <div className="mx-auto max-w-5xl space-y-8">
           <Card className="overflow-hidden">
             <CardContent className="space-y-6 pt-6">
+              <DisciplineSelector selected={discipline} onChange={setDiscipline} />
               <div className="space-y-2">
                 <div className="relative rounded-lg p-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 animate-gradient-border">
                   <Textarea

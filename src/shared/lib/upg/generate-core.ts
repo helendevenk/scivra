@@ -123,11 +123,15 @@ export async function generateCore(
     });
   }
 
-  // 1. AI generation (provider selection: Anthropic proxy or OpenRouter)
+  // 1. AI generation (provider selection)
+  // Priority: ANTHROPIC_API_KEY (direct) > OPENROUTER_BASE_URL proxy > OpenRouter
   const configs = await getAllConfigs();
-  const apiKey = process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
-  const baseUrl = process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url;
-  const useAnthropic = baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = anthropicKey || process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
+  const baseUrl = anthropicKey
+    ? (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com')
+    : (process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url);
+  const useAnthropic = !!anthropicKey || baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
 
   const aiResult = useAnthropic && apiKey
     ? await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl })

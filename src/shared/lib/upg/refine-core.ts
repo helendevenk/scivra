@@ -120,13 +120,14 @@ export async function refineCore(
     .update(`${original.prompt}::refine::${refinementPrompt}`)
     .digest('hex');
 
-  // 4. Call LLM
+  // 4. Call LLM (same routing logic as generate-core)
   const configs = await getAllConfigs();
-  const apiKey = process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
-  const baseUrl =
-    process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url;
-  const useAnthropic =
-    baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = anthropicKey || process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
+  const baseUrl = anthropicKey
+    ? (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com')
+    : (process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url);
+  const useAnthropic = !!anthropicKey || baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
 
   const aiResult =
     useAnthropic && apiKey

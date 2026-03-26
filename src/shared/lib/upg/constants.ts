@@ -12,7 +12,7 @@ export const UPG_DEFAULT_MAX_TOKENS = 16000;
 export const UPG_DEFAULT_TEMPERATURE = 0.7;
 export const UPG_CREDITS_PER_REFINEMENT = 3;
 export const UPG_REFINEMENT_MAX_TOKENS = 16000;
-export const UPG_OPENROUTER_DEFAULT_BASE_URL = 'https://api.minimaxi.com/v1';
+export const UPG_OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 
 // CDN whitelist moved to @/config/lib-versions.ts for centralized version management
 export { UPG_CDN_WHITELIST } from '@/config/lib-versions';
