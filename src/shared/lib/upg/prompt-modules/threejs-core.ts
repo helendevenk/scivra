@@ -25,7 +25,7 @@ Omitting any part of this skeleton is a CRITICAL ERROR that causes black screens
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"><\/script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"><\/script>
+  <script src="/lib/orbit-controls.js"><\/script>
   <style>
     /* [YOUR CSS HERE — must include :root variables from Visual Design System] */
   </style>

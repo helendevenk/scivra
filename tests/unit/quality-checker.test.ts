@@ -87,11 +87,11 @@ describe('checkQuality', () => {
   });
 
   // --- ORBIT CONTROLS ---
-  it('fails when OrbitControls CDN is missing', () => {
+  it('fails when OrbitControls script is missing', () => {
     const result = checkQuality(makeValidHtml({ orbitCdn: '', orbitUsage: '' }));
     expect(result.passed).toBe(false);
     expect(result.issues).toEqual(
-      expect.arrayContaining([expect.stringContaining('OrbitControls CDN')])
+      expect.arrayContaining([expect.stringContaining('OrbitControls script tag')])
     );
   });
 

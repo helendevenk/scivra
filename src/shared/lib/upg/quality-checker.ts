@@ -31,13 +31,15 @@ export function checkQuality(html: string, discipline?: string): QualityResult {
     warnings.push('Three.js not loaded from CDN — may use wrong version');
   }
 
-  // 2. Check OrbitControls is loaded from CDN (not self-implemented)
-  const hasOrbitControlsCdn = /cdn\.jsdelivr\.net\/npm\/three@[\d.]+\/examples\/js\/controls\/OrbitControls\.js/.test(html);
+  // 2. Check OrbitControls is loaded (local or CDN)
+  const hasOrbitControlsScript =
+    /\/lib\/orbit-controls\.js/.test(html) ||
+    /cdn\.jsdelivr\.net\/npm\/three@[\d.]+\/examples\/js\/controls\/OrbitControls\.js/.test(html);
   const hasOrbitControlsUsage = /THREE\.OrbitControls/.test(html);
-  if (!hasOrbitControlsCdn) {
-    issues.push('Missing OrbitControls CDN script tag — camera controls will not work');
+  if (!hasOrbitControlsScript) {
+    issues.push('Missing OrbitControls script tag — camera controls will not work');
   }
-  if (!hasOrbitControlsUsage && hasOrbitControlsCdn) {
+  if (!hasOrbitControlsUsage && hasOrbitControlsScript) {
     warnings.push('OrbitControls loaded but never instantiated');
   }
 

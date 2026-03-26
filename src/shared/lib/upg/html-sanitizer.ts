@@ -49,10 +49,17 @@ function extractHtml(raw: string): string {
   return cleaned;
 }
 
+/** Allowed local asset paths served from public/ */
+const ALLOWED_LOCAL_PREFIXES = ['/lib/'] as const;
+
 /**
- * Check if a script src is on the CDN whitelist
+ * Check if a script src is on the CDN whitelist or is an allowed local asset
  */
 function isWhitelistedSrc(src: string): boolean {
+  // Allow known local asset paths (e.g. /lib/orbit-controls.js)
+  if (ALLOWED_LOCAL_PREFIXES.some((prefix) => src.startsWith(prefix))) {
+    return true;
+  }
   try {
     const url = new URL(src);
     return UPG_CDN_WHITELIST.some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));

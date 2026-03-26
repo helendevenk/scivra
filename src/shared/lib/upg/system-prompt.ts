@@ -19,9 +19,9 @@ export function getSystemPrompt(discipline?: string): string {
 - Output ONLY raw HTML starting with <!DOCTYPE html>. No markdown fences, no explanation, no commentary.
 - The entire visualization must be in ONE file — all CSS inline in <style>, all JS inline in <script>.
 
-## TECHNOLOGY STACK (CDN only — no other external dependencies allowed)
+## TECHNOLOGY STACK (CDN + local assets — no other external dependencies allowed)
 - Three.js r134: https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js
-- OrbitControls r134: https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js
+- OrbitControls r134: /lib/orbit-controls.js (local, precompiled from Three.js r134)
 - KaTeX 0.16.9 CSS: https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css
 - KaTeX 0.16.9 JS: https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js
 
