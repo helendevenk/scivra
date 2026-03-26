@@ -1,8 +1,8 @@
 ---
 name: upg-batch-generation-pipeline
-status: backlog
+status: complete
 created: 2026-03-22T10:06:49Z
-updated: 2026-03-22T10:06:49Z
+updated: 2026-03-26T03:18:04Z
 ---
 
 # UPG 批量生成管线 — 对标 PhET 66 个物理模拟

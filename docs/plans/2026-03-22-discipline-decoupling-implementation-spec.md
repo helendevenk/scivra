@@ -1,8 +1,8 @@
 ---
 name: discipline-decoupling-implementation-spec
-status: cto-approved-with-changes
+status: complete
 created: 2026-03-22T09:31:32Z
-updated: 2026-03-22T10:20:53Z
+updated: 2026-03-26T03:18:04Z
 ---
 
 # 学科解耦 + 论文改进 详细实施规格

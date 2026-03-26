@@ -1,3 +1,10 @@
+---
+name: upg-gallery-design
+status: complete
+created: 2026-02-24T00:00:00Z
+updated: 2026-03-26T03:18:04Z
+---
+
 # UPG Gallery 设计文档
 
 > 日期：2026-02-24

@@ -1,8 +1,8 @@
 ---
 name: experiment-qa-full-audit
-status: in-progress
+status: complete
 created: 2026-03-23T00:00:00Z
-updated: 2026-03-23T00:00:00Z
+updated: 2026-03-26T03:18:04Z
 ---
 
 # 全量实验 QA 检查计划

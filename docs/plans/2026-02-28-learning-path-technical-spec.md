@@ -1,3 +1,10 @@
+---
+name: learning-path-technical-spec
+status: complete
+created: 2026-02-28T00:00:00Z
+updated: 2026-03-26T03:18:04Z
+---
+
 # Learning Path 模块 -- 完整技术实现方案
 
 > 日期：2026-02-28

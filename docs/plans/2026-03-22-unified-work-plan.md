@@ -1,8 +1,8 @@
 ---
 name: unified-work-plan-q2-2026
-status: cto-approved
+status: complete
 created: 2026-03-22T10:29:04Z
-updated: 2026-03-22T10:35:00Z
+updated: 2026-03-26T03:18:04Z
 ---
 
 # NeonPhysics v2 — Q2 2026 统一工作计划

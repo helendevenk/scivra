@@ -277,10 +277,6 @@ pnpm rbac:init          # 初始化 RBAC 角色/权限
 
 ## 文档索引
 
-### 代码真相（优先阅读）
-- `docs/PROJECT-BASELINE.md` — 项目基线
-- `docs/WORKSPACE-STATUS.md` — 状态看板（需更新）
-
 ### 技术决策
 - `/Users/sky/Desktop/sciwangzhan/UPG-CTO-REVIEW.md` — UPG 架构评审（2 处修正 + 7 个决策）
 
@@ -297,30 +293,20 @@ pnpm rbac:init          # 初始化 RBAC 角色/权限
 - `2026-03-22-ap-prep-mode-design.md` — AP 考试备考模式
 - `2026-03-22-physics-quest-design.md` — Physics Quest 游戏化学习
 - `2026-03-22-lab-notebook-ai-design.md` — Lab Notebook AI 实验笔记
-- `2026-03-22-ap-physics-experiment-gap-analysis.md` — AP 实验缺口分析
+- `2026-03-22-ap-physics-experiment-gap-analysis.md` — AP 实验缺口分析（完成）
 - `2026-03-22-arxiv-2412.07482-competitive-analysis.md` — 论文对标分析
 
-**UPG & 3D**
-- `2026-03-17-upg-3d-enhancement-plan.md` — UPG 3D 质量增强方案
-- `3d-visualization-plan.md` — 3D 可视化规划
-- `3d-skills-analysis.md` — 3D Skills 深度分析
-- `3d-cto-review.md` — 3D 方案 CTO 评审
+**UPG**
 - `upg-transaction-flow.md` — UPG 积分事务流程
+- `2026-03-22-upg-batch-generation-pipeline.md` — UPG 批量生成管线（完成）
 
 **内容 & 产品**
-- `2026-03-18-curated-labs-content-priority-design.md` — Curated Labs 内容优先级
-- `2026-03-18-physics-autopilot-design.md` — Physics Autopilot 智能导学
 - `north-american-k12-experiments-master-plan.md` — K12 实验总规划（120+ 实验清单）
 
 **已实施功能设计**
-- `2026-02-28-learning-path-technical-spec.md` — 学习路径技术规格
-- `2026-02-24-upg-gallery-design.md` — UPG 画廊设计
-- `2026-02-24-user-dashboard-design.md` — 用户仪表盘设计
-- `2026-02-28-seephysics-marketing-strategy.md` — 营销策略
-
-**前端优化**
-- `2026-03-17-frontend-optimization-plan.md` — 前端优化规划
-- `2026-03-17-frontend-product-analysis.md` — 前端产品分析
+- `2026-02-28-learning-path-technical-spec.md` — 学习路径技术规格（完成）
+- `2026-02-24-upg-gallery-design.md` — UPG 画廊设计（完成）
+- `2026-02-24-user-dashboard-design.md` — 用户仪表盘设计（完成）
 
 **测试 & 质量**
 - `test-coverage-100-plan.md` — **100% 覆盖率测试计划**（1684 行，6 Phase 详细规格）
@@ -328,6 +314,7 @@ pnpm rbac:init          # 初始化 RBAC 角色/权限
 
 ### 完成报告（docs/reports/）
 - `2026-03-23-sprint-retrospective.md` — **Sprint 复盘（03-22~23，175→579 tests）**
+- `2026-03-08-phase2-completion-summary.md` — Phase 2 完成总结
 - `2026-03-10-final-summary.md` — **最终总结（Phase 1+2 汇总）**
 - `2026-03-09-phase-0-complete-retrospective.md` — Phase 0 完整复盘
 - `2026-03-10-phase1-completion.md` — Phase 1 完成报告
@@ -342,7 +329,6 @@ pnpm rbac:init          # 初始化 RBAC 角色/权限
 - `../../research-north-american-high-school-physics-labs.md` — 北美高中物理课标
 - `../../docs/research/phet-competitive-analysis.md` — **PhET 深度竞品分析 + UPG 基准实验清单**（2026-03-22）
 - `../../docs/research/k5-science-experiments-research.md` — K5 科学实验调研
-- `../../research/phet-analysis.md` — PhET 竞品分析（早期）
 - `../../research/middle-school-science-experiments-research.md` — 初中实验调研
 
 ## 开发规范
