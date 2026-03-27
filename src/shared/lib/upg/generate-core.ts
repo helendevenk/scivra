@@ -1,4 +1,3 @@
-import { callOpenRouter } from '@/shared/lib/upg/openrouter-client';
 import { callAnthropic } from '@/shared/lib/upg/anthropic-client';
 import {
   getSystemPrompt,
@@ -74,7 +73,7 @@ export async function generateCore(
       promptHash,
       language,
       model,
-      provider: 'openrouter',
+      provider: 'anthropic',
       inputTokens: 0,
       outputTokens: 0,
       costCredits: 0,
@@ -123,37 +122,24 @@ export async function generateCore(
     });
   }
 
-  // 1. AI generation (provider selection)
-  // Priority: ANTHROPIC_API_KEY (direct) > OPENROUTER_BASE_URL proxy > OpenRouter
+  // 1. AI generation
+  // Resolve API key and base URL from env vars or DB config
   const configs = await getAllConfigs();
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const apiKey = anthropicKey || process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
-  const baseUrl = anthropicKey
-    ? (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com')
-    : (process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url);
-  const useAnthropic = !!anthropicKey || baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
+  const apiKey =
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.OPENROUTER_API_KEY ||
+    configs.openrouter_api_key;
+  const baseUrl =
+    process.env.ANTHROPIC_BASE_URL ||
+    process.env.OPENROUTER_BASE_URL ||
+    configs.openrouter_base_url ||
+    'https://api.anthropic.com';
 
-  let aiResult;
-  if (useAnthropic && apiKey) {
-    try {
-      aiResult = await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl });
-    } catch (err: unknown) {
-      // Fallback to OpenRouter on rate limit / quota exhaustion
-      const isRateLimit = err instanceof Error && 'errorType' in err &&
-        ((err as any).errorType === 'rate_limit' || (err as any).statusCode === 402);
-      if (isRateLimit && process.env.OPENROUTER_API_KEY) {
-        // OpenRouter uses "anthropic/model-name" format
-        const orModel = model.startsWith('anthropic/') ? model : `anthropic/${model}`;
-        console.warn(`Anthropic rate limited, falling back to OpenRouter (${orModel})`);
-        aiResult = await callOpenRouter({ model: orModel, systemPrompt, userPrompt });
-      } else {
-        throw err;
-      }
-    }
-  } else {
-    const orModel = model.startsWith('anthropic/') ? model : `anthropic/${model}`;
-    aiResult = await callOpenRouter({ model: orModel, systemPrompt, userPrompt });
+  if (!apiKey) {
+    throw new Error('No AI provider API key configured. Set ANTHROPIC_API_KEY or OPENROUTER_API_KEY.');
   }
+
+  const aiResult = await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl });
 
   // 2. Post-processing
   let { sanitized: htmlContent } = sanitizeHtml(aiResult.html);
@@ -182,7 +168,7 @@ export async function generateCore(
       language,
       htmlContent,
       model,
-      provider: 'openrouter',
+      provider: 'anthropic',
       inputTokens: aiResult.inputTokens,
       outputTokens: aiResult.outputTokens,
       costCredits: 0,
@@ -224,7 +210,7 @@ export async function generateCore(
       htmlContent,
       htmlSize,
       model,
-      provider: 'openrouter',
+      provider: 'anthropic',
       inputTokens: aiResult.inputTokens,
       outputTokens: aiResult.outputTokens,
       costCredits: 0,
@@ -298,7 +284,7 @@ export async function generateCore(
     htmlContent,
     htmlSize,
     model,
-    provider: 'openrouter',
+    provider: 'anthropic',
     inputTokens: aiResult.inputTokens,
     outputTokens: aiResult.outputTokens,
     costCredits: 0, // Caller handles credit deduction

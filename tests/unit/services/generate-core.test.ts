@@ -6,10 +6,6 @@ const savedEnv = { ...process.env };
 
 // ── Mock all external dependencies ──
 
-vi.mock('@/shared/lib/upg/openrouter-client', () => ({
-  callOpenRouter: vi.fn(),
-}));
-
 vi.mock('@/shared/lib/upg/anthropic-client', () => ({
   callAnthropic: vi.fn(),
 }));
@@ -74,7 +70,6 @@ vi.mock('@/shared/lib/upg/validation', () => ({
 
 // ── Import mocked modules ──
 
-import { callOpenRouter } from '@/shared/lib/upg/openrouter-client';
 import { callAnthropic } from '@/shared/lib/upg/anthropic-client';
 import { sanitizeHtml } from '@/shared/lib/upg/html-sanitizer';
 import { checkQuality } from '@/shared/lib/upg/quality-checker';
@@ -88,7 +83,6 @@ import { generateCore } from '@/shared/lib/upg/generate-core';
 
 // ── Helpers ──
 
-const mockedCallOpenRouter = vi.mocked(callOpenRouter);
 const mockedCallAnthropic = vi.mocked(callAnthropic);
 const mockedSanitizeHtml = vi.mocked(sanitizeHtml);
 const mockedCheckQuality = vi.mocked(checkQuality);
@@ -120,10 +114,8 @@ function baseParams(overrides?: Partial<GenerateCoreParams>): GenerateCoreParams
 describe('generateCore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Remove env vars so mock configs control provider selection
-    delete process.env.OPENROUTER_API_KEY;
-    delete process.env.OPENROUTER_BASE_URL;
-    mockedCallOpenRouter.mockResolvedValue(validLlmResult());
+    // Mock configs provide API key; callAnthropic returns valid result
+    mockedCallAnthropic.mockResolvedValue(validLlmResult());
   });
 
   afterAll(() => {
@@ -197,7 +189,7 @@ describe('generateCore', () => {
 
   // 5. LLM timeout → error propagates
   it('should propagate LLM timeout error', async () => {
-    mockedCallOpenRouter.mockRejectedValueOnce(new Error('Request timed out'));
+    mockedCallAnthropic.mockRejectedValueOnce(new Error('Request timed out'));
 
     await expect(generateCore(baseParams())).rejects.toThrow('Request timed out');
   });
@@ -239,14 +231,14 @@ describe('generateCore', () => {
         status: 'completed',
         htmlContent: expect.any(String),
         model: 'test-model',
-        provider: 'openrouter',
+        provider: 'anthropic',
       })
     );
   });
 
   // 10. does NOT store on LLM failure (error thrown before DB write)
   it('should not call createUpgGeneration when LLM throws', async () => {
-    mockedCallOpenRouter.mockRejectedValueOnce(new Error('LLM down'));
+    mockedCallAnthropic.mockRejectedValueOnce(new Error('LLM down'));
 
     await expect(generateCore(baseParams())).rejects.toThrow('LLM down');
     expect(mockedCreateUpg).not.toHaveBeenCalled();
@@ -266,19 +258,11 @@ describe('generateCore', () => {
     expect(mockedCreateUpg).not.toHaveBeenCalled();
   });
 
-  // 12. Anthropic client used when baseUrl includes 'anthropic'
-  it('should use Anthropic client when baseUrl contains anthropic', async () => {
-    const { getAllConfigs } = await import('@/shared/models/config');
-    vi.mocked(getAllConfigs).mockResolvedValueOnce({
-      openrouter_api_key: 'sk-test',
-      openrouter_base_url: 'https://zenmux.anthropic.example.com/v1',
-    } as Record<string, string>);
-    mockedCallAnthropic.mockResolvedValueOnce(validLlmResult());
-
+  // 12. Always uses Anthropic client (single provider)
+  it('should always call Anthropic client', async () => {
     const result = await generateCore(baseParams());
 
     expect(result.status).toBe('completed');
     expect(mockedCallAnthropic).toHaveBeenCalledTimes(1);
-    expect(mockedCallOpenRouter).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,3 @@
-import { callOpenRouter } from '@/shared/lib/upg/openrouter-client';
 import { callAnthropic } from '@/shared/lib/upg/anthropic-client';
 import { getSystemPrompt } from '@/shared/lib/upg/system-prompt';
 import { sanitizeHtml } from '@/shared/lib/upg/html-sanitizer';
@@ -120,24 +119,29 @@ export async function refineCore(
     .update(`${original.prompt}::refine::${refinementPrompt}`)
     .digest('hex');
 
-  // 4. Call LLM (same routing logic as generate-core)
+  // 4. Call LLM
   const configs = await getAllConfigs();
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const apiKey = anthropicKey || process.env.OPENROUTER_API_KEY || configs.openrouter_api_key;
-  const baseUrl = anthropicKey
-    ? (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com')
-    : (process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url);
-  const useAnthropic = !!anthropicKey || baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
+  const apiKey =
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.OPENROUTER_API_KEY ||
+    configs.openrouter_api_key;
+  const baseUrl =
+    process.env.ANTHROPIC_BASE_URL ||
+    process.env.OPENROUTER_BASE_URL ||
+    configs.openrouter_base_url ||
+    'https://api.anthropic.com';
 
-  const aiResult =
-    useAnthropic && apiKey
-      ? await callAnthropic(apiKey, {
-          model,
-          systemPrompt,
-          userPrompt,
-          maxTokens: UPG_REFINEMENT_MAX_TOKENS,
-        })
-      : await callOpenRouter({ model, systemPrompt, userPrompt });
+  if (!apiKey) {
+    throw new Error('No AI provider API key configured.');
+  }
+
+  const aiResult = await callAnthropic(apiKey, {
+    model,
+    systemPrompt,
+    userPrompt,
+    baseUrl,
+    maxTokens: UPG_REFINEMENT_MAX_TOKENS,
+  });
 
   // 5. Post-processing
   let { sanitized: htmlContent } = sanitizeHtml(aiResult.html);
@@ -166,7 +170,7 @@ export async function refineCore(
       htmlContent,
       htmlSize,
       model,
-      provider: 'openrouter',
+      provider: 'anthropic',
       inputTokens: aiResult.inputTokens,
       outputTokens: aiResult.outputTokens,
       costCredits: 0,
@@ -206,7 +210,7 @@ export async function refineCore(
       htmlContent,
       htmlSize,
       model,
-      provider: 'openrouter',
+      provider: 'anthropic',
       inputTokens: aiResult.inputTokens,
       outputTokens: aiResult.outputTokens,
       costCredits: 0,
@@ -265,7 +269,7 @@ export async function refineCore(
     htmlContent,
     htmlSize,
     model,
-    provider: 'openrouter',
+    provider: 'anthropic',
     inputTokens: aiResult.inputTokens,
     outputTokens: aiResult.outputTokens,
     costCredits: 0,
