@@ -94,10 +94,10 @@ export default async function LabsIndexPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Why NeonPhysics */}
+      {/* Why Scivra */}
       <section className="rounded-2xl border border-primary/10 bg-card p-8 md:p-12">
         <h2 className="font-heading mb-6 text-center text-2xl font-bold text-foreground md:text-3xl">
-          Why NeonPhysics?
+          Why Scivra?
         </h2>
         <div className="grid gap-8 md:grid-cols-3">
           <div className="text-center">
