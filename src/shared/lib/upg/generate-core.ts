@@ -133,9 +133,27 @@ export async function generateCore(
     : (process.env.OPENROUTER_BASE_URL || configs.openrouter_base_url);
   const useAnthropic = !!anthropicKey || baseUrl?.includes('anthropic') || baseUrl?.includes('zenmux');
 
-  const aiResult = useAnthropic && apiKey
-    ? await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl })
-    : await callOpenRouter({ model, systemPrompt, userPrompt });
+  let aiResult;
+  if (useAnthropic && apiKey) {
+    try {
+      aiResult = await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl });
+    } catch (err: unknown) {
+      // Fallback to OpenRouter on rate limit / quota exhaustion
+      const isRateLimit = err instanceof Error && 'errorType' in err &&
+        ((err as any).errorType === 'rate_limit' || (err as any).statusCode === 402);
+      if (isRateLimit && process.env.OPENROUTER_API_KEY) {
+        // OpenRouter uses "anthropic/model-name" format
+        const orModel = model.startsWith('anthropic/') ? model : `anthropic/${model}`;
+        console.warn(`Anthropic rate limited, falling back to OpenRouter (${orModel})`);
+        aiResult = await callOpenRouter({ model: orModel, systemPrompt, userPrompt });
+      } else {
+        throw err;
+      }
+    }
+  } else {
+    const orModel = model.startsWith('anthropic/') ? model : `anthropic/${model}`;
+    aiResult = await callOpenRouter({ model: orModel, systemPrompt, userPrompt });
+  }
 
   // 2. Post-processing
   let { sanitized: htmlContent } = sanitizeHtml(aiResult.html);

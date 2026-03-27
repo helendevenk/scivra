@@ -82,7 +82,7 @@ export async function callAnthropic(
       const errorType =
         response.status === 401 || response.status === 403
           ? 'invalid_key'
-          : response.status === 429
+          : response.status === 429 || response.status === 402
             ? 'rate_limit'
             : response.status >= 500
               ? 'server_error'
