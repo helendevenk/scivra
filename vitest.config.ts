@@ -14,6 +14,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "@/.source": path.resolve(__dirname, "./tests/helpers/stub-source.ts"),
       "@": path.resolve(__dirname, "./src"),
     },
   },
