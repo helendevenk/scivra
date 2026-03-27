@@ -8,11 +8,14 @@ import {
   getExperimentsBySubject,
 } from "@/shared/lib/experiments/registry";
 import { SUBJECTS, SUBJECT_LIST, STANDARD_LABELS } from "@/shared/lib/experiments/subjects";
-import type { Subject } from "@/shared/types/experiment";
+import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+
+const VALID_GRADES = new Set<string>(["K-2", "3-5", "6-8", "9-12", "AP"]);
 
 interface Props {
   params: Promise<{ locale: string; subject: string }>;
+  searchParams: Promise<{ grade?: string }>;
 }
 
 export function generateStaticParams() {
@@ -24,13 +27,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!(subject in SUBJECTS)) return {};
   const label = SUBJECTS[subject as Subject].label;
   return {
-    title: `${label} Virtual Labs | NeonPhysics`,
+    title: `${label} Virtual Labs | Scivra`,
     description: `Browse interactive ${label.toLowerCase()} virtual labs and experiments. Standards-aligned simulations for AP, NGSS, and K-12 curriculum.`,
   };
 }
 
-export default async function SubjectPage({ params }: Props) {
+export default async function SubjectPage({ params, searchParams }: Props) {
   const { locale, subject } = await params;
+  const { grade } = await searchParams;
   setRequestLocale(locale);
 
   if (!(subject in SUBJECTS)) {
@@ -41,8 +45,14 @@ export default async function SubjectPage({ params }: Props) {
   const subjectConfig = SUBJECTS[subjectKey];
   const t = await getTranslations("experiments");
 
+  const activeGrade =
+    grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
+
   const standards = getStandardsForSubject(subjectKey);
-  const totalCount = getExperimentsBySubject(subjectKey).length;
+  const allSubjectExperiments = getExperimentsBySubject(subjectKey);
+  const totalCount = activeGrade
+    ? allSubjectExperiments.filter((e) => e.gradeLevel === activeGrade).length
+    : allSubjectExperiments.length;
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
@@ -70,9 +80,11 @@ export default async function SubjectPage({ params }: Props) {
       {/* Standards Sections */}
       {standards.map((standard) => {
         const experiments = getExperimentsByStandard(standard);
-        // Only show experiments matching this subject
+        // Filter by subject and optionally by grade
         const subjectExperiments = experiments.filter(
-          (exp) => exp.subject === subjectKey
+          (exp) =>
+            exp.subject === subjectKey &&
+            (!activeGrade || exp.gradeLevel === activeGrade)
         );
         if (subjectExperiments.length === 0) return null;
 

@@ -469,13 +469,16 @@ export function getStandardsForSubject(
   return Array.from(standards);
 }
 
-export function getAllSubjectsWithCounts(): Array<{
+export function getAllSubjectsWithCounts(
+  gradeLevel?: GradeLevel
+): Array<{
   subject: Subject;
   count: number;
 }> {
   const counts = new Map<Subject, number>();
   for (const e of experiments) {
     if (e.subject) {
+      if (gradeLevel && e.gradeLevel !== gradeLevel) continue;
       counts.set(e.subject, (counts.get(e.subject) || 0) + 1);
     }
   }
