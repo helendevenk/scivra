@@ -146,7 +146,75 @@ export const EXPERIMENT_HTML_MAP: Record<string, string> = {
   "solutions-dilutions": "/experiments/ap-chemistry/solutions-dilutions.html",
   "stoichiometry": "/experiments/ap-chemistry/stoichiometry.html",
   "calorimetry": "/experiments/ap-chemistry/calorimetry.html",
+  "gas-properties": "/experiments/ap-chemistry/gas-properties.html",
   "build-a-molecule": "/experiments/ap-chemistry/build-a-molecule.html",
+  "molecular-polarity": "/experiments/ap-chemistry/molecular-polarity.html",
+  // Wave 10 — Earth Science
+  "greenhouse-effect": "/experiments/earth-science/greenhouse-effect.html",
+  "radiometric-dating": "/experiments/earth-science/radiometric-dating.html",
+  "atmosphere-layers": "/experiments/earth-science/atmosphere-layers.html",
+  "solar-system-scale": "/experiments/earth-science/solar-system-scale.html",
+  "seismic-waves": "/experiments/earth-science/seismic-waves.html",
+  "rock-cycle": "/experiments/earth-science/rock-cycle.html",
+  "climate-change-modeling": "/experiments/earth-science/climate-change-modeling.html",
+  "star-life-cycle": "/experiments/earth-science/star-life-cycle.html",
+  "soil-formation": "/experiments/earth-science/soil-formation.html",
+  "tides-lunar-gravity": "/experiments/earth-science/tides-lunar-gravity.html",
+  "glaciers-ice-ages": "/experiments/earth-science/glaciers-ice-ages.html",
+  "plate-tectonics-advanced": "/experiments/earth-science/plate-tectonics-advanced.html",
+
+  // Wave 11 — Biology AP (B-11 to B-16)
+  "immune-system": "/experiments/ap-biology/immune-system.html",
+  "population-dynamics": "/experiments/ap-biology/population-dynamics.html",
+  "ecological-succession": "/experiments/ap-biology/ecological-succession.html",
+  "evidence-of-evolution": "/experiments/ap-biology/evidence-of-evolution.html",
+  "hardy-weinberg": "/experiments/ap-biology/hardy-weinberg.html",
+  "cell-structure-3d": "/experiments/ap-biology/cell-structure-3d.html",
+
+  // Wave 11 — K5 Extensions (K5-12 to K5-19)
+  "k5-chemical-changes": "/experiments/elementary/k5-chemical-changes.html",
+  "k5-mixtures-solutions": "/experiments/elementary/k5-mixtures-solutions.html",
+  "k5-weather-patterns": "/experiments/elementary/k5-weather-patterns.html",
+  "k5-landforms-erosion": "/experiments/elementary/k5-landforms-erosion.html",
+  "k5-stars-space": "/experiments/elementary/k5-stars-space.html",
+  "k5-plant-life-cycle": "/experiments/elementary/k5-plant-life-cycle.html",
+  "k5-animal-adaptations": "/experiments/elementary/k5-animal-adaptations.html",
+  "k5-solar-energy": "/experiments/elementary/k5-solar-energy.html",
+
+  // Wave 11 — Middle School Extensions (MS-10 to MS-17)
+  "ms-chemical-bonding": "/experiments/middle/ms-chemical-bonding.html",
+  "ms-acid-base-reactions": "/experiments/middle/ms-acid-base-reactions.html",
+  "ms-earthquake-epicenter": "/experiments/middle/ms-earthquake-epicenter.html",
+  "ms-moon-phases-detailed": "/experiments/middle/ms-moon-phases-detailed.html",
+  "ms-cell-division-comparison": "/experiments/middle/ms-cell-division-comparison.html",
+  "ms-food-web-dynamics": "/experiments/middle/ms-food-web-dynamics.html",
+  "ms-electric-circuits-advanced": "/experiments/middle/ms-electric-circuits-advanced.html",
+  "ms-wave-interactions-advanced": "/experiments/middle/ms-wave-interactions-advanced.html",
+
+  // Wave 12 — AP Physics C (P-83 to P-87)
+  "gauss-law": "/experiments/ap-physics-c/gauss-law.html",
+  "amperes-law": "/experiments/ap-physics-c/amperes-law.html",
+  "rlc-circuit": "/experiments/ap-physics-c/rlc-circuit.html",
+  "rotational-kinematics-advanced": "/experiments/ap-physics-c/rotational-kinematics-advanced.html",
+  "angular-momentum-3d": "/experiments/ap-physics-c/angular-momentum-3d.html",
+
+  // Wave 12 — P2 Batch
+  "ocean-currents": "/experiments/earth-science/ocean-currents.html",
+  "ms-chemical-stoichiometry": "/experiments/middle/ms-chemical-stoichiometry.html",
+  "ms-genetics-punnett": "/experiments/middle/ms-genetics-punnett.html",
+  "ms-force-motion-graphs": "/experiments/middle/ms-force-motion-graphs.html",
+  "photosynthesis-light-reactions": "/experiments/ap-biology/photosynthesis-light-reactions.html",
+  "cellular-respiration-detail": "/experiments/ap-biology/cellular-respiration-detail.html",
+  "dna-replication-detail": "/experiments/ap-biology/dna-replication-detail.html",
+  "protein-synthesis-3d": "/experiments/ap-biology/protein-synthesis-3d.html",
+  "moon-geology": "/experiments/earth-science/moon-geology.html",
+  "water-cycle-detail": "/experiments/earth-science/water-cycle-detail.html",
+  "mineral-identification": "/experiments/earth-science/mineral-identification.html",
+  "volcano-eruption-types": "/experiments/earth-science/volcano-eruption-types.html",
+  "k5-sound-vibration": "/experiments/elementary/k5-sound-vibration.html",
+  "k5-plant-needs": "/experiments/elementary/k5-plant-needs.html",
+  "k5-weather-measurement": "/experiments/elementary/k5-weather-measurement.html",
+  "k5-habitats": "/experiments/elementary/k5-habitats.html",
 };
 
 export function getExperimentHtmlPath(slug: string): string | null {

@@ -146,7 +146,76 @@ import { beersLawLab } from "./data/beers-law-lab";
 import { solutionsDilutions } from "./data/solutions-dilutions";
 import { stoichiometry } from "./data/stoichiometry";
 import { calorimetry } from "./data/calorimetry";
+import { gasProperties } from "./data/gas-properties";
 import { buildAMolecule } from "./data/build-a-molecule";
+import { molecularPolarity } from "./data/molecular-polarity";
+
+// Wave 10 — Earth Science NGSS (ES-06 to ES-18)
+import { greenhouseEffect } from "./data/greenhouse-effect";
+import { radiometricDating } from "./data/radiometric-dating";
+import { atmosphereLayers } from "./data/atmosphere-layers";
+import { solarSystemScale } from "./data/solar-system-scale";
+import { seismicWaves } from "./data/seismic-waves";
+import { rockCycle } from "./data/rock-cycle";
+import { climateChangeModeling } from "./data/climate-change-modeling";
+import { starLifeCycle } from "./data/star-life-cycle";
+import { soilFormation } from "./data/soil-formation";
+import { tidesLunarGravity } from "./data/tides-lunar-gravity";
+import { glaciersIceAges } from "./data/glaciers-ice-ages";
+import { plateTectonicsAdvanced } from "./data/plate-tectonics-advanced";
+
+// Wave 11 — Biology AP (B-11 to B-16)
+import { immuneSystem } from "./data/immune-system";
+import { populationDynamics } from "./data/population-dynamics";
+import { ecologicalSuccession } from "./data/ecological-succession";
+import { evidenceOfEvolution } from "./data/evidence-of-evolution";
+import { hardyWeinberg } from "./data/hardy-weinberg";
+import { cellStructure3d } from "./data/cell-structure-3d";
+
+// Wave 11 — K5 Extensions (K5-12 to K5-19)
+import { k5ChemicalChanges } from "./data/k5-chemical-changes";
+import { k5MixturesSolutions } from "./data/k5-mixtures-solutions";
+import { k5WeatherPatterns } from "./data/k5-weather-patterns";
+import { k5LandformsErosion } from "./data/k5-landforms-erosion";
+import { k5StarsSpace } from "./data/k5-stars-space";
+import { k5PlantLifeCycle } from "./data/k5-plant-life-cycle";
+import { k5AnimalAdaptations } from "./data/k5-animal-adaptations";
+import { k5SolarEnergy } from "./data/k5-solar-energy";
+
+// Wave 11 — Middle School Extensions (MS-10 to MS-17)
+import { msChemicalBonding } from "./data/ms-chemical-bonding";
+import { msAcidBaseReactions } from "./data/ms-acid-base-reactions";
+import { msEarthquakeEpicenter } from "./data/ms-earthquake-epicenter";
+import { msMoonPhasesDetailed } from "./data/ms-moon-phases-detailed";
+import { msCellDivisionComparison } from "./data/ms-cell-division-comparison";
+import { msFoodWebDynamics } from "./data/ms-food-web-dynamics";
+import { msElectricCircuitsAdvanced } from "./data/ms-electric-circuits-advanced";
+import { msWaveInteractionsAdvanced } from "./data/ms-wave-interactions-advanced";
+
+// Wave 12 — AP Physics C (P-83 to P-87)
+import { gaussLaw } from "./data/gauss-law";
+import { amperesLaw } from "./data/amperes-law";
+import { rlcCircuit } from "./data/rlc-circuit";
+import { rotationalKinematicsAdvanced } from "./data/rotational-kinematics-advanced";
+import { angularMomentum3d } from "./data/angular-momentum-3d";
+
+// Wave 12 — P2 Batch
+import { oceanCurrents } from "./data/ocean-currents";
+import { msChemicalStoichiometry } from "./data/ms-chemical-stoichiometry";
+import { msGeneticsPunnett } from "./data/ms-genetics-punnett";
+import { msForceMotionGraphs } from "./data/ms-force-motion-graphs";
+import { photosynthesisLightReactions } from "./data/photosynthesis-light-reactions";
+import { cellularRespirationDetail } from "./data/cellular-respiration-detail";
+import { dnaReplicationDetail } from "./data/dna-replication-detail";
+import { proteinSynthesis3d } from "./data/protein-synthesis-3d";
+import { moonGeology } from "./data/moon-geology";
+import { waterCycleDetail } from "./data/water-cycle-detail";
+import { mineralIdentification } from "./data/mineral-identification";
+import { volcanoEruptionTypes } from "./data/volcano-eruption-types";
+import { k5SoundVibration } from "./data/k5-sound-vibration";
+import { k5PlantNeeds } from "./data/k5-plant-needs";
+import { k5WeatherMeasurement } from "./data/k5-weather-measurement";
+import { k5Habitats } from "./data/k5-habitats";
 
 const experiments: Experiment[] = [
   // Wave 1 — Original 4
@@ -280,7 +349,70 @@ const experiments: Experiment[] = [
   solutionsDilutions,
   stoichiometry,
   calorimetry,
+  gasProperties,
   buildAMolecule,
+  molecularPolarity,
+  // Wave 10 — Earth Science NGSS (ES-06 to ES-18)
+  greenhouseEffect,
+  radiometricDating,
+  atmosphereLayers,
+  solarSystemScale,
+  seismicWaves,
+  rockCycle,
+  climateChangeModeling,
+  starLifeCycle,
+  soilFormation,
+  tidesLunarGravity,
+  glaciersIceAges,
+  plateTectonicsAdvanced,
+  // Wave 11 — Biology AP (B-11 to B-16)
+  immuneSystem,
+  populationDynamics,
+  ecologicalSuccession,
+  evidenceOfEvolution,
+  hardyWeinberg,
+  cellStructure3d,
+  // Wave 11 — K5 Extensions
+  k5ChemicalChanges,
+  k5MixturesSolutions,
+  k5WeatherPatterns,
+  k5LandformsErosion,
+  k5StarsSpace,
+  k5PlantLifeCycle,
+  k5AnimalAdaptations,
+  k5SolarEnergy,
+  // Wave 11 — Middle School Extensions
+  msChemicalBonding,
+  msAcidBaseReactions,
+  msEarthquakeEpicenter,
+  msMoonPhasesDetailed,
+  msCellDivisionComparison,
+  msFoodWebDynamics,
+  msElectricCircuitsAdvanced,
+  msWaveInteractionsAdvanced,
+  // Wave 12 — AP Physics C
+  gaussLaw,
+  amperesLaw,
+  rlcCircuit,
+  rotationalKinematicsAdvanced,
+  angularMomentum3d,
+  // Wave 12 — P2 Batch
+  oceanCurrents,
+  msChemicalStoichiometry,
+  msGeneticsPunnett,
+  msForceMotionGraphs,
+  photosynthesisLightReactions,
+  cellularRespirationDetail,
+  dnaReplicationDetail,
+  proteinSynthesis3d,
+  moonGeology,
+  waterCycleDetail,
+  mineralIdentification,
+  volcanoEruptionTypes,
+  k5SoundVibration,
+  k5PlantNeeds,
+  k5WeatherMeasurement,
+  k5Habitats,
 ];
 
 export function getAllExperiments(): Experiment[] {
