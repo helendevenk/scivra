@@ -17,7 +17,7 @@ export const dcCircuitsBasic: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "electricity",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: [
     "ohm's law",
     "circuits",

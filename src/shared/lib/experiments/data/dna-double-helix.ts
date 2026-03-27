@@ -17,7 +17,7 @@ export const dnaDoubleHelix: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["DNA", "double helix", "base pairing", "Watson Crick", "genetics", "AP Biology"],
   difficulty: "intermediate",
 

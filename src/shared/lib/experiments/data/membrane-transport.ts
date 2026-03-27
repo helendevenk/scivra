@@ -17,7 +17,7 @@ export const membraneTransport: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["cell membrane", "osmosis", "diffusion", "active transport", "fluid mosaic", "AP Biology"],
   difficulty: "intermediate",
 

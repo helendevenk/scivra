@@ -17,7 +17,7 @@ export const cellularRespiration: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["cellular respiration", "ATP", "glycolysis", "Krebs cycle", "electron transport chain", "AP Biology"],
   difficulty: "advanced",
 

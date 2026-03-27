@@ -17,7 +17,7 @@ export const bendingLight: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "waves",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["refraction", "Snell's law", "reflection", "total internal reflection", "index of refraction", "optics"],
   difficulty: "intermediate",
 

@@ -17,7 +17,7 @@ export const diffusion: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "modern",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["diffusion", "osmosis", "concentration gradient", "Fick's law", "membrane", "molecular motion"],
   difficulty: "intermediate",
 

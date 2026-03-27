@@ -17,7 +17,7 @@ export const naturalSelection: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["natural selection", "evolution", "Hardy-Weinberg", "allele frequency", "genetic drift", "AP Biology"],
   difficulty: "intermediate",
 

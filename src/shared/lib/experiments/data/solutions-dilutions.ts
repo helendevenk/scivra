@@ -17,7 +17,7 @@ export const solutionsDilutions: Experiment = {
   primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: [
     "solutions",
     "dilutions",

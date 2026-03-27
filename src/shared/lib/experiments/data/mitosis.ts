@@ -17,7 +17,7 @@ export const mitosis: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["mitosis", "cell cycle", "cell division", "chromosomes", "cancer", "AP Biology"],
   difficulty: "intermediate",
 

@@ -17,7 +17,7 @@ export const atomicStructure: Experiment = {
   primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["atomic structure", "electron configuration", "orbitals", "periodic trends", "emission spectrum", "AP Chemistry"],
   difficulty: "intermediate",
 

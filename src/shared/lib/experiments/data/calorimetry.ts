@@ -17,7 +17,7 @@ export const calorimetry: Experiment = {
   primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: [
     "calorimetry",
     "heat transfer",

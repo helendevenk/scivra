@@ -17,7 +17,7 @@ export const radiometricDating: Experiment = {
   primaryStandard: "ngss-hs",
   category: "earth",
   subject: "earth-science",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: [
     "radiometric dating",
     "half-life",

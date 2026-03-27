@@ -17,7 +17,7 @@ export const geometricOpticsBasics: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "waves",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["geometric optics", "lens", "mirror", "ray tracing", "focal length", "image formation"],
   difficulty: "intermediate",
 

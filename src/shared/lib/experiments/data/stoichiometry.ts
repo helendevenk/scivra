@@ -17,7 +17,7 @@ export const stoichiometry: Experiment = {
   primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: [
     "stoichiometry",
     "limiting reagent",

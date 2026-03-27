@@ -17,7 +17,7 @@ export const meiosis: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["meiosis", "crossing over", "genetic variation", "gametes", "independent assortment", "AP Biology"],
   difficulty: "advanced",
 

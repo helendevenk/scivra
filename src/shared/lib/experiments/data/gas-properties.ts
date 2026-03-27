@@ -17,7 +17,7 @@ export const gasProperties: Experiment = {
   primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: [
     "gas laws",
     "ideal gas law",

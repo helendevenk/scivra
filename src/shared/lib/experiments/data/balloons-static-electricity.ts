@@ -17,7 +17,7 @@ export const balloonsStaticElectricity: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "electricity",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["static electricity", "charge", "electrostatics", "attraction", "repulsion", "polarization"],
   difficulty: "beginner",
 

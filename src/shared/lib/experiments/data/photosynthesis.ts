@@ -17,7 +17,7 @@ export const photosynthesis: Experiment = {
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["photosynthesis", "Calvin cycle", "chloroplast", "light reactions", "RuBisCO", "AP Biology"],
   difficulty: "advanced",
 

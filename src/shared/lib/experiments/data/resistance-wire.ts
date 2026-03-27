@@ -17,7 +17,7 @@ export const resistanceWire: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "electricity",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["resistance", "resistivity", "wire", "length", "cross-section", "Ohm's law"],
   difficulty: "intermediate",
 

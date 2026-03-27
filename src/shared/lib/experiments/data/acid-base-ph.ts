@@ -17,7 +17,7 @@ export const acidBasePh: Experiment = {
   primaryStandard: "ap-chemistry",
   category: "chemistry",
   subject: "chemistry",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["acid-base", "pH", "titration", "buffer", "Ka Kb", "AP Chemistry"],
   difficulty: "intermediate",
 

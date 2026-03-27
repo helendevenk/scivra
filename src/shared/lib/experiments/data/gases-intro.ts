@@ -17,7 +17,7 @@ export const gasesIntro: Experiment = {
   primaryStandard: "ap-physics-2",
   category: "thermodynamics",
   subject: "physics",
-  gradeLevel: "AP",
+  gradeLevel: "9-12",
   tags: ["ideal gas law", "pressure", "volume", "temperature", "Boyle's law", "Charles's law"],
   difficulty: "beginner",
 
