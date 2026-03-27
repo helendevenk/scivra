@@ -185,27 +185,23 @@ describe('getAllConfigs', () => {
 
 describe('getPublicConfigs', () => {
   it('returns only public setting names', async () => {
-    mockDb._resolveSelect([
-      { name: 'stripe_enabled', value: 'true' },
-      { name: 'secret_key', value: 'hidden' },
-    ]);
+    // Set env var so getAllConfigs picks it up (jsdom has window defined, skipping db)
+    process.env.STRIPE_ENABLED = 'true';
+    process.env.CUSTOM_KEY = 'secret-value';
 
     const result = await getPublicConfigs();
 
-    expect(result.stripe_enabled).toBeDefined();
-    expect(result).not.toHaveProperty('secret_key');
+    expect(result.stripe_enabled).toBe('true');
+    // custom_key is not in publicSettingNames, so it should be filtered out
+    expect(result).not.toHaveProperty('custom_key');
   });
 
   it('converts values to strings', async () => {
-    mockDb._resolveSelect([
-      { name: 'stripe_enabled', value: 'true' },
-    ]);
+    process.env.STRIPE_ENABLED = 'true';
 
     const result = await getPublicConfigs();
 
-    if (result.stripe_enabled !== undefined) {
-      expect(typeof result.stripe_enabled).toBe('string');
-    }
+    expect(typeof result.stripe_enabled).toBe('string');
   });
 
   it('returns empty object when no public configs match', async () => {
