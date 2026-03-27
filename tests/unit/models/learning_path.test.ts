@@ -36,6 +36,10 @@ import {
   getUserCompletedPathCount,
   checkNodeAccess,
   advanceProgress,
+  createNodeWithCount,
+  deleteNodeWithReorder,
+  reorderNodes,
+  getOrCreateProgress,
 } from '@/shared/models/learning_path';
 
 let mockDb: ReturnType<typeof createMockDb>;
@@ -323,5 +327,155 @@ describe('advanceProgress', () => {
     const result = await advanceProgress('user-1', 'path-1', 2, 5);
     expect(result.currentNode).toBe(3);
     expect(mockDb.onConflictDoUpdate).toHaveBeenCalled();
+  });
+
+  it('sets completed=true when nextNode >= totalNodes', async () => {
+    mockDb._resolveInsert([{ ...MOCK_PROGRESS, currentNode: 5, completed: true }]);
+    const result = await advanceProgress('user-1', 'path-1', 4, 5);
+    expect(result.completed).toBe(true);
+  });
+});
+
+// ─── Transactional Node Operations ───
+
+describe('createNodeWithCount', () => {
+  it('creates node with auto-calculated orderIndex in transaction', async () => {
+    // transaction calls callback with the chain (tx = mockDb)
+    // Inside: select max orderIndex → insert node → update path nodeCount
+    // The mock's transaction passes chain as tx, so all operations resolve via chain
+    mockDb._resolveSelect([{ maxOrder: 2 }]); // max order result
+    const newNode = { ...MOCK_NODE, id: 'mock-uuid', orderIndex: 3 };
+    mockDb._resolveInsert([newNode]); // insert returning
+
+    const result = await createNodeWithCount('path-1', {
+      title: 'Kinematics',
+      type: 'experiment',
+      experimentId: 'projectile-motion',
+    } as any);
+
+    expect(result).toEqual(newNode);
+    expect(mockDb.transaction).toHaveBeenCalled();
+    expect(mockDb.insert).toHaveBeenCalled();
+    expect(mockDb.update).toHaveBeenCalled();
+  });
+
+  it('uses orderIndex 0 when no existing nodes', async () => {
+    mockDb._resolveSelect([{ maxOrder: null }]); // no existing nodes
+    const newNode = { ...MOCK_NODE, id: 'mock-uuid', orderIndex: 0 };
+    mockDb._resolveInsert([newNode]);
+
+    const result = await createNodeWithCount('path-1', {
+      title: 'First Node',
+      type: 'experiment',
+      experimentId: 'test',
+    } as any);
+
+    expect(result).toEqual(newNode);
+    expect(mockDb.transaction).toHaveBeenCalled();
+  });
+
+  it('uses provided orderIndex when specified', async () => {
+    const newNode = { ...MOCK_NODE, id: 'mock-uuid', orderIndex: 5 };
+    mockDb._resolveInsert([newNode]);
+
+    const result = await createNodeWithCount('path-1', {
+      title: 'Custom Order',
+      type: 'experiment',
+      experimentId: 'test',
+      orderIndex: 5,
+    } as any);
+
+    expect(result).toEqual(newNode);
+    expect(mockDb.transaction).toHaveBeenCalled();
+  });
+});
+
+describe('deleteNodeWithReorder', () => {
+  it('deletes node and reorders subsequent nodes', async () => {
+    // transaction: select node → delete node → update subsequent orderIndex → update path nodeCount
+    mockDb._resolveSelect([MOCK_NODE]);
+
+    await deleteNodeWithReorder('node-1');
+
+    expect(mockDb.transaction).toHaveBeenCalled();
+    expect(mockDb.delete).toHaveBeenCalled();
+    expect(mockDb.update).toHaveBeenCalled();
+  });
+
+  it('does nothing when node not found', async () => {
+    mockDb._resolveSelect([]);
+
+    await deleteNodeWithReorder('nonexistent');
+
+    expect(mockDb.transaction).toHaveBeenCalled();
+    expect(mockDb.delete).not.toHaveBeenCalled();
+  });
+});
+
+describe('reorderNodes', () => {
+  it('updates orderIndex for each node in transaction', async () => {
+    await reorderNodes('path-1', ['node-3', 'node-1', 'node-2']);
+
+    expect(mockDb.transaction).toHaveBeenCalled();
+    // update is called once per nodeId
+    expect(mockDb.update).toHaveBeenCalledTimes(3);
+    expect(mockDb.set).toHaveBeenCalledTimes(3);
+  });
+
+  it('handles empty nodeIds array', async () => {
+    await reorderNodes('path-1', []);
+
+    expect(mockDb.transaction).toHaveBeenCalled();
+    expect(mockDb.update).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Advanced Progress (getOrCreateProgress) ───
+
+describe('getOrCreateProgress', () => {
+  it('returns existing progress if found', async () => {
+    mockDb._resolveSelect([MOCK_PROGRESS]);
+
+    const result = await getOrCreateProgress('user-1', 'path-1');
+
+    expect(result).toEqual(MOCK_PROGRESS);
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('creates new progress when none exists', async () => {
+    // First select: getUserProgressForPath returns nothing
+    mockDb._resolveSelect([]);
+    // Insert with onConflictDoNothing returns the new record
+    const newProgress = { ...MOCK_PROGRESS, id: 'mock-uuid' };
+    mockDb._resolveInsert([newProgress]);
+
+    const result = await getOrCreateProgress('user-1', 'path-1');
+
+    expect(result).toEqual(newProgress);
+    expect(mockDb.insert).toHaveBeenCalled();
+    expect(mockDb.onConflictDoNothing).toHaveBeenCalled();
+  });
+
+  it('refetches on race condition (insert returns nothing)', async () => {
+    const refetchedProgress = { ...MOCK_PROGRESS, id: 'existing-from-race' };
+
+    // Override then to return different results on successive calls:
+    // 1st call (getUserProgressForPath): empty → not found
+    // 2nd call (refetch after conflict): found
+    let selectCallCount = 0;
+    mockDb.then.mockImplementation((resolve: (v: unknown) => void) => {
+      selectCallCount++;
+      if (selectCallCount === 1) {
+        return Promise.resolve([]).then(resolve);
+      }
+      return Promise.resolve([refetchedProgress]).then(resolve);
+    });
+    // Insert with onConflictDoNothing → returning resolves with [] (race lost)
+    mockDb._resolveInsert([]);
+
+    const result = await getOrCreateProgress('user-1', 'path-1');
+
+    expect(result).toEqual(refetchedProgress);
+    expect(mockDb.onConflictDoNothing).toHaveBeenCalled();
   });
 });
