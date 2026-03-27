@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock Cycle — Scivra Earth Science</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { display: block; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    button.active { background: rgba(249,115,22,0.35); border-color: #f97316; }
+    .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+    .ctrl-row { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #94a3b8; }
+    .ctrl-row label { min-width: 80px; }
+    .ctrl-row input[type=range] { width: 110px; accent-color: #f97316; }
+    .ctrl-row .data-val { color: #fed7aa; min-width: 55px; text-align: right; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #fed7aa; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 420px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .rock-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    .rock-chip {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.62rem; color: #e2e8f0; cursor: pointer;
+      padding: 3px 8px; border-radius: 4px; transition: all 0.2s;
+    }
+    .rock-chip:hover { background: rgba(249,115,22,0.15); }
+    .rock-chip.selected { background: rgba(249,115,22,0.3); border: 1px solid #f97316; }
+    .rock-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .process-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .process-btn {
+      font-size: 0.65rem; padding: 4px 8px;
+      transition: all 0.2s; opacity: 0.5; pointer-events: none;
+    }
+    .process-btn.enabled { opacity: 1; pointer-events: all; }
+    .transition-log {
+      max-height: 80px; overflow-y: auto; font-size: 0.6rem;
+      color: #94a3b8; margin-top: 6px;
+    }
+    .transition-log div { padding: 1px 0; }
+    .transition-log .highlight { color: #f97316; }
+  </style>
+</head>
+<body>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Rock Cycle <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">3D geological cross-section — drag to rotate, scroll to zoom</p>
+      <div class="rock-legend" id="rock-legend">
+        <div class="rock-chip selected" data-rock="igneous" onclick="selectRock('igneous')">
+          <div class="rock-dot" style="background:#ef4444"></div> Igneous
+        </div>
+        <div class="rock-chip" data-rock="sedimentary" onclick="selectRock('sedimentary')">
+          <div class="rock-dot" style="background:#eab308"></div> Sedimentary
+        </div>
+        <div class="rock-chip" data-rock="metamorphic" onclick="selectRock('metamorphic')">
+          <div class="rock-dot" style="background:#a855f7"></div> Metamorphic
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Conditions</div>
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <label>Temperature</label>
+          <input type="range" id="temperature" min="0" max="1400" value="200" step="50">
+          <span class="data-val" id="temp-val">200 °C</span>
+        </div>
+        <div class="ctrl-row">
+          <label>Pressure</label>
+          <input type="range" id="pressure" min="0" max="4" value="0.5" step="0.1">
+          <span class="data-val" id="pres-val">0.5 GPa</span>
+        </div>
+        <div class="ctrl-row">
+          <label>Time Scale</label>
+          <input type="range" id="timescale" min="1" max="500" value="50" step="10">
+          <span class="data-val" id="time-val">50 My</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="flex:1; max-width:340px;">
+      <div class="panel-title">Rock State</div>
+      <div class="info-row">Current: <span class="data-val" id="current-rock">Igneous</span></div>
+      <div class="info-row">Depth: <span class="data-val" id="depth-val">0 km</span></div>
+      <div class="info-row">Transitions: <span class="data-val" id="trans-count">0</span></div>
+      <div class="process-btns" id="process-btns">
+        <button class="process-btn" id="btn-weather" onclick="doProcess('weathering')">🌧 Weathering</button>
+        <button class="process-btn" id="btn-compact" onclick="doProcess('compaction')">⬇ Compaction</button>
+        <button class="process-btn" id="btn-meta" onclick="doProcess('metamorphism')">🔥 Metamorphism</button>
+        <button class="process-btn" id="btn-melt" onclick="doProcess('melting')">🌋 Melting</button>
+        <button class="process-btn" id="btn-cool" onclick="doProcess('cooling')">❄ Cooling</button>
+        <button class="process-btn" id="btn-uplift" onclick="doProcess('uplift')">⬆ Uplift</button>
+      </div>
+      <div class="transition-log" id="log"></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Rock Cycle Processes</div>
+      <div id="formula1"></div>
+      <div class="formula-desc">Weathering → erosion → deposition → compaction & cementation.</div>
+      <div id="formula2" style="margin-top:6px;"></div>
+      <div class="formula-desc">Heat + pressure below melting point → metamorphic transformation.</div>
+      <div id="formula3" style="margin-top:6px;"></div>
+      <div class="formula-desc">Complete melting → magma → cooling crystallizes new igneous rock.</div>
+    </div>
+  </div>
+</div>
+<script>
+/* ── Rock Cycle Data ── */
+const ROCKS = {
+  igneous:     { color: 0xef4444, label: 'Igneous',     y: 0.5,  examples: 'Granite, Basalt' },
+  sedimentary: { color: 0xeab308, label: 'Sedimentary', y: 1.8,  examples: 'Sandstone, Limestone' },
+  metamorphic: { color: 0xa855f7, label: 'Metamorphic', y: -1.2, examples: 'Marble, Slate, Gneiss' }
+};
+
+const PROCESSES = {
+  weathering:   { from: ['igneous','metamorphic','sedimentary'], to: 'sediment',     minT: 0,   maxT: 200,  minP: 0,   maxP: 0.2  },
+  compaction:   { from: ['sediment'],                            to: 'sedimentary',  minT: 0,   maxT: 300,  minP: 0.05,maxP: 1    },
+  metamorphism: { from: ['igneous','sedimentary','sediment'],    to: 'metamorphic',  minT: 200, maxT: 700,  minP: 0.3, maxP: 4    },
+  melting:      { from: ['igneous','sedimentary','metamorphic'], to: 'magma',        minT: 700, maxT: 1400, minP: 0,   maxP: 4    },
+  cooling:      { from: ['magma'],                               to: 'igneous',      minT: 0,   maxT: 700,  minP: 0,   maxP: 4    },
+  uplift:       { from: ['metamorphic','igneous'],               to: null,           minT: 0,   maxT: 1400, minP: 0,   maxP: 4    }
+};
+
+/* ── State ── */
+let currentRock = 'igneous';
+let transitionCount = 0;
+
+/* ── Three.js Setup ── */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.FogExp2(0x0f172a, 0.06);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(6, 4, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.insertBefore(renderer.domElement, document.getElementById('ui'));
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.minDistance = 4;
+controls.maxDistance = 20;
+
+/* ── Lighting ── */
+scene.add(new THREE.AmbientLight(0x94a3b8, 0.4));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(5, 8, 4);
+scene.add(dirLight);
+const rimLight = new THREE.DirectionalLight(0xf97316, 0.3);
+rimLight.position.set(-3, 2, -5);
+scene.add(rimLight);
+
+/* ── Cross-Section Geometry ── */
+// Surface layer (crust)
+const crustGeo = new THREE.BoxGeometry(10, 1.5, 8);
+const crustMat = new THREE.MeshStandardMaterial({
+  color: 0x8b6914, roughness: 0.9, metalness: 0.1,
+  transparent: true, opacity: 0.7
+});
+const crust = new THREE.Mesh(crustGeo, crustMat);
+crust.position.set(0, 1.75, 0);
+scene.add(crust);
+
+// Upper mantle
+const mantleGeo = new THREE.BoxGeometry(10, 3, 8);
+const mantleMat = new THREE.MeshStandardMaterial({
+  color: 0xc2410c, roughness: 0.7, metalness: 0.2,
+  transparent: true, opacity: 0.5
+});
+const mantle = new THREE.Mesh(mantleGeo, mantleMat);
+mantle.position.set(0, -0.5, 0);
+scene.add(mantle);
+
+// Deep mantle / magma chamber
+const magmaGeo = new THREE.SphereGeometry(1.8, 24, 24);
+const magmaMat = new THREE.MeshStandardMaterial({
+  color: 0xef4444, emissive: 0xff4500, emissiveIntensity: 0.4,
+  roughness: 0.3, metalness: 0.1, transparent: true, opacity: 0.6
+});
+const magmaChamber = new THREE.Mesh(magmaGeo, magmaMat);
+magmaChamber.position.set(0, -1.5, 0);
+magmaChamber.scale.set(1, 0.6, 1);
+scene.add(magmaChamber);
+
+// Volcano cone
+const volcanoGeo = new THREE.ConeGeometry(1.2, 2, 16);
+const volcanoMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.9 });
+const volcano = new THREE.Mesh(volcanoGeo, volcanoMat);
+volcano.position.set(-2, 3.5, 0);
+scene.add(volcano);
+
+// Surface terrain (low poly hills)
+const terrainPts = [];
+for (let i = 0; i < 50; i++) {
+  const x = (Math.random() - 0.5) * 10;
+  const z = (Math.random() - 0.5) * 8;
+  const y = 2.5 + Math.random() * 0.3;
+  terrainPts.push(new THREE.Vector3(x, y, z));
+}
+
+// Grid lines for depth reference
+const gridMat = new THREE.LineBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.15 });
+for (let d = 0; d <= 4; d++) {
+  const y = 2.5 - d * 1.2;
+  const pts = [new THREE.Vector3(-5, y, -4), new THREE.Vector3(5, y, -4),
+               new THREE.Vector3(5, y, 4), new THREE.Vector3(-5, y, 4),
+               new THREE.Vector3(-5, y, -4)];
+  const gridGeo = new THREE.BufferGeometry().setFromPoints(pts);
+  scene.add(new THREE.Line(gridGeo, gridMat));
+}
+
+// Depth labels
+const depthLabels = [0, 15, 30, 50];
+
+/* ── Rock Node Spheres ── */
+const rockMeshes = {};
+const rockGlow = {};
+
+Object.entries(ROCKS).forEach(([key, data]) => {
+  const geo = new THREE.SphereGeometry(0.45, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: data.color, roughness: 0.4, metalness: 0.3,
+    emissive: data.color, emissiveIntensity: 0.15
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+
+  const angle = key === 'igneous' ? -Math.PI / 3 : key === 'sedimentary' ? Math.PI / 3 : Math.PI;
+  mesh.position.set(Math.cos(angle) * 3, data.y, Math.sin(angle) * 2);
+  scene.add(mesh);
+  rockMeshes[key] = mesh;
+
+  // Glow ring
+  const ringGeo = new THREE.RingGeometry(0.55, 0.7, 32);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: data.color, transparent: true, opacity: 0, side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(mesh.position);
+  ring.lookAt(camera.position);
+  scene.add(ring);
+  rockGlow[key] = ring;
+});
+
+// Magma & Sediment indicator nodes
+const magmaNode = new THREE.Mesh(
+  new THREE.SphereGeometry(0.35, 24, 24),
+  new THREE.MeshStandardMaterial({
+    color: 0xff6b35, emissive: 0xff4500, emissiveIntensity: 0.6,
+    roughness: 0.2, transparent: true, opacity: 0.8
+  })
+);
+magmaNode.position.set(0, -1.5, 0);
+magmaNode.visible = false;
+scene.add(magmaNode);
+
+const sedimentNode = new THREE.Mesh(
+  new THREE.SphereGeometry(0.35, 24, 24),
+  new THREE.MeshStandardMaterial({
+    color: 0xd4a574, roughness: 0.9, metalness: 0,
+    emissive: 0xd4a574, emissiveIntensity: 0.1
+  })
+);
+sedimentNode.position.set(2, 2.2, 1);
+sedimentNode.visible = false;
+scene.add(sedimentNode);
+
+/* ── Process Arrow Lines ── */
+const arrowMat = new THREE.LineBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.4 });
+
+function createArrow(from, to) {
+  const pts = [from.clone(), to.clone()];
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geo, arrowMat.clone());
+  scene.add(line);
+  return line;
+}
+
+const arrows = [];
+// Igneous → weathering → sediment area
+arrows.push(createArrow(rockMeshes.igneous.position, sedimentNode.position));
+// Sediment → compaction → sedimentary
+arrows.push(createArrow(sedimentNode.position, rockMeshes.sedimentary.position));
+// Sedimentary → metamorphism → metamorphic
+arrows.push(createArrow(rockMeshes.sedimentary.position, rockMeshes.metamorphic.position));
+// Metamorphic → melting → magma
+arrows.push(createArrow(rockMeshes.metamorphic.position, magmaNode.position));
+// Magma → cooling → igneous
+arrows.push(createArrow(magmaNode.position, rockMeshes.igneous.position));
+// Uplift arrow (metamorphic up)
+arrows.push(createArrow(rockMeshes.metamorphic.position, new THREE.Vector3(rockMeshes.metamorphic.position.x, 2.5, rockMeshes.metamorphic.position.z)));
+
+/* ── Particle System (transition animation) ── */
+const particleCount = 80;
+const particleGeo = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleColors = new Float32Array(particleCount * 3);
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+const particleMat = new THREE.PointsMaterial({
+  size: 0.08, vertexColors: true, transparent: true, opacity: 0.8,
+  blending: THREE.AdditiveBlending, depthWrite: false
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+let particleAnim = null; // { startPos, endPos, color, progress, duration }
+
+function startParticleAnim(from, to, color, duration) {
+  const c = new THREE.Color(color);
+  particleAnim = { from, to, color: c, progress: 0, duration: duration || 1.5 };
+  for (let i = 0; i < particleCount; i++) {
+    particleColors[i * 3] = c.r;
+    particleColors[i * 3 + 1] = c.g;
+    particleColors[i * 3 + 2] = c.b;
+  }
+  particleGeo.attributes.color.needsUpdate = true;
+}
+
+function updateParticles(dt) {
+  if (!particleAnim) return;
+  particleAnim.progress += dt / particleAnim.duration;
+  if (particleAnim.progress >= 1) { particleAnim = null; return; }
+
+  const p = particleAnim.progress;
+  const from = particleAnim.from;
+  const to = particleAnim.to;
+
+  for (let i = 0; i < particleCount; i++) {
+    const t = Math.max(0, Math.min(1, p + (Math.random() - 0.5) * 0.3));
+    const spread = (1 - Math.abs(t - 0.5) * 2) * 0.5;
+    particlePositions[i * 3]     = from.x + (to.x - from.x) * t + (Math.random() - 0.5) * spread;
+    particlePositions[i * 3 + 1] = from.y + (to.y - from.y) * t + (Math.random() - 0.5) * spread;
+    particlePositions[i * 3 + 2] = from.z + (to.z - from.z) * t + (Math.random() - 0.5) * spread;
+  }
+  particleGeo.attributes.position.needsUpdate = true;
+  particleMat.opacity = Math.sin(p * Math.PI) * 0.8;
+}
+
+/* ── UI Logic ── */
+const tempSlider = document.getElementById('temperature');
+const presSlider = document.getElementById('pressure');
+const timeSlider = document.getElementById('timescale');
+const tempVal = document.getElementById('temp-val');
+const presVal = document.getElementById('pres-val');
+const timeVal = document.getElementById('time-val');
+const currentRockEl = document.getElementById('current-rock');
+const depthEl = document.getElementById('depth-val');
+const transCountEl = document.getElementById('trans-count');
+const logEl = document.getElementById('log');
+
+function getTemp() { return parseFloat(tempSlider.value); }
+function getPres() { return parseFloat(presSlider.value); }
+
+tempSlider.oninput = () => { tempVal.textContent = tempSlider.value + ' °C'; updateProcessBtns(); updateVisuals(); };
+presSlider.oninput = () => { presVal.textContent = parseFloat(presSlider.value).toFixed(1) + ' GPa'; updateProcessBtns(); updateVisuals(); };
+timeSlider.oninput = () => { timeVal.textContent = timeSlider.value + ' My'; };
+
+function selectRock(type) {
+  if (type === 'magma' || type === 'sediment') return;
+  currentRock = type;
+  document.querySelectorAll('.rock-chip').forEach(el => el.classList.remove('selected'));
+  const chip = document.querySelector(`[data-rock="${type}"]`);
+  if (chip) chip.classList.add('selected');
+  currentRockEl.textContent = ROCKS[type] ? ROCKS[type].label : type;
+  updateDepth();
+  updateProcessBtns();
+  updateGlow();
+}
+
+function updateDepth() {
+  const depths = { igneous: '5–30', sedimentary: '0–5', metamorphic: '15–40', magma: '30–100', sediment: '0' };
+  depthEl.textContent = (depths[currentRock] || '0') + ' km';
+}
+
+function updateGlow() {
+  Object.entries(rockGlow).forEach(([key, ring]) => {
+    ring.material.opacity = key === currentRock ? 0.5 : 0;
+    ring.lookAt(camera.position);
+  });
+}
+
+function updateProcessBtns() {
+  const t = getTemp();
+  const p = getPres();
+  Object.entries(PROCESSES).forEach(([name, proc]) => {
+    const btn = document.getElementById('btn-' + name.substring(0, Math.min(name.length, 7)));
+    if (!btn) return;
+    const canDo = proc.from.includes(currentRock) && t >= proc.minT && t <= proc.maxT && p >= proc.minP && p <= proc.maxP;
+    btn.classList.toggle('enabled', canDo);
+  });
+  // Map button IDs properly
+  document.getElementById('btn-weather').classList.toggle('enabled',
+    PROCESSES.weathering.from.includes(currentRock) && t <= 200 && p <= 0.2);
+  document.getElementById('btn-compact').classList.toggle('enabled',
+    currentRock === 'sediment' && p >= 0.05 && t <= 300);
+  document.getElementById('btn-meta').classList.toggle('enabled',
+    PROCESSES.metamorphism.from.includes(currentRock) && t >= 200 && t <= 700 && p >= 0.3);
+  document.getElementById('btn-melt').classList.toggle('enabled',
+    PROCESSES.melting.from.includes(currentRock) && t >= 700);
+  document.getElementById('btn-cool').classList.toggle('enabled',
+    currentRock === 'magma' && t < 700);
+  document.getElementById('btn-uplift').classList.toggle('enabled',
+    PROCESSES.uplift.from.includes(currentRock));
+}
+
+function doProcess(name) {
+  const proc = PROCESSES[name];
+  if (!proc || !proc.from.includes(currentRock)) return;
+
+  const fromKey = currentRock;
+  const toKey = proc.to || currentRock;
+  const fromLabel = ROCKS[fromKey] ? ROCKS[fromKey].label : fromKey;
+  const toLabel = ROCKS[toKey] ? ROCKS[toKey].label : toKey;
+
+  // Determine animation positions
+  let fromPos, toPos;
+  if (rockMeshes[fromKey]) fromPos = rockMeshes[fromKey].position;
+  else if (fromKey === 'magma') fromPos = magmaNode.position;
+  else if (fromKey === 'sediment') fromPos = sedimentNode.position;
+  else fromPos = new THREE.Vector3(0, 0, 0);
+
+  if (rockMeshes[toKey]) toPos = rockMeshes[toKey].position;
+  else if (toKey === 'magma') toPos = magmaNode.position;
+  else if (toKey === 'sediment') toPos = sedimentNode.position;
+  else toPos = new THREE.Vector3(0, 2.5, 0);
+
+  const targetColor = ROCKS[toKey] ? ROCKS[toKey].color : 0xf97316;
+  startParticleAnim(fromPos, toPos, targetColor, 1.5);
+
+  // Show intermediate nodes
+  if (toKey === 'magma') magmaNode.visible = true;
+  if (toKey === 'sediment') sedimentNode.visible = true;
+
+  // Update state
+  if (name === 'uplift') {
+    addLog(`⬆ ${fromLabel} uplifted to surface — exposed to weathering`);
+  } else {
+    currentRock = toKey;
+    transitionCount++;
+    transCountEl.textContent = transitionCount;
+    addLog(`${fromLabel} → <span class="highlight">${name}</span> → ${toLabel}`);
+  }
+
+  selectRock(toKey !== null ? toKey : fromKey);
+}
+
+function addLog(msg) {
+  const div = document.createElement('div');
+  div.innerHTML = msg;
+  logEl.prepend(div);
+  if (logEl.children.length > 15) logEl.removeChild(logEl.lastChild);
+}
+
+/* ── Visual Updates based on T/P ── */
+function updateVisuals() {
+  const t = getTemp();
+  const p = getPres();
+
+  // Magma chamber glow intensity based on temperature
+  const magmaIntensity = Math.max(0, (t - 400) / 1000);
+  magmaMat.emissiveIntensity = 0.2 + magmaIntensity * 0.8;
+  magmaChamber.scale.set(1 + magmaIntensity * 0.2, 0.6 + magmaIntensity * 0.1, 1 + magmaIntensity * 0.2);
+
+  // Crust compression based on pressure
+  crust.scale.y = 1 - p * 0.08;
+  mantle.material.color.setHex(t > 600 ? 0xdc2626 : 0xc2410c);
+}
+
+/* ── KaTeX Formulas ── */
+katex.render(
+  "\\text{Igneous} \\xrightarrow{\\text{weathering}} \\text{Sediment} \\xrightarrow{\\text{compact}} \\text{Sedimentary}",
+  document.getElementById('formula1'), { displayMode: false, throwOnError: false }
+);
+katex.render(
+  "\\text{Rock} \\xrightarrow{T>200°C,\\,P>0.3\\,\\text{GPa}} \\text{Metamorphic}",
+  document.getElementById('formula2'), { displayMode: false, throwOnError: false }
+);
+katex.render(
+  "\\text{Rock} \\xrightarrow{T>700°C} \\text{Magma} \\xrightarrow{\\text{cool}} \\text{Igneous}",
+  document.getElementById('formula3'), { displayMode: false, throwOnError: false }
+);
+
+/* ── Animation Loop ── */
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+
+  controls.update();
+  updateParticles(dt);
+
+  // Gentle rock node bobbing
+  const time = clock.getElapsedTime();
+  Object.entries(rockMeshes).forEach(([key, mesh]) => {
+    mesh.position.y = ROCKS[key].y + Math.sin(time * 0.8 + Object.keys(ROCKS).indexOf(key) * 2) * 0.05;
+  });
+
+  // Glow rings face camera
+  Object.values(rockGlow).forEach(ring => ring.lookAt(camera.position));
+
+  // Magma chamber pulsing
+  const pulse = Math.sin(time * 2) * 0.02;
+  magmaChamber.scale.x = magmaChamber.scale.x + pulse * 0.1;
+
+  renderer.render(scene, camera);
+}
+
+/* ── Init ── */
+updateProcessBtns();
+updateDepth();
+updateGlow();
+updateVisuals();
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

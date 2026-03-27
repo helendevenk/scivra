@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar System Scale — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    input[type=range] { accent-color: #f97316; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.3rem; font-weight: 700; color: #fed7aa; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Solar System Scale <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">Scroll to explore true proportional distances between planets</p>
+    </div>
+    <div class="panel controls">
+      <label>Scroll Position: <span class="data-val" id="scrollDisplay">0</span> AU</label>
+      <input type="range" id="scrollSlider" min="0" max="3100" value="0" step="1">
+      <label>Size Exaggeration: <span class="data-val" id="sizeDisplay">50</span>×</label>
+      <input type="range" id="sizeSlider" min="1" max="200" value="50" step="1">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:220px;">
+      <div class="panel-title" id="planetNameDisplay">Sun</div>
+      <div class="big-val" id="diamDisplay">1,392,700 km</div>
+      <div class="data-row"><span>Distance from Sun</span><span class="data-val" id="distDisplay">0 AU</span></div>
+      <div class="data-row"><span>Light travel time</span><span class="data-val" id="lightDisplay">—</span></div>
+      <div class="data-row"><span>Type</span><span class="data-val" id="typeDisplay">Star</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Scale Reference</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BODIES = [
+  { name: 'Sun', au: 0, diam: 1392700, color: '#fbbf24', type: 'Star' },
+  { name: 'Mercury', au: 0.39, diam: 4879, color: '#9ca3af', type: 'Terrestrial' },
+  { name: 'Venus', au: 0.72, diam: 12104, color: '#d97706', type: 'Terrestrial' },
+  { name: 'Earth', au: 1.00, diam: 12756, color: '#3b82f6', type: 'Terrestrial' },
+  { name: 'Mars', au: 1.52, diam: 6792, color: '#dc2626', type: 'Terrestrial' },
+  { name: 'Jupiter', au: 5.20, diam: 139820, color: '#d97706', type: 'Gas Giant' },
+  { name: 'Saturn', au: 9.58, diam: 116460, color: '#eab308', type: 'Gas Giant' },
+  { name: 'Uranus', au: 19.22, diam: 50724, color: '#67e8f9', type: 'Ice Giant' },
+  { name: 'Neptune', au: 30.07, diam: 49528, color: '#3b82f6', type: 'Ice Giant' }
+];
+
+let scrollAU = 0, sizeExag = 50;
+let selectedPlanet = 0;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function auToPixels(au) {
+  return au * 80; // 80px per AU at base
+}
+
+function updateInfo(idx) {
+  selectedPlanet = idx;
+  const b = BODIES[idx];
+  document.getElementById('planetNameDisplay').textContent = b.name;
+  document.getElementById('diamDisplay').textContent = b.diam.toLocaleString() + ' km';
+  document.getElementById('distDisplay').textContent = b.au.toFixed(2) + ' AU';
+  const lightMin = b.au * 8.317;
+  if (b.au === 0) document.getElementById('lightDisplay').textContent = '—';
+  else if (lightMin < 60) document.getElementById('lightDisplay').textContent = lightMin.toFixed(1) + ' min';
+  else document.getElementById('lightDisplay').textContent = (lightMin / 60).toFixed(1) + ' hr';
+  document.getElementById('typeDisplay').textContent = b.type;
+}
+
+function draw() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const centerY = h * 0.45;
+  const offset = auToPixels(scrollAU / 100);
+
+  // Stars background
+  if (!draw.stars) {
+    draw.stars = [];
+    for (let i = 0; i < 200; i++) {
+      draw.stars.push({ x: Math.random() * 5000, y: Math.random() * h, s: Math.random() * 1.5 + 0.5 });
+    }
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  draw.stars.forEach(s => {
+    const sx = ((s.x - offset * 0.05) % 5000 + 5000) % 5000;
+    ctx.fillRect(sx * w / 5000, s.y, s.s, s.s);
+  });
+
+  // Orbit line
+  ctx.strokeStyle = 'rgba(249,115,22,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, centerY);
+  ctx.lineTo(w, centerY);
+  ctx.stroke();
+
+  // Draw bodies
+  let closestIdx = 0, closestDist = Infinity;
+
+  BODIES.forEach((b, i) => {
+    const screenX = w * 0.1 + auToPixels(b.au) - offset;
+
+    // Only draw if on screen (with margin)
+    if (screenX < -200 || screenX > w + 200) return;
+
+    // Size: Sun is special (capped), planets exaggerated
+    let radius;
+    if (i === 0) {
+      radius = Math.min(40, sizeExag * 0.3);
+    } else {
+      radius = Math.max(2, (b.diam / 12756) * sizeExag * 0.15);
+    }
+
+    // Body
+    ctx.beginPath();
+    ctx.arc(screenX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = b.color;
+    ctx.fill();
+
+    // Glow
+    if (i === 0) {
+      ctx.beginPath();
+      ctx.arc(screenX, centerY, radius + 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(251,191,36,0.15)';
+      ctx.fill();
+    }
+
+    // Saturn rings
+    if (b.name === 'Saturn') {
+      ctx.strokeStyle = 'rgba(234,179,8,0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(screenX, centerY, radius * 1.8, radius * 0.4, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(b.name, screenX, centerY + radius + 16);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '8px JetBrains Mono, monospace';
+    ctx.fillText(b.au.toFixed(2) + ' AU', screenX, centerY + radius + 28);
+
+    // Track closest to center
+    const dist = Math.abs(screenX - w / 2);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestIdx = i;
+    }
+  });
+
+  // Auto-select nearest planet
+  if (closestDist < 200) updateInfo(closestIdx);
+
+  // Scale bar
+  const barY = h * 0.85;
+  const auPx = auToPixels(1);
+  ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.6, barY);
+  ctx.lineTo(w * 0.6 + auPx, barY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.6, barY - 4);
+  ctx.lineTo(w * 0.6, barY + 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.6 + auPx, barY - 4);
+  ctx.lineTo(w * 0.6 + auPx, barY + 4);
+  ctx.stroke();
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('1 AU = 150 million km', w * 0.6 + auPx / 2, barY - 8);
+
+  // Size comparison bar (top)
+  const barTopY = h * 0.08;
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Relative planet sizes:', 20, barTopY - 6);
+  let sx = 20;
+  BODIES.forEach((b, i) => {
+    if (i === 0) return; // skip Sun
+    const r = Math.max(1.5, (b.diam / 139820) * 20);
+    ctx.beginPath();
+    ctx.arc(sx + r, barTopY + 10, r, 0, Math.PI * 2);
+    ctx.fillStyle = b.color;
+    ctx.fill();
+    sx += r * 2 + 12;
+  });
+}
+
+function animate() {
+  draw();
+  requestAnimationFrame(animate);
+}
+
+document.getElementById('scrollSlider').addEventListener('input', e => {
+  scrollAU = +e.target.value;
+  document.getElementById('scrollDisplay').textContent = (scrollAU / 100).toFixed(2);
+});
+document.getElementById('sizeSlider').addEventListener('input', e => {
+  sizeExag = +e.target.value;
+  document.getElementById('sizeDisplay').textContent = sizeExag;
+});
+
+try {
+  katex.render('1\\,\\text{AU} = 1.496 \\times 10^8\\,\\text{km}', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch(e) {}
+
+updateInfo(0);
+animate();
+</script>
+</body>
+</html>

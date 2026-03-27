@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gas Properties — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 210px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.6rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Gas Properties <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">PV = nRT — adjust T, V, and n to observe pressure changes</p>
+    </div>
+    <div class="panel controls">
+      <label>Temperature: <span class="data-val" id="tempDisplay">300</span> K</label>
+      <input type="range" id="tempSlider" min="100" max="800" value="300" step="10">
+      <label>Container Width: <span class="data-val" id="volDisplay">60</span>%</label>
+      <input type="range" id="volSlider" min="20" max="100" value="60" step="5">
+      <label>Particles: <span class="data-val" id="numDisplay">80</span></label>
+      <input type="range" id="numSlider" min="10" max="200" value="80" step="10">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Measured Values</div>
+      <div class="big-val" id="pressureDisplay">0.00</div>
+      <div style="text-align:center;font-size:0.65rem;color:#94a3b8;">Pressure (relative)</div>
+      <div class="data-row"><span>Avg. KE</span><span class="data-val" id="keDisplay">—</span></div>
+      <div class="data-row"><span>Avg. Speed</span><span class="data-val" id="speedDisplay">—</span></div>
+      <div class="data-row"><span>Wall Hits/s</span><span class="data-val" id="hitsDisplay">0</span></div>
+      <div class="data-row"><span>PV/nT ratio</span><span class="data-val" id="ratioDisplay">—</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Ideal Gas Law</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let temperature = 300, containerPct = 60, numParticles = 80;
+let particles = [];
+let wallHits = 0, hitTimer = 0, hitsPerSecond = 0;
+let pressureHistory = [];
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function getContainerBounds() {
+  const w = canvas.width, h = canvas.height;
+  const margin = 20;
+  const cw = (w * 0.55) * (containerPct / 100);
+  const ch = h * 0.6;
+  const cx = w * 0.05 + margin;
+  const cy = h * 0.18;
+  return { x: cx, y: cy, w: cw, h: ch };
+}
+
+function speedFromTemp(T) {
+  return Math.sqrt(T / 300) * 3;
+}
+
+function initParticles() {
+  const bounds = getContainerBounds();
+  const speed = speedFromTemp(temperature);
+  particles = [];
+  for (let i = 0; i < numParticles; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const s = speed * (0.5 + Math.random());
+    particles.push({
+      x: bounds.x + 10 + Math.random() * (bounds.w - 20),
+      y: bounds.y + 10 + Math.random() * (bounds.h - 20),
+      vx: Math.cos(angle) * s,
+      vy: Math.sin(angle) * s,
+      r: 3
+    });
+  }
+  wallHits = 0;
+  pressureHistory = [];
+}
+
+function updateParticles() {
+  const bounds = getContainerBounds();
+  const speed = speedFromTemp(temperature);
+  let frameHits = 0;
+
+  particles.forEach(p => {
+    // Scale speeds to temperature
+    const currentSpeed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    if (currentSpeed > 0) {
+      const targetSpeed = speed * (0.7 + Math.random() * 0.6);
+      const scale = 0.98 + 0.02 * (targetSpeed / currentSpeed);
+      p.vx *= scale;
+      p.vy *= scale;
+    }
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // Wall collisions
+    if (p.x - p.r < bounds.x) { p.x = bounds.x + p.r; p.vx = Math.abs(p.vx); frameHits++; }
+    if (p.x + p.r > bounds.x + bounds.w) { p.x = bounds.x + bounds.w - p.r; p.vx = -Math.abs(p.vx); frameHits++; }
+    if (p.y - p.r < bounds.y) { p.y = bounds.y + p.r; p.vy = Math.abs(p.vy); frameHits++; }
+    if (p.y + p.r > bounds.y + bounds.h) { p.y = bounds.y + bounds.h - p.r; p.vy = -Math.abs(p.vy); frameHits++; }
+
+    // Keep in bounds after container resize
+    p.x = Math.max(bounds.x + p.r, Math.min(bounds.x + bounds.w - p.r, p.x));
+    p.y = Math.max(bounds.y + p.r, Math.min(bounds.y + bounds.h - p.r, p.y));
+  });
+
+  wallHits += frameHits;
+  hitTimer++;
+  if (hitTimer >= 60) {
+    hitsPerSecond = wallHits;
+    wallHits = 0;
+    hitTimer = 0;
+
+    // Calculate "pressure" as hits per unit wall area
+    const wallArea = 2 * (bounds.w + bounds.h);
+    const pressure = hitsPerSecond / wallArea * 1000;
+    pressureHistory.push(pressure);
+    if (pressureHistory.length > 120) pressureHistory.shift();
+  }
+}
+
+function tempToColor(T) {
+  const ratio = Math.max(0, Math.min(1, (T - 100) / 700));
+  if (ratio < 0.5) {
+    const r = ratio * 2;
+    return [Math.round(59 + 180 * r), Math.round(130 + 55 * r), Math.round(246 * (1 - r))];
+  } else {
+    const r = (ratio - 0.5) * 2;
+    return [Math.round(239), Math.round(185 * (1 - r) + 68 * r), Math.round(0)];
+  }
+}
+
+function draw() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const bounds = getContainerBounds();
+  const tc = tempToColor(temperature);
+
+  // Container
+  ctx.strokeStyle = 'rgba(16,185,129,0.4)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
+
+  // Piston (right wall, movable)
+  ctx.fillStyle = 'rgba(16,185,129,0.15)';
+  ctx.fillRect(bounds.x + bounds.w - 4, bounds.y, 8, bounds.h);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('← piston', bounds.x + bounds.w + 30, bounds.y + bounds.h / 2);
+
+  // Particles
+  particles.forEach(p => {
+    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    const alpha = Math.min(0.4 + speed * 0.15, 1);
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${tc[0]},${tc[1]},${tc[2]},${alpha})`;
+    ctx.fill();
+
+    // Glow for fast particles
+    if (speed > 4) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r + 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${tc[0]},${tc[1]},${tc[2]},0.15)`;
+      ctx.fill();
+    }
+  });
+
+  // Pressure graph (right side)
+  const gx = w * 0.65, gy = h * 0.18;
+  const gw = w * 0.3, gh = h * 0.55;
+
+  ctx.strokeStyle = 'rgba(16,185,129,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(gx, gy, gw, gh);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Time', gx + gw / 2, gy + gh + 16);
+  ctx.save();
+  ctx.translate(gx - 14, gy + gh / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Pressure', 0, 0);
+  ctx.restore();
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 1; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(gx, gy + gh * i / 5);
+    ctx.lineTo(gx + gw, gy + gh * i / 5);
+    ctx.stroke();
+  }
+
+  // Plot pressure history
+  if (pressureHistory.length > 1) {
+    const maxP = Math.max(...pressureHistory, 1);
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    pressureHistory.forEach((p, i) => {
+      const px = gx + (i / 120) * gw;
+      const py = gy + gh * (1 - p / (maxP * 1.2));
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+  }
+
+  // Update displays
+  const avgSpeed = particles.reduce((s, p) => s + Math.sqrt(p.vx * p.vx + p.vy * p.vy), 0) / particles.length;
+  const ke = 0.5 * avgSpeed * avgSpeed;
+  const currentP = pressureHistory.length > 0 ? pressureHistory[pressureHistory.length - 1] : 0;
+  const volume = bounds.w * bounds.h;
+  const pvnrt = volume > 0 && numParticles > 0 && temperature > 0
+    ? (currentP * volume) / (numParticles * temperature)
+    : 0;
+
+  document.getElementById('pressureDisplay').textContent = currentP.toFixed(2);
+  document.getElementById('keDisplay').textContent = ke.toFixed(2);
+  document.getElementById('speedDisplay').textContent = avgSpeed.toFixed(1) + ' px/f';
+  document.getElementById('hitsDisplay').textContent = hitsPerSecond;
+  document.getElementById('ratioDisplay').textContent = pvnrt > 0 ? pvnrt.toFixed(4) : '—';
+}
+
+function animate() {
+  updateParticles();
+  draw();
+  requestAnimationFrame(animate);
+}
+
+// Controls
+document.getElementById('tempSlider').addEventListener('input', e => {
+  temperature = +e.target.value;
+  document.getElementById('tempDisplay').textContent = temperature;
+});
+document.getElementById('volSlider').addEventListener('input', e => {
+  containerPct = +e.target.value;
+  document.getElementById('volDisplay').textContent = containerPct;
+});
+document.getElementById('numSlider').addEventListener('input', e => {
+  numParticles = +e.target.value;
+  document.getElementById('numDisplay').textContent = numParticles;
+  initParticles();
+});
+
+try {
+  katex.render('PV = nRT', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch (e) {}
+
+initParticles();
+animate();
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ export const beersLawLab: Experiment = {
 
   standards: {
     ngss: ["HS-PS4-5"],
+    gcse: [],
     ap: ["3.C.1"],
   },
   primaryStandard: "ap-chemistry",

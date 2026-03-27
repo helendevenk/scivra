@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Greenhouse Effect — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    input[type=range] { accent-color: #f97316; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.6rem; font-weight: 700; color: #fed7aa; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Greenhouse Effect <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">Watch how CO₂ traps infrared radiation and warms the planet</p>
+    </div>
+    <div class="panel controls">
+      <label>CO₂: <span class="data-val" id="co2Display">420</span> ppm</label>
+      <input type="range" id="co2Slider" min="200" max="1000" value="420" step="10">
+      <label>CH₄: <span class="data-val" id="ch4Display">1900</span> ppb</label>
+      <input type="range" id="ch4Slider" min="500" max="5000" value="1900" step="100">
+      <label>Solar Intensity: <span class="data-val" id="solarDisplay">100</span>%</label>
+      <input type="range" id="solarSlider" min="80" max="120" value="100" step="1">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Surface Temperature</div>
+      <div class="big-val" id="tempDisplay">15.0°C</div>
+      <div style="text-align:center;font-size:0.65rem;color:#94a3b8;">Global Average</div>
+      <div class="data-row"><span>Pre-industrial</span><span class="data-val">14.0°C</span></div>
+      <div class="data-row"><span>ΔT from baseline</span><span class="data-val" id="deltaDisplay">+1.0°C</span></div>
+      <div class="data-row"><span>IR trapped</span><span class="data-val" id="trappedDisplay">—</span></div>
+      <div class="data-row"><span>Greenhouse τ</span><span class="data-val" id="tauDisplay">—</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Energy Balance</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let co2 = 420, ch4 = 1900, solar = 100;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let photons = [];
+let frameCount = 0;
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+// Simplified greenhouse model
+function calcTemp() {
+  // Logarithmic response: ~3°C per CO2 doubling from 280ppm baseline
+  const co2Forcing = 5.35 * Math.log(co2 / 280); // W/m²
+  const ch4Forcing = 0.036 * (Math.sqrt(ch4) - Math.sqrt(700)); // W/m²
+  const solarForcing = (solar - 100) * 0.01 * 1361 * 0.25 * (1 - 0.3); // simplified
+  const totalForcing = co2Forcing + ch4Forcing + solarForcing;
+
+  // Climate sensitivity ~0.8°C per W/m² (simplified)
+  const deltaT = totalForcing * 0.8;
+  const baseTemp = 14.0; // pre-industrial
+  return baseTemp + deltaT;
+}
+
+function calcTau() {
+  // Approximate atmospheric opacity
+  return 0.78 + 0.12 * Math.log(co2 / 280) + 0.02 * Math.log(ch4 / 700);
+}
+
+function spawnPhoton(type) {
+  const w = canvas.width, h = canvas.height;
+  if (type === 'solar') {
+    return {
+      x: Math.random() * w * 0.7 + w * 0.15,
+      y: 0,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: 2 + Math.random(),
+      type: 'solar',
+      color: [250, 204, 21], // yellow
+      life: 300
+    };
+  } else {
+    // IR from surface
+    const surfaceY = h * 0.75;
+    return {
+      x: Math.random() * w * 0.6 + w * 0.2,
+      y: surfaceY,
+      vx: (Math.random() - 0.5) * 1,
+      vy: -(1.5 + Math.random()),
+      type: 'ir',
+      color: [239, 68, 68], // red
+      life: 300
+    };
+  }
+}
+
+function update() {
+  const temp = calcTemp();
+  const tau = calcTau();
+  const trappedPct = (1 - Math.exp(-tau)) * 100;
+
+  document.getElementById('tempDisplay').textContent = temp.toFixed(1) + '°C';
+  document.getElementById('deltaDisplay').textContent = (temp > 14 ? '+' : '') + (temp - 14).toFixed(1) + '°C';
+  document.getElementById('trappedDisplay').textContent = trappedPct.toFixed(0) + '%';
+  document.getElementById('tauDisplay').textContent = tau.toFixed(3);
+}
+
+function animate() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  frameCount++;
+
+  const surfaceY = h * 0.75;
+  const atmoTop = h * 0.15;
+  const tau = calcTau();
+  const trapProb = 1 - Math.exp(-tau);
+
+  // Sky gradient (space → atmosphere → surface)
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, surfaceY);
+  skyGrad.addColorStop(0, '#0f172a');
+  skyGrad.addColorStop(0.3, '#1e293b');
+  skyGrad.addColorStop(0.8, 'rgba(30,41,59,0.9)');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, surfaceY);
+
+  // Atmosphere layer (semi-transparent based on greenhouse gases)
+  const atmoAlpha = Math.min(trapProb * 0.3, 0.25);
+  ctx.fillStyle = `rgba(249,115,22,${atmoAlpha})`;
+  ctx.fillRect(0, atmoTop, w, surfaceY - atmoTop);
+
+  // Atmosphere label
+  ctx.fillStyle = 'rgba(249,115,22,0.5)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Atmosphere', w - 20, atmoTop + 16);
+
+  // Earth surface
+  const earthGrad = ctx.createLinearGradient(0, surfaceY, 0, h);
+  earthGrad.addColorStop(0, '#166534');
+  earthGrad.addColorStop(0.3, '#14532d');
+  earthGrad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = earthGrad;
+  ctx.fillRect(0, surfaceY, w, h - surfaceY);
+
+  // Surface line
+  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, surfaceY);
+  ctx.lineTo(w, surfaceY);
+  ctx.stroke();
+
+  // Sun
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(w * 0.85, h * 0.08, 30, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(251,191,36,0.2)';
+  ctx.beginPath();
+  ctx.arc(w * 0.85, h * 0.08, 45, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spawn photons
+  if (frameCount % 8 === 0) {
+    const solarCount = Math.round(solar / 25);
+    for (let i = 0; i < solarCount; i++) photons.push(spawnPhoton('solar'));
+  }
+  if (frameCount % 12 === 0) {
+    const irCount = Math.round(2 + co2 / 200);
+    for (let i = 0; i < Math.min(irCount, 6); i++) photons.push(spawnPhoton('ir'));
+  }
+
+  // Update and draw photons
+  photons = photons.filter(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+
+    // Solar photon hits surface → absorbed
+    if (p.type === 'solar' && p.y >= surfaceY) {
+      return false;
+    }
+
+    // IR photon in atmosphere → chance of being trapped and reflected
+    if (p.type === 'ir' && p.y < surfaceY && p.y > atmoTop) {
+      if (Math.random() < trapProb * 0.02) {
+        // Reflect downward
+        p.vy = Math.abs(p.vy) * 0.8;
+        p.vx = (Math.random() - 0.5) * 2;
+        p.color = [249, 115, 22]; // orange = re-emitted
+      }
+    }
+
+    // IR escapes to space
+    if (p.y < 0) return false;
+    // IR returns to surface
+    if (p.type === 'ir' && p.vy > 0 && p.y > surfaceY) return false;
+    // Out of bounds
+    if (p.x < -20 || p.x > w + 20) return false;
+    if (p.life <= 0) return false;
+
+    // Draw photon
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},0.9)`;
+    ctx.fill();
+
+    // Trail
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x - p.vx * 3, p.y - p.vy * 3);
+    ctx.strokeStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},0.3)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    return true;
+  });
+
+  // Legend
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  const ly = h * 0.92;
+  ctx.fillStyle = 'rgba(250,204,21,0.8)';
+  ctx.beginPath(); ctx.arc(20, ly, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Solar (visible)', 30, ly + 4);
+
+  ctx.fillStyle = 'rgba(239,68,68,0.8)';
+  ctx.beginPath(); ctx.arc(140, ly, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('IR (outgoing)', 150, ly + 4);
+
+  ctx.fillStyle = 'rgba(249,115,22,0.8)';
+  ctx.beginPath(); ctx.arc(260, ly, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('IR (trapped)', 270, ly + 4);
+
+  // Thermometer (right side)
+  const temp = calcTemp();
+  const tx = w * 0.92, ty = h * 0.2, th = h * 0.5;
+  const fillRatio = Math.max(0.05, Math.min(1, (temp + 20) / 60));
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(tx - 6, ty, 12, th);
+
+  // Temperature color
+  const tRatio = Math.max(0, Math.min(1, (temp - 5) / 30));
+  const r = Math.round(59 + 190 * tRatio);
+  const g = Math.round(130 * (1 - tRatio) + 68 * tRatio);
+  const b = Math.round(246 * (1 - tRatio));
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
+  ctx.fillRect(tx - 5, ty + th * (1 - fillRatio), 10, th * fillRatio);
+
+  // Bulb
+  ctx.beginPath();
+  ctx.arc(tx, ty + th + 10, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('°C', tx, ty - 8);
+
+  update();
+  requestAnimationFrame(animate);
+}
+
+// Controls
+document.getElementById('co2Slider').addEventListener('input', e => {
+  co2 = +e.target.value;
+  document.getElementById('co2Display').textContent = co2;
+});
+document.getElementById('ch4Slider').addEventListener('input', e => {
+  ch4 = +e.target.value;
+  document.getElementById('ch4Display').textContent = ch4;
+});
+document.getElementById('solarSlider').addEventListener('input', e => {
+  solar = +e.target.value;
+  document.getElementById('solarDisplay').textContent = solar;
+});
+
+try {
+  katex.render('T_s = T_{\\text{eff}} \\cdot (1 + \\tau)^{1/4}', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch(e) {}
+
+animate();
+</script>
+</body>
+</html>

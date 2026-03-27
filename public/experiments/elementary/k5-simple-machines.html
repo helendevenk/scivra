@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Machines — Scivra K-5 Physics</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;min-width:260px;background:rgba(30,41,59,0.95);border-right:1px solid rgba(59,130,246,0.25);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.badge-row{display:flex;gap:8px}
+.badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+.badge-subject{background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.4)}
+.badge-free{background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+.sidebar h1{font-size:1.2em;color:#3b82f6;line-height:1.3}
+.sidebar h1 span{color:#93c5fd;font-size:0.7em;display:block;margin-top:2px}
+.control-group{display:flex;flex-direction:column;gap:6px}
+.control-group label{font-size:13px;color:#93c5fd;font-weight:600}
+.control-group select,.control-group input[type=range]{width:100%;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#e2e8f0;border-radius:6px;padding:6px 8px;font-size:13px;outline:none}
+.control-group input[type=range]{-webkit-appearance:none;height:6px;padding:0;cursor:pointer}
+.control-group input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#3b82f6;border-radius:50%;cursor:pointer}
+.val{font-family:'JetBrains Mono',monospace;color:#93c5fd;font-size:12px;text-align:right}
+.info-box{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:12px;font-size:13px;line-height:1.5}
+.info-box h3{color:#3b82f6;font-size:14px;margin-bottom:6px}
+.data-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(59,130,246,0.1)}
+.data-label{color:#94a3b8;font-size:12px}
+.data-val{font-family:'JetBrains Mono',monospace;color:#93c5fd;font-size:13px;font-weight:600}
+.canvas-area{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+canvas{border-radius:12px;background:#0f172a;display:block}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="badge-row">
+        <span class="badge badge-subject">K-5 PHYSICS</span>
+        <span class="badge badge-free">FREE</span>
+    </div>
+    <h1>Simple Machines<span>Scivra K-5 Physics</span></h1>
+
+    <div class="control-group">
+        <label>Machine Type</label>
+        <select id="machineType">
+            <option value="lever">Lever</option>
+            <option value="pulley">Pulley</option>
+            <option value="ramp">Inclined Plane</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>Load Weight (N)</label>
+        <input type="range" id="loadWeight" min="10" max="100" value="50">
+        <div class="val" id="loadVal">50 N</div>
+    </div>
+
+    <div class="control-group" id="fulcrumGroup">
+        <label>Fulcrum Position</label>
+        <input type="range" id="fulcrumPos" min="20" max="80" value="40">
+        <div class="val" id="fulcrumVal">40%</div>
+    </div>
+
+    <div class="control-group" id="angleGroup" style="display:none">
+        <label>Ramp Angle (°)</label>
+        <input type="range" id="rampAngle" min="10" max="60" value="30">
+        <div class="val" id="angleVal">30°</div>
+    </div>
+
+    <div class="info-box">
+        <h3>Results</h3>
+        <div class="data-row"><span class="data-label">Mechanical Advantage</span><span class="data-val" id="maVal">—</span></div>
+        <div class="data-row"><span class="data-label">Effort Force</span><span class="data-val" id="effortVal">—</span></div>
+        <div class="data-row"><span class="data-label">Work Done</span><span class="data-val" id="workVal">—</span></div>
+    </div>
+
+    <div class="info-box" id="tipBox">
+        <h3>Did You Know?</h3>
+        <p id="tipText">A lever makes lifting heavy things easier by spreading the work over a longer distance!</p>
+    </div>
+</div>
+
+<div class="canvas-area">
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const machineSelect = document.getElementById('machineType');
+const loadSlider = document.getElementById('loadWeight');
+const fulcrumSlider = document.getElementById('fulcrumPos');
+const rampAngleSlider = document.getElementById('rampAngle');
+
+let W, H, time = 0;
+
+function resize() {
+    const area = canvas.parentElement;
+    W = area.clientWidth - 40;
+    H = area.clientHeight - 40;
+    canvas.width = W; canvas.height = H;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const tips = {
+    lever: 'A lever makes lifting heavy things easier by spreading the work over a longer distance!',
+    pulley: 'A pulley changes the direction of force — you pull down to lift up!',
+    ramp: 'A ramp lets you use less force by moving an object over a longer distance.'
+};
+
+function updateUI() {
+    const type = machineSelect.value;
+    const load = +loadSlider.value;
+    const fulcrum = +fulcrumSlider.value / 100;
+    const angle = +rampAngleSlider.value;
+
+    document.getElementById('loadVal').textContent = load + ' N';
+    document.getElementById('fulcrumVal').textContent = Math.round(fulcrum * 100) + '%';
+    document.getElementById('angleVal').textContent = angle + '°';
+
+    document.getElementById('fulcrumGroup').style.display = type === 'lever' ? '' : 'none';
+    document.getElementById('angleGroup').style.display = type === 'ramp' ? '' : 'none';
+
+    let ma, effort;
+    if (type === 'lever') {
+        const effortArm = 1 - fulcrum;
+        const loadArm = fulcrum;
+        ma = effortArm / Math.max(loadArm, 0.01);
+        effort = load / ma;
+    } else if (type === 'pulley') {
+        ma = 2;
+        effort = load / ma;
+    } else {
+        const rad = angle * Math.PI / 180;
+        ma = 1 / Math.sin(rad);
+        effort = load * Math.sin(rad);
+    }
+
+    document.getElementById('maVal').textContent = ma.toFixed(2);
+    document.getElementById('effortVal').textContent = effort.toFixed(1) + ' N';
+    document.getElementById('workVal').textContent = (load * 1).toFixed(1) + ' J';
+    document.getElementById('tipText').textContent = tips[type];
+}
+
+function drawArrow(x1, y1, x2, y2, color, label) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 12 * Math.cos(angle - 0.4), y2 - 12 * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - 12 * Math.cos(angle + 0.4), y2 - 12 * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+    if (label) {
+        ctx.font = "bold 14px 'Segoe UI'";
+        ctx.fillStyle = color;
+        ctx.fillText(label, (x1 + x2) / 2 + 8, (y1 + y2) / 2 - 8);
+    }
+}
+
+function drawLever() {
+    const load = +loadSlider.value;
+    const fulcrum = +fulcrumSlider.value / 100;
+    const baseY = H * 0.65;
+    const beamLen = W * 0.6;
+    const beamX = (W - beamLen) / 2;
+    const fulcrumX = beamX + beamLen * fulcrum;
+    const triH = 40;
+    const bob = Math.sin(time * 2) * 3;
+
+    const effortArm = 1 - fulcrum;
+    const loadArm = fulcrum;
+    const tiltAngle = Math.atan2(bob, beamLen / 2);
+
+    // fulcrum triangle
+    ctx.fillStyle = '#3b82f6';
+    ctx.beginPath();
+    ctx.moveTo(fulcrumX, baseY);
+    ctx.lineTo(fulcrumX - 25, baseY + triH);
+    ctx.lineTo(fulcrumX + 25, baseY + triH);
+    ctx.closePath();
+    ctx.fill();
+
+    // ground
+    ctx.strokeStyle = 'rgba(59,130,246,0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(beamX - 20, baseY + triH);
+    ctx.lineTo(beamX + beamLen + 20, baseY + triH);
+    ctx.stroke();
+
+    // beam
+    const leftY = baseY - bob;
+    const rightY = baseY + bob;
+    ctx.strokeStyle = '#93c5fd';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(beamX, leftY);
+    ctx.lineTo(beamX + beamLen, rightY);
+    ctx.stroke();
+
+    // load box (left side)
+    const boxSize = 30 + load * 0.2;
+    ctx.fillStyle = 'rgba(59,130,246,0.6)';
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    const loadX = beamX + 20;
+    const loadY = leftY - boxSize;
+    ctx.fillRect(loadX - boxSize / 2, loadY, boxSize, boxSize);
+    ctx.strokeRect(loadX - boxSize / 2, loadY, boxSize, boxSize);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = "bold 13px 'JetBrains Mono'";
+    ctx.textAlign = 'center';
+    ctx.fillText(load + 'N', loadX, loadY + boxSize / 2 + 5);
+
+    // effort arrow (right side)
+    const effortX = beamX + beamLen - 20;
+    const effort = load * loadArm / Math.max(effortArm, 0.01);
+    const arrowLen = Math.min(80, 30 + effort * 0.5);
+    drawArrow(effortX, rightY, effortX, rightY + arrowLen, '#60a5fa', effort.toFixed(1) + 'N');
+
+    // labels
+    ctx.textAlign = 'center';
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Load', loadX, loadY - 10);
+    ctx.fillText('Effort', effortX, rightY + arrowLen + 20);
+    ctx.fillText('Fulcrum', fulcrumX, baseY + triH + 20);
+
+    // distance labels
+    ctx.font = "12px 'JetBrains Mono'";
+    ctx.fillStyle = 'rgba(147,197,253,0.6)';
+    ctx.fillText('Load Arm: ' + Math.round(fulcrum * 100) + '%', (beamX + fulcrumX) / 2, baseY + triH + 40);
+    ctx.fillText('Effort Arm: ' + Math.round(effortArm * 100) + '%', (fulcrumX + beamX + beamLen) / 2, baseY + triH + 40);
+}
+
+function drawPulley() {
+    const load = +loadSlider.value;
+    const cx = W / 2;
+    const topY = H * 0.15;
+    const wheelR = 35;
+    const bob = Math.sin(time * 1.5) * 5;
+
+    // support beam
+    ctx.strokeStyle = 'rgba(59,130,246,0.4)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(cx - 80, topY);
+    ctx.lineTo(cx + 80, topY);
+    ctx.stroke();
+
+    // wheel
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx, topY + wheelR + 5, wheelR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // axle
+    ctx.fillStyle = '#93c5fd';
+    ctx.beginPath();
+    ctx.arc(cx, topY + wheelR + 5, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // spokes
+    for (let i = 0; i < 4; i++) {
+        const a = time * 2 + i * Math.PI / 2;
+        ctx.strokeStyle = 'rgba(147,197,253,0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, topY + wheelR + 5);
+        ctx.lineTo(cx + Math.cos(a) * (wheelR - 5), topY + wheelR + 5 + Math.sin(a) * (wheelR - 5));
+        ctx.stroke();
+    }
+
+    // rope - load side
+    const loadHangY = topY + wheelR * 2 + 30 + bob;
+    const boxSize = 35 + load * 0.25;
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - wheelR + 3, topY + wheelR + 5);
+    ctx.lineTo(cx - wheelR + 3, loadHangY);
+    ctx.stroke();
+
+    // load box
+    ctx.fillStyle = 'rgba(59,130,246,0.5)';
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.fillRect(cx - wheelR + 3 - boxSize / 2, loadHangY, boxSize, boxSize);
+    ctx.strokeRect(cx - wheelR + 3 - boxSize / 2, loadHangY, boxSize, boxSize);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = "bold 14px 'JetBrains Mono'";
+    ctx.textAlign = 'center';
+    ctx.fillText(load + 'N', cx - wheelR + 3, loadHangY + boxSize / 2 + 5);
+
+    // rope - effort side
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx + wheelR - 3, topY + wheelR + 5);
+    ctx.lineTo(cx + wheelR - 3, loadHangY + 40);
+    ctx.stroke();
+
+    // effort arrow
+    const effort = load / 2;
+    drawArrow(cx + wheelR - 3, loadHangY - 10, cx + wheelR - 3, loadHangY + 50, '#60a5fa', effort.toFixed(1) + 'N');
+
+    // labels
+    ctx.textAlign = 'center';
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Load', cx - wheelR + 3, loadHangY + boxSize + 18);
+    ctx.fillText('Pull Down', cx + wheelR - 3, loadHangY + 70);
+    ctx.fillText('Pulley Wheel', cx, topY - 10);
+
+    // MA note
+    ctx.font = "13px 'Segoe UI'";
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText('MA = 2 (single movable pulley)', cx, H * 0.85);
+}
+
+function drawRamp() {
+    const load = +loadSlider.value;
+    const angle = +rampAngleSlider.value;
+    const rad = angle * Math.PI / 180;
+
+    const baseY = H * 0.75;
+    const rampLen = W * 0.55;
+    const rampH = rampLen * Math.tan(rad);
+    const startX = W * 0.15;
+    const endX = startX + rampLen;
+    const topY = baseY - rampH;
+
+    // ground
+    ctx.strokeStyle = 'rgba(59,130,246,0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(startX - 20, baseY);
+    ctx.lineTo(endX + 20, baseY);
+    ctx.stroke();
+
+    // ramp surface
+    ctx.fillStyle = 'rgba(59,130,246,0.15)';
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(startX, baseY);
+    ctx.lineTo(endX, baseY);
+    ctx.lineTo(endX, topY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // box sliding up ramp
+    const progress = (Math.sin(time * 0.8) + 1) / 2;
+    const boxX = startX + (endX - startX) * 0.3 + progress * (endX - startX) * 0.3;
+    const boxOnRampY = baseY - (boxX - startX) * Math.tan(rad);
+    const boxSize = 30;
+
+    ctx.save();
+    ctx.translate(boxX, boxOnRampY);
+    ctx.rotate(-rad);
+    ctx.fillStyle = 'rgba(59,130,246,0.6)';
+    ctx.strokeStyle = '#93c5fd';
+    ctx.lineWidth = 2;
+    ctx.fillRect(-boxSize / 2, -boxSize, boxSize, boxSize);
+    ctx.strokeRect(-boxSize / 2, -boxSize, boxSize, boxSize);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = "bold 12px 'JetBrains Mono'";
+    ctx.textAlign = 'center';
+    ctx.fillText(load + 'N', 0, -boxSize / 2 + 5);
+    ctx.restore();
+
+    // force arrow along ramp
+    const effort = load * Math.sin(rad);
+    const arrowLen = 60;
+    const ax1 = boxX + Math.cos(-rad) * boxSize;
+    const ay1 = boxOnRampY + Math.sin(-rad) * boxSize;
+    drawArrow(ax1, ay1, ax1 + Math.cos(-rad) * arrowLen, ay1 + Math.sin(-rad) * arrowLen, '#60a5fa', effort.toFixed(1) + 'N');
+
+    // weight arrow down
+    drawArrow(boxX, boxOnRampY, boxX, boxOnRampY + 50, '#f87171', load + 'N');
+
+    // angle arc
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(endX, baseY, 40, Math.PI, Math.PI + rad, true);
+    ctx.stroke();
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = "bold 13px 'JetBrains Mono'";
+    ctx.textAlign = 'center';
+    ctx.fillText(angle + '°', endX - 55, baseY - 10);
+
+    // labels
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('Height', endX + 25, (topY + baseY) / 2);
+    ctx.fillText('Ramp', (startX + endX) / 2, baseY + 25);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    time += 0.016;
+
+    // title
+    ctx.font = "bold 16px 'Segoe UI'";
+    ctx.fillStyle = 'rgba(147,197,253,0.5)';
+    ctx.textAlign = 'center';
+    const type = machineSelect.value;
+    const titles = { lever: 'Lever', pulley: 'Pulley', ramp: 'Inclined Plane' };
+    ctx.fillText(titles[type], W / 2, 30);
+    ctx.textAlign = 'start';
+
+    if (type === 'lever') drawLever();
+    else if (type === 'pulley') drawPulley();
+    else drawRamp();
+
+    requestAnimationFrame(draw);
+}
+
+machineSelect.addEventListener('change', updateUI);
+loadSlider.addEventListener('input', updateUI);
+fulcrumSlider.addEventListener('input', updateUI);
+rampAngleSlider.addEventListener('input', updateUI);
+
+updateUI();
+draw();
+</script>
+</body>
+</html>

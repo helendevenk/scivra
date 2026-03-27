@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tides &amp; Lunar Gravity — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    .ctrl-row { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #94a3b8; margin: 4px 0; }
+    .ctrl-row label { min-width: 80px; }
+    .ctrl-row input[type=range] { width: 100px; accent-color: #f97316; }
+    .ctrl-row .data-val { color: #fed7aa; min-width: 45px; text-align: right; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #fed7aa; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 380px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .tide-type { font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+    .spring { background: rgba(249,115,22,0.2); color: #f97316; }
+    .neap { background: rgba(96,165,250,0.2); color: #60a5fa; }
+    .mixed { background: rgba(148,163,184,0.2); color: #94a3b8; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Tides &amp; Lunar Gravity <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">Moon orbit, tidal bulges, spring &amp; neap tides</p>
+    </div>
+    <div class="panel">
+      <div class="ctrl-row">
+        <label>Moon Pos</label>
+        <input type="range" id="moon-angle" min="0" max="360" value="0" step="5">
+        <span class="data-val" id="moon-val">0°</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Sun Pos</label>
+        <input type="range" id="sun-angle" min="0" max="360" value="90" step="5">
+        <span class="data-val" id="sun-val">90°</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Time Speed</label>
+        <input type="range" id="speed" min="0" max="5" value="1" step="0.5">
+        <span class="data-val" id="speed-val">1.0×</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="max-width:280px;">
+      <div class="panel-title">Tide Data</div>
+      <div class="info-row">Water Level: <span class="data-val" id="water-level">0.0 m</span></div>
+      <div class="info-row">Moon-Sun Angle: <span class="data-val" id="ms-angle">90°</span></div>
+      <div class="info-row">Tidal Range: <span class="data-val" id="tidal-range">— m</span></div>
+      <div id="tide-type"><span class="tide-type neap">Neap Tide</span></div>
+    </div>
+    <div class="panel" style="max-width:220px;">
+      <div class="panel-title">Tide Gauge</div>
+      <canvas id="gauge" width="190" height="80" style="display:block;"></canvas>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Tidal Physics</div>
+      <div id="formula1"></div>
+      <div class="formula-desc">Tidal force ∝ M/d³ — nearby objects dominate.</div>
+      <div id="formula2" style="margin-top:6px;"></div>
+      <div class="formula-desc">Moon's tidal pull is ~2.2× the Sun's despite being far less massive.</div>
+    </div>
+  </div>
+</div>
+<script>
+/* ── Canvas ── */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const gauge = document.getElementById('gauge');
+const gctx = gauge.getContext('2d');
+
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+/* ── Controls ── */
+const moonSlider = document.getElementById('moon-angle');
+const sunSlider = document.getElementById('sun-angle');
+const speedSlider = document.getElementById('speed');
+const moonVal = document.getElementById('moon-val');
+const sunVal = document.getElementById('sun-val');
+const speedVal = document.getElementById('speed-val');
+const waterEl = document.getElementById('water-level');
+const msAngleEl = document.getElementById('ms-angle');
+const rangeEl = document.getElementById('tidal-range');
+const tideTypeEl = document.getElementById('tide-type');
+
+moonSlider.oninput = () => moonVal.textContent = moonSlider.value + '°';
+sunSlider.oninput = () => sunVal.textContent = sunSlider.value + '°';
+speedSlider.oninput = () => speedVal.textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+
+/* ── State ── */
+let time = 0;
+const tideHistory = [];
+
+/* ── Physics ── */
+function computeTide(moonDeg, sunDeg, earthRotDeg) {
+  const moonRad = moonDeg * Math.PI / 180;
+  const sunRad = sunDeg * Math.PI / 180;
+  const earthRad = earthRotDeg * Math.PI / 180;
+
+  // Tidal bulge from Moon (strength 1.0)
+  const moonTide = Math.cos(2 * (earthRad - moonRad));
+  // Tidal bulge from Sun (strength ~0.46)
+  const sunTide = 0.46 * Math.cos(2 * (earthRad - sunRad));
+
+  return moonTide + sunTide;
+}
+
+function getTideType(moonDeg, sunDeg) {
+  let diff = Math.abs(moonDeg - sunDeg) % 360;
+  if (diff > 180) diff = 360 - diff;
+  if (diff < 30 || diff > 150) return 'spring';
+  if (diff > 60 && diff < 120) return 'neap';
+  return 'mixed';
+}
+
+/* ── Drawing ── */
+function drawScene() {
+  const cx = canvas.width * 0.45;
+  const cy = canvas.height * 0.45;
+  const earthR = Math.min(canvas.width, canvas.height) * 0.12;
+  const moonOrbitR = earthR * 3.2;
+  const sunDirR = earthR * 4.5;
+
+  const moonDeg = parseFloat(moonSlider.value);
+  const sunDeg = parseFloat(sunSlider.value);
+  const moonRad = moonDeg * Math.PI / 180;
+  const sunRad = sunDeg * Math.PI / 180;
+
+  // Background stars
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < 100; i++) {
+    const sx = (i * 137.5 + 42) % canvas.width;
+    const sy = (i * 89.3 + 17) % canvas.height;
+    ctx.fillStyle = `rgba(226,232,240,${0.2 + Math.sin(time + i) * 0.1})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Moon orbit path
+  ctx.strokeStyle = 'rgba(249,115,22,0.1)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 8]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, moonOrbitR, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Sun direction indicator
+  const sunX = cx + Math.cos(sunRad) * sunDirR;
+  const sunY = cy - Math.sin(sunRad) * sunDirR;
+  const sunGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 30);
+  sunGrad.addColorStop(0, 'rgba(253,224,71,0.8)');
+  sunGrad.addColorStop(0.5, 'rgba(253,224,71,0.2)');
+  sunGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = sunGrad;
+  ctx.fillRect(sunX - 30, sunY - 30, 60, 60);
+  ctx.fillStyle = '#fde047';
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Sun ☀', sunX, sunY + 22);
+
+  // Earth
+  const earthGrad = ctx.createRadialGradient(cx - earthR * 0.3, cy - earthR * 0.3, 0, cx, cy, earthR);
+  earthGrad.addColorStop(0, '#3b82f6');
+  earthGrad.addColorStop(0.6, '#1e40af');
+  earthGrad.addColorStop(1, '#1e3a5f');
+  ctx.fillStyle = earthGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Continents (simplified)
+  ctx.fillStyle = 'rgba(34,197,94,0.3)';
+  ctx.beginPath();
+  ctx.arc(cx - earthR * 0.2, cy - earthR * 0.1, earthR * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx + earthR * 0.3, cy + earthR * 0.15, earthR * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tidal bulge
+  const coastAngle = time * 0.5; // Earth rotation
+  const tide = computeTide(moonDeg, sunDeg, coastAngle * 180 / Math.PI);
+  const bulgeSize = earthR * 0.15;
+
+  // Draw tidal bulge as elliptical ocean deformation
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Combined tidal direction (weighted average of Moon and Sun directions)
+  const bulgeAngle = Math.atan2(
+    Math.sin(moonRad) + 0.46 * Math.sin(sunRad),
+    Math.cos(moonRad) + 0.46 * Math.cos(sunRad)
+  );
+
+  ctx.rotate(-bulgeAngle);
+  ctx.fillStyle = 'rgba(96,165,250,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, earthR + bulgeSize * 1.3, earthR - bulgeSize * 0.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(96,165,250,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Coastal point marker
+  const coastX = cx + Math.cos(coastAngle) * (earthR + 2);
+  const coastY = cy - Math.sin(coastAngle) * (earthR + 2);
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.arc(coastX, coastY, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fed7aa';
+  ctx.font = '8px system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillText('Coast', coastX + 6, coastY + 3);
+
+  // Moon
+  const moonX = cx + Math.cos(moonRad) * moonOrbitR;
+  const moonY = cy - Math.sin(moonRad) * moonOrbitR;
+  const moonGrad = ctx.createRadialGradient(moonX - 4, moonY - 4, 0, moonX, moonY, 16);
+  moonGrad.addColorStop(0, '#e2e8f0');
+  moonGrad.addColorStop(0.7, '#94a3b8');
+  moonGrad.addColorStop(1, '#64748b');
+  ctx.fillStyle = moonGrad;
+  ctx.beginPath();
+  ctx.arc(moonX, moonY, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Moon 🌙', moonX, moonY + 24);
+
+  // Gravitational pull arrows (Moon → Earth)
+  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(moonX, moonY);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '10px system-ui';
+  ctx.fillText('Earth', cx, cy + earthR + 16);
+
+  // Update UI
+  const waterLevel = (tide * 3).toFixed(1);
+  waterEl.textContent = waterLevel + ' m';
+
+  let msDiff = Math.abs(moonDeg - sunDeg) % 360;
+  if (msDiff > 180) msDiff = 360 - msDiff;
+  msAngleEl.textContent = msDiff.toFixed(0) + '°';
+
+  const type = getTideType(moonDeg, sunDeg);
+  const maxRange = type === 'spring' ? '4-6' : type === 'neap' ? '1-2' : '2-4';
+  rangeEl.textContent = maxRange + ' m';
+
+  const typeLabels = {
+    spring: '<span class="tide-type spring">Spring Tide</span> (Sun + Moon aligned)',
+    neap: '<span class="tide-type neap">Neap Tide</span> (Sun ⊥ Moon)',
+    mixed: '<span class="tide-type mixed">Mixed</span>'
+  };
+  tideTypeEl.innerHTML = typeLabels[type];
+
+  // Tide gauge
+  tideHistory.push(parseFloat(waterLevel));
+  if (tideHistory.length > 190) tideHistory.shift();
+  drawGauge();
+}
+
+function drawGauge() {
+  gctx.fillStyle = '#0f172a';
+  gctx.fillRect(0, 0, 190, 80);
+
+  // Grid
+  gctx.strokeStyle = 'rgba(249,115,22,0.1)';
+  gctx.lineWidth = 0.5;
+  gctx.beginPath();
+  gctx.moveTo(0, 40); gctx.lineTo(190, 40);
+  gctx.stroke();
+
+  // Water level line
+  if (tideHistory.length < 2) return;
+  gctx.strokeStyle = '#60a5fa';
+  gctx.lineWidth = 1.5;
+  gctx.beginPath();
+  tideHistory.forEach((v, i) => {
+    const x = i;
+    const y = 40 - v * 8;
+    if (i === 0) gctx.moveTo(x, y);
+    else gctx.lineTo(x, y);
+  });
+  gctx.stroke();
+
+  // Zero line label
+  gctx.fillStyle = '#64748b';
+  gctx.font = '8px JetBrains Mono, monospace';
+  gctx.fillText('0m', 2, 38);
+}
+
+/* ── KaTeX ── */
+katex.render(
+  "F_{\\text{tidal}} = \\frac{2GMmr}{d^3}",
+  document.getElementById('formula1'), { displayMode: false, throwOnError: false }
+);
+katex.render(
+  "\\frac{F_{\\text{Moon}}}{F_{\\text{Sun}}} \\approx 2.2",
+  document.getElementById('formula2'), { displayMode: false, throwOnError: false }
+);
+
+/* ── Animation ── */
+let lastT = 0;
+function animate(ts) {
+  requestAnimationFrame(animate);
+  const dt = (ts - lastT) / 1000;
+  lastT = ts;
+
+  const speed = parseFloat(speedSlider.value);
+  time += dt * speed;
+
+  // Auto-advance moon position
+  if (speed > 0) {
+    let moonDeg = parseFloat(moonSlider.value) + dt * speed * 3;
+    if (moonDeg > 360) moonDeg -= 360;
+    moonSlider.value = moonDeg.toFixed(0);
+    moonVal.textContent = Math.round(moonDeg) + '°';
+  }
+
+  drawScene();
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

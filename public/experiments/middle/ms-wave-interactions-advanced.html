@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave Interactions — Scivra Middle School Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e8e6df;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(15,23,42,0.88);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#93c5fd;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:280px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.4);color:#93c5fd;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.7rem;transition:all 0.2s}
+    button:hover{background:rgba(59,130,246,0.25)}
+    button.active{background:rgba(59,130,246,0.35);border-color:#3b82f6}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#3b82f6;height:4px;margin-top:2px}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#3b82f6;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(59,130,246,0.25);color:#93c5fd}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Wave Interactions <span class="badge">Middle School</span></h1>
+      <p>Explore reflection, refraction, diffraction, and interference in a wave tank simulation</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-reflection" class="active" onclick="setMode('reflection')">Reflection</button>
+        <button id="btn-refraction" onclick="setMode('refraction')">Refraction</button>
+        <button id="btn-diffraction" onclick="setMode('diffraction')">Diffraction</button>
+        <button id="btn-interference" onclick="setMode('interference')">Interference</button>
+      </div>
+      <div class="slider-row">
+        <label>Wavelength <span id="wl-val">40 px</span></label>
+        <input type="range" id="wl-slider" min="15" max="80" step="1" value="40" oninput="updateParams()">
+      </div>
+      <div class="slider-row">
+        <label>Frequency <span id="freq-val">1.0 Hz</span></label>
+        <input type="range" id="freq-slider" min="0.3" max="3" step="0.1" value="1" oninput="updateParams()">
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#93c5fd;margin-bottom:4px;font-weight:600">Wave Data</div>
+      <div class="data-row">Mode <span class="data-val" id="d-mode">Reflection</span></div>
+      <div class="data-row">Wavelength <span class="data-val" id="d-wl">40 px</span></div>
+      <div class="data-row">Frequency <span class="data-val" id="d-freq">1.0 Hz</span></div>
+      <div class="data-row">Speed <span class="data-val" id="d-speed">40 px/s</span></div>
+      <div class="data-row">Behavior <span class="data-val" id="d-behav">Bounces off barrier</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#93c5fd;margin-bottom:4px;font-weight:600">Wave Physics</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=document.getElementById('canvas'),ctx=C.getContext('2d');
+let W,H,mode='reflection',wavelength=40,freq=1,animT=0;
+
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+window.addEventListener('resize',resize);resize();
+
+const behaviors={
+  reflection:'Bounces off barrier',
+  refraction:'Bends at medium boundary',
+  diffraction:'Spreads through slit',
+  interference:'Two sources create pattern'
+};
+
+function setMode(m){
+  mode=m;
+  ['reflection','refraction','diffraction','interference'].forEach(x=>
+    document.getElementById('btn-'+x).classList.toggle('active',x===m));
+  document.getElementById('d-mode').textContent=m.charAt(0).toUpperCase()+m.slice(1);
+  document.getElementById('d-behav').textContent=behaviors[m];
+}
+
+function updateParams(){
+  wavelength=+document.getElementById('wl-slider').value;
+  freq=+document.getElementById('freq-slider').value;
+  document.getElementById('wl-val').textContent=wavelength+' px';
+  document.getElementById('freq-val').textContent=freq.toFixed(1)+' Hz';
+  document.getElementById('d-wl').textContent=wavelength+' px';
+  document.getElementById('d-freq').textContent=freq.toFixed(1)+' Hz';
+  document.getElementById('d-speed').textContent=(wavelength*freq).toFixed(0)+' px/s';
+}
+
+function drawWavefront(cx,cy,maxR,angle,arcStart,arcEnd){
+  const speed=wavelength*freq;
+  const numWaves=Math.floor(maxR/wavelength)+1;
+  for(let i=0;i<numWaves;i++){
+    const r=((animT*speed+i*wavelength)%maxR);
+    if(r<5)continue;
+    const alpha=Math.max(0,1-r/maxR)*0.6;
+    ctx.strokeStyle='rgba(59,130,246,'+alpha+')';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,arcStart||0,arcEnd||Math.PI*2);
+    ctx.stroke();
+  }
+}
+
+function drawReflection(){
+  const cx=W*0.3,cy=H*0.5;
+  const maxR=Math.min(W*0.35,H*0.4);
+  // barrier on right
+  const bx=W*0.6;
+  ctx.fillStyle='rgba(148,163,184,0.15)';ctx.fillRect(bx,H*0.15,8,H*0.7);
+  ctx.strokeStyle='rgba(148,163,184,0.4)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(bx+4,H*0.15);ctx.lineTo(bx+4,H*0.85);ctx.stroke();
+  ctx.fillStyle='#94a3b8';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Barrier',bx+4,H*0.12);
+  // incoming waves
+  drawWavefront(cx,cy,maxR,0,-Math.PI*0.4,Math.PI*0.4);
+  // reflected waves (mirror source)
+  const rcx=bx+(bx-cx);
+  const speed=wavelength*freq;
+  const numWaves=Math.floor(maxR/wavelength)+1;
+  for(let i=0;i<numWaves;i++){
+    const r=((animT*speed+i*wavelength)%maxR);
+    if(r<5)continue;
+    const alpha=Math.max(0,1-r/maxR)*0.35;
+    ctx.strokeStyle='rgba(239,68,68,'+alpha+')';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(rcx,cy,r,Math.PI-0.4,Math.PI+0.4);ctx.stroke();
+  }
+  // labels
+  ctx.fillStyle='#3b82f6';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Incident Waves',cx,cy-maxR-10);
+  ctx.fillStyle='#ef4444';ctx.fillText('Reflected Waves',bx-60,cy-maxR-10);
+  // angle indicators
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.setLineDash([4,4]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(bx+4,cy-80);ctx.lineTo(bx+4,cy+80);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24';ctx.font='10px "Segoe UI",system-ui';
+  ctx.fillText('angle_i = angle_r',bx+4,cy+100);
+}
+
+function drawRefraction(){
+  const boundary=W*0.5;
+  // two media
+  ctx.fillStyle='rgba(59,130,246,0.05)';ctx.fillRect(0,0,boundary,H);
+  ctx.fillStyle='rgba(16,185,129,0.05)';ctx.fillRect(boundary,0,W-boundary,H);
+  // boundary line
+  ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(boundary,0);ctx.lineTo(boundary,H);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#94a3b8';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Medium 1 (fast)',W*0.25,H*0.12);
+  ctx.fillText('Medium 2 (slow)',W*0.75,H*0.12);
+  // incoming plane waves
+  const speed1=wavelength*freq;
+  const speed2=speed1*0.6;
+  const wl2=wavelength*0.6;
+  const cy=H*0.5;
+  // left side: plane wavefronts moving right
+  for(let i=0;i<15;i++){
+    const x=(animT*speed1+i*wavelength)%(boundary);
+    if(x<0)continue;
+    const alpha=0.4;
+    ctx.strokeStyle='rgba(59,130,246,'+alpha+')';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x,H*0.15);ctx.lineTo(x,H*0.85);ctx.stroke();
+  }
+  // right side: plane wavefronts (shorter wavelength, angled)
+  const angle=Math.asin(0.6)*0.5; // simplified Snell's law visual
+  for(let i=0;i<15;i++){
+    const baseX=boundary+(animT*speed2+i*wl2)%(W-boundary);
+    if(baseX>W)continue;
+    const alpha=0.4;
+    ctx.strokeStyle='rgba(16,185,129,'+alpha+')';ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(baseX-Math.sin(angle)*H*0.35,H*0.15);
+    ctx.lineTo(baseX+Math.sin(angle)*H*0.35,H*0.85);
+    ctx.stroke();
+  }
+  // labels
+  ctx.fillStyle='#3b82f6';ctx.font='10px "JetBrains Mono",monospace';ctx.textAlign='center';
+  ctx.fillText('lambda='+wavelength+'px',W*0.25,H*0.9);
+  ctx.fillStyle='#10b981';ctx.fillText('lambda='+Math.round(wl2)+'px',W*0.75,H*0.9);
+  ctx.fillStyle='#fbbf24';ctx.font='11px "Segoe UI",system-ui';
+  ctx.fillText('Waves slow down and bend toward normal',W*0.5,H*0.95);
+}
+
+function drawDiffraction(){
+  const slitX=W*0.4,slitY=H*0.5,slitW=60;
+  const gap=Math.max(30,wavelength*1.5);
+  // barrier with slit
+  ctx.fillStyle='rgba(148,163,184,0.15)';
+  ctx.fillRect(slitX,0,8,slitY-gap/2);
+  ctx.fillRect(slitX,slitY+gap/2,8,H-slitY-gap/2);
+  ctx.strokeStyle='rgba(148,163,184,0.4)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(slitX+4,0);ctx.lineTo(slitX+4,slitY-gap/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(slitX+4,slitY+gap/2);ctx.lineTo(slitX+4,H);ctx.stroke();
+  ctx.fillStyle='#94a3b8';ctx.font='10px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Slit',slitX+4,slitY-gap/2-8);
+  // incoming plane waves (left)
+  const speed=wavelength*freq;
+  for(let i=0;i<12;i++){
+    const x=((animT*speed+i*wavelength)%(slitX));
+    const alpha=0.4;
+    ctx.strokeStyle='rgba(59,130,246,'+alpha+')';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x,H*0.1);ctx.lineTo(x,H*0.9);ctx.stroke();
+  }
+  // diffracted circular waves from slit
+  drawWavefront(slitX+8,slitY,W-slitX,0,-Math.PI*0.45,Math.PI*0.45);
+  // labels
+  ctx.fillStyle='#3b82f6';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Plane Waves',slitX*0.5,H*0.08);
+  ctx.fillText('Diffracted Waves',W*0.7,H*0.08);
+  ctx.fillStyle='#fbbf24';ctx.font='10px "Segoe UI",system-ui';
+  ctx.fillText('Waves spread out after passing through slit',W*0.65,H*0.95);
+}
+
+function drawInterference(){
+  const s1={x:W*0.35,y:H*0.35};
+  const s2={x:W*0.35,y:H*0.65};
+  const speed=wavelength*freq;
+  const maxR=W*0.6;
+  // draw intensity pattern using pixel sampling
+  const step=6;
+  for(let px=W*0.4;px<W*0.95;px+=step){
+    for(let py=H*0.05;py<H*0.95;py+=step){
+      const d1=Math.hypot(px-s1.x,py-s1.y);
+      const d2=Math.hypot(px-s2.x,py-s2.y);
+      const phase1=(d1/wavelength-animT*freq)*Math.PI*2;
+      const phase2=(d2/wavelength-animT*freq)*Math.PI*2;
+      const amp=(Math.sin(phase1)+Math.sin(phase2))/2;
+      const intensity=amp*amp;
+      const alpha=intensity*0.5;
+      if(alpha<0.02)continue;
+      ctx.fillStyle='rgba(59,130,246,'+alpha+')';
+      ctx.fillRect(px-step/2,py-step/2,step,step);
+    }
+  }
+  // source wavefronts
+  [s1,s2].forEach((s,i)=>{
+    const numWaves=Math.floor(maxR/wavelength)+1;
+    for(let j=0;j<numWaves;j++){
+      const r=((animT*speed+j*wavelength)%maxR);
+      if(r<5)continue;
+      const alpha=Math.max(0,1-r/maxR)*0.3;
+      ctx.strokeStyle='rgba(59,130,246,'+alpha+')';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);ctx.stroke();
+    }
+    // source point
+    ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='10px "Segoe UI",system-ui';ctx.textAlign='center';
+    ctx.fillText('S'+(i+1),s.x-15,s.y+3);
+  });
+  // barrier with two slits
+  const bx=W*0.35-15;
+  ctx.fillStyle='rgba(148,163,184,0.12)';
+  ctx.fillRect(bx,0,6,s1.y-15);
+  ctx.fillRect(bx,s1.y+15,6,s2.y-s1.y-30);
+  ctx.fillRect(bx,s2.y+15,6,H-s2.y-15);
+  ctx.fillStyle='#fbbf24';ctx.font='10px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Constructive (bright) & Destructive (dark) interference',W*0.65,H*0.97);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.02)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  if(mode==='reflection')drawReflection();
+  else if(mode==='refraction')drawRefraction();
+  else if(mode==='diffraction')drawDiffraction();
+  else drawInterference();
+
+  animT+=0.016;
+  requestAnimationFrame(draw);
+}
+
+updateParams();
+katex.render('v = f \\times \\lambda \\quad \\text{(wave speed equation)}',document.getElementById('kx-1'),{throwOnError:false});
+katex.render('n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2 \\quad \\text{(Snell\'s Law)}',document.getElementById('kx-2'),{throwOnError:false});
+draw();
+</script>
+</body>
+</html>

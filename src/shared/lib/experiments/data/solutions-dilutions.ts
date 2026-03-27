@@ -11,6 +11,7 @@ export const solutionsDilutions: Experiment = {
 
   standards: {
     ngss: ["HS-PS1-7"],
+    gcse: [],
     ap: ["3.A.1"],
   },
   primaryStandard: "ap-chemistry",

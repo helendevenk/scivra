@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seismic Waves — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    input[type=range] { accent-color: #f97316; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .btn {
+      background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.4);
+      color: #fed7aa; padding: 6px 14px; border-radius: 6px; cursor: pointer;
+      font-size: 0.75rem; font-weight: 600; margin-top: 4px;
+    }
+    .btn:hover { background: rgba(249,115,22,0.25); }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Seismic Waves <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">P-waves, S-waves, and surface waves from an earthquake epicenter</p>
+    </div>
+    <div class="panel controls">
+      <label>Speed Factor: <span class="data-val" id="speedDisplay">1.0</span>×</label>
+      <input type="range" id="speedSlider" min="0.5" max="3" value="1" step="0.1">
+      <label>Frequency: <span class="data-val" id="freqDisplay">2.0</span> Hz</label>
+      <input type="range" id="freqSlider" min="0.5" max="5" value="2" step="0.5">
+      <label>Amplitude: <span class="data-val" id="ampDisplay">30</span></label>
+      <input type="range" id="ampSlider" min="10" max="60" value="30" step="5">
+      <button class="btn" id="quakeBtn">⚡ Trigger Quake</button>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Wave Speeds (crustal rock)</div>
+      <div class="data-row"><span style="color:#38bdf8">● P-wave</span><span class="data-val" id="pSpeedDisplay">6.0 km/s</span></div>
+      <div class="data-row"><span style="color:#4ade80">● S-wave</span><span class="data-val" id="sSpeedDisplay">3.5 km/s</span></div>
+      <div class="data-row"><span style="color:#f87171">● Surface</span><span class="data-val" id="surfSpeedDisplay">2.5 km/s</span></div>
+      <div class="data-row"><span>S-P interval</span><span class="data-val" id="spInterval">—</span></div>
+      <div class="data-row"><span>Time elapsed</span><span class="data-val" id="timeDisplay">0.0 s</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Seismograph</div>
+      <canvas id="seismo" width="300" height="100" style="width:100%;background:rgba(0,0,0,0.3);border-radius:4px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const seismoCanvas = document.getElementById('seismo');
+const seismoCtx = seismoCanvas.getContext('2d');
+
+let speedFactor = 1, freq = 2, amp = 30;
+let quakeTime = -1;
+let time = 0;
+
+// Seismograph trace history
+let seismoData = new Array(300).fill(0);
+
+// Base speeds (km/s) — scaled for visualization
+const BASE_P = 6.0, BASE_S = 3.5, BASE_SURF = 2.5;
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function triggerQuake() {
+  quakeTime = time;
+  seismoData = new Array(300).fill(0);
+}
+
+document.getElementById('quakeBtn').addEventListener('click', triggerQuake);
+
+function animate() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  time += 1 / 60;
+
+  const epicenterX = w * 0.15;
+  const epicenterY = h * 0.5;
+
+  // Earth cross-section background
+  const earthGrad = ctx.createRadialGradient(epicenterX, epicenterY, 0, epicenterX, epicenterY, w);
+  earthGrad.addColorStop(0, '#1e293b');
+  earthGrad.addColorStop(0.5, '#0f172a');
+  earthGrad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = earthGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid lines for reference
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < w; i += 50) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+  }
+  for (let i = 0; i < h; i += 50) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
+  }
+
+  // Surface line
+  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.3);
+  ctx.lineTo(w, h * 0.3);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(249,115,22,0.4)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Surface', 8, h * 0.3 - 6);
+
+  // Epicenter marker
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.arc(epicenterX, epicenterY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(249,115,22,0.3)';
+  ctx.beginPath();
+  ctx.arc(epicenterX, epicenterY, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fed7aa';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Epicenter', epicenterX, epicenterY + 24);
+
+  // Seismograph station
+  const stationX = w * 0.85, stationY = h * 0.3;
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('▼ Station', stationX, stationY - 8);
+
+  // Draw waves if quake triggered
+  if (quakeTime >= 0) {
+    const elapsed = time - quakeTime;
+    const pxPerSec = w * 0.08; // pixels per second for visualization
+
+    // P-wave (compressional) — fastest
+    const pRadius = elapsed * BASE_P * speedFactor * pxPerSec;
+    if (pRadius > 0 && pRadius < w * 1.5) {
+      drawWaveRing(epicenterX, epicenterY, pRadius, [56, 189, 248], elapsed, 'P');
+    }
+
+    // S-wave (shear) — medium
+    const sRadius = elapsed * BASE_S * speedFactor * pxPerSec;
+    if (sRadius > 0 && sRadius < w * 1.5) {
+      drawWaveRing(epicenterX, epicenterY, sRadius, [74, 222, 128], elapsed, 'S');
+    }
+
+    // Surface wave — slowest, only along surface
+    const surfRadius = elapsed * BASE_SURF * speedFactor * pxPerSec;
+    if (surfRadius > 0 && surfRadius < w * 1.5) {
+      drawSurfaceWave(epicenterX, h * 0.3, surfRadius, elapsed);
+    }
+
+    // Seismograph recording
+    const dist = Math.hypot(stationX - epicenterX, stationY - epicenterY);
+    const pArrival = dist / (BASE_P * speedFactor * pxPerSec);
+    const sArrival = dist / (BASE_S * speedFactor * pxPerSec);
+    const surfArrival = dist / (BASE_SURF * speedFactor * pxPerSec);
+
+    let seismoVal = 0;
+    if (elapsed > pArrival) {
+      const t = elapsed - pArrival;
+      seismoVal += amp * 0.5 * Math.sin(freq * Math.PI * 2 * t) * Math.exp(-t * 1.5);
+    }
+    if (elapsed > sArrival) {
+      const t = elapsed - sArrival;
+      seismoVal += amp * 0.8 * Math.sin(freq * 0.7 * Math.PI * 2 * t) * Math.exp(-t * 1.0);
+    }
+    if (elapsed > surfArrival) {
+      const t = elapsed - surfArrival;
+      seismoVal += amp * 1.0 * Math.sin(freq * 0.4 * Math.PI * 2 * t) * Math.exp(-t * 0.5);
+    }
+
+    seismoData.push(seismoVal);
+    if (seismoData.length > 300) seismoData.shift();
+
+    // Update displays
+    document.getElementById('timeDisplay').textContent = elapsed.toFixed(1) + ' s';
+    if (elapsed > sArrival && elapsed > pArrival) {
+      document.getElementById('spInterval').textContent = (sArrival - pArrival).toFixed(2) + ' s';
+    }
+  }
+
+  // Update speed displays
+  document.getElementById('pSpeedDisplay').textContent = (BASE_P * speedFactor).toFixed(1) + ' km/s';
+  document.getElementById('sSpeedDisplay').textContent = (BASE_S * speedFactor).toFixed(1) + ' km/s';
+  document.getElementById('surfSpeedDisplay').textContent = (BASE_SURF * speedFactor).toFixed(1) + ' km/s';
+
+  // Draw seismograph
+  drawSeismograph();
+
+  // Wave type legend at bottom-left of canvas
+  const ly = h - 30;
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(56,189,248,0.8)';
+  ctx.fillText('● P-wave (compressional)', 12, ly);
+  ctx.fillStyle = 'rgba(74,222,128,0.8)';
+  ctx.fillText('● S-wave (shear)', 180, ly);
+  ctx.fillStyle = 'rgba(248,113,113,0.8)';
+  ctx.fillText('● Surface wave', 310, ly);
+
+  requestAnimationFrame(animate);
+}
+
+function drawWaveRing(cx, cy, radius, color, elapsed, label) {
+  const [r, g, b] = color;
+  const alpha = Math.max(0.05, 0.6 * Math.exp(-elapsed * 0.3));
+
+  // Multiple concentric rings for wave packet
+  for (let i = 0; i < 3; i++) {
+    const rr = radius - i * 15;
+    if (rr <= 0) continue;
+    const a = alpha * (1 - i * 0.3);
+    ctx.strokeStyle = `rgba(${r},${g},${b},${a})`;
+    ctx.lineWidth = 2 - i * 0.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Label on wave front
+  ctx.fillStyle = `rgba(${r},${g},${b},${alpha + 0.2})`;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, cx + radius * 0.7, cy - radius * 0.7 - 5);
+}
+
+function drawSurfaceWave(startX, surfY, radius, elapsed) {
+  const alpha = Math.max(0.05, 0.6 * Math.exp(-elapsed * 0.2));
+  const endX = startX + radius;
+
+  ctx.strokeStyle = `rgba(248,113,113,${alpha})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  for (let x = startX; x <= Math.min(endX, canvas.width); x += 2) {
+    const dist = x - startX;
+    const envelope = Math.exp(-(endX - x) * 0.01) * Math.exp(-dist * 0.002);
+    const y = surfY + amp * envelope * Math.sin(freq * 0.4 * dist * 0.05);
+    if (x === startX) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function drawSeismograph() {
+  const sw = seismoCanvas.width, sh = seismoCanvas.height;
+  seismoCtx.clearRect(0, 0, sw, sh);
+
+  // Grid
+  seismoCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+  seismoCtx.lineWidth = 1;
+  seismoCtx.beginPath();
+  seismoCtx.moveTo(0, sh / 2);
+  seismoCtx.lineTo(sw, sh / 2);
+  seismoCtx.stroke();
+
+  // Trace
+  seismoCtx.strokeStyle = '#f97316';
+  seismoCtx.lineWidth = 1;
+  seismoCtx.beginPath();
+  for (let i = 0; i < seismoData.length; i++) {
+    const x = (i / seismoData.length) * sw;
+    const y = sh / 2 - seismoData[i] * (sh / (amp * 4));
+    if (i === 0) seismoCtx.moveTo(x, y);
+    else seismoCtx.lineTo(x, y);
+  }
+  seismoCtx.stroke();
+}
+
+// Controls
+document.getElementById('speedSlider').addEventListener('input', e => {
+  speedFactor = +e.target.value;
+  document.getElementById('speedDisplay').textContent = speedFactor.toFixed(1);
+});
+document.getElementById('freqSlider').addEventListener('input', e => {
+  freq = +e.target.value;
+  document.getElementById('freqDisplay').textContent = freq.toFixed(1);
+});
+document.getElementById('ampSlider').addEventListener('input', e => {
+  amp = +e.target.value;
+  document.getElementById('ampDisplay').textContent = amp;
+});
+
+try {
+  katex.render('v_P = \\sqrt{\\frac{K + \\frac{4}{3}\\mu}{\\rho}}', document.getElementById('formulaDisplay') || document.createElement('div'), { displayMode: true });
+} catch(e) {}
+
+// Auto-trigger first quake after 1 second
+setTimeout(triggerQuake, 1000);
+
+animate();
+</script>
+</body>
+</html>

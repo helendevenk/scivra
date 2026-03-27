@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Star Life Cycle — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    button.active { background: rgba(249,115,22,0.35); border-color: #f97316; }
+    .ctrl-row { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #94a3b8; margin: 4px 0; }
+    .ctrl-row label { min-width: 80px; }
+    .ctrl-row input[type=range] { width: 110px; accent-color: #f97316; }
+    .ctrl-row .data-val { color: #fed7aa; min-width: 50px; text-align: right; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #fed7aa; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 380px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .stage-label {
+      display: inline-block; font-size: 0.6rem; padding: 2px 6px;
+      border-radius: 4px; margin: 2px; transition: all 0.2s;
+    }
+    .stage-label.current { background: rgba(249,115,22,0.3); color: #f97316; font-weight: 600; }
+    .stage-label.past { color: #64748b; }
+    .stage-label.future { color: #475569; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Star Life Cycle <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">Hertzsprung-Russell diagram — stellar evolution by mass</p>
+    </div>
+    <div class="panel">
+      <div class="ctrl-row">
+        <label>Initial Mass</label>
+        <input type="range" id="mass" min="0.5" max="40" value="1" step="0.5">
+        <span class="data-val" id="mass-val">1.0 M☉</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Time Speed</label>
+        <input type="range" id="speed" min="0.5" max="5" value="1" step="0.5">
+        <span class="data-val" id="speed-val">1.0×</span>
+      </div>
+      <div style="margin-top:6px; display:flex; gap:6px;">
+        <button id="btn-start" onclick="startEvolution()">▶ Start Evolution</button>
+        <button id="btn-reset" onclick="resetStar()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="flex:1; max-width:340px;">
+      <div class="panel-title">Star State</div>
+      <div class="info-row">Stage: <span class="data-val" id="stage-name">Nebula</span></div>
+      <div class="info-row">Temperature: <span class="data-val" id="temp-val">—</span></div>
+      <div class="info-row">Luminosity: <span class="data-val" id="lum-val">—</span></div>
+      <div class="info-row">Age: <span class="data-val" id="age-val">0 yr</span></div>
+      <div class="info-row">Lifetime: <span class="data-val" id="lifetime-val">—</span></div>
+      <div id="stages" style="margin-top:6px;"></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Stellar Physics</div>
+      <div id="formula1"></div>
+      <div class="formula-desc">Main-sequence luminosity scales as mass^3.5.</div>
+      <div id="formula2" style="margin-top:6px;"></div>
+      <div class="formula-desc">Lifetime decreases steeply with mass — massive stars die young.</div>
+    </div>
+  </div>
+</div>
+<script>
+/* ── Canvas Setup ── */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+/* ── Stellar Evolution Data ── */
+const STAGES = {
+  low: ['Nebula','Protostar','Main Sequence','Red Giant','Planetary Nebula','White Dwarf'],
+  high: ['Nebula','Protostar','Main Sequence','Red Supergiant','Supernova','Neutron Star'],
+  vhigh: ['Nebula','Protostar','Main Sequence','Red Supergiant','Supernova','Black Hole']
+};
+
+function getStages(mass) {
+  if (mass < 8) return STAGES.low;
+  if (mass < 25) return STAGES.high;
+  return STAGES.vhigh;
+}
+
+// HR diagram positions for each stage [logT (K), logL (L☉)]
+// Temperature axis is REVERSED (hot=left, cool=right)
+function getTrack(mass) {
+  const logM = Math.log10(mass);
+  const msT = 3.75 + logM * 0.15;  // main sequence temperature
+  const msL = 3.5 * logM;           // L ∝ M^3.5
+
+  if (mass < 8) {
+    return [
+      { t: 3.4, l: -1, stage: 'Nebula' },
+      { t: 3.6, l: 0.5 + logM, stage: 'Protostar' },
+      { t: msT, l: msL, stage: 'Main Sequence' },
+      { t: 3.55, l: msL + 2, stage: 'Red Giant' },
+      { t: 4.5, l: msL + 1.5, stage: 'Planetary Nebula' },
+      { t: 4.3, l: -2 + logM * 0.5, stage: 'White Dwarf' }
+    ];
+  } else {
+    return [
+      { t: 3.4, l: 1, stage: 'Nebula' },
+      { t: 3.8, l: 2 + logM, stage: 'Protostar' },
+      { t: msT, l: msL, stage: 'Main Sequence' },
+      { t: 3.5, l: msL + 1.5, stage: 'Red Supergiant' },
+      { t: 4.0, l: msL + 3, stage: 'Supernova' },
+      { t: mass < 25 ? 4.8 : 0, l: mass < 25 ? -1 : -3, stage: mass < 25 ? 'Neutron Star' : 'Black Hole' }
+    ];
+  }
+}
+
+function getLifetime(mass) {
+  return 1e10 * Math.pow(mass, -2.5); // years
+}
+
+function formatAge(yr) {
+  if (yr < 1e3) return yr.toFixed(0) + ' yr';
+  if (yr < 1e6) return (yr / 1e3).toFixed(1) + ' kyr';
+  if (yr < 1e9) return (yr / 1e6).toFixed(1) + ' Myr';
+  return (yr / 1e9).toFixed(2) + ' Gyr';
+}
+
+/* ── State ── */
+let mass = 1;
+let playing = false;
+let progress = 0; // 0 to 1 across all stages
+let track = getTrack(mass);
+
+const massSlider = document.getElementById('mass');
+const speedSlider = document.getElementById('speed');
+const massVal = document.getElementById('mass-val');
+const speedVal = document.getElementById('speed-val');
+const stageEl = document.getElementById('stage-name');
+const tempValEl = document.getElementById('temp-val');
+const lumValEl = document.getElementById('lum-val');
+const ageEl = document.getElementById('age-val');
+const lifetimeEl = document.getElementById('lifetime-val');
+const stagesEl = document.getElementById('stages');
+
+massSlider.oninput = () => {
+  mass = parseFloat(massSlider.value);
+  massVal.textContent = mass.toFixed(1) + ' M☉';
+  if (!playing) { track = getTrack(mass); updateStageLabels(); }
+};
+speedSlider.oninput = () => {
+  speedVal.textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+};
+
+function startEvolution() {
+  mass = parseFloat(massSlider.value);
+  track = getTrack(mass);
+  progress = 0;
+  playing = true;
+  document.getElementById('btn-start').textContent = '⏸ Pause';
+  document.getElementById('btn-start').onclick = togglePause;
+  lifetimeEl.textContent = formatAge(getLifetime(mass));
+  updateStageLabels();
+}
+
+function togglePause() {
+  playing = !playing;
+  document.getElementById('btn-start').textContent = playing ? '⏸ Pause' : '▶ Resume';
+}
+
+function resetStar() {
+  playing = false;
+  progress = 0;
+  track = getTrack(mass);
+  document.getElementById('btn-start').textContent = '▶ Start Evolution';
+  document.getElementById('btn-start').onclick = startEvolution;
+  stageEl.textContent = 'Nebula';
+  tempValEl.textContent = '—';
+  lumValEl.textContent = '—';
+  ageEl.textContent = '0 yr';
+  updateStageLabels();
+}
+
+function updateStageLabels() {
+  const stages = getStages(mass);
+  const currentIdx = Math.min(Math.floor(progress * stages.length), stages.length - 1);
+  stagesEl.innerHTML = stages.map((s, i) => {
+    const cls = i < currentIdx ? 'past' : i === currentIdx ? 'current' : 'future';
+    return `<span class="stage-label ${cls}">${s}</span>`;
+  }).join(' → ');
+}
+
+/* ── HR Diagram Drawing ── */
+const HR = { x: 0, y: 0, w: 0, h: 0 };
+
+function updateHRBounds() {
+  HR.x = canvas.width * 0.12;
+  HR.y = canvas.height * 0.08;
+  HR.w = canvas.width * 0.76;
+  HR.h = canvas.height * 0.72;
+}
+
+function logTToX(logT) {
+  // Reversed: high T = left, low T = right
+  // logT range: 3.3 (cool) to 5.0 (hot)
+  const tMin = 3.3, tMax = 5.0;
+  return HR.x + HR.w * (1 - (logT - tMin) / (tMax - tMin));
+}
+
+function logLToY(logL) {
+  // logL range: -3 to 7
+  const lMin = -3, lMax = 7;
+  return HR.y + HR.h * (1 - (logL - lMin) / (lMax - lMin));
+}
+
+function tempToColor(logT) {
+  const t = Math.pow(10, logT);
+  // Approximate black body: cool=red, medium=yellow, hot=blue-white
+  if (t < 4000) return '#ff6b35';
+  if (t < 5500) return '#ffcc66';
+  if (t < 7500) return '#ffffee';
+  if (t < 15000) return '#aaccff';
+  return '#6699ff';
+}
+
+function drawHRDiagram() {
+  updateHRBounds();
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(249,115,22,0.08)';
+  ctx.lineWidth = 1;
+  for (let logT = 3.5; logT <= 5.0; logT += 0.5) {
+    const x = logTToX(logT);
+    ctx.beginPath(); ctx.moveTo(x, HR.y); ctx.lineTo(x, HR.y + HR.h); ctx.stroke();
+  }
+  for (let logL = -2; logL <= 6; logL += 2) {
+    const y = logLToY(logL);
+    ctx.beginPath(); ctx.moveTo(HR.x, y); ctx.lineTo(HR.x + HR.w, y); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(HR.x, HR.y); ctx.lineTo(HR.x, HR.y + HR.h); ctx.lineTo(HR.x + HR.w, HR.y + HR.h);
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Surface Temperature (K) →  Hot                                            Cool  →', HR.x + HR.w / 2, HR.y + HR.h + 28);
+
+  ctx.save();
+  ctx.translate(HR.x - 35, HR.y + HR.h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Luminosity (L☉) →', 0, 0);
+  ctx.restore();
+
+  // Temperature labels
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillStyle = '#64748b';
+  [3.5, 3.7, 3.9, 4.1, 4.3, 4.5, 4.8].forEach(logT => {
+    const x = logTToX(logT);
+    const t = Math.pow(10, logT);
+    ctx.fillText(t >= 10000 ? (t/1000).toFixed(0)+'k' : t.toFixed(0), x, HR.y + HR.h + 14);
+  });
+
+  // Luminosity labels
+  ctx.textAlign = 'right';
+  [-2, 0, 2, 4, 6].forEach(logL => {
+    const y = logLToY(logL);
+    const label = logL === 0 ? '1' : '10^' + logL;
+    ctx.fillText(label, HR.x - 8, y + 3);
+  });
+
+  // Main sequence band (background)
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.moveTo(logTToX(4.7), logLToY(5.5));
+  ctx.lineTo(logTToX(4.6), logLToY(4.5));
+  ctx.lineTo(logTToX(3.7), logLToY(-1));
+  ctx.lineTo(logTToX(3.55), logLToY(-2));
+  ctx.lineTo(logTToX(3.65), logLToY(-2.5));
+  ctx.lineTo(logTToX(3.8), logLToY(-1.5));
+  ctx.lineTo(logTToX(4.7), logLToY(4));
+  ctx.lineTo(logTToX(4.8), logLToY(5));
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // MS label
+  ctx.fillStyle = 'rgba(249,115,22,0.3)';
+  ctx.font = 'italic 10px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Main Sequence', logTToX(4.1), logLToY(1.5));
+
+  // Region labels
+  ctx.fillStyle = 'rgba(249,115,22,0.15)';
+  ctx.font = '9px system-ui';
+  ctx.fillText('Red Giants', logTToX(3.6), logLToY(3));
+  ctx.fillText('White Dwarfs', logTToX(4.2), logLToY(-2));
+  ctx.fillText('Supergiants', logTToX(3.6), logLToY(5.5));
+}
+
+function drawEvolutionTrack() {
+  if (track.length < 2) return;
+  const stages = getStages(mass);
+  const currentIdx = Math.min(Math.floor(progress * stages.length), stages.length - 1);
+
+  // Draw full track as faint line
+  ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  track.forEach((pt, i) => {
+    const x = logTToX(pt.t);
+    const y = logLToY(pt.l);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw traversed portion
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= currentIdx && i < track.length; i++) {
+    const x = logTToX(track[i].t);
+    const y = logLToY(track[i].l);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  // Interpolate current position
+  const stageProgress = (progress * stages.length) - currentIdx;
+  if (currentIdx < track.length - 1) {
+    const cur = track[currentIdx];
+    const nxt = track[currentIdx + 1];
+    const interpT = cur.t + (nxt.t - cur.t) * stageProgress;
+    const interpL = cur.l + (nxt.l - cur.l) * stageProgress;
+    ctx.lineTo(logTToX(interpT), logLToY(interpL));
+  }
+  ctx.stroke();
+
+  // Draw current star position
+  const cur = track[currentIdx];
+  const nxt = currentIdx < track.length - 1 ? track[currentIdx + 1] : cur;
+  const sp = (progress * stages.length) - currentIdx;
+  const starT = cur.t + (nxt.t - cur.t) * sp;
+  const starL = cur.l + (nxt.l - cur.l) * sp;
+  const sx = logTToX(starT);
+  const sy = logLToY(starL);
+  const color = tempToColor(starT);
+
+  // Glow
+  const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, 25);
+  gradient.addColorStop(0, color);
+  gradient.addColorStop(1, 'transparent');
+  ctx.fillStyle = gradient;
+  ctx.globalAlpha = 0.4;
+  ctx.fillRect(sx - 25, sy - 25, 50, 50);
+  ctx.globalAlpha = 1;
+
+  // Star dot
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Stage label dots
+  track.forEach((pt, i) => {
+    if (pt.t === 0 && pt.l === -3) return; // black hole
+    const px = logTToX(pt.t);
+    const py = logLToY(pt.l);
+    ctx.fillStyle = i <= currentIdx ? '#f97316' : '#475569';
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = i <= currentIdx ? '#fed7aa' : '#64748b';
+    ctx.font = '9px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(pt.stage, px, py - 8);
+  });
+
+  // Update UI
+  const tempK = Math.pow(10, starT);
+  const lumL = Math.pow(10, starL);
+  stageEl.textContent = stages[currentIdx];
+  tempValEl.textContent = tempK >= 10000 ? (tempK / 1000).toFixed(1) + 'k K' : tempK.toFixed(0) + ' K';
+  lumValEl.textContent = lumL >= 1000 ? lumL.toExponential(1) + ' L☉' : lumL.toFixed(2) + ' L☉';
+
+  const totalLife = getLifetime(mass);
+  const currentAge = progress * totalLife * 1.2; // rough scaling
+  ageEl.textContent = formatAge(currentAge);
+}
+
+/* ── Background Stars ── */
+const bgStars = [];
+for (let i = 0; i < 200; i++) {
+  bgStars.push({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.5 + 0.3,
+    b: Math.random() * 0.5 + 0.3,
+    twinkle: Math.random() * Math.PI * 2
+  });
+}
+
+function drawBackground(time) {
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  bgStars.forEach(s => {
+    const alpha = s.b + Math.sin(time * 2 + s.twinkle) * 0.15;
+    ctx.fillStyle = `rgba(226,232,240,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+/* ── KaTeX ── */
+katex.render(
+  "L \\approx L_\\odot \\left(\\frac{M}{M_\\odot}\\right)^{3.5}",
+  document.getElementById('formula1'), { displayMode: false, throwOnError: false }
+);
+katex.render(
+  "\\tau_{\\text{MS}} \\approx 10^{10} \\left(\\frac{M}{M_\\odot}\\right)^{-2.5} \\text{ yr}",
+  document.getElementById('formula2'), { displayMode: false, throwOnError: false }
+);
+
+/* ── Animation Loop ── */
+let lastTime = 0;
+
+function animate(timestamp) {
+  requestAnimationFrame(animate);
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+  const time = timestamp / 1000;
+
+  if (playing && progress < 1) {
+    const speed = parseFloat(speedSlider.value);
+    progress = Math.min(1, progress + dt * speed * 0.05);
+    updateStageLabels();
+    if (progress >= 1) {
+      playing = false;
+      document.getElementById('btn-start').textContent = '▶ Start Evolution';
+      document.getElementById('btn-start').onclick = startEvolution;
+    }
+  }
+
+  drawBackground(time);
+  drawHRDiagram();
+  drawEvolutionTrack();
+}
+
+/* ── Init ── */
+updateStageLabels();
+lifetimeEl.textContent = formatAge(getLifetime(mass));
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

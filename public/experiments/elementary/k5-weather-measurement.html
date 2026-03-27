@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Measurement — Scivra K-5 Earth Science</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;min-width:260px;background:rgba(30,41,59,0.95);border-right:1px solid rgba(249,115,22,0.25);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.badge-row{display:flex;gap:8px}
+.badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+.badge-subject{background:rgba(249,115,22,0.25);color:#fed7aa;border:1px solid rgba(249,115,22,0.4)}
+.badge-free{background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+.sidebar h1{font-size:1.2em;color:#f97316;line-height:1.3}
+.sidebar h1 span{color:#fed7aa;font-size:0.7em;display:block;margin-top:2px}
+.control-group{display:flex;flex-direction:column;gap:6px}
+.control-group label{font-size:13px;color:#fed7aa;font-weight:600}
+.control-group input[type=range]{width:100%;-webkit-appearance:none;height:6px;background:rgba(249,115,22,0.2);border-radius:3px;outline:none;cursor:pointer;padding:0}
+.control-group input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#f97316;border-radius:50%;cursor:pointer}
+.val{font-family:'JetBrains Mono',monospace;color:#fed7aa;font-size:12px;text-align:right}
+.info-box{background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:8px;padding:12px;font-size:13px;line-height:1.5}
+.info-box h3{color:#f97316;font-size:14px;margin-bottom:6px}
+.data-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(249,115,22,0.1)}
+.data-label{color:#94a3b8;font-size:12px}
+.data-val{font-family:'JetBrains Mono',monospace;color:#fed7aa;font-size:13px;font-weight:600}
+.canvas-area{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+canvas{border-radius:12px;background:#0f172a;display:block}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="badge-row">
+        <span class="badge badge-subject">K-5 EARTH SCIENCE</span>
+        <span class="badge badge-free">FREE</span>
+    </div>
+    <h1>Weather Measurement<span>Scivra K-5 Earth Science</span></h1>
+
+    <div class="control-group">
+        <label>Temperature (°F)</label>
+        <input type="range" id="temperature" min="0" max="110" value="72">
+        <div class="val" id="tempVal">72°F (22°C)</div>
+    </div>
+
+    <div class="control-group">
+        <label>Wind Speed (mph)</label>
+        <input type="range" id="wind" min="0" max="80" value="15">
+        <div class="val" id="windVal">15 mph</div>
+    </div>
+
+    <div class="control-group">
+        <label>Precipitation (in/hr)</label>
+        <input type="range" id="precip" min="0" max="4" value="0" step="0.1">
+        <div class="val" id="precipVal">0.0 in/hr</div>
+    </div>
+
+    <div class="control-group">
+        <label>Humidity (%)</label>
+        <input type="range" id="humidity" min="0" max="100" value="50">
+        <div class="val" id="humVal">50%</div>
+    </div>
+
+    <div class="info-box">
+        <h3>Weather Summary</h3>
+        <div class="data-row"><span class="data-label">Condition</span><span class="data-val" id="condVal">Clear</span></div>
+        <div class="data-row"><span class="data-label">Wind Category</span><span class="data-val" id="windCat">Breeze</span></div>
+        <div class="data-row"><span class="data-label">Comfort</span><span class="data-val" id="comfortVal">Pleasant</span></div>
+    </div>
+
+    <div class="info-box">
+        <h3>Did You Know?</h3>
+        <p id="funFact">A thermometer measures temperature using liquid that expands when heated and contracts when cooled!</p>
+    </div>
+</div>
+
+<div class="canvas-area">
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, time = 0;
+
+function resize() {
+    const area = canvas.parentElement;
+    W = area.clientWidth - 40;
+    H = area.clientHeight - 40;
+    canvas.width = W; canvas.height = H;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function getVals() {
+    return {
+        temp: +document.getElementById('temperature').value,
+        wind: +document.getElementById('wind').value,
+        precip: +document.getElementById('precip').value,
+        humidity: +document.getElementById('humidity').value
+    };
+}
+
+function updateUI() {
+    const v = getVals();
+    const tempC = ((v.temp - 32) * 5 / 9).toFixed(0);
+    document.getElementById('tempVal').textContent = v.temp + '°F (' + tempC + '°C)';
+    document.getElementById('windVal').textContent = v.wind + ' mph';
+    document.getElementById('precipVal').textContent = v.precip.toFixed(1) + ' in/hr';
+    document.getElementById('humVal').textContent = v.humidity + '%';
+
+    let cond = 'Clear';
+    if (v.precip > 2) cond = 'Heavy Rain';
+    else if (v.precip > 0.5) cond = 'Rainy';
+    else if (v.precip > 0) cond = 'Light Rain';
+    else if (v.humidity > 80) cond = 'Cloudy';
+    else if (v.humidity > 50) cond = 'Partly Cloudy';
+    document.getElementById('condVal').textContent = cond;
+
+    let windCat = 'Calm';
+    if (v.wind > 60) windCat = 'Storm';
+    else if (v.wind > 40) windCat = 'Strong';
+    else if (v.wind > 20) windCat = 'Windy';
+    else if (v.wind > 5) windCat = 'Breeze';
+    document.getElementById('windCat').textContent = windCat;
+
+    let comfort = 'Pleasant';
+    if (v.temp > 95) comfort = 'Very Hot';
+    else if (v.temp > 85) comfort = 'Hot';
+    else if (v.temp < 32) comfort = 'Freezing';
+    else if (v.temp < 50) comfort = 'Cold';
+    else if (v.humidity > 80 && v.temp > 75) comfort = 'Muggy';
+    document.getElementById('comfortVal').textContent = comfort;
+
+    const facts = [
+        'A thermometer measures temperature using liquid that expands when heated and contracts when cooled!',
+        'An anemometer has cups that spin in the wind — the faster they spin, the stronger the wind!',
+        'A rain gauge is simply a container that collects rainwater to measure how much has fallen.',
+        'A hygrometer measures moisture in the air. Hair hygrometers use real hair that stretches when humid!'
+    ];
+    document.getElementById('funFact').textContent = facts[Math.floor(time * 0.1) % 4];
+}
+
+function drawSky(v) {
+    const skyH = H * 0.35;
+    // base sky
+    let skyAlpha = 0.15;
+    let skyR = 56, skyG = 189, skyB = 248;
+    if (v.precip > 0.5) { skyR = 100; skyG = 116; skyB = 139; skyAlpha = 0.25; }
+    else if (v.humidity > 70) { skyR = 120; skyG = 140; skyB = 160; skyAlpha = 0.2; }
+
+    const grd = ctx.createLinearGradient(0, 0, 0, skyH);
+    grd.addColorStop(0, `rgba(${skyR},${skyG},${skyB},${skyAlpha})`);
+    grd.addColorStop(1, 'rgba(15,23,42,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, skyH);
+
+    // sun (if not too rainy)
+    if (v.precip < 1 && v.humidity < 80) {
+        const sunX = W * 0.85;
+        const sunY = 50;
+        const bright = 1 - v.humidity / 100;
+        ctx.fillStyle = `rgba(250,204,21,${bright * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // clouds
+    if (v.humidity > 40 || v.precip > 0) {
+        const numClouds = Math.ceil((v.humidity + v.precip * 25) / 25);
+        const cloudAlpha = Math.min(0.6, (v.humidity / 100) * 0.5 + v.precip * 0.15);
+        for (let i = 0; i < numClouds; i++) {
+            const cx = ((i * 197 + time * 15 * (1 + i * 0.3)) % (W + 100)) - 50;
+            const cy = 30 + (i * 37) % 60;
+            ctx.fillStyle = `rgba(200,210,220,${cloudAlpha})`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+            ctx.arc(cx + 25, cy - 5, 25, 0, Math.PI * 2);
+            ctx.arc(cx + 50, cy, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // rain drops
+    if (v.precip > 0) {
+        const drops = Math.floor(v.precip * 30);
+        ctx.strokeStyle = 'rgba(96,165,250,0.4)';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < drops; i++) {
+            const rx = (i * 73 + time * 120) % W;
+            const ry = (i * 137 + time * 200) % (skyH + 20);
+            ctx.beginPath();
+            ctx.moveTo(rx, ry);
+            ctx.lineTo(rx - 2, ry + 10);
+            ctx.stroke();
+        }
+    }
+}
+
+function drawThermometer(x, y, w, h, v) {
+    const bulbR = w * 0.6;
+    const tubeW = w * 0.35;
+    const tubeH = h - bulbR * 2;
+    const fill = v.temp / 110;
+
+    // label
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText('Thermometer', x, y - 15);
+
+    // tube outline
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x - tubeW / 2, y, tubeW, tubeH, tubeW / 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // mercury fill
+    const mercH = tubeH * fill;
+    const mercColor = v.temp > 85 ? '#ef4444' : v.temp > 60 ? '#f97316' : v.temp > 32 ? '#3b82f6' : '#60a5fa';
+    ctx.fillStyle = mercColor;
+    ctx.beginPath();
+    ctx.roundRect(x - tubeW / 2 + 3, y + tubeH - mercH, tubeW - 6, mercH, tubeW / 4);
+    ctx.fill();
+
+    // bulb
+    ctx.fillStyle = mercColor;
+    ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y + tubeH + bulbR * 0.5, bulbR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // tick marks
+    for (let i = 0; i <= 5; i++) {
+        const ty = y + tubeH - (i / 5) * tubeH;
+        ctx.strokeStyle = 'rgba(254,215,170,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + tubeW / 2 + 3, ty);
+        ctx.lineTo(x + tubeW / 2 + 10, ty);
+        ctx.stroke();
+        ctx.font = "10px 'JetBrains Mono'";
+        ctx.fillStyle = 'rgba(254,215,170,0.5)';
+        ctx.textAlign = 'left';
+        ctx.fillText((i * 22) + '°F', x + tubeW / 2 + 13, ty + 3);
+    }
+
+    // readout
+    ctx.font = "bold 16px 'JetBrains Mono'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText(v.temp + '°F', x, y + tubeH + bulbR * 2 + 5);
+}
+
+function drawAnemometer(x, y, w, h, v) {
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText('Anemometer', x, y - 15);
+
+    // pole
+    ctx.strokeStyle = 'rgba(249,115,22,0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y + h * 0.3);
+    ctx.lineTo(x, y + h);
+    ctx.stroke();
+
+    // base
+    ctx.fillStyle = 'rgba(249,115,22,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + h, 20, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // spinning cups
+    const centerY = y + h * 0.3;
+    const armLen = w * 0.5;
+    const speed = v.wind / 10;
+    const angle = time * speed;
+
+    for (let i = 0; i < 3; i++) {
+        const a = angle + i * Math.PI * 2 / 3;
+        const cx = x + Math.cos(a) * armLen;
+        const cy = centerY + Math.sin(a) * armLen * 0.4;
+
+        // arm
+        ctx.strokeStyle = 'rgba(249,115,22,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, centerY);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+
+        // cup
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // center hub
+    ctx.fillStyle = '#fed7aa';
+    ctx.beginPath();
+    ctx.arc(x, centerY, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // readout
+    ctx.font = "bold 16px 'JetBrains Mono'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText(v.wind + ' mph', x, y + h + 25);
+}
+
+function drawRainGauge(x, y, w, h, v) {
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText('Rain Gauge', x, y - 15);
+
+    const gaugeW = w * 0.45;
+    const gaugeH = h * 0.8;
+    const fill = v.precip / 4;
+
+    // container
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - gaugeW / 2 - 5, y);
+    ctx.lineTo(x - gaugeW / 2, y + gaugeH);
+    ctx.lineTo(x + gaugeW / 2, y + gaugeH);
+    ctx.lineTo(x + gaugeW / 2 + 5, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // water fill
+    if (fill > 0) {
+        const waterH = gaugeH * fill;
+        const waterY = y + gaugeH - waterH;
+        const wLeft = x - gaugeW / 2 + (gaugeH - waterH) / gaugeH * (-5) * -0.1;
+        ctx.fillStyle = 'rgba(96,165,250,0.4)';
+        ctx.beginPath();
+        // wave top
+        for (let wx = x - gaugeW / 2 + 2; wx <= x + gaugeW / 2 - 2; wx++) {
+            const wy = waterY + Math.sin((wx - x) * 0.15 + time * 3) * 2;
+            if (wx === x - gaugeW / 2 + 2) ctx.moveTo(wx, wy);
+            else ctx.lineTo(wx, wy);
+        }
+        ctx.lineTo(x + gaugeW / 2, y + gaugeH);
+        ctx.lineTo(x - gaugeW / 2, y + gaugeH);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // markings
+    for (let i = 0; i <= 4; i++) {
+        const my = y + gaugeH - (i / 4) * gaugeH;
+        ctx.strokeStyle = 'rgba(254,215,170,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + gaugeW / 2 + 3, my);
+        ctx.lineTo(x + gaugeW / 2 + 10, my);
+        ctx.stroke();
+        ctx.font = "9px 'JetBrains Mono'";
+        ctx.fillStyle = 'rgba(254,215,170,0.5)';
+        ctx.textAlign = 'left';
+        ctx.fillText(i + '"', x + gaugeW / 2 + 13, my + 3);
+    }
+
+    // readout
+    ctx.font = "bold 16px 'JetBrains Mono'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText(v.precip.toFixed(1) + ' in', x, y + gaugeH + 30);
+}
+
+function drawHygrometer(x, y, w, h, v) {
+    ctx.font = "bold 13px 'Segoe UI'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText('Hygrometer', x, y - 15);
+
+    const gaugeR = Math.min(w, h) * 0.4;
+    const cy = y + gaugeR + 10;
+
+    // gauge arc background
+    ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.arc(x, cy, gaugeR, Math.PI * 0.8, Math.PI * 2.2);
+    ctx.stroke();
+
+    // colored arc (blue=dry to orange=humid)
+    const humAngle = Math.PI * 0.8 + (v.humidity / 100) * Math.PI * 1.4;
+    const grd = ctx.createConicGradient(Math.PI * 0.8, x, cy);
+    grd.addColorStop(0, '#3b82f6');
+    grd.addColorStop(0.5, '#84cc16');
+    grd.addColorStop(1, '#f97316');
+    ctx.strokeStyle = grd;
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.arc(x, cy, gaugeR, Math.PI * 0.8, humAngle);
+    ctx.stroke();
+
+    // needle
+    const needleAngle = Math.PI * 0.8 + (v.humidity / 100) * Math.PI * 1.4;
+    ctx.strokeStyle = '#fed7aa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x, cy);
+    ctx.lineTo(x + Math.cos(needleAngle) * (gaugeR - 15), cy + Math.sin(needleAngle) * (gaugeR - 15));
+    ctx.stroke();
+
+    // center dot
+    ctx.fillStyle = '#f97316';
+    ctx.beginPath();
+    ctx.arc(x, cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // labels around arc
+    ctx.font = "9px 'JetBrains Mono'";
+    ctx.fillStyle = 'rgba(254,215,170,0.5)';
+    ctx.textAlign = 'center';
+    for (let p = 0; p <= 100; p += 25) {
+        const la = Math.PI * 0.8 + (p / 100) * Math.PI * 1.4;
+        const lx = x + Math.cos(la) * (gaugeR + 18);
+        const ly = cy + Math.sin(la) * (gaugeR + 18);
+        ctx.fillText(p + '%', lx, ly + 3);
+    }
+
+    // readout
+    ctx.font = "bold 16px 'JetBrains Mono'";
+    ctx.fillStyle = '#fed7aa';
+    ctx.textAlign = 'center';
+    ctx.fillText(v.humidity + '%', x, cy + gaugeR * 0.5);
+
+    // stand
+    ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, cy + gaugeR * 0.3);
+    ctx.lineTo(x, y + h);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(249,115,22,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + h, 18, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    time += 0.016;
+
+    const v = getVals();
+    drawSky(v);
+
+    // ground line
+    const groundY = H * 0.88;
+    ctx.strokeStyle = 'rgba(249,115,22,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    ctx.lineTo(W, groundY);
+    ctx.stroke();
+
+    // 4 instruments evenly spaced
+    const instW = W / 4;
+    const instH = H * 0.55;
+    const topY = H * 0.2;
+
+    drawThermometer(instW * 0.5, topY, instW * 0.5, instH, v);
+    drawAnemometer(instW * 1.5, topY, instW * 0.6, instH, v);
+    drawRainGauge(instW * 2.5, topY, instW * 0.5, instH, v);
+    drawHygrometer(instW * 3.5, topY, instW * 0.7, instH, v);
+
+    // title
+    ctx.font = "bold 15px 'Segoe UI'";
+    ctx.fillStyle = 'rgba(254,215,170,0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Weather Instruments', W / 2, 25);
+    ctx.textAlign = 'start';
+
+    requestAnimationFrame(draw);
+}
+
+document.getElementById('temperature').addEventListener('input', updateUI);
+document.getElementById('wind').addEventListener('input', updateUI);
+document.getElementById('precip').addEventListener('input', updateUI);
+document.getElementById('humidity').addEventListener('input', updateUI);
+
+updateUI();
+draw();
+</script>
+</body>
+</html>

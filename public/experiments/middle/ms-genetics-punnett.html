@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genetics: Punnett Square — Scivra Middle School Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',-apple-system,sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(132,204,22,.1),rgba(101,163,13,.07));border-bottom:1px solid rgba(132,204,22,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px}.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ms{background:rgba(132,204,22,.2);border:1px solid rgba(132,204,22,.4);color:#d9f99d}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 60px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .select-row{margin-bottom:12px}
+    .select-row label{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px}
+    .select-row select{width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(132,204,22,.25);background:#0f172a;color:#d9f99d;font-size:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#d9f99d;font-family:'JetBrains Mono',monospace}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(132,204,22,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#84cc16;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(132,204,22,.15);border-radius:8px;padding:6px 8px;text-align:center}
+    .stat-label{font-size:9px;color:#475569;text-transform:uppercase;margin-bottom:2px}
+    .stat-value{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace}
+    .v-green{color:#d9f99d} .v-cyan{color:#67e8f9} .v-amber{color:#fcd34d}
+    .btn{width:100%;padding:9px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .btn-primary{border:1px solid rgba(132,204,22,.3);background:rgba(132,204,22,.12);color:#d9f99d}
+    .canvas-wrap{position:relative}.canvas-wrap canvas{display:block;width:100%;height:100%}
+    .katex{font-size:1em}.katex .base{color:#d9f99d}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges"><span class="badge badge-ms">BIOLOGY MS</span><span class="badge badge-free">FREE</span></div>
+  <h1>Genetics: Punnett Square</h1>
+  <p>Predict offspring genotypes, phenotypes, and verify Mendelian ratios</p>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parents</div>
+      <div class="select-row"><label>Parent 1</label><select id="selP1"><option value="0">AA (Homozygous Dominant)</option><option value="1" selected>Aa (Heterozygous)</option><option value="2">aa (Homozygous Recessive)</option></select></div>
+      <div class="select-row"><label>Parent 2</label><select id="selP2"><option value="0">AA</option><option value="1" selected>Aa</option><option value="2">aa</option></select></div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Offspring Count</span><span class="param-val" id="lblN">100</span></div>
+        <input type="range" id="sldN" min="4" max="1000" step="4" value="100">
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">AA</div><div class="stat-value v-green" id="valAA">25%</div></div>
+      <div class="stat-card"><div class="stat-label">Aa</div><div class="stat-value v-cyan" id="valAa">50%</div></div>
+      <div class="stat-card"><div class="stat-label">aa</div><div class="stat-value v-amber" id="valaa">25%</div></div>
+    </div>
+    <div class="section">
+      <button class="btn btn-primary" id="btnBreed">🧬 Breed Offspring</button>
+    </div>
+  </div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+</div>
+<script>
+(function(){
+  const cv = document.getElementById('cv'); const ctx = cv.getContext('2d');
+  const genotypes = ['AA', 'Aa', 'aa'];
+  let p1 = 1, p2 = 1, nOff = 100;
+  let observed = { AA: 0, Aa: 0, aa: 0 };
+  let bred = false;
+
+  function getAlleles(g) {
+    if (g === 0) return ['A', 'A'];
+    if (g === 1) return ['A', 'a'];
+    return ['a', 'a'];
+  }
+
+  function getPunnett() {
+    const a1 = getAlleles(p1), a2 = getAlleles(p2);
+    const grid = [];
+    const counts = { AA: 0, Aa: 0, aa: 0 };
+    for (let i = 0; i < 2; i++) {
+      for (let j = 0; j < 2; j++) {
+        const alleles = [a1[i], a2[j]].sort();
+        const geno = alleles[0] === 'A' && alleles[1] === 'A' ? 'AA' :
+                     alleles[0] === 'A' && alleles[1] === 'a' ? 'Aa' : 'aa';
+        grid.push(geno);
+        counts[geno]++;
+      }
+    }
+    return { grid, counts };
+  }
+
+  function breed() {
+    observed = { AA: 0, Aa: 0, aa: 0 };
+    const a1 = getAlleles(p1), a2 = getAlleles(p2);
+    for (let i = 0; i < nOff; i++) {
+      const al1 = a1[Math.random() < 0.5 ? 0 : 1];
+      const al2 = a2[Math.random() < 0.5 ? 0 : 1];
+      const pair = [al1, al2].sort();
+      const g = pair[0] === 'A' && pair[1] === 'A' ? 'AA' :
+                pair[0] === 'A' && pair[1] === 'a' ? 'Aa' : 'aa';
+      observed[g]++;
+    }
+    bred = true;
+  }
+
+  function updateStats() {
+    const { counts } = getPunnett();
+    document.getElementById('valAA').textContent = (counts.AA / 4 * 100) + '%';
+    document.getElementById('valAa').textContent = (counts.Aa / 4 * 100) + '%';
+    document.getElementById('valaa').textContent = (counts.aa / 4 * 100) + '%';
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = cv.parentElement.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0, 0, w, h);
+
+    const { grid, counts } = getPunnett();
+    const a1 = getAlleles(p1), a2 = getAlleles(p2);
+    const cx = w / 2, cy = h * 0.35;
+    const cellSize = Math.min(w, h) * 0.15;
+    const gridX = cx - cellSize, gridY = cy - cellSize;
+
+    // Punnett square title
+    ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#d9f99d'; ctx.textAlign = 'center';
+    ctx.fillText('Punnett Square', cx, gridY - cellSize - 10);
+
+    // Parent labels
+    ctx.font = 'bold 14px JetBrains Mono, monospace';
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText(a2[0], gridX + cellSize * 0.5, gridY - 8);
+    ctx.fillText(a2[1], gridX + cellSize * 1.5, gridY - 8);
+    ctx.fillStyle = '#fca5a5';
+    ctx.textAlign = 'right';
+    ctx.fillText(a1[0], gridX - 8, gridY + cellSize * 0.55);
+    ctx.fillText(a1[1], gridX - 8, gridY + cellSize * 1.55);
+    ctx.textAlign = 'center';
+
+    // Grid cells
+    const colors = { 'AA': 'rgba(132,204,22,0.2)', 'Aa': 'rgba(103,232,249,0.15)', 'aa': 'rgba(251,191,36,0.15)' };
+    const textColors = { 'AA': '#d9f99d', 'Aa': '#67e8f9', 'aa': '#fcd34d' };
+    for (let i = 0; i < 4; i++) {
+      const col = i % 2, row = Math.floor(i / 2);
+      const x = gridX + col * cellSize, y = gridY + row * cellSize;
+      ctx.fillStyle = colors[grid[i]];
+      ctx.fillRect(x, y, cellSize, cellSize);
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.strokeRect(x, y, cellSize, cellSize);
+      ctx.font = 'bold 18px JetBrains Mono, monospace';
+      ctx.fillStyle = textColors[grid[i]];
+      ctx.fillText(grid[i], x + cellSize / 2, y + cellSize / 2 + 6);
+    }
+
+    // Predicted ratios
+    const ratioY = gridY + cellSize * 2 + 40;
+    ctx.font = '13px sans-serif'; ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Predicted: ' + (counts.AA / 4 * 100) + '% AA / ' + (counts.Aa / 4 * 100) + '% Aa / ' + (counts.aa / 4 * 100) + '% aa', cx, ratioY);
+
+    // Breeding results
+    if (bred) {
+      const barY = ratioY + 30;
+      ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#d9f99d';
+      ctx.fillText('Observed Results (n=' + nOff + ')', cx, barY);
+
+      const barW = w * 0.6, barH = 30;
+      const barX = cx - barW / 2;
+      const total = nOff;
+      const wAA = (observed.AA / total) * barW;
+      const wAa = (observed.Aa / total) * barW;
+      const waa = (observed.aa / total) * barW;
+
+      ctx.fillStyle = 'rgba(132,204,22,0.4)';
+      ctx.fillRect(barX, barY + 10, wAA, barH);
+      ctx.fillStyle = 'rgba(103,232,249,0.3)';
+      ctx.fillRect(barX + wAA, barY + 10, wAa, barH);
+      ctx.fillStyle = 'rgba(251,191,36,0.3)';
+      ctx.fillRect(barX + wAA + wAa, barY + 10, waa, barH);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.strokeRect(barX, barY + 10, barW, barH);
+
+      ctx.font = '11px JetBrains Mono, monospace'; ctx.fillStyle = '#d9f99d';
+      ctx.fillText('AA: ' + observed.AA + ' (' + (observed.AA / total * 100).toFixed(1) + '%)', cx - barW * 0.3, barY + barH + 28);
+      ctx.fillStyle = '#67e8f9';
+      ctx.fillText('Aa: ' + observed.Aa + ' (' + (observed.Aa / total * 100).toFixed(1) + '%)', cx, barY + barH + 28);
+      ctx.fillStyle = '#fcd34d';
+      ctx.fillText('aa: ' + observed.aa + ' (' + (observed.aa / total * 100).toFixed(1) + '%)', cx + barW * 0.3, barY + barH + 28);
+
+      // Offspring dots
+      const dotY = barY + barH + 50;
+      const dotSize = Math.min(6, w / (Math.sqrt(nOff) * 3));
+      const cols = Math.floor((w * 0.8) / (dotSize * 2.5));
+      let idx = 0;
+      const allOff = [];
+      for (let i = 0; i < observed.AA; i++) allOff.push('AA');
+      for (let i = 0; i < observed.Aa; i++) allOff.push('Aa');
+      for (let i = 0; i < observed.aa; i++) allOff.push('aa');
+      // Shuffle
+      for (let i = allOff.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOff[i], allOff[j]] = [allOff[j], allOff[i]]; }
+      const maxDots = Math.min(allOff.length, 500);
+      for (let i = 0; i < maxDots; i++) {
+        const col = i % cols, row = Math.floor(i / cols);
+        const dx = w * 0.1 + col * dotSize * 2.5;
+        const dy = dotY + row * dotSize * 2.5;
+        if (dy > h - 10) break;
+        ctx.beginPath(); ctx.arc(dx, dy, dotSize, 0, 2 * Math.PI);
+        const c = allOff[i] === 'AA' ? 'rgba(132,204,22,0.6)' : allOff[i] === 'Aa' ? 'rgba(103,232,249,0.4)' : 'rgba(251,191,36,0.5)';
+        ctx.fillStyle = c; ctx.fill();
+      }
+    }
+  }
+
+  document.getElementById('selP1').addEventListener('change', e => { p1 = parseInt(e.target.value); bred = false; updateStats(); draw(); });
+  document.getElementById('selP2').addEventListener('change', e => { p2 = parseInt(e.target.value); bred = false; updateStats(); draw(); });
+  document.getElementById('sldN').addEventListener('input', e => { nOff = parseInt(e.target.value); document.getElementById('lblN').textContent = nOff; });
+  document.getElementById('btnBreed').addEventListener('click', () => { breed(); draw(); });
+  window.addEventListener('resize', draw);
+  updateStats(); draw();
+})();
+</script>
+</body>
+</html>

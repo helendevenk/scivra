@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecological Succession — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 10px; z-index: 10;
+    }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(132,204,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(132,204,22,0.15); color: #84cc16; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
+    .control-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.7rem; }
+    .control-row label { color: #94a3b8; white-space: nowrap; }
+    .control-row .data-val { color: #d9f99d; min-width: 36px; text-align: right; }
+    input[type=range] { accent-color: #84cc16; height: 4px; flex: 1; min-width: 70px; }
+    button { background: rgba(132,204,22,0.12); border: 1px solid rgba(132,204,22,0.25); color: #d9f99d; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.72rem; transition: all 0.2s; }
+    button:hover { background: rgba(132,204,22,0.25); }
+    .btn-row { display: flex; gap: 6px; }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 0.68rem; }
+    .data-grid .label { color: #94a3b8; }
+    .data-grid .value { color: #d9f99d; text-align: right; }
+    .formula-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .formula-item { margin-bottom: 6px; }
+    .formula-desc { font-size: 0.6rem; color: #64748b; margin-top: 2px; }
+    .stage-indicator { display: flex; gap: 4px; margin-top: 6px; }
+    .stage-dot { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(132,204,22,0.3); }
+    .stage-dot.active { border-color: #84cc16; box-shadow: 0 0 6px rgba(132,204,22,0.5); }
+    .stage-name { font-size: 0.72rem; color: #d9f99d; font-weight: 600; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Ecological Succession <span class="badge">AP Biology</span></h1>
+      <p>From bare rock to climax community — watch ecosystems develop over time</p>
+      <div class="stage-indicator">
+        <div class="stage-dot active" id="sd0" style="background:#94a3b8;"></div>
+        <div class="stage-dot" id="sd1" style="background:#a3e635;"></div>
+        <div class="stage-dot" id="sd2" style="background:#22c55e;"></div>
+        <div class="stage-dot" id="sd3" style="background:#15803d;"></div>
+        <div class="stage-dot" id="sd4" style="background:#064e3b;"></div>
+      </div>
+      <div class="stage-name" id="stageName">Bare Rock</div>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>Type</label>
+        <button id="btnPrimary" class="active">Primary</button>
+        <button id="btnSecondary">Secondary</button>
+      </div>
+      <div class="control-row">
+        <label>Time Scale</label>
+        <input type="range" id="timeScale" min="1" max="50" value="10" step="1">
+        <span class="data-val" id="timeScaleVal">10 yr/s</span>
+      </div>
+      <div class="control-row">
+        <label>Moisture</label>
+        <input type="range" id="moisture" min="10" max="100" value="60" step="10">
+        <span class="data-val" id="moistureVal">60%</span>
+      </div>
+      <div class="btn-row">
+        <button id="btnPlay">Play</button>
+        <button id="btnDisturb">Disturb</button>
+        <button id="btnReset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Ecosystem Data</h3>
+      <div class="data-grid">
+        <span class="label">Years Elapsed</span><span class="value data-val" id="dYears">0</span>
+        <span class="label">Stage</span><span class="value data-val" id="dStage">Bare</span>
+        <span class="label">Species Count</span><span class="value data-val" id="dSpecies">0</span>
+        <span class="label">Biomass (kg/m²)</span><span class="value data-val" id="dBiomass">0.0</span>
+        <span class="label">Soil Depth (cm)</span><span class="value data-val" id="dSoil">0.0</span>
+        <span class="label">Biodiversity Index</span><span class="value data-val" id="dBiodiv">0.00</span>
+      </div>
+    </div>
+    <div class="panel formula-panel">
+      <h3>Key Relationships</h3>
+      <div class="formula-item"><div id="f1"></div><div class="formula-desc">Species richness saturates over time</div></div>
+      <div class="formula-item"><div id="f2"></div><div class="formula-desc">Biomass follows sigmoidal accumulation</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  // Stages: [name, soilMax, speciesMax, biomassMax, color, treeHeight]
+  const STAGES = [
+    { name: 'Bare Rock', soil: 0, species: 0, biomass: 0, color: '#64748b', treeH: 0 },
+    { name: 'Pioneer (Lichens/Moss)', soil: 2, species: 8, biomass: 0.5, color: '#a3e635', treeH: 0 },
+    { name: 'Herbaceous', soil: 10, species: 25, biomass: 5, color: '#22c55e', treeH: 20 },
+    { name: 'Shrub/Sapling', soil: 25, species: 45, biomass: 20, color: '#15803d', treeH: 60 },
+    { name: 'Climax Forest', soil: 50, species: 60, biomass: 50, color: '#064e3b', treeH: 120 },
+  ];
+
+  // Primary succession thresholds (years)
+  const PRIMARY_THRESHOLDS = [0, 20, 80, 200, 500];
+  const SECONDARY_THRESHOLDS = [0, 2, 15, 50, 150];
+
+  let state = {
+    running: false,
+    isPrimary: true,
+    years: 0,
+    stageIdx: 0,
+    moisture: 60,
+    timeScale: 10,
+    plants: [], // {x, type, height, maxH, color, swayPhase}
+  };
+
+  // Controls
+  document.getElementById('btnPrimary').addEventListener('click', () => {
+    state.isPrimary = true;
+    document.getElementById('btnPrimary').classList.add('active');
+    document.getElementById('btnSecondary').classList.remove('active');
+    resetSim();
+  });
+  document.getElementById('btnSecondary').addEventListener('click', () => {
+    state.isPrimary = false;
+    document.getElementById('btnSecondary').classList.add('active');
+    document.getElementById('btnPrimary').classList.remove('active');
+    resetSim();
+  });
+  document.getElementById('timeScale').addEventListener('input', function() {
+    state.timeScale = +this.value;
+    document.getElementById('timeScaleVal').textContent = this.value + ' yr/s';
+  });
+  document.getElementById('moisture').addEventListener('input', function() {
+    state.moisture = +this.value;
+    document.getElementById('moistureVal').textContent = this.value + '%';
+  });
+  document.getElementById('btnPlay').addEventListener('click', () => { state.running = !state.running; });
+  document.getElementById('btnDisturb').addEventListener('click', disturb);
+  document.getElementById('btnReset').addEventListener('click', resetSim);
+
+  function resetSim() {
+    state.running = false;
+    state.years = 0;
+    state.stageIdx = 0;
+    state.plants = [];
+  }
+
+  function disturb() {
+    // Set back 1-2 stages
+    state.stageIdx = Math.max(0, state.stageIdx - 1 - Math.floor(Math.random() * 2));
+    const thresholds = state.isPrimary ? PRIMARY_THRESHOLDS : SECONDARY_THRESHOLDS;
+    state.years = thresholds[state.stageIdx] + 1;
+    // Remove some plants
+    state.plants = state.plants.filter(() => Math.random() > 0.6);
+  }
+
+  function getCurrentStageIdx() {
+    const thresholds = state.isPrimary ? PRIMARY_THRESHOLDS : SECONDARY_THRESHOLDS;
+    const moistureFactor = state.moisture / 60;
+    let idx = 0;
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (state.years >= thresholds[i] / moistureFactor) { idx = i; break; }
+    }
+    return idx;
+  }
+
+  function lerp(a, b, t) { return a + (b - a) * Math.min(1, t); }
+
+  function updateSim(dt) {
+    if (!state.running) return;
+    state.years += dt * state.timeScale;
+    state.stageIdx = getCurrentStageIdx();
+
+    // Spawn plants based on stage
+    const stage = STAGES[state.stageIdx];
+    if (state.stageIdx > 0 && state.plants.length < state.stageIdx * 30 + 10) {
+      if (Math.random() < 0.15) {
+        const groundY = canvas.height * 0.65;
+        const types = ['lichen', 'grass', 'shrub', 'tree'];
+        const typeIdx = Math.min(state.stageIdx - 1, 3);
+        const type = types[Math.floor(Math.random() * (typeIdx + 1))];
+        const maxH = type === 'lichen' ? 3 : type === 'grass' ? 15 : type === 'shrub' ? 40 : stage.treeH;
+        state.plants.push({
+          x: Math.random() * canvas.width,
+          type, height: 1, maxH,
+          color: stage.color,
+          swayPhase: Math.random() * Math.PI * 2,
+        });
+      }
+    }
+
+    // Grow plants
+    for (const p of state.plants) {
+      if (p.height < p.maxH) {
+        p.height += dt * p.maxH * 0.05;
+      }
+    }
+  }
+
+  function drawScene() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const groundY = H * 0.65;
+
+    // Sky gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+    skyGrad.addColorStop(0, '#0c1525');
+    skyGrad.addColorStop(1, '#1e293b');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, groundY);
+
+    // Ground layers
+    const stage = STAGES[state.stageIdx];
+    const soilDepth = stage.soil;
+
+    // Rock layer
+    ctx.fillStyle = '#374151';
+    ctx.fillRect(0, groundY, W, H - groundY);
+
+    // Soil layer
+    if (soilDepth > 0) {
+      const soilH = Math.min((soilDepth / 50) * (H - groundY) * 0.6, H - groundY);
+      const soilGrad = ctx.createLinearGradient(0, groundY, 0, groundY + soilH);
+      soilGrad.addColorStop(0, '#3f2d1a');
+      soilGrad.addColorStop(1, '#374151');
+      ctx.fillStyle = soilGrad;
+      ctx.fillRect(0, groundY, W, soilH);
+    }
+
+    // Ground surface line
+    ctx.strokeStyle = stage.color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    for (let x = 0; x < W; x += 3) {
+      ctx.lineTo(x, groundY + Math.sin(x * 0.02) * 3);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Draw plants
+    const now = performance.now() / 1000;
+    for (const p of state.plants) {
+      const sway = Math.sin(now * 1.5 + p.swayPhase) * 2;
+      ctx.save();
+      ctx.translate(p.x, groundY);
+
+      if (p.type === 'lichen') {
+        ctx.fillStyle = '#a3e635';
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.ellipse(0, -1, 4 + p.height, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (p.type === 'grass') {
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(sway, -p.height * 0.5, sway * 0.5, -p.height);
+        ctx.stroke();
+      } else if (p.type === 'shrub') {
+        // Trunk
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(sway * 0.3, -p.height * 0.5);
+        ctx.stroke();
+        // Canopy
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(sway * 0.3, -p.height * 0.6, p.height * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'tree') {
+        // Trunk
+        ctx.fillStyle = '#78350f';
+        const trunkW = Math.max(3, p.height * 0.06);
+        ctx.fillRect(-trunkW / 2 + sway * 0.1, -p.height, trunkW, p.height);
+        // Canopy
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        const canopyR = p.height * 0.3;
+        ctx.arc(sway * 0.15, -p.height - canopyR * 0.3, canopyR, 0, Math.PI * 2);
+        ctx.fill();
+        // Lighter inner canopy
+        ctx.fillStyle = '#22c55e';
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.arc(sway * 0.15 - canopyR * 0.2, -p.height - canopyR * 0.4, canopyR * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+    }
+  }
+
+  function updateUI() {
+    const stage = STAGES[state.stageIdx];
+    const thresholds = state.isPrimary ? PRIMARY_THRESHOLDS : SECONDARY_THRESHOLDS;
+    const nextThreshold = state.stageIdx < 4 ? thresholds[state.stageIdx + 1] : Infinity;
+    const progress = state.stageIdx < 4
+      ? (state.years - thresholds[state.stageIdx]) / (nextThreshold - thresholds[state.stageIdx])
+      : 1;
+
+    const species = Math.round(lerp(
+      state.stageIdx > 0 ? STAGES[state.stageIdx - 1].species : 0,
+      stage.species, Math.min(1, progress)
+    ));
+    const biomass = lerp(
+      state.stageIdx > 0 ? STAGES[state.stageIdx - 1].biomass : 0,
+      stage.biomass, Math.min(1, progress)
+    );
+    const soil = lerp(
+      state.stageIdx > 0 ? STAGES[state.stageIdx - 1].soil : 0,
+      stage.soil, Math.min(1, progress)
+    );
+
+    document.getElementById('dYears').textContent = Math.round(state.years);
+    document.getElementById('dStage').textContent = stage.name.split('(')[0].trim();
+    document.getElementById('dSpecies').textContent = species;
+    document.getElementById('dBiomass').textContent = biomass.toFixed(1);
+    document.getElementById('dSoil').textContent = soil.toFixed(1);
+    document.getElementById('dBiodiv').textContent = (species / 60).toFixed(2);
+    document.getElementById('stageName').textContent = stage.name;
+
+    // Stage dots
+    for (let i = 0; i < 5; i++) {
+      document.getElementById('sd' + i).classList.toggle('active', i <= state.stageIdx);
+    }
+  }
+
+  // KaTeX
+  try {
+    katex.render("S = S_{\\max}(1 - e^{-kt})", document.getElementById('f1'), { throwOnError: false });
+    katex.render("B(t) = B_{\\max}\\frac{t^2}{t^2+K^2}", document.getElementById('f2'), { throwOnError: false });
+  } catch(e) {}
+
+  let last = 0;
+  function animate(ts) {
+    const dt = Math.min((ts - last) / 1000, 0.05);
+    last = ts;
+    updateSim(dt);
+    drawScene();
+    updateUI();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

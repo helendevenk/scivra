@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Population Dynamics — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 10px; z-index: 10;
+    }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(132,204,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .title-block h1 {
+      font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px;
+    }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge {
+      background: rgba(132,204,22,0.15); color: #84cc16;
+      padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600;
+    }
+    .controls { display: flex; flex-direction: column; gap: 5px; min-width: 220px; }
+    .control-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      font-size: 0.7rem;
+    }
+    .control-row label { color: #94a3b8; white-space: nowrap; min-width: 70px; }
+    .control-row .data-val { color: #d9f99d; min-width: 40px; text-align: right; }
+    input[type=range] { accent-color: #84cc16; height: 4px; flex: 1; min-width: 70px; }
+    button {
+      background: rgba(132,204,22,0.12);
+      border: 1px solid rgba(132,204,22,0.25);
+      color: #d9f99d; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(132,204,22,0.25); }
+    .btn-row { display: flex; gap: 6px; }
+    .chart-area {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex; gap: 20px; pointer-events: none;
+    }
+    .chart-container { position: relative; }
+    .chart-container canvas { border: 1px solid rgba(132,204,22,0.15); border-radius: 6px; }
+    .chart-label {
+      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.7rem; color: #84cc16; white-space: nowrap;
+    }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 0.68rem; }
+    .data-grid .label { color: #94a3b8; }
+    .data-grid .value { color: #d9f99d; text-align: right; }
+    .formula-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .formula-item { margin-bottom: 6px; }
+    .formula-desc { font-size: 0.6rem; color: #64748b; margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="chart-area">
+  <div class="chart-container">
+    <div class="chart-label">Population vs Time</div>
+    <canvas id="chartTime" width="480" height="320"></canvas>
+  </div>
+  <div class="chart-container">
+    <div class="chart-label">Phase Plane (Prey vs Predator)</div>
+    <canvas id="chartPhase" width="320" height="320"></canvas>
+  </div>
+</div>
+
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Population Dynamics <span class="badge">AP Biology</span></h1>
+      <p>Lotka-Volterra predator-prey oscillations and phase-plane analysis</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>α (prey birth)</label>
+        <input type="range" id="alpha" min="0.1" max="2.0" value="1.0" step="0.1">
+        <span class="data-val" id="alphaVal">1.0</span>
+      </div>
+      <div class="control-row">
+        <label>β (predation)</label>
+        <input type="range" id="beta" min="0.01" max="0.20" value="0.05" step="0.01">
+        <span class="data-val" id="betaVal">0.05</span>
+      </div>
+      <div class="control-row">
+        <label>γ (pred death)</label>
+        <input type="range" id="gamma" min="0.1" max="2.0" value="0.8" step="0.1">
+        <span class="data-val" id="gammaVal">0.8</span>
+      </div>
+      <div class="control-row">
+        <label>δ (conversion)</label>
+        <input type="range" id="delta" min="0.01" max="0.10" value="0.02" step="0.01">
+        <span class="data-val" id="deltaVal">0.02</span>
+      </div>
+      <div class="btn-row">
+        <button id="btnRun">Run</button>
+        <button id="btnReset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Live Data</h3>
+      <div class="data-grid">
+        <span class="label">Prey (x)</span><span class="value data-val" id="dPrey">80</span>
+        <span class="label">Predator (y)</span><span class="value data-val" id="dPred">30</span>
+        <span class="label">Equil. Prey (γ/δ)</span><span class="value data-val" id="dEqPrey">40</span>
+        <span class="label">Equil. Pred (α/β)</span><span class="value data-val" id="dEqPred">20</span>
+        <span class="label">Time (years)</span><span class="value data-val" id="dTime">0.0</span>
+        <span class="label">Prey Peak</span><span class="value data-val" id="dPreyPeak">80</span>
+        <span class="label">Pred Peak</span><span class="value data-val" id="dPredPeak">30</span>
+      </div>
+    </div>
+    <div class="panel formula-panel">
+      <h3>Lotka-Volterra Equations</h3>
+      <div class="formula-item"><div id="f1"></div><div class="formula-desc">Prey: birth − predation</div></div>
+      <div class="formula-item"><div id="f2"></div><div class="formula-desc">Predator: consumption − death</div></div>
+      <div class="formula-item"><div id="f3"></div><div class="formula-desc">Equilibrium point</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const ctxTime = document.getElementById('chartTime').getContext('2d');
+  const ctxPhase = document.getElementById('chartPhase').getContext('2d');
+  const TW = 480, TH = 320, PW = 320, PH = 320;
+
+  let params = { alpha: 1.0, beta: 0.05, gamma: 0.8, delta: 0.02 };
+  let running = false;
+  let time = 0;
+  let x = 80, y = 30; // prey, predator
+  let history = []; // {t, x, y}
+  let peakPrey = 80, peakPred = 30;
+  const dt = 0.01; // integration step
+  const maxTime = 50; // years
+
+  // Controls
+  ['alpha', 'beta', 'gamma', 'delta'].forEach(id => {
+    const el = document.getElementById(id);
+    const valEl = document.getElementById(id + 'Val');
+    el.addEventListener('input', () => {
+      params[id] = parseFloat(el.value);
+      valEl.textContent = el.value;
+    });
+  });
+
+  document.getElementById('btnRun').addEventListener('click', () => {
+    if (running) { running = false; return; }
+    running = true;
+    time = 0; x = 80; y = 30;
+    history = [{ t: 0, x, y }];
+    peakPrey = x; peakPred = y;
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    running = false; time = 0; x = 80; y = 30;
+    history = []; peakPrey = 80; peakPred = 30;
+    drawTimeChart(); drawPhaseChart();
+    updateUI();
+  });
+
+  function step() {
+    // RK4 integration
+    const { alpha, beta, gamma, delta } = params;
+    function dxdt(x, y) { return alpha * x - beta * x * y; }
+    function dydt(x, y) { return delta * x * y - gamma * y; }
+
+    const k1x = dxdt(x, y);
+    const k1y = dydt(x, y);
+    const k2x = dxdt(x + dt/2 * k1x, y + dt/2 * k1y);
+    const k2y = dydt(x + dt/2 * k1x, y + dt/2 * k1y);
+    const k3x = dxdt(x + dt/2 * k2x, y + dt/2 * k2y);
+    const k3y = dydt(x + dt/2 * k2x, y + dt/2 * k2y);
+    const k4x = dxdt(x + dt * k3x, y + dt * k3y);
+    const k4y = dydt(x + dt * k3x, y + dt * k3y);
+
+    x += dt / 6 * (k1x + 2*k2x + 2*k3x + k4x);
+    y += dt / 6 * (k1y + 2*k2y + 2*k3y + k4y);
+
+    x = Math.max(0, x);
+    y = Math.max(0, y);
+    time += dt;
+
+    if (x > peakPrey) peakPrey = x;
+    if (y > peakPred) peakPred = y;
+
+    history.push({ t: time, x, y });
+    if (history.length > 10000) history.shift();
+  }
+
+  function drawTimeChart() {
+    const ctx = ctxTime;
+    ctx.clearRect(0, 0, TW, TH);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctx.fillRect(0, 0, TW, TH);
+
+    if (history.length < 2) return;
+
+    const margin = { t: 20, r: 15, b: 30, l: 45 };
+    const w = TW - margin.l - margin.r;
+    const h = TH - margin.t - margin.b;
+
+    // Axes
+    ctx.strokeStyle = 'rgba(132,204,22,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.l, margin.t);
+    ctx.lineTo(margin.l, margin.t + h);
+    ctx.lineTo(margin.l + w, margin.t + h);
+    ctx.stroke();
+
+    // Scale
+    const tMax = Math.max(history[history.length - 1].t, 10);
+    const popMax = Math.max(peakPrey, peakPred, 50) * 1.2;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(132,204,22,0.08)';
+    for (let i = 1; i <= 4; i++) {
+      const yy = margin.t + h - (i / 4) * h;
+      ctx.beginPath(); ctx.moveTo(margin.l, yy); ctx.lineTo(margin.l + w, yy); ctx.stroke();
+    }
+
+    // Labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const val = Math.round(popMax * i / 4);
+      ctx.fillText(val, margin.l - 4, margin.t + h - (i / 4) * h + 3);
+    }
+    ctx.textAlign = 'center';
+    ctx.fillText('Time (years)', margin.l + w / 2, TH - 4);
+    for (let t = 0; t <= tMax; t += Math.ceil(tMax / 5)) {
+      const xx = margin.l + (t / tMax) * w;
+      ctx.fillText(t, xx, margin.t + h + 14);
+    }
+
+    // Prey line (blue-green)
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < history.length; i++) {
+      const px = margin.l + (history[i].t / tMax) * w;
+      const py = margin.t + h - (history[i].x / popMax) * h;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Predator line (red-orange)
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < history.length; i++) {
+      const px = margin.l + (history[i].t / tMax) * w;
+      const py = margin.t + h - (history[i].y / popMax) * h;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.font = '10px Segoe UI, sans-serif';
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillRect(margin.l + 10, margin.t + 4, 14, 3);
+    ctx.fillText('Prey', margin.l + 30, margin.t + 10);
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(margin.l + 70, margin.t + 4, 14, 3);
+    ctx.fillText('Predator', margin.l + 92, margin.t + 10);
+  }
+
+  function drawPhaseChart() {
+    const ctx = ctxPhase;
+    ctx.clearRect(0, 0, PW, PH);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctx.fillRect(0, 0, PW, PH);
+
+    if (history.length < 2) return;
+
+    const margin = { t: 20, r: 15, b: 30, l: 45 };
+    const w = PW - margin.l - margin.r;
+    const h = PH - margin.t - margin.b;
+
+    const popMax = Math.max(peakPrey, peakPred, 50) * 1.2;
+
+    // Axes
+    ctx.strokeStyle = 'rgba(132,204,22,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.l, margin.t);
+    ctx.lineTo(margin.l, margin.t + h);
+    ctx.lineTo(margin.l + w, margin.t + h);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Prey', margin.l + w / 2, PH - 4);
+    ctx.save();
+    ctx.translate(10, margin.t + h / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Predator', 0, 0);
+    ctx.restore();
+
+    // Equilibrium point
+    const eqX = params.gamma / params.delta;
+    const eqY = params.alpha / params.beta;
+    const eqPx = margin.l + (eqX / popMax) * w;
+    const eqPy = margin.t + h - (eqY / popMax) * h;
+    ctx.fillStyle = '#84cc16';
+    ctx.beginPath();
+    ctx.arc(eqPx, eqPy, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Phase trajectory
+    ctx.strokeStyle = '#d9f99d';
+    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    for (let i = 0; i < history.length; i++) {
+      const px = margin.l + (history[i].x / popMax) * w;
+      const py = margin.t + h - (history[i].y / popMax) * h;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Current point
+    if (history.length > 0) {
+      const last = history[history.length - 1];
+      const px = margin.l + (last.x / popMax) * w;
+      const py = margin.t + h - (last.y / popMax) * h;
+      ctx.fillStyle = '#84cc16';
+      ctx.shadowColor = '#84cc16';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function updateUI() {
+    document.getElementById('dPrey').textContent = Math.round(x);
+    document.getElementById('dPred').textContent = Math.round(y);
+    document.getElementById('dEqPrey').textContent = Math.round(params.gamma / params.delta);
+    document.getElementById('dEqPred').textContent = Math.round(params.alpha / params.beta);
+    document.getElementById('dTime').textContent = time.toFixed(1);
+    document.getElementById('dPreyPeak').textContent = Math.round(peakPrey);
+    document.getElementById('dPredPeak').textContent = Math.round(peakPred);
+  }
+
+  // KaTeX
+  try {
+    katex.render("\\frac{dx}{dt} = \\alpha x - \\beta xy", document.getElementById('f1'), { throwOnError: false });
+    katex.render("\\frac{dy}{dt} = \\delta xy - \\gamma y", document.getElementById('f2'), { throwOnError: false });
+    katex.render("\\bar{x}=\\gamma/\\delta,\\;\\bar{y}=\\alpha/\\beta", document.getElementById('f3'), { throwOnError: false });
+  } catch(e) {}
+
+  // Animation loop
+  let lastFrame = 0;
+  function animate(ts) {
+    if (running && time < maxTime) {
+      // Multiple integration steps per frame for speed
+      for (let i = 0; i < 10; i++) {
+        if (time < maxTime && x > 0.01 && y > 0.01) step();
+      }
+      if (x < 0.01 || y < 0.01) running = false;
+    }
+    drawTimeChart();
+    drawPhaseChart();
+    updateUI();
+    requestAnimationFrame(animate);
+  }
+  drawTimeChart();
+  drawPhaseChart();
+  updateUI();
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

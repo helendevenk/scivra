@@ -11,6 +11,7 @@ export const stoichiometry: Experiment = {
 
   standards: {
     ngss: ["HS-PS1-7"],
+    gcse: [],
     ap: ["4.A.1", "4.A.2"],
   },
   primaryStandard: "ap-chemistry",

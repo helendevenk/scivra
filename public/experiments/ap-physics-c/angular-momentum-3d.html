@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angular Momentum 3D — Scivra AP Physics C</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(99,102,241,.07));border-bottom:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ap{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
+    .badge-pro{background:rgba(168,85,247,.2);border:1px solid rgba(168,85,247,.4);color:#c4b5fd}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 60px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#93c5fd;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:8px 10px}
+    .stat-card.span2{grid-column:span 2}
+    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .stat-value{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+    .v-blue{color:#93c5fd} .v-cyan{color:#67e8f9} .v-amber{color:#fcd34d} .v-green{color:#86efac} .v-rose{color:#fda4af}
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-live{font-size:11px;color:#94a3b8;margin-top:4px;font-family:'JetBrains Mono',monospace}
+    .btn{width:100%;padding:9px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .btn-primary{border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.12);color:#93c5fd}
+    .btn-primary:hover{background:rgba(59,130,246,.22)}
+    .btn-warn{border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24}
+    .btn-warn:hover{background:rgba(251,191,36,.18)}
+    .select-row{margin-bottom:12px}
+    .select-row select{width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(59,130,246,.25);background:#0f172a;color:#93c5fd;font-size:12px;cursor:pointer}
+    .select-row select option{background:#1e293b;color:#e8eaf0}
+    .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-family:'JetBrains Mono',monospace;pointer-events:none;z-index:5}
+    .threejs-wrap{position:relative;overflow:hidden}
+    #threeCanvas{display:block;width:100%;height:100%}
+    .katex{font-size:1em}
+    .katex .base{color:#93c5fd}
+    .conserve-badge{margin-top:6px;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-align:center;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS C: MECH</span>
+    <span class="badge badge-pro">PRO</span>
+  </div>
+  <h1>Angular Momentum — 3D Vector Visualization</h1>
+  <p>Gyroscopic precession, skater spin-up, and rotational collisions in 3D</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Scenario</div>
+      <div class="select-row">
+        <select id="selScene">
+          <option value="0">Gyroscope Precession</option>
+          <option value="1">Ice Skater Spin</option>
+          <option value="2">Rotational Collision</option>
+        </select>
+      </div>
+
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Spin Rate ω</span><span class="param-val" id="lblSpin">20 rad/s</span></div>
+        <input type="range" id="sldSpin" min="1" max="50" step="1" value="20">
+      </div>
+      <div class="param-row" id="rowTilt">
+        <div class="param-label"><span class="param-name">Tilt Angle</span><span class="param-val" id="lblTilt">30°</span></div>
+        <input type="range" id="sldTilt" min="0" max="80" step="5" value="30">
+      </div>
+      <div class="param-row" id="rowArm" style="display:none">
+        <div class="param-label"><span class="param-name">Arm Extension</span><span class="param-val" id="lblArm">100%</span></div>
+        <input type="range" id="sldArm" min="20" max="100" step="5" value="100">
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card span2">
+        <div class="stat-label">|L| (kg·m²/s)</div>
+        <div class="stat-value v-blue" id="valL">0.200</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ω (rad/s)</div>
+        <div class="stat-value v-cyan" id="valOmega">20.0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">I (kg·m²)</div>
+        <div class="stat-value v-green" id="valI">0.010</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ω_prec (rad/s)</div>
+        <div class="stat-value v-amber" id="valPrec">2.45</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">KE_rot (J)</div>
+        <div class="stat-value v-rose" id="valKE">2.00</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Equations</div>
+      <div class="formula-box" id="fL"></div>
+      <div class="formula-box" id="fPrec"></div>
+      <div class="formula-live" id="fLive">L = Iω = 0.200 kg·m²/s</div>
+      <div class="conserve-badge" id="conserveBadge">✓ L conserved</div>
+    </div>
+
+    <div class="section">
+      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+      <button class="btn btn-primary" id="btnVectors">Toggle L/τ Vectors</button>
+      <button class="btn btn-warn" id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <div class="threejs-wrap">
+    <div class="fps-badge" id="fpsBadge">60 FPS</div>
+    <canvas id="threeCanvas"></canvas>
+  </div>
+</div>
+
+<script>
+(function(){
+  const g = 9.8;
+  let scenario = 0;
+  let spinRate = 20, tiltDeg = 30, armPct = 100;
+  let playing = false, showVec = true;
+  let precAngle = 0, spinAngle = 0;
+  let skaterOmega = 20;
+
+  // Gyro params
+  const gyroMass = 0.5, gyroDist = 0.1, gyroI = 0.01, gyroR = 0.08;
+
+  const canvas = document.getElementById('threeCanvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  camera.position.set(3, 3, 5);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+
+  scene.add(new THREE.AmbientLight(0x334466, 0.6));
+  const dLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dLight.position.set(5, 8, 5);
+  scene.add(dLight);
+
+  const grid = new THREE.GridHelper(10, 10, 0x1e3a5f, 0x0f1f3a);
+  scene.add(grid);
+
+  // Pivot point
+  const pivotGeo = new THREE.SphereGeometry(0.05, 16, 16);
+  const pivotMat = new THREE.MeshPhongMaterial({ color: 0xfbbf24 });
+  const pivot = new THREE.Mesh(pivotGeo, pivotMat);
+  pivot.position.set(0, 1.5, 0);
+  scene.add(pivot);
+
+  // Gyroscope group
+  const gyroGroup = new THREE.Group();
+  gyroGroup.position.copy(pivot.position);
+  scene.add(gyroGroup);
+
+  // Axle
+  const axleGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 8);
+  const axleMat = new THREE.MeshPhongMaterial({ color: 0x94a3b8 });
+  const axle = new THREE.Mesh(axleGeo, axleMat);
+  axle.rotation.z = Math.PI / 2;
+  axle.position.x = 0.75;
+  gyroGroup.add(axle);
+
+  // Wheel
+  const wheelGeo = new THREE.TorusGeometry(0.3, 0.06, 16, 32);
+  const wheelMat = new THREE.MeshPhongMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 0.3 });
+  const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+  wheel.position.x = 1.5;
+  wheel.rotation.y = Math.PI / 2;
+  gyroGroup.add(wheel);
+
+  // Disk inside wheel
+  const diskGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.04, 32);
+  const diskMat = new THREE.MeshPhongMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.4 });
+  const disk = new THREE.Mesh(diskGeo, diskMat);
+  disk.position.x = 1.5;
+  disk.rotation.z = Math.PI / 2;
+  gyroGroup.add(disk);
+
+  // Spoke markers for rotation visibility
+  for (let i = 0; i < 4; i++) {
+    const angle = (Math.PI / 2) * i;
+    const spokeGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.56, 4);
+    const spokeMat = new THREE.MeshPhongMaterial({ color: 0xfbbf24 });
+    const spoke = new THREE.Mesh(spokeGeo, spokeMat);
+    spoke.position.x = 1.5;
+    spoke.rotation.z = Math.PI / 2;
+    spoke.rotation.x = angle;
+    gyroGroup.add(spoke);
+  }
+
+  // L vector arrow
+  let lArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 2, 0x3b82f6, 0.15, 0.08);
+  scene.add(lArrow);
+
+  // Tau vector arrow
+  let tauArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), pivot.position, 0.5, 0xef4444, 0.1, 0.06);
+  scene.add(tauArrow);
+
+  // Skater group (hidden by default)
+  const skaterGroup = new THREE.Group();
+  skaterGroup.position.set(0, 0, 0);
+  skaterGroup.visible = false;
+  scene.add(skaterGroup);
+
+  // Skater body
+  const bodyGeo = new THREE.CylinderGeometry(0.15, 0.2, 1.2, 12);
+  const bodyMat = new THREE.MeshPhongMaterial({ color: 0x8b5cf6 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 0.8;
+  skaterGroup.add(body);
+
+  // Head
+  const headGeo = new THREE.SphereGeometry(0.12, 16, 16);
+  const headMat = new THREE.MeshPhongMaterial({ color: 0xfbbf24 });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.y = 1.55;
+  skaterGroup.add(head);
+
+  // Arms
+  const armGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8);
+  const armMat = new THREE.MeshPhongMaterial({ color: 0x8b5cf6 });
+  const armL = new THREE.Mesh(armGeo, armMat);
+  armL.rotation.z = Math.PI / 2;
+  armL.position.set(-0.55, 1.1, 0);
+  skaterGroup.add(armL);
+  const armR = armL.clone();
+  armR.position.x = 0.55;
+  skaterGroup.add(armR);
+
+  // Collision disks
+  const collGroup = new THREE.Group();
+  collGroup.visible = false;
+  scene.add(collGroup);
+
+  const cd1Geo = new THREE.CylinderGeometry(0.6, 0.6, 0.1, 32);
+  const cd1Mat = new THREE.MeshPhongMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.7 });
+  const cd1 = new THREE.Mesh(cd1Geo, cd1Mat);
+  cd1.position.set(-1, 0.5, 0);
+  collGroup.add(cd1);
+
+  const cd2Geo = new THREE.CylinderGeometry(0.6, 0.6, 0.1, 32);
+  const cd2Mat = new THREE.MeshPhongMaterial({ color: 0xef4444, transparent: true, opacity: 0.7 });
+  const cd2 = new THREE.Mesh(cd2Geo, cd2Mat);
+  cd2.position.set(1, 0.5, 0);
+  collGroup.add(cd2);
+
+  // Skater L arrow
+  let skaterLArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 2, 0), 1, 0x3b82f6, 0.1, 0.06);
+  skaterLArrow.visible = false;
+  scene.add(skaterLArrow);
+
+  function updateScenario() {
+    gyroGroup.visible = scenario === 0;
+    pivot.visible = scenario === 0;
+    lArrow.visible = scenario === 0 && showVec;
+    tauArrow.visible = scenario === 0 && showVec;
+    skaterGroup.visible = scenario === 1;
+    skaterLArrow.visible = scenario === 1 && showVec;
+    collGroup.visible = scenario === 2;
+
+    document.getElementById('rowTilt').style.display = scenario === 0 ? 'block' : 'none';
+    document.getElementById('rowArm').style.display = scenario === 1 ? 'block' : 'none';
+  }
+
+  function getGyroPrecessRate() {
+    return gyroMass * g * gyroDist / (gyroI * spinRate);
+  }
+
+  function getSkaterI() {
+    const ext = armPct / 100;
+    return 0.5 + 2.5 * ext * ext; // simplified: I from 0.5 to 3.0
+  }
+
+  function updateStats() {
+    let omega, I, L, prec, KE;
+    if (scenario === 0) {
+      omega = spinRate;
+      I = gyroI;
+      L = I * omega;
+      prec = getGyroPrecessRate();
+      KE = 0.5 * I * omega * omega;
+    } else if (scenario === 1) {
+      I = getSkaterI();
+      const L0 = 3.0 * spinRate; // initial L with full extension
+      omega = L0 / I;
+      L = L0;
+      prec = 0;
+      KE = 0.5 * I * omega * omega;
+      skaterOmega = omega;
+    } else {
+      I = 0.5; omega = spinRate; L = I * omega; prec = 0;
+      KE = 0.5 * I * omega * omega;
+    }
+
+    document.getElementById('valL').textContent = L.toFixed(3);
+    document.getElementById('valOmega').textContent = omega.toFixed(1);
+    document.getElementById('valI').textContent = I.toFixed(3);
+    document.getElementById('valPrec').textContent = prec.toFixed(2);
+    document.getElementById('valKE').textContent = KE.toFixed(2);
+    document.getElementById('fLive').textContent = 'L = Iω = ' + L.toFixed(3) + ' kg·m²/s';
+  }
+
+  let lastTime = 0;
+  let frameCount = 0, lastFps = performance.now();
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+    if (!lastTime) lastTime = now;
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+
+    controls.update();
+
+    if (playing) {
+      if (scenario === 0) {
+        // Gyroscope precession
+        const prec = getGyroPrecessRate();
+        precAngle += prec * dt;
+        spinAngle += spinRate * dt;
+
+        const tiltRad = tiltDeg * Math.PI / 180;
+        gyroGroup.rotation.set(0, 0, 0);
+        gyroGroup.rotation.y = precAngle;
+        gyroGroup.rotation.z = -tiltRad;
+
+        // Spin the wheel
+        wheel.rotation.x = spinAngle;
+        disk.rotation.x = spinAngle;
+
+        // L arrow direction
+        const lDir = new THREE.Vector3(
+          Math.sin(tiltRad) * Math.cos(precAngle),
+          Math.cos(tiltRad),
+          Math.sin(tiltRad) * Math.sin(precAngle)
+        ).normalize();
+        lArrow.position.copy(pivot.position);
+        lArrow.setDirection(lDir);
+        lArrow.setLength(1.5, 0.15, 0.08);
+
+        // Tau arrow (perpendicular to L, in horizontal plane)
+        const tauDir = new THREE.Vector3(-Math.sin(precAngle), 0, Math.cos(precAngle)).normalize();
+        tauArrow.position.copy(pivot.position);
+        tauArrow.setDirection(tauDir);
+        tauArrow.setLength(0.5, 0.1, 0.06);
+
+      } else if (scenario === 1) {
+        spinAngle += skaterOmega * dt;
+        skaterGroup.rotation.y = spinAngle;
+
+        // Arm positions based on extension
+        const ext = armPct / 100;
+        const armDist = 0.15 + ext * 0.45;
+        armL.position.x = -armDist;
+        armR.position.x = armDist;
+        armL.scale.x = 0.5 + ext * 0.5;
+        armR.scale.x = 0.5 + ext * 0.5;
+
+        skaterLArrow.position.set(0, 2, 0);
+        const lLen = Math.min(skaterOmega * 0.1, 2);
+        skaterLArrow.setLength(lLen, 0.1, 0.06);
+
+      } else {
+        spinAngle += spinRate * dt;
+        cd1.rotation.y = spinAngle;
+        cd2.rotation.y = -spinAngle * 0.5;
+      }
+    }
+
+    updateStats();
+    renderer.render(scene, camera);
+
+    frameCount++;
+    if (now - lastFps >= 1000) {
+      document.getElementById('fpsBadge').textContent = frameCount + ' FPS';
+      frameCount = 0;
+      lastFps = now;
+    }
+  }
+
+  // Events
+  document.getElementById('selScene').addEventListener('change', e => {
+    scenario = parseInt(e.target.value);
+    updateScenario();
+  });
+  document.getElementById('sldSpin').addEventListener('input', e => {
+    spinRate = parseInt(e.target.value);
+    document.getElementById('lblSpin').textContent = spinRate + ' rad/s';
+  });
+  document.getElementById('sldTilt').addEventListener('input', e => {
+    tiltDeg = parseInt(e.target.value);
+    document.getElementById('lblTilt').textContent = tiltDeg + '°';
+  });
+  document.getElementById('sldArm').addEventListener('input', e => {
+    armPct = parseInt(e.target.value);
+    document.getElementById('lblArm').textContent = armPct + '%';
+  });
+
+  document.getElementById('btnPlay').addEventListener('click', () => {
+    playing = !playing;
+    document.getElementById('btnPlay').textContent = playing ? '⏸ Pause' : '▶ Play';
+  });
+  document.getElementById('btnVectors').addEventListener('click', () => {
+    showVec = !showVec;
+    updateScenario();
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    playing = false; precAngle = 0; spinAngle = 0; skaterOmega = spinRate;
+    document.getElementById('btnPlay').textContent = '▶ Play';
+    gyroGroup.rotation.set(0, 0, -tiltDeg * Math.PI / 180);
+    skaterGroup.rotation.y = 0;
+    lastTime = 0;
+  });
+
+  function resize() {
+    const wrap = canvas.parentElement;
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  katex.render('\\vec{L} = I\\vec{\\omega}', document.getElementById('fL'), { displayMode: false });
+  katex.render('\\Omega = \\frac{Mgd}{I\\omega}', document.getElementById('fPrec'), { displayMode: false });
+
+  resize();
+  updateScenario();
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

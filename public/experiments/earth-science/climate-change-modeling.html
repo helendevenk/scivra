@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Climate Change Modeling — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    input[type=range] { accent-color: #f97316; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.4rem; font-weight: 700; color: #fed7aa; font-family: 'JetBrains Mono', monospace; text-align: center; }
+    .scenario-label { font-size: 0.75rem; font-weight: 600; text-align: center; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Climate Change Modeling <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">Temperature anomaly and CO₂ correlation across time</p>
+    </div>
+    <div class="panel controls">
+      <label>Time Range: <span class="data-val" id="rangeDisplay">1000</span> years</label>
+      <input type="range" id="rangeSlider" min="100" max="800000" value="1000" step="100">
+      <label>SSP Scenario: <span class="data-val" id="scenarioDisplay">SSP2-4.5</span></label>
+      <input type="range" id="scenarioSlider" min="1" max="4" value="2" step="1">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Current Values (2024)</div>
+      <div class="data-row"><span>CO₂</span><span class="data-val">421 ppm</span></div>
+      <div class="data-row"><span>ΔT (vs pre-industrial)</span><span class="data-val">+1.2°C</span></div>
+      <div class="panel-title" style="margin-top:8px;">Projected 2100</div>
+      <div id="scenarioName" class="scenario-label" style="color:#f97316;">SSP2-4.5 (Middle Road)</div>
+      <div class="data-row"><span>CO₂ by 2100</span><span class="data-val" id="co2Proj">~600 ppm</span></div>
+      <div class="data-row"><span>ΔT by 2100</span><span class="data-val" id="tempProj">~2.7°C</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Radiative Forcing</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let timeRange = 1000;
+let scenario = 2;
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+// SSP scenario data [name, co2_2100, deltaT_2100, color]
+const scenarios = {
+  1: { name: 'SSP1-2.6 (Sustainable)', co2: 420, temp: 1.8, color: '#4ade80' },
+  2: { name: 'SSP2-4.5 (Middle Road)', co2: 600, temp: 2.7, color: '#f97316' },
+  3: { name: 'SSP3-7.0 (Regional Rivalry)', co2: 850, temp: 3.6, color: '#f59e0b' },
+  4: { name: 'SSP5-8.5 (Fossil-Fueled)', co2: 1135, temp: 4.4, color: '#ef4444' },
+};
+
+// Simplified historical data generators
+function getHistoricalTemp(yearsBefore) {
+  // Glacial cycles (~100kyr period) + noise
+  if (yearsBefore > 200) {
+    const glacial = -4 * Math.cos(yearsBefore / 100000 * Math.PI * 2);
+    const noise = Math.sin(yearsBefore / 11000 * Math.PI * 2) * 1.5 + Math.sin(yearsBefore / 41000 * Math.PI * 2) * 0.8;
+    return glacial + noise;
+  }
+  // Recent history (last 200 years) — hockey stick
+  if (yearsBefore > 0) {
+    const medieval = Math.sin((yearsBefore - 500) / 500 * Math.PI) * 0.3;
+    const industrial = yearsBefore < 170 ? (170 - yearsBefore) / 170 * 1.2 : 0;
+    return medieval + industrial - 0.3;
+  }
+  return 1.2; // current anomaly
+}
+
+function getHistoricalCO2(yearsBefore) {
+  if (yearsBefore > 200) {
+    const glacial = 230 + 50 * Math.cos(yearsBefore / 100000 * Math.PI * 2);
+    const noise = Math.sin(yearsBefore / 11000 * Math.PI * 2) * 15;
+    return glacial + noise;
+  }
+  if (yearsBefore > 0) {
+    if (yearsBefore > 170) return 280;
+    return 280 + (170 - yearsBefore) / 170 * 140;
+  }
+  return 421;
+}
+
+// Future projection (2024 to 2100)
+function getFutureTemp(yearsAfter, sc) {
+  const s = scenarios[sc];
+  const frac = Math.min(yearsAfter / 76, 1); // 76 years to 2100
+  return 1.2 + (s.temp - 1.2) * Math.pow(frac, 0.7);
+}
+
+function getFutureCO2(yearsAfter, sc) {
+  const s = scenarios[sc];
+  const frac = Math.min(yearsAfter / 76, 1);
+  return 421 + (s.co2 - 421) * frac;
+}
+
+function updateScenario() {
+  const s = scenarios[scenario];
+  document.getElementById('scenarioDisplay').textContent = s.name.split(' ')[0];
+  document.getElementById('scenarioName').textContent = s.name;
+  document.getElementById('scenarioName').style.color = s.color;
+  document.getElementById('co2Proj').textContent = '~' + s.co2 + ' ppm';
+  document.getElementById('tempProj').textContent = '+' + s.temp.toFixed(1) + '°C';
+}
+
+function animate() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const margin = { top: 60, right: 80, bottom: 80, left: 80 };
+  const chartW = w - margin.left - margin.right;
+  const chartH = h - margin.top - margin.bottom;
+
+  // Chart background
+  ctx.fillStyle = 'rgba(30,41,59,0.3)';
+  ctx.fillRect(margin.left, margin.top, chartW, chartH);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = margin.top + chartH * i / 5;
+    ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left + chartW, y); ctx.stroke();
+  }
+  for (let i = 0; i <= 8; i++) {
+    const x = margin.left + chartW * i / 8;
+    ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + chartH); ctx.stroke();
+  }
+
+  // Temperature range for chart
+  const tempMin = timeRange > 10000 ? -10 : -1;
+  const tempMax = timeRange > 10000 ? 6 : 5;
+  const co2Min = timeRange > 10000 ? 150 : 250;
+  const co2Max = timeRange > 10000 ? 500 : 1200;
+
+  function tempToY(t) { return margin.top + chartH * (1 - (t - tempMin) / (tempMax - tempMin)); }
+  function co2ToY(c) { return margin.top + chartH * (1 - (c - co2Min) / (co2Max - co2Min)); }
+  function yearToX(yearsBefore) { return margin.left + chartW * (1 - yearsBefore / timeRange); }
+
+  // Zero line (pre-industrial baseline)
+  const zeroY = tempToY(0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(margin.left, zeroY); ctx.lineTo(margin.left + chartW, zeroY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Pre-industrial baseline', margin.left + chartW - 5, zeroY - 4);
+
+  // Draw CO₂ curve (blue area)
+  ctx.beginPath();
+  ctx.fillStyle = 'rgba(56,189,248,0.08)';
+  ctx.strokeStyle = 'rgba(56,189,248,0.6)';
+  ctx.lineWidth = 1.5;
+  let first = true;
+  const steps = Math.min(400, timeRange);
+  for (let i = 0; i <= steps; i++) {
+    const yb = timeRange * i / steps;
+    const co2 = getHistoricalCO2(yb);
+    const x = yearToX(yb);
+    const y = co2ToY(co2);
+    if (first) { ctx.moveTo(x, y); first = false; }
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Draw temperature curve (red)
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(239,68,68,0.8)';
+  ctx.lineWidth = 2;
+  first = true;
+  for (let i = 0; i <= steps; i++) {
+    const yb = timeRange * i / steps;
+    const temp = getHistoricalTemp(yb);
+    const x = yearToX(yb);
+    const y = tempToY(temp);
+    if (first) { ctx.moveTo(x, y); first = false; }
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Future projection (only visible if timeRange <= 1000)
+  if (timeRange <= 1000) {
+    const s = scenarios[scenario];
+    const futureStartX = yearToX(0);
+    const futureEndX = yearToX(-76); // 76 years into future
+
+    // Projection zone background
+    ctx.fillStyle = 'rgba(249,115,22,0.05)';
+    ctx.fillRect(futureStartX, margin.top, futureEndX - futureStartX, chartH);
+
+    // Projected temperature
+    ctx.beginPath();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 3]);
+    for (let yr = 0; yr <= 76; yr++) {
+      const temp = getFutureTemp(yr, scenario);
+      const x = yearToX(-yr);
+      const y = tempToY(temp);
+      if (yr === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Projected CO₂
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(56,189,248,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    for (let yr = 0; yr <= 76; yr++) {
+      const co2 = getFutureCO2(yr, scenario);
+      const x = yearToX(-yr);
+      const y = co2ToY(co2);
+      if (yr === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // End point labels
+    ctx.fillStyle = s.color;
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'left';
+    const endX = yearToX(-76);
+    ctx.fillText('+' + s.temp + '°C', endX + 5, tempToY(s.temp) + 4);
+
+    // "2100" label
+    ctx.fillStyle = 'rgba(249,115,22,0.5)';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2100', endX, margin.top + chartH + 16);
+  }
+
+  // Y-axis labels — Temperature (left)
+  ctx.fillStyle = 'rgba(239,68,68,0.7)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  const tempSteps = timeRange > 10000 ? [-8, -4, 0, 4] : [-1, 0, 1, 2, 3, 4];
+  for (const t of tempSteps) {
+    if (t >= tempMin && t <= tempMax) {
+      ctx.fillText((t >= 0 ? '+' : '') + t + '°C', margin.left - 8, tempToY(t) + 4);
+    }
+  }
+  ctx.save();
+  ctx.translate(20, margin.top + chartH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('Temperature Anomaly (°C)', 0, 0);
+  ctx.restore();
+
+  // Y-axis labels — CO₂ (right)
+  ctx.fillStyle = 'rgba(56,189,248,0.7)';
+  ctx.textAlign = 'left';
+  const co2Steps = timeRange > 10000 ? [200, 300, 400] : [300, 500, 700, 900, 1100];
+  for (const c of co2Steps) {
+    if (c >= co2Min && c <= co2Max) {
+      ctx.fillText(c + ' ppm', margin.left + chartW + 8, co2ToY(c) + 4);
+    }
+  }
+  ctx.save();
+  ctx.translate(w - 16, margin.top + chartH / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('CO₂ (ppm)', 0, 0);
+  ctx.restore();
+
+  // X-axis labels
+  ctx.fillStyle = 'rgba(148,163,184,0.6)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= 8; i++) {
+    const yb = timeRange * i / 8;
+    const x = yearToX(yb);
+    let label;
+    if (timeRange >= 100000) label = (yb / 1000).toFixed(0) + 'kyr ago';
+    else if (timeRange >= 1000) label = yb.toFixed(0) + ' yr ago';
+    else label = yb.toFixed(0) + ' yr ago';
+    ctx.fillText(label, x, margin.top + chartH + 30);
+  }
+
+  // Legend
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  const lx = margin.left + 10, ly = margin.top + 15;
+  ctx.fillStyle = 'rgba(239,68,68,0.8)';
+  ctx.fillRect(lx, ly - 2, 14, 3);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Temperature anomaly', lx + 20, ly + 3);
+  ctx.fillStyle = 'rgba(56,189,248,0.6)';
+  ctx.fillRect(lx, ly + 14, 14, 3);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('CO₂ concentration', lx + 20, ly + 19);
+
+  // "Now" marker
+  const nowX = yearToX(0);
+  ctx.strokeStyle = 'rgba(249,115,22,0.5)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(nowX, margin.top); ctx.lineTo(nowX, margin.top + chartH); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#f97316';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Now', nowX, margin.top - 6);
+
+  requestAnimationFrame(animate);
+}
+
+// Controls
+document.getElementById('rangeSlider').addEventListener('input', e => {
+  timeRange = +e.target.value;
+  document.getElementById('rangeDisplay').textContent = timeRange >= 1000 ? (timeRange / 1000).toFixed(0) + 'k' : timeRange;
+});
+document.getElementById('scenarioSlider').addEventListener('input', e => {
+  scenario = +e.target.value;
+  updateScenario();
+});
+
+try {
+  katex.render('\\Delta F = 5.35 \\ln(C/C_0)', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch(e) {}
+
+updateScenario();
+animate();
+</script>
+</body>
+</html>

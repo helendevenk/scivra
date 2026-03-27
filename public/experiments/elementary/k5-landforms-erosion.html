@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landforms & Erosion — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(249,115,22,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(249,115,22,0.15); color: #f97316; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .control-row { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+    .control-row label { color: #94a3b8; min-width: 55px; }
+    button { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25); color: #fed7aa; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: rgba(249,115,22,0.3); }
+    button.active { background: rgba(249,115,22,0.35); box-shadow: 0 0 8px rgba(249,115,22,0.3); }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    input[type="range"] { flex: 1; accent-color: #f97316; height: 4px; }
+    .data-panel h3 { font-size: 0.75rem; color: #f97316; margin-bottom: 6px; }
+    .data-row { font-size: 0.7rem; margin-bottom: 3px; display: flex; gap: 6px; }
+    .data-row .lbl { color: #94a3b8; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Landforms & Erosion <span class="badge">Elementary</span></h1>
+      <p>Watch how water, wind, and ice reshape the land over time!</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row"><label>Erosion:</label></div>
+      <div class="btn-row">
+        <button id="eWater" class="ero-btn active">Water</button>
+        <button id="eWind" class="ero-btn">Wind</button>
+        <button id="eIce" class="ero-btn">Ice</button>
+      </div>
+      <div class="control-row">
+        <label>Speed:</label>
+        <input type="range" id="speed" min="1" max="10" value="3">
+        <span class="data-val" id="speedVal">3x</span>
+      </div>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btnStart">Start</button>
+        <button id="btnReset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Erosion Data</h3>
+      <div class="data-row"><span class="lbl">Years Elapsed:</span> <span class="data-val" id="dYears">0</span></div>
+      <div class="data-row"><span class="lbl">Material Moved:</span> <span class="data-val" id="dMoved">0 tons</span></div>
+      <div class="data-row"><span class="lbl">Peak Height:</span> <span class="data-val" id="dPeak">100%</span></div>
+    </div>
+    <div class="panel data-panel">
+      <h3>Process</h3>
+      <div class="data-row"><span class="data-val" id="dDesc">Select erosion type and press Start</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  const POINTS = 200;
+  let terrain = [];
+  let original = [];
+  let erosionType = 'water';
+  let running = false;
+  let years = 0;
+  let moved = 0;
+  let particles = [];
+
+  const DESCS = {
+    water: 'Water flows downhill, carrying loose rock and soil. Rivers carve valleys over thousands of years.',
+    wind: 'Wind picks up sand and small particles, wearing down exposed rock surfaces slowly.',
+    ice: 'Glaciers grind over rock, carving U-shaped valleys and carrying boulders great distances.'
+  };
+
+  function initTerrain() {
+    terrain = []; original = []; particles = [];
+    years = 0; moved = 0;
+    const W = canvas.width;
+    for (let i = 0; i <= POINTS; i++) {
+      const x = i / POINTS;
+      let h = 0.3;
+      // Mountain range
+      h += 0.35 * Math.exp(-((x - 0.3) * (x - 0.3)) / 0.008);
+      h += 0.25 * Math.exp(-((x - 0.5) * (x - 0.5)) / 0.015);
+      h += 0.15 * Math.exp(-((x - 0.7) * (x - 0.7)) / 0.01);
+      // Small hills
+      h += 0.05 * Math.sin(x * 15) + 0.03 * Math.sin(x * 30);
+      terrain.push(h);
+      original.push(h);
+    }
+    updateData();
+  }
+
+  function erode(speed) {
+    const rate = speed * 0.0001;
+    for (let i = 1; i < terrain.length - 1; i++) {
+      const slope = Math.abs(terrain[i] - terrain[i - 1]) + Math.abs(terrain[i] - terrain[i + 1]);
+      let erosion = 0;
+      if (erosionType === 'water') {
+        erosion = slope * rate * 2 * (terrain[i] > 0.35 ? 1.5 : 0.5);
+        // Deposit at lower areas
+        if (terrain[i] < 0.35 && i > POINTS * 0.6) erosion *= -0.3;
+      } else if (erosionType === 'wind') {
+        erosion = rate * 0.8 * (terrain[i] > 0.4 ? 1 : 0.3);
+      } else {
+        erosion = rate * 1.5 * (terrain[i] > 0.4 ? 2 : 0.5);
+      }
+      terrain[i] = Math.max(0.15, terrain[i] - erosion);
+      moved += erosion * 10;
+    }
+    years += speed * 50;
+  }
+
+  function spawnParticles() {
+    const W = canvas.width, H = canvas.height;
+    if (erosionType === 'water') {
+      // Rain / river
+      if (Math.random() < 0.3) {
+        particles.push({ x: Math.random() * W, y: 0, vx: 0, vy: 3 + Math.random() * 2, life: 80, type: 'rain' });
+      }
+    } else if (erosionType === 'wind') {
+      if (Math.random() < 0.2) {
+        particles.push({ x: 0, y: H * (0.3 + Math.random() * 0.3), vx: 2 + Math.random() * 3, vy: (Math.random() - 0.5) * 0.5, life: 120, type: 'wind' });
+      }
+    } else {
+      // Ice chunks
+      if (Math.random() < 0.05) {
+        const idx = Math.floor(Math.random() * POINTS * 0.5 + POINTS * 0.2);
+        const tx = (idx / POINTS) * W;
+        const ty = H - terrain[idx] * H;
+        particles.push({ x: tx, y: ty, vx: 0.5, vy: 0.3, life: 200, type: 'ice', size: 5 + Math.random() * 8 });
+      }
+    }
+    particles = particles.filter(p => {
+      p.x += p.vx; p.y += p.vy; p.life--;
+      return p.life > 0 && p.x < W && p.y < H;
+    });
+  }
+
+  function updateData() {
+    const peak = Math.max(...terrain);
+    const origPeak = Math.max(...original);
+    document.getElementById('dYears').textContent = Math.floor(years).toLocaleString();
+    document.getElementById('dMoved').textContent = Math.floor(moved) + ' tons';
+    document.getElementById('dPeak').textContent = Math.floor((peak / origPeak) * 100) + '%';
+    document.getElementById('dDesc').textContent = DESCS[erosionType];
+  }
+
+  function setType(t) {
+    erosionType = t;
+    document.querySelectorAll('.ero-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(t === 'water' ? 'eWater' : t === 'wind' ? 'eWind' : 'eIce').classList.add('active');
+    updateData();
+  }
+
+  document.getElementById('eWater').addEventListener('click', () => setType('water'));
+  document.getElementById('eWind').addEventListener('click', () => setType('wind'));
+  document.getElementById('eIce').addEventListener('click', () => setType('ice'));
+  document.getElementById('btnStart').addEventListener('click', () => { running = !running; document.getElementById('btnStart').textContent = running ? 'Pause' : 'Start'; });
+  document.getElementById('btnReset').addEventListener('click', () => { running = false; document.getElementById('btnStart').textContent = 'Start'; initTerrain(); });
+  document.getElementById('speed').addEventListener('input', () => { document.getElementById('speedVal').textContent = document.getElementById('speed').value + 'x'; });
+
+  initTerrain();
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const speed = parseInt(document.getElementById('speed').value);
+
+    if (running) { erode(speed); spawnParticles(); updateData(); }
+
+    // Sky
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+    skyGrad.addColorStop(0, '#1e293b');
+    skyGrad.addColorStop(1, erosionType === 'ice' ? '#334155' : '#475569');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Original terrain outline
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let i = 0; i <= POINTS; i++) {
+      ctx.lineTo((i / POINTS) * W, H - original[i] * H);
+    }
+    ctx.lineTo(W, H); ctx.closePath();
+    ctx.strokeStyle = 'rgba(249,115,22,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Current terrain
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let i = 0; i <= POINTS; i++) {
+      ctx.lineTo((i / POINTS) * W, H - terrain[i] * H);
+    }
+    ctx.lineTo(W, H); ctx.closePath();
+
+    // Terrain gradient
+    const tGrad = ctx.createLinearGradient(0, H * 0.3, 0, H);
+    if (erosionType === 'ice') {
+      tGrad.addColorStop(0, '#e2e8f0');
+      tGrad.addColorStop(0.3, '#94a3b8');
+      tGrad.addColorStop(0.6, '#78716c');
+      tGrad.addColorStop(1, '#57534e');
+    } else {
+      tGrad.addColorStop(0, '#78716c');
+      tGrad.addColorStop(0.4, '#92400e');
+      tGrad.addColorStop(0.7, '#65a30d');
+      tGrad.addColorStop(1, '#422006');
+    }
+    ctx.fillStyle = tGrad;
+    ctx.fill();
+
+    // Rock layers
+    ctx.strokeStyle = 'rgba(120,113,108,0.2)';
+    ctx.lineWidth = 1;
+    for (let layer = 0.2; layer < 0.8; layer += 0.1) {
+      ctx.beginPath();
+      for (let i = 0; i <= POINTS; i++) {
+        const ty = H - terrain[i] * H;
+        const ly = ty + (H - ty) * layer;
+        if (i === 0) ctx.moveTo(0, ly); else ctx.lineTo((i / POINTS) * W, ly);
+      }
+      ctx.stroke();
+    }
+
+    // Particles
+    particles.forEach(p => {
+      if (p.type === 'rain') {
+        ctx.strokeStyle = 'rgba(96,165,250,0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + 6); ctx.stroke();
+      } else if (p.type === 'wind') {
+        ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 10, p.y); ctx.stroke();
+      } else if (p.type === 'ice') {
+        ctx.fillStyle = 'rgba(191,219,254,0.6)';
+        ctx.fillRect(p.x, p.y, p.size, p.size * 0.6);
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

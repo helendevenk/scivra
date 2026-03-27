@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Molecular Polarity — Scivra AP Chemistry</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { display: block; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    button.active { background: rgba(16,185,129,0.35); border-color: #10b981; }
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #6ee7b7; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 380px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .ctrl-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .polar-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 0.65rem; font-weight: 600;
+    }
+    .polar-yes { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .polar-no { background: rgba(148,163,184,0.15); color: #94a3b8; }
+  </style>
+</head>
+<body>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Molecular Polarity <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">Visualize dipole moments and electron density — drag to rotate</p>
+    </div>
+    <div class="panel">
+      <label style="font-size:0.68rem;color:#94a3b8;">Molecule:</label>
+      <select id="molSelect"></select>
+      <div class="ctrl-row">
+        <button id="btnDipoles" class="active">Dipoles</button>
+        <button id="btnCloud" class="active">e⁻ Cloud</button>
+        <button id="btnReset">Reset View</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" id="infoPanel" style="min-width:230px;">
+      <div class="panel-title">Polarity Analysis</div>
+      <div class="info-row">Formula: <span class="data-val" id="infoFormula">—</span></div>
+      <div class="info-row">Geometry: <span class="data-val" id="infoGeom">—</span></div>
+      <div class="info-row">Net Dipole: <span class="data-val" id="infoDipole">—</span></div>
+      <div class="info-row">Polarity: <span id="infoPolar"></span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Dipole Moment</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ATOM_COLORS = {
+  H: 0xffffff, C: 0x444444, N: 0x3333ff, O: 0xff3333,
+  F: 0x00ff00, Cl: 0x00ff00, S: 0xffff00, B: 0xff9999
+};
+const ATOM_RADII = {
+  H: 0.3, C: 0.5, N: 0.48, O: 0.45,
+  F: 0.4, Cl: 0.55, S: 0.6, B: 0.5
+};
+const EN = { H: 2.20, C: 2.55, N: 3.04, O: 3.44, F: 3.98, Cl: 3.16, S: 2.58, B: 2.04 };
+
+const MOLECULES = [
+  {
+    name: "H₂O — Water", formula: "H₂O", geom: "Bent", dipole: "1.85 D", polar: true,
+    atoms: [
+      { el: "O", pos: [0, 0, 0] },
+      { el: "H", pos: [-0.76, 0.59, 0] },
+      { el: "H", pos: [0.76, 0.59, 0] }
+    ],
+    bonds: [[0,1],[0,2]]
+  },
+  {
+    name: "CO₂ — Carbon Dioxide", formula: "CO₂", geom: "Linear", dipole: "0 D", polar: false,
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "O", pos: [-1.16, 0, 0] },
+      { el: "O", pos: [1.16, 0, 0] }
+    ],
+    bonds: [[0,1],[0,2]]
+  },
+  {
+    name: "NH₃ — Ammonia", formula: "NH₃", geom: "Trigonal Pyramidal", dipole: "1.47 D", polar: true,
+    atoms: [
+      { el: "N", pos: [0, 0.35, 0] },
+      { el: "H", pos: [0, -0.3, 0.94] },
+      { el: "H", pos: [0.81, -0.3, -0.47] },
+      { el: "H", pos: [-0.81, -0.3, -0.47] }
+    ],
+    bonds: [[0,1],[0,2],[0,3]]
+  },
+  {
+    name: "CH₄ — Methane", formula: "CH₄", geom: "Tetrahedral", dipole: "0 D", polar: false,
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "H", pos: [0.63, 0.63, 0.63] },
+      { el: "H", pos: [-0.63, -0.63, 0.63] },
+      { el: "H", pos: [-0.63, 0.63, -0.63] },
+      { el: "H", pos: [0.63, -0.63, -0.63] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4]]
+  },
+  {
+    name: "HF — Hydrogen Fluoride", formula: "HF", geom: "Linear", dipole: "1.83 D", polar: true,
+    atoms: [
+      { el: "H", pos: [-0.46, 0, 0] },
+      { el: "F", pos: [0.46, 0, 0] }
+    ],
+    bonds: [[0,1]]
+  },
+  {
+    name: "BF₃ — Boron Trifluoride", formula: "BF₃", geom: "Trigonal Planar", dipole: "0 D", polar: false,
+    atoms: [
+      { el: "B", pos: [0, 0, 0] },
+      { el: "F", pos: [0, 1.3, 0] },
+      { el: "F", pos: [1.13, -0.65, 0] },
+      { el: "F", pos: [-1.13, -0.65, 0] }
+    ],
+    bonds: [[0,1],[0,2],[0,3]]
+  },
+  {
+    name: "CHCl₃ — Chloroform", formula: "CHCl₃", geom: "Tetrahedral", dipole: "1.04 D", polar: true,
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "H", pos: [0, 1.0, 0] },
+      { el: "Cl", pos: [0.94, -0.33, 0] },
+      { el: "Cl", pos: [-0.47, -0.33, 0.81] },
+      { el: "Cl", pos: [-0.47, -0.33, -0.81] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4]]
+  },
+  {
+    name: "CCl₄ — Carbon Tetrachloride", formula: "CCl₄", geom: "Tetrahedral", dipole: "0 D", polar: false,
+    atoms: [
+      { el: "C", pos: [0, 0, 0] },
+      { el: "Cl", pos: [0.9, 0.9, 0.9] },
+      { el: "Cl", pos: [-0.9, -0.9, 0.9] },
+      { el: "Cl", pos: [-0.9, 0.9, -0.9] },
+      { el: "Cl", pos: [0.9, -0.9, -0.9] }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4]]
+  }
+];
+
+let scene, camera, renderer, controls;
+let molGroup, cloudGroup, dipoleGroup, netDipoleArrow;
+let showDipoles = true, showCloud = true;
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 6);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  document.body.insertBefore(renderer.domElement, document.getElementById('ui'));
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2;
+  controls.maxDistance = 15;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 5, 5);
+  scene.add(dirLight);
+  const dirLight2 = new THREE.DirectionalLight(0x6ee7b7, 0.3);
+  dirLight2.position.set(-3, -2, -3);
+  scene.add(dirLight2);
+
+  molGroup = new THREE.Group();
+  cloudGroup = new THREE.Group();
+  dipoleGroup = new THREE.Group();
+  scene.add(molGroup);
+  scene.add(cloudGroup);
+  scene.add(dipoleGroup);
+
+  window.addEventListener('resize', onResize);
+  animate();
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function clearGroup(group) {
+  while (group.children.length > 0) {
+    const child = group.children[0];
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+      else child.material.dispose();
+    }
+    group.remove(child);
+  }
+}
+
+function buildMolecule(idx) {
+  clearGroup(molGroup);
+  clearGroup(cloudGroup);
+  clearGroup(dipoleGroup);
+  if (netDipoleArrow) { scene.remove(netDipoleArrow); netDipoleArrow = null; }
+
+  const mol = MOLECULES[idx];
+
+  // Atoms
+  mol.atoms.forEach(a => {
+    const r = (ATOM_RADII[a.el] || 0.4) * 0.7;
+    const geo = new THREE.SphereGeometry(r, 32, 32);
+    const mat = new THREE.MeshPhongMaterial({
+      color: ATOM_COLORS[a.el] || 0xcccccc, shininess: 80, specular: 0x444444
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...a.pos);
+    molGroup.add(mesh);
+  });
+
+  // Bonds
+  mol.bonds.forEach(([i, j]) => {
+    const a1 = new THREE.Vector3(...mol.atoms[i].pos);
+    const a2 = new THREE.Vector3(...mol.atoms[j].pos);
+    const dir = new THREE.Vector3().subVectors(a2, a1);
+    const len = dir.length();
+    const mid = new THREE.Vector3().addVectors(a1, a2).multiplyScalar(0.5);
+    const geo = new THREE.CylinderGeometry(0.06, 0.06, len, 8);
+    const mat = new THREE.MeshPhongMaterial({ color: 0x94a3b8, shininess: 40 });
+    const cyl = new THREE.Mesh(geo, mat);
+    cyl.position.copy(mid);
+    cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    molGroup.add(cyl);
+  });
+
+  // Electron density clouds
+  if (showCloud) {
+    mol.bonds.forEach(([i, j]) => {
+      const a1 = mol.atoms[i], a2 = mol.atoms[j];
+      const en1 = EN[a1.el] || 2.5, en2 = EN[a2.el] || 2.5;
+      const diff = Math.abs(en1 - en2);
+      if (diff < 0.05) return;
+      const moreEN = en1 > en2 ? a1 : a2;
+      const lessEN = en1 > en2 ? a2 : a1;
+      const pos = new THREE.Vector3(...moreEN.pos);
+      const scale = 0.4 + diff * 0.5;
+      const cloudGeo = new THREE.SphereGeometry(scale, 24, 24);
+      const cloudMat = new THREE.MeshPhongMaterial({
+        color: 0x3b82f6, transparent: true,
+        opacity: Math.min(0.15 + diff * 0.12, 0.4), shininess: 10
+      });
+      const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+      cloudMesh.position.copy(pos);
+      cloudGroup.add(cloudMesh);
+
+      // Smaller red cloud on less EN atom
+      const redGeo = new THREE.SphereGeometry(scale * 0.6, 24, 24);
+      const redMat = new THREE.MeshPhongMaterial({
+        color: 0xef4444, transparent: true,
+        opacity: Math.min(0.1 + diff * 0.08, 0.25), shininess: 10
+      });
+      const redMesh = new THREE.Mesh(redGeo, redMat);
+      redMesh.position.set(...lessEN.pos);
+      cloudGroup.add(redMesh);
+    });
+  }
+
+  // Bond dipole arrows
+  const netDipole = new THREE.Vector3(0, 0, 0);
+  if (showDipoles) {
+    mol.bonds.forEach(([i, j]) => {
+      const a1 = mol.atoms[i], a2 = mol.atoms[j];
+      const en1 = EN[a1.el] || 2.5, en2 = EN[a2.el] || 2.5;
+      const diff = Math.abs(en1 - en2);
+      if (diff < 0.05) return;
+      // Arrow from δ+ to δ-
+      const from = en1 < en2
+        ? new THREE.Vector3(...a1.pos)
+        : new THREE.Vector3(...a2.pos);
+      const to = en1 < en2
+        ? new THREE.Vector3(...a2.pos)
+        : new THREE.Vector3(...a1.pos);
+      const dir = new THREE.Vector3().subVectors(to, from);
+      const dipoleVec = dir.clone().normalize().multiplyScalar(diff * 0.5);
+      netDipole.add(dipoleVec);
+
+      const arrowLen = dir.length() * 0.7;
+      const arrow = new THREE.ArrowHelper(
+        dir.clone().normalize(), from.clone().lerp(to, 0.15),
+        arrowLen, 0x38bdf8, arrowLen * 0.18, arrowLen * 0.12
+      );
+      dipoleGroup.add(arrow);
+    });
+  }
+
+  // Net dipole arrow
+  if (showDipoles && netDipole.length() > 0.05) {
+    const center = new THREE.Vector3(0, 0, 0);
+    mol.atoms.forEach(a => center.add(new THREE.Vector3(...a.pos)));
+    center.divideScalar(mol.atoms.length);
+    const netLen = netDipole.length() * 2.5;
+    netDipoleArrow = new THREE.ArrowHelper(
+      netDipole.clone().normalize(), center,
+      Math.min(netLen, 2.5), 0xfbbf24, netLen * 0.2, netLen * 0.14
+    );
+    scene.add(netDipoleArrow);
+  }
+
+  // Update info panel
+  document.getElementById('infoFormula').textContent = mol.formula;
+  document.getElementById('infoGeom').textContent = mol.geom;
+  document.getElementById('infoDipole').textContent = mol.dipole;
+  const polarEl = document.getElementById('infoPolar');
+  if (mol.polar) {
+    polarEl.innerHTML = '<span class="polar-tag polar-yes">Polar</span>';
+  } else {
+    polarEl.innerHTML = '<span class="polar-tag polar-no">Nonpolar</span>';
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// Controls
+const select = document.getElementById('molSelect');
+MOLECULES.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = m.name;
+  select.appendChild(opt);
+});
+select.addEventListener('change', () => buildMolecule(parseInt(select.value)));
+
+document.getElementById('btnDipoles').addEventListener('click', function() {
+  showDipoles = !showDipoles;
+  this.classList.toggle('active', showDipoles);
+  buildMolecule(parseInt(select.value));
+});
+
+document.getElementById('btnCloud').addEventListener('click', function() {
+  showCloud = !showCloud;
+  this.classList.toggle('active', showCloud);
+  buildMolecule(parseInt(select.value));
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  camera.position.set(0, 0, 6);
+  controls.reset();
+});
+
+function renderFormulas() {
+  const el = document.getElementById('formulaDisplay');
+  el.innerHTML = '';
+  const formulas = [
+    { tex: '\\vec{\\mu} = q \\times d', desc: 'Dipole moment = charge × distance (Debye)' },
+    { tex: '\\vec{\\mu}_{\\text{net}} = \\sum_i \\vec{\\mu}_i', desc: 'Net dipole = vector sum of bond dipoles' }
+  ];
+  formulas.forEach(f => {
+    const div = document.createElement('div');
+    try { katex.render(f.tex, div, { displayMode: false, throwOnError: false }); }
+    catch { div.textContent = f.tex; }
+    el.appendChild(div);
+    const desc = document.createElement('div');
+    desc.className = 'formula-desc'; desc.textContent = f.desc;
+    el.appendChild(desc);
+  });
+}
+
+init();
+renderFormulas();
+buildMolecule(0);
+</script>
+</body>
+</html>

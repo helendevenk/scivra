@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Patterns — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(249,115,22,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(249,115,22,0.15); color: #f97316; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+    .control-row { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+    .control-row label { color: #94a3b8; min-width: 55px; }
+    input[type="range"] { flex: 1; accent-color: #f97316; height: 4px; }
+    .season-label { color: #fed7aa; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; min-width: 55px; text-align: right; }
+    .data-panel h3 { font-size: 0.75rem; color: #f97316; margin-bottom: 6px; }
+    .data-row { font-size: 0.7rem; margin-bottom: 3px; display: flex; gap: 6px; }
+    .data-row .lbl { color: #94a3b8; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Weather Patterns <span class="badge">Elementary</span></h1>
+      <p>Explore how weather changes with the seasons!</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>Season:</label>
+        <input type="range" id="season" min="0" max="3" step="1" value="0">
+        <span class="season-label" id="seasonLabel">Spring</span>
+      </div>
+      <div class="control-row">
+        <label>Region:</label>
+        <select id="region" style="background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25); color: #fed7aa; padding: 4px 8px; border-radius: 5px; font-size: 0.72rem;">
+          <option value="0">Temperate</option>
+          <option value="1">Tropical</option>
+          <option value="2">Arctic</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Current Conditions</h3>
+      <div class="data-row"><span class="lbl">Temperature:</span> <span class="data-val" id="dTemp">65°F</span></div>
+      <div class="data-row"><span class="lbl">Rain Chance:</span> <span class="data-val" id="dRain">40%</span></div>
+      <div class="data-row"><span class="lbl">Wind:</span> <span class="data-val" id="dWind">SE 8 mph</span></div>
+    </div>
+    <div class="panel data-panel">
+      <h3>Forecast</h3>
+      <div class="data-row"><span class="lbl">Sky:</span> <span class="data-val" id="dSky">Partly Cloudy</span></div>
+      <div class="data-row"><span class="lbl">Daylight:</span> <span class="data-val" id="dDay">12h</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  const SEASONS = ['Spring', 'Summer', 'Fall', 'Winter'];
+  const DIRS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
+  // [temperate, tropical, arctic] x [spring, summer, fall, winter]
+  const WEATHER = {
+    temp: [[60, 85, 55, 30], [82, 90, 84, 78], [20, 45, 15, -10]],
+    rain: [[50, 30, 40, 20], [60, 70, 65, 40], [30, 40, 25, 15]],
+    wind: [[10, 8, 12, 15], [6, 8, 10, 7], [20, 12, 25, 30]],
+    clouds: [[0.4, 0.2, 0.5, 0.6], [0.5, 0.6, 0.5, 0.3], [0.7, 0.4, 0.8, 0.9]],
+    daylight: [[12, 15, 11, 9], [12, 13, 12, 11], [14, 22, 10, 2]],
+    sky: [
+      ['Partly Cloudy', 'Sunny', 'Overcast', 'Snowy'],
+      ['Rainy', 'Thunderstorms', 'Humid', 'Clear'],
+      ['Overcast', 'Misty', 'Stormy', 'Blizzard']
+    ]
+  };
+
+  let raindrops = [], snowflakes = [], clouds = [], frame = 0;
+  for (let i = 0; i < 100; i++) raindrops.push({ x: Math.random(), y: Math.random(), speed: 2 + Math.random() * 3 });
+  for (let i = 0; i < 80; i++) snowflakes.push({ x: Math.random(), y: Math.random(), size: 1 + Math.random() * 3, drift: (Math.random() - 0.5) * 0.003 });
+  for (let i = 0; i < 6; i++) clouds.push({ x: Math.random(), y: 0.15 + Math.random() * 0.2, w: 80 + Math.random() * 120, speed: 0.0002 + Math.random() * 0.0003 });
+
+  function getWeather() {
+    const s = parseInt(document.getElementById('season').value);
+    const r = parseInt(document.getElementById('region').value);
+    return { season: s, region: r, temp: WEATHER.temp[r][s], rain: WEATHER.rain[r][s], wind: WEATHER.wind[r][s], cloudiness: WEATHER.clouds[r][s], daylight: WEATHER.daylight[r][s], sky: WEATHER.sky[r][s] };
+  }
+
+  function update() {
+    const w = getWeather();
+    document.getElementById('seasonLabel').textContent = SEASONS[w.season];
+    document.getElementById('dTemp').textContent = w.temp + '°F';
+    document.getElementById('dRain').textContent = w.rain + '%';
+    document.getElementById('dWind').textContent = DIRS[Math.floor(Math.random() * 8)] + ' ' + w.wind + ' mph';
+    document.getElementById('dSky').textContent = w.sky;
+    document.getElementById('dDay').textContent = w.daylight + 'h';
+  }
+
+  document.getElementById('season').addEventListener('input', update);
+  document.getElementById('region').addEventListener('change', update);
+  update();
+
+  function draw() {
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const w = getWeather();
+    const isWinter = w.season === 3;
+    const isSummer = w.season === 1;
+
+    // Sky gradient based on season
+    const skyColors = [
+      ['#1e3a5f', '#5b8fb9'], // spring
+      ['#1a365d', '#4299e1'], // summer
+      ['#2d3748', '#a0aec0'], // fall
+      ['#1a202c', '#4a5568']  // winter
+    ];
+    const grad = ctx.createLinearGradient(0, 0, 0, H * 0.7);
+    grad.addColorStop(0, skyColors[w.season][0]);
+    grad.addColorStop(1, skyColors[w.season][1]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H * 0.7);
+
+    // Sun
+    if (w.cloudiness < 0.7) {
+      const sunX = W * 0.8, sunY = H * 0.15;
+      const sunR = isSummer ? 40 : 28;
+      ctx.beginPath(); ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fill();
+      ctx.beginPath(); ctx.arc(sunX, sunY, sunR + 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(251,191,36,0.15)';
+      ctx.fill();
+      // Rays
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + frame * 0.005;
+        ctx.beginPath();
+        ctx.moveTo(sunX + Math.cos(a) * (sunR + 15), sunY + Math.sin(a) * (sunR + 15));
+        ctx.lineTo(sunX + Math.cos(a) * (sunR + 28), sunY + Math.sin(a) * (sunR + 28));
+        ctx.strokeStyle = 'rgba(251,191,36,0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    // Ground
+    const groundY = H * 0.7;
+    const groundColors = ['#22c55e', '#16a34a', '#b45309', '#e2e8f0'];
+    ctx.fillStyle = groundColors[w.season];
+    ctx.fillRect(0, groundY, W, H - groundY);
+
+    // Grid overlay (map feel)
+    ctx.strokeStyle = 'rgba(249,115,22,0.08)';
+    ctx.lineWidth = 1;
+    const gridSize = 60;
+    for (let x = 0; x < W; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // Trees
+    const treeColor = w.season === 3 ? '#6b7280' : w.season === 2 ? '#dc2626' : '#22c55e';
+    for (let i = 0; i < 5; i++) {
+      const tx = W * 0.1 + i * W * 0.2, ty = groundY;
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(tx - 4, ty - 40, 8, 40);
+      if (w.season !== 3) {
+        ctx.beginPath(); ctx.arc(tx, ty - 55, 22, 0, Math.PI * 2);
+        ctx.fillStyle = treeColor; ctx.fill();
+      } else {
+        // Bare branches
+        ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 2;
+        for (let b = 0; b < 3; b++) {
+          const ba = -Math.PI / 2 + (b - 1) * 0.5;
+          ctx.beginPath(); ctx.moveTo(tx, ty - 40);
+          ctx.lineTo(tx + Math.cos(ba) * 25, ty - 40 + Math.sin(ba) * 25);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Clouds
+    clouds.forEach(c => {
+      c.x += c.speed;
+      if (c.x > 1.2) c.x = -0.2;
+      const alpha = 0.3 + w.cloudiness * 0.5;
+      ctx.fillStyle = `rgba(226,232,240,${alpha})`;
+      const cx = c.x * W, cy = c.y * H;
+      ctx.beginPath(); ctx.arc(cx, cy, c.w * 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + c.w * 0.2, cy - 10, c.w * 0.25, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx - c.w * 0.15, cy + 5, c.w * 0.2, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Rain
+    if (w.rain > 40 && !isWinter) {
+      const intensity = (w.rain - 40) / 60;
+      ctx.strokeStyle = `rgba(96,165,250,${0.3 + intensity * 0.4})`;
+      ctx.lineWidth = 1;
+      raindrops.forEach(d => {
+        d.y += d.speed / H;
+        if (d.y > 1) { d.y = 0; d.x = Math.random(); }
+        const rx = d.x * W, ry = d.y * H;
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 1, ry + 8); ctx.stroke();
+      });
+    }
+
+    // Snow
+    if (isWinter) {
+      snowflakes.forEach(s => {
+        s.y += 0.001 + Math.random() * 0.001;
+        s.x += s.drift + Math.sin(frame * 0.02 + s.y * 10) * 0.001;
+        if (s.y > 1) { s.y = 0; s.x = Math.random(); }
+        ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fill();
+      });
+    }
+
+    // Wind arrows
+    if (w.wind > 10) {
+      ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+      ctx.lineWidth = 2;
+      const wAngle = frame * 0.01;
+      for (let i = 0; i < 3; i++) {
+        const wx = W * (0.3 + i * 0.2), wy = H * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(wx, wy);
+        ctx.lineTo(wx + 30, wy);
+        ctx.lineTo(wx + 25, wy - 5);
+        ctx.moveTo(wx + 30, wy);
+        ctx.lineTo(wx + 25, wy + 5);
+        ctx.stroke();
+      }
+    }
+
+    // Thermometer
+    const thX = 50, thY = H * 0.35, thH = 120;
+    ctx.fillStyle = 'rgba(15,23,42,0.7)';
+    ctx.fillRect(thX - 10, thY, 20, thH + 20);
+    ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+    ctx.strokeRect(thX - 10, thY, 20, thH + 20);
+    const tempFrac = Math.max(0, Math.min(1, (w.temp + 20) / 120));
+    const mercuryH = tempFrac * thH;
+    ctx.fillStyle = w.temp > 70 ? '#ef4444' : w.temp > 40 ? '#f97316' : '#3b82f6';
+    ctx.fillRect(thX - 5, thY + thH - mercuryH + 5, 10, mercuryH);
+    ctx.beginPath(); ctx.arc(thX, thY + thH + 10, 10, 0, Math.PI * 2);
+    ctx.fillStyle = '#ef4444'; ctx.fill();
+    ctx.fillStyle = '#fed7aa'; ctx.font = '10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText(w.temp + '°F', thX, thY - 5);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

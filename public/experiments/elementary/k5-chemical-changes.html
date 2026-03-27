@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Changes — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(16,185,129,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .control-row { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+    .control-row label { color: #94a3b8; }
+    select { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.72rem; }
+    button { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: rgba(16,185,129,0.3); }
+    .btn-row { display: flex; gap: 6px; }
+    .indicator-panel h3 { font-size: 0.75rem; color: #10b981; margin-bottom: 6px; }
+    .indicator { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; margin-bottom: 4px; }
+    .indicator-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(16,185,129,0.3); transition: all 0.3s; }
+    .indicator-dot.active { background: #10b981; border-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+    .result-text { font-size: 0.75rem; color: #6ee7b7; margin-top: 8px; font-weight: 600; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Chemical Changes <span class="badge">Elementary</span></h1>
+      <p>Mix substances and watch for signs of chemical reactions!</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>Substance 1:</label>
+        <select id="sub1">
+          <option value="0">Vinegar</option>
+          <option value="1">Baking Soda</option>
+          <option value="2">Milk</option>
+          <option value="3">Lemon Juice</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Substance 2:</label>
+        <select id="sub2">
+          <option value="0">Baking Soda</option>
+          <option value="1">Vinegar</option>
+          <option value="2">Food Coloring</option>
+          <option value="3">Copper Penny</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button id="btnMix">Mix!</button>
+        <button id="btnReset">Reset</button>
+      </div>
+    </div>
+    <div class="panel indicator-panel">
+      <h3>Signs of Chemical Change</h3>
+      <div class="indicator"><div class="indicator-dot" id="iColor"></div> Color Change</div>
+      <div class="indicator"><div class="indicator-dot" id="iGas"></div> Gas Bubbles</div>
+      <div class="indicator"><div class="indicator-dot" id="iTemp"></div> Temperature Change</div>
+      <div class="indicator"><div class="indicator-dot" id="iPrecip"></div> Precipitate</div>
+      <div class="result-text" id="resultText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  // Reaction table: [sub1][sub2] → { color, gas, temp, precip, chemical, desc, mixColor }
+  const REACTIONS = {
+    '0-0': { gas: true, temp: true, chemical: true, desc: 'Vinegar + Baking Soda → CO₂ gas + water + sodium acetate', mixColor: '#a7f3d0', bubbles: true },
+    '0-1': { gas: true, temp: true, chemical: true, desc: 'Same reaction! Fizzy bubbles of CO₂!', mixColor: '#a7f3d0', bubbles: true },
+    '1-0': { gas: true, temp: true, chemical: true, desc: 'Baking Soda + Baking Soda — no reaction (same substance)', mixColor: '#f0fdf4', bubbles: false },
+    '0-2': { color: true, chemical: false, desc: 'Vinegar + Food Coloring — physical change (just mixing colors)', mixColor: '#fbbf24' },
+    '0-3': { color: true, chemical: true, desc: 'Vinegar + Copper = shiny clean penny! Acid dissolves tarnish', mixColor: '#f97316' },
+    '1-1': { desc: 'Same substance, no reaction', mixColor: '#e2e8f0' },
+    '1-2': { color: true, chemical: false, desc: 'Baking Soda + Food Coloring — physical change', mixColor: '#c084fc' },
+    '1-3': { desc: 'Baking Soda + Copper Penny — no visible reaction', mixColor: '#e2e8f0' },
+    '2-0': { chemical: false, desc: 'Milk + Baking Soda — slight fizz but mostly physical', mixColor: '#fef3c7' },
+    '2-1': { color: true, chemical: true, desc: 'Milk + Vinegar → curds! Acid causes casein protein to coagulate', mixColor: '#fef9c3', precip: true },
+    '2-2': { color: true, chemical: false, desc: 'Milk + Food Coloring — beautiful colors but just physical mixing', mixColor: '#f9a8d4' },
+    '2-3': { desc: 'Milk + Copper Penny — no visible reaction', mixColor: '#fef3c7' },
+    '3-0': { gas: true, temp: true, chemical: true, desc: 'Lemon Juice + Baking Soda → CO₂ bubbles! (citric acid reaction)', mixColor: '#fde68a', bubbles: true },
+    '3-1': { gas: true, chemical: true, desc: 'Lemon + Vinegar — both acids, slight reaction', mixColor: '#fde68a' },
+    '3-2': { color: true, chemical: false, desc: 'Lemon Juice + Food Coloring — physical change only', mixColor: '#fdba74' },
+    '3-3': { color: true, chemical: true, desc: 'Lemon Juice cleans the penny! Citric acid dissolves tarnish', mixColor: '#fb923c' },
+  };
+
+  let state = { mixed: false, reaction: null, bubbles: [], time: 0 };
+
+  const subNames = [['Vinegar','Baking Soda','Milk','Lemon Juice'],['Baking Soda','Vinegar','Food Coloring','Copper Penny']];
+
+  document.getElementById('btnMix').addEventListener('click', mix);
+  document.getElementById('btnReset').addEventListener('click', reset);
+
+  function mix() {
+    const s1 = document.getElementById('sub1').value;
+    const s2 = document.getElementById('sub2').value;
+    const key = s1 + '-' + s2;
+    state.reaction = REACTIONS[key] || { desc: 'No visible reaction', mixColor: '#e2e8f0' };
+    state.mixed = true;
+    state.time = 0;
+    state.bubbles = [];
+
+    // Update indicators
+    ['iColor', 'iGas', 'iTemp', 'iPrecip'].forEach(id => document.getElementById(id).classList.remove('active'));
+    if (state.reaction.color) document.getElementById('iColor').classList.add('active');
+    if (state.reaction.gas) document.getElementById('iGas').classList.add('active');
+    if (state.reaction.temp) document.getElementById('iTemp').classList.add('active');
+    if (state.reaction.precip) document.getElementById('iPrecip').classList.add('active');
+
+    const type = state.reaction.chemical ? '⚗️ Chemical Change!' : '🔄 Physical Change';
+    document.getElementById('resultText').textContent = type + ' — ' + state.reaction.desc;
+  }
+
+  function reset() {
+    state.mixed = false;
+    state.reaction = null;
+    state.bubbles = [];
+    ['iColor', 'iGas', 'iTemp', 'iPrecip'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('resultText').textContent = '';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+
+    // Draw beaker
+    const bW = 200, bH = 250;
+    const bx = cx - bW / 2, by = cy - bH / 2 + 40;
+
+    // Beaker outline
+    ctx.strokeStyle = 'rgba(16,185,129,0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx, by + bH);
+    ctx.lineTo(bx + bW, by + bH);
+    ctx.lineTo(bx + bW, by);
+    ctx.stroke();
+
+    // Liquid
+    const liquidH = state.mixed ? bH * 0.7 : bH * 0.35;
+    const liquidY = by + bH - liquidH;
+    const liquidColor = state.mixed && state.reaction ? state.reaction.mixColor : '#94a3b8';
+
+    ctx.fillStyle = liquidColor;
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(bx + 3, liquidY, bW - 6, liquidH - 3);
+    ctx.globalAlpha = 1;
+
+    // Bubbles
+    if (state.mixed && state.reaction && state.reaction.bubbles) {
+      state.time += 1/60;
+      if (state.time < 5 && Math.random() < 0.3) {
+        state.bubbles.push({
+          x: bx + 20 + Math.random() * (bW - 40),
+          y: by + bH - 10,
+          r: 3 + Math.random() * 6,
+          speed: 1 + Math.random() * 2,
+        });
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      state.bubbles = state.bubbles.filter(b => {
+        b.y -= b.speed;
+        b.x += Math.sin(b.y * 0.05) * 0.5;
+        if (b.y < liquidY) return false;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        return true;
+      });
+    }
+
+    // Precipitate dots
+    if (state.mixed && state.reaction && state.reaction.precip) {
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      for (let i = 0; i < 30; i++) {
+        const px = bx + 20 + Math.random() * (bW - 40);
+        const py = by + bH - 20 - Math.random() * 30;
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Beaker label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    if (!state.mixed) {
+      ctx.fillText('Choose substances and press Mix!', cx, by + bH + 30);
+    }
+  }
+
+  function animate() {
+    draw();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

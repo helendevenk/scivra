@@ -11,6 +11,7 @@ export const calorimetry: Experiment = {
 
   standards: {
     ngss: ["HS-PS3-1", "HS-PS3-4"],
+    gcse: [],
     ap: ["6.A.1", "6.B.1"],
   },
   primaryStandard: "ap-chemistry",

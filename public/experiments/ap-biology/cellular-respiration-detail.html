@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cellular Respiration (Detailed) — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;display:flex}
+    #sim-canvas{flex:1;display:block}
+    #sidebar{width:320px;min-width:320px;height:100vh;display:flex;flex-direction:column;gap:10px;padding:14px;overflow-y:auto;background:rgba(15,23,42,0.95)}
+    .panel{background:rgba(15,23,42,0.9);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:14px;backdrop-filter:blur(8px)}
+    h1{font-size:1rem;color:#d9f99d;font-weight:700;margin-bottom:4px}
+    .badge{display:inline-block;font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
+    .badge-subject{background:rgba(132,204,22,0.3);color:#d9f99d}
+    .badge-free{background:rgba(34,197,94,0.25);color:#86efac}
+    .slider-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#84cc16;height:4px}
+    button{background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;margin:3px 3px 3px 0;transition:all 0.2s}
+    button:hover{background:rgba(132,204,22,0.25)}
+    button.active{background:rgba(132,204,22,0.35);border-color:#84cc16}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#a3e635;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .section-title{font-size:0.75rem;color:#d9f99d;font-weight:600;margin-bottom:6px}
+    .stage-indicator{display:flex;gap:4px;margin-top:6px}
+    .stage-dot{flex:1;height:4px;border-radius:2px;background:rgba(132,204,22,0.15)}
+    .stage-dot.active{background:#84cc16}
+  </style>
+</head>
+<body>
+<canvas id="sim-canvas"></canvas>
+<div id="sidebar">
+  <div class="panel">
+    <h1>Cellular Respiration <span class="badge badge-subject">AP BIOLOGY</span><span class="badge badge-free">FREE</span></h1>
+    <p style="font-size:0.68rem;color:#94a3b8;margin-top:4px">Glycolysis &#8594; Krebs Cycle &#8594; Electron Transport Chain</p>
+    <div class="stage-indicator">
+      <div class="stage-dot active" id="sd-glyc"></div>
+      <div class="stage-dot" id="sd-krebs"></div>
+      <div class="stage-dot" id="sd-etc"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="section-title">Controls</div>
+    <div class="slider-row">
+      <label>Speed <span id="speed-val">1.0</span>x</label>
+      <input type="range" id="speed-slider" min="0.2" max="3" step="0.2" value="1">
+    </div>
+    <div style="margin-top:4px">
+      <button id="btn-aerobic" class="active">Aerobic</button>
+      <button id="btn-anaerobic">Anaerobic</button>
+    </div>
+    <div style="margin-top:6px">
+      <button id="btn-play" class="active">&#9654; Play</button>
+      <button id="btn-reset">&#8634; Reset</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="section-title">Molecule Counters</div>
+    <div class="data-row">ATP <span class="data-val" id="d-atp">0</span></div>
+    <div class="data-row">NADH <span class="data-val" id="d-nadh">0</span></div>
+    <div class="data-row">FADH&#8322; <span class="data-val" id="d-fadh2">0</span></div>
+    <div class="data-row">CO&#8322; <span class="data-val" id="d-co2">0</span></div>
+    <div class="data-row">Pyruvate <span class="data-val" id="d-pyr">0</span></div>
+    <div class="data-row">Acetyl-CoA <span class="data-val" id="d-acetyl">0</span></div>
+  </div>
+  <div class="panel">
+    <div class="section-title">Total ATP Yield</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:1.4rem;color:#a3e635;font-family:'JetBrains Mono',monospace;font-weight:700" id="total-atp">0</div>
+        <div style="font-size:0.6rem;color:#64748b">ATP total</div>
+      </div>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:1.4rem;color:#84cc16;font-family:'JetBrains Mono',monospace;font-weight:700" id="max-atp">36</div>
+        <div style="font-size:0.6rem;color:#64748b">Max possible</div>
+      </div>
+    </div>
+    <div style="height:6px;background:rgba(132,204,22,0.1);border-radius:3px;overflow:hidden">
+      <div id="atp-bar" style="height:100%;background:#84cc16;border-radius:3px;width:0%;transition:width 0.3s"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="katex-wrap" id="f1"></div>
+    <div class="katex-wrap" id="f2"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('sim-canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.clientWidth; H = canvas.clientHeight;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+katex.render('C_6H_{12}O_6 + 6O_2 \\to 6CO_2 + 6H_2O + 36\\text{ATP}', document.getElementById('f1'), {displayMode:false});
+katex.render('C_6H_{12}O_6 \\to 2C_2H_5OH + 2CO_2 + 2\\text{ATP}', document.getElementById('f2'), {displayMode:false});
+
+let speed = 1, aerobic = true, playing = true;
+let atp = 0, nadh = 0, fadh2 = 0, co2 = 0, pyruvate = 0, acetylCoA = 0;
+let totalAtp = 0;
+let stagePhase = 0; // 0=glycolysis, 1=krebs, 2=etc
+let stageTimer = 0;
+const STAGE_DURATION = 200;
+
+// Animated molecules
+const molecules = [];
+
+function spawnMol(type, x, y, targetX, targetY) {
+  molecules.push({type, x, y, targetX, targetY, progress: 0, alive: true});
+}
+
+// Stage regions
+const glycX = () => W * 0.08;
+const glycW = () => W * 0.28;
+const krebsX = () => W * 0.38;
+const krebsW = () => W * 0.28;
+const etcX = () => W * 0.68;
+const etcW = () => W * 0.28;
+const stageY = () => H * 0.15;
+const stageH = () => H * 0.7;
+
+const colors = {
+  glucose: '#facc15',
+  pyruvate: '#fb923c',
+  acetylCoA: '#f97316',
+  atp: '#84cc16',
+  nadh: '#60a5fa',
+  fadh2: '#a78bfa',
+  co2: '#94a3b8',
+  ethanol: '#f472b6',
+  lactate: '#ec4899'
+};
+
+document.getElementById('speed-slider').oninput = function() {
+  speed = +this.value;
+  document.getElementById('speed-val').textContent = speed.toFixed(1);
+};
+document.getElementById('btn-aerobic').onclick = function() {
+  aerobic = true;
+  this.classList.add('active');
+  document.getElementById('btn-anaerobic').classList.remove('active');
+  document.getElementById('max-atp').textContent = '36';
+  resetSim();
+};
+document.getElementById('btn-anaerobic').onclick = function() {
+  aerobic = false;
+  this.classList.add('active');
+  document.getElementById('btn-aerobic').classList.remove('active');
+  document.getElementById('max-atp').textContent = '2';
+  resetSim();
+};
+document.getElementById('btn-play').onclick = function() {
+  playing = !playing;
+  this.textContent = playing ? '\u25B6 Play' : '\u23F8 Pause';
+  this.classList.toggle('active', playing);
+};
+document.getElementById('btn-reset').onclick = resetSim;
+
+function resetSim() {
+  atp = 0; nadh = 0; fadh2 = 0; co2 = 0; pyruvate = 0; acetylCoA = 0; totalAtp = 0;
+  stagePhase = 0; stageTimer = 0;
+  molecules.length = 0;
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('d-atp').textContent = atp;
+  document.getElementById('d-nadh').textContent = nadh;
+  document.getElementById('d-fadh2').textContent = fadh2;
+  document.getElementById('d-co2').textContent = co2;
+  document.getElementById('d-pyr').textContent = pyruvate;
+  document.getElementById('d-acetyl').textContent = acetylCoA;
+  totalAtp = atp + Math.floor(nadh * 2.5) + Math.floor(fadh2 * 1.5);
+  document.getElementById('total-atp').textContent = totalAtp;
+  const maxAtp = aerobic ? 36 : 2;
+  document.getElementById('atp-bar').style.width = Math.min(100, (totalAtp / maxAtp) * 100) + '%';
+  document.getElementById('sd-glyc').classList.toggle('active', stagePhase === 0);
+  document.getElementById('sd-krebs').classList.toggle('active', stagePhase === 1);
+  document.getElementById('sd-etc').classList.toggle('active', stagePhase === 2);
+}
+
+function drawStageBox(x, w, label, sublabel, active) {
+  const y = stageY(), h = stageH();
+  ctx.fillStyle = active ? 'rgba(132,204,22,0.08)' : 'rgba(132,204,22,0.03)';
+  ctx.strokeStyle = active ? 'rgba(132,204,22,0.4)' : 'rgba(132,204,22,0.12)';
+  ctx.lineWidth = active ? 2 : 1;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = active ? '#d9f99d' : '#475569';
+  ctx.font = 'bold 13px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x + w / 2, y + 22);
+  ctx.font = '9px "Segoe UI", system-ui';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText(sublabel, x + w / 2, y + 36);
+}
+
+function drawArrow(x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - 8 * Math.cos(angle - 0.3), y2 - 8 * Math.sin(angle - 0.3));
+  ctx.lineTo(x2 - 8 * Math.cos(angle + 0.3), y2 - 8 * Math.sin(angle + 0.3));
+  ctx.fill();
+}
+
+function drawMolecule(x, y, type, radius) {
+  const r = radius || 6;
+  ctx.fillStyle = colors[type] || '#fff';
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath();
+  ctx.arc(x, y, r + 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0f172a';
+  ctx.font = `bold ${r < 5 ? 6 : 7}px "JetBrains Mono", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const labels = {glucose:'G', pyruvate:'Pyr', acetylCoA:'AcC', atp:'ATP', nadh:'N', fadh2:'F', co2:'CO\u2082', ethanol:'EtOH', lactate:'Lac'};
+  ctx.fillText(labels[type] || '?', x, y);
+  ctx.textBaseline = 'alphabetic';
+}
+
+// Glycolysis products display
+function drawGlycolysisInternals(gx, gw) {
+  const cy = stageY() + stageH() * 0.5;
+  // Glucose input
+  drawMolecule(gx + gw * 0.5, stageY() + 55, 'glucose', 10);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '8px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Glucose (C\u2086H\u2081\u2082O\u2086)', gx + gw * 0.5, stageY() + 72);
+
+  // Arrow down
+  drawArrow(gx + gw * 0.5, stageY() + 78, gx + gw * 0.5, cy - 20, 'rgba(132,204,22,0.3)');
+
+  // Products
+  const py = cy + 10;
+  drawMolecule(gx + gw * 0.3, py, 'pyruvate', 7);
+  drawMolecule(gx + gw * 0.7, py, 'pyruvate', 7);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '8px "Segoe UI", system-ui';
+  ctx.fillText('2 Pyruvate', gx + gw * 0.5, py + 18);
+
+  // Side products
+  const spY = py + 35;
+  drawMolecule(gx + gw * 0.2, spY, 'atp', 5);
+  drawMolecule(gx + gw * 0.35, spY, 'atp', 5);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '7px "Segoe UI", system-ui';
+  ctx.fillText('2 ATP', gx + gw * 0.27, spY + 14);
+
+  drawMolecule(gx + gw * 0.65, spY, 'nadh', 5);
+  drawMolecule(gx + gw * 0.8, spY, 'nadh', 5);
+  ctx.fillText('2 NADH', gx + gw * 0.72, spY + 14);
+}
+
+function drawKrebsInternals(kx, kw) {
+  const cy = stageY() + stageH() * 0.5;
+  const cr = Math.min(kw * 0.35, stageH() * 0.22);
+
+  // Krebs cycle circle
+  ctx.strokeStyle = 'rgba(132,204,22,0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(kx + kw * 0.5, cy, cr, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Rotating indicator
+  const angle = (Date.now() / 2000) * speed;
+  const ix = kx + kw * 0.5 + Math.cos(angle) * cr;
+  const iy = cy + Math.sin(angle) * cr;
+  ctx.fillStyle = '#84cc16';
+  ctx.beginPath();
+  ctx.arc(ix, iy, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Acetyl-CoA input
+  drawMolecule(kx + kw * 0.5, stageY() + 55, 'acetylCoA', 8);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '8px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Acetyl-CoA', kx + kw * 0.5, stageY() + 72);
+
+  // Labels around cycle
+  ctx.fillStyle = '#64748b';
+  ctx.font = '7px "Segoe UI", system-ui';
+  ctx.fillText('Citrate', kx + kw * 0.5 + cr + 8, cy - 10);
+  ctx.fillText('Oxaloacetate', kx + kw * 0.5 - cr - 10, cy + 4);
+
+  // Products
+  const py = cy + cr + 20;
+  drawMolecule(kx + kw * 0.15, py, 'atp', 4);
+  ctx.fillText('2 ATP', kx + kw * 0.15, py + 12);
+  drawMolecule(kx + kw * 0.38, py, 'nadh', 4);
+  ctx.fillText('6 NADH', kx + kw * 0.38, py + 12);
+  drawMolecule(kx + kw * 0.6, py, 'fadh2', 4);
+  ctx.fillText('2 FADH\u2082', kx + kw * 0.6, py + 12);
+  drawMolecule(kx + kw * 0.83, py, 'co2', 4);
+  ctx.fillText('4 CO\u2082', kx + kw * 0.83, py + 12);
+}
+
+function drawETCInternals(ex, ew) {
+  const cy = stageY() + stageH() * 0.5;
+
+  // Membrane
+  ctx.fillStyle = 'rgba(132,204,22,0.12)';
+  ctx.fillRect(ex + 10, cy - 6, ew - 20, 12);
+
+  // Complexes
+  const complexes = ['I', 'II', 'III', 'IV', 'ATP\nSyn'];
+  const cw = (ew - 30) / complexes.length;
+  for (let i = 0; i < complexes.length; i++) {
+    const cx = ex + 15 + i * cw + cw * 0.5;
+    ctx.fillStyle = i === 4 ? 'rgba(249,115,22,0.5)' : 'rgba(79,70,229,0.5)';
+    ctx.beginPath();
+    ctx.roundRect(cx - 12, cy - 16, 24, 32, 4);
+    ctx.fill();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '8px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(complexes[i].split('\n')[0], cx, cy + 2);
+    if (complexes[i].includes('\n')) {
+      ctx.fillText(complexes[i].split('\n')[1], cx, cy + 12);
+    }
+  }
+
+  // Electron flow animation
+  const numDots = 6;
+  const t = (Date.now() / 1000) * speed;
+  for (let i = 0; i < numDots; i++) {
+    const prog = ((t * 0.3 + i / numDots) % 1);
+    const dx = ex + 15 + prog * (ew - 30);
+    const dy = cy + Math.sin(prog * Math.PI * 4) * 20;
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '8px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('NADH/FADH\u2082 donate e\u207B', ex + ew * 0.5, stageY() + 55);
+
+  // H+ gradient
+  ctx.fillStyle = 'rgba(192,132,252,0.4)';
+  ctx.font = '7px "Segoe UI", system-ui';
+  for (let i = 0; i < 8; i++) {
+    const hx = ex + 15 + Math.random() * (ew - 30);
+    const hy = cy - 25 - Math.random() * 30;
+    ctx.fillText('H\u207A', hx, hy);
+  }
+
+  // Output
+  const py = cy + 50;
+  ctx.fillStyle = '#64748b';
+  ctx.font = '7px "Segoe UI", system-ui';
+  drawMolecule(ex + ew * 0.3, py, 'atp', 5);
+  ctx.fillText('~32 ATP', ex + ew * 0.3, py + 14);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('H\u2082O formed', ex + ew * 0.7, py + 4);
+}
+
+function drawFermentation(gx, gw) {
+  const cy = stageY() + stageH() * 0.75;
+  ctx.fillStyle = 'rgba(236,72,153,0.08)';
+  ctx.strokeStyle = 'rgba(236,72,153,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(gx + gw + 15, stageY(), W * 0.55, stageH(), 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#f9a8d4';
+  ctx.font = 'bold 13px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  const fx = gx + gw + 15 + W * 0.275;
+  ctx.fillText('Fermentation', fx, stageY() + 22);
+  ctx.font = '9px "Segoe UI", system-ui';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('(No O\u2082 available)', fx, stageY() + 36);
+
+  // Pyruvate -> Ethanol + CO2
+  drawMolecule(fx - 40, cy - 30, 'pyruvate', 8);
+  drawArrow(fx - 40, cy - 18, fx - 40, cy + 5, 'rgba(236,72,153,0.4)');
+  drawMolecule(fx - 60, cy + 20, 'ethanol', 7);
+  drawMolecule(fx - 20, cy + 20, 'co2', 6);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '7px "Segoe UI", system-ui';
+  ctx.fillText('Ethanol', fx - 60, cy + 36);
+  ctx.fillText('CO\u2082', fx - 20, cy + 36);
+
+  // Or Lactate
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px "Segoe UI", system-ui';
+  ctx.fillText('OR', fx + 20, cy);
+  drawMolecule(fx + 50, cy + 20, 'lactate', 7);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '7px "Segoe UI", system-ui';
+  ctx.fillText('Lactate', fx + 50, cy + 36);
+
+  // Net ATP
+  ctx.fillStyle = '#d9f99d';
+  ctx.font = 'bold 11px "JetBrains Mono", monospace';
+  ctx.fillText('Net: 2 ATP only', fx, cy + 65);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Title
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px "Segoe UI", system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillText('C\u2086H\u2081\u2082O\u2086 + 6O\u2082 \u2192 6CO\u2082 + 6H\u2082O + ATP', 10, 20);
+
+  if (aerobic) {
+    // 3 stage boxes
+    drawStageBox(glycX(), glycW(), 'Glycolysis', 'Cytoplasm', stagePhase === 0);
+    drawStageBox(krebsX(), krebsW(), 'Krebs Cycle', 'Mitochondrial Matrix', stagePhase === 1);
+    drawStageBox(etcX(), etcW(), 'ETC', 'Inner Membrane', stagePhase === 2);
+
+    // Arrows between stages
+    drawArrow(glycX() + glycW() + 5, stageY() + stageH() * 0.5, krebsX() - 5, stageY() + stageH() * 0.5, 'rgba(132,204,22,0.3)');
+    drawArrow(krebsX() + krebsW() + 5, stageY() + stageH() * 0.5, etcX() - 5, stageY() + stageH() * 0.5, 'rgba(132,204,22,0.3)');
+
+    // Draw internals
+    drawGlycolysisInternals(glycX(), glycW());
+    drawKrebsInternals(krebsX(), krebsW());
+    drawETCInternals(etcX(), etcW());
+  } else {
+    // Glycolysis only + fermentation
+    drawStageBox(glycX(), glycW(), 'Glycolysis', 'Cytoplasm', stagePhase === 0);
+    drawGlycolysisInternals(glycX(), glycW());
+    drawFermentation(glycX(), glycW());
+  }
+
+  // Animated molecules
+  for (const m of molecules) {
+    if (!m.alive) continue;
+    drawMolecule(m.x, m.y, m.type, 5);
+  }
+}
+
+function update() {
+  if (!playing) return;
+  stageTimer += speed;
+
+  if (stageTimer >= STAGE_DURATION) {
+    stageTimer = 0;
+    if (aerobic) {
+      if (stagePhase === 0) {
+        atp += 2; nadh += 2; pyruvate += 2;
+        stagePhase = 1;
+      } else if (stagePhase === 1) {
+        atp += 2; nadh += 6; fadh2 += 2; co2 += 4; acetylCoA += 2;
+        pyruvate = Math.max(0, pyruvate - 2);
+        stagePhase = 2;
+      } else {
+        atp += 32; nadh = 0; fadh2 = 0;
+        stagePhase = 0;
+      }
+    } else {
+      if (stagePhase === 0) {
+        atp += 2; pyruvate += 2; co2 += 2;
+        stagePhase = 0;
+      }
+    }
+    updateUI();
+  }
+
+  // Spawn traveling molecules periodically
+  if (Math.random() < 0.05 * speed) {
+    if (aerobic) {
+      if (stagePhase === 0) {
+        spawnMol('glucose', glycX() + glycW() * 0.5, stageY() - 10, glycX() + glycW() * 0.5, stageY() + 50);
+      } else if (stagePhase === 1) {
+        spawnMol('pyruvate', glycX() + glycW(), stageY() + stageH() * 0.5, krebsX(), stageY() + stageH() * 0.5);
+      } else {
+        spawnMol('nadh', krebsX() + krebsW(), stageY() + stageH() * 0.5, etcX(), stageY() + stageH() * 0.5);
+      }
+    }
+  }
+
+  // Update molecules
+  for (const m of molecules) {
+    if (!m.alive) continue;
+    m.progress += 0.02 * speed;
+    m.x = m.x + (m.targetX - m.x) * 0.02 * speed;
+    m.y = m.y + (m.targetY - m.y) * 0.02 * speed;
+    if (m.progress >= 1) m.alive = false;
+  }
+  if (molecules.length > 50) {
+    for (let i = molecules.length - 1; i >= 0; i--) {
+      if (!molecules[i].alive) molecules.splice(i, 1);
+    }
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glaciers &amp; Ice Ages — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    .ctrl-row { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #94a3b8; margin: 4px 0; }
+    .ctrl-row label { min-width: 80px; }
+    .ctrl-row input[type=range] { width: 100px; accent-color: #f97316; }
+    .ctrl-row .data-val { color: #fed7aa; min-width: 55px; text-align: right; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #fed7aa; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 400px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .era-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+    .glacial { background: rgba(96,165,250,0.2); color: #60a5fa; }
+    .interglacial { background: rgba(249,115,22,0.2); color: #f97316; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Glaciers &amp; Ice Ages <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">800,000 years of glacial cycles — Milankovitch orbital forcing</p>
+    </div>
+    <div class="panel">
+      <div class="ctrl-row">
+        <label>Eccentricity</label>
+        <input type="range" id="ecc" min="0" max="0.06" value="0.017" step="0.001">
+        <span class="data-val" id="ecc-val">0.017</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Axial Tilt</label>
+        <input type="range" id="obl" min="22" max="24.5" value="23.4" step="0.1">
+        <span class="data-val" id="obl-val">23.4°</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Time</label>
+        <input type="range" id="time-pos" min="0" max="800" value="0" step="5">
+        <span class="data-val" id="time-val">0 kya</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Speed</label>
+        <input type="range" id="speed" min="0" max="5" value="1" step="0.5">
+        <span class="data-val" id="speed-val">1.0×</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="max-width:280px;">
+      <div class="panel-title">Climate State</div>
+      <div class="info-row">Era: <span class="data-val" id="era-val">—</span></div>
+      <div class="info-row">ΔT from present: <span class="data-val" id="dt-val">— °C</span></div>
+      <div class="info-row">CO₂: <span class="data-val" id="co2-val">— ppm</span></div>
+      <div class="info-row">Ice Coverage: <span class="data-val" id="ice-val">— %</span></div>
+      <div class="info-row">Sea Level: <span class="data-val" id="sea-val">— m</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Milankovitch Cycles</div>
+      <div id="formula1"></div>
+      <div class="formula-desc">100 kyr eccentricity cycle dominates glacial timing.</div>
+      <div id="formula2" style="margin-top:6px;"></div>
+      <div class="formula-desc">Obliquity (41 kyr) and precession (26 kyr) modulate seasons.</div>
+    </div>
+  </div>
+</div>
+<script>
+/* ── Canvas ── */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+/* ── Controls ── */
+const eccSlider = document.getElementById('ecc');
+const oblSlider = document.getElementById('obl');
+const timeSlider = document.getElementById('time-pos');
+const speedSlider = document.getElementById('speed');
+
+eccSlider.oninput = () => document.getElementById('ecc-val').textContent = parseFloat(eccSlider.value).toFixed(3);
+oblSlider.oninput = () => document.getElementById('obl-val').textContent = parseFloat(oblSlider.value).toFixed(1) + '°';
+timeSlider.oninput = () => document.getElementById('time-val').textContent = timeSlider.value + ' kya';
+speedSlider.oninput = () => document.getElementById('speed-val').textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+
+/* ── Synthetic Ice Core Data (simplified 100kyr cycle) ── */
+function getClimateState(kya) {
+  // Approximate glacial cycles based on 100kyr period
+  const ecc = parseFloat(eccSlider.value);
+  const obl = parseFloat(oblSlider.value);
+
+  // Eccentricity forcing (100 kyr)
+  const eccForce = Math.cos(kya / 100 * Math.PI * 2) * (ecc / 0.06);
+  // Obliquity forcing (41 kyr)
+  const oblForce = Math.cos(kya / 41 * Math.PI * 2) * ((obl - 22) / 2.5) * 0.3;
+  // Precession forcing (26 kyr)
+  const precForce = Math.cos(kya / 26 * Math.PI * 2) * 0.15;
+
+  // Combined forcing → temperature anomaly
+  const forcing = eccForce + oblForce + precForce;
+  // Nonlinear ice-albedo feedback
+  const dt = forcing * 5 + (forcing > 0 ? forcing * forcing * 2 : -forcing * forcing);
+
+  // CO2 follows temperature with slight lag
+  const co2 = 280 + dt * 15;
+  // Ice coverage inversely related to temperature
+  const ice = Math.max(0, Math.min(100, 30 - dt * 5));
+  // Sea level
+  const sea = dt * 12;
+
+  const isGlacial = dt < -2;
+  const era = isGlacial ? 'Glacial' : 'Interglacial';
+
+  return { dt: dt.toFixed(1), co2: co2.toFixed(0), ice: ice.toFixed(0), sea: sea.toFixed(0), era, forcing };
+}
+
+/* ── Drawing ── */
+function drawLandscape(state) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const horizonY = h * 0.35;
+
+  // Sky gradient
+  const cold = parseFloat(state.dt) < 0;
+  const skyTop = cold ? '#0c1929' : '#1a2744';
+  const skyBot = cold ? '#1e3a5f' : '#2d5a8f';
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+  skyGrad.addColorStop(0, skyTop);
+  skyGrad.addColorStop(1, skyBot);
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, horizonY);
+
+  // Stars
+  for (let i = 0; i < 60; i++) {
+    ctx.fillStyle = `rgba(226,232,240,${0.3 + Math.sin(Date.now() / 1000 + i) * 0.1})`;
+    ctx.beginPath();
+    ctx.arc((i * 137.5 + 42) % w, (i * 89.3 + 17) % (horizonY * 0.7), 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Mountains
+  ctx.fillStyle = '#374151';
+  ctx.beginPath();
+  ctx.moveTo(0, horizonY);
+  for (let x = 0; x <= w; x += 20) {
+    const mh = Math.sin(x * 0.005) * 40 + Math.sin(x * 0.012) * 25 + Math.sin(x * 0.003) * 50;
+    ctx.lineTo(x, horizonY - Math.abs(mh));
+  }
+  ctx.lineTo(w, horizonY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ice sheet (size based on ice coverage)
+  const icePercent = parseFloat(state.ice) / 100;
+  if (icePercent > 0.05) {
+    const iceExtent = w * icePercent * 0.8;
+    const iceGrad = ctx.createLinearGradient(w / 2 - iceExtent / 2, 0, w / 2 + iceExtent / 2, 0);
+    iceGrad.addColorStop(0, 'rgba(186,230,253,0)');
+    iceGrad.addColorStop(0.2, 'rgba(186,230,253,0.7)');
+    iceGrad.addColorStop(0.5, 'rgba(224,242,254,0.85)');
+    iceGrad.addColorStop(0.8, 'rgba(186,230,253,0.7)');
+    iceGrad.addColorStop(1, 'rgba(186,230,253,0)');
+    ctx.fillStyle = iceGrad;
+
+    const iceH = 30 + icePercent * 60;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - iceExtent / 2, horizonY);
+    for (let x = 0; x <= iceExtent; x += 5) {
+      const px = w / 2 - iceExtent / 2 + x;
+      const bump = Math.sin(x * 0.03) * 5 + Math.sin(x * 0.07) * 3;
+      ctx.lineTo(px, horizonY - iceH + Math.abs(iceExtent / 2 - x) * 0.1 + bump);
+    }
+    ctx.lineTo(w / 2 + iceExtent / 2, horizonY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ice label
+    ctx.fillStyle = 'rgba(186,230,253,0.6)';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ice Sheet', w / 2, horizonY - iceH / 2);
+  }
+
+  // Ground / tundra
+  const groundColor = icePercent > 0.4 ? '#4b5563' : '#3f6212';
+  ctx.fillStyle = groundColor;
+  ctx.fillRect(0, horizonY, w, h * 0.1);
+
+  // Ocean
+  const seaLevel = horizonY + h * 0.1;
+  const oceanGrad = ctx.createLinearGradient(0, seaLevel, 0, h * 0.75);
+  oceanGrad.addColorStop(0, cold ? '#1e3a5f' : '#1e40af');
+  oceanGrad.addColorStop(1, '#0c1929');
+  ctx.fillStyle = oceanGrad;
+  ctx.fillRect(0, seaLevel, w, h * 0.65 - seaLevel);
+}
+
+function drawTimeline(kya) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const tlY = h * 0.72;
+  const tlH = h * 0.2;
+  const tlX = w * 0.08;
+  const tlW = w * 0.84;
+
+  // Timeline background
+  ctx.fillStyle = 'rgba(15,23,42,0.6)';
+  ctx.fillRect(tlX - 5, tlY - 5, tlW + 10, tlH + 20);
+
+  // Temperature curve (800 kya)
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let t = 0; t <= 800; t += 2) {
+    const x = tlX + (t / 800) * tlW;
+    const state = getClimateState(t);
+    const y = tlY + tlH / 2 - parseFloat(state.dt) * (tlH / 16);
+    if (t === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Current position marker
+  const curX = tlX + (kya / 800) * tlW;
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(curX, tlY);
+  ctx.lineTo(curX, tlY + tlH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.arc(curX, tlY - 3, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Zero line
+  ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(tlX, tlY + tlH / 2);
+  ctx.lineTo(tlX + tlW, tlY + tlH / 2);
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('800 kya', tlX, tlY + tlH + 14);
+  ctx.fillText('400 kya', tlX + tlW / 2, tlY + tlH + 14);
+  ctx.fillText('Present', tlX + tlW, tlY + tlH + 14);
+  ctx.fillText(kya + ' kya', curX, tlY + tlH + 14);
+
+  ctx.save();
+  ctx.translate(tlX - 15, tlY + tlH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('ΔT (°C)', 0, 0);
+  ctx.restore();
+}
+
+/* ── KaTeX ── */
+katex.render(
+  "T_{\\text{ecc}} \\approx 100{,}000\\;\\text{yr}",
+  document.getElementById('formula1'), { displayMode: false, throwOnError: false }
+);
+katex.render(
+  "T_{\\text{obl}} \\approx 41{,}000\\;\\text{yr},\\;T_{\\text{prec}} \\approx 26{,}000\\;\\text{yr}",
+  document.getElementById('formula2'), { displayMode: false, throwOnError: false }
+);
+
+/* ── Animation ── */
+let lastT = 0;
+function animate(ts) {
+  requestAnimationFrame(animate);
+  const dt = (ts - lastT) / 1000;
+  lastT = ts;
+
+  const speed = parseFloat(speedSlider.value);
+  if (speed > 0) {
+    let t = parseFloat(timeSlider.value) + dt * speed * 5;
+    if (t > 800) t = 0;
+    timeSlider.value = t.toFixed(0);
+    document.getElementById('time-val').textContent = Math.round(t) + ' kya';
+  }
+
+  const kya = parseFloat(timeSlider.value);
+  const state = getClimateState(kya);
+
+  // Update UI
+  document.getElementById('era-val').innerHTML =
+    state.era === 'Glacial'
+      ? '<span class="era-tag glacial">Glacial</span>'
+      : '<span class="era-tag interglacial">Interglacial</span>';
+  document.getElementById('dt-val').textContent = state.dt + ' °C';
+  document.getElementById('co2-val').textContent = state.co2 + ' ppm';
+  document.getElementById('ice-val').textContent = state.ice + '%';
+  document.getElementById('sea-val').textContent = state.sea + ' m';
+
+  // Draw
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawLandscape(state);
+  drawTimeline(kya);
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

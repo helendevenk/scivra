@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animal Habitats — Scivra K-5 Biology</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;min-width:260px;background:rgba(30,41,59,0.95);border-right:1px solid rgba(132,204,22,0.25);padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.badge-row{display:flex;gap:8px}
+.badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+.badge-subject{background:rgba(132,204,22,0.25);color:#d9f99d;border:1px solid rgba(132,204,22,0.4)}
+.badge-free{background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+.sidebar h1{font-size:1.15em;color:#84cc16;line-height:1.3}
+.sidebar h1 span{color:#d9f99d;font-size:0.7em;display:block;margin-top:2px}
+.control-group{display:flex;flex-direction:column;gap:6px}
+.control-group label{font-size:13px;color:#d9f99d;font-weight:600}
+.control-group select,.control-group input[type=range]{width:100%;background:rgba(132,204,22,0.1);border:1px solid rgba(132,204,22,0.25);color:#e2e8f0;border-radius:6px;padding:6px 8px;font-size:13px;outline:none}
+.control-group input[type=range]{-webkit-appearance:none;height:6px;padding:0;cursor:pointer}
+.control-group input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#84cc16;border-radius:50%;cursor:pointer}
+.val{font-family:'JetBrains Mono',monospace;color:#d9f99d;font-size:12px;text-align:right}
+.info-box{background:rgba(132,204,22,0.1);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:12px;font-size:12px;line-height:1.5}
+.info-box h3{color:#84cc16;font-size:13px;margin-bottom:6px}
+.data-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(132,204,22,0.1)}
+.data-label{color:#94a3b8;font-size:11px}
+.data-val{font-family:'JetBrains Mono',monospace;color:#d9f99d;font-size:12px;font-weight:600}
+.animal-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.animal-item{display:flex;align-items:center;gap:8px;padding:5px 8px;background:rgba(132,204,22,0.08);border-radius:6px;font-size:12px}
+.animal-icon{font-size:18px}
+.animal-name{color:#d9f99d;font-weight:600}
+.animal-adapt{color:#94a3b8;font-size:11px}
+.stress-dot{width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0}
+.canvas-area{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+canvas{border-radius:12px;background:#0f172a;display:block}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="badge-row">
+        <span class="badge badge-subject">K-5 BIOLOGY</span>
+        <span class="badge badge-free">FREE</span>
+    </div>
+    <h1>Animal Habitats<span>Scivra K-5 Biology</span></h1>
+
+    <div class="control-group">
+        <label>Habitat</label>
+        <select id="habitat">
+            <option value="desert">Desert</option>
+            <option value="ocean">Ocean</option>
+            <option value="forest" selected>Forest</option>
+            <option value="arctic">Arctic</option>
+            <option value="grassland">Grassland</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>Temperature Change (°F)</label>
+        <input type="range" id="tempChange" min="-40" max="40" value="0">
+        <div class="val" id="tempChangeVal">0°F</div>
+    </div>
+
+    <div class="control-group">
+        <label>Rainfall Change (in/yr)</label>
+        <input type="range" id="rainChange" min="-30" max="30" value="0">
+        <div class="val" id="rainChangeVal">0 in/yr</div>
+    </div>
+
+    <div class="info-box">
+        <h3>Habitat Data</h3>
+        <div class="data-row"><span class="data-label">Temperature</span><span class="data-val" id="tempVal">—</span></div>
+        <div class="data-row"><span class="data-label">Rainfall</span><span class="data-val" id="rainVal">—</span></div>
+        <div class="data-row"><span class="data-label">Biome</span><span class="data-val" id="biomeVal">—</span></div>
+    </div>
+
+    <div class="info-box">
+        <h3>Animals <span style="font-size:10px;color:#94a3b8">(green=happy, red=stressed)</span></h3>
+        <div class="animal-list" id="animalList"></div>
+    </div>
+
+    <div class="info-box">
+        <h3>Climate Effect</h3>
+        <p id="climateText" style="font-size:11px">Adjust temperature and rainfall sliders to simulate climate change effects on this habitat.</p>
+    </div>
+</div>
+
+<div class="canvas-area">
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, time = 0;
+
+function resize() {
+    const area = canvas.parentElement;
+    W = area.clientWidth - 40;
+    H = area.clientHeight - 40;
+    canvas.width = W; canvas.height = H;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const habitats = {
+    desert: {
+        name: 'Desert', temp: 95, rain: 10, biome: 'Arid',
+        skyTop: [40, 30, 10], skyBot: [60, 45, 20], groundCol: [194, 170, 120],
+        animals: [
+            { name: 'Camel', icon: '🐪', adapt: 'Stores fat in hump', tempRange: [60, 130], rainRange: [0, 25] },
+            { name: 'Scorpion', icon: '🦂', adapt: 'Nocturnal hunter', tempRange: [50, 120], rainRange: [0, 20] },
+            { name: 'Roadrunner', icon: '🐦', adapt: 'Fast ground runner', tempRange: [55, 115], rainRange: [0, 30] },
+            { name: 'Rattlesnake', icon: '🐍', adapt: 'Heat-sensing pits', tempRange: [55, 110], rainRange: [0, 25] }
+        ]
+    },
+    ocean: {
+        name: 'Ocean', temp: 65, rain: 50, biome: 'Marine',
+        skyTop: [20, 50, 80], skyBot: [10, 30, 60], groundCol: [30, 80, 120],
+        animals: [
+            { name: 'Dolphin', icon: '🐬', adapt: 'Echolocation', tempRange: [45, 85], rainRange: [20, 80] },
+            { name: 'Sea Turtle', icon: '🐢', adapt: 'Shell protection', tempRange: [50, 85], rainRange: [20, 80] },
+            { name: 'Clownfish', icon: '🐠', adapt: 'Lives in anemones', tempRange: [60, 82], rainRange: [25, 70] },
+            { name: 'Octopus', icon: '🐙', adapt: 'Camouflage skin', tempRange: [40, 80], rainRange: [15, 80] }
+        ]
+    },
+    forest: {
+        name: 'Forest', temp: 60, rain: 45, biome: 'Temperate',
+        skyTop: [30, 55, 35], skyBot: [20, 40, 25], groundCol: [60, 90, 40],
+        animals: [
+            { name: 'Deer', icon: '🦌', adapt: 'Camouflage coat', tempRange: [10, 85], rainRange: [20, 65] },
+            { name: 'Owl', icon: '🦉', adapt: 'Silent flight', tempRange: [5, 80], rainRange: [15, 60] },
+            { name: 'Bear', icon: '🐻', adapt: 'Hibernates in winter', tempRange: [0, 90], rainRange: [20, 70] },
+            { name: 'Squirrel', icon: '🐿️', adapt: 'Stores food for winter', tempRange: [10, 85], rainRange: [20, 65] }
+        ]
+    },
+    arctic: {
+        name: 'Arctic', temp: 5, rain: 8, biome: 'Tundra',
+        skyTop: [40, 50, 70], skyBot: [60, 70, 85], groundCol: [200, 210, 225],
+        animals: [
+            { name: 'Polar Bear', icon: '🐻‍❄️', adapt: 'Thick blubber layer', tempRange: [-40, 40], rainRange: [0, 25] },
+            { name: 'Arctic Fox', icon: '🦊', adapt: 'White winter coat', tempRange: [-50, 35], rainRange: [0, 20] },
+            { name: 'Penguin', icon: '🐧', adapt: 'Huddles for warmth', tempRange: [-40, 30], rainRange: [0, 30] },
+            { name: 'Walrus', icon: '🦭', adapt: 'Tusks break ice', tempRange: [-30, 35], rainRange: [0, 25] }
+        ]
+    },
+    grassland: {
+        name: 'Grassland', temp: 70, rain: 30, biome: 'Savanna',
+        skyTop: [50, 60, 30], skyBot: [70, 75, 40], groundCol: [150, 160, 80],
+        animals: [
+            { name: 'Lion', icon: '🦁', adapt: 'Pack hunting', tempRange: [40, 105], rainRange: [10, 55] },
+            { name: 'Zebra', icon: '🦓', adapt: 'Stripes confuse flies', tempRange: [35, 100], rainRange: [10, 50] },
+            { name: 'Elephant', icon: '🐘', adapt: 'Big ears cool blood', tempRange: [40, 100], rainRange: [15, 55] },
+            { name: 'Giraffe', icon: '🦒', adapt: 'Tall neck reaches trees', tempRange: [45, 100], rainRange: [10, 50] }
+        ]
+    }
+};
+
+function getCurrent() {
+    const h = habitats[document.getElementById('habitat').value];
+    const dT = +document.getElementById('tempChange').value;
+    const dR = +document.getElementById('rainChange').value;
+    return {
+        habitat: h,
+        temp: h.temp + dT,
+        rain: Math.max(0, h.rain + dR),
+        dT, dR
+    };
+}
+
+function animalStress(animal, temp, rain) {
+    let stress = 0;
+    if (temp < animal.tempRange[0]) stress += (animal.tempRange[0] - temp) / 20;
+    if (temp > animal.tempRange[1]) stress += (temp - animal.tempRange[1]) / 20;
+    if (rain < animal.rainRange[0]) stress += (animal.rainRange[0] - rain) / 15;
+    if (rain > animal.rainRange[1]) stress += (rain - animal.rainRange[1]) / 15;
+    return Math.min(1, Math.max(0, stress));
+}
+
+function updateUI() {
+    const c = getCurrent();
+    document.getElementById('tempChangeVal').textContent = (c.dT >= 0 ? '+' : '') + c.dT + '°F';
+    document.getElementById('rainChangeVal').textContent = (c.dR >= 0 ? '+' : '') + c.dR + ' in/yr';
+    document.getElementById('tempVal').textContent = c.temp + '°F';
+    document.getElementById('rainVal').textContent = c.rain + ' in/yr';
+    document.getElementById('biomeVal').textContent = c.habitat.biome;
+
+    const list = document.getElementById('animalList');
+    list.innerHTML = '';
+    c.habitat.animals.forEach(a => {
+        const s = animalStress(a, c.temp, c.rain);
+        const color = s < 0.2 ? '#84cc16' : s < 0.5 ? '#eab308' : '#ef4444';
+        list.innerHTML += `<div class="animal-item">
+            <span class="animal-icon">${a.icon}</span>
+            <div><div class="animal-name">${a.name}</div><div class="animal-adapt">${a.adapt}</div></div>
+            <div class="stress-dot" style="background:${color}"></div>
+        </div>`;
+    });
+
+    let climateMsg = 'Current conditions are normal for this habitat.';
+    if (Math.abs(c.dT) > 20 || Math.abs(c.dR) > 15) {
+        const stressed = c.habitat.animals.filter(a => animalStress(a, c.temp, c.rain) > 0.4).length;
+        if (stressed > 0) climateMsg = `${stressed} animal${stressed > 1 ? 's are' : ' is'} stressed! Climate change affects ${c.habitat.name.toLowerCase()} animals that are adapted to specific conditions.`;
+        else climateMsg = 'Animals are coping, but continued change could cause problems.';
+    }
+    document.getElementById('climateText').textContent = climateMsg;
+}
+
+function drawDesert(c) {
+    // sand dunes
+    ctx.fillStyle = `rgba(${c.habitat.groundCol.join(',')},0.6)`;
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.6);
+    for (let x = 0; x <= W; x += 5) {
+        ctx.lineTo(x, H * 0.6 + Math.sin(x * 0.008 + 1) * 30 + Math.sin(x * 0.02) * 10);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+    // cacti
+    const drawCactus = (x, h) => {
+        ctx.fillStyle = 'rgba(80,140,50,0.7)';
+        ctx.fillRect(x - 8, H * 0.6 - h, 16, h);
+        ctx.fillRect(x - 25, H * 0.6 - h * 0.7, 17, 8);
+        ctx.fillRect(x - 25, H * 0.6 - h * 0.7 - 20, 8, 28);
+        ctx.fillRect(x + 8, H * 0.6 - h * 0.5, 20, 8);
+        ctx.fillRect(x + 20, H * 0.6 - h * 0.5 - 18, 8, 26);
+    };
+    drawCactus(W * 0.2, 80);
+    drawCactus(W * 0.7, 60);
+}
+
+function drawOcean(c) {
+    // water
+    for (let y = H * 0.4; y < H; y += 3) {
+        const depth = (y - H * 0.4) / (H * 0.6);
+        ctx.fillStyle = `rgba(${20 - depth * 10},${80 - depth * 30},${160 - depth * 40},0.5)`;
+        ctx.fillRect(0, y, W, 3);
+    }
+    // waves
+    ctx.strokeStyle = 'rgba(100,180,255,0.3)';
+    ctx.lineWidth = 2;
+    for (let row = 0; row < 5; row++) {
+        ctx.beginPath();
+        const wy = H * 0.4 + row * 30;
+        for (let x = 0; x <= W; x += 5) {
+            const y = wy + Math.sin(x * 0.02 + time * 2 + row) * 8;
+            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+    // coral
+    const colors = ['rgba(255,100,100,0.5)', 'rgba(255,180,50,0.5)', 'rgba(200,100,255,0.5)'];
+    for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = colors[i % 3];
+        const cx = W * 0.15 + i * W * 0.18;
+        const ch = 20 + Math.random() * 30;
+        ctx.beginPath();
+        ctx.moveTo(cx - 15, H - 5);
+        ctx.quadraticCurveTo(cx - 20, H - ch, cx, H - ch - 10);
+        ctx.quadraticCurveTo(cx + 20, H - ch, cx + 15, H - 5);
+        ctx.fill();
+    }
+}
+
+function drawForest(c) {
+    // ground
+    ctx.fillStyle = `rgba(${c.habitat.groundCol.join(',')},0.4)`;
+    ctx.fillRect(0, H * 0.65, W, H * 0.35);
+
+    // trees
+    const drawTree = (x, h, trunkH) => {
+        ctx.fillStyle = 'rgba(80,50,30,0.7)';
+        ctx.fillRect(x - 8, H * 0.65 - trunkH, 16, trunkH);
+        ctx.fillStyle = 'rgba(40,120,40,0.6)';
+        ctx.beginPath();
+        ctx.moveTo(x, H * 0.65 - trunkH - h);
+        ctx.lineTo(x - 35, H * 0.65 - trunkH);
+        ctx.lineTo(x + 35, H * 0.65 - trunkH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(50,140,50,0.5)';
+        ctx.beginPath();
+        ctx.moveTo(x, H * 0.65 - trunkH - h + 20);
+        ctx.lineTo(x - 28, H * 0.65 - trunkH + 10);
+        ctx.lineTo(x + 28, H * 0.65 - trunkH + 10);
+        ctx.closePath();
+        ctx.fill();
+    };
+    for (let i = 0; i < 7; i++) {
+        drawTree(W * 0.08 + i * W * 0.14, 50 + (i % 3) * 15, 30 + (i % 2) * 15);
+    }
+}
+
+function drawArctic(c) {
+    // snow ground
+    ctx.fillStyle = 'rgba(210,220,235,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.55);
+    for (let x = 0; x <= W; x += 5) {
+        ctx.lineTo(x, H * 0.55 + Math.sin(x * 0.01) * 15);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+    // ice chunks
+    ctx.fillStyle = 'rgba(180,210,240,0.4)';
+    ctx.strokeStyle = 'rgba(200,220,245,0.3)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+        const ix = W * 0.2 + i * W * 0.3;
+        const iy = H * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(ix - 30, iy);
+        ctx.lineTo(ix - 20, iy - 25);
+        ctx.lineTo(ix + 15, iy - 20);
+        ctx.lineTo(ix + 30, iy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    // snowflakes
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    for (let i = 0; i < 20; i++) {
+        const sx = (i * 73 + time * 20) % W;
+        const sy = (i * 137 + time * 30) % (H * 0.55);
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawGrassland(c) {
+    // ground
+    ctx.fillStyle = `rgba(${c.habitat.groundCol.join(',')},0.4)`;
+    ctx.fillRect(0, H * 0.6, W, H * 0.4);
+
+    // grass tufts
+    ctx.strokeStyle = 'rgba(120,140,60,0.5)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 40; i++) {
+        const gx = (i * 47) % W;
+        const gy = H * 0.6 + (i * 23) % (H * 0.3);
+        for (let b = -2; b <= 2; b++) {
+            ctx.beginPath();
+            ctx.moveTo(gx, gy);
+            ctx.quadraticCurveTo(gx + b * 4 + Math.sin(time + i) * 3, gy - 15, gx + b * 6, gy - 20);
+            ctx.stroke();
+        }
+    }
+
+    // acacia tree
+    const tx = W * 0.7;
+    ctx.fillStyle = 'rgba(100,70,40,0.6)';
+    ctx.fillRect(tx - 6, H * 0.35, 12, H * 0.25);
+    ctx.fillStyle = 'rgba(80,120,40,0.5)';
+    ctx.beginPath();
+    ctx.ellipse(tx, H * 0.33, 60, 25, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawAnimals(c) {
+    const h = c.habitat;
+    const groundY = h.name === 'Ocean' ? H * 0.55 : h.name === 'Arctic' ? H * 0.45 : H * 0.55;
+
+    h.animals.forEach((a, i) => {
+        const stress = animalStress(a, c.temp, c.rain);
+        const ax = W * 0.15 + i * W * 0.22;
+        const ay = groundY + (i % 2) * 30;
+        const bob = Math.sin(time * 2 + i) * 3;
+
+        // animal emoji
+        ctx.font = '36px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(a.icon, ax, ay + bob);
+
+        // name
+        ctx.font = "bold 11px 'Segoe UI'";
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(a.name, ax, ay + bob + 22);
+
+        // stress indicator
+        if (stress > 0.3) {
+            const pulseAlpha = 0.3 + Math.sin(time * 4) * 0.2;
+            ctx.strokeStyle = `rgba(239,68,68,${pulseAlpha})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(ax, ay + bob - 12, 22, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // exclamation
+            if (stress > 0.6) {
+                ctx.font = "bold 14px 'Segoe UI'";
+                ctx.fillStyle = '#ef4444';
+                ctx.fillText('!', ax + 22, ay + bob - 18);
+            }
+        }
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    time += 0.016;
+
+    const c = getCurrent();
+    const h = c.habitat;
+
+    // sky gradient
+    const stressShift = Math.abs(c.dT) / 40;
+    const skyGrd = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+    skyGrd.addColorStop(0, `rgba(${h.skyTop[0] + stressShift * 30},${h.skyTop[1]},${h.skyTop[2]},0.5)`);
+    skyGrd.addColorStop(1, `rgba(${h.skyBot[0]},${h.skyBot[1]},${h.skyBot[2]},0.15)`);
+    ctx.fillStyle = skyGrd;
+    ctx.fillRect(0, 0, W, H);
+
+    // draw habitat scene
+    const drawFns = { desert: drawDesert, ocean: drawOcean, forest: drawForest, arctic: drawArctic, grassland: drawGrassland };
+    drawFns[document.getElementById('habitat').value](c);
+
+    drawAnimals(c);
+
+    // title
+    ctx.font = "bold 15px 'Segoe UI'";
+    ctx.fillStyle = 'rgba(217,249,157,0.5)';
+    ctx.textAlign = 'center';
+    ctx.fillText(h.name + ' Habitat', W / 2, 25);
+
+    // temp & rain display
+    ctx.font = "12px 'JetBrains Mono'";
+    ctx.fillStyle = 'rgba(217,249,157,0.4)';
+    ctx.fillText(c.temp + '°F  |  ' + c.rain + ' in/yr', W / 2, H - 15);
+    ctx.textAlign = 'start';
+
+    requestAnimationFrame(draw);
+}
+
+document.getElementById('habitat').addEventListener('change', updateUI);
+document.getElementById('tempChange').addEventListener('input', updateUI);
+document.getElementById('rainChange').addEventListener('input', updateUI);
+
+updateUI();
+draw();
+</script>
+</body>
+</html>

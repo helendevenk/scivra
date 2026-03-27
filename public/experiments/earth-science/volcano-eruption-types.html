@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volcano Eruption Types — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; color: #fed7aa; }
+    .sidebar {
+      width: 280px; min-width: 280px;
+      background: rgba(15, 23, 42, 0.95);
+      border-right: 1px solid rgba(249,115,22,0.25);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+      overflow-y: auto;
+    }
+    .canvas-wrap { flex: 1; position: relative; }
+    canvas { display: block; width: 100%; height: 100%; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      display: inline-block;
+      font-size: 0.55rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .subtitle { font-size: 0.68rem; color: #94a3b8; margin-bottom: 4px; }
+    .panel {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .panel-title { font-size: 0.72rem; color: #f97316; margin-bottom: 8px; font-weight: 600; }
+    .ctrl-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.68rem; color: #94a3b8; margin: 6px 0;
+    }
+    .ctrl-row label { min-width: 85px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #f97316; }
+    .ctrl-row .data-val { min-width: 55px; text-align: right; font-size: 0.65rem; }
+    .info-row { font-size: 0.66rem; color: #94a3b8; margin: 3px 0; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 6px 12px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+      width: 100%;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    .erupt-btn {
+      background: rgba(239,68,68,0.2);
+      border-color: rgba(239,68,68,0.4);
+      color: #fca5a5;
+      font-size: 0.85rem;
+      padding: 10px;
+      font-weight: 600;
+    }
+    .erupt-btn:hover { background: rgba(239,68,68,0.35); }
+    .type-info {
+      font-size: 0.6rem; color: #94a3b8; padding: 6px;
+      background: rgba(249,115,22,0.05);
+      border-radius: 4px; margin-top: 4px;
+    }
+    .type-info .label { color: #f97316; font-weight: 600; }
+    .formula-desc { font-size: 0.6rem; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div>
+    <h1>Volcano Types <span class="badge">EARTH SCIENCE MS</span><span class="badge">FREE</span></h1>
+    <p class="subtitle">Cross-section view with animated eruptions</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Magma Properties</div>
+    <div class="ctrl-row">
+      <label>Magma Type</label>
+      <input type="range" id="magmaType" min="0" max="2" value="0" step="1">
+      <span class="data-val" id="magmaType-val">Basaltic</span>
+    </div>
+    <div class="ctrl-row">
+      <label>Gas Content</label>
+      <input type="range" id="gasContent" min="0.5" max="5" value="1" step="0.1">
+      <span class="data-val" id="gasContent-val">1.0%</span>
+    </div>
+    <div class="ctrl-row">
+      <label>Temperature</label>
+      <input type="range" id="magmaTemp" min="700" max="1300" value="1200" step="10">
+      <span class="data-val" id="magmaTemp-val">1200 °C</span>
+    </div>
+  </div>
+
+  <button class="erupt-btn" onclick="triggerEruption()">ERUPT</button>
+
+  <div class="panel">
+    <div class="panel-title">Eruption Info</div>
+    <div class="info-row">Volcano Type: <span class="data-val" id="volcType">Shield</span></div>
+    <div class="info-row">Eruption Style: <span class="data-val" id="eruptStyle">Effusive</span></div>
+    <div class="info-row">Viscosity: <span class="data-val" id="viscosity">Low</span></div>
+    <div class="info-row">VEI Estimate: <span class="data-val" id="vei">0-1</span></div>
+    <div class="info-row">Active Particles: <span class="data-val" id="partCount">0</span></div>
+    <button onclick="resetEruption()" style="margin-top:8px;">Reset</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Eruption Types</div>
+    <div class="type-info" id="typeDesc">
+      <span class="label">Basaltic (Shield):</span> Low viscosity, gentle lava flows. Hawaii-type eruptions. Broad, flat volcano shape.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Equations</div>
+    <div id="formula1"></div>
+    <div class="formula-desc">Viscosity increases exponentially with SiO₂ content.</div>
+    <div id="formula2" style="margin-top:6px;"></div>
+    <div class="formula-desc">Eruption explosivity correlates with gas + viscosity.</div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const wrap = canvas.parentElement;
+
+function resize() { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; }
+resize();
+addEventListener('resize', resize);
+
+const MAGMA_TYPES = [
+  { name: 'Basaltic', volcType: 'Shield', style: 'Effusive', viscosity: 'Low', vei: '0-1', slopeAngle: 0.08, color1: '#ef6c00', color2: '#ff8f00', desc: '<span class="label">Basaltic (Shield):</span> Low viscosity, gentle lava flows. Hawaii-type eruptions. Broad, flat volcano shape.' },
+  { name: 'Andesitic', volcType: 'Stratovolcano', style: 'Explosive', viscosity: 'Medium', vei: '2-4', slopeAngle: 0.25, color1: '#d84315', color2: '#e65100', desc: '<span class="label">Andesitic (Strato):</span> Medium viscosity, moderate explosions with pyroclastic material. Mt. St. Helens type.' },
+  { name: 'Rhyolitic', volcType: 'Caldera', style: 'Plinian', viscosity: 'Very High', vei: '5-8', slopeAngle: 0.4, color1: '#bf360c', color2: '#8d0000', desc: '<span class="label">Rhyolitic (Caldera):</span> Very high viscosity, violent Plinian eruptions. Massive ash columns. Yellowstone type.' }
+];
+
+const slMagma = document.getElementById('magmaType');
+const slGas = document.getElementById('gasContent');
+const slTemp = document.getElementById('magmaTemp');
+
+slMagma.addEventListener('input', updateMagmaInfo);
+slGas.addEventListener('input', () => document.getElementById('gasContent-val').textContent = (+slGas.value).toFixed(1) + '%');
+slTemp.addEventListener('input', () => document.getElementById('magmaTemp-val').textContent = slTemp.value + ' °C');
+
+function updateMagmaInfo() {
+  const idx = +slMagma.value;
+  const mt = MAGMA_TYPES[idx];
+  document.getElementById('magmaType-val').textContent = mt.name;
+  document.getElementById('volcType').textContent = mt.volcType;
+  document.getElementById('eruptStyle').textContent = mt.style;
+  document.getElementById('viscosity').textContent = mt.viscosity;
+  document.getElementById('vei').textContent = mt.vei;
+  document.getElementById('typeDesc').innerHTML = mt.desc;
+
+  /* Adjust gas and temp defaults */
+  if (idx === 0) { slGas.value = 1; slTemp.value = 1200; }
+  else if (idx === 1) { slGas.value = 2.5; slTemp.value = 1000; }
+  else { slGas.value = 4.5; slTemp.value = 800; }
+  document.getElementById('gasContent-val').textContent = (+slGas.value).toFixed(1) + '%';
+  document.getElementById('magmaTemp-val').textContent = slTemp.value + ' °C';
+}
+
+/* Particles */
+const particles = [];
+let erupting = false;
+let eruptTimer = 0;
+const MAX_ERUPT_FRAMES = 300;
+
+function triggerEruption() {
+  erupting = true;
+  eruptTimer = 0;
+}
+
+function resetEruption() {
+  erupting = false;
+  eruptTimer = 0;
+  particles.length = 0;
+}
+
+function spawnParticles(W, H) {
+  const idx = +slMagma.value;
+  const gas = +slGas.value;
+  const mt = MAGMA_TYPES[idx];
+  const ventX = W * 0.5;
+  const baseY = H * 0.72;
+  const slopeH = baseY * mt.slopeAngle * 2.5;
+  const ventY = baseY - slopeH;
+
+  const count = idx === 0 ? 3 : (idx === 1 ? 6 : 10);
+  for (let i = 0; i < count; i++) {
+    const p = {
+      x: ventX + (Math.random() - 0.5) * 10,
+      y: ventY,
+      vx: 0, vy: 0,
+      life: 1,
+      type: 'lava',
+      size: 2 + Math.random() * 3,
+      color: mt.color1
+    };
+
+    if (idx === 0) {
+      /* Basaltic: lava flows down slopes */
+      p.vx = (Math.random() - 0.5) * 3;
+      p.vy = -1 - Math.random() * 2;
+      p.type = 'lava';
+      p.size = 3 + Math.random() * 4;
+    } else if (idx === 1) {
+      /* Andesitic: upward burst + some lateral */
+      p.vx = (Math.random() - 0.5) * 4;
+      p.vy = -4 - Math.random() * 6;
+      p.type = Math.random() < 0.4 ? 'ash' : 'bomb';
+      p.size = Math.random() < 0.4 ? 2 : 3 + Math.random() * 3;
+      p.color = Math.random() < 0.4 ? '#6b6b6b' : mt.color1;
+    } else {
+      /* Rhyolitic: violent upward column */
+      p.vx = (Math.random() - 0.5) * 3;
+      p.vy = -8 - Math.random() * 10;
+      p.type = Math.random() < 0.6 ? 'ash' : 'bomb';
+      p.size = Math.random() < 0.6 ? 1.5 + Math.random() * 2 : 2 + Math.random() * 3;
+      p.color = Math.random() < 0.6 ? '#8a8a8a' : mt.color1;
+
+      /* Pyroclastic flow particles */
+      if (Math.random() < 0.15 * gas) {
+        p.vx = (Math.random() < 0.5 ? -1 : 1) * (3 + Math.random() * 5);
+        p.vy = -1 - Math.random() * 2;
+        p.type = 'pyroclastic';
+        p.color = '#4a3a2a';
+        p.size = 4 + Math.random() * 4;
+      }
+    }
+    particles.push(p);
+  }
+}
+
+function updateParticles(W, H) {
+  const idx = +slMagma.value;
+  const mt = MAGMA_TYPES[idx];
+  const baseY = H * 0.72;
+  const slopeH = baseY * mt.slopeAngle * 2.5;
+  const ventX = W * 0.5;
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.life -= 0.003;
+
+    if (p.type === 'lava' && idx === 0) {
+      /* Flow down volcano slope */
+      p.vy += 0.08;
+      p.x += p.vx;
+      p.y += p.vy;
+      /* Stick to slope */
+      const distFromVent = Math.abs(p.x - ventX);
+      const slopeY = (baseY - slopeH) + distFromVent * mt.slopeAngle * 5;
+      if (p.y > slopeY) {
+        p.y = slopeY;
+        p.vy = 0;
+        p.vx *= 1.02;
+      }
+      if (p.y > baseY) p.y = baseY;
+    } else if (p.type === 'pyroclastic') {
+      p.vy += 0.05;
+      p.x += p.vx;
+      p.y += p.vy;
+      const distFromVent = Math.abs(p.x - ventX);
+      const slopeY = (baseY - slopeH) + distFromVent * mt.slopeAngle * 5;
+      if (p.y > slopeY) {
+        p.y = slopeY - 2;
+        p.vy = -0.5;
+      }
+    } else {
+      /* Ballistic trajectory */
+      p.vy += 0.12;
+      p.x += p.vx;
+      p.y += p.vy;
+      /* Wind drift for ash */
+      if (p.type === 'ash') p.vx += 0.02;
+    }
+
+    if (p.life <= 0 || p.y > H + 10 || p.x < -20 || p.x > W + 20) {
+      particles.splice(i, 1);
+    }
+  }
+}
+
+let frame = 0;
+
+function draw() {
+  frame++;
+  const W = canvas.width, H = canvas.height;
+  const idx = +slMagma.value;
+  const mt = MAGMA_TYPES[idx];
+  const baseY = H * 0.72;
+  const slopeH = baseY * mt.slopeAngle * 2.5;
+  const ventX = W * 0.5;
+  const ventY = baseY - slopeH;
+
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  /* Sky */
+  const skyG = ctx.createLinearGradient(0, 0, 0, baseY);
+  skyG.addColorStop(0, '#1e293b');
+  skyG.addColorStop(1, '#334155');
+  ctx.fillStyle = skyG;
+  ctx.fillRect(0, 0, W, baseY);
+
+  /* Ground */
+  ctx.fillStyle = '#3d2b1f';
+  ctx.fillRect(0, baseY, W, H - baseY);
+
+  /* Underground cross-section */
+  const ugY = baseY + 5;
+
+  /* Earth layers */
+  ctx.fillStyle = '#4a3528';
+  ctx.fillRect(0, ugY, W, (H - ugY) * 0.3);
+  ctx.fillStyle = '#5a4a3a';
+  ctx.fillRect(0, ugY + (H - ugY) * 0.3, W, (H - ugY) * 0.3);
+  ctx.fillStyle = '#6a5a4a';
+  ctx.fillRect(0, ugY + (H - ugY) * 0.6, W, (H - ugY) * 0.4);
+
+  /* Magma chamber */
+  const chamberCX = ventX;
+  const chamberCY = ugY + (H - ugY) * 0.6;
+  const chamberRX = W * 0.12;
+  const chamberRY = (H - ugY) * 0.22;
+
+  const chamberG = ctx.createRadialGradient(chamberCX, chamberCY, 0, chamberCX, chamberCY, chamberRX);
+  chamberG.addColorStop(0, '#ff6600');
+  chamberG.addColorStop(0.5, '#cc3300');
+  chamberG.addColorStop(1, '#8b0000');
+  ctx.fillStyle = chamberG;
+  ctx.beginPath();
+  ctx.ellipse(chamberCX, chamberCY, chamberRX, chamberRY, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Magma pulse animation */
+  const pulse = Math.sin(frame * 0.03) * 0.05 + 1;
+  const pulseG = ctx.createRadialGradient(chamberCX, chamberCY, 0, chamberCX, chamberCY, chamberRX * pulse);
+  pulseG.addColorStop(0, 'rgba(255,140,0,0.3)');
+  pulseG.addColorStop(1, 'rgba(255,140,0,0)');
+  ctx.fillStyle = pulseG;
+  ctx.beginPath();
+  ctx.ellipse(chamberCX, chamberCY, chamberRX * 1.3, chamberRY * 1.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Conduit */
+  ctx.fillStyle = '#cc3300';
+  ctx.beginPath();
+  ctx.moveTo(ventX - 8, ventY);
+  ctx.lineTo(ventX - 12, chamberCY - chamberRY);
+  ctx.lineTo(ventX + 12, chamberCY - chamberRY);
+  ctx.lineTo(ventX + 8, ventY);
+  ctx.closePath();
+  ctx.fill();
+
+  /* Volcano shape */
+  ctx.fillStyle = '#5a4a3e';
+  ctx.beginPath();
+  ctx.moveTo(ventX - W * 0.35, baseY);
+
+  /* Left slope */
+  const slopePoints = 30;
+  for (let s = 0; s <= slopePoints; s++) {
+    const t = s / slopePoints;
+    const sx = ventX - W * 0.35 * (1 - t);
+    let sy;
+    if (idx === 0) {
+      /* Shield: very flat, convex */
+      sy = baseY - slopeH * Math.pow(t, 0.5);
+    } else if (idx === 1) {
+      /* Strato: steeper, concave-convex */
+      sy = baseY - slopeH * Math.pow(t, 1.5);
+    } else {
+      /* Caldera: steep then dip at top */
+      sy = baseY - slopeH * Math.pow(t, 2);
+    }
+    sy += Math.sin(sx * 0.05) * 2;
+    ctx.lineTo(sx, sy);
+  }
+
+  /* Crater rim */
+  if (idx === 2) {
+    ctx.lineTo(ventX - 5, ventY + 8);
+    ctx.lineTo(ventX, ventY + 12);
+    ctx.lineTo(ventX + 5, ventY + 8);
+  } else {
+    ctx.lineTo(ventX, ventY);
+  }
+
+  /* Right slope */
+  for (let s = slopePoints; s >= 0; s--) {
+    const t = s / slopePoints;
+    const sx = ventX + W * 0.35 * (1 - t);
+    let sy;
+    if (idx === 0) sy = baseY - slopeH * Math.pow(t, 0.5);
+    else if (idx === 1) sy = baseY - slopeH * Math.pow(t, 1.5);
+    else sy = baseY - slopeH * Math.pow(t, 2);
+    sy += Math.sin(sx * 0.05) * 2;
+    ctx.lineTo(sx, sy);
+  }
+
+  ctx.lineTo(ventX + W * 0.35, baseY);
+  ctx.closePath();
+  ctx.fill();
+
+  /* Volcano texture - strata lines */
+  ctx.strokeStyle = 'rgba(100,80,60,0.3)';
+  ctx.lineWidth = 1;
+  for (let l = 0; l < 5; l++) {
+    const ly = ventY + (baseY - ventY) * (l / 5);
+    ctx.beginPath();
+    const lw = W * 0.35 * (l / 5);
+    ctx.moveTo(ventX - lw, ly + Math.sin(l * 2) * 3);
+    for (let x = ventX - lw; x <= ventX + lw; x += 8) {
+      ctx.lineTo(x, ly + Math.sin(x * 0.03 + l) * 3);
+    }
+    ctx.stroke();
+  }
+
+  /* Vent glow */
+  const ventGlow = ctx.createRadialGradient(ventX, ventY, 0, ventX, ventY, 25);
+  ventGlow.addColorStop(0, 'rgba(255,100,0,0.4)');
+  ventGlow.addColorStop(1, 'rgba(255,100,0,0)');
+  ctx.fillStyle = ventGlow;
+  ctx.beginPath();
+  ctx.arc(ventX, ventY, 25, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Eruption */
+  if (erupting) {
+    eruptTimer++;
+    if (eruptTimer < MAX_ERUPT_FRAMES) {
+      spawnParticles(W, H);
+    } else {
+      erupting = false;
+    }
+  }
+
+  updateParticles(W, H);
+
+  /* Draw particles */
+  particles.forEach(p => {
+    ctx.globalAlpha = Math.max(0, p.life);
+    if (p.type === 'ash') {
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    } else if (p.type === 'pyroclastic') {
+      /* Pyroclastic flow: larger, smoky */
+      const pg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      pg.addColorStop(0, 'rgba(120,80,40,0.6)');
+      pg.addColorStop(1, 'rgba(80,50,20,0)');
+      ctx.fillStyle = pg;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      /* Lava bombs/flows */
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      /* Glow */
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+      glow.addColorStop(0, 'rgba(255,150,0,0.2)');
+      glow.addColorStop(1, 'rgba(255,150,0,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  /* Ash cloud for rhyolitic */
+  if (idx === 2 && erupting && eruptTimer > 20) {
+    const ashH = Math.min(eruptTimer * 0.5, ventY * 0.7);
+    const ashG = ctx.createLinearGradient(ventX, ventY - ashH, ventX, ventY);
+    ashG.addColorStop(0, 'rgba(100,100,100,0.3)');
+    ashG.addColorStop(0.5, 'rgba(80,80,80,0.4)');
+    ashG.addColorStop(1, 'rgba(60,60,60,0)');
+    ctx.fillStyle = ashG;
+
+    /* Mushroom cloud shape */
+    ctx.beginPath();
+    const cloudTop = ventY - ashH;
+    const cloudW = 30 + ashH * 0.6;
+    ctx.moveTo(ventX - 12, ventY);
+    ctx.bezierCurveTo(ventX - 15, ventY - ashH * 0.5, ventX - cloudW, cloudTop + 20, ventX - cloudW * 0.8, cloudTop);
+    ctx.bezierCurveTo(ventX - cloudW * 0.4, cloudTop - 20, ventX + cloudW * 0.4, cloudTop - 20, ventX + cloudW * 0.8, cloudTop);
+    ctx.bezierCurveTo(ventX + cloudW, cloudTop + 20, ventX + 15, ventY - ashH * 0.5, ventX + 12, ventY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* Labels */
+  ctx.fillStyle = 'rgba(249,115,22,0.7)';
+  ctx.font = '11px "Segoe UI", system-ui';
+  ctx.fillText('MAGMA CHAMBER', chamberCX - 50, chamberCY + 5);
+  ctx.fillText('CONDUIT', ventX + 15, (ventY + chamberCY) / 2);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px "Segoe UI", system-ui';
+  ctx.fillText('Crust', 10, ugY + (H - ugY) * 0.15);
+  ctx.fillText('Upper Mantle', 10, ugY + (H - ugY) * 0.45);
+  ctx.fillText('Lower Mantle', 10, ugY + (H - ugY) * 0.75);
+
+  /* Volcano type label */
+  ctx.fillStyle = '#fed7aa';
+  ctx.font = '13px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(mt.volcType + ' Volcano', ventX, ventY - slopeH * 0.2 - 15);
+  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.fillText(mt.name + ' magma', ventX, ventY - slopeH * 0.2);
+  ctx.textAlign = 'left';
+
+  document.getElementById('partCount').textContent = particles.length;
+
+  requestAnimationFrame(draw);
+}
+
+/* KaTeX */
+try {
+  katex.render('\\eta \\propto e^{\\alpha \\cdot [\\text{SiO}_2]}', document.getElementById('formula1'), { displayMode: false, throwOnError: false });
+  katex.render('\\text{VEI} \\propto \\eta \\times [\\text{gas}]', document.getElementById('formula2'), { displayMode: false, throwOnError: false });
+} catch(e) {}
+
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+import type { Experiment } from "@/shared/types/experiment";
+
+export const k5WeatherMeasurement: Experiment = {
+  id: "k5-weather-measurement",
+  slug: "k5-weather-measurement",
+  title: "Weather Measurement",
+  subtitle: "Temperature, wind speed, precipitation, and humidity instruments",
+  description: "Learn to read weather instruments like a meteorologist! Use virtual thermometers, anemometers, rain gauges, and hygrometers to measure weather conditions. Record data over multiple days and look for patterns to make weather predictions.",
+  thumbnail: "/imgs/experiments/k5-weather-measurement.png",
+  standards: { ngss: ["3-ESS2-1", "3-ESS2-2"], gcse: [], ap: [] },
+  primaryStandard: "elementary-k5",
+  category: "earth",
+  subject: "earth-science",
+  gradeLevel: "3-5",
+  tags: ["weather", "thermometer", "anemometer", "rain gauge", "meteorology", "K-5 Earth science"],
+  difficulty: "beginner",
+  parameters: [
+    { id: "temperature", label: "Temperature", unit: "°C", min: -20, max: 45, default: 22, step: 1, tier: "free" },
+    { id: "windSpeed", label: "Wind Speed", unit: "km/h", min: 0, max: 120, default: 15, step: 5, tier: "free" },
+    { id: "precipitation", label: "Precipitation", unit: "mm", min: 0, max: 50, default: 5, step: 1, tier: "free" },
+    { id: "humidity", label: "Humidity", unit: "%", min: 10, max: 100, default: 55, step: 5, tier: "free" },
+  ],
+  formulas: [],
+  theory: "Meteorologists use instruments to measure weather: thermometers measure air temperature; anemometers measure wind speed (spinning cups catch the wind); rain gauges collect and measure precipitation; hygrometers measure humidity (moisture in the air). Weather changes day to day but follows patterns by season. Temperature is measured in Celsius (°C) or Fahrenheit (°F). Wind speed is measured in km/h or mph. Precipitation is measured in millimeters of water collected. By recording weather data over time, you can spot patterns and make predictions.",
+  instructions: "Adjust the weather conditions using sliders and watch each instrument respond. The thermometer level changes, the anemometer spins faster or slower, the rain gauge fills, and the hygrometer needle moves. Record readings in the data table.",
+  challenges: [
+    { id: "kwm-c1", question: "If the temperature drops and humidity is high, what might happen?", hint: "Fog, dew, or frost might form — when air cools to its dew point, water vapor condenses", tier: "free" },
+    { id: "kwm-c2", question: "Why does the anemometer spin faster when wind speed increases?", hint: "The cups catch more wind force, pushing them around faster — the spin rate is proportional to wind speed", tier: "free" },
+  ],
+  wave: 12, tier: "free", estimatedTime: 10,
+  relatedExperiments: ["k5-weather-patterns"],
+  htmlPath: "/experiments/elementary/k5-weather-measurement.html",
+  seoTitle: "Weather Measurement for Kids | Scivra K-5 Science",
+  seoKeywords: ["weather instruments for kids", "thermometer anemometer simulation", "weather measurement interactive", "K-5 Earth science"],
+  jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Weather Measurement" },
+};

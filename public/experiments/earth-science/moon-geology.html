@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Geology — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; color: #fed7aa; }
+    .sidebar {
+      width: 280px; min-width: 280px;
+      background: rgba(15, 23, 42, 0.95);
+      border-right: 1px solid rgba(249,115,22,0.25);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+      overflow-y: auto;
+    }
+    .canvas-wrap { flex: 1; position: relative; }
+    canvas { display: block; width: 100%; height: 100%; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      display: inline-block;
+      font-size: 0.55rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .subtitle { font-size: 0.68rem; color: #94a3b8; margin-bottom: 4px; }
+    .panel {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .panel-title { font-size: 0.72rem; color: #f97316; margin-bottom: 8px; font-weight: 600; }
+    .ctrl-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.68rem; color: #94a3b8; margin: 6px 0;
+    }
+    .ctrl-row label { min-width: 90px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #f97316; }
+    .ctrl-row .data-val { min-width: 50px; text-align: right; font-size: 0.65rem; }
+    .info-row { font-size: 0.66rem; color: #94a3b8; margin: 3px 0; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 6px 12px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+      width: 100%;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.6rem; color: #94a3b8; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .formula-box { margin-top: 4px; }
+    .formula-desc { font-size: 0.6rem; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div>
+    <h1>Moon Geology <span class="badge">EARTH SCIENCE MS</span><span class="badge">FREE</span></h1>
+    <p class="subtitle">Click the lunar surface to create impact craters</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Impact Parameters</div>
+    <div class="ctrl-row">
+      <label>Meteorite Size</label>
+      <input type="range" id="metSize" min="5" max="60" value="20" step="1">
+      <span class="data-val" id="metSize-val">20 m</span>
+    </div>
+    <div class="ctrl-row">
+      <label>Impact Velocity</label>
+      <input type="range" id="impVel" min="5" max="72" value="20" step="1">
+      <span class="data-val" id="impVel-val">20 km/s</span>
+    </div>
+    <div class="ctrl-row">
+      <label>Impact Angle</label>
+      <input type="range" id="impAngle" min="10" max="90" value="45" step="1">
+      <span class="data-val" id="impAngle-val">45°</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Surface Info</div>
+    <div class="info-row">Total Craters: <span class="data-val" id="craterCount">0</span></div>
+    <div class="info-row">Last Crater Ø: <span class="data-val" id="lastDiam">—</span></div>
+    <div class="info-row">Last Depth: <span class="data-val" id="lastDepth">—</span></div>
+    <button onclick="clearCraters()" style="margin-top:8px;">Reset Surface</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Terrain Legend</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4a4a5a"></div>Maria (dark)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8a8a96"></div>Highlands (light)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2d2d3a"></div>Crater floor</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b0b0bc"></div>Ejecta rays</div>
+    </div>
+  </div>
+
+  <div class="panel formula-box">
+    <div class="panel-title">Crater Scaling</div>
+    <div id="formula1"></div>
+    <div class="formula-desc">Crater diameter scales with impactor KE^0.29.</div>
+    <div id="formula2" style="margin-top:6px;"></div>
+    <div class="formula-desc">Depth ≈ 1/5 of diameter for simple craters.</div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const wrap = canvas.parentElement;
+
+function resize() {
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+resize();
+addEventListener('resize', resize);
+
+/* Sliders */
+const sliders = {
+  metSize: document.getElementById('metSize'),
+  impVel: document.getElementById('impVel'),
+  impAngle: document.getElementById('impAngle')
+};
+const vals = {
+  metSize: document.getElementById('metSize-val'),
+  impVel: document.getElementById('impVel-val'),
+  impAngle: document.getElementById('impAngle-val')
+};
+Object.keys(sliders).forEach(k => {
+  sliders[k].addEventListener('input', () => {
+    if (k === 'metSize') vals[k].textContent = sliders[k].value + ' m';
+    else if (k === 'impVel') vals[k].textContent = sliders[k].value + ' km/s';
+    else vals[k].textContent = sliders[k].value + '°';
+  });
+});
+
+/* Pre-existing craters for terrain */
+const preExisting = [];
+const userCraters = [];
+
+function generateTerrain() {
+  preExisting.length = 0;
+  const W = canvas.width, H = canvas.height;
+  const surfY = H * 0.45;
+  /* Large maria regions */
+  for (let i = 0; i < 6; i++) {
+    preExisting.push({
+      x: Math.random() * W, y: surfY - 20 + Math.random() * 40,
+      r: 30 + Math.random() * 80, type: 'maria', depth: 8 + Math.random() * 15
+    });
+  }
+  /* Small old craters */
+  for (let i = 0; i < 25; i++) {
+    preExisting.push({
+      x: Math.random() * W, y: surfY - 30 + Math.random() * 60,
+      r: 5 + Math.random() * 25, type: 'crater', depth: 3 + Math.random() * 8
+    });
+  }
+}
+
+function clearCraters() {
+  userCraters.length = 0;
+  document.getElementById('craterCount').textContent = '0';
+  document.getElementById('lastDiam').textContent = '—';
+  document.getElementById('lastDepth').textContent = '—';
+  generateTerrain();
+}
+
+function calcCrater(size, vel, angle) {
+  const angleRad = angle * Math.PI / 180;
+  const ke = 0.5 * size * size * size * vel * vel;
+  const diam = 0.8 * Math.pow(ke, 0.29) * Math.sin(angleRad);
+  const depth = diam * 0.2;
+  return { diam: Math.max(8, diam), depth: Math.max(3, depth) };
+}
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const surfY = canvas.height * 0.45;
+
+  if (y < surfY - 60 || y > surfY + 80) return;
+
+  const size = +sliders.metSize.value;
+  const vel = +sliders.impVel.value;
+  const angle = +sliders.impAngle.value;
+  const { diam, depth } = calcCrater(size, vel, angle);
+
+  userCraters.push({ x, y: surfY, r: diam / 2, depth, age: 0 });
+  document.getElementById('craterCount').textContent = userCraters.length;
+  document.getElementById('lastDiam').textContent = diam.toFixed(1) + ' px';
+  document.getElementById('lastDepth').textContent = depth.toFixed(1) + ' px';
+});
+
+/* Ejecta particles */
+const ejecta = [];
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  const surfY = H * 0.45;
+  const crossY = H * 0.65;
+
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  /* Stars */
+  ctx.fillStyle = '#e2e8f0';
+  for (let i = 0; i < 60; i++) {
+    const sx = (i * 137.5 + 50) % W;
+    const sy = (i * 97.3 + 20) % (surfY - 40);
+    ctx.fillRect(sx, sy, 1.2, 1.2);
+  }
+
+  /* Lunar surface base - highlands */
+  ctx.fillStyle = '#6a6a76';
+  ctx.fillRect(0, surfY - 10, W, H * 0.25 + 10);
+
+  /* Surface texture - gentle bumps */
+  ctx.beginPath();
+  ctx.moveTo(0, surfY);
+  for (let x = 0; x <= W; x += 4) {
+    const bump = Math.sin(x * 0.02) * 3 + Math.sin(x * 0.05) * 2 + Math.sin(x * 0.13) * 1;
+    ctx.lineTo(x, surfY + bump);
+  }
+  ctx.lineTo(W, surfY + 60);
+  ctx.lineTo(0, surfY + 60);
+  ctx.closePath();
+  ctx.fillStyle = '#7a7a86';
+  ctx.fill();
+
+  /* Maria regions */
+  preExisting.forEach(c => {
+    if (c.type === 'maria') {
+      const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+      g.addColorStop(0, '#3a3a4a');
+      g.addColorStop(0.7, '#4a4a5a');
+      g.addColorStop(1, 'rgba(74,74,90,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, c.r, c.r * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  /* Pre-existing craters */
+  preExisting.forEach(c => {
+    if (c.type === 'crater') drawCrater(c.x, c.y, c.r, c.depth, 0.4);
+  });
+
+  /* User craters */
+  userCraters.forEach(c => {
+    c.age = Math.min(c.age + 0.02, 1);
+    drawCrater(c.x, c.y, c.r, c.depth, 1);
+    /* Ejecta rays */
+    if (c.age < 0.8) {
+      ctx.globalAlpha = (1 - c.age) * 0.3;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        ctx.beginPath();
+        ctx.moveTo(c.x, c.y);
+        const rayLen = c.r * 2.5;
+        ctx.lineTo(c.x + Math.cos(a) * rayLen, c.y + Math.sin(a) * rayLen * 0.4);
+        ctx.strokeStyle = '#b0b0bc';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+  });
+
+  /* Divider line */
+  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, crossY);
+  ctx.lineTo(W, crossY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* Label */
+  ctx.fillStyle = '#f97316';
+  ctx.font = '12px "Segoe UI", system-ui';
+  ctx.fillText('SURFACE VIEW', 10, surfY - 20);
+  ctx.fillText('CROSS-SECTION VIEW', 10, crossY + 16);
+
+  /* Cross-section */
+  const csTop = crossY + 30;
+  const csH = H - csTop - 20;
+
+  /* Draw cross-section of last user crater or largest pre-existing */
+  const target = userCraters.length > 0
+    ? userCraters[userCraters.length - 1]
+    : (preExisting.length > 0 ? preExisting[5] : null);
+
+  if (target) {
+    const csCenter = W / 2;
+    const csR = Math.min(target.r * 2, W * 0.35);
+    const csDepth = Math.min(target.depth * 2, csH * 0.6);
+
+    /* Ground layers */
+    ctx.fillStyle = '#5a5a66';
+    ctx.fillRect(W * 0.1, csTop, W * 0.8, csH);
+
+    /* Regolith */
+    ctx.fillStyle = '#7a7a86';
+    ctx.fillRect(W * 0.1, csTop, W * 0.8, csH * 0.3);
+
+    /* Crater bowl */
+    ctx.beginPath();
+    ctx.moveTo(csCenter - csR, csTop);
+    ctx.quadraticCurveTo(csCenter, csTop + csDepth, csCenter + csR, csTop);
+    ctx.closePath();
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+
+    /* Crater rim */
+    ctx.beginPath();
+    ctx.moveTo(csCenter - csR - 10, csTop);
+    ctx.lineTo(csCenter - csR, csTop - 6);
+    ctx.lineTo(csCenter - csR + 5, csTop);
+    ctx.fillStyle = '#8a8a96';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(csCenter + csR - 5, csTop);
+    ctx.lineTo(csCenter + csR, csTop - 6);
+    ctx.lineTo(csCenter + csR + 10, csTop);
+    ctx.fill();
+
+    /* Ejecta blanket */
+    ctx.fillStyle = 'rgba(176,176,188,0.3)';
+    ctx.beginPath();
+    ctx.moveTo(csCenter - csR * 2, csTop);
+    ctx.quadraticCurveTo(csCenter - csR, csTop - 8, csCenter - csR * 0.3, csTop);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(csCenter + csR * 0.3, csTop);
+    ctx.quadraticCurveTo(csCenter + csR, csTop - 8, csCenter + csR * 2, csTop);
+    ctx.fill();
+
+    /* Dimension labels */
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    /* Diameter line */
+    ctx.beginPath();
+    ctx.moveTo(csCenter - csR, csTop - 15);
+    ctx.lineTo(csCenter + csR, csTop - 15);
+    ctx.stroke();
+    /* Depth line */
+    ctx.beginPath();
+    ctx.moveTo(csCenter + csR + 20, csTop);
+    ctx.lineTo(csCenter + csR + 20, csTop + csDepth);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#fed7aa';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ø ' + (target.r * 2).toFixed(0) + ' px', csCenter, csTop - 20);
+    ctx.textAlign = 'left';
+    ctx.fillText('d=' + target.depth.toFixed(1), csCenter + csR + 25, csTop + csDepth / 2 + 4);
+
+    /* Layer labels */
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px "Segoe UI", system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText('Regolith', W * 0.1 - 5, csTop + csH * 0.15);
+    ctx.fillText('Megaregolith', W * 0.1 - 5, csTop + csH * 0.55);
+    ctx.fillText('Bedrock', W * 0.1 - 5, csTop + csH * 0.85);
+    ctx.textAlign = 'left';
+  }
+
+  requestAnimationFrame(draw);
+}
+
+function drawCrater(x, y, r, depth, opacity) {
+  ctx.globalAlpha = opacity;
+  /* Shadow/bowl */
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, '#2d2d3a');
+  g.addColorStop(0.6, '#3d3d4a');
+  g.addColorStop(0.85, '#5a5a66');
+  g.addColorStop(1, 'rgba(90,90,102,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(x, y, r, r * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  /* Rim highlight */
+  ctx.strokeStyle = 'rgba(180,180,190,' + (0.4 * opacity) + ')';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(x, y, r * 0.95, r * 0.33, 0, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.stroke();
+  /* Center peak for larger craters */
+  if (r > 20) {
+    ctx.fillStyle = 'rgba(140,140,150,' + (0.5 * opacity) + ')';
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+generateTerrain();
+
+/* KaTeX formulas */
+try {
+  katex.render('D \\propto (\\tfrac{1}{2}mv^2)^{0.29} \\sin\\theta', document.getElementById('formula1'), { displayMode: false, throwOnError: false });
+  katex.render('d \\approx \\tfrac{D}{5}', document.getElementById('formula2'), { displayMode: false, throwOnError: false });
+} catch(e) {}
+
+draw();
+</script>
+</body>
+</html>

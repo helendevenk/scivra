@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hardy-Weinberg Equilibrium — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(132,204,22,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(132,204,22,0.15); color: #84cc16; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 5px; min-width: 230px; }
+    .control-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.7rem; }
+    .control-row label { color: #94a3b8; white-space: nowrap; min-width: 80px; }
+    .control-row .data-val { color: #d9f99d; min-width: 44px; text-align: right; }
+    input[type=range] { accent-color: #84cc16; height: 4px; flex: 1; min-width: 70px; }
+    button { background: rgba(132,204,22,0.12); border: 1px solid rgba(132,204,22,0.25); color: #d9f99d; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.72rem; transition: all 0.2s; }
+    button:hover { background: rgba(132,204,22,0.25); }
+    .btn-row { display: flex; gap: 6px; }
+    .chart-area { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 20px; pointer-events: none; }
+    .chart-container { position: relative; }
+    .chart-container canvas { border: 1px solid rgba(132,204,22,0.15); border-radius: 6px; }
+    .chart-label { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #84cc16; white-space: nowrap; }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 0.68rem; }
+    .data-grid .label { color: #94a3b8; }
+    .data-grid .value { color: #d9f99d; text-align: right; }
+    .formula-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .formula-item { margin-bottom: 6px; }
+    .formula-desc { font-size: 0.6rem; color: #64748b; margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="chart-area">
+  <div class="chart-container">
+    <div class="chart-label">Genotype Frequencies</div>
+    <canvas id="chartBar" width="300" height="300"></canvas>
+  </div>
+  <div class="chart-container">
+    <div class="chart-label">Allele Frequency Over Generations</div>
+    <canvas id="chartLine" width="460" height="300"></canvas>
+  </div>
+</div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Hardy-Weinberg Equilibrium <span class="badge">AP Biology</span></h1>
+      <p>p² + 2pq + q² = 1 — allele frequencies and evolutionary forces</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row"><label>p (freq)</label><input type="range" id="pFreq" min="0.01" max="0.99" value="0.60" step="0.01"><span class="data-val" id="pVal">0.60</span></div>
+      <div class="control-row"><label>Pop Size</label><input type="range" id="popSize" min="20" max="10000" value="1000" step="20"><span class="data-val" id="popVal">1000</span></div>
+      <div class="control-row"><label>Selection (s)</label><input type="range" id="selCoeff" min="0" max="1" value="0" step="0.05"><span class="data-val" id="selVal">0.00</span></div>
+      <div class="control-row"><label>Mutation (μ)</label><input type="range" id="mutRate" min="0" max="0.01" value="0" step="0.001"><span class="data-val" id="mutVal">0.000</span></div>
+      <div class="control-row"><label>Generations</label><input type="range" id="gens" min="10" max="500" value="100" step="10"><span class="data-val" id="gensVal">100</span></div>
+      <div class="btn-row">
+        <button id="btnSim">Simulate</button>
+        <button id="btnReset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Current State</h3>
+      <div class="data-grid">
+        <span class="label">p (A)</span><span class="value data-val" id="dP">0.60</span>
+        <span class="label">q (a)</span><span class="value data-val" id="dQ">0.40</span>
+        <span class="label">AA (p²)</span><span class="value data-val" id="dAA">0.36</span>
+        <span class="label">Aa (2pq)</span><span class="value data-val" id="dAa">0.48</span>
+        <span class="label">aa (q²)</span><span class="value data-val" id="daa">0.16</span>
+        <span class="label">Generation</span><span class="value data-val" id="dGen">0</span>
+        <span class="label">HW Deviation</span><span class="value data-val" id="dDev">0.00%</span>
+      </div>
+    </div>
+    <div class="panel formula-panel">
+      <h3>Hardy-Weinberg Equations</h3>
+      <div class="formula-item"><div id="f1"></div><div class="formula-desc">Allele frequencies sum to 1</div></div>
+      <div class="formula-item"><div id="f2"></div><div class="formula-desc">Genotype frequency distribution</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const ctxBar = document.getElementById('chartBar').getContext('2d');
+  const ctxLine = document.getElementById('chartLine').getContext('2d');
+  const BW = 300, BH = 300, LW = 460, LH = 300;
+
+  let params = { p: 0.6, popSize: 1000, sel: 0, mut: 0, gens: 100 };
+  let history = []; // [{gen, p, q}]
+  let currentP = 0.6;
+
+  // Controls
+  const controls = [
+    { id: 'pFreq', key: 'p', valId: 'pVal', fmt: v => v.toFixed(2) },
+    { id: 'popSize', key: 'popSize', valId: 'popVal', fmt: v => v },
+    { id: 'selCoeff', key: 'sel', valId: 'selVal', fmt: v => v.toFixed(2) },
+    { id: 'mutRate', key: 'mut', valId: 'mutVal', fmt: v => v.toFixed(3) },
+    { id: 'gens', key: 'gens', valId: 'gensVal', fmt: v => v },
+  ];
+  controls.forEach(c => {
+    document.getElementById(c.id).addEventListener('input', function() {
+      params[c.key] = parseFloat(this.value);
+      document.getElementById(c.valId).textContent = c.fmt(params[c.key]);
+    });
+  });
+
+  document.getElementById('btnSim').addEventListener('click', simulate);
+  document.getElementById('btnReset').addEventListener('click', reset);
+
+  function simulate() {
+    history = [];
+    currentP = params.p;
+    for (let g = 0; g <= params.gens; g++) {
+      const q = 1 - currentP;
+      history.push({ gen: g, p: currentP, q });
+
+      // Selection: reduce aa fitness by s
+      if (params.sel > 0) {
+        const wAA = 1, wAa = 1, waa = 1 - params.sel;
+        const wBar = currentP * currentP * wAA + 2 * currentP * q * wAa + q * q * waa;
+        if (wBar > 0) {
+          currentP = (currentP * currentP * wAA + currentP * q * wAa) / wBar;
+        }
+      }
+
+      // Mutation: A→a at rate μ
+      if (params.mut > 0) {
+        currentP = currentP * (1 - params.mut);
+      }
+
+      // Genetic drift (binomial sampling)
+      if (params.popSize < 10000) {
+        let successes = 0;
+        const n = params.popSize * 2; // alleles
+        for (let i = 0; i < n; i++) {
+          if (Math.random() < currentP) successes++;
+        }
+        currentP = successes / n;
+      }
+
+      currentP = Math.max(0.001, Math.min(0.999, currentP));
+    }
+    drawBar();
+    drawLine();
+    updateUI();
+  }
+
+  function reset() {
+    history = [];
+    currentP = params.p;
+    drawBar();
+    drawLine();
+    updateUI();
+  }
+
+  function drawBar() {
+    ctxBar.clearRect(0, 0, BW, BH);
+    ctxBar.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctxBar.fillRect(0, 0, BW, BH);
+
+    const p = currentP, q = 1 - p;
+    const actual = { AA: p * p, Aa: 2 * p * q, aa: q * q };
+    const hwP = params.p, hwQ = 1 - hwP;
+    const expected = { AA: hwP * hwP, Aa: 2 * hwP * hwQ, aa: hwQ * hwQ };
+
+    const margin = { t: 20, r: 15, b: 40, l: 40 };
+    const w = BW - margin.l - margin.r;
+    const h = BH - margin.t - margin.b;
+
+    // Axes
+    ctxBar.strokeStyle = 'rgba(132,204,22,0.3)';
+    ctxBar.lineWidth = 1;
+    ctxBar.beginPath();
+    ctxBar.moveTo(margin.l, margin.t);
+    ctxBar.lineTo(margin.l, margin.t + h);
+    ctxBar.lineTo(margin.l + w, margin.t + h);
+    ctxBar.stroke();
+
+    const genotypes = ['AA', 'Aa', 'aa'];
+    const colors = ['#3b82f6', '#84cc16', '#ef4444'];
+    const barW = w / 3 * 0.35;
+    const gap = w / 3;
+
+    genotypes.forEach((g, i) => {
+      const cx = margin.l + gap * i + gap / 2;
+
+      // Expected bar (outline)
+      const eh = expected[g] * h;
+      ctxBar.strokeStyle = colors[i];
+      ctxBar.lineWidth = 1.5;
+      ctxBar.setLineDash([3, 3]);
+      ctxBar.strokeRect(cx - barW - 2, margin.t + h - eh, barW, eh);
+      ctxBar.setLineDash([]);
+
+      // Actual bar (filled)
+      const ah = actual[g] * h;
+      ctxBar.fillStyle = colors[i];
+      ctxBar.globalAlpha = 0.6;
+      ctxBar.fillRect(cx + 2, margin.t + h - ah, barW, ah);
+      ctxBar.globalAlpha = 1;
+
+      // Label
+      ctxBar.fillStyle = '#e2e8f0';
+      ctxBar.font = '11px Segoe UI, sans-serif';
+      ctxBar.textAlign = 'center';
+      ctxBar.fillText(g, cx, margin.t + h + 16);
+      ctxBar.fillStyle = colors[i];
+      ctxBar.font = '9px JetBrains Mono, monospace';
+      ctxBar.fillText(actual[g].toFixed(3), cx, margin.t + h - ah - 4);
+    });
+
+    // Legend
+    ctxBar.fillStyle = '#64748b';
+    ctxBar.font = '8px Segoe UI, sans-serif';
+    ctxBar.textAlign = 'left';
+    ctxBar.fillText('Dashed = HW expected, Solid = actual', margin.l, BH - 4);
+  }
+
+  function drawLine() {
+    ctxLine.clearRect(0, 0, LW, LH);
+    ctxLine.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctxLine.fillRect(0, 0, LW, LH);
+
+    if (history.length < 2) return;
+
+    const margin = { t: 20, r: 15, b: 30, l: 40 };
+    const w = LW - margin.l - margin.r;
+    const h = LH - margin.t - margin.b;
+    const maxGen = history[history.length - 1].gen || 1;
+
+    // Axes
+    ctxLine.strokeStyle = 'rgba(132,204,22,0.3)';
+    ctxLine.lineWidth = 1;
+    ctxLine.beginPath();
+    ctxLine.moveTo(margin.l, margin.t);
+    ctxLine.lineTo(margin.l, margin.t + h);
+    ctxLine.lineTo(margin.l + w, margin.t + h);
+    ctxLine.stroke();
+
+    // Labels
+    ctxLine.fillStyle = '#64748b';
+    ctxLine.font = '9px JetBrains Mono, monospace';
+    ctxLine.textAlign = 'right';
+    [0, 0.25, 0.5, 0.75, 1.0].forEach(v => {
+      const yy = margin.t + h - v * h;
+      ctxLine.fillText(v.toFixed(2), margin.l - 4, yy + 3);
+      ctxLine.strokeStyle = 'rgba(132,204,22,0.06)';
+      ctxLine.beginPath(); ctxLine.moveTo(margin.l, yy); ctxLine.lineTo(margin.l + w, yy); ctxLine.stroke();
+    });
+    ctxLine.textAlign = 'center';
+    ctxLine.fillText('Generation', margin.l + w / 2, LH - 4);
+
+    // p line
+    ctxLine.strokeStyle = '#3b82f6';
+    ctxLine.lineWidth = 1.5;
+    ctxLine.beginPath();
+    history.forEach((h2, i) => {
+      const px = margin.l + (h2.gen / maxGen) * w;
+      const py = margin.t + h - h2.p * h;
+      if (i === 0) ctxLine.moveTo(px, py); else ctxLine.lineTo(px, py);
+    });
+    ctxLine.stroke();
+
+    // q line
+    ctxLine.strokeStyle = '#ef4444';
+    ctxLine.lineWidth = 1.5;
+    ctxLine.beginPath();
+    history.forEach((h2, i) => {
+      const px = margin.l + (h2.gen / maxGen) * w;
+      const py = margin.t + h - h2.q * h;
+      if (i === 0) ctxLine.moveTo(px, py); else ctxLine.lineTo(px, py);
+    });
+    ctxLine.stroke();
+
+    // Legend
+    ctxLine.font = '9px Segoe UI, sans-serif';
+    ctxLine.textAlign = 'left';
+    ctxLine.fillStyle = '#3b82f6'; ctxLine.fillRect(margin.l + 5, margin.t + 4, 12, 3); ctxLine.fillText('p (A)', margin.l + 22, margin.t + 9);
+    ctxLine.fillStyle = '#ef4444'; ctxLine.fillRect(margin.l + 65, margin.t + 4, 12, 3); ctxLine.fillText('q (a)', margin.l + 82, margin.t + 9);
+  }
+
+  function updateUI() {
+    const p = currentP, q = 1 - p;
+    document.getElementById('dP').textContent = p.toFixed(3);
+    document.getElementById('dQ').textContent = q.toFixed(3);
+    document.getElementById('dAA').textContent = (p * p).toFixed(3);
+    document.getElementById('dAa').textContent = (2 * p * q).toFixed(3);
+    document.getElementById('daa').textContent = (q * q).toFixed(3);
+    document.getElementById('dGen').textContent = history.length > 0 ? history[history.length - 1].gen : 0;
+    const hwP = params.p;
+    const dev = Math.abs(p - hwP) / hwP * 100;
+    document.getElementById('dDev').textContent = dev.toFixed(1) + '%';
+  }
+
+  // KaTeX
+  try {
+    katex.render("p + q = 1", document.getElementById('f1'), { throwOnError: false });
+    katex.render("p^2 + 2pq + q^2 = 1", document.getElementById('f2'), { throwOnError: false });
+  } catch(e) {}
+
+  drawBar(); drawLine(); updateUI();
+})();
+</script>
+</body>
+</html>

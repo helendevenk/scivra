@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atmosphere Layers — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    input[type=range] { accent-color: #f97316; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.5rem; font-weight: 700; color: #fed7aa; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Atmosphere Layers <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">Explore temperature, pressure, and composition from ground to space</p>
+    </div>
+    <div class="panel controls">
+      <label>Altitude: <span class="data-val" id="altDisplay">0</span> km</label>
+      <input type="range" id="altSlider" min="0" max="500" value="0" step="1">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Conditions at Altitude</div>
+      <div class="big-val" id="layerDisplay">Troposphere</div>
+      <div class="data-row"><span>Temperature</span><span class="data-val" id="tempDisplay">15.0°C</span></div>
+      <div class="data-row"><span>Pressure</span><span class="data-val" id="pressDisplay">1013 hPa</span></div>
+      <div class="data-row"><span>Density</span><span class="data-val" id="densDisplay">100%</span></div>
+      <div class="data-row"><span>Key Feature</span><span class="data-val" id="featureDisplay">Weather zone</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Pressure Formula</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LAYERS = [
+  { name: 'Troposphere', top: 12, color: [59, 130, 246], feature: 'Weather, clouds' },
+  { name: 'Stratosphere', top: 50, color: [56, 189, 248], feature: 'Ozone layer (UV shield)' },
+  { name: 'Mesosphere', top: 85, color: [99, 102, 241], feature: 'Meteors burn here' },
+  { name: 'Thermosphere', top: 600, color: [168, 85, 247], feature: 'Aurora, ISS orbit' },
+  { name: 'Exosphere', top: 10000, color: [30, 41, 59], feature: 'Fades into space' }
+];
+
+function getTemp(h) {
+  if (h <= 12) return 15 - 6.5 * h;
+  if (h <= 20) return -56.5;
+  if (h <= 50) return -56.5 + (h - 20) * 1.5;
+  if (h <= 85) return -2.5 - (h - 50) * 2.5;
+  if (h <= 200) return -90 + (h - 85) * 10;
+  return Math.min(1500, -90 + (200 - 85) * 10 + (h - 200) * 2);
+}
+
+function getPressure(h) {
+  return 1013 * Math.exp(-h / 8.5);
+}
+
+function getLayer(h) {
+  for (const l of LAYERS) {
+    if (h <= l.top) return l;
+  }
+  return LAYERS[LAYERS.length - 1];
+}
+
+let altitude = 0;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function update() {
+  const layer = getLayer(altitude);
+  const temp = getTemp(altitude);
+  const press = getPressure(altitude);
+  const dens = press / 1013 * 100;
+
+  document.getElementById('layerDisplay').textContent = layer.name;
+  document.getElementById('tempDisplay').textContent = temp.toFixed(1) + '°C';
+  document.getElementById('pressDisplay').textContent = press < 1 ? press.toExponential(1) + ' hPa' : press.toFixed(0) + ' hPa';
+  document.getElementById('densDisplay').textContent = dens < 0.01 ? dens.toExponential(1) + '%' : dens.toFixed(1) + '%';
+  document.getElementById('featureDisplay').textContent = layer.feature;
+}
+
+function draw() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Vertical atmosphere column (left side)
+  const colX = w * 0.05, colW = w * 0.25;
+  const colY = h * 0.05, colH = h * 0.85;
+
+  // Draw layers
+  const maxAlt = 500;
+  let prevY = colY + colH;
+
+  LAYERS.forEach((layer, i) => {
+    const topAlt = Math.min(layer.top, maxAlt);
+    const topY = colY + colH * (1 - topAlt / maxAlt);
+    const c = layer.color;
+
+    ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},0.15)`;
+    ctx.fillRect(colX, topY, colW, prevY - topY);
+
+    ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},0.3)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(colX, topY);
+    ctx.lineTo(colX + colW, topY);
+    ctx.stroke();
+
+    // Layer label
+    const labelY = (topY + prevY) / 2;
+    ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},0.8)`;
+    ctx.font = '10px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    if (prevY - topY > 20) {
+      ctx.fillText(layer.name, colX + colW / 2, labelY + 3);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '8px JetBrains Mono, monospace';
+      ctx.fillText(topAlt + ' km', colX + colW / 2, labelY + 15);
+    }
+
+    prevY = topY;
+  });
+
+  // Column outline
+  ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(colX, colY, colW, colH);
+
+  // Current altitude indicator
+  const curY = colY + colH * (1 - Math.min(altitude, maxAlt) / maxAlt);
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(colX - 5, curY);
+  ctx.lineTo(colX + colW + 5, curY);
+  ctx.stroke();
+
+  // Balloon icon
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.arc(colX + colW + 15, curY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fed7aa';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(altitude + ' km', colX + colW + 24, curY + 3);
+
+  // Ozone layer highlight
+  const o3Top = colY + colH * (1 - 35 / maxAlt);
+  const o3Bot = colY + colH * (1 - 15 / maxAlt);
+  ctx.fillStyle = 'rgba(56,189,248,0.08)';
+  ctx.fillRect(colX, o3Top, colW, o3Bot - o3Top);
+  ctx.fillStyle = 'rgba(56,189,248,0.5)';
+  ctx.font = '8px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('O₃', colX - 4, (o3Top + o3Bot) / 2 + 3);
+
+  // Kármán line (100 km)
+  const karmanY = colY + colH * (1 - 100 / maxAlt);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(colX, karmanY);
+  ctx.lineTo(colX + colW, karmanY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '8px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Kármán line (100 km)', colX - 4, karmanY + 3);
+
+  // Temperature profile graph (right)
+  const gx = w * 0.4, gy = h * 0.05;
+  const gw = w * 0.25, gh = colH;
+
+  ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(gx, gy, gw, gh);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Temperature (°C)', gx + gw / 2, gy + gh + 16);
+
+  // Temperature curve
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const tMin = -100, tMax = 60;
+  for (let a = 0; a <= maxAlt; a += 0.5) {
+    const t = getTemp(a);
+    const px = gx + gw * ((t - tMin) / (tMax - tMin));
+    const py = gy + gh * (1 - a / maxAlt);
+    if (a === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Current position on temp graph
+  const curTemp = getTemp(altitude);
+  const curTx = gx + gw * ((curTemp - tMin) / (tMax - tMin));
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.arc(curTx, curY, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Temp axis labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '8px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  for (let t = -100; t <= 60; t += 40) {
+    const tx = gx + gw * ((t - tMin) / (tMax - tMin));
+    ctx.fillText(t + '°', tx, gy + gh + 8);
+  }
+
+  // Pressure profile graph (far right)
+  const px2 = w * 0.72, py2 = h * 0.05;
+  const pw = w * 0.2, ph = colH;
+
+  ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px2, py2, pw, ph);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Pressure (log scale)', px2 + pw / 2, py2 + ph + 16);
+
+  // Pressure curve (log scale)
+  ctx.strokeStyle = 'rgba(249,115,22,0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let a = 0; a <= maxAlt; a += 0.5) {
+    const p = getPressure(a);
+    const logP = Math.log10(Math.max(p, 1e-8));
+    const logMin = -6, logMax = 3.1;
+    const ppx = px2 + pw * ((logP - logMin) / (logMax - logMin));
+    const ppy = py2 + ph * (1 - a / maxAlt);
+    if (a === 0) ctx.moveTo(ppx, ppy);
+    else ctx.lineTo(ppx, ppy);
+  }
+  ctx.stroke();
+
+  // Current position on pressure graph
+  const curPress = getPressure(altitude);
+  const logP = Math.log10(Math.max(curPress, 1e-8));
+  const cpx = px2 + pw * ((logP - (-6)) / (3.1 - (-6)));
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.arc(cpx, curY, 5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function animate() {
+  update();
+  draw();
+  requestAnimationFrame(animate);
+}
+
+document.getElementById('altSlider').addEventListener('input', e => {
+  altitude = +e.target.value;
+  document.getElementById('altDisplay').textContent = altitude;
+});
+
+try {
+  katex.render('P(h) = P_0 \\cdot e^{-h/H}', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch(e) {}
+
+animate();
+</script>
+</body>
+</html>

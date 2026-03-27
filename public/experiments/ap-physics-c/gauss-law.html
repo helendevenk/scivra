@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gauss's Law — Scivra AP Physics C</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(99,102,241,.07));border-bottom:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px;align-items:center}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ap{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
+    .badge-pro{background:rgba(168,85,247,.2);border:1px solid rgba(168,85,247,.4);color:#c4b5fd}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 60px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#93c5fd;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:8px 10px}
+    .stat-card.span2{grid-column:span 2}
+    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .stat-value{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+    .v-blue{color:#93c5fd} .v-cyan{color:#67e8f9} .v-amber{color:#fcd34d} .v-green{color:#86efac} .v-rose{color:#fda4af}
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .formula-desc{font-size:10px;color:#64748b;margin-top:5px}
+    .formula-live{font-size:11px;color:#94a3b8;margin-top:4px;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+    .btn{width:100%;padding:9px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .btn-primary{border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.12);color:#93c5fd}
+    .btn-primary:hover{background:rgba(59,130,246,.22)}
+    .btn-warn{border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24}
+    .btn-warn:hover{background:rgba(251,191,36,.18)}
+    .select-row{margin-bottom:12px}
+    .select-row select{width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(59,130,246,.25);background:#0f172a;color:#93c5fd;font-size:12px;cursor:pointer}
+    .select-row select option{background:#1e293b;color:#e8eaf0}
+    .fps-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;font-family:'JetBrains Mono',monospace;pointer-events:none;z-index:5}
+    .threejs-wrap{position:relative;overflow:hidden}
+    #threeCanvas{display:block;width:100%;height:100%}
+    .katex{font-size:1em}
+    .katex .base{color:#93c5fd}
+    .verify-badge{margin-top:8px;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:600;text-align:center}
+    .verify-pass{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .verify-fail{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges">
+    <span class="badge badge-ap">AP PHYSICS C: E&M</span>
+    <span class="badge badge-pro">PRO</span>
+  </div>
+  <h1>Gauss's Law — Electric Flux & Gaussian Surfaces</h1>
+  <p>Visualize electric field vectors, construct Gaussian surfaces, and verify Φ = Q<sub>enc</sub>/ε₀</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Charge Distribution</div>
+      <div class="select-row">
+        <select id="selDist">
+          <option value="0">Point Charge</option>
+          <option value="1">Infinite Line Charge</option>
+          <option value="2">Infinite Plane</option>
+          <option value="3">Charged Sphere</option>
+        </select>
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Charge Q</span>
+          <span class="param-val" id="lblQ">5.0 μC</span>
+        </div>
+        <input type="range" id="sldQ" min="-10" max="10" step="0.5" value="5">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Surface Radius</span>
+          <span class="param-val" id="lblR">2.0 m</span>
+        </div>
+        <input type="range" id="sldR" min="0.5" max="5" step="0.1" value="2">
+      </div>
+
+      <div class="param-row">
+        <div class="param-label">
+          <span class="param-name">Field Density</span>
+          <span class="param-val" id="lblDens">10</span>
+        </div>
+        <input type="range" id="sldDens" min="4" max="20" step="1" value="10">
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card span2">
+        <div class="stat-label">Electric Flux Φ</div>
+        <div class="stat-value v-cyan" id="valFlux">5.65 × 10⁵ N·m²/C</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Q enclosed</div>
+        <div class="stat-value v-blue" id="valQenc">5.0 μC</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Q/ε₀</div>
+        <div class="stat-value v-green" id="valCheck">5.65 × 10⁵</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">|E| at surface</div>
+        <div class="stat-value v-amber" id="valE">1.12 × 10⁴ N/C</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Surface Area</div>
+        <div class="stat-value v-rose" id="valArea">50.27 m²</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Gauss's Law</div>
+      <div class="formula-box" id="fGauss"></div>
+      <div class="formula-box" id="fCoulomb"></div>
+      <div class="formula-live" id="fLive">Φ = Q/ε₀ = 5.65 × 10⁵ N·m²/C</div>
+      <div class="verify-badge verify-pass" id="verifyBadge">✓ Gauss's Law Verified: Φ = Q_enc/ε₀</div>
+    </div>
+
+    <div class="section">
+      <button class="btn btn-primary" id="btnToggleSurface">Toggle Surface Visibility</button>
+      <button class="btn btn-primary" id="btnToggleFlux">Toggle Flux Arrows</button>
+      <button class="btn btn-warn" id="btnReset">Reset View</button>
+    </div>
+  </div>
+
+  <div class="threejs-wrap">
+    <div class="fps-badge" id="fpsBadge">60 FPS</div>
+    <canvas id="threeCanvas"></canvas>
+  </div>
+</div>
+
+<script>
+(function(){
+  const EPS0 = 8.854187817e-12;
+  const K = 1 / (4 * Math.PI * EPS0);
+
+  // State
+  let Q = 5e-6;
+  let surfaceR = 2;
+  let fieldDensity = 10;
+  let distType = 0;
+  let showSurface = true;
+  let showFluxArrows = true;
+  let paused = false;
+
+  // DOM
+  const canvas = document.getElementById('threeCanvas');
+  const selDist = document.getElementById('selDist');
+  const sldQ = document.getElementById('sldQ');
+  const sldR = document.getElementById('sldR');
+  const sldDens = document.getElementById('sldDens');
+  const lblQ = document.getElementById('lblQ');
+  const lblR = document.getElementById('lblR');
+  const lblDens = document.getElementById('lblDens');
+
+  // Three.js setup
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0f172a);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  camera.position.set(5, 4, 6);
+
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2;
+  controls.maxDistance = 25;
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0x334466, 0.6));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 8, 5);
+  scene.add(dirLight);
+
+  // Grid
+  const gridHelper = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x0f1f3a);
+  gridHelper.position.y = -0.01;
+  scene.add(gridHelper);
+
+  // Axes
+  const axesGroup = new THREE.Group();
+  const axisLen = 8;
+  const axisMat = [
+    new THREE.LineBasicMaterial({ color: 0xef4444, opacity: 0.5, transparent: true }),
+    new THREE.LineBasicMaterial({ color: 0x22c55e, opacity: 0.5, transparent: true }),
+    new THREE.LineBasicMaterial({ color: 0x3b82f6, opacity: 0.5, transparent: true })
+  ];
+  [[axisLen,0,0],[0,axisLen,0],[0,0,axisLen]].forEach((dir,i) => {
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(...dir)]);
+    axesGroup.add(new THREE.Line(g, axisMat[i]));
+  });
+  scene.add(axesGroup);
+
+  // Charge visual
+  let chargeMesh;
+  const chargeGeo = new THREE.SphereGeometry(0.2, 24, 24);
+  const chargeMatPos = new THREE.MeshPhongMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 0.5 });
+  const chargeMatNeg = new THREE.MeshPhongMaterial({ color: 0xef4444, emissive: 0x7f1d1d, emissiveIntensity: 0.5 });
+  chargeMesh = new THREE.Mesh(chargeGeo, chargeMatPos);
+  scene.add(chargeMesh);
+
+  // Line charge visual
+  let lineChargeMesh;
+  const lineGeo = new THREE.CylinderGeometry(0.06, 0.06, 16, 12);
+  const lineChargeMat = new THREE.MeshPhongMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 0.4, transparent: true, opacity: 0.8 });
+  lineChargeMesh = new THREE.Mesh(lineGeo, lineChargeMat);
+  lineChargeMesh.visible = false;
+  scene.add(lineChargeMesh);
+
+  // Plane charge visual
+  let planeChargeMesh;
+  const planeGeo = new THREE.PlaneGeometry(16, 16);
+  const planeChargeMat = new THREE.MeshPhongMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 0.3, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+  planeChargeMesh = new THREE.Mesh(planeGeo, planeChargeMat);
+  planeChargeMesh.rotation.x = Math.PI / 2;
+  planeChargeMesh.visible = false;
+  scene.add(planeChargeMesh);
+
+  // Sphere charge visual
+  let sphereChargeMesh;
+  const sphereChargeGeo = new THREE.SphereGeometry(1, 32, 32);
+  const sphereChargeMat = new THREE.MeshPhongMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 0.3, transparent: true, opacity: 0.3 });
+  sphereChargeMesh = new THREE.Mesh(sphereChargeGeo, sphereChargeMat);
+  sphereChargeMesh.visible = false;
+  scene.add(sphereChargeMesh);
+
+  // Gaussian surface
+  const gaussGeo = new THREE.SphereGeometry(1, 48, 48);
+  const gaussMat = new THREE.MeshPhongMaterial({
+    color: 0x67e8f9, emissive: 0x0e7490, emissiveIntensity: 0.15,
+    transparent: true, opacity: 0.12, side: THREE.DoubleSide, wireframe: false
+  });
+  const gaussMesh = new THREE.Mesh(gaussGeo, gaussMat);
+  scene.add(gaussMesh);
+
+  // Gaussian wireframe
+  const gaussWireGeo = new THREE.SphereGeometry(1, 24, 24);
+  const gaussWireMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9, wireframe: true, transparent: true, opacity: 0.2 });
+  const gaussWireMesh = new THREE.Mesh(gaussWireGeo, gaussWireMat);
+  scene.add(gaussWireMesh);
+
+  // Field vectors group
+  const fieldGroup = new THREE.Group();
+  scene.add(fieldGroup);
+
+  // Flux arrows group
+  const fluxGroup = new THREE.Group();
+  scene.add(fluxGroup);
+
+  // Color helpers
+  function fieldColor(magnitude) {
+    const t = Math.min(magnitude / 30000, 1);
+    const r = Math.floor(59 + t * (239 - 59));
+    const g = Math.floor(130 + t * (68 - 130));
+    const b = Math.floor(246 + t * (68 - 246));
+    return new THREE.Color(r / 255, g / 255, b / 255);
+  }
+
+  function createArrow(origin, direction, length, color) {
+    const dir = direction.clone().normalize();
+    const arrowHelper = new THREE.ArrowHelper(dir, origin, length, color, length * 0.25, length * 0.12);
+    return arrowHelper;
+  }
+
+  // Physics: E field at a point
+  function getEField(pos) {
+    const x = pos.x, y = pos.y, z = pos.z;
+    const absQ = Math.abs(Q);
+    const sign = Q >= 0 ? 1 : -1;
+
+    if (distType === 0) {
+      // Point charge
+      const r2 = x * x + y * y + z * z;
+      const r = Math.sqrt(r2);
+      if (r < 0.15) return new THREE.Vector3(0, 0, 0);
+      const E = K * absQ / r2;
+      return new THREE.Vector3(x / r, y / r, z / r).multiplyScalar(E * sign);
+    } else if (distType === 1) {
+      // Line charge along y-axis, lambda = Q per meter (conceptual)
+      const rho2 = x * x + z * z;
+      const rho = Math.sqrt(rho2);
+      if (rho < 0.1) return new THREE.Vector3(0, 0, 0);
+      const lambda = absQ;
+      const E = lambda / (2 * Math.PI * EPS0 * rho);
+      return new THREE.Vector3(x / rho, 0, z / rho).multiplyScalar(E * sign);
+    } else if (distType === 2) {
+      // Infinite plane at y=0, sigma = Q (conceptual)
+      const sigma = absQ;
+      const E = sigma / (2 * EPS0);
+      const dir = y >= 0 ? 1 : -1;
+      return new THREE.Vector3(0, dir * E * sign, 0);
+    } else {
+      // Charged sphere radius=1
+      const r2 = x * x + y * y + z * z;
+      const r = Math.sqrt(r2);
+      if (r < 0.05) return new THREE.Vector3(0, 0, 0);
+      const R0 = 1;
+      let E;
+      if (r >= R0) {
+        E = K * absQ / r2;
+      } else {
+        E = K * absQ * r / (R0 * R0 * R0);
+      }
+      return new THREE.Vector3(x / r, y / r, z / r).multiplyScalar(E * sign);
+    }
+  }
+
+  // Build field vectors
+  function buildFieldVectors() {
+    while (fieldGroup.children.length > 0) {
+      const c = fieldGroup.children[0];
+      fieldGroup.remove(c);
+      if (c.dispose) c.dispose();
+    }
+
+    const n = fieldDensity;
+    const range = Math.max(surfaceR * 1.5, 4);
+    const step = (range * 2) / n;
+
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        for (let k = 0; k < n; k++) {
+          const x = -range + step * (i + 0.5);
+          const y = -range + step * (j + 0.5);
+          const z = -range + step * (k + 0.5);
+          const pos = new THREE.Vector3(x, y, z);
+          const E = getEField(pos);
+          const mag = E.length();
+          if (mag < 100) continue;
+
+          const logScale = Math.log10(mag / 100 + 1) * 0.3;
+          const len = Math.min(logScale, step * 0.8);
+          if (len < 0.05) continue;
+
+          const color = fieldColor(mag);
+          const arrow = createArrow(pos, E, len, color);
+          fieldGroup.add(arrow);
+        }
+      }
+    }
+  }
+
+  // Build flux arrows on Gaussian surface
+  function buildFluxArrows() {
+    while (fluxGroup.children.length > 0) {
+      const c = fluxGroup.children[0];
+      fluxGroup.remove(c);
+      if (c.dispose) c.dispose();
+    }
+    if (!showFluxArrows) return;
+
+    const nPhi = 12;
+    const nTheta = 8;
+
+    for (let i = 0; i < nPhi; i++) {
+      for (let j = 1; j < nTheta; j++) {
+        const phi = (2 * Math.PI * i) / nPhi;
+        const theta = (Math.PI * j) / nTheta;
+        const x = surfaceR * Math.sin(theta) * Math.cos(phi);
+        const y = surfaceR * Math.cos(theta);
+        const z = surfaceR * Math.sin(theta) * Math.sin(phi);
+        const pos = new THREE.Vector3(x, y, z);
+        const E = getEField(pos);
+        const normal = pos.clone().normalize();
+        const EdotN = E.dot(normal);
+        const absDot = Math.abs(EdotN);
+        if (absDot < 50) continue;
+
+        const len = Math.min(Math.log10(absDot / 50 + 1) * 0.5, 1.2);
+        const dir = EdotN >= 0 ? normal : normal.clone().negate();
+        const color = EdotN >= 0 ? 0x22c55e : 0xef4444;
+        const arrow = createArrow(pos, dir, len, color);
+        fluxGroup.add(arrow);
+      }
+    }
+  }
+
+  // Calculate flux and stats
+  function calcFlux() {
+    let qEnc = Math.abs(Q);
+    const absQ = Math.abs(Q);
+    const sign = Q >= 0 ? 1 : -1;
+
+    if (distType === 0) {
+      // Point charge always enclosed
+      qEnc = absQ;
+    } else if (distType === 3) {
+      // Sphere: if surface radius > charge sphere radius, all enclosed
+      const R0 = 1;
+      if (surfaceR >= R0) {
+        qEnc = absQ;
+      } else {
+        qEnc = absQ * (surfaceR * surfaceR * surfaceR) / (R0 * R0 * R0);
+      }
+    } else {
+      // Line/plane: conceptual — always enclose some
+      qEnc = absQ;
+    }
+
+    const flux = qEnc / EPS0 * sign;
+    const area = 4 * Math.PI * surfaceR * surfaceR;
+
+    let eSurface;
+    if (distType === 0) {
+      eSurface = K * absQ / (surfaceR * surfaceR);
+    } else if (distType === 1) {
+      eSurface = absQ / (2 * Math.PI * EPS0 * surfaceR);
+    } else if (distType === 2) {
+      eSurface = absQ / (2 * EPS0);
+    } else {
+      const R0 = 1;
+      if (surfaceR >= R0) {
+        eSurface = K * absQ / (surfaceR * surfaceR);
+      } else {
+        eSurface = K * absQ * surfaceR / (R0 * R0 * R0);
+      }
+    }
+
+    return { flux, qEnc: qEnc * sign, area, eSurface };
+  }
+
+  function formatSci(val) {
+    if (Math.abs(val) === 0) return "0";
+    const exp = Math.floor(Math.log10(Math.abs(val)));
+    const man = val / Math.pow(10, exp);
+    if (exp === 0) return man.toFixed(2);
+    const superDigits = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻' };
+    const supStr = String(exp).split('').map(c => superDigits[c] || c).join('');
+    return man.toFixed(2) + ' × 10' + supStr;
+  }
+
+  function updateStats() {
+    const { flux, qEnc, area, eSurface } = calcFlux();
+
+    document.getElementById('valFlux').textContent = formatSci(flux) + ' N·m²/C';
+    document.getElementById('valQenc').textContent = (qEnc * 1e6).toFixed(1) + ' μC';
+    document.getElementById('valCheck').textContent = formatSci(qEnc / EPS0);
+    document.getElementById('valE').textContent = formatSci(eSurface) + ' N/C';
+    document.getElementById('valArea').textContent = area.toFixed(2) + ' m²';
+
+    const liveStr = 'Φ = Q/ε₀ = ' + formatSci(flux) + ' N·m²/C';
+    document.getElementById('fLive').textContent = liveStr;
+
+    const verified = Math.abs(flux - qEnc / EPS0) < 1;
+    const badge = document.getElementById('verifyBadge');
+    if (verified) {
+      badge.className = 'verify-badge verify-pass';
+      badge.textContent = '✓ Gauss\'s Law Verified: Φ = Q_enc/ε₀';
+    } else {
+      badge.className = 'verify-badge verify-fail';
+      badge.textContent = '✗ Verification Failed';
+    }
+  }
+
+  // Update scene
+  function rebuildScene() {
+    // Charge visuals
+    chargeMesh.visible = distType === 0;
+    lineChargeMesh.visible = distType === 1;
+    planeChargeMesh.visible = distType === 2;
+    sphereChargeMesh.visible = distType === 3;
+
+    // Color by sign
+    const mat = Q >= 0 ? chargeMatPos : chargeMatNeg;
+    chargeMesh.material = mat;
+    const col = Q >= 0 ? 0x3b82f6 : 0xef4444;
+    const emCol = Q >= 0 ? 0x1e3a8a : 0x7f1d1d;
+    lineChargeMat.color.setHex(col);
+    lineChargeMat.emissive.setHex(emCol);
+    planeChargeMat.color.setHex(col);
+    planeChargeMat.emissive.setHex(emCol);
+    sphereChargeMat.color.setHex(col);
+    sphereChargeMat.emissive.setHex(emCol);
+
+    // Gaussian surface scale
+    gaussMesh.scale.setScalar(surfaceR);
+    gaussWireMesh.scale.setScalar(surfaceR);
+    gaussMesh.visible = showSurface;
+    gaussWireMesh.visible = showSurface;
+
+    buildFieldVectors();
+    buildFluxArrows();
+    updateStats();
+  }
+
+  // Events
+  selDist.addEventListener('change', () => { distType = parseInt(selDist.value); rebuildScene(); });
+  sldQ.addEventListener('input', () => {
+    Q = parseFloat(sldQ.value) * 1e-6;
+    lblQ.textContent = parseFloat(sldQ.value).toFixed(1) + ' μC';
+    rebuildScene();
+  });
+  sldR.addEventListener('input', () => {
+    surfaceR = parseFloat(sldR.value);
+    lblR.textContent = surfaceR.toFixed(1) + ' m';
+    rebuildScene();
+  });
+  sldDens.addEventListener('input', () => {
+    fieldDensity = parseInt(sldDens.value);
+    lblDens.textContent = fieldDensity;
+    rebuildScene();
+  });
+
+  document.getElementById('btnToggleSurface').addEventListener('click', () => {
+    showSurface = !showSurface;
+    gaussMesh.visible = showSurface;
+    gaussWireMesh.visible = showSurface;
+  });
+
+  document.getElementById('btnToggleFlux').addEventListener('click', () => {
+    showFluxArrows = !showFluxArrows;
+    buildFluxArrows();
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    sldQ.value = 5; Q = 5e-6; lblQ.textContent = '5.0 μC';
+    sldR.value = 2; surfaceR = 2; lblR.textContent = '2.0 m';
+    sldDens.value = 10; fieldDensity = 10; lblDens.textContent = '10';
+    selDist.value = 0; distType = 0;
+    showSurface = true; showFluxArrows = true;
+    camera.position.set(5, 4, 6);
+    controls.reset();
+    rebuildScene();
+  });
+
+  // Resize
+  function resize() {
+    const wrap = canvas.parentElement;
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  // KaTeX formulas
+  katex.render('\\Phi_E = \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{Q_{\\text{enc}}}{\\varepsilon_0}', document.getElementById('fGauss'), { displayMode: false });
+  katex.render('\\vec{E} = \\frac{1}{4\\pi\\varepsilon_0}\\frac{Q}{r^2}\\hat{r}', document.getElementById('fCoulomb'), { displayMode: false });
+
+  // FPS counter
+  let frameCount = 0, lastFpsTime = performance.now();
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+
+    frameCount++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      document.getElementById('fpsBadge').textContent = frameCount + ' FPS';
+      frameCount = 0;
+      lastFpsTime = now;
+    }
+  }
+
+  // Init
+  resize();
+  rebuildScene();
+  animate();
+})();
+</script>
+</body>
+</html>

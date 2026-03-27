@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plate Tectonics Advanced — Scivra Earth Science</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+  <script src="/lib/orbit-controls.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { display: block; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    button.active { background: rgba(249,115,22,0.35); border-color: #f97316; }
+    .ctrl-row { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #94a3b8; margin: 4px 0; }
+    .ctrl-row label { min-width: 85px; }
+    .ctrl-row input[type=range] { width: 100px; accent-color: #f97316; }
+    .ctrl-row .data-val { color: #fed7aa; min-width: 55px; text-align: right; }
+    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
+    .info-row .data-val { color: #fed7aa; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .formula-panel { max-width: 380px; }
+    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
+    .btn-group { display: flex; gap: 4px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel">
+      <h1>Plate Tectonics <span class="badge">Earth Science</span></h1>
+      <p class="subtitle">3D cross-section — drag to rotate, scroll to zoom</p>
+      <div class="btn-group">
+        <button class="active" id="btn-conv" onclick="setBoundary('convergent')">Convergent</button>
+        <button id="btn-div" onclick="setBoundary('divergent')">Divergent</button>
+        <button id="btn-trans" onclick="setBoundary('transform')">Transform</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ctrl-row">
+        <label>Plate Speed</label>
+        <input type="range" id="speed" min="1" max="20" value="5" step="1">
+        <span class="data-val" id="speed-val">5 cm/yr</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Mantle Temp</label>
+        <input type="range" id="mantle-temp" min="1000" max="4000" value="2500" step="100">
+        <span class="data-val" id="mt-val">2500 °C</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="max-width:300px;">
+      <div class="panel-title">Boundary Data</div>
+      <div class="info-row">Type: <span class="data-val" id="type-val">Convergent</span></div>
+      <div class="info-row">Quake Risk: <span class="data-val" id="quake-val">High</span></div>
+      <div class="info-row">Volcanism: <span class="data-val" id="volc-val">Active</span></div>
+      <div class="info-row">Feature: <span class="data-val" id="feature-val">Subduction Zone</span></div>
+      <div class="info-row">Depth: <span class="data-val" id="depth-val">0–700 km</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div class="panel-title">Driving Forces</div>
+      <div id="formula1"></div>
+      <div class="formula-desc">Plates move 2–15 cm/yr — about fingernail growth speed.</div>
+      <div id="formula2" style="margin-top:6px;"></div>
+      <div class="formula-desc">Slab pull dominates — cold dense lithosphere sinks under gravity.</div>
+    </div>
+  </div>
+</div>
+<script>
+/* ── State ── */
+let boundaryType = 'convergent';
+let quakeFlash = 0;
+
+const BOUNDARY_DATA = {
+  convergent: { label: 'Convergent', quake: 'High (M7-9)', volc: 'Active arc', feature: 'Subduction Zone + Trench', depth: '0–700 km' },
+  divergent:  { label: 'Divergent',  quake: 'Moderate (M5-6)', volc: 'Rift volcanism', feature: 'Mid-Ocean Ridge', depth: '0–30 km' },
+  transform:  { label: 'Transform',  quake: 'High (M6-8)', volc: 'None', feature: 'Strike-Slip Fault', depth: '0–20 km' }
+};
+
+/* ── Three.js Setup ── */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.FogExp2(0x0f172a, 0.04);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(8, 5, 10);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.insertBefore(renderer.domElement, document.getElementById('ui'));
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, -1, 0);
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.minDistance = 5;
+controls.maxDistance = 25;
+
+/* ── Lighting ── */
+scene.add(new THREE.AmbientLight(0x94a3b8, 0.35));
+const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+dir.position.set(5, 8, 4);
+scene.add(dir);
+scene.add(new THREE.DirectionalLight(0xf97316, 0.2).translateZ(-5));
+
+/* ── Plate Geometry ── */
+const plateMat1 = new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.8, metalness: 0.1 });
+const plateMat2 = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.8, metalness: 0.1 });
+const mantleMat = new THREE.MeshStandardMaterial({
+  color: 0xc2410c, roughness: 0.5, metalness: 0.2,
+  transparent: true, opacity: 0.5
+});
+const magmaMat = new THREE.MeshStandardMaterial({
+  color: 0xef4444, emissive: 0xff4500, emissiveIntensity: 0.4,
+  roughness: 0.3, transparent: true, opacity: 0.7
+});
+
+// Left plate
+const plate1 = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 6), plateMat1);
+plate1.position.set(-3.2, 0, 0);
+scene.add(plate1);
+
+// Right plate
+const plate2 = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 6), plateMat2);
+plate2.position.set(3.2, 0, 0);
+scene.add(plate2);
+
+// Mantle
+const mantleGeo = new THREE.BoxGeometry(14, 5, 6);
+const mantle = new THREE.Mesh(mantleGeo, mantleMat);
+mantle.position.set(0, -3, 0);
+scene.add(mantle);
+
+// Subducting slab (convergent)
+const slabGeo = new THREE.BoxGeometry(3, 0.6, 5);
+const slab = new THREE.Mesh(slabGeo, new THREE.MeshStandardMaterial({
+  color: 0x4b5563, roughness: 0.7, transparent: true, opacity: 0.8
+}));
+slab.position.set(1.5, -2, 0);
+slab.rotation.z = -Math.PI / 4;
+scene.add(slab);
+
+// Magma upwelling (divergent)
+const magmaUp = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.3, 0.8, 4, 12),
+  magmaMat
+);
+magmaUp.position.set(0, -2.5, 0);
+magmaUp.visible = false;
+scene.add(magmaUp);
+
+// Ridge (divergent)
+const ridge = new THREE.Mesh(
+  new THREE.ConeGeometry(0.8, 1.5, 12),
+  new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0xff4500, emissiveIntensity: 0.2, roughness: 0.4 })
+);
+ridge.position.set(0, 0.5, 0);
+ridge.visible = false;
+scene.add(ridge);
+
+// Trench (convergent)
+const trenchGeo = new THREE.BoxGeometry(0.5, 1.5, 5);
+const trench = new THREE.Mesh(trenchGeo, new THREE.MeshStandardMaterial({
+  color: 0x1e3a5f, roughness: 0.9
+}));
+trench.position.set(0.2, -0.5, 0);
+scene.add(trench);
+
+// Volcano (convergent)
+const volcano = new THREE.Mesh(
+  new THREE.ConeGeometry(0.6, 1.2, 12),
+  new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.9 })
+);
+volcano.position.set(-2, 1, 0);
+scene.add(volcano);
+
+// Transform fault line
+const faultGeo = new THREE.BoxGeometry(0.15, 0.9, 6);
+const fault = new THREE.Mesh(faultGeo, new THREE.MeshStandardMaterial({
+  color: 0xf97316, emissive: 0xf97316, emissiveIntensity: 0.3, transparent: true, opacity: 0.6
+}));
+fault.position.set(0, 0, 0);
+fault.visible = false;
+scene.add(fault);
+
+// Convection arrows (particle system)
+const arrowCount = 40;
+const arrowGeo = new THREE.BufferGeometry();
+const arrowPos = new Float32Array(arrowCount * 3);
+arrowGeo.setAttribute('position', new THREE.BufferAttribute(arrowPos, 3));
+const arrowPts = new THREE.Points(arrowGeo, new THREE.PointsMaterial({
+  color: 0xf97316, size: 0.1, transparent: true, opacity: 0.5,
+  blending: THREE.AdditiveBlending, depthWrite: false
+}));
+scene.add(arrowPts);
+
+// Earthquake flash sphere
+const quakeSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(0.3, 16, 16),
+  new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0 })
+);
+quakeSphere.position.set(0, 0, 0);
+scene.add(quakeSphere);
+
+/* ── Grid ── */
+const gridHelper = new THREE.GridHelper(14, 14, 0x1e293b, 0x1e293b);
+gridHelper.position.y = -5.5;
+scene.add(gridHelper);
+
+/* ── UI Logic ── */
+const speedSlider = document.getElementById('speed');
+const mtSlider = document.getElementById('mantle-temp');
+speedSlider.oninput = () => document.getElementById('speed-val').textContent = speedSlider.value + ' cm/yr';
+mtSlider.oninput = () => document.getElementById('mt-val').textContent = mtSlider.value + ' °C';
+
+function setBoundary(type) {
+  boundaryType = type;
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + type.substring(0, Math.min(type.length, 5))).classList.add('active');
+
+  const data = BOUNDARY_DATA[type];
+  document.getElementById('type-val').textContent = data.label;
+  document.getElementById('quake-val').textContent = data.quake;
+  document.getElementById('volc-val').textContent = data.volc;
+  document.getElementById('feature-val').textContent = data.feature;
+  document.getElementById('depth-val').textContent = data.depth;
+
+  // Visibility
+  slab.visible = type === 'convergent';
+  trench.visible = type === 'convergent';
+  volcano.visible = type === 'convergent';
+  magmaUp.visible = type === 'divergent';
+  ridge.visible = type === 'divergent';
+  fault.visible = type === 'transform';
+}
+
+// Fix button IDs
+document.getElementById('btn-conv').id = 'btn-conve';
+document.getElementById('btn-div').id = 'btn-diver';
+document.getElementById('btn-trans').id = 'btn-trans';
+
+function setBoundaryBtns() {
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+}
+
+// Re-wire buttons
+document.querySelectorAll('.btn-group button')[0].id = 'btn-conve';
+document.querySelectorAll('.btn-group button')[1].id = 'btn-diver';
+document.querySelectorAll('.btn-group button')[2].id = 'btn-trans';
+
+function setBoundary(type) {
+  boundaryType = type;
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+  const idx = type === 'convergent' ? 0 : type === 'divergent' ? 1 : 2;
+  document.querySelectorAll('.btn-group button')[idx].classList.add('active');
+
+  const data = BOUNDARY_DATA[type];
+  document.getElementById('type-val').textContent = data.label;
+  document.getElementById('quake-val').textContent = data.quake;
+  document.getElementById('volc-val').textContent = data.volc;
+  document.getElementById('feature-val').textContent = data.feature;
+  document.getElementById('depth-val').textContent = data.depth;
+
+  slab.visible = type === 'convergent';
+  trench.visible = type === 'convergent';
+  volcano.visible = type === 'convergent';
+  magmaUp.visible = type === 'divergent';
+  ridge.visible = type === 'divergent';
+  fault.visible = type === 'transform';
+}
+
+/* ── KaTeX ── */
+katex.render(
+  "v_{\\text{plate}} \\approx 2\\text{--}15\\;\\text{cm/yr}",
+  document.getElementById('formula1'), { displayMode: false, throwOnError: false }
+);
+katex.render(
+  "F_{\\text{slab pull}} > F_{\\text{ridge push}}",
+  document.getElementById('formula2'), { displayMode: false, throwOnError: false }
+);
+
+/* ── Animation ── */
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const time = clock.getElapsedTime();
+  const speed = parseFloat(speedSlider.value) / 100;
+  const mt = parseFloat(mtSlider.value);
+
+  controls.update();
+
+  // Plate motion
+  if (boundaryType === 'convergent') {
+    // Right plate subducts
+    const drift = Math.sin(time * speed * 2) * 0.02;
+    plate2.position.x = 3.2 - drift;
+    slab.rotation.z = -Math.PI / 4 + Math.sin(time * 0.5) * 0.02;
+  } else if (boundaryType === 'divergent') {
+    // Plates spread apart
+    const spread = Math.sin(time * speed) * 0.05;
+    plate1.position.x = -3.2 - spread;
+    plate2.position.x = 3.2 + spread;
+    // Magma pulse
+    magmaUp.scale.y = 1 + Math.sin(time * 2) * 0.1;
+    magmaMat.emissiveIntensity = 0.3 + Math.sin(time * 3) * 0.15;
+  } else {
+    // Transform — lateral motion
+    plate1.position.z = Math.sin(time * speed) * 0.1;
+    plate2.position.z = -Math.sin(time * speed) * 0.1;
+    plate1.position.x = -3.2;
+    plate2.position.x = 3.2;
+  }
+
+  // Convection particles
+  for (let i = 0; i < arrowCount; i++) {
+    const phase = (time * 0.3 + i * 0.2) % 4;
+    const cellX = (i % 2 === 0) ? -3 : 3;
+    let px, py;
+    if (phase < 1) {
+      // Rise
+      px = cellX * 0.1;
+      py = -5 + phase * 4;
+    } else if (phase < 2) {
+      // Spread
+      px = cellX * (phase - 1);
+      py = -1;
+    } else if (phase < 3) {
+      // Sink
+      px = cellX;
+      py = -1 - (phase - 2) * 4;
+    } else {
+      // Return
+      px = cellX * (4 - phase);
+      py = -5;
+    }
+    arrowPos[i * 3] = px;
+    arrowPos[i * 3 + 1] = py;
+    arrowPos[i * 3 + 2] = (Math.random() - 0.5) * 4;
+  }
+  arrowGeo.attributes.position.needsUpdate = true;
+
+  // Random earthquake flash
+  if (Math.random() < speed * 0.02) {
+    quakeFlash = 1;
+    quakeSphere.position.set(
+      (Math.random() - 0.5) * 0.5,
+      boundaryType === 'convergent' ? -1 : 0,
+      (Math.random() - 0.5) * 3
+    );
+  }
+  if (quakeFlash > 0) {
+    quakeFlash -= dt * 3;
+    quakeSphere.material.opacity = Math.max(0, quakeFlash * 0.8);
+    quakeSphere.scale.setScalar(1 + (1 - quakeFlash) * 2);
+  }
+
+  // Mantle color based on temperature
+  const tempFrac = (mt - 1000) / 3000;
+  mantle.material.color.setHex(tempFrac > 0.5 ? 0xdc2626 : 0xc2410c);
+  mantle.material.opacity = 0.4 + tempFrac * 0.2;
+
+  renderer.render(scene, camera);
+}
+
+setBoundary('convergent');
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

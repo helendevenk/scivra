@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calorimetry — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 5px; min-width: 220px; }
+    .controls label { font-size: 0.65rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.6rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Calorimetry <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">q = mcΔT — mix solutions, measure heat transfer</p>
+    </div>
+    <div class="panel controls">
+      <label>Experiment Type:</label>
+      <select id="typeSelect">
+        <option value="0">Simple Mixing (hot + cold water)</option>
+        <option value="1">Acid-Base Neutralization</option>
+        <option value="2">Salt Dissolution</option>
+      </select>
+      <label>Mass A: <span class="data-val" id="massADisplay">50</span> g &nbsp; Temp A: <span class="data-val" id="tempADisplay">25</span> °C</label>
+      <input type="range" id="massASlider" min="10" max="200" value="50">
+      <input type="range" id="tempASlider" min="0" max="100" value="25">
+      <label>Mass B: <span class="data-val" id="massBDisplay">50</span> g &nbsp; Temp B: <span class="data-val" id="tempBDisplay">75</span> °C</label>
+      <input type="range" id="massBSlider" min="10" max="200" value="50">
+      <input type="range" id="tempBSlider" min="0" max="100" value="75">
+      <button id="mixBtn">Mix!</button> <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:200px;">
+      <div class="panel-title">Measurements</div>
+      <div class="big-val" id="finalTempDisplay">—</div>
+      <div style="text-align:center;font-size:0.65rem;color:#94a3b8;">Final Temperature (°C)</div>
+      <div class="data-row"><span>ΔT (cold side)</span><span class="data-val" id="dtColdDisplay">—</span></div>
+      <div class="data-row"><span>ΔT (hot side)</span><span class="data-val" id="dtHotDisplay">—</span></div>
+      <div class="data-row"><span>q (heat transfer)</span><span class="data-val" id="qDisplay">—</span></div>
+      <div class="data-row"><span>ΔH (if rxn)</span><span class="data-val" id="dhDisplay">—</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Heat Equation</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C_WATER = 4.184; // J/(g·°C)
+
+// Reaction enthalpy additions (J per g of solution)
+const REACTION_DH = [0, 0.57, -0.35]; // mixing=0, acid-base exothermic, dissolution endothermic
+
+let typeIdx = 0, massA = 50, tempA = 25, massB = 50, tempB = 75;
+let mixing = false, mixProgress = 0, tempCurve = [], currentTemp = 0, finalTemp = 0;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function calcFinalTemp() {
+  const totalMass = massA + massB;
+  const baseTf = (massA * C_WATER * tempA + massB * C_WATER * tempB) / (totalMass * C_WATER);
+  const reactionDelta = REACTION_DH[typeIdx] * totalMass / (totalMass * C_WATER);
+  return baseTf + reactionDelta;
+}
+
+function startMix() {
+  finalTemp = calcFinalTemp();
+  mixing = true;
+  mixProgress = 0;
+  tempCurve = [];
+  currentTemp = Math.min(tempA, tempB);
+
+  const coldT = Math.min(tempA, tempB);
+  const hotT = Math.max(tempA, tempB);
+
+  document.getElementById('finalTempDisplay').textContent = finalTemp.toFixed(1);
+  document.getElementById('dtColdDisplay').textContent = (finalTemp - coldT).toFixed(1) + ' °C';
+  document.getElementById('dtHotDisplay').textContent = (finalTemp - hotT).toFixed(1) + ' °C';
+
+  const q = (massA + massB) * C_WATER * Math.abs(finalTemp - coldT);
+  document.getElementById('qDisplay').textContent = (q / 1000).toFixed(2) + ' kJ';
+
+  if (typeIdx > 0) {
+    const dh = REACTION_DH[typeIdx] * (massA + massB);
+    document.getElementById('dhDisplay').textContent = (dh / 1000).toFixed(2) + ' kJ';
+  } else {
+    document.getElementById('dhDisplay').textContent = 'N/A';
+  }
+}
+
+function resetExperiment() {
+  mixing = false;
+  mixProgress = 0;
+  tempCurve = [];
+  document.getElementById('finalTempDisplay').textContent = '—';
+  document.getElementById('dtColdDisplay').textContent = '—';
+  document.getElementById('dtHotDisplay').textContent = '—';
+  document.getElementById('qDisplay').textContent = '—';
+  document.getElementById('dhDisplay').textContent = '—';
+}
+
+function tempToColor(t) {
+  // Blue (cold) → Green (warm) → Red (hot)
+  const ratio = Math.max(0, Math.min(1, t / 100));
+  if (ratio < 0.5) {
+    const r2 = ratio * 2;
+    return [Math.round(59 * (1-r2)), Math.round(130 + 55 * r2), Math.round(246 * (1-r2))];
+  } else {
+    const r2 = (ratio - 0.5) * 2;
+    return [Math.round(239 * r2), Math.round(185 * (1-r2) + 68 * r2), Math.round(129 * (1-r2))];
+  }
+}
+
+function drawThermometer(x, y, h, temp, label) {
+  const bulbR = 12;
+  const tubeW = 8;
+  const fillRatio = Math.max(0.05, Math.min(1, temp / 100));
+  const tc = tempToColor(temp);
+
+  // Tube
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.rect(x - tubeW/2, y - h, tubeW, h);
+  ctx.stroke();
+
+  // Fill
+  ctx.fillStyle = `rgb(${tc[0]},${tc[1]},${tc[2]})`;
+  const fillH = h * fillRatio;
+  ctx.fillRect(x - tubeW/2 + 1, y - fillH, tubeW - 2, fillH);
+
+  // Bulb
+  ctx.beginPath();
+  ctx.arc(x, y + bulbR/2, bulbR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, y + bulbR + 16);
+  ctx.fillStyle = `rgb(${tc[0]},${tc[1]},${tc[2]})`;
+  ctx.font = '12px JetBrains Mono, monospace';
+  ctx.fillText(temp.toFixed(1) + '°C', x, y - h - 8);
+}
+
+function animate() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  if (mixing) {
+    mixProgress = Math.min(1, mixProgress + 0.008);
+    // Exponential approach to final temp
+    const coldT = Math.min(tempA, tempB);
+    currentTemp = coldT + (finalTemp - coldT) * (1 - Math.exp(-mixProgress * 4));
+    tempCurve.push(currentTemp);
+    if (tempCurve.length > 300) tempCurve.shift();
+  }
+
+  // Draw calorimeter (center)
+  const cx = w * 0.38, cy = h * 0.42;
+  const calW = 120, calH = 150;
+
+  // Cup
+  ctx.strokeStyle = 'rgba(16,185,129,0.3)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - calW/2, cy - calH/2);
+  ctx.lineTo(cx - calW/2 - 5, cy + calH/2);
+  ctx.lineTo(cx + calW/2 + 5, cy + calH/2);
+  ctx.lineTo(cx + calW/2, cy - calH/2);
+  ctx.stroke();
+
+  // Lid
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath();
+  ctx.moveTo(cx - calW/2 - 8, cy - calH/2);
+  ctx.lineTo(cx + calW/2 + 8, cy - calH/2);
+  ctx.stroke();
+
+  if (mixing) {
+    // Mixed solution
+    const tc = tempToColor(currentTemp);
+    ctx.fillStyle = `rgba(${tc[0]},${tc[1]},${tc[2]},0.3)`;
+    const fillH = calH * 0.75;
+    ctx.fillRect(cx - calW/2, cy + calH/2 - fillH, calW, fillH);
+
+    // Thermometer in cup
+    drawThermometer(cx, cy - 10, 80, currentTemp, 'Mixture');
+  } else {
+    // Two beakers before mixing
+    const tc1 = tempToColor(tempA);
+    const tc2 = tempToColor(tempB);
+
+    // Beaker A (left)
+    ctx.fillStyle = `rgba(${tc1[0]},${tc1[1]},${tc1[2]},0.3)`;
+    ctx.fillRect(cx - calW/2, cy + calH/2 - calH * 0.4, calW * 0.45, calH * 0.4);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('A', cx - calW/4, cy + calH/2 + 14);
+
+    // Beaker B (right)
+    ctx.fillStyle = `rgba(${tc2[0]},${tc2[1]},${tc2[2]},0.3)`;
+    ctx.fillRect(cx + calW * 0.05, cy + calH/2 - calH * 0.4, calW * 0.45, calH * 0.4);
+    ctx.fillText('B', cx + calW/4, cy + calH/2 + 14);
+
+    drawThermometer(cx - 45, cy - 10, 60, tempA, 'Sol. A');
+    drawThermometer(cx + 45, cy - 10, 60, tempB, 'Sol. B');
+  }
+
+  // Temperature vs time graph (right side)
+  const gx = w * 0.6, gy = h * 0.18;
+  const gw = w * 0.32, gh = h * 0.55;
+
+  ctx.strokeStyle = 'rgba(16,185,129,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(gx, gy, gw, gh);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Time (s)', gx + gw/2, gy + gh + 16);
+  ctx.save();
+  ctx.translate(gx - 14, gy + gh/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Temperature (°C)', 0, 0);
+  ctx.restore();
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 1; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(gx, gy + gh * i/5);
+    ctx.lineTo(gx + gw, gy + gh * i/5);
+    ctx.stroke();
+  }
+
+  // Temperature axis labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 5; i++) {
+    ctx.fillText((100 - i * 20) + '°', gx - 4, gy + gh * i/5 + 3);
+  }
+
+  // Plot curve
+  if (tempCurve.length > 1) {
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    tempCurve.forEach((t, i) => {
+      const px = gx + (i / 300) * gw;
+      const py = gy + gh * (1 - t / 100);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+
+    // Final temp reference line
+    if (mixing && mixProgress > 0.3) {
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(16,185,129,0.4)';
+      ctx.lineWidth = 1;
+      const fy = gy + gh * (1 - finalTemp / 100);
+      ctx.beginPath();
+      ctx.moveTo(gx, fy);
+      ctx.lineTo(gx + gw, fy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#6ee7b7';
+      ctx.textAlign = 'left';
+      ctx.font = '9px JetBrains Mono, monospace';
+      ctx.fillText('T_f = ' + finalTemp.toFixed(1) + '°C', gx + gw + 4, fy + 3);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// Controls
+document.getElementById('typeSelect').addEventListener('change', e => { typeIdx = +e.target.value; resetExperiment(); });
+document.getElementById('massASlider').addEventListener('input', e => {
+  massA = +e.target.value;
+  document.getElementById('massADisplay').textContent = massA;
+  resetExperiment();
+});
+document.getElementById('tempASlider').addEventListener('input', e => {
+  tempA = +e.target.value;
+  document.getElementById('tempADisplay').textContent = tempA;
+  resetExperiment();
+});
+document.getElementById('massBSlider').addEventListener('input', e => {
+  massB = +e.target.value;
+  document.getElementById('massBDisplay').textContent = massB;
+  resetExperiment();
+});
+document.getElementById('tempBSlider').addEventListener('input', e => {
+  tempB = +e.target.value;
+  document.getElementById('tempBDisplay').textContent = tempB;
+  resetExperiment();
+});
+document.getElementById('mixBtn').addEventListener('click', startMix);
+document.getElementById('resetBtn').addEventListener('click', resetExperiment);
+
+try {
+  katex.render('q = mc\\Delta T', document.getElementById('formulaDisplay'), { displayMode: true });
+} catch(e) {}
+
+animate();
+</script>
+</body>
+</html>

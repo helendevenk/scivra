@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Web Dynamics — Scivra Middle School Science</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e8e6df;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(15,23,42,0.88);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#d9f99d;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:240px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.7rem;transition:all 0.2s}
+    button:hover{background:rgba(132,204,22,0.25)}
+    button.active{background:rgba(132,204,22,0.35);border-color:#84cc16}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#84cc16;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(132,204,22,0.25);color:#d9f99d}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Food Web Dynamics <span class="badge">Middle School</span></h1>
+      <p>Click an organism to remove it and see how the food web responds. Energy flows from producers upward.</p>
+    </div>
+    <div class="panel controls">
+      <div style="font-size:0.62rem;color:#94a3b8">Click any organism on the canvas to remove it</div>
+      <div class="btn-row">
+        <button onclick="resetWeb()">Reset Food Web</button>
+        <button onclick="removeSpecies('fox')">Remove Fox</button>
+        <button onclick="removeSpecies('rabbit')">Remove Rabbit</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#d9f99d;margin-bottom:4px;font-weight:600">Ecosystem Status</div>
+      <div class="data-row">Species Count <span class="data-val" id="d-count">8</span></div>
+      <div class="data-row">Removed <span class="data-val" id="d-removed">None</span></div>
+      <div class="data-row">Energy Source <span class="data-val">Sun (100%)</span></div>
+      <div class="data-row">Producer Level <span class="data-val" id="d-prod">Stable</span></div>
+      <div class="data-row">Top Predator <span class="data-val" id="d-top">Hawk</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=document.getElementById('canvas'),ctx=C.getContext('2d');
+let W,H,animT=0;
+
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+window.addEventListener('resize',resize);resize();
+
+const speciesData=[
+  {id:'sun',name:'Sun',level:0,color:'#fbbf24',x:0.5,y:0.9,size:1,alive:true,emoji:'*'},
+  {id:'grass',name:'Grass',level:1,color:'#22c55e',x:0.2,y:0.72,size:1,alive:true,emoji:'G'},
+  {id:'flowers',name:'Flowers',level:1,color:'#f472b6',x:0.5,y:0.72,size:1,alive:true,emoji:'F'},
+  {id:'algae',name:'Algae',level:1,color:'#34d399',x:0.8,y:0.72,size:1,alive:true,emoji:'A'},
+  {id:'rabbit',name:'Rabbit',level:2,color:'#94a3b8',x:0.25,y:0.48,size:1,alive:true,emoji:'R'},
+  {id:'mouse',name:'Mouse',level:2,color:'#a78bfa',x:0.55,y:0.48,size:1,alive:true,emoji:'M'},
+  {id:'fox',name:'Fox',level:3,color:'#f97316',x:0.35,y:0.25,size:1,alive:true,emoji:'X'},
+  {id:'hawk',name:'Hawk',level:3,color:'#ef4444',x:0.7,y:0.25,size:1,alive:true,emoji:'H'}
+];
+
+const links=[
+  {from:'sun',to:'grass',pct:100},{from:'sun',to:'flowers',pct:100},{from:'sun',to:'algae',pct:100},
+  {from:'grass',to:'rabbit',pct:10},{from:'flowers',to:'rabbit',pct:10},{from:'grass',to:'mouse',pct:10},
+  {from:'flowers',to:'mouse',pct:10},{from:'algae',to:'mouse',pct:10},
+  {from:'rabbit',to:'fox',pct:10},{from:'rabbit',to:'hawk',pct:10},
+  {from:'mouse',to:'fox',pct:10},{from:'mouse',to:'hawk',pct:10}
+];
+
+let removed=[];
+
+function getSpecies(id){return speciesData.find(s=>s.id===id)}
+
+function removeSpecies(id){
+  const sp=getSpecies(id);
+  if(!sp||!sp.alive||sp.id==='sun')return;
+  sp.alive=false;sp.size=0.3;
+  removed.push(sp.name);
+  // cascade: connected consumers grow/shrink
+  propagateEffects();
+  updateData();
+}
+
+function propagateEffects(){
+  speciesData.forEach(s=>{
+    if(!s.alive||s.level===0)return;
+    // check if any food source is alive
+    const foodLinks=links.filter(l=>l.to===s.id);
+    const aliveSources=foodLinks.filter(l=>getSpecies(l.from).alive);
+    if(aliveSources.length===0&&foodLinks.length>0){
+      // no food = decline
+      s.size=Math.max(0.3,s.size-0.3);
+    }
+    // check if predator is removed → prey grows
+    const predLinks=links.filter(l=>l.from===s.id);
+    const alivePreds=predLinks.filter(l=>{
+      const pred=getSpecies(l.to);
+      return pred&&pred.alive&&pred.level>s.level;
+    });
+    if(alivePreds.length===0&&predLinks.some(l=>{const p=getSpecies(l.to);return p&&p.level>s.level})){
+      s.size=Math.min(1.8,s.size+0.3);
+    }
+  });
+}
+
+function resetWeb(){
+  speciesData.forEach(s=>{s.alive=true;s.size=1});
+  removed=[];
+  updateData();
+}
+
+function updateData(){
+  const alive=speciesData.filter(s=>s.alive&&s.id!=='sun').length;
+  document.getElementById('d-count').textContent=alive;
+  document.getElementById('d-removed').textContent=removed.length?removed.join(', '):'None';
+  const prods=speciesData.filter(s=>s.level===1);
+  const prodStatus=prods.every(s=>s.alive)?'Stable':prods.some(s=>s.alive)?'Reduced':'Collapsed';
+  document.getElementById('d-prod').textContent=prodStatus;
+  const tops=speciesData.filter(s=>s.level===3&&s.alive);
+  document.getElementById('d-top').textContent=tops.length?tops.map(s=>s.name).join(', '):'None';
+}
+
+C.addEventListener('click',function(e){
+  const mx=e.clientX,my=e.clientY;
+  speciesData.forEach(sp=>{
+    if(!sp.alive||sp.id==='sun')return;
+    const sx=sp.x*W,sy=sp.y*H;
+    if(Math.hypot(mx-sx,my-sy)<30){
+      removeSpecies(sp.id);
+    }
+  });
+});
+
+function drawArrow(x1,y1,x2,y2,color,pct,alive){
+  if(!alive){color+='30'}
+  const dx=x2-x1,dy=y2-y1,d=Math.sqrt(dx*dx+dy*dy);
+  const nx=dx/d,ny=dy/d;
+  const sx=x1+nx*28,sy=y1+ny*28;
+  const ex=x2-nx*28,ey=y2-ny*28;
+  ctx.strokeStyle=color;ctx.lineWidth=alive?2:1;
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();
+  // arrowhead
+  const a=Math.atan2(ey-sy,ex-sx);
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-10*Math.cos(a-0.4),ey-10*Math.sin(a-0.4));
+  ctx.lineTo(ex-10*Math.cos(a+0.4),ey-10*Math.sin(a+0.4));
+  ctx.closePath();ctx.fill();
+  // energy label
+  if(alive){
+    const mx2=(sx+ex)/2,my2=(sy+ey)/2;
+    ctx.fillStyle='#94a3b8';ctx.font='9px "JetBrains Mono",monospace';ctx.textAlign='center';
+    ctx.fillText(pct+'%',mx2+10,my2);
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.02)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // level labels
+  ctx.fillStyle='rgba(132,204,22,0.15)';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='right';
+  ctx.fillText('Tertiary Consumers',W-20,H*0.25-20);
+  ctx.fillText('Primary Consumers',W-20,H*0.48-20);
+  ctx.fillText('Producers',W-20,H*0.72-20);
+  ctx.fillText('Energy Source',W-20,H*0.9-10);
+
+  // draw links first
+  links.forEach(l=>{
+    const from=getSpecies(l.from),to=getSpecies(l.to);
+    const alive=from.alive&&to.alive;
+    drawArrow(from.x*W,from.y*H,to.x*W,to.y*H,from.color,l.pct,alive);
+  });
+
+  // draw species nodes
+  speciesData.forEach(sp=>{
+    const sx=sp.x*W,sy=sp.y*H;
+    const r=22*sp.size;
+    // glow
+    if(sp.alive){
+      const g=ctx.createRadialGradient(sx,sy,0,sx,sy,r*1.5);
+      g.addColorStop(0,sp.color+'30');g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(sx,sy,r*1.5,0,Math.PI*2);ctx.fill();
+    }
+    // circle
+    ctx.fillStyle=sp.alive?sp.color+'40':'#33415540';
+    ctx.strokeStyle=sp.alive?sp.color:'#334155';ctx.lineWidth=sp.alive?2:1;
+    ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // name
+    ctx.fillStyle=sp.alive?'#fff':'#475569';ctx.font='bold 11px "Segoe UI",system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(sp.name,sx,sy);
+    // size indicator
+    if(sp.alive&&sp.size!==1&&sp.id!=='sun'){
+      ctx.fillStyle=sp.size>1?'#22c55e':'#f87171';ctx.font='9px "JetBrains Mono",monospace';
+      ctx.fillText(sp.size>1?'GROWING':'DECLINING',sx,sy+r+10);
+    }
+    if(!sp.alive&&sp.id!=='sun'){
+      ctx.fillStyle='#f87171';ctx.font='9px "JetBrains Mono",monospace';ctx.textAlign='center';
+      ctx.fillText('REMOVED',sx,sy+r+10);
+    }
+  });
+
+  animT+=0.016;
+  requestAnimationFrame(draw);
+}
+
+updateData();
+draw();
+</script>
+</body>
+</html>

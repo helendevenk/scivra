@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acid-Base Reactions — Scivra Middle School Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e8e6df;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(15,23,42,0.88);border:1px solid rgba(16,185,129,0.25);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#6ee7b7;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:260px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);color:#6ee7b7;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.7rem;transition:all 0.2s}
+    button:hover{background:rgba(16,185,129,0.25)}
+    button.active{background:rgba(16,185,129,0.35);border-color:#10b981}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#10b981;height:4px;margin-top:2px}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#10b981;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(16,185,129,0.25);color:#6ee7b7}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Acid-Base Reactions <span class="badge">Middle School</span></h1>
+      <p>Mix acids and bases, watch pH change, and observe neutralization reactions</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-acid" class="active" onclick="setDropper('acid')">Add Acid (HCl)</button>
+        <button id="btn-base" onclick="setDropper('base')">Add Base (NaOH)</button>
+        <button onclick="resetBeaker()">Reset Beaker</button>
+      </div>
+      <div class="slider-row">
+        <label>Drop Size <span id="drop-val">5 mL</span></label>
+        <input type="range" id="drop-slider" min="1" max="20" step="1" value="5" oninput="document.getElementById('drop-val').textContent=this.value+' mL'">
+      </div>
+      <div style="font-size:0.62rem;color:#64748b;margin-top:2px">Click the beaker to add drops</div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#6ee7b7;margin-bottom:4px;font-weight:600">Solution Data</div>
+      <div class="data-row">pH <span class="data-val" id="d-ph">7.0</span></div>
+      <div class="data-row">Solution <span class="data-val" id="d-sol">Neutral</span></div>
+      <div class="data-row">H+ Conc <span class="data-val" id="d-hplus">1.0e-7 M</span></div>
+      <div class="data-row">OH- Conc <span class="data-val" id="d-oh">1.0e-7 M</span></div>
+      <div class="data-row">Indicator <span class="data-val" id="d-ind">Green</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#6ee7b7;margin-bottom:4px;font-weight:600">Acid-Base Chemistry</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=document.getElementById('canvas'),ctx=C.getContext('2d');
+let W,H,pH=7,dropper='acid',drops=[],bubbles=[],animT=0;
+
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+window.addEventListener('resize',resize);resize();
+
+function setDropper(d){
+  dropper=d;
+  document.getElementById('btn-acid').classList.toggle('active',d==='acid');
+  document.getElementById('btn-base').classList.toggle('active',d==='base');
+}
+function resetBeaker(){pH=7;drops=[];bubbles=[];updateData()}
+
+function pHColor(p){
+  if(p<2)return'#dc2626';if(p<4)return'#f97316';if(p<6)return'#eab308';
+  if(p<8)return'#22c55e';if(p<10)return'#3b82f6';if(p<12)return'#6366f1';
+  return'#7c3aed';
+}
+function indicatorName(p){
+  if(p<3)return'Red';if(p<5)return'Orange';if(p<6.5)return'Yellow';
+  if(p<7.5)return'Green';if(p<9)return'Blue';if(p<11)return'Indigo';
+  return'Violet';
+}
+
+function updateData(){
+  const hplus=Math.pow(10,-pH);
+  const oh=Math.pow(10,-(14-pH));
+  document.getElementById('d-ph').textContent=pH.toFixed(1);
+  document.getElementById('d-sol').textContent=pH<6.5?'Acidic':pH>7.5?'Basic':'Neutral';
+  document.getElementById('d-hplus').textContent=hplus.toExponential(1)+' M';
+  document.getElementById('d-oh').textContent=oh.toExponential(1)+' M';
+  document.getElementById('d-ind').textContent=indicatorName(pH);
+}
+
+// beaker geometry
+function beakerX(){return W*0.5}
+function beakerY(){return H*0.52}
+function beakerW(){return Math.min(280,W*0.25)}
+function beakerH(){return Math.min(340,H*0.42)}
+
+C.addEventListener('click',function(e){
+  const bx=beakerX(),by=beakerY(),bw=beakerW(),bh=beakerH();
+  const rx=e.clientX,ry=e.clientY;
+  if(rx>bx-bw/2&&rx<bx+bw/2&&ry>by-bh/2&&ry<by+bh/2){
+    const amt=+document.getElementById('drop-slider').value;
+    const change=amt*0.15;
+    if(dropper==='acid')pH=Math.max(0,pH-change);
+    else pH=Math.min(14,pH+change);
+    // add visual drops
+    for(let i=0;i<3;i++){
+      drops.push({x:rx+(Math.random()-0.5)*20,y:by-bh/2-20,vy:2+Math.random(),
+        color:dropper==='acid'?'#f87171':'#60a5fa',life:1});
+    }
+    // neutralization bubbles near pH 7
+    if(Math.abs(pH-7)<2){
+      for(let i=0;i<5;i++){
+        bubbles.push({x:bx+(Math.random()-0.5)*bw*0.6,
+          y:by+bh*0.3-Math.random()*20,vy:-0.5-Math.random(),life:1,r:3+Math.random()*4});
+      }
+    }
+    updateData();
+  }
+});
+
+function drawPHScale(){
+  const sx=60,sy=H*0.2,sw=20,sh=H*0.6;
+  for(let i=0;i<sh;i++){
+    const p=14*(1-i/sh);
+    ctx.fillStyle=pHColor(p);ctx.fillRect(sx,sy+i,sw,2);
+  }
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
+  ctx.strokeRect(sx,sy,sw,sh);
+  // labels
+  ctx.font='11px "JetBrains Mono",monospace';ctx.textAlign='left';
+  for(let p=0;p<=14;p+=2){
+    const y=sy+sh*(1-p/14);
+    ctx.fillStyle='#94a3b8';ctx.fillText(p.toString(),sx+sw+6,y+4);
+    ctx.strokeStyle='rgba(255,255,255,0.1)';
+    ctx.beginPath();ctx.moveTo(sx,y);ctx.lineTo(sx+sw,y);ctx.stroke();
+  }
+  // current pH marker
+  const my=sy+sh*(1-pH/14);
+  ctx.fillStyle='#fff';ctx.beginPath();
+  ctx.moveTo(sx-2,my);ctx.lineTo(sx-12,my-6);ctx.lineTo(sx-12,my+6);ctx.closePath();ctx.fill();
+  ctx.font='bold 12px "JetBrains Mono",monospace';ctx.textAlign='right';
+  ctx.fillStyle='#fff';ctx.fillText('pH '+pH.toFixed(1),sx-16,my+4);
+  // labels
+  ctx.font='10px "Segoe UI",system-ui';ctx.textAlign='left';ctx.fillStyle='#f87171';
+  ctx.fillText('ACIDIC',sx+sw+6,sy+20);
+  ctx.fillStyle='#22c55e';ctx.fillText('NEUTRAL',sx+sw+6,sy+sh/2+4);
+  ctx.fillStyle='#818cf8';ctx.fillText('BASIC',sx+sw+6,sy+sh-10);
+}
+
+function drawBeaker(){
+  const bx=beakerX(),by=beakerY(),bw=beakerW(),bh=beakerH();
+  // beaker outline
+  ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(bx-bw/2,by-bh/2);ctx.lineTo(bx-bw/2,by+bh/2);
+  ctx.lineTo(bx+bw/2,by+bh/2);ctx.lineTo(bx+bw/2,by-bh/2);ctx.stroke();
+  // liquid fill
+  const fillH=bh*0.75;
+  const liqTop=by+bh/2-fillH;
+  const col=pHColor(pH);
+  ctx.fillStyle=col+'40';ctx.fillRect(bx-bw/2+2,liqTop,bw-4,fillH-2);
+  // liquid surface shimmer
+  ctx.strokeStyle=col+'80';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(bx-bw/2+2,liqTop);
+  for(let x=0;x<bw-4;x+=4){
+    ctx.lineTo(bx-bw/2+2+x,liqTop+Math.sin(animT*2+x*0.05)*2);
+  }
+  ctx.stroke();
+  // pH meter
+  ctx.fillStyle='#334155';ctx.fillRect(bx+bw/2+20,by-20,80,40);
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.strokeRect(bx+bw/2+20,by-20,80,40);
+  ctx.fillStyle='#fff';ctx.font='bold 16px "JetBrains Mono",monospace';ctx.textAlign='center';
+  ctx.fillText(pH.toFixed(1),bx+bw/2+60,by+6);
+  ctx.font='9px "Segoe UI",system-ui';ctx.fillStyle='#94a3b8';
+  ctx.fillText('pH METER',bx+bw/2+60,by-8);
+  // probe line
+  ctx.strokeStyle='#64748b';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(bx+bw/2+60,by+20);ctx.lineTo(bx+bw*0.3,liqTop+fillH*0.5);ctx.stroke();
+  // dropper above
+  const dc=dropper==='acid'?'#f87171':'#60a5fa';
+  ctx.fillStyle=dc;ctx.fillRect(bx-6,by-bh/2-50,12,30);
+  ctx.fillStyle='#475569';ctx.fillRect(bx-8,by-bh/2-55,16,8);
+  // drop forming
+  const dropY=by-bh/2-20+Math.sin(animT*3)*3;
+  ctx.fillStyle=dc;ctx.beginPath();ctx.arc(bx,dropY,4,0,Math.PI*2);ctx.fill();
+  // graduation marks
+  ctx.font='9px "JetBrains Mono",monospace';ctx.textAlign='left';ctx.fillStyle='rgba(255,255,255,0.3)';
+  for(let i=1;i<=5;i++){
+    const gy=by+bh/2-fillH*i/5-2;
+    ctx.beginPath();ctx.moveTo(bx-bw/2+2,gy);ctx.lineTo(bx-bw/2+15,gy);ctx.stroke();
+    ctx.fillText(i*50+'mL',bx-bw/2+18,gy+3);
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.02)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  drawPHScale();
+  drawBeaker();
+
+  // animate drops
+  drops=drops.filter(d=>{
+    d.y+=d.vy;d.life-=0.015;
+    if(d.life<=0)return false;
+    ctx.globalAlpha=d.life;ctx.fillStyle=d.color;
+    ctx.beginPath();ctx.arc(d.x,d.y,4,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;return true;
+  });
+  // animate bubbles
+  bubbles=bubbles.filter(b=>{
+    b.y+=b.vy;b.life-=0.01;
+    if(b.life<=0)return false;
+    ctx.globalAlpha=b.life*0.5;ctx.strokeStyle='#fff';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;return true;
+  });
+
+  animT+=0.016;
+  requestAnimationFrame(draw);
+}
+
+updateData();
+katex.render('\\text{HCl} + \\text{NaOH} \\to \\text{NaCl} + \\text{H}_2\\text{O}',document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{pH} = -\\log[\\text{H}^+] \\quad \\text{pOH} = -\\log[\\text{OH}^-]',document.getElementById('kx-2'),{throwOnError:false});
+draw();
+</script>
+</body>
+</html>

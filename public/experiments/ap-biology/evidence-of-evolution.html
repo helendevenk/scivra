@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evidence of Evolution — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 10px; z-index: 10;
+    }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(132,204,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(132,204,22,0.15); color: #84cc16; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
+    .control-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.7rem; }
+    .control-row label { color: #94a3b8; white-space: nowrap; }
+    .control-row .data-val { color: #d9f99d; min-width: 60px; text-align: right; }
+    button { background: rgba(132,204,22,0.12); border: 1px solid rgba(132,204,22,0.25); color: #d9f99d; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.72rem; transition: all 0.2s; }
+    button:hover { background: rgba(132,204,22,0.25); }
+    button.active { background: rgba(132,204,22,0.35); border-color: #84cc16; }
+    .btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 0.68rem; }
+    .data-grid .label { color: #94a3b8; }
+    .data-grid .value { color: #d9f99d; text-align: right; }
+    .formula-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .formula-item { margin-bottom: 6px; }
+    .formula-desc { font-size: 0.6rem; color: #64748b; margin-top: 2px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Evidence of Evolution <span class="badge">AP Biology</span></h1>
+      <p>Phylogenetic trees, homologous structures, fossils &amp; molecular evidence</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btnTree" class="active">Phylo Tree</button>
+        <button id="btnAnatomy">Anatomy</button>
+        <button id="btnFossil">Fossil</button>
+        <button id="btnMolecular">Molecular</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Evidence Summary</h3>
+      <div class="data-grid">
+        <span class="label">View</span><span class="value data-val" id="dView">Phylo Tree</span>
+        <span class="label">Species Shown</span><span class="value data-val" id="dSpecies">6</span>
+        <span class="label">Common Ancestor</span><span class="value data-val" id="dAncestor">~400 Mya</span>
+        <span class="label">Evidence Type</span><span class="value data-val" id="dType">Morphological</span>
+      </div>
+    </div>
+    <div class="panel formula-panel">
+      <h3>Molecular Clock</h3>
+      <div class="formula-item"><div id="f1"></div><div class="formula-desc">Sequence divergence percentage</div></div>
+      <div class="formula-item"><div id="f2"></div><div class="formula-desc">Divergence time from mutation rate</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  let currentView = 'tree'; // tree | anatomy | fossil | molecular
+
+  const SPECIES = [
+    { name: 'Human', color: '#ef4444', dna: 'ATGCGTACCTGA', diverge: 7 },
+    { name: 'Chimpanzee', color: '#f97316', dna: 'ATGCGTACCTGA', diverge: 7 },
+    { name: 'Dog', color: '#eab308', dna: 'ATGCGAACCTGA', diverge: 85 },
+    { name: 'Whale', color: '#3b82f6', dna: 'ATGCGAACTTGA', diverge: 85 },
+    { name: 'Chicken', color: '#a855f7', dna: 'ATGCAAACCTGA', diverge: 310 },
+    { name: 'Frog', color: '#22d3ee', dna: 'ATGCAAAGCTGA', diverge: 370 },
+  ];
+
+  // Limb bones for anatomy view
+  const LIMBS = [
+    { name: 'Human Arm', bones: ['Humerus', 'Radius/Ulna', 'Carpals', 'Phalanges'], color: '#ef4444' },
+    { name: 'Whale Flipper', bones: ['Humerus', 'Radius/Ulna', 'Carpals', 'Phalanges'], color: '#3b82f6' },
+    { name: 'Bat Wing', bones: ['Humerus', 'Radius/Ulna', 'Carpals', 'Elongated Phalanges'], color: '#eab308' },
+    { name: 'Dog Leg', bones: ['Humerus', 'Radius/Ulna', 'Carpals', 'Phalanges'], color: '#f97316' },
+  ];
+
+  const FOSSILS = [
+    { name: 'Tiktaalik', age: 375, desc: 'Fish-tetrapod transition', y: 0 },
+    { name: 'Archaeopteryx', age: 150, desc: 'Dinosaur-bird transition', y: 0 },
+    { name: 'Ambulocetus', age: 49, desc: 'Land-whale transition', y: 0 },
+    { name: 'Australopithecus', age: 4, desc: 'Ape-human transition', y: 0 },
+    { name: 'Pakicetus', age: 53, desc: 'Earliest whale ancestor', y: 0 },
+  ];
+
+  // View buttons
+  const views = ['Tree', 'Anatomy', 'Fossil', 'Molecular'];
+  views.forEach(v => {
+    document.getElementById('btn' + v).addEventListener('click', () => {
+      currentView = v.toLowerCase();
+      views.forEach(vv => document.getElementById('btn' + vv).classList.remove('active'));
+      document.getElementById('btn' + v).classList.add('active');
+    });
+  });
+
+  function drawTree() {
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, baseY = H * 0.8;
+    const rootY = H * 0.15;
+
+    // Draw tree branches
+    ctx.lineWidth = 2;
+    const n = SPECIES.length;
+    const spacing = Math.min(120, (W - 200) / n);
+    const startX = cx - (n - 1) * spacing / 2;
+
+    // Tree structure (simplified cladogram)
+    // Root splits into (Frog) vs rest at 370 Mya
+    // Rest splits into (Chicken) vs mammals at 310 Mya
+    // Mammals split into (Dog, Whale) vs primates at 85 Mya
+    // Primates split into Human, Chimp at 7 Mya
+
+    const timeScale = (baseY - rootY) / 400; // pixels per Mya
+
+    function timeToY(mya) { return baseY - mya * timeScale; }
+
+    // Nodes: [x, mya, label, color]
+    const leaves = SPECIES.map((s, i) => ({ x: startX + i * spacing, mya: 0, ...s }));
+
+    // Draw vertical lines from leaves to their branch point
+    function drawBranch(x1, y1, x2, y2, color) {
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1, y2);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x2, y1 < y2 ? y1 : y2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Human-Chimp node (7 Mya)
+    const hcY = timeToY(7);
+    const hcX = (leaves[0].x + leaves[1].x) / 2;
+    ctx.strokeStyle = '#84cc16'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(leaves[0].x, baseY); ctx.lineTo(leaves[0].x, hcY); ctx.lineTo(leaves[1].x, hcY); ctx.lineTo(leaves[1].x, baseY); ctx.stroke();
+
+    // Primate-Dog/Whale node (85 Mya)
+    const mdY = timeToY(85);
+    const mdX = (leaves[2].x + leaves[3].x) / 2;
+    ctx.beginPath(); ctx.moveTo(leaves[2].x, baseY); ctx.lineTo(leaves[2].x, mdY); ctx.lineTo(leaves[3].x, mdY); ctx.lineTo(leaves[3].x, baseY); ctx.stroke();
+
+    // Mammal node
+    const mamX = (hcX + mdX) / 2;
+    ctx.beginPath(); ctx.moveTo(hcX, hcY); ctx.lineTo(hcX, mdY); ctx.lineTo(mdX, mdY); ctx.stroke();
+
+    // Mammal-Chicken node (310 Mya)
+    const ckY = timeToY(310);
+    ctx.beginPath(); ctx.moveTo(leaves[4].x, baseY); ctx.lineTo(leaves[4].x, ckY); ctx.lineTo(mamX, ckY); ctx.lineTo(mamX, mdY); ctx.stroke();
+
+    // Amniote-Frog node (370 Mya)
+    const frY = timeToY(370);
+    const amX = (mamX + leaves[4].x) / 2;
+    ctx.beginPath(); ctx.moveTo(leaves[5].x, baseY); ctx.lineTo(leaves[5].x, frY); ctx.lineTo(amX, frY); ctx.lineTo(amX, ckY); ctx.stroke();
+
+    // Node dots
+    [[hcX, hcY], [mdX, mdY], [mamX, mdY], [(mamX + leaves[4].x) / 2, ckY], [amX, frY]].forEach(([nx, ny]) => {
+      ctx.fillStyle = '#84cc16';
+      ctx.beginPath(); ctx.arc(nx, ny, 4, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Species labels + dots
+    leaves.forEach(s => {
+      ctx.fillStyle = s.color;
+      ctx.shadowColor = s.color; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(s.x, baseY, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.font = '11px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.name, s.x, baseY + 18);
+    });
+
+    // Time axis
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'left';
+    [0, 50, 100, 200, 300, 400].forEach(mya => {
+      const yy = timeToY(mya);
+      ctx.fillText(mya + ' Mya', 15, yy + 3);
+      ctx.strokeStyle = 'rgba(132,204,22,0.08)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(50, yy); ctx.lineTo(W - 20, yy); ctx.stroke();
+    });
+
+    document.getElementById('dView').textContent = 'Phylo Tree';
+    document.getElementById('dSpecies').textContent = '6';
+    document.getElementById('dAncestor').textContent = '~400 Mya';
+    document.getElementById('dType').textContent = 'Morphological';
+  }
+
+  function drawAnatomy() {
+    const W = canvas.width, H = canvas.height;
+    const n = LIMBS.length;
+    const colW = (W - 100) / n;
+
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+
+    LIMBS.forEach((limb, i) => {
+      const cx = 60 + colW * i + colW / 2;
+      const startY = H * 0.2;
+
+      // Title
+      ctx.fillStyle = limb.color;
+      ctx.shadowColor = limb.color; ctx.shadowBlur = 6;
+      ctx.fillText(limb.name, cx, startY - 10);
+      ctx.shadowBlur = 0;
+
+      // Draw bones
+      limb.bones.forEach((bone, j) => {
+        const boneY = startY + j * 80;
+        const boneH = 60;
+        const boneW = 20 + (3 - j) * 5; // wider at top
+
+        // Bone shape
+        ctx.fillStyle = limb.color;
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.roundRect(cx - boneW / 2, boneY, boneW, boneH, 8);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        ctx.strokeStyle = limb.color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(cx - boneW / 2, boneY, boneW, boneH, 8);
+        ctx.stroke();
+
+        // Bone label
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px JetBrains Mono, monospace';
+        ctx.fillText(bone, cx, boneY + boneH / 2 + 3);
+      });
+
+      // Connecting lines between bones
+      ctx.strokeStyle = 'rgba(132,204,22,0.2)';
+      ctx.lineWidth = 1;
+      for (let j = 0; j < limb.bones.length - 1; j++) {
+        ctx.beginPath();
+        ctx.moveTo(cx, startY + j * 80 + 60);
+        ctx.lineTo(cx, startY + (j + 1) * 80);
+        ctx.stroke();
+      }
+    });
+
+    // Homology label
+    ctx.fillStyle = '#84cc16';
+    ctx.font = '14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Same bones, different functions → Common ancestry', W / 2, H * 0.85);
+
+    document.getElementById('dView').textContent = 'Anatomy';
+    document.getElementById('dSpecies').textContent = '4';
+    document.getElementById('dAncestor').textContent = 'Tetrapod';
+    document.getElementById('dType').textContent = 'Comparative';
+  }
+
+  function drawFossil() {
+    const W = canvas.width, H = canvas.height;
+    const margin = { l: 100, r: 40, t: 60, b: 60 };
+    const chartW = W - margin.l - margin.r;
+    const chartH = H - margin.t - margin.b;
+
+    // Time axis (horizontal, 0 to 400 Mya)
+    const maxAge = 400;
+    function ageToX(age) { return margin.l + (1 - age / maxAge) * chartW; }
+
+    // Axis
+    ctx.strokeStyle = 'rgba(132,204,22,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.l, H - margin.b);
+    ctx.lineTo(margin.l + chartW, H - margin.b);
+    ctx.stroke();
+
+    // Time labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let t = 0; t <= 400; t += 50) {
+      const xx = ageToX(t);
+      ctx.fillText(t + ' Mya', xx, H - margin.b + 16);
+      ctx.strokeStyle = 'rgba(132,204,22,0.06)';
+      ctx.beginPath(); ctx.moveTo(xx, margin.t); ctx.lineTo(xx, H - margin.b); ctx.stroke();
+    }
+    ctx.fillText('← Present                                     Past →', W / 2, H - 15);
+
+    // Strata background
+    const strata = [
+      { name: 'Quaternary', from: 0, to: 2.6, color: 'rgba(239,68,68,0.08)' },
+      { name: 'Neogene', from: 2.6, to: 23, color: 'rgba(249,115,22,0.08)' },
+      { name: 'Paleogene', from: 23, to: 66, color: 'rgba(234,179,8,0.08)' },
+      { name: 'Cretaceous', from: 66, to: 145, color: 'rgba(34,211,238,0.08)' },
+      { name: 'Jurassic', from: 145, to: 201, color: 'rgba(59,130,246,0.08)' },
+      { name: 'Devonian', from: 359, to: 419, color: 'rgba(132,204,22,0.08)' },
+    ];
+    strata.forEach(s => {
+      const x1 = ageToX(s.to), x2 = ageToX(s.from);
+      ctx.fillStyle = s.color;
+      ctx.fillRect(x1, margin.t, x2 - x1, chartH);
+      ctx.fillStyle = '#475569';
+      ctx.font = '9px Segoe UI, sans-serif';
+      ctx.fillText(s.name, (x1 + x2) / 2, margin.t + 14);
+    });
+
+    // Fossils
+    const sortedFossils = [...FOSSILS].sort((a, b) => b.age - a.age);
+    sortedFossils.forEach((f, i) => {
+      const fx = ageToX(f.age);
+      const fy = margin.t + 50 + i * (chartH - 80) / sortedFossils.length;
+
+      // Marker
+      ctx.fillStyle = '#84cc16';
+      ctx.shadowColor = '#84cc16'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(fx, fy, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Connecting line to axis
+      ctx.strokeStyle = 'rgba(132,204,22,0.2)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(fx, fy + 8); ctx.lineTo(fx, H - margin.b); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Label
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(f.name, fx + 14, fy + 4);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Segoe UI, sans-serif';
+      ctx.fillText(f.desc + ' (' + f.age + ' Mya)', fx + 14, fy + 18);
+    });
+
+    document.getElementById('dView').textContent = 'Fossil Record';
+    document.getElementById('dSpecies').textContent = '5';
+    document.getElementById('dAncestor').textContent = 'Transitional';
+    document.getElementById('dType').textContent = 'Paleontological';
+  }
+
+  function drawMolecular() {
+    const W = canvas.width, H = canvas.height;
+    const startY = H * 0.15;
+    const rowH = 50;
+
+    ctx.font = '11px Segoe UI, sans-serif';
+
+    // Header
+    ctx.fillStyle = '#84cc16';
+    ctx.textAlign = 'left';
+    ctx.fillText('DNA Sequence Alignment (Cytochrome c gene fragment)', 60, startY - 20);
+
+    // Sequences
+    SPECIES.forEach((s, i) => {
+      const y = startY + i * rowH;
+
+      // Name
+      ctx.fillStyle = s.color;
+      ctx.font = '11px Segoe UI, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(s.name, 130, y + 4);
+
+      // DNA
+      ctx.font = '14px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      const refDna = SPECIES[0].dna;
+      for (let j = 0; j < s.dna.length; j++) {
+        const nx = 150 + j * 24;
+        const match = s.dna[j] === refDna[j];
+        ctx.fillStyle = match ? '#84cc16' : '#ef4444';
+        if (!match) {
+          ctx.fillRect(nx - 2, y - 12, 20, 18);
+          ctx.fillStyle = '#ffffff';
+        }
+        ctx.fillText(s.dna[j], nx, y + 4);
+      }
+
+      // Similarity %
+      let matches = 0;
+      for (let j = 0; j < s.dna.length; j++) {
+        if (s.dna[j] === refDna[j]) matches++;
+      }
+      const pct = (matches / refDna.length * 100).toFixed(0);
+      ctx.fillStyle = '#d9f99d';
+      ctx.font = '11px JetBrains Mono, monospace';
+      ctx.fillText(pct + '% match', 150 + s.dna.length * 24 + 20, y + 4);
+    });
+
+    // Similarity matrix
+    const matY = startY + SPECIES.length * rowH + 40;
+    ctx.fillStyle = '#84cc16';
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Divergence Time (Molecular Clock)', 60, matY);
+
+    SPECIES.forEach((s, i) => {
+      ctx.fillStyle = s.color;
+      ctx.font = '10px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(s.name + ': ~' + s.diverge + ' Mya from human lineage', 80, matY + 20 + i * 18);
+    });
+
+    document.getElementById('dView').textContent = 'Molecular';
+    document.getElementById('dSpecies').textContent = '6';
+    document.getElementById('dAncestor').textContent = 'DNA based';
+    document.getElementById('dType').textContent = 'Molecular';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Subtle grid
+    ctx.globalAlpha = 0.03;
+    ctx.strokeStyle = '#84cc16'; ctx.lineWidth = 0.5;
+    for (let x = 0; x < canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+    for (let y = 0; y < canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+
+    if (currentView === 'tree') drawTree();
+    else if (currentView === 'anatomy') drawAnatomy();
+    else if (currentView === 'fossil') drawFossil();
+    else if (currentView === 'molecular') drawMolecular();
+  }
+
+  // KaTeX
+  try {
+    katex.render("d = \\frac{\\text{mutations}}{\\text{sites}} \\times 100\\%", document.getElementById('f1'), { throwOnError: false });
+    katex.render("t = \\frac{d}{2\\mu}", document.getElementById('f2'), { throwOnError: false });
+  } catch(e) {}
+
+  function animate() {
+    draw();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

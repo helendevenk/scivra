@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earthquake Epicenter — Scivra Middle School Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e8e6df;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(15,23,42,0.88);border:1px solid rgba(249,115,22,0.25);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#fed7aa;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:280px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#f97316;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.4);color:#fed7aa;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.7rem;transition:all 0.2s}
+    button:hover{background:rgba(249,115,22,0.25)}
+    button.active{background:rgba(249,115,22,0.35);border-color:#f97316}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#f97316;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(249,115,22,0.25);color:#fed7aa}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Earthquake Epicenter <span class="badge">Middle School</span></h1>
+      <p>Triangulate the epicenter using P-wave arrival times from 3 seismograph stations</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Station A delay <span id="sA-val">4.0 s</span></label>
+        <input type="range" id="sA" min="1" max="10" step="0.5" value="4" oninput="updateStations()">
+      </div>
+      <div class="slider-row">
+        <label>Station B delay <span id="sB-val">6.0 s</span></label>
+        <input type="range" id="sB" min="1" max="10" step="0.5" value="6" oninput="updateStations()">
+      </div>
+      <div class="slider-row">
+        <label>Station C delay <span id="sC-val">5.0 s</span></label>
+        <input type="range" id="sC" min="1" max="10" step="0.5" value="5" oninput="updateStations()">
+      </div>
+      <div class="btn-row">
+        <button onclick="toggleWaves()">Toggle P-Waves</button>
+        <button onclick="resetSliders()">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#fed7aa;margin-bottom:4px;font-weight:600">Seismic Data</div>
+      <div class="data-row">Station A dist <span class="data-val" id="d-dA">24 km</span></div>
+      <div class="data-row">Station B dist <span class="data-val" id="d-dB">36 km</span></div>
+      <div class="data-row">Station C dist <span class="data-val" id="d-dC">30 km</span></div>
+      <div class="data-row">Epicenter <span class="data-val" id="d-epi">Calculating...</span></div>
+      <div class="data-row">P-wave speed <span class="data-val">6.0 km/s</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#fed7aa;margin-bottom:4px;font-weight:600">Seismology</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=document.getElementById('canvas'),ctx=C.getContext('2d');
+let W,H,animT=0,showWaves=true;
+const Vp=6; // km/s
+
+const stations=[
+  {label:'A',color:'#f87171',bx:0.25,by:0.35},
+  {label:'B',color:'#60a5fa',bx:0.7,by:0.3},
+  {label:'C',color:'#a78bfa',bx:0.5,by:0.75}
+];
+
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+window.addEventListener('resize',resize);resize();
+
+function getDelays(){
+  return[+document.getElementById('sA').value,+document.getElementById('sB').value,+document.getElementById('sC').value];
+}
+
+function updateStations(){
+  const d=getDelays();
+  d.forEach((v,i)=>{document.getElementById('s'+stations[i].label+'-val').textContent=v.toFixed(1)+' s'});
+  const dists=d.map(t=>t*Vp);
+  document.getElementById('d-dA').textContent=dists[0].toFixed(0)+' km';
+  document.getElementById('d-dB').textContent=dists[1].toFixed(0)+' km';
+  document.getElementById('d-dC').textContent=dists[2].toFixed(0)+' km';
+}
+
+function toggleWaves(){showWaves=!showWaves}
+function resetSliders(){
+  document.getElementById('sA').value=4;
+  document.getElementById('sB').value=6;
+  document.getElementById('sC').value=5;
+  updateStations();
+}
+
+function stationPos(i){
+  return{x:stations[i].bx*W,y:stations[i].by*H};
+}
+
+function circleIntersection(x1,y1,r1,x2,y2,r2){
+  const dx=x2-x1,dy=y2-y1,d=Math.sqrt(dx*dx+dy*dy);
+  if(d>r1+r2||d<Math.abs(r1-r2)||d===0)return null;
+  const a=(r1*r1-r2*r2+d*d)/(2*d);
+  const h=Math.sqrt(Math.max(0,r1*r1-a*a));
+  const mx=x1+a*dx/d,my=y1+a*dy/d;
+  return[{x:mx+h*dy/d,y:my-h*dx/d},{x:mx-h*dy/d,y:my+h*dx/d}];
+}
+
+function findEpicenter(){
+  const d=getDelays();
+  const scale=Math.min(W,H)/20;
+  const r=d.map(t=>t*Vp/20*scale);
+  const p=stations.map((_,i)=>stationPos(i));
+  const i1=circleIntersection(p[0].x,p[0].y,r[0],p[1].x,p[1].y,r[1]);
+  if(!i1)return null;
+  const i2=circleIntersection(p[0].x,p[0].y,r[0],p[2].x,p[2].y,r[2]);
+  if(!i2)return null;
+  // find closest pair between intersection sets
+  let best=null,bestD=Infinity;
+  for(const a of i1)for(const b of i2){
+    const dd=Math.hypot(a.x-b.x,a.y-b.y);
+    if(dd<bestD){bestD=dd;best={x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
+  }
+  return best;
+}
+
+function drawMap(){
+  // terrain grid
+  ctx.strokeStyle='rgba(249,115,22,0.06)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  // terrain patches
+  ctx.fillStyle='rgba(249,115,22,0.03)';
+  for(let i=0;i<8;i++){
+    ctx.beginPath();ctx.arc(W*(0.1+i*0.12),H*(0.3+Math.sin(i)*0.2),60+i*10,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawMap();
+
+  const d=getDelays();
+  const scale=Math.min(W,H)/20;
+  const radii=d.map(t=>t*Vp/20*scale);
+
+  // draw circles
+  stations.forEach((s,i)=>{
+    const p=stationPos(i);
+    const r=radii[i];
+    // concentric rings
+    for(let ring=1;ring<=4;ring++){
+      const rr=r*ring/4;
+      ctx.strokeStyle=s.color+(ring===4?'60':'20');
+      ctx.lineWidth=ring===4?2:1;
+      ctx.setLineDash(ring===4?[]:[4,4]);
+      ctx.beginPath();ctx.arc(p.x,p.y,rr,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    // animated P-wave ring
+    if(showWaves){
+      const waveR=(animT*40+i*30)%(r*1.2);
+      ctx.strokeStyle=s.color+'40';ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(p.x,p.y,waveR,0,Math.PI*2);ctx.stroke();
+    }
+    // station marker
+    ctx.fillStyle=s.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 11px "Segoe UI",system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(s.label,p.x,p.y);
+    // label
+    ctx.font='11px "JetBrains Mono",monospace';ctx.fillStyle=s.color;
+    ctx.fillText('Station '+s.label,p.x,p.y-18);
+    ctx.fillStyle='#94a3b8';ctx.font='10px "JetBrains Mono",monospace';
+    ctx.fillText((d[i]*Vp).toFixed(0)+' km',p.x,p.y+20);
+  });
+
+  // epicenter
+  const epi=findEpicenter();
+  if(epi){
+    // crosshair
+    ctx.strokeStyle='#f97316';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(epi.x-15,epi.y);ctx.lineTo(epi.x+15,epi.y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(epi.x,epi.y-15);ctx.lineTo(epi.x,epi.y+15);ctx.stroke();
+    // pulse
+    const pulse=8+Math.sin(animT*4)*4;
+    ctx.strokeStyle='#f9731680';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(epi.x,epi.y,pulse,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#f97316';ctx.beginPath();ctx.arc(epi.x,epi.y,5,0,Math.PI*2);ctx.fill();
+    // label
+    ctx.fillStyle='#f97316';ctx.font='bold 12px "Segoe UI",system-ui';ctx.textAlign='center';
+    ctx.fillText('EPICENTER',epi.x,epi.y-22);
+    document.getElementById('d-epi').textContent='Found';
+  }else{
+    document.getElementById('d-epi').textContent='No intersection';
+  }
+
+  animT+=0.016;
+  requestAnimationFrame(draw);
+}
+
+updateStations();
+katex.render('d = v_P \\times \\Delta t \\quad (v_P \\approx 6\\text{ km/s})',document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\text{3 circles} \\to \\text{triangulation} \\to \\text{epicenter}',document.getElementById('kx-2'),{throwOnError:false});
+draw();
+</script>
+</body>
+</html>

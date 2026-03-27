@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Life Cycle — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(132,204,22,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(132,204,22,0.15); color: #84cc16; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 6px; }
+    .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    button { background: rgba(132,204,22,0.12); border: 1px solid rgba(132,204,22,0.25); color: #d9f99d; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.72rem; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: rgba(132,204,22,0.3); }
+    button.active { background: rgba(132,204,22,0.35); box-shadow: 0 0 8px rgba(132,204,22,0.3); }
+    .play-btn { font-size: 0.8rem; padding: 6px 16px; }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-row { font-size: 0.7rem; margin-bottom: 3px; display: flex; gap: 6px; }
+    .data-row .lbl { color: #94a3b8; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Plant Life Cycle <span class="badge">Elementary</span></h1>
+      <p>Watch a plant grow from seed to fruit! Jump to any stage.</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button class="stage-btn active" data-stage="0">Seed</button>
+        <button class="stage-btn" data-stage="1">Sprout</button>
+        <button class="stage-btn" data-stage="2">Seedling</button>
+        <button class="stage-btn" data-stage="3">Mature</button>
+        <button class="stage-btn" data-stage="4">Flower</button>
+        <button class="stage-btn" data-stage="5">Fruit</button>
+        <button class="stage-btn" data-stage="6">Seeds</button>
+      </div>
+      <div class="btn-row">
+        <button class="play-btn" id="btnPlay">Play</button>
+        <button class="play-btn" id="btnReset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Growth Data</h3>
+      <div class="data-row"><span class="lbl">Stage:</span> <span class="data-val" id="dStage">Seed</span></div>
+      <div class="data-row"><span class="lbl">Days:</span> <span class="data-val" id="dDays">0</span></div>
+      <div class="data-row"><span class="lbl">Height:</span> <span class="data-val" id="dHeight">0 cm</span></div>
+    </div>
+    <div class="panel data-panel">
+      <h3>What's Happening</h3>
+      <div class="data-row"><span class="data-val" id="dDesc">A seed rests in the soil, waiting for water and warmth.</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  const STAGES = [
+    { name: 'Seed', days: 0, height: 0, desc: 'A seed rests in the soil, waiting for water and warmth.' },
+    { name: 'Sprout', days: 7, height: 2, desc: 'The seed cracks open! A tiny root grows down and a shoot pushes up.' },
+    { name: 'Seedling', days: 21, height: 8, desc: 'First true leaves appear! The plant starts making food from sunlight.' },
+    { name: 'Mature Plant', days: 60, height: 40, desc: 'The plant is fully grown with many leaves collecting sunlight.' },
+    { name: 'Flower', days: 75, height: 45, desc: 'Beautiful flowers bloom to attract pollinators like bees!' },
+    { name: 'Fruit', days: 90, height: 45, desc: 'Flowers become fruit! Seeds develop inside the fruit.' },
+    { name: 'Seeds Spread', days: 100, height: 40, desc: 'Ripe fruit drops seeds. Wind, animals, and water spread them to new places!' }
+  ];
+
+  let currentStage = 0;
+  let targetStage = 0;
+  let progress = 0; // 0-1 within a stage transition
+  let playing = false;
+  let frame = 0;
+  let fallingSeeds = [];
+
+  function setStage(s) {
+    targetStage = s;
+    currentStage = s;
+    progress = 1;
+    updateUI();
+    document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-stage="${s}"]`).classList.add('active');
+  }
+
+  function updateUI() {
+    const s = STAGES[currentStage];
+    document.getElementById('dStage').textContent = s.name;
+    document.getElementById('dDays').textContent = s.days;
+    document.getElementById('dHeight').textContent = s.height + ' cm';
+    document.getElementById('dDesc').textContent = s.desc;
+  }
+
+  document.querySelectorAll('.stage-btn').forEach(btn => {
+    btn.addEventListener('click', () => setStage(parseInt(btn.dataset.stage)));
+  });
+
+  document.getElementById('btnPlay').addEventListener('click', () => {
+    playing = !playing;
+    document.getElementById('btnPlay').textContent = playing ? 'Pause' : 'Play';
+    if (playing && currentStage >= 6) { currentStage = 0; targetStage = 0; progress = 0; }
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    playing = false;
+    document.getElementById('btnPlay').textContent = 'Play';
+    setStage(0);
+    progress = 0;
+    fallingSeeds = [];
+  });
+
+  function getGrowthFactor() {
+    return Math.min(1, progress);
+  }
+
+  function drawSoil(cx, groundY, W) {
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, groundY, W, canvas.height - groundY);
+    // Soil texture
+    ctx.fillStyle = '#92400e';
+    for (let i = 0; i < 30; i++) {
+      const sx = Math.random() * W, sy = groundY + Math.random() * (canvas.height - groundY);
+      ctx.fillRect(sx, sy, 3 + Math.random() * 6, 2);
+    }
+  }
+
+  function drawSeed(cx, groundY) {
+    const gy = groundY + 20;
+    const f = getGrowthFactor();
+    // Seed shape
+    ctx.fillStyle = '#a16207';
+    ctx.beginPath();
+    ctx.ellipse(cx, gy, 10, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#78350f'; ctx.lineWidth = 1; ctx.stroke();
+    if (currentStage >= 1 && f > 0.3) {
+      // Crack
+      ctx.strokeStyle = '#d9f99d'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx - 5, gy); ctx.lineTo(cx + 5, gy - 3); ctx.stroke();
+    }
+  }
+
+  function drawStem(cx, groundY, height) {
+    if (height <= 0) return;
+    ctx.strokeStyle = '#65a30d'; ctx.lineWidth = Math.min(8, 2 + height * 0.05);
+    ctx.beginPath(); ctx.moveTo(cx, groundY); ctx.lineTo(cx, groundY - height); ctx.stroke();
+    // Slight sway
+    return groundY - height;
+  }
+
+  function drawLeaves(cx, top, count, size) {
+    ctx.fillStyle = '#84cc16';
+    for (let i = 0; i < count; i++) {
+      const ly = top + i * (size * 1.5);
+      const side = i % 2 === 0 ? 1 : -1;
+      ctx.beginPath();
+      ctx.ellipse(cx + side * size * 0.8, ly + size * 0.3, size * 0.9, size * 0.35, side * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      // Vein
+      ctx.strokeStyle = '#a3e635'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(cx, ly + size * 0.3);
+      ctx.lineTo(cx + side * size * 0.7, ly + size * 0.3); ctx.stroke();
+    }
+  }
+
+  function drawFlower(cx, top) {
+    const petalCount = 6, pr = 18;
+    // Petals
+    for (let i = 0; i < petalCount; i++) {
+      const a = (i / petalCount) * Math.PI * 2 + frame * 0.005;
+      ctx.fillStyle = i % 2 === 0 ? '#f472b6' : '#fb7185';
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(a) * pr, top + Math.sin(a) * pr, 12, 7, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Center
+    ctx.beginPath(); ctx.arc(cx, top, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#fbbf24'; ctx.fill();
+  }
+
+  function drawFruit(cx, top) {
+    // Apple shape
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath(); ctx.arc(cx - 6, top + 15, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 6, top + 15, 14, 0, Math.PI * 2); ctx.fill();
+    // Stem
+    ctx.strokeStyle = '#65a30d'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, top + 2); ctx.lineTo(cx, top - 5); ctx.stroke();
+    // Leaf on fruit
+    ctx.fillStyle = '#84cc16';
+    ctx.beginPath(); ctx.ellipse(cx + 5, top - 3, 6, 3, 0.5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function draw() {
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, groundY = H * 0.65;
+
+    // Sky
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+    skyGrad.addColorStop(0, '#1e3a5f');
+    skyGrad.addColorStop(1, '#60a5fa');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, groundY);
+
+    // Sun
+    ctx.beginPath(); ctx.arc(W * 0.82, H * 0.12, 35, 0, Math.PI * 2);
+    ctx.fillStyle = '#fbbf24'; ctx.fill();
+    ctx.beginPath(); ctx.arc(W * 0.82, H * 0.12, 50, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(251,191,36,0.1)'; ctx.fill();
+
+    // Sun rays to plant (photosynthesis indicator for mature+)
+    if (currentStage >= 2) {
+      ctx.strokeStyle = 'rgba(251,191,36,0.08)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        const ry = groundY - STAGES[currentStage].height * 2.5 + i * 20;
+        ctx.beginPath(); ctx.moveTo(W * 0.82, H * 0.12); ctx.lineTo(cx, ry); ctx.stroke();
+      }
+    }
+
+    drawSoil(cx, groundY, W);
+
+    // Underground roots (visible from sprout stage)
+    if (currentStage >= 1) {
+      ctx.strokeStyle = 'rgba(132,204,22,0.3)';
+      ctx.lineWidth = 1.5;
+      const rootDepth = Math.min(80, currentStage * 15);
+      for (let r = 0; r < 5; r++) {
+        const ra = (r - 2) * 0.4;
+        ctx.beginPath(); ctx.moveTo(cx, groundY);
+        ctx.quadraticCurveTo(cx + ra * 40, groundY + rootDepth * 0.6, cx + ra * 50, groundY + rootDepth);
+        ctx.stroke();
+      }
+    }
+
+    const heightPx = STAGES[currentStage].height * 2.5 * getGrowthFactor();
+
+    // Draw based on stage
+    if (currentStage === 0) {
+      drawSeed(cx, groundY);
+    } else {
+      const top = drawStem(cx, groundY, heightPx);
+      if (currentStage >= 2) {
+        const leafCount = currentStage >= 3 ? 6 : 3;
+        const leafSize = currentStage >= 3 ? 25 : 15;
+        drawLeaves(cx, top + 10, leafCount, leafSize);
+      }
+      if (currentStage === 1) {
+        // Tiny first leaves
+        ctx.fillStyle = '#bef264';
+        ctx.beginPath(); ctx.ellipse(cx - 6, top + 3, 5, 3, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 6, top + 3, 5, 3, 0.3, 0, Math.PI * 2); ctx.fill();
+      }
+      if (currentStage === 4) drawFlower(cx, top - 5);
+      if (currentStage === 5) { drawFlower(cx, top - 5); drawFruit(cx - 30, top + 30); drawFruit(cx + 30, top + 20); }
+      if (currentStage === 6) {
+        drawFruit(cx + 35, groundY - 10);
+        // Falling seeds
+        if (frame % 30 === 0 && fallingSeeds.length < 10) {
+          fallingSeeds.push({ x: cx + (Math.random() - 0.5) * 100, y: top + 30, vx: (Math.random() - 0.5) * 2, vy: 0 });
+        }
+        fallingSeeds.forEach(s => {
+          s.vy += 0.05; s.x += s.vx; s.y += s.vy;
+          s.y = Math.min(groundY + 15, s.y);
+          ctx.fillStyle = '#a16207';
+          ctx.beginPath(); ctx.ellipse(s.x, s.y, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+    }
+
+    // Animate progress
+    if (playing) {
+      progress += 0.008;
+      if (progress >= 1.5 && currentStage < 6) {
+        currentStage++;
+        targetStage = currentStage;
+        progress = 0;
+        updateUI();
+        document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-stage="${currentStage}"]`).classList.add('active');
+      }
+      if (currentStage >= 6 && progress > 3) {
+        playing = false;
+        document.getElementById('btnPlay').textContent = 'Play';
+      }
+    }
+
+    // Water drops animation
+    if (currentStage >= 0 && currentStage <= 3 && frame % 40 < 20) {
+      ctx.fillStyle = 'rgba(96,165,250,0.4)';
+      for (let i = 0; i < 3; i++) {
+        const wx = cx - 40 + i * 40, wy = groundY - 10 + (frame % 20) * 2;
+        ctx.beginPath();
+        ctx.moveTo(wx, wy - 4); ctx.quadraticCurveTo(wx + 3, wy, wx, wy + 4);
+        ctx.quadraticCurveTo(wx - 3, wy, wx, wy - 4);
+        ctx.fill();
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  setStage(0);
+  draw();
+})();
+</script>
+</body>
+</html>

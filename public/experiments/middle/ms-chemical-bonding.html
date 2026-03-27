@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Bonding — Scivra Middle School Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e8e6df;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(15,23,42,0.88);border:1px solid rgba(16,185,129,0.25);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#6ee7b7;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:240px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);color:#6ee7b7;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.7rem;transition:all 0.2s}
+    button:hover{background:rgba(16,185,129,0.25)}
+    button.active{background:rgba(16,185,129,0.35);border-color:#10b981}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#10b981;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .formula-panel{flex:1;max-width:400px}
+    .kx{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.7rem}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(16,185,129,0.25);color:#6ee7b7}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#10b981;height:4px;margin-top:2px}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Chemical Bonding <span class="badge">Middle School</span></h1>
+      <p>Explore ionic, covalent, and metallic bonds — watch electrons transfer or share</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button id="btn-ionic" class="active" onclick="setBond('ionic')">Ionic Bond</button>
+        <button id="btn-covalent" onclick="setBond('covalent')">Covalent Bond</button>
+        <button id="btn-metallic" onclick="setBond('metallic')">Metallic Bond</button>
+      </div>
+      <div class="btn-row">
+        <button onclick="resetAnim()">Reset Animation</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#6ee7b7;margin-bottom:4px;font-weight:600">Bond Data</div>
+      <div class="data-row">Bond Type <span class="data-val" id="d-type">Ionic</span></div>
+      <div class="data-row">Atom A <span class="data-val" id="d-atomA">Na (EN: 0.93)</span></div>
+      <div class="data-row">Atom B <span class="data-val" id="d-atomB">Cl (EN: 3.16)</span></div>
+      <div class="data-row">EN Difference <span class="data-val" id="d-endiff">2.23</span></div>
+      <div class="data-row">Electron Transfer <span class="data-val" id="d-transfer">Full Transfer</span></div>
+    </div>
+    <div class="panel formula-panel">
+      <div style="font-size:0.68rem;color:#6ee7b7;margin-bottom:4px;font-weight:600">Electronegativity</div>
+      <div class="kx" id="kx-1"></div>
+      <div class="kx" id="kx-2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=document.getElementById('canvas'),ctx=C.getContext('2d');
+let W,H,bondType='ionic',animT=0,transferProgress=0,animRunning=true;
+
+const bonds={
+  ionic:{atomA:{sym:'Na',en:0.93,color:'#a78bfa',electrons:1,protons:11,r:50},
+         atomB:{sym:'Cl',en:3.16,color:'#34d399',electrons:7,protons:17,r:45},
+         endiff:2.23,transfer:'Full Transfer',desc:'Electron transfers from Na to Cl'},
+  covalent:{atomA:{sym:'O',en:3.44,color:'#f87171',electrons:6,protons:8,r:45},
+            atomB:{sym:'O',en:3.44,color:'#f87171',electrons:6,protons:8,r:45},
+            endiff:0.0,transfer:'Shared Pairs',desc:'Two oxygen atoms share 2 electron pairs'},
+  metallic:{atomA:{sym:'Fe',en:1.83,color:'#94a3b8',electrons:2,protons:26,r:48},
+            atomB:{sym:'Fe',en:1.83,color:'#94a3b8',electrons:2,protons:26,r:48},
+            endiff:0.0,transfer:'Delocalized Sea',desc:'Electrons form a shared "sea" around metal ions'}
+};
+
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+window.addEventListener('resize',resize);resize();
+
+function setBond(t){
+  bondType=t;animT=0;transferProgress=0;animRunning=true;
+  ['ionic','covalent','metallic'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',x===t));
+  const b=bonds[t];
+  document.getElementById('d-type').textContent=t.charAt(0).toUpperCase()+t.slice(1);
+  document.getElementById('d-atomA').textContent=b.atomA.sym+' (EN: '+b.atomA.en+')';
+  document.getElementById('d-atomB').textContent=b.atomB.sym+' (EN: '+b.atomB.en+')';
+  document.getElementById('d-endiff').textContent=b.endiff.toFixed(2);
+  document.getElementById('d-transfer').textContent=b.transfer;
+}
+
+function resetAnim(){animT=0;transferProgress=0;animRunning=true}
+
+function drawAtom(x,y,r,sym,color,shellElectrons,protons){
+  ctx.save();
+  // nucleus glow
+  const g=ctx.createRadialGradient(x,y,0,x,y,r*0.35);
+  g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*0.35,0,Math.PI*2);ctx.fill();
+  // nucleus
+  ctx.fillStyle=color;ctx.globalAlpha=0.9;
+  ctx.beginPath();ctx.arc(x,y,r*0.25,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  // symbol
+  ctx.fillStyle='#fff';ctx.font='bold '+Math.round(r*0.35)+'px "Segoe UI",system-ui';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(sym,x,y);
+  // proton count
+  ctx.font=Math.round(r*0.18)+'px "JetBrains Mono",monospace';
+  ctx.fillStyle='#94a3b8';ctx.fillText(protons+'p',x,y+r*0.18);
+  // electron shells
+  ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(x,y,r*0.8,0,Math.PI*2);ctx.stroke();
+  // electrons on outer shell
+  for(let i=0;i<shellElectrons;i++){
+    const a=(Math.PI*2/shellElectrons)*i+animT*0.5;
+    const ex=x+Math.cos(a)*r*0.8,ey=y+Math.sin(a)*r*0.8;
+    ctx.fillStyle='#60a5fa';ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(96,165,250,0.3)';ctx.beginPath();ctx.arc(ex,ey,7,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawIonic(){
+  const b=bonds.ionic,cx=W/2,cy=H/2;
+  const sep=180+40*(1-Math.min(transferProgress,1));
+  const axA=cx-sep/2,axB=cx+sep/2;
+  // draw atoms
+  const eA=transferProgress<1?1:0;
+  const eB=transferProgress<1?7:8;
+  drawAtom(axA,cy,80,b.atomA.sym,b.atomA.color,eA,b.atomA.protons);
+  drawAtom(axB,cy,75,b.atomB.sym,b.atomB.color,eB,b.atomB.protons);
+  // transferring electron
+  if(transferProgress<1){
+    const t=transferProgress;
+    const ex=axA+(axB-axA)*t,ey=cy-60*Math.sin(Math.PI*t);
+    ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(ex,ey,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(251,191,36,0.3)';ctx.beginPath();ctx.arc(ex,ey,12,0,Math.PI*2);ctx.fill();
+    // arrow
+    ctx.strokeStyle='rgba(251,191,36,0.4)';ctx.lineWidth=2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(axA+60,cy-10);ctx.quadraticCurveTo(cx,cy-80,axB-60,cy-10);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // charge labels after transfer
+  if(transferProgress>=1){
+    ctx.font='bold 20px "Segoe UI",system-ui';ctx.textAlign='center';
+    ctx.fillStyle='#f87171';ctx.fillText('Na+',axA,cy-70);
+    ctx.fillStyle='#34d399';ctx.fillText('Cl-',axB,cy-70);
+    // attraction line
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;ctx.setLineDash([6,6]);
+    ctx.beginPath();ctx.moveTo(axA+45,cy);ctx.lineTo(axB-42,cy);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#94a3b8';ctx.font='11px "Segoe UI",system-ui';
+    ctx.fillText('Electrostatic Attraction',cx,cy+12);
+  }
+  if(animRunning)transferProgress=Math.min(transferProgress+0.005,1);
+}
+
+function drawCovalent(){
+  const b=bonds.covalent,cx=W/2,cy=H/2;
+  const sep=120;
+  const axA=cx-sep/2,axB=cx+sep/2;
+  // draw nuclei + shells
+  drawAtom(axA,cy,75,b.atomA.sym,b.atomA.color,4,b.atomA.protons);
+  drawAtom(axB,cy,75,b.atomB.sym,b.atomB.color,4,b.atomB.protons);
+  // shared electrons (2 pairs = 4 electrons oscillating in overlap zone)
+  const overlap=cx;
+  for(let p=0;p<2;p++){
+    for(let e=0;e<2;e++){
+      const phase=animT*1.2+p*Math.PI+e*Math.PI;
+      const ox=overlap+Math.cos(phase)*20;
+      const oy=cy-20+p*40+Math.sin(phase*1.5)*8;
+      ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(ox,oy,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(251,191,36,0.25)';ctx.beginPath();ctx.arc(ox,oy,10,0,Math.PI*2);ctx.fill();
+    }
+  }
+  // overlap region
+  ctx.strokeStyle='rgba(251,191,36,0.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.ellipse(overlap,cy,30,55,0,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#94a3b8';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Shared Electron Pairs',overlap,cy+75);
+  ctx.fillText('O=O Double Bond',overlap,cy+90);
+}
+
+function drawMetallic(){
+  const cx=W/2,cy=H/2;
+  // grid of metal ions
+  const ions=[];
+  for(let r=-2;r<=2;r++){
+    for(let c=-2;c<=2;c++){
+      ions.push({x:cx+c*90,y:cy+r*80});
+    }
+  }
+  // draw delocalized electrons (sea)
+  for(let i=0;i<30;i++){
+    const phase=animT*0.8+i*0.7;
+    const ex=cx+Math.cos(phase+i)*180*Math.sin(i*0.3);
+    const ey=cy+Math.sin(phase*0.7+i*0.5)*150*Math.cos(i*0.4);
+    ctx.fillStyle='rgba(96,165,250,0.5)';ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(96,165,250,0.15)';ctx.beginPath();ctx.arc(ex,ey,8,0,Math.PI*2);ctx.fill();
+  }
+  // draw ions
+  ions.forEach(ion=>{
+    const g=ctx.createRadialGradient(ion.x,ion.y,0,ion.x,ion.y,30);
+    g.addColorStop(0,'#94a3b8');g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(ion.x,ion.y,30,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#cbd5e1';ctx.globalAlpha=0.8;
+    ctx.beginPath();ctx.arc(ion.x,ion.y,18,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#fff';ctx.font='bold 13px "Segoe UI",system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Fe+',ion.x,ion.y);
+  });
+  ctx.fillStyle='#94a3b8';ctx.font='11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Delocalized Electron Sea',cx,cy+190);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // subtle grid
+  ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  if(bondType==='ionic')drawIonic();
+  else if(bondType==='covalent')drawCovalent();
+  else drawMetallic();
+
+  // center label
+  const desc=bonds[bondType].desc;
+  ctx.fillStyle='rgba(15,23,42,0.7)';
+  const tw=ctx.measureText(desc).width+20;
+  ctx.fillRect(W/2-tw/2,H*0.15-12,tw,24);
+  ctx.fillStyle='#6ee7b7';ctx.font='13px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText(desc,W/2,H*0.15+4);
+
+  animT+=0.016;
+  requestAnimationFrame(draw);
+}
+
+setBond('ionic');
+katex.render('\\Delta EN > 1.7 \\Rightarrow \\text{Ionic Bond}',document.getElementById('kx-1'),{throwOnError:false});
+katex.render('\\Delta EN < 0.4 \\Rightarrow \\text{Nonpolar Covalent}',document.getElementById('kx-2'),{throwOnError:false});
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mineral Identification — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; color: #fed7aa; }
+    .sidebar {
+      width: 280px; min-width: 280px;
+      background: rgba(15, 23, 42, 0.95);
+      border-right: 1px solid rgba(249,115,22,0.25);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
+      overflow-y: auto;
+    }
+    .canvas-wrap { flex: 1; position: relative; }
+    canvas { display: block; width: 100%; height: 100%; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      display: inline-block;
+      font-size: 0.55rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .subtitle { font-size: 0.68rem; color: #94a3b8; margin-bottom: 4px; }
+    .panel {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .panel-title { font-size: 0.72rem; color: #f97316; margin-bottom: 8px; font-weight: 600; }
+    .info-row { font-size: 0.66rem; color: #94a3b8; margin: 3px 0; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.68rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    button.active { background: rgba(249,115,22,0.35); border-color: #f97316; }
+    .test-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+    .test-btns button { flex: 1; min-width: 55px; text-align: center; }
+    .result-box {
+      background: rgba(249,115,22,0.05);
+      border: 1px solid rgba(249,115,22,0.15);
+      border-radius: 6px; padding: 8px;
+      font-size: 0.62rem; color: #94a3b8;
+      min-height: 50px;
+    }
+    .result-box .val { color: #fed7aa; font-weight: 600; }
+    .id-result {
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 6px; padding: 8px;
+      font-size: 0.65rem;
+    }
+    .id-result .match { color: #22c55e; font-weight: 600; }
+    .formula-desc { font-size: 0.6rem; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div>
+    <h1>Mineral ID <span class="badge">EARTH SCIENCE MS</span><span class="badge">FREE</span></h1>
+    <p class="subtitle">Select a mineral, then run identification tests</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Test Station</div>
+    <div class="test-btns">
+      <button id="btn-hardness" onclick="setTest('hardness')">Hardness</button>
+      <button id="btn-luster" onclick="setTest('luster')">Luster</button>
+      <button id="btn-streak" onclick="setTest('streak')">Streak</button>
+      <button id="btn-cleavage" onclick="setTest('cleavage')">Cleavage</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Selected Mineral</div>
+    <div class="info-row">Name: <span class="data-val" id="selName">—</span></div>
+    <div class="info-row">Formula: <span class="data-val" id="selFormula">—</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Test Results</div>
+    <div class="result-box" id="testResult">Click a mineral on the canvas, then choose a test.</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Tests Completed</div>
+    <div class="info-row">Hardness: <span class="data-val" id="res-hardness">—</span></div>
+    <div class="info-row">Luster: <span class="data-val" id="res-luster">—</span></div>
+    <div class="info-row">Streak: <span class="data-val" id="res-streak">—</span></div>
+    <div class="info-row">Cleavage: <span class="data-val" id="res-cleavage">—</span></div>
+    <button onclick="identify()" style="width:100%;margin-top:8px;">Identify Mineral</button>
+  </div>
+
+  <div class="panel id-result" id="idResult" style="display:none;">
+    <div class="panel-title">Identification</div>
+    <div id="idText"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Mohs Scale Reference</div>
+    <div id="formula1"></div>
+    <div class="formula-desc">Mohs hardness: 1 (talc) to 10 (diamond). Each mineral scratches those below it.</div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const wrap = canvas.parentElement;
+
+function resize() { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; }
+resize();
+addEventListener('resize', resize);
+
+const MINERALS = [
+  { name: 'Quartz',     formula: 'SiO₂',      color: '#c8b8d4', hardness: 7,   luster: 'Vitreous',  streak: '#ffffff', streakName: 'White',      cleavage: 'None (conchoidal fracture)', shape: 'hexagonal' },
+  { name: 'Feldspar',   formula: 'KAlSi₃O₈',  color: '#d4a88c', hardness: 6,   luster: 'Vitreous',  streak: '#ffffff', streakName: 'White',      cleavage: 'Two planes at 90°',          shape: 'blocky' },
+  { name: 'Calcite',    formula: 'CaCO₃',      color: '#e8e4d0', hardness: 3,   luster: 'Vitreous',  streak: '#ffffff', streakName: 'White',      cleavage: 'Three planes (rhombohedral)', shape: 'rhomb' },
+  { name: 'Pyrite',     formula: 'FeS₂',       color: '#c8b832', hardness: 6.5, luster: 'Metallic',  streak: '#2a2a1a', streakName: 'Greenish-black', cleavage: 'None (conchoidal fracture)', shape: 'cubic' },
+  { name: 'Galena',     formula: 'PbS',        color: '#7a7a8a', hardness: 2.5, luster: 'Metallic',  streak: '#3a3a3a', streakName: 'Dark gray',  cleavage: 'Three planes (cubic)',       shape: 'cubic' },
+  { name: 'Talc',       formula: 'Mg₃Si₄O₁₀(OH)₂', color: '#b8c8b0', hardness: 1, luster: 'Pearly', streak: '#ffffff', streakName: 'White',     cleavage: 'One plane (basal)',          shape: 'flat' },
+  { name: 'Halite',     formula: 'NaCl',       color: '#d0d8e8', hardness: 2.5, luster: 'Vitreous',  streak: '#ffffff', streakName: 'White',      cleavage: 'Three planes (cubic)',       shape: 'cubic' },
+  { name: 'Magnetite',  formula: 'Fe₃O₄',      color: '#2a2a30', hardness: 6,   luster: 'Metallic',  streak: '#1a1a1a', streakName: 'Black',      cleavage: 'None (conchoidal fracture)', shape: 'octahedral' },
+  { name: 'Fluorite',   formula: 'CaF₂',       color: '#8a6aaa', hardness: 4,   luster: 'Vitreous',  streak: '#ffffff', streakName: 'White',      cleavage: 'Four planes (octahedral)',   shape: 'cubic' },
+  { name: 'Mica',       formula: 'KAl₂(Si₃Al)O₁₀(OH)₂', color: '#8a7a5a', hardness: 2.5, luster: 'Pearly', streak: '#ffffff', streakName: 'White', cleavage: 'One plane (basal, perfect)', shape: 'flat' }
+];
+
+let selectedMineral = -1;
+let currentTest = null;
+let testsDone = { hardness: null, luster: null, streak: null, cleavage: null };
+let mineralRects = [];
+
+function setTest(test) {
+  currentTest = test;
+  document.querySelectorAll('.test-btns button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + test).classList.add('active');
+
+  if (selectedMineral >= 0) {
+    runTest(selectedMineral, test);
+  } else {
+    document.getElementById('testResult').textContent = 'Select a mineral first, then this test will run.';
+  }
+}
+
+function runTest(idx, test) {
+  const m = MINERALS[idx];
+  const resultEl = document.getElementById('testResult');
+  let html = '';
+
+  switch (test) {
+    case 'hardness':
+      testsDone.hardness = m.hardness;
+      html = `<span class="val">Hardness: ${m.hardness}</span> (Mohs scale)<br>`;
+      if (m.hardness <= 2.5) html += 'Very soft — scratched by fingernail (2.5)';
+      else if (m.hardness <= 5.5) html += 'Medium — scratched by steel knife (5.5)';
+      else html += 'Hard — scratches glass (5.5)';
+      document.getElementById('res-hardness').textContent = m.hardness;
+      break;
+    case 'luster':
+      testsDone.luster = m.luster;
+      html = `<span class="val">Luster: ${m.luster}</span><br>`;
+      if (m.luster === 'Metallic') html += 'Shiny, reflective like metal';
+      else if (m.luster === 'Vitreous') html += 'Glassy, like broken glass';
+      else html += 'Soft sheen, like a pearl';
+      document.getElementById('res-luster').textContent = m.luster;
+      break;
+    case 'streak':
+      testsDone.streak = m.streakName;
+      html = `<span class="val">Streak: ${m.streakName}</span><br>`;
+      html += `<div style="width:40px;height:12px;background:${m.streak};border:1px solid #555;border-radius:2px;margin-top:4px;display:inline-block;"></div>`;
+      html += '<br>Color of powder when rubbed on porcelain plate';
+      document.getElementById('res-streak').textContent = m.streakName;
+      break;
+    case 'cleavage':
+      testsDone.cleavage = m.cleavage;
+      html = `<span class="val">${m.cleavage}</span><br>`;
+      html += 'How the mineral breaks along crystal planes';
+      document.getElementById('res-cleavage').textContent = m.cleavage.split(' ')[0];
+      break;
+  }
+  resultEl.innerHTML = html;
+}
+
+function identify() {
+  const el = document.getElementById('idResult');
+  const textEl = document.getElementById('idText');
+  if (selectedMineral < 0) {
+    el.style.display = 'block';
+    textEl.innerHTML = 'No mineral selected. Click one on the canvas first.';
+    return;
+  }
+  const done = Object.values(testsDone).filter(v => v !== null).length;
+  if (done < 2) {
+    el.style.display = 'block';
+    textEl.innerHTML = 'Run at least 2 tests before identifying.';
+    return;
+  }
+  const m = MINERALS[selectedMineral];
+  el.style.display = 'block';
+  textEl.innerHTML = `<span class="match">Identified: ${m.name}</span><br>` +
+    `Formula: ${m.formula}<br>` +
+    `Tests completed: ${done}/4<br>` +
+    `This mineral is commonly found in ${m.hardness >= 6 ? 'igneous and metamorphic' : 'sedimentary'} rocks.`;
+}
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  for (let i = 0; i < mineralRects.length; i++) {
+    const r = mineralRects[i];
+    if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
+      selectedMineral = i;
+      testsDone = { hardness: null, luster: null, streak: null, cleavage: null };
+      ['hardness', 'luster', 'streak', 'cleavage'].forEach(t => document.getElementById('res-' + t).textContent = '—');
+      document.getElementById('selName').textContent = MINERALS[i].name;
+      document.getElementById('selFormula').textContent = MINERALS[i].formula;
+      document.getElementById('idResult').style.display = 'none';
+      document.getElementById('testResult').textContent = 'Mineral selected. Choose a test from the sidebar.';
+
+      if (currentTest) runTest(i, currentTest);
+      break;
+    }
+  }
+});
+
+function drawMineralShape(x, y, w, h, mineral, isSelected) {
+  const m = mineral;
+
+  /* Background card */
+  ctx.fillStyle = isSelected ? 'rgba(249,115,22,0.15)' : 'rgba(30,41,59,0.8)';
+  ctx.strokeStyle = isSelected ? '#f97316' : 'rgba(249,115,22,0.2)';
+  ctx.lineWidth = isSelected ? 2 : 1;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  /* Mineral sample */
+  const cx = x + w / 2;
+  const cy = y + h * 0.4;
+  const sz = Math.min(w, h) * 0.28;
+
+  ctx.fillStyle = m.color;
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+
+  switch (m.shape) {
+    case 'hexagonal':
+      ctx.beginPath();
+      for (let a = 0; a < 6; a++) {
+        const angle = a * Math.PI / 3 - Math.PI / 6;
+        ctx.lineTo(cx + Math.cos(angle) * sz, cy + Math.sin(angle) * sz);
+      }
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      break;
+    case 'cubic':
+      /* Isometric cube illusion */
+      ctx.beginPath();
+      ctx.rect(cx - sz * 0.7, cy - sz * 0.7, sz * 1.4, sz * 1.4);
+      ctx.fill(); ctx.stroke();
+      /* Top face */
+      ctx.fillStyle = lighten(m.color, 20);
+      ctx.beginPath();
+      ctx.moveTo(cx - sz * 0.7, cy - sz * 0.7);
+      ctx.lineTo(cx - sz * 0.4, cy - sz);
+      ctx.lineTo(cx + sz, cy - sz);
+      ctx.lineTo(cx + sz * 0.7, cy - sz * 0.7);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      /* Right face */
+      ctx.fillStyle = darken(m.color, 20);
+      ctx.beginPath();
+      ctx.moveTo(cx + sz * 0.7, cy - sz * 0.7);
+      ctx.lineTo(cx + sz, cy - sz);
+      ctx.lineTo(cx + sz, cy + sz * 0.4);
+      ctx.lineTo(cx + sz * 0.7, cy + sz * 0.7);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      break;
+    case 'rhomb':
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - sz);
+      ctx.lineTo(cx + sz * 0.8, cy - sz * 0.2);
+      ctx.lineTo(cx, cy + sz * 0.6);
+      ctx.lineTo(cx - sz * 0.8, cy - sz * 0.2);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      break;
+    case 'flat':
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, sz, sz * 0.35, -0.2, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      /* Layer lines */
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      for (let l = -2; l <= 2; l++) {
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + l * 4, sz * 0.9, sz * 0.3, -0.2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      break;
+    case 'octahedral':
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - sz);
+      ctx.lineTo(cx + sz, cy);
+      ctx.lineTo(cx, cy + sz);
+      ctx.lineTo(cx - sz, cy);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      /* Cross line */
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(cx - sz, cy);
+      ctx.lineTo(cx + sz, cy);
+      ctx.stroke();
+      break;
+    default: /* blocky */
+      ctx.fillRect(cx - sz * 0.8, cy - sz * 0.6, sz * 1.6, sz * 1.2);
+      ctx.strokeRect(cx - sz * 0.8, cy - sz * 0.6, sz * 1.6, sz * 1.2);
+  }
+
+  /* Label */
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '11px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(m.name, cx, y + h - 20);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px "JetBrains Mono", monospace';
+  ctx.fillText('H:' + m.hardness, cx, y + h - 8);
+  ctx.textAlign = 'left';
+}
+
+function lighten(hex, amt) {
+  let r = parseInt(hex.slice(1, 3), 16) + amt;
+  let g = parseInt(hex.slice(3, 5), 16) + amt;
+  let b = parseInt(hex.slice(5, 7), 16) + amt;
+  return '#' + [r, g, b].map(c => Math.min(255, Math.max(0, c)).toString(16).padStart(2, '0')).join('');
+}
+function darken(hex, amt) { return lighten(hex, -amt); }
+
+/* Test station visuals */
+function drawTestStation(W, H) {
+  if (currentTest === null || selectedMineral < 0) return;
+  const m = MINERALS[selectedMineral];
+  const stX = W * 0.6;
+  const stY = H * 0.65;
+  const stW = W * 0.35;
+  const stH = H * 0.28;
+
+  /* Station background */
+  ctx.fillStyle = 'rgba(30,41,59,0.9)';
+  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(stX, stY, stW, stH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#f97316';
+  ctx.font = '12px "Segoe UI", system-ui';
+  ctx.fillText('Test: ' + currentTest.toUpperCase(), stX + 12, stY + 20);
+
+  const cx = stX + stW / 2;
+  const cy = stY + stH / 2 + 10;
+
+  switch (currentTest) {
+    case 'hardness':
+      /* Draw scratch test visual */
+      ctx.fillStyle = m.color;
+      ctx.fillRect(cx - 40, cy - 15, 80, 30);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cx - 40, cy - 15, 80, 30);
+      /* Scratch line */
+      ctx.strokeStyle = m.hardness < 5.5 ? '#ef4444' : 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 30, cy + 5);
+      ctx.lineTo(cx + 30, cy - 5);
+      ctx.stroke();
+      /* Knife */
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.moveTo(cx + 35, cy - 10);
+      ctx.lineTo(cx + 50, cy - 25);
+      ctx.lineTo(cx + 53, cy - 22);
+      ctx.lineTo(cx + 38, cy - 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#fed7aa';
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(m.hardness + ' Mohs', cx, cy + 35);
+      ctx.textAlign = 'left';
+      break;
+
+    case 'luster':
+      /* Draw reflection */
+      ctx.fillStyle = m.color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+      ctx.fill();
+      if (m.luster === 'Metallic') {
+        const lg = ctx.createRadialGradient(cx - 8, cy - 8, 2, cx, cy, 25);
+        lg.addColorStop(0, 'rgba(255,255,255,0.6)');
+        lg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = lg;
+        ctx.fill();
+      } else if (m.luster === 'Vitreous') {
+        const lg = ctx.createRadialGradient(cx - 5, cy - 5, 1, cx, cy, 25);
+        lg.addColorStop(0, 'rgba(255,255,255,0.3)');
+        lg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = lg;
+        ctx.fill();
+      }
+      ctx.fillStyle = '#fed7aa';
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(m.luster, cx, cy + 40);
+      ctx.textAlign = 'left';
+      break;
+
+    case 'streak':
+      /* Porcelain plate */
+      ctx.fillStyle = '#d4d0c8';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 50, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+      /* Streak mark */
+      ctx.strokeStyle = m.streak;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx - 30, cy);
+      ctx.lineTo(cx + 30, cy);
+      ctx.stroke();
+      ctx.fillStyle = '#fed7aa';
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(m.streakName, cx, cy + 35);
+      ctx.textAlign = 'left';
+      break;
+
+    case 'cleavage':
+      /* Broken mineral illustration */
+      ctx.fillStyle = m.color;
+      const hasCleave = !m.cleavage.startsWith('None');
+      if (hasCleave) {
+        /* Clean break planes */
+        ctx.fillRect(cx - 30, cy - 15, 25, 30);
+        ctx.fillRect(cx + 5, cy - 15, 25, 30);
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(cx - 2, cy - 20);
+        ctx.lineTo(cx + 2, cy + 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        /* Irregular fracture */
+        ctx.beginPath();
+        ctx.moveTo(cx - 25, cy - 10);
+        ctx.lineTo(cx - 5, cy - 15);
+        ctx.lineTo(cx + 2, cy + 5);
+        ctx.lineTo(cx - 15, cy + 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 8, cy - 12);
+        ctx.lineTo(cx + 28, cy - 8);
+        ctx.lineTo(cx + 22, cy + 15);
+        ctx.lineTo(cx + 5, cy + 8);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = '#fed7aa';
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(hasCleave ? 'Cleavage' : 'Fracture', cx, cy + 35);
+      ctx.textAlign = 'left';
+      break;
+  }
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  /* Title area */
+  ctx.fillStyle = '#f97316';
+  ctx.font = '13px "Segoe UI", system-ui';
+  ctx.fillText('MINERAL SAMPLES', 15, 25);
+
+  /* Grid of minerals */
+  const cols = 5;
+  const rows = 2;
+  const pad = 12;
+  const gridW = W * 0.55;
+  const cellW = (gridW - pad * (cols + 1)) / cols;
+  const cellH = (H * 0.5 - pad * (rows + 1)) / rows;
+  const startX = pad;
+  const startY = 40;
+
+  mineralRects = [];
+
+  for (let i = 0; i < MINERALS.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const rx = startX + col * (cellW + pad);
+    const ry = startY + row * (cellH + pad);
+    mineralRects.push({ x: rx, y: ry, w: cellW, h: cellH });
+    drawMineralShape(rx, ry, cellW, cellH, MINERALS[i], i === selectedMineral);
+  }
+
+  /* Mohs scale visual */
+  const scaleY = H * 0.55;
+  ctx.fillStyle = '#f97316';
+  ctx.font = '11px "Segoe UI", system-ui';
+  ctx.fillText('MOHS HARDNESS SCALE', 15, scaleY);
+
+  const scaleW = W * 0.5;
+  const barY = scaleY + 15;
+  const barH = 14;
+
+  /* Scale gradient bar */
+  const sg = ctx.createLinearGradient(15, 0, 15 + scaleW, 0);
+  sg.addColorStop(0, '#22c55e');
+  sg.addColorStop(0.5, '#eab308');
+  sg.addColorStop(1, '#ef4444');
+  ctx.fillStyle = sg;
+  ctx.beginPath();
+  ctx.roundRect(15, barY, scaleW, barH, 4);
+  ctx.fill();
+
+  /* Scale labels */
+  ctx.font = '9px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  for (let v = 1; v <= 10; v++) {
+    const sx = 15 + (v - 1) / 9 * scaleW;
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(v, sx, barY + barH + 12);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(sx, barY, 1, barH);
+  }
+
+  /* Selected mineral marker on scale */
+  if (selectedMineral >= 0) {
+    const m = MINERALS[selectedMineral];
+    const mx = 15 + (m.hardness - 1) / 9 * scaleW;
+    ctx.fillStyle = '#f97316';
+    ctx.beginPath();
+    ctx.moveTo(mx, barY - 4);
+    ctx.lineTo(mx - 5, barY - 10);
+    ctx.lineTo(mx + 5, barY - 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillText(m.name, mx, barY - 13);
+  }
+  ctx.textAlign = 'left';
+
+  /* Reference minerals on scale */
+  const refs = [
+    { name: 'Talc', h: 1 }, { name: 'Gypsum', h: 2 }, { name: 'Calcite', h: 3 },
+    { name: 'Fluorite', h: 4 }, { name: 'Apatite', h: 5 }, { name: 'Orthoclase', h: 6 },
+    { name: 'Quartz', h: 7 }, { name: 'Topaz', h: 8 }, { name: 'Corundum', h: 9 },
+    { name: 'Diamond', h: 10 }
+  ];
+  ctx.font = '8px "Segoe UI", system-ui';
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'center';
+  refs.forEach(r => {
+    const rx = 15 + (r.h - 1) / 9 * scaleW;
+    ctx.fillText(r.name, rx, barY + barH + 24);
+  });
+  ctx.textAlign = 'left';
+
+  /* Properties table area */
+  if (selectedMineral >= 0) {
+    const m = MINERALS[selectedMineral];
+    const tX = W * 0.55;
+    const tY = 40;
+
+    ctx.fillStyle = 'rgba(30,41,59,0.8)';
+    ctx.strokeStyle = 'rgba(249,115,22,0.2)';
+    ctx.beginPath();
+    ctx.roundRect(tX, tY, W - tX - 15, H * 0.45, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#f97316';
+    ctx.font = '13px "Segoe UI", system-ui';
+    ctx.fillText(m.name, tX + 15, tY + 22);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillText(m.formula, tX + 15, tY + 40);
+
+    /* Large sample */
+    const bigX = tX + (W - tX - 15) / 2;
+    const bigY = tY + H * 0.22;
+    const bigSz = 45;
+
+    ctx.save();
+    ctx.translate(bigX, bigY);
+
+    ctx.fillStyle = m.color;
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+
+    switch (m.shape) {
+      case 'hexagonal':
+        ctx.beginPath();
+        for (let a = 0; a < 6; a++) {
+          const angle = a * Math.PI / 3 - Math.PI / 6;
+          ctx.lineTo(Math.cos(angle) * bigSz, Math.sin(angle) * bigSz);
+        }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        break;
+      case 'cubic':
+        ctx.fillRect(-bigSz * 0.7, -bigSz * 0.7, bigSz * 1.4, bigSz * 1.4);
+        ctx.strokeRect(-bigSz * 0.7, -bigSz * 0.7, bigSz * 1.4, bigSz * 1.4);
+        break;
+      case 'rhomb':
+        ctx.beginPath();
+        ctx.moveTo(0, -bigSz);
+        ctx.lineTo(bigSz * 0.8, -bigSz * 0.2);
+        ctx.lineTo(0, bigSz * 0.6);
+        ctx.lineTo(-bigSz * 0.8, -bigSz * 0.2);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        break;
+      case 'flat':
+        ctx.beginPath();
+        ctx.ellipse(0, 0, bigSz, bigSz * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        break;
+      case 'octahedral':
+        ctx.beginPath();
+        ctx.moveTo(0, -bigSz);
+        ctx.lineTo(bigSz, 0);
+        ctx.lineTo(0, bigSz);
+        ctx.lineTo(-bigSz, 0);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        break;
+      default:
+        ctx.fillRect(-bigSz * 0.8, -bigSz * 0.5, bigSz * 1.6, bigSz);
+        ctx.strokeRect(-bigSz * 0.8, -bigSz * 0.5, bigSz * 1.6, bigSz);
+    }
+    ctx.restore();
+  }
+
+  /* Test station */
+  drawTestStation(W, H);
+
+  requestAnimationFrame(draw);
+}
+
+/* KaTeX */
+try {
+  katex.render('1\\ (\\text{Talc}) \\to 10\\ (\\text{Diamond})', document.getElementById('formula1'), { displayMode: false, throwOnError: false });
+} catch(e) {}
+
+draw();
+</script>
+</body>
+</html>

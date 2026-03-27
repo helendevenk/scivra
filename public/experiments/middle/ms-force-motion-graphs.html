@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Force & Motion Graphs — Scivra Middle School Physics</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',-apple-system,sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh}
+    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(99,102,241,.07));border-bottom:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .badges{display:flex;gap:8px}.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ms{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
+    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+    .header h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;flex:1}
+    .header p{font-size:.85rem;color:#94a3b8;width:100%;margin-top:-8px}
+    .layout{display:grid;grid-template-columns:260px 1fr;height:calc(100vh - 60px)}
+    .sidebar{background:#0f172a;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto}
+    .section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .param-row{margin-bottom:12px}
+    .param-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .param-name{font-size:12px;color:#94a3b8}
+    .param-val{font-size:12px;font-weight:600;color:#93c5fd;font-family:'JetBrains Mono',monospace}
+    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(59,130,246,.2);border-radius:2px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;cursor:pointer}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:8px 10px}
+    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;margin-bottom:2px}
+    .stat-value{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace}
+    .v-blue{color:#93c5fd}.v-cyan{color:#67e8f9}.v-amber{color:#fcd34d}.v-green{color:#86efac}
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+    .btn{width:100%;padding:9px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+    .btn-primary{border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.12);color:#93c5fd}
+    .btn-warn{border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24}
+    .canvas-area{display:grid;grid-template-rows:120px 1fr 1fr 1fr}
+    .track-panel{position:relative;border-bottom:1px solid rgba(255,255,255,.06)}
+    .track-panel canvas,.graph-panel canvas{display:block;width:100%;height:100%}
+    .graph-panel{position:relative;border-bottom:1px solid rgba(255,255,255,.04)}
+    .graph-label{position:absolute;top:4px;left:8px;font-size:10px;color:#475569;pointer-events:none}
+    .katex{font-size:1em}.katex .base{color:#93c5fd}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="badges"><span class="badge badge-ms">PHYSICS MS</span><span class="badge badge-free">FREE</span></div>
+  <h1>Force & Motion Graphs</h1>
+  <p>Real-time position, velocity, and acceleration graphs connected to applied forces</p>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Parameters</div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Applied Force</span><span class="param-val" id="lblF">5 N</span></div>
+        <input type="range" id="sldF" min="-20" max="20" step="1" value="5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Mass</span><span class="param-val" id="lblM">5 kg</span></div>
+        <input type="range" id="sldM" min="1" max="20" step="1" value="5">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span class="param-name">Friction μ</span><span class="param-val" id="lblMu">0.10</span></div>
+        <input type="range" id="sldMu" min="0" max="0.5" step="0.05" value="0.1">
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Position</div><div class="stat-value v-blue" id="valX">0.0 m</div></div>
+      <div class="stat-card"><div class="stat-label">Velocity</div><div class="stat-value v-cyan" id="valV">0.0 m/s</div></div>
+      <div class="stat-card"><div class="stat-label">Accel</div><div class="stat-value v-amber" id="valA">1.0 m/s²</div></div>
+      <div class="stat-card"><div class="stat-label">F_net</div><div class="stat-value v-green" id="valFn">5.0 N</div></div>
+    </div>
+    <div class="section">
+      <div class="formula-box" id="fN2"></div>
+    </div>
+    <div class="section">
+      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+      <button class="btn btn-warn" id="btnReset">Reset</button>
+    </div>
+  </div>
+  <div class="canvas-area">
+    <div class="track-panel"><canvas id="cvTrack"></canvas></div>
+    <div class="graph-panel"><canvas id="cvX"></canvas><span class="graph-label">x(t) — Position</span></div>
+    <div class="graph-panel"><canvas id="cvV"></canvas><span class="graph-label">v(t) — Velocity</span></div>
+    <div class="graph-panel"><canvas id="cvA"></canvas><span class="graph-label">a(t) — Acceleration</span></div>
+  </div>
+</div>
+<script>
+(function(){
+  let F = 5, m = 5, mu = 0.1;
+  let x = 0, v = 0, t = 0, playing = false;
+  const g = 9.8;
+  let xHist = [], vHist = [], aHist = [];
+  const MAX = 300;
+
+  function getAccel() {
+    const friction = v !== 0 ? -Math.sign(v) * mu * m * g : (Math.abs(F) > mu * m * g ? 0 : -F);
+    const fNet = F + (v !== 0 ? -Math.sign(v) * mu * m * g : 0);
+    // Static friction check
+    if (v === 0 && Math.abs(F) <= mu * m * g) return 0;
+    return fNet / m;
+  }
+
+  function step(dt) {
+    const a = getAccel();
+    v += a * dt;
+    // Stop if friction reverses velocity
+    if (v !== 0 && Math.abs(F) < mu * m * g && Math.sign(v) !== Math.sign(v + a * dt) && Math.abs(F) < mu * m * g) {
+      v = 0;
+    }
+    x += v * dt;
+    t += dt;
+    xHist.push(x); vHist.push(v); aHist.push(a);
+    if (xHist.length > MAX) { xHist.shift(); vHist.shift(); aHist.shift(); }
+  }
+
+  function updateStats() {
+    const a = getAccel();
+    const fNet = a * m;
+    document.getElementById('valX').textContent = x.toFixed(1) + ' m';
+    document.getElementById('valV').textContent = v.toFixed(2) + ' m/s';
+    document.getElementById('valA').textContent = a.toFixed(2) + ' m/s²';
+    document.getElementById('valFn').textContent = fNet.toFixed(1) + ' N';
+  }
+
+  function drawCanvas(cv, data, color, label) {
+    const ctx = cv.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = cv.parentElement.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#060c12'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+    if (data.length < 2) return;
+    const maxVal = Math.max(...data.map(Math.abs), 1);
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach((val, i) => {
+      const px = (i / MAX) * w;
+      const py = h / 2 - (val / maxVal) * (h * 0.4);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+  }
+
+  function drawTrack() {
+    const cv = document.getElementById('cvTrack');
+    const ctx = cv.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = cv.parentElement.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0, 0, w, h);
+    // Track
+    const trackY = h * 0.7;
+    ctx.fillStyle = 'rgba(59,130,246,0.1)';
+    ctx.fillRect(0, trackY, w, 4);
+    // Ticks
+    ctx.fillStyle = '#475569'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    for (let i = -5; i <= 5; i++) {
+      const px = w / 2 + i * (w / 12);
+      ctx.fillRect(px, trackY - 3, 1, 10);
+    }
+    // Object
+    const objX = w / 2 + (x % 50) * (w / 60);
+    const objSize = 25;
+    ctx.fillStyle = 'rgba(59,130,246,0.6)';
+    ctx.fillRect(objX - objSize / 2, trackY - objSize - 2, objSize, objSize);
+    ctx.strokeStyle = 'rgba(59,130,246,0.8)'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(objX - objSize / 2, trackY - objSize - 2, objSize, objSize);
+    // Force arrow
+    if (Math.abs(F) > 0.5) {
+      const arrLen = Math.sign(F) * Math.min(Math.abs(F) * 3, 80);
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(objX, trackY - objSize / 2); ctx.lineTo(objX + arrLen, trackY - objSize / 2); ctx.stroke();
+      const tipX = objX + arrLen;
+      ctx.beginPath();
+      ctx.moveTo(tipX, trackY - objSize / 2 - 6);
+      ctx.lineTo(tipX + Math.sign(F) * 8, trackY - objSize / 2);
+      ctx.lineTo(tipX, trackY - objSize / 2 + 6);
+      ctx.fillStyle = '#22c55e'; ctx.fill();
+    }
+    ctx.font = '11px JetBrains Mono, monospace'; ctx.fillStyle = '#64748b'; ctx.textAlign = 'left';
+    ctx.fillText('x = ' + x.toFixed(1) + ' m  v = ' + v.toFixed(2) + ' m/s  t = ' + t.toFixed(1) + ' s', 12, 18);
+  }
+
+  let lastTime = 0;
+  function animate(now) {
+    requestAnimationFrame(animate);
+    if (!lastTime) lastTime = now;
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    if (playing) step(dt);
+    drawTrack();
+    drawCanvas(document.getElementById('cvX'), xHist, '#93c5fd');
+    drawCanvas(document.getElementById('cvV'), vHist, '#67e8f9');
+    drawCanvas(document.getElementById('cvA'), aHist, '#fcd34d');
+    updateStats();
+  }
+
+  document.getElementById('sldF').addEventListener('input', e => { F = parseInt(e.target.value); document.getElementById('lblF').textContent = F + ' N'; });
+  document.getElementById('sldM').addEventListener('input', e => { m = parseInt(e.target.value); document.getElementById('lblM').textContent = m + ' kg'; });
+  document.getElementById('sldMu').addEventListener('input', e => { mu = parseFloat(e.target.value); document.getElementById('lblMu').textContent = mu.toFixed(2); });
+  document.getElementById('btnPlay').addEventListener('click', () => { playing = !playing; document.getElementById('btnPlay').textContent = playing ? '⏸ Pause' : '▶ Play'; });
+  document.getElementById('btnReset').addEventListener('click', () => { x = 0; v = 0; t = 0; playing = false; xHist = []; vHist = []; aHist = []; document.getElementById('btnPlay').textContent = '▶ Play'; lastTime = 0; });
+  katex.render('a = \\frac{F_{\\text{net}}}{m}', document.getElementById('fN2'), { displayMode: false });
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

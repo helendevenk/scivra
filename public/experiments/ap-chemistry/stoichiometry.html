@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stoichiometry — Scivra AP Chemistry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 12px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      font-size: 0.6rem; background: rgba(16,185,129,0.18);
+      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .subtitle { font-size: 0.7rem; color: #94a3b8; }
+    button {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+    }
+    button:hover { background: rgba(16,185,129,0.25); }
+    select {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 210px; }
+    .controls label { font-size: 0.68rem; color: #94a3b8; }
+    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
+    .data-row {
+      display: flex; justify-content: space-between; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
+    }
+    .big-val { font-size: 1.5rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; text-align: center; }
+    .limiting { color: #f87171; }
+    .excess { color: #94a3b8; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Stoichiometry <span class="badge">AP Chemistry</span></h1>
+      <p class="subtitle">Mole ratios, limiting reagents, and theoretical yield</p>
+    </div>
+    <div class="panel controls">
+      <label>Reaction:</label>
+      <select id="rxnSelect">
+        <option value="0">2H₂ + O₂ → 2H₂O</option>
+        <option value="1">N₂ + 3H₂ → 2NH₃</option>
+        <option value="2">CH₄ + 2O₂ → CO₂ + 2H₂O</option>
+      </select>
+      <label>Moles of Reactant A: <span class="data-val" id="molesADisplay">2.0</span></label>
+      <input type="range" id="molesASlider" min="0" max="100" value="20">
+      <label>Moles of Reactant B: <span class="data-val" id="molesBDisplay">3.0</span></label>
+      <input type="range" id="molesBSlider" min="0" max="100" value="30">
+      <button id="reactBtn">React!</button>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel" style="min-width:220px;">
+      <div class="panel-title">Reaction Results</div>
+      <div class="data-row"><span>Limiting Reagent</span><span class="data-val" id="limitingDisplay">—</span></div>
+      <div class="data-row"><span>Moles of Product</span><span class="data-val" id="productDisplay">—</span></div>
+      <div class="data-row"><span>Excess Remaining</span><span class="data-val" id="excessDisplay">—</span></div>
+      <div class="data-row"><span>% Atom Economy</span><span class="data-val" id="atomEconDisplay">—</span></div>
+    </div>
+    <div class="panel" style="max-width:380px;">
+      <div class="panel-title">Balanced Equation</div>
+      <div id="formulaDisplay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REACTIONS = [
+  { eq: '2H₂ + O₂ → 2H₂O', latex: '2\\text{H}_2 + \\text{O}_2 \\rightarrow 2\\text{H}_2\\text{O}',
+    coeffA: 2, coeffB: 1, coeffProd: 2, nameA: 'H₂', nameB: 'O₂', nameProd: 'H₂O',
+    colorA: [59,130,246], colorB: [239,68,68], colorProd: [16,185,129] },
+  { eq: 'N₂ + 3H₂ → 2NH₃', latex: '\\text{N}_2 + 3\\text{H}_2 \\rightarrow 2\\text{NH}_3',
+    coeffA: 1, coeffB: 3, coeffProd: 2, nameA: 'N₂', nameB: 'H₂', nameProd: 'NH₃',
+    colorA: [168,85,247], colorB: [59,130,246], colorProd: [16,185,129] },
+  { eq: 'CH₄ + 2O₂ → CO₂ + 2H₂O', latex: '\\text{CH}_4 + 2\\text{O}_2 \\rightarrow \\text{CO}_2 + 2\\text{H}_2\\text{O}',
+    coeffA: 1, coeffB: 2, coeffProd: 1, nameA: 'CH₄', nameB: 'O₂', nameProd: 'CO₂',
+    colorA: [250,204,21], colorB: [239,68,68], colorProd: [16,185,129] }
+];
+
+let rxnIdx = 0, molesA = 2.0, molesB = 3.0;
+let particles = [], reacted = false;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+function initParticles() {
+  particles = [];
+  reacted = false;
+  const rxn = REACTIONS[rxnIdx];
+  const w = canvas.width, h = canvas.height;
+
+  // Reactant A particles (left side)
+  const nA = Math.round(molesA * 5);
+  for (let i = 0; i < Math.min(nA, 60); i++) {
+    particles.push({
+      x: w * 0.1 + Math.random() * w * 0.3,
+      y: h * 0.2 + Math.random() * h * 0.5,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1.5,
+      r: 8, color: rxn.colorA, type: 'A', consumed: false
+    });
+  }
+  // Reactant B particles (right side)
+  const nB = Math.round(molesB * 5);
+  for (let i = 0; i < Math.min(nB, 60); i++) {
+    particles.push({
+      x: w * 0.55 + Math.random() * w * 0.3,
+      y: h * 0.2 + Math.random() * h * 0.5,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1.5,
+      r: 8, color: rxn.colorB, type: 'B', consumed: false
+    });
+  }
+}
+
+function react() {
+  const rxn = REACTIONS[rxnIdx];
+  const ratioA = molesA / rxn.coeffA;
+  const ratioB = molesB / rxn.coeffB;
+  const limiting = ratioA <= ratioB ? 'A' : 'B';
+  const limitingMoles = limiting === 'A' ? molesA : molesB;
+  const limitingCoeff = limiting === 'A' ? rxn.coeffA : rxn.coeffB;
+  const productMoles = (limitingMoles / limitingCoeff) * rxn.coeffProd;
+
+  const excessCoeff = limiting === 'A' ? rxn.coeffB : rxn.coeffA;
+  const excessMoles = limiting === 'A' ? molesB : molesA;
+  const excessUsed = (limitingMoles / limitingCoeff) * excessCoeff;
+  const excessRemaining = excessMoles - excessUsed;
+
+  document.getElementById('limitingDisplay').textContent = (limiting === 'A' ? rxn.nameA : rxn.nameB) + ' (limiting)';
+  document.getElementById('limitingDisplay').className = 'data-val limiting';
+  document.getElementById('productDisplay').textContent = productMoles.toFixed(2) + ' mol ' + rxn.nameProd;
+  document.getElementById('excessDisplay').textContent = excessRemaining.toFixed(2) + ' mol ' + (limiting === 'A' ? rxn.nameB : rxn.nameA);
+  document.getElementById('atomEconDisplay').textContent = '100%';
+
+  // Animate: consume limiting particles, convert some to product
+  const consumeType = limiting;
+  const otherType = limiting === 'A' ? 'B' : 'A';
+  let consumedCount = 0;
+  const maxConsume = Math.round((limitingMoles / Math.max(molesA, molesB)) * particles.filter(p => p.type === consumeType).length);
+
+  particles.forEach(p => {
+    if (p.type === consumeType && consumedCount < maxConsume) {
+      p.consumed = true;
+      consumedCount++;
+    }
+  });
+
+  // Consume proportional excess
+  let otherConsumed = 0;
+  const maxOther = Math.round((excessUsed / excessMoles) * particles.filter(p => p.type === otherType).length);
+  particles.forEach(p => {
+    if (p.type === otherType && otherConsumed < maxOther) {
+      p.consumed = true;
+      otherConsumed++;
+    }
+  });
+
+  // Add product particles
+  const nProd = Math.round(productMoles * 4);
+  const w = canvas.width, h = canvas.height;
+  for (let i = 0; i < Math.min(nProd, 40); i++) {
+    particles.push({
+      x: w * 0.3 + Math.random() * w * 0.35,
+      y: h * 0.25 + Math.random() * h * 0.4,
+      vx: (Math.random() - 0.5) * 1,
+      vy: (Math.random() - 0.5) * 1,
+      r: 10, color: rxn.colorProd, type: 'P', consumed: false
+    });
+  }
+  reacted = true;
+}
+
+function animate() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Reaction vessel outline
+  ctx.strokeStyle = 'rgba(16,185,129,0.15)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(w * 0.08, h * 0.15, w * 0.84, h * 0.65);
+
+  // Move and draw particles
+  particles.forEach(p => {
+    if (p.consumed) return;
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < w * 0.08 + p.r || p.x > w * 0.92 - p.r) p.vx *= -1;
+    if (p.y < h * 0.15 + p.r || p.y > h * 0.80 - p.r) p.vy *= -1;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},0.85)`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},0.4)`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // Legend
+  const rxn = REACTIONS[rxnIdx];
+  ctx.font = '11px Segoe UI, sans-serif';
+  ctx.textAlign = 'left';
+  const ly = h * 0.88;
+  [[rxn.colorA, rxn.nameA], [rxn.colorB, rxn.nameB], [rxn.colorProd, rxn.nameProd]].forEach(([c, n], i) => {
+    const lx = w * 0.1 + i * 120;
+    ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+    ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(n, lx + 10, ly + 4);
+  });
+
+  requestAnimationFrame(animate);
+}
+
+// Controls
+document.getElementById('rxnSelect').addEventListener('change', e => {
+  rxnIdx = +e.target.value;
+  updateFormula();
+  initParticles();
+  resetResults();
+});
+document.getElementById('molesASlider').addEventListener('input', e => {
+  molesA = +e.target.value / 10;
+  document.getElementById('molesADisplay').textContent = molesA.toFixed(1);
+  initParticles();
+  resetResults();
+});
+document.getElementById('molesBSlider').addEventListener('input', e => {
+  molesB = +e.target.value / 10;
+  document.getElementById('molesBDisplay').textContent = molesB.toFixed(1);
+  initParticles();
+  resetResults();
+});
+document.getElementById('reactBtn').addEventListener('click', react);
+
+function resetResults() {
+  document.getElementById('limitingDisplay').textContent = '—';
+  document.getElementById('limitingDisplay').className = 'data-val';
+  document.getElementById('productDisplay').textContent = '—';
+  document.getElementById('excessDisplay').textContent = '—';
+  document.getElementById('atomEconDisplay').textContent = '—';
+}
+
+function updateFormula() {
+  try {
+    katex.render(REACTIONS[rxnIdx].latex, document.getElementById('formulaDisplay'), { displayMode: true });
+  } catch(e) {}
+}
+
+updateFormula();
+initParticles();
+animate();
+</script>
+</body>
+</html>

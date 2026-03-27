@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Adaptations — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(132,204,22,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(132,204,22,0.15); color: #84cc16; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 6px; }
+    .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    button { background: rgba(132,204,22,0.12); border: 1px solid rgba(132,204,22,0.25); color: #d9f99d; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.72rem; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: rgba(132,204,22,0.3); }
+    button.active { background: rgba(132,204,22,0.35); box-shadow: 0 0 8px rgba(132,204,22,0.3); }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-row { font-size: 0.7rem; margin-bottom: 3px; display: flex; gap: 6px; }
+    .data-row .lbl { color: #94a3b8; }
+    .info-box { max-width: 260px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Animal Adaptations <span class="badge">Elementary</span></h1>
+      <p>Click animals to learn their adaptations! Drag them to new environments.</p>
+    </div>
+    <div class="panel controls">
+      <div class="btn-row">
+        <button class="env-btn active" data-env="0">Desert</button>
+        <button class="env-btn" data-env="1">Arctic</button>
+        <button class="env-btn" data-env="2">Ocean</button>
+        <button class="env-btn" data-env="3">Forest</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Environment</h3>
+      <div class="data-row"><span class="lbl">Biome:</span> <span class="data-val" id="dBiome">Desert</span></div>
+      <div class="data-row"><span class="lbl">Temp:</span> <span class="data-val" id="dTemp">110°F</span></div>
+      <div class="data-row"><span class="lbl">Rainfall:</span> <span class="data-val" id="dRain">Very Low</span></div>
+    </div>
+    <div class="panel data-panel info-box">
+      <h3>Animal Info</h3>
+      <div class="data-row"><span class="lbl">Name:</span> <span class="data-val" id="dName">Click an animal</span></div>
+      <div class="data-row"><span class="data-val" id="dAdapt" style="line-height:1.4">Select an environment and click on an animal to learn about its adaptations.</span></div>
+    </div>
+    <div class="panel data-panel">
+      <h3>Fitness Check</h3>
+      <div class="data-row"><span class="data-val" id="dFit">—</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  const ENVS = [
+    { name: 'Desert', temp: '110°F', rain: 'Very Low', bgTop: '#92400e', bgBot: '#fbbf24', ground: '#d97706' },
+    { name: 'Arctic', temp: '-20°F', rain: 'Low (Snow)', bgTop: '#1e3a5f', bgBot: '#bfdbfe', ground: '#e2e8f0' },
+    { name: 'Ocean', temp: '65°F', rain: 'N/A', bgTop: '#0c4a6e', bgBot: '#0ea5e9', ground: '#0369a1' },
+    { name: 'Forest', temp: '72°F', rain: 'Moderate', bgTop: '#14532d', bgBot: '#4ade80', ground: '#166534' }
+  ];
+
+  const ANIMALS = [
+    { name: 'Camel', home: 0, emoji: '🐪', adaptations: 'Stores fat in hump for energy. Wide feet for walking on sand. Can close nostrils during sandstorms. Barely sweats to conserve water.', wrongEnv: { 1: 'Too cold! Camels have thin fur and no blubber.', 2: 'Cannot swim long distances!', 3: 'Overheats in humid environments.' } },
+    { name: 'Rattlesnake', home: 0, emoji: '🐍', adaptations: 'Heat-sensing pits detect prey. Scales prevent water loss. Nocturnal to avoid daytime heat. Sandy color for camouflage.', wrongEnv: { 1: 'Cold-blooded — would freeze!', 2: 'Cannot breathe underwater!', 3: 'Sandy coloring offers no camouflage.' } },
+    { name: 'Polar Bear', home: 1, emoji: '🐻‍❄️', adaptations: 'Thick blubber layer for insulation. White fur for camouflage in snow. Large paws act as snowshoes. Black skin absorbs sun warmth.', wrongEnv: { 0: 'Would overheat! Thick fur traps too much heat.', 2: 'Good swimmer but needs ice to rest.', 3: 'White fur stands out — no camouflage!' } },
+    { name: 'Arctic Fox', home: 1, emoji: '🦊', adaptations: 'Fur changes color: white in winter, brown in summer. Short ears reduce heat loss. Thick fluffy tail used as blanket. Furry paw pads for traction on ice.', wrongEnv: { 0: 'Would overheat in desert!', 2: 'Cannot survive in water.', 3: 'Seasonal fur less useful in stable climate.' } },
+    { name: 'Dolphin', home: 2, emoji: '🐬', adaptations: 'Streamlined body for fast swimming. Blowhole on top to breathe at surface. Echolocation to find prey. Flippers for steering.', wrongEnv: { 0: 'Cannot survive on land!', 1: 'Needs open water, not ice.', 3: 'Must stay in water to survive.' } },
+    { name: 'Clownfish', home: 2, emoji: '🐠', adaptations: 'Lives in sea anemones (immune to stings). Bright colors warn predators. Mucus coating protects from anemone. Small size to hide in coral.', wrongEnv: { 0: 'Needs water to breathe!', 1: 'Tropical fish — too cold!', 3: 'Cannot survive outside water.' } },
+    { name: 'Owl', home: 3, emoji: '🦉', adaptations: 'Silent flight feathers for hunting. Large eyes for night vision. Can rotate head 270°. Excellent hearing to locate prey.', wrongEnv: { 0: 'Few trees for nesting!', 1: 'Not enough prey in arctic.', 2: 'Cannot hunt in water.' } },
+    { name: 'Deer', home: 3, emoji: '🦌', adaptations: 'Brown coat blends with trees. Antlers for defense. Long legs for running from predators. Keen sense of smell detects danger.', wrongEnv: { 0: 'No shade or water sources!', 1: 'Thin coat offers little insulation.', 2: 'Cannot swim long distances.' } }
+  ];
+
+  let currentEnv = 0;
+  let selectedAnimal = null;
+  let dragging = null;
+  let dragOffX = 0, dragOffY = 0;
+  let frame = 0;
+
+  // Position animals in their environments
+  let animalPositions = {};
+  function resetPositions() {
+    animalPositions = {};
+    ANIMALS.forEach((a, i) => {
+      const envAnimals = ANIMALS.filter(x => x.home === currentEnv);
+      const idx = envAnimals.indexOf(a);
+      if (a.home === currentEnv) {
+        const spacing = canvas.width / (envAnimals.length + 1);
+        animalPositions[i] = { x: spacing * (idx + 1), y: canvas.height * 0.55, visible: true };
+      } else {
+        animalPositions[i] = { x: -100, y: -100, visible: false };
+      }
+    });
+  }
+
+  function setEnv(e) {
+    currentEnv = e;
+    document.querySelectorAll('.env-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-env="${e}"]`).classList.add('active');
+    document.getElementById('dBiome').textContent = ENVS[e].name;
+    document.getElementById('dTemp').textContent = ENVS[e].temp;
+    document.getElementById('dRain').textContent = ENVS[e].rain;
+    document.getElementById('dFit').textContent = '—';
+    selectedAnimal = null;
+    resetPositions();
+  }
+
+  document.querySelectorAll('.env-btn').forEach(btn => {
+    btn.addEventListener('click', () => setEnv(parseInt(btn.dataset.env)));
+  });
+
+  canvas.addEventListener('mousedown', (e) => {
+    const mx = e.clientX, my = e.clientY;
+    for (let i = 0; i < ANIMALS.length; i++) {
+      const p = animalPositions[i];
+      if (!p || !p.visible) continue;
+      if (Math.abs(mx - p.x) < 30 && Math.abs(my - p.y) < 30) {
+        selectedAnimal = i;
+        dragging = i;
+        dragOffX = mx - p.x;
+        dragOffY = my - p.y;
+        const a = ANIMALS[i];
+        document.getElementById('dName').textContent = a.emoji + ' ' + a.name;
+        document.getElementById('dAdapt').textContent = a.adaptations;
+        // Fitness check
+        if (a.home === currentEnv) {
+          document.getElementById('dFit').textContent = 'Perfect fit! This animal is adapted to this environment.';
+          document.getElementById('dFit').style.color = '#84cc16';
+        } else {
+          document.getElementById('dFit').textContent = a.wrongEnv[currentEnv] || 'Not well adapted to this environment.';
+          document.getElementById('dFit').style.color = '#f87171';
+        }
+        break;
+      }
+    }
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (dragging !== null) {
+      animalPositions[dragging].x = e.clientX - dragOffX;
+      animalPositions[dragging].y = e.clientY - dragOffY;
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => { dragging = null; });
+
+  resetPositions();
+
+  function drawEnvironment() {
+    const W = canvas.width, H = canvas.height;
+    const env = ENVS[currentEnv];
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, env.bgTop); grad.addColorStop(0.6, env.bgBot); grad.addColorStop(0.65, env.ground); grad.addColorStop(1, env.ground);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+    const groundY = H * 0.65;
+
+    if (currentEnv === 0) {
+      // Desert: sand dunes + cacti
+      ctx.fillStyle = '#b45309';
+      for (let i = 0; i < 4; i++) {
+        const dx = W * (0.15 + i * 0.25);
+        ctx.beginPath(); ctx.arc(dx, groundY, 80 + i * 20, Math.PI, 0); ctx.fill();
+      }
+      // Cacti
+      ctx.fillStyle = '#16a34a';
+      [W * 0.2, W * 0.7].forEach(cx => {
+        ctx.fillRect(cx - 5, groundY - 60, 10, 60);
+        ctx.fillRect(cx + 5, groundY - 45, 20, 6);
+        ctx.fillRect(cx + 19, groundY - 45, 6, -20);
+        ctx.fillRect(cx - 25, groundY - 35, 20, 6);
+        ctx.fillRect(cx - 25, groundY - 55, 6, 20);
+      });
+      // Sun
+      ctx.beginPath(); ctx.arc(W * 0.85, H * 0.1, 40, 0, Math.PI * 2);
+      ctx.fillStyle = '#fbbf24'; ctx.fill();
+    } else if (currentEnv === 1) {
+      // Arctic: snow, ice
+      ctx.fillStyle = '#f1f5f9';
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath(); ctx.arc(W * (0.1 + i * 0.22), groundY, 60 + Math.random() * 30, Math.PI, 0); ctx.fill();
+      }
+      // Snowflakes
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      for (let i = 0; i < 40; i++) {
+        const sx = (Math.sin(frame * 0.01 + i) * 0.5 + 0.5) * W;
+        const sy = ((frame * 0.5 + i * 30) % H);
+        ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (currentEnv === 2) {
+      // Ocean: waves
+      for (let w = 0; w < 5; w++) {
+        ctx.fillStyle = `rgba(14,165,233,${0.1 + w * 0.05})`;
+        ctx.beginPath(); ctx.moveTo(0, groundY - 30 + w * 30);
+        for (let x = 0; x <= W; x += 20) {
+          ctx.lineTo(x, groundY - 30 + w * 30 + Math.sin(x * 0.02 + frame * 0.03 + w) * 10);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+      }
+      // Bubbles
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      for (let i = 0; i < 15; i++) {
+        const bx = (i * 97 + frame * 0.5) % W, by = groundY + 20 + ((i * 53 + frame * 0.3) % (H - groundY - 20));
+        ctx.beginPath(); ctx.arc(bx, by, 3 + Math.random() * 3, 0, Math.PI * 2); ctx.fill();
+      }
+    } else {
+      // Forest: trees
+      ctx.fillStyle = '#15803d';
+      for (let i = 0; i < 8; i++) {
+        const tx = W * (0.05 + i * 0.13), th = 80 + Math.random() * 60;
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(tx - 6, groundY - th, 12, th);
+        ctx.fillStyle = '#166534';
+        ctx.beginPath(); ctx.arc(tx, groundY - th - 20, 30 + Math.random() * 15, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#15803d';
+        ctx.beginPath(); ctx.arc(tx - 10, groundY - th - 10, 25, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(tx + 10, groundY - th - 10, 25, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+
+  function draw() {
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawEnvironment();
+
+    // Draw animals
+    ANIMALS.forEach((a, i) => {
+      const p = animalPositions[i];
+      if (!p || !p.visible) return;
+      // Highlight if selected
+      if (selectedAnimal === i) {
+        ctx.beginPath(); ctx.arc(p.x, p.y, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(132,204,22,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      // Misfit indicator
+      if (a.home !== currentEnv) {
+        ctx.beginPath(); ctx.arc(p.x, p.y, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(248,113,113,0.4)'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+      }
+      // Emoji
+      ctx.font = '36px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(a.emoji, p.x, p.y);
+      // Name
+      ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(a.name, p.x, p.y + 28);
+      // Adaptation tag
+      if (a.home === currentEnv) {
+        ctx.fillStyle = 'rgba(132,204,22,0.7)';
+        ctx.font = '9px "Segoe UI", sans-serif';
+        ctx.fillText('Adapted', p.x, p.y + 40);
+      }
+    });
+
+    // Drag hint
+    if (dragging !== null) {
+      ctx.fillStyle = 'rgba(132,204,22,0.3)';
+      ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('Drop anywhere!', animalPositions[dragging].x, animalPositions[dragging].y - 40);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

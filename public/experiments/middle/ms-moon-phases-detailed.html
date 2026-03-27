@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Phases — Scivra Middle School Science</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e8e6df;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh}
+    canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
+    .panel{background:rgba(15,23,42,0.88);border:1px solid rgba(249,115,22,0.25);border-radius:8px;padding:12px;pointer-events:all;backdrop-filter:blur(8px)}
+    .top-bar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .title-block h1{font-size:1.05rem;color:#fed7aa;font-weight:700;margin-bottom:2px}
+    .title-block p{font-size:0.7rem;color:#94a3b8;max-width:280px}
+    .controls{display:flex;flex-direction:column;gap:7px;min-width:260px}
+    .slider-row label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#f97316;height:4px;margin-top:2px}
+    .btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+    button{background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.4);color:#fed7aa;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.7rem;transition:all 0.2s}
+    button:hover{background:rgba(249,115,22,0.25)}
+    button.active{background:rgba(249,115,22,0.35);border-color:#f97316}
+    .bottom-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .data-panel{min-width:200px}
+    .data-row{display:flex;justify-content:space-between;font-size:0.68rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#f97316;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(249,115,22,0.25);color:#fed7aa}
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Moon Phases <span class="badge">Middle School</span></h1>
+      <p>See how the Moon's position relative to Earth and Sun creates the lunar phases</p>
+    </div>
+    <div class="panel controls">
+      <div class="slider-row">
+        <label>Day <span id="day-val">0.0</span></label>
+        <input type="range" id="day-slider" min="0" max="29.5" step="0.1" value="0" oninput="updateDay()">
+      </div>
+      <div class="btn-row">
+        <button onclick="setDay(0)">New</button>
+        <button onclick="setDay(3.7)">Wax Cres</button>
+        <button onclick="setDay(7.4)">1st Qtr</button>
+        <button onclick="setDay(11.1)">Wax Gib</button>
+        <button onclick="setDay(14.75)">Full</button>
+        <button onclick="setDay(18.4)">Wan Gib</button>
+        <button onclick="setDay(22.1)">3rd Qtr</button>
+        <button onclick="setDay(25.8)">Wan Cres</button>
+      </div>
+      <div class="btn-row">
+        <button id="btn-play" onclick="togglePlay()">Play Animation</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <div style="font-size:0.7rem;color:#fed7aa;margin-bottom:4px;font-weight:600">Lunar Data</div>
+      <div class="data-row">Phase <span class="data-val" id="d-phase">New Moon</span></div>
+      <div class="data-row">Day <span class="data-val" id="d-day">0.0</span></div>
+      <div class="data-row">Illumination <span class="data-val" id="d-illum">0%</span></div>
+      <div class="data-row">Angle <span class="data-val" id="d-angle">0 deg</span></div>
+      <div class="data-row">Period <span class="data-val">29.5 days</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=document.getElementById('canvas'),ctx=C.getContext('2d');
+let W,H,day=0,playing=false,animT=0;
+
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+window.addEventListener('resize',resize);resize();
+
+function setDay(d){document.getElementById('day-slider').value=d;updateDay()}
+function togglePlay(){playing=!playing;document.getElementById('btn-play').textContent=playing?'Pause':'Play Animation';document.getElementById('btn-play').classList.toggle('active',playing)}
+
+function phaseName(d){
+  const n=d/29.5;
+  if(n<0.03||n>0.97)return'New Moon';
+  if(n<0.22)return'Waxing Crescent';
+  if(n<0.28)return'First Quarter';
+  if(n<0.47)return'Waxing Gibbous';
+  if(n<0.53)return'Full Moon';
+  if(n<0.72)return'Waning Gibbous';
+  if(n<0.78)return'Third Quarter';
+  return'Waning Crescent';
+}
+
+function illumination(d){
+  const angle=d/29.5*Math.PI*2;
+  return((1-Math.cos(angle))/2*100);
+}
+
+function updateDay(){
+  day=+document.getElementById('day-slider').value;
+  const angle=(day/29.5*360).toFixed(0);
+  const illum=illumination(day).toFixed(0);
+  document.getElementById('day-val').textContent=day.toFixed(1);
+  document.getElementById('d-phase').textContent=phaseName(day);
+  document.getElementById('d-day').textContent=day.toFixed(1);
+  document.getElementById('d-illum').textContent=illum+'%';
+  document.getElementById('d-angle').textContent=angle+' deg';
+}
+
+function drawStars(){
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  for(let i=0;i<80;i++){
+    const x=(i*137.5)%W,y=(i*97.3+i*i*0.1)%H;
+    ctx.fillRect(x,y,1.2,1.2);
+  }
+}
+
+function drawTopView(){
+  const cx=W*0.35,cy=H*0.48,orbitR=Math.min(W*0.2,H*0.3);
+  // Sun (far left indicator)
+  const sunX=cx-orbitR-100;
+  ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(sunX,cy,20,0,Math.PI*2);ctx.fill();
+  const sg=ctx.createRadialGradient(sunX,cy,15,sunX,cy,50);
+  sg.addColorStop(0,'rgba(251,191,36,0.3)');sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg;ctx.beginPath();ctx.arc(sunX,cy,50,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 11px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Sun',sunX,cy+32);
+  // sunlight arrows
+  ctx.strokeStyle='rgba(251,191,36,0.15)';ctx.lineWidth=1;
+  for(let i=-3;i<=3;i++){
+    const y=cy+i*25;
+    ctx.beginPath();ctx.moveTo(sunX+30,y);ctx.lineTo(cx+orbitR+30,y);ctx.stroke();
+  }
+  ctx.fillStyle='rgba(251,191,36,0.3)';
+  for(let i=-3;i<=3;i++){
+    const y=cy+i*25;
+    ctx.beginPath();ctx.moveTo(cx+orbitR+30,y);ctx.lineTo(cx+orbitR+22,y-3);ctx.lineTo(cx+orbitR+22,y+3);ctx.closePath();ctx.fill();
+  }
+  // Earth
+  ctx.fillStyle='#3b82f6';ctx.beginPath();ctx.arc(cx,cy,18,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(cx-3,cy-4,6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(cx+5,cy+3,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='10px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Earth',cx,cy+30);
+  // Moon orbit
+  ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.arc(cx,cy,orbitR,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  // Moon position
+  const angle=day/29.5*Math.PI*2-Math.PI/2;
+  const mx=cx+Math.cos(angle)*orbitR,my=cy+Math.sin(angle)*orbitR;
+  // Moon with half-lit
+  const moonR=12;
+  ctx.save();ctx.beginPath();ctx.arc(mx,my,moonR,0,Math.PI*2);ctx.clip();
+  // dark side
+  ctx.fillStyle='#334155';ctx.fillRect(mx-moonR,my-moonR,moonR*2,moonR*2);
+  // lit side (facing sun = left side from top view)
+  const sunAngle=Math.atan2(cy-my,sunX-mx);
+  ctx.save();ctx.translate(mx,my);ctx.rotate(sunAngle);
+  ctx.fillStyle='#e2e8f0';ctx.beginPath();ctx.arc(0,0,moonR,-Math.PI/2,Math.PI/2);ctx.fill();
+  ctx.restore();
+  ctx.restore();
+  // Moon outline
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(mx,my,moonR,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='10px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('Moon',mx,my+22);
+  // label
+  ctx.fillStyle='#94a3b8';ctx.font='12px "Segoe UI",system-ui';
+  ctx.fillText('Top-Down View (not to scale)',cx,cy-orbitR-20);
+  // observer eye indicator on Earth
+  ctx.fillStyle='#fbbf24';ctx.font='9px "Segoe UI",system-ui';
+  ctx.fillText('Observer on Earth looks up',cx,cy+45);
+}
+
+function drawMoonFromEarth(){
+  const cx=W*0.75,cy=H*0.48,r=60;
+  // background circle
+  ctx.fillStyle='#1e293b';ctx.beginPath();ctx.arc(cx,cy,r+10,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(249,115,22,0.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,r+10,0,Math.PI*2);ctx.stroke();
+  // Moon rendering from Earth's perspective
+  const phase=day/29.5;
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+  // dark base
+  ctx.fillStyle='#334155';ctx.fillRect(cx-r,cy-r,r*2,r*2);
+  // illuminated portion
+  const illumFrac=(1-Math.cos(phase*Math.PI*2))/2;
+  ctx.fillStyle='#e2e8f0';
+  if(phase<0.5){
+    // waxing: lit from right
+    ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,Math.PI/2);
+    const bulge=(illumFrac*2-1)*r;
+    ctx.ellipse(cx,cy,Math.abs(bulge),r,0,Math.PI/2,3*Math.PI/2,bulge<0);
+    ctx.fill();
+  }else{
+    // waning: lit from left
+    ctx.beginPath();ctx.arc(cx,cy,r,Math.PI/2,3*Math.PI/2);
+    const rem=1-illumFrac;
+    const bulge=((1-rem)*2-1)*r;
+    ctx.ellipse(cx,cy,Math.abs(bulge),r,0,3*Math.PI/2,Math.PI/2,bulge<0);
+    ctx.fill();
+  }
+  ctx.restore();
+  // outline
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  // labels
+  ctx.fillStyle='#94a3b8';ctx.font='12px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillText('View from Earth',cx,cy-r-22);
+  ctx.fillStyle='#f97316';ctx.font='bold 14px "Segoe UI",system-ui';
+  ctx.fillText(phaseName(day),cx,cy+r+25);
+  ctx.fillStyle='#94a3b8';ctx.font='11px "JetBrains Mono",monospace';
+  ctx.fillText(illumination(day).toFixed(0)+'% illuminated',cx,cy+r+42);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawStars();
+  drawTopView();
+  drawMoonFromEarth();
+
+  if(playing){
+    day+=0.05;
+    if(day>29.5)day=0;
+    document.getElementById('day-slider').value=day;
+    updateDay();
+  }
+  animT+=0.016;
+  requestAnimationFrame(draw);
+}
+
+updateDay();
+draw();
+</script>
+</body>
+</html>

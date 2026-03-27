@@ -1,0 +1,35 @@
+import type { Experiment } from "@/shared/types/experiment";
+
+export const k5Habitats: Experiment = {
+  id: "k5-habitats",
+  slug: "k5-habitats",
+  title: "Animal Habitats",
+  subtitle: "Ecosystems, adaptations, and where animals live",
+  description: "Explore different habitats — desert, ocean, forest, arctic, and grassland — and discover which animals live in each. Learn how animals are adapted to their environments. Try moving animals to the wrong habitat and see why they can't survive there!",
+  thumbnail: "/imgs/experiments/k5-habitats.png",
+  standards: { ngss: ["2-LS4-1", "3-LS4-3"], gcse: [], ap: [] },
+  primaryStandard: "elementary-k5",
+  category: "biology",
+  subject: "biology",
+  gradeLevel: "3-5",
+  tags: ["habitats", "ecosystems", "animal adaptations", "desert", "ocean", "forest", "K-5 biology"],
+  difficulty: "beginner",
+  parameters: [
+    { id: "habitat", label: "Habitat (0=desert, 1=ocean, 2=forest, 3=arctic, 4=grassland)", unit: "", min: 0, max: 4, default: 2, step: 1, tier: "free" },
+    { id: "temperature", label: "Temperature", unit: "°C", min: -30, max: 50, default: 20, step: 5, tier: "free" },
+    { id: "rainfall", label: "Annual Rainfall", unit: "cm", min: 0, max: 300, default: 100, step: 10, tier: "free" },
+  ],
+  formulas: [],
+  theory: "A habitat is the natural home of an animal or plant. Different habitats have different conditions: temperature, rainfall, sunlight, and available food. Animals have adaptations that help them survive in their habitat. Desert animals (camel, rattlesnake) conserve water and tolerate heat. Ocean animals (dolphin, clownfish) breathe underwater or hold breath for long periods. Forest animals (deer, owl) use camouflage among trees. Arctic animals (polar bear, penguin) have thick fur/feathers and fat layers for insulation. Grassland animals (zebra, lion) are adapted for open spaces. When habitats change (climate, human activity), animals must adapt, migrate, or face extinction.",
+  instructions: "Select a habitat to see its typical animals, climate, and landscape. Adjust temperature and rainfall to see how animals respond to changing conditions. Drag animals between habitats to learn about adaptations.",
+  challenges: [
+    { id: "kh-c1", question: "Why can't a polar bear survive in the desert?", hint: "Its thick fur and fat layer (insulation for -40°C) would cause overheating in desert heat. It also can't find seals to eat!", tier: "free" },
+    { id: "kh-c2", question: "What adaptation helps a cactus survive in the desert?", hint: "Thick waxy skin to prevent water loss, spines instead of leaves (less surface area), and a large root system to absorb rare rainfall", tier: "free" },
+  ],
+  wave: 12, tier: "free", estimatedTime: 10,
+  relatedExperiments: ["k5-animal-adaptations"],
+  htmlPath: "/experiments/elementary/k5-habitats.html",
+  seoTitle: "Animal Habitats for Kids | Scivra K-5 Science",
+  seoKeywords: ["animal habitats for kids", "ecosystem simulation", "habitat adaptations interactive", "K-5 biology"],
+  jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Animal Habitats" },
+};

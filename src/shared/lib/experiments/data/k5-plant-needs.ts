@@ -1,0 +1,35 @@
+import type { Experiment } from "@/shared/types/experiment";
+
+export const k5PlantNeeds: Experiment = {
+  id: "k5-plant-needs",
+  slug: "k5-plant-needs",
+  title: "What Plants Need",
+  subtitle: "Light, water, soil nutrients, and air for plant growth",
+  description: "Grow virtual plants by providing the right amounts of light, water, and nutrients. Discover what happens when you remove one essential need — the plant struggles! Compare healthy plants to those missing sunlight, water, or soil nutrients to understand what all plants need to survive.",
+  thumbnail: "/imgs/experiments/k5-plant-needs.png",
+  standards: { ngss: ["2-LS2-1", "5-LS1-1"], gcse: [], ap: [] },
+  primaryStandard: "elementary-k5",
+  category: "biology",
+  subject: "biology",
+  gradeLevel: "3-5",
+  tags: ["plant needs", "photosynthesis basics", "sunlight water nutrients", "plant growth", "K-5 biology"],
+  difficulty: "beginner",
+  parameters: [
+    { id: "sunlight", label: "Sunlight", unit: "hours/day", min: 0, max: 16, default: 8, step: 1, tier: "free" },
+    { id: "water", label: "Water", unit: "mL/day", min: 0, max: 500, default: 200, step: 25, tier: "free" },
+    { id: "nutrients", label: "Soil Nutrients", unit: "%", min: 0, max: 100, default: 70, step: 10, tier: "free" },
+  ],
+  formulas: [],
+  theory: "All plants need four things to grow: light (energy source for photosynthesis), water (used in photosynthesis and to transport nutrients), nutrients from soil (nitrogen, phosphorus, potassium for building cells), and carbon dioxide from air. Remove any one and the plant suffers. Too little light: pale, leggy growth. Too little water: wilting, then death. Too few nutrients: yellowing leaves, stunted growth. Too much water: root rot. Plants are like tiny factories that use sunlight as power to combine water and CO₂ into sugar (food) and oxygen.",
+  instructions: "Set the sunlight hours, water amount, and nutrient level for your virtual plant. Press 'Grow' and watch what happens over several days. Try removing one factor to see its effect. Compare side-by-side plants with different conditions.",
+  challenges: [
+    { id: "kpn-c1", question: "What happens if a plant gets water and nutrients but no sunlight?", hint: "It can't photosynthesize — no energy to make food. It will grow pale and weak, then eventually die", tier: "free" },
+    { id: "kpn-c2", question: "Why do plants in dark closets grow very tall and thin?", hint: "They're stretching toward light (etiolation) — using stored energy to grow taller, hoping to find sunlight", tier: "free" },
+  ],
+  wave: 12, tier: "free", estimatedTime: 10,
+  relatedExperiments: ["k5-plant-life-cycle"],
+  htmlPath: "/experiments/elementary/k5-plant-needs.html",
+  seoTitle: "What Do Plants Need? | Scivra K-5 Science",
+  seoKeywords: ["plant needs for kids", "plant growth simulation", "sunlight water nutrients", "K-5 biology"],
+  jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Plant Needs" },
+};

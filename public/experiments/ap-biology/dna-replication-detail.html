@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNA Replication (Detailed) — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;display:flex}
+    #sim-canvas{flex:1;display:block}
+    #sidebar{width:320px;min-width:320px;height:100vh;display:flex;flex-direction:column;gap:10px;padding:14px;overflow-y:auto;background:rgba(15,23,42,0.95)}
+    .panel{background:rgba(15,23,42,0.9);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:14px;backdrop-filter:blur(8px)}
+    h1{font-size:1rem;color:#d9f99d;font-weight:700;margin-bottom:4px}
+    .badge{display:inline-block;font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
+    .badge-subject{background:rgba(132,204,22,0.3);color:#d9f99d}
+    .badge-free{background:rgba(34,197,94,0.25);color:#86efac}
+    .slider-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
+    .slider-row input[type=range]{width:100%;accent-color:#84cc16;height:4px}
+    button{background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;margin:3px 3px 3px 0;transition:all 0.2s}
+    button:hover{background:rgba(132,204,22,0.25)}
+    button.active{background:rgba(132,204,22,0.35);border-color:#84cc16}
+    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .data-val{color:#a3e635;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
+    .section-title{font-size:0.75rem;color:#d9f99d;font-weight:600;margin-bottom:6px}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:0.62rem;color:#94a3b8}
+    .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .enzyme-list{margin-top:6px}
+    .enzyme-item{display:flex;align-items:center;gap:6px;font-size:0.65rem;color:#94a3b8;padding:2px 0}
+    .enzyme-color{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  </style>
+</head>
+<body>
+<canvas id="sim-canvas"></canvas>
+<div id="sidebar">
+  <div class="panel">
+    <h1>DNA Replication <span class="badge badge-subject">AP BIOLOGY</span><span class="badge badge-free">FREE</span></h1>
+    <p style="font-size:0.68rem;color:#94a3b8;margin-top:4px">Semi-conservative replication at the replication fork</p>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Template 3'&#8594;5'</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Template 5'&#8594;3'</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>New strand</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>RNA Primer</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="section-title">Controls</div>
+    <div class="slider-row">
+      <label>Speed <span id="speed-val">1.0</span>x</label>
+      <input type="range" id="speed-slider" min="0.2" max="3" step="0.2" value="1">
+    </div>
+    <div style="margin-top:4px">
+      <button id="btn-play" class="active">&#9654; Play</button>
+      <button id="btn-pause">&#9208; Pause</button>
+      <button id="btn-reset">&#8634; Reset</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="section-title">Enzymes</div>
+    <div class="enzyme-list">
+      <div class="enzyme-item"><div class="enzyme-color" style="background:#f59e0b"></div>Helicase — unwinds double helix</div>
+      <div class="enzyme-item"><div class="enzyme-color" style="background:#ec4899"></div>Primase — synthesizes RNA primers</div>
+      <div class="enzyme-item"><div class="enzyme-color" style="background:#22c55e"></div>DNA Pol III — extends new strand 5'&#8594;3'</div>
+      <div class="enzyme-item"><div class="enzyme-color" style="background:#6366f1"></div>Ligase — joins Okazaki fragments</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="section-title">Replication Data</div>
+    <div class="data-row">Fork position <span class="data-val" id="d-fork">0</span> bp</div>
+    <div class="data-row">Leading strand <span class="data-val" id="d-leading">0</span> bp</div>
+    <div class="data-row">Okazaki fragments <span class="data-val" id="d-okazaki">0</span></div>
+    <div class="data-row">Primers placed <span class="data-val" id="d-primers">0</span></div>
+    <div class="data-row">Ligase joins <span class="data-val" id="d-ligase">0</span></div>
+    <div class="data-row">Speed <span class="data-val" id="d-speed">1000</span> bp/s</div>
+  </div>
+  <div class="panel">
+    <div class="katex-wrap" id="f1"></div>
+    <div class="katex-wrap" id="f2"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('sim-canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.clientWidth; H = canvas.clientHeight;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+katex.render("5' \\to 3' \\text{ (synthesis direction)}", document.getElementById('f1'), {displayMode:false});
+katex.render("\\text{Leading: continuous} \\quad \\text{Lagging: Okazaki fragments}", document.getElementById('f2'), {displayMode:false});
+
+let speed = 1, playing = true;
+let forkX = 0; // 0 to 1 progress
+let leadingLen = 0;
+let okazakiFragments = [];
+let primers = [];
+let ligaseJoins = 0;
+let primerCount = 0;
+let lastOkazakiEnd = 0;
+const OKAZAKI_LEN = 0.08;
+const PRIMER_LEN = 0.015;
+
+// DNA base pair colors
+const baseColors = { A: '#f87171', T: '#60a5fa', G: '#fbbf24', C: '#4ade80' };
+const complement = { A: 'T', T: 'A', G: 'C', C: 'G' };
+
+// Generate template sequence
+const templateBases = [];
+const bases = ['A', 'T', 'G', 'C'];
+for (let i = 0; i < 200; i++) {
+  templateBases.push(bases[Math.floor(Math.random() * 4)]);
+}
+
+document.getElementById('speed-slider').oninput = function() {
+  speed = +this.value;
+  document.getElementById('speed-val').textContent = speed.toFixed(1);
+};
+document.getElementById('btn-play').onclick = function() {
+  playing = true;
+  this.classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+};
+document.getElementById('btn-pause').onclick = function() {
+  playing = false;
+  this.classList.add('active');
+  document.getElementById('btn-play').classList.remove('active');
+};
+document.getElementById('btn-reset').onclick = function() {
+  forkX = 0; leadingLen = 0; okazakiFragments = []; primers = [];
+  ligaseJoins = 0; primerCount = 0; lastOkazakiEnd = 0;
+  playing = true;
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+  updateUI();
+};
+
+function updateUI() {
+  document.getElementById('d-fork').textContent = Math.floor(forkX * 1000);
+  document.getElementById('d-leading').textContent = Math.floor(leadingLen * 1000);
+  document.getElementById('d-okazaki').textContent = okazakiFragments.length;
+  document.getElementById('d-primers').textContent = primerCount;
+  document.getElementById('d-ligase').textContent = ligaseJoins;
+  document.getElementById('d-speed').textContent = Math.floor(speed * 1000);
+}
+
+function drawHelixSegment(x1, x2, y, strandGap, isUnwound, topColor, botColor) {
+  const segments = Math.max(1, Math.floor((x2 - x1) / 4));
+  for (let i = 0; i < segments; i++) {
+    const t = i / segments;
+    const x = x1 + (x2 - x1) * t;
+    if (isUnwound) {
+      // Separated strands
+      ctx.fillStyle = topColor;
+      ctx.beginPath();
+      ctx.arc(x, y - strandGap, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = botColor;
+      ctx.beginPath();
+      ctx.arc(x, y + strandGap, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Double helix
+      const wave = Math.sin((x / 12) + Date.now() / 3000) * 6;
+      ctx.fillStyle = topColor;
+      ctx.beginPath();
+      ctx.arc(x, y + wave, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = botColor;
+      ctx.beginPath();
+      ctx.arc(x, y - wave, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Base pair rungs
+      if (i % 3 === 0) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x, y + wave);
+        ctx.lineTo(x, y - wave);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  const centerY = H * 0.5;
+  const dnaLeft = 30;
+  const dnaRight = W - 30;
+  const dnaLen = dnaRight - dnaLeft;
+  const forkPx = dnaLeft + forkX * dnaLen;
+  const strandGap = 35;
+
+  // Unreplicated DNA (right of fork)
+  if (forkPx < dnaRight) {
+    drawHelixSegment(forkPx + 20, dnaRight, centerY, strandGap, false, '#f87171', '#60a5fa');
+  }
+
+  // Unwound template strands (left of fork)
+  if (forkPx > dnaLeft) {
+    // Top template (3'->5' = leading template)
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(dnaLeft, centerY - strandGap);
+    ctx.lineTo(forkPx, centerY - strandGap);
+    ctx.stroke();
+
+    // Bottom template (5'->3' = lagging template)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(dnaLeft, centerY + strandGap);
+    ctx.lineTo(forkPx, centerY + strandGap);
+    ctx.stroke();
+
+    // Leading strand (continuous, green)
+    const leadEnd = dnaLeft + leadingLen * dnaLen;
+    if (leadEnd > dnaLeft) {
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(dnaLeft, centerY - strandGap - 6);
+      ctx.lineTo(Math.min(leadEnd, forkPx - 5), centerY - strandGap - 6);
+      ctx.stroke();
+
+      // Base pair connections on leading strand
+      for (let px = dnaLeft; px < Math.min(leadEnd, forkPx - 5); px += 8) {
+        ctx.strokeStyle = 'rgba(74,222,128,0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(px, centerY - strandGap);
+        ctx.lineTo(px, centerY - strandGap - 6);
+        ctx.stroke();
+      }
+    }
+
+    // Lagging strand: Okazaki fragments (green segments with gaps)
+    for (const frag of okazakiFragments) {
+      const fragStart = dnaLeft + frag.start * dnaLen;
+      const fragEnd = dnaLeft + frag.end * dnaLen;
+
+      // Primer (yellow, short)
+      if (frag.primerStart !== undefined) {
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(dnaLeft + frag.primerStart * dnaLen, centerY + strandGap + 6);
+        ctx.lineTo(fragStart, centerY + strandGap + 6);
+        ctx.stroke();
+      }
+
+      // Fragment (green)
+      ctx.strokeStyle = frag.joined ? '#22c55e' : '#4ade80';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(fragStart, centerY + strandGap + 6);
+      ctx.lineTo(fragEnd, centerY + strandGap + 6);
+      ctx.stroke();
+
+      // Base pair connections
+      for (let px = fragStart; px < fragEnd; px += 8) {
+        ctx.strokeStyle = 'rgba(74,222,128,0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(px, centerY + strandGap);
+        ctx.lineTo(px, centerY + strandGap + 6);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Helicase at fork
+  ctx.fillStyle = 'rgba(245,158,11,0.7)';
+  ctx.beginPath();
+  ctx.arc(forkPx + 5, centerY, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(245,158,11,0.9)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // Helicase label
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 7px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('HEL', forkPx + 5, centerY + 2);
+
+  // Fork opening lines
+  ctx.strokeStyle = 'rgba(245,158,11,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(forkPx + 15, centerY - 5);
+  ctx.lineTo(forkPx + 25, centerY - strandGap);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(forkPx + 15, centerY + 5);
+  ctx.lineTo(forkPx + 25, centerY + strandGap);
+  ctx.stroke();
+
+  // DNA Pol III on leading strand
+  if (leadingLen > 0.02) {
+    const polX = dnaLeft + leadingLen * dnaLen;
+    ctx.fillStyle = 'rgba(34,197,94,0.7)';
+    ctx.beginPath();
+    ctx.arc(polX, centerY - strandGap - 6, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 6px "JetBrains Mono", monospace';
+    ctx.fillText('POL', polX, centerY - strandGap - 5);
+  }
+
+  // Primase near latest Okazaki fragment start
+  if (okazakiFragments.length > 0 && playing) {
+    const latest = okazakiFragments[okazakiFragments.length - 1];
+    if (latest.end - latest.start < OKAZAKI_LEN * 0.3) {
+      const primX = dnaLeft + latest.start * dnaLen;
+      ctx.fillStyle = 'rgba(236,72,153,0.7)';
+      ctx.beginPath();
+      ctx.arc(primX, centerY + strandGap + 6, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 5px "JetBrains Mono", monospace';
+      ctx.fillText('PRI', primX, centerY + strandGap + 8);
+    }
+  }
+
+  // Ligase between joined fragments
+  for (let i = 1; i < okazakiFragments.length; i++) {
+    if (okazakiFragments[i].joined && !okazakiFragments[i].ligaseShown) {
+      okazakiFragments[i].ligaseShown = true;
+    }
+  }
+
+  // Direction labels
+  ctx.fillStyle = 'rgba(248,113,113,0.6)';
+  ctx.font = '10px "Segoe UI", system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillText("3'", dnaLeft - 20, centerY - strandGap + 4);
+  ctx.textAlign = 'right';
+  ctx.fillText("5'", dnaRight + 20, centerY - strandGap + 4);
+
+  ctx.fillStyle = 'rgba(96,165,250,0.6)';
+  ctx.textAlign = 'left';
+  ctx.fillText("5'", dnaLeft - 20, centerY + strandGap + 4);
+  ctx.textAlign = 'right';
+  ctx.fillText("3'", dnaRight + 20, centerY + strandGap + 4);
+
+  // Leading/Lagging labels
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 11px "Segoe UI", system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillText('LEADING STRAND (continuous)', dnaLeft, centerY - strandGap - 22);
+  ctx.fillText('LAGGING STRAND (Okazaki fragments)', dnaLeft, centerY + strandGap + 28);
+
+  // Synthesis direction arrows
+  ctx.fillStyle = 'rgba(74,222,128,0.5)';
+  ctx.font = '9px "Segoe UI", system-ui';
+  ctx.textAlign = 'center';
+  const midX = (dnaLeft + forkPx) / 2;
+  ctx.fillText("5' \u2192 3' synthesis", midX, centerY - strandGap - 34);
+  ctx.fillText("5' \u2192 3' synthesis (\u2190 read 3' to 5')", midX, centerY + strandGap + 42);
+
+  // Base pair visualization near fork
+  if (forkPx > dnaLeft + 50) {
+    ctx.font = '8px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    const startIdx = Math.max(0, Math.floor(forkX * 100) - 15);
+    const endIdx = Math.min(templateBases.length, Math.floor(forkX * 100) + 2);
+    for (let i = startIdx; i < endIdx; i++) {
+      const bx = dnaLeft + (i / 100) * dnaLen;
+      if (bx < dnaLeft || bx > forkPx - 10) continue;
+      const base = templateBases[i];
+      const comp = complement[base];
+      // Top template base
+      ctx.fillStyle = baseColors[base];
+      ctx.fillText(base, bx, centerY - strandGap - 12);
+      // Bottom template base
+      ctx.fillStyle = baseColors[comp];
+      ctx.fillText(comp, bx, centerY + strandGap + 20);
+    }
+  }
+}
+
+function update() {
+  if (!playing) return;
+  const dt = 0.0008 * speed;
+
+  // Advance fork
+  if (forkX < 0.95) {
+    forkX += dt;
+  }
+
+  // Leading strand follows fork
+  leadingLen = Math.min(forkX - 0.01, leadingLen + dt);
+
+  // Lagging strand: create Okazaki fragments
+  if (forkX - lastOkazakiEnd > OKAZAKI_LEN + PRIMER_LEN && forkX > 0.05) {
+    primerCount++;
+    const primerStart = forkX - PRIMER_LEN;
+    okazakiFragments.push({
+      primerStart: primerStart,
+      start: forkX,
+      end: forkX,
+      growing: true,
+      joined: false,
+      ligaseShown: false
+    });
+    lastOkazakiEnd = forkX;
+  }
+
+  // Grow Okazaki fragments (they grow backward, away from fork)
+  for (const frag of okazakiFragments) {
+    if (frag.growing) {
+      frag.end += dt * 0.6;
+      // Stop when reaching previous fragment
+      const idx = okazakiFragments.indexOf(frag);
+      if (idx > 0) {
+        const prev = okazakiFragments[idx - 1];
+        if (frag.end >= prev.start - 0.002) {
+          frag.end = prev.start;
+          frag.growing = false;
+          // Ligase joins
+          if (!frag.joined) {
+            frag.joined = true;
+            ligaseJoins++;
+          }
+        }
+      }
+      if (frag.end - frag.start >= OKAZAKI_LEN) {
+        frag.growing = false;
+      }
+    }
+  }
+
+  if (Date.now() % 100 < 20) updateUI();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

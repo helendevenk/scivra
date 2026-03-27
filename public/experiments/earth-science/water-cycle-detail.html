@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Water Cycle (Detailed) — Scivra Earth Science</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; color: #fed7aa; }
+    .sidebar {
+      width: 280px; min-width: 280px;
+      background: rgba(15, 23, 42, 0.95);
+      border-right: 1px solid rgba(249,115,22,0.25);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+      overflow-y: auto;
+    }
+    .canvas-wrap { flex: 1; position: relative; }
+    canvas { display: block; width: 100%; height: 100%; }
+    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+    .badge {
+      display: inline-block;
+      font-size: 0.55rem; background: rgba(249,115,22,0.18);
+      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .subtitle { font-size: 0.68rem; color: #94a3b8; margin-bottom: 4px; }
+    .panel {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .panel-title { font-size: 0.72rem; color: #f97316; margin-bottom: 8px; font-weight: 600; }
+    .ctrl-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.68rem; color: #94a3b8; margin: 6px 0;
+    }
+    .ctrl-row label { min-width: 80px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #f97316; }
+    .ctrl-row .data-val { min-width: 50px; text-align: right; font-size: 0.65rem; }
+    .ctrl-row select {
+      flex: 1; background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 3px 6px; border-radius: 4px; font-size: 0.65rem;
+    }
+    .info-row { font-size: 0.66rem; color: #94a3b8; margin: 3px 0; }
+    button {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: #fed7aa; padding: 6px 12px; border-radius: 5px;
+      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
+      width: 100%;
+    }
+    button:hover { background: rgba(249,115,22,0.25); }
+    .process-list { margin-top: 4px; }
+    .process-item {
+      font-size: 0.6rem; color: #94a3b8; padding: 3px 0;
+      border-bottom: 1px solid rgba(249,115,22,0.1);
+    }
+    .process-item .label { color: #f97316; font-weight: 600; }
+    .formula-box { margin-top: 4px; }
+    .formula-desc { font-size: 0.6rem; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div>
+    <h1>Water Cycle <span class="badge">EARTH SCIENCE MS</span><span class="badge">FREE</span></h1>
+    <p class="subtitle">Detailed water cycle with animated particles</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Controls</div>
+    <div class="ctrl-row">
+      <label>Temperature</label>
+      <input type="range" id="temp" min="0" max="45" value="25" step="1">
+      <span class="data-val" id="temp-val">25 °C</span>
+    </div>
+    <div class="ctrl-row">
+      <label>Humidity</label>
+      <input type="range" id="humid" min="10" max="100" value="60" step="5">
+      <span class="data-val" id="humid-val">60%</span>
+    </div>
+    <div class="ctrl-row">
+      <label>Terrain</label>
+      <select id="terrain">
+        <option value="coastal">Coastal Mountains</option>
+        <option value="desert">Arid Desert</option>
+        <option value="tropical">Tropical Forest</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Water Budget</div>
+    <div class="info-row">Evaporation Rate: <span class="data-val" id="evapRate">—</span></div>
+    <div class="info-row">Cloud Density: <span class="data-val" id="cloudDens">—</span></div>
+    <div class="info-row">Precipitation: <span class="data-val" id="precipRate">—</span></div>
+    <div class="info-row">Runoff: <span class="data-val" id="runoffRate">—</span></div>
+    <div class="info-row">Infiltration: <span class="data-val" id="infiltRate">—</span></div>
+    <div class="info-row">Particles: <span class="data-val" id="particleCount">0</span></div>
+    <button onclick="resetParticles()" style="margin-top:8px;">Reset Cycle</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Processes</div>
+    <div class="process-list">
+      <div class="process-item"><span class="label">Evaporation:</span> Heat converts liquid water to vapor</div>
+      <div class="process-item"><span class="label">Condensation:</span> Vapor cools into water droplets (clouds)</div>
+      <div class="process-item"><span class="label">Precipitation:</span> Droplets fall as rain or snow</div>
+      <div class="process-item"><span class="label">Surface Runoff:</span> Water flows downhill over land</div>
+      <div class="process-item"><span class="label">Infiltration:</span> Water seeps into ground</div>
+      <div class="process-item"><span class="label">Groundwater:</span> Subsurface flow back to ocean</div>
+    </div>
+  </div>
+
+  <div class="panel formula-box">
+    <div class="panel-title">Equations</div>
+    <div id="formula1"></div>
+    <div class="formula-desc">Water balance equation.</div>
+    <div id="formula2" style="margin-top:6px;"></div>
+    <div class="formula-desc">Clausius-Clapeyron: evap rate rises ~7%/°C.</div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const wrap = canvas.parentElement;
+
+function resize() { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; }
+resize();
+addEventListener('resize', resize);
+
+const slTemp = document.getElementById('temp');
+const slHumid = document.getElementById('humid');
+const slTerrain = document.getElementById('terrain');
+slTemp.addEventListener('input', () => document.getElementById('temp-val').textContent = slTemp.value + ' °C');
+slHumid.addEventListener('input', () => document.getElementById('humid-val').textContent = slHumid.value + '%');
+
+/* Particle states: evap, cloud, precip, runoff, infiltrate, ground */
+const particles = [];
+const MAX_PARTICLES = 400;
+
+function createParticle(state, x, y) {
+  return { state, x, y, vx: 0, vy: 0, life: 1, age: 0 };
+}
+
+function resetParticles() {
+  particles.length = 0;
+}
+
+function getTerrainProfile(W, H) {
+  const groundY = H * 0.65;
+  const seaLevel = groundY;
+  const terrain = slTerrain.value;
+  const points = [];
+
+  if (terrain === 'coastal') {
+    /* Ocean left, mountain center, plain right */
+    for (let x = 0; x <= W; x += 4) {
+      let y;
+      const t = x / W;
+      if (t < 0.25) y = seaLevel;
+      else if (t < 0.55) {
+        const mt = (t - 0.25) / 0.3;
+        y = seaLevel - Math.sin(mt * Math.PI) * H * 0.28;
+      } else {
+        const pt = (t - 0.55) / 0.45;
+        y = seaLevel - H * 0.05 * (1 - pt * 0.5);
+      }
+      y += Math.sin(x * 0.03) * 3;
+      points.push({ x, y });
+    }
+  } else if (terrain === 'desert') {
+    for (let x = 0; x <= W; x += 4) {
+      let y;
+      const t = x / W;
+      if (t < 0.15) y = seaLevel;
+      else {
+        const dt = (t - 0.15) / 0.85;
+        y = seaLevel - H * 0.03 - Math.sin(dt * Math.PI * 3) * H * 0.06;
+      }
+      y += Math.sin(x * 0.05) * 2;
+      points.push({ x, y });
+    }
+  } else {
+    /* tropical */
+    for (let x = 0; x <= W; x += 4) {
+      let y;
+      const t = x / W;
+      if (t < 0.2) y = seaLevel;
+      else {
+        const tt = (t - 0.2) / 0.8;
+        y = seaLevel - H * 0.1 - Math.sin(tt * Math.PI * 2) * H * 0.08;
+      }
+      y += Math.sin(x * 0.04) * 3;
+      points.push({ x, y });
+    }
+  }
+  return { points, seaLevel, groundY };
+}
+
+function getGroundY(x, profile) {
+  const pts = profile.points;
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (x >= pts[i].x && x <= pts[i + 1].x) {
+      const t = (x - pts[i].x) / (pts[i + 1].x - pts[i].x);
+      return pts[i].y * (1 - t) + pts[i + 1].y * t;
+    }
+  }
+  return profile.seaLevel;
+}
+
+function spawnEvaporation(W, H, profile, temp) {
+  const rate = Math.max(0.05, (temp - 5) / 40);
+  if (Math.random() < rate * 0.3 && particles.length < MAX_PARTICLES) {
+    const oceanEnd = W * 0.25;
+    const x = Math.random() * oceanEnd;
+    particles.push(createParticle('evap', x, profile.seaLevel - 2));
+  }
+  /* Some evaporation from land */
+  if (Math.random() < rate * 0.08 && particles.length < MAX_PARTICLES) {
+    const x = W * 0.3 + Math.random() * W * 0.6;
+    const gy = getGroundY(x, profile);
+    particles.push(createParticle('evap', x, gy - 2));
+  }
+}
+
+function updateParticles(W, H, profile) {
+  const temp = +slTemp.value;
+  const humid = +slHumid.value;
+  const cloudZone = H * 0.15;
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.age++;
+
+    switch (p.state) {
+      case 'evap':
+        p.vy = -1.2 - Math.random() * 0.5;
+        p.vx = 0.3 + Math.random() * 0.2;
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < cloudZone + Math.random() * H * 0.1) {
+          p.state = 'cloud';
+          p.age = 0;
+        }
+        break;
+
+      case 'cloud':
+        p.vx = 0.5 + Math.random() * 0.3;
+        p.vy = Math.sin(p.age * 0.02) * 0.3;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.y = Math.max(cloudZone * 0.5, Math.min(cloudZone * 2, p.y));
+        /* Precipitation probability depends on humidity */
+        if (p.age > 40 && Math.random() < (humid / 100) * 0.03 && p.x > W * 0.2) {
+          p.state = 'precip';
+          p.age = 0;
+        }
+        break;
+
+      case 'precip':
+        p.vy = 2.5 + Math.random() * 1.5;
+        p.vx = 0.2;
+        p.x += p.vx;
+        p.y += p.vy;
+        const gy = getGroundY(p.x, profile);
+        if (p.y >= gy) {
+          p.y = gy;
+          /* Split: some runoff, some infiltrate */
+          if (Math.random() < 0.6) {
+            p.state = 'runoff';
+          } else {
+            p.state = 'infiltrate';
+          }
+          p.age = 0;
+        }
+        break;
+
+      case 'runoff':
+        /* Flow downhill */
+        {
+          const gyCur = getGroundY(p.x, profile);
+          const gyNext = getGroundY(p.x + 3, profile);
+          const slope = (gyNext - gyCur) / 3;
+          p.vx = slope > 0 ? 1.5 : (slope < -0.01 ? -0.3 : 1.0);
+          p.x += p.vx;
+          p.y = getGroundY(p.x, profile) - 1;
+        }
+        if (p.x <= W * 0.25 || p.x >= W) {
+          p.state = 'evap';
+          p.x = Math.random() * W * 0.25;
+          p.y = profile.seaLevel - 2;
+          p.age = 0;
+        }
+        break;
+
+      case 'infiltrate':
+        p.vy = 0.5;
+        p.vx = 0;
+        p.y += p.vy;
+        if (p.y > getGroundY(p.x, profile) + H * 0.12) {
+          p.state = 'ground';
+          p.age = 0;
+        }
+        break;
+
+      case 'ground':
+        p.vx = -0.6;
+        p.vy = 0.05;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.y = Math.min(p.y, H * 0.85);
+        if (p.x <= W * 0.05) {
+          p.state = 'evap';
+          p.x = Math.random() * W * 0.15;
+          p.y = profile.seaLevel - 2;
+          p.age = 0;
+        }
+        break;
+    }
+
+    if (p.x < -10 || p.x > W + 10 || p.y < -10 || p.y > H + 10) {
+      particles.splice(i, 1);
+    }
+  }
+}
+
+const stateColors = {
+  evap: 'rgba(147,197,253,0.7)',
+  cloud: 'rgba(226,232,240,0.8)',
+  precip: 'rgba(96,165,250,0.9)',
+  runoff: 'rgba(59,130,246,0.8)',
+  infiltrate: 'rgba(37,99,235,0.6)',
+  ground: 'rgba(30,64,175,0.5)'
+};
+
+let frame = 0;
+
+function draw() {
+  frame++;
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  const profile = getTerrainProfile(W, H);
+  const temp = +slTemp.value;
+  const humid = +slHumid.value;
+
+  /* Sky gradient */
+  const skyG = ctx.createLinearGradient(0, 0, 0, profile.seaLevel);
+  skyG.addColorStop(0, '#1e293b');
+  skyG.addColorStop(1, '#334155');
+  ctx.fillStyle = skyG;
+  ctx.fillRect(0, 0, W, profile.seaLevel);
+
+  /* Sun */
+  const sunG = ctx.createRadialGradient(W * 0.85, H * 0.1, 5, W * 0.85, H * 0.1, 40);
+  sunG.addColorStop(0, 'rgba(253,224,71,0.9)');
+  sunG.addColorStop(0.5, 'rgba(253,224,71,0.2)');
+  sunG.addColorStop(1, 'rgba(253,224,71,0)');
+  ctx.fillStyle = sunG;
+  ctx.fillRect(W * 0.75, 0, W * 0.2, H * 0.25);
+
+  /* Ocean */
+  const oceanEnd = W * 0.25;
+  const oceanG = ctx.createLinearGradient(0, profile.seaLevel, 0, H);
+  oceanG.addColorStop(0, '#1e40af');
+  oceanG.addColorStop(0.5, '#1e3a8a');
+  oceanG.addColorStop(1, '#172554');
+  ctx.fillStyle = oceanG;
+  ctx.fillRect(0, profile.seaLevel, oceanEnd, H - profile.seaLevel);
+
+  /* Ocean waves */
+  ctx.strokeStyle = 'rgba(96,165,250,0.3)';
+  ctx.lineWidth = 1;
+  for (let w = 0; w < 3; w++) {
+    ctx.beginPath();
+    const wy = profile.seaLevel + 5 + w * 8;
+    for (let x = 0; x < oceanEnd; x += 3) {
+      ctx.lineTo(x, wy + Math.sin((x + frame * 2 + w * 40) * 0.05) * 2);
+    }
+    ctx.stroke();
+  }
+
+  /* Terrain fill */
+  ctx.beginPath();
+  ctx.moveTo(profile.points[0].x, H);
+  profile.points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+  ctx.lineTo(W, H);
+  ctx.closePath();
+
+  const terrainType = slTerrain.value;
+  if (terrainType === 'desert') {
+    ctx.fillStyle = '#92734a';
+  } else if (terrainType === 'tropical') {
+    ctx.fillStyle = '#2d5a27';
+  } else {
+    ctx.fillStyle = '#4a6741';
+  }
+  ctx.fill();
+
+  /* Underground layer */
+  const ugTop = profile.seaLevel + H * 0.08;
+  ctx.fillStyle = '#3d3528';
+  ctx.fillRect(oceanEnd, ugTop, W - oceanEnd, H - ugTop);
+
+  /* Water table */
+  const wtY = profile.seaLevel + H * 0.12;
+  ctx.fillStyle = 'rgba(30,64,175,0.15)';
+  ctx.fillRect(oceanEnd, wtY, W - oceanEnd, H - wtY);
+  ctx.strokeStyle = 'rgba(96,165,250,0.3)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(oceanEnd, wtY);
+  ctx.lineTo(W, wtY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* Vegetation (coastal/tropical) */
+  if (terrainType !== 'desert') {
+    for (let tx = oceanEnd + 30; tx < W - 20; tx += 35) {
+      const ty = getGroundY(tx, profile);
+      if (ty < profile.seaLevel - 10) {
+        /* Simple tree */
+        ctx.fillStyle = '#1a3a15';
+        ctx.beginPath();
+        ctx.arc(tx, ty - 18, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#5a3a20';
+        ctx.fillRect(tx - 1.5, ty - 10, 3, 10);
+      }
+    }
+  }
+
+  /* Snow cap on mountains */
+  if (terrainType === 'coastal') {
+    profile.points.forEach(pt => {
+      if (pt.y < profile.seaLevel - H * 0.22) {
+        ctx.fillStyle = 'rgba(226,232,240,0.6)';
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  }
+
+  /* Clouds */
+  const cloudZone = H * 0.15;
+  /* Static background clouds */
+  ctx.fillStyle = 'rgba(148,163,184,0.15)';
+  for (let c = 0; c < 4; c++) {
+    const cx = (W * 0.3 + c * W * 0.18 + frame * 0.1) % (W * 1.2) - W * 0.1;
+    const cy = cloudZone + Math.sin(c * 2.1) * 20;
+    for (let b = 0; b < 5; b++) {
+      ctx.beginPath();
+      ctx.arc(cx + b * 18, cy + Math.sin(b) * 5, 15 + Math.sin(b * 1.5) * 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /* Spawn and update particles */
+  spawnEvaporation(W, H, profile, temp);
+  updateParticles(W, H, profile);
+
+  /* Draw particles */
+  particles.forEach(p => {
+    ctx.fillStyle = stateColors[p.state];
+    const size = p.state === 'cloud' ? 4 : (p.state === 'precip' ? 2.5 : 3);
+    ctx.beginPath();
+    if (p.state === 'precip') {
+      ctx.fillRect(p.x, p.y, 1.5, 5);
+    } else {
+      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  /* Process labels */
+  ctx.font = '11px "Segoe UI", system-ui';
+  ctx.fillStyle = '#f97316';
+  const labels = [
+    { text: 'EVAPORATION', x: W * 0.1, y: profile.seaLevel - 30 },
+    { text: 'CONDENSATION', x: W * 0.45, y: cloudZone - 10 },
+    { text: 'PRECIPITATION', x: W * 0.6, y: cloudZone + 50 },
+    { text: 'RUNOFF', x: W * 0.7, y: profile.seaLevel - 15 },
+    { text: 'INFILTRATION', x: W * 0.65, y: profile.seaLevel + H * 0.05 },
+    { text: 'GROUNDWATER FLOW', x: W * 0.4, y: wtY + 15 }
+  ];
+  labels.forEach(l => {
+    ctx.fillStyle = 'rgba(249,115,22,0.7)';
+    ctx.fillText(l.text, l.x, l.y);
+  });
+
+  /* Arrows */
+  ctx.strokeStyle = 'rgba(249,115,22,0.4)';
+  ctx.lineWidth = 1;
+  /* Evaporation arrow up */
+  drawArrow(W * 0.12, profile.seaLevel - 35, W * 0.12, profile.seaLevel - 60);
+  /* Condensation arrow */
+  drawArrow(W * 0.5, cloudZone - 5, W * 0.55, cloudZone - 5);
+  /* Precipitation arrow down */
+  drawArrow(W * 0.62, cloudZone + 55, W * 0.62, cloudZone + 80);
+  /* Groundwater arrow left */
+  drawArrow(W * 0.5, wtY + 20, W * 0.35, wtY + 20);
+
+  /* Update readouts */
+  const evapR = ((temp - 5) / 40 * 100).toFixed(0);
+  const cloudCount = particles.filter(p => p.state === 'cloud').length;
+  const precipCount = particles.filter(p => p.state === 'precip').length;
+  const runoffCount = particles.filter(p => p.state === 'runoff').length;
+  const infiltCount = particles.filter(p => p.state === 'infiltrate' || p.state === 'ground').length;
+
+  document.getElementById('evapRate').textContent = Math.max(0, evapR) + '%';
+  document.getElementById('cloudDens').textContent = cloudCount;
+  document.getElementById('precipRate').textContent = precipCount;
+  document.getElementById('runoffRate').textContent = runoffCount;
+  document.getElementById('infiltRate').textContent = infiltCount;
+  document.getElementById('particleCount').textContent = particles.length;
+
+  requestAnimationFrame(draw);
+}
+
+function drawArrow(x1, y1, x2, y2) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - 6 * Math.cos(angle - 0.4), y2 - 6 * Math.sin(angle - 0.4));
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - 6 * Math.cos(angle + 0.4), y2 - 6 * Math.sin(angle + 0.4));
+  ctx.stroke();
+}
+
+/* KaTeX */
+try {
+  katex.render('P = E + \\Delta S + R + I', document.getElementById('formula1'), { displayMode: false, throwOnError: false });
+  katex.render('E \\propto e^{0.07 \\cdot T}', document.getElementById('formula2'), { displayMode: false, throwOnError: false });
+} catch(e) {}
+
+draw();
+</script>
+</body>
+</html>

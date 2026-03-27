@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Immune System — Scivra AP Biology</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none; padding: 10px; z-index: 10;
+    }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(132,204,22,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+    }
+    .title-block h1 {
+      font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px;
+    }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge {
+      background: rgba(132,204,22,0.15); color: #84cc16;
+      padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600;
+    }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .control-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 0.72rem;
+    }
+    .control-row label { color: #94a3b8; white-space: nowrap; }
+    .control-row .data-val { color: #d9f99d; min-width: 36px; text-align: right; }
+    input[type=range] { accent-color: #84cc16; height: 4px; flex: 1; min-width: 80px; }
+    button {
+      background: rgba(132,204,22,0.12);
+      border: 1px solid rgba(132,204,22,0.25);
+      color: #d9f99d;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      transition: all 0.2s;
+    }
+    button:hover { background: rgba(132,204,22,0.25); }
+    button.active { background: rgba(132,204,22,0.35); border-color: #84cc16; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .data-panel { min-width: 280px; }
+    .data-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 0.7rem; }
+    .data-grid .label { color: #94a3b8; }
+    .data-grid .value { color: #d9f99d; text-align: right; }
+    .formula-panel { min-width: 260px; }
+    .formula-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 6px; }
+    .formula-item { margin-bottom: 6px; }
+    .formula-desc { font-size: 0.6rem; color: #64748b; margin-top: 2px; }
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.65rem; align-items: center; }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .stage-panel { font-size: 0.72rem; }
+    .stage-panel h3 { font-size: 0.75rem; color: #84cc16; margin-bottom: 4px; }
+    .stage-label { color: #d9f99d; font-weight: 600; }
+    .stage-desc { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Immune System <span class="badge">AP Biology</span></h1>
+      <p>Innate &amp; adaptive immunity: antigens, antibodies, and memory cells</p>
+      <div class="legend" style="margin-top: 6px;">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Pathogen</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Macrophage</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>B Cell</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22d3ee;"></div>Antibody</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a855f7;"></div>T Cell</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#84cc16;"></div>Memory Cell</div>
+      </div>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>Pathogen Count</label>
+        <input type="range" id="pathogenCount" min="5" max="50" value="15" step="5">
+        <span class="data-val" id="pathogenCountVal">15</span>
+      </div>
+      <div class="control-row">
+        <label>Virulence</label>
+        <input type="range" id="virulence" min="10" max="100" value="50" step="10">
+        <span class="data-val" id="virulenceVal">50%</span>
+      </div>
+      <div class="control-row">
+        <label>Immune Strength</label>
+        <input type="range" id="immuneStrength" min="20" max="100" value="70" step="10">
+        <span class="data-val" id="immuneStrengthVal">70%</span>
+      </div>
+      <div class="btn-row">
+        <button id="btnInfect">Infect</button>
+        <button id="btnVaccinate">Vaccinate</button>
+        <button id="btnReset">Reset</button>
+      </div>
+    </div>
+    <div class="panel stage-panel" id="stagePanel">
+      <h3>Immune Stage</h3>
+      <div class="stage-label" id="stageLabel">Idle</div>
+      <div class="stage-desc" id="stageDesc">Press Infect to begin immune response</div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Live Data</h3>
+      <div class="data-grid">
+        <span class="label">Pathogens</span><span class="value data-val" id="dPathogens">0</span>
+        <span class="label">Macrophages</span><span class="value data-val" id="dMacrophages">0</span>
+        <span class="label">B Cells</span><span class="value data-val" id="dBCells">0</span>
+        <span class="label">Antibodies</span><span class="value data-val" id="dAntibodies">0</span>
+        <span class="label">T Cells</span><span class="value data-val" id="dTCells">0</span>
+        <span class="label">Memory Cells</span><span class="value data-val" id="dMemory">0</span>
+        <span class="label">Antibody Titer</span><span class="value data-val" id="dTiter">0.0</span>
+        <span class="label">Time (days)</span><span class="value data-val" id="dTime">0.0</span>
+      </div>
+    </div>
+    <div class="panel formula-panel">
+      <h3>Key Formulas</h3>
+      <div class="formula-item"><div id="f1"></div><div class="formula-desc">Titer ∝ activated B cells × time</div></div>
+      <div class="formula-item"><div id="f2"></div><div class="formula-desc">Memory cells accelerate secondary response</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // --- State ---
+  const state = {
+    running: false,
+    vaccinated: false,
+    time: 0,           // simulation time in "days"
+    stage: 'idle',     // idle | innate | adaptive | memory | cleared | overwhelmed
+    pathogens: [],
+    macrophages: [],
+    bCells: [],
+    tCells: [],
+    antibodies: [],
+    memoryCells: [],
+    antibodyTiter: 0,
+    pathogensKilled: 0,
+    spawnTimer: 0,
+    adaptiveTimer: 0,
+    memoryFormed: false,
+  };
+
+  const params = {
+    pathogenCount: 15,
+    virulence: 50,
+    immuneStrength: 70,
+  };
+
+  // --- Entity factory ---
+  function makeEntity(type, x, y) {
+    return {
+      type,
+      x: x || Math.random() * canvas.width,
+      y: y || Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      radius: type === 'pathogen' ? 8 : type === 'antibody' ? 4 : 12,
+      life: 1,
+      target: null,
+      bound: false,
+      age: 0,
+    };
+  }
+
+  // --- Controls ---
+  const sliders = ['pathogenCount', 'virulence', 'immuneStrength'];
+  sliders.forEach(id => {
+    const el = document.getElementById(id);
+    const valEl = document.getElementById(id + 'Val');
+    el.addEventListener('input', () => {
+      params[id] = +el.value;
+      valEl.textContent = id === 'virulence' || id === 'immuneStrength' ? el.value + '%' : el.value;
+    });
+  });
+
+  document.getElementById('btnInfect').addEventListener('click', startInfection);
+  document.getElementById('btnVaccinate').addEventListener('click', () => {
+    state.vaccinated = !state.vaccinated;
+    document.getElementById('btnVaccinate').classList.toggle('active', state.vaccinated);
+    if (state.vaccinated && state.stage === 'idle') {
+      // Pre-form memory cells
+      for (let i = 0; i < 5; i++) {
+        state.memoryCells.push(makeEntity('memory', canvas.width * 0.3 + Math.random() * canvas.width * 0.4, canvas.height * 0.3 + Math.random() * canvas.height * 0.4));
+      }
+      state.memoryFormed = true;
+      setStage('idle', 'Vaccinated — memory cells pre-formed. Press Infect to test.');
+    }
+  });
+  document.getElementById('btnReset').addEventListener('click', resetSim);
+
+  function startInfection() {
+    if (state.running) return;
+    state.running = true;
+    state.time = 0;
+    state.pathogensKilled = 0;
+    state.antibodyTiter = 0;
+    state.adaptiveTimer = 0;
+    state.spawnTimer = 0;
+
+    // Clear active cells but keep memory cells if vaccinated
+    state.pathogens = [];
+    state.macrophages = [];
+    state.bCells = [];
+    state.tCells = [];
+    state.antibodies = [];
+    if (!state.vaccinated) {
+      state.memoryCells = [];
+      state.memoryFormed = false;
+    }
+
+    // Spawn pathogens from edges
+    for (let i = 0; i < params.pathogenCount; i++) {
+      const edge = Math.random();
+      let x, y;
+      if (edge < 0.25) { x = 0; y = Math.random() * canvas.height; }
+      else if (edge < 0.5) { x = canvas.width; y = Math.random() * canvas.height; }
+      else if (edge < 0.75) { x = Math.random() * canvas.width; y = 0; }
+      else { x = Math.random() * canvas.width; y = canvas.height; }
+      state.pathogens.push(makeEntity('pathogen', x, y));
+    }
+
+    setStage('innate', 'Innate immunity responding — macrophages deploying');
+  }
+
+  function resetSim() {
+    state.running = false;
+    state.vaccinated = false;
+    state.time = 0;
+    state.pathogens = [];
+    state.macrophages = [];
+    state.bCells = [];
+    state.tCells = [];
+    state.antibodies = [];
+    state.memoryCells = [];
+    state.antibodyTiter = 0;
+    state.pathogensKilled = 0;
+    state.memoryFormed = false;
+    document.getElementById('btnVaccinate').classList.remove('active');
+    setStage('idle', 'Press Infect to begin immune response');
+  }
+
+  function setStage(stage, desc) {
+    state.stage = stage;
+    const labels = { idle: 'Idle', innate: 'Innate Response', adaptive: 'Adaptive Response', memory: 'Memory Formation', cleared: 'Infection Cleared', overwhelmed: 'Overwhelmed' };
+    document.getElementById('stageLabel').textContent = labels[stage] || stage;
+    document.getElementById('stageDesc').textContent = desc || '';
+  }
+
+  // --- Simulation logic ---
+  function updateSim(dt) {
+    if (!state.running) return;
+    state.time += dt * 0.5; // ~0.5 day per second
+
+    const str = params.immuneStrength / 100;
+    const vir = params.virulence / 100;
+
+    // Innate phase: spawn macrophages
+    if (state.stage === 'innate') {
+      state.spawnTimer += dt;
+      if (state.spawnTimer > 0.3) {
+        state.spawnTimer = 0;
+        if (state.macrophages.length < 8 + Math.floor(str * 12)) {
+          state.macrophages.push(makeEntity('macrophage',
+            canvas.width / 2 + (Math.random() - 0.5) * 200,
+            canvas.height / 2 + (Math.random() - 0.5) * 200
+          ));
+        }
+      }
+      // Transition to adaptive after delay (faster if vaccinated)
+      state.adaptiveTimer += dt;
+      const adaptiveDelay = state.vaccinated ? 1.5 : 5;
+      if (state.adaptiveTimer > adaptiveDelay) {
+        state.stage = 'adaptive';
+        setStage('adaptive', state.vaccinated
+          ? 'Memory cells activated — rapid B cell response'
+          : 'Adaptive immunity activating — B and T cells deploying');
+      }
+    }
+
+    // Adaptive phase: spawn B cells, T cells, antibodies
+    if (state.stage === 'adaptive') {
+      state.spawnTimer += dt;
+      if (state.spawnTimer > 0.25) {
+        state.spawnTimer = 0;
+        const bMax = state.vaccinated ? 18 : 10;
+        const tMax = state.vaccinated ? 12 : 7;
+        if (state.bCells.length < Math.floor(bMax * str)) {
+          state.bCells.push(makeEntity('bCell',
+            canvas.width / 2 + (Math.random() - 0.5) * 300,
+            canvas.height / 2 + (Math.random() - 0.5) * 300
+          ));
+        }
+        if (state.tCells.length < Math.floor(tMax * str)) {
+          state.tCells.push(makeEntity('tCell',
+            canvas.width / 2 + (Math.random() - 0.5) * 300,
+            canvas.height / 2 + (Math.random() - 0.5) * 300
+          ));
+        }
+        // B cells produce antibodies
+        const abRate = state.vaccinated ? 3 : 1;
+        for (let i = 0; i < abRate && state.antibodies.length < 120; i++) {
+          if (state.bCells.length > 0) {
+            const bc = state.bCells[Math.floor(Math.random() * state.bCells.length)];
+            state.antibodies.push(makeEntity('antibody', bc.x, bc.y));
+          }
+        }
+      }
+      state.antibodyTiter = Math.min(10, state.antibodies.length * 0.08);
+
+      // Form memory cells after enough time in adaptive
+      if (!state.memoryFormed && state.time > (state.vaccinated ? 3 : 8)) {
+        state.memoryFormed = true;
+        for (let i = 0; i < 4; i++) {
+          state.memoryCells.push(makeEntity('memory',
+            canvas.width / 2 + (Math.random() - 0.5) * 200,
+            canvas.height / 2 + (Math.random() - 0.5) * 200
+          ));
+        }
+        setStage('memory', 'Memory B cells forming — long-term immunity established');
+        state.stage = 'memory'; // brief display
+      }
+    }
+
+    if (state.stage === 'memory') {
+      // Continue fighting while forming memory
+      state.spawnTimer += dt;
+      if (state.spawnTimer > 0.25) {
+        state.spawnTimer = 0;
+        if (state.antibodies.length < 120 && state.bCells.length > 0) {
+          const bc = state.bCells[Math.floor(Math.random() * state.bCells.length)];
+          state.antibodies.push(makeEntity('antibody', bc.x, bc.y));
+          state.antibodies.push(makeEntity('antibody', bc.x, bc.y));
+        }
+      }
+      state.antibodyTiter = Math.min(10, state.antibodies.length * 0.08);
+    }
+
+    // Pathogen replication
+    if (state.time % 2 < dt && state.pathogens.length < 80) {
+      const replicateCount = Math.floor(state.pathogens.length * vir * 0.15);
+      for (let i = 0; i < replicateCount && state.pathogens.length < 80; i++) {
+        const parent = state.pathogens[Math.floor(Math.random() * state.pathogens.length)];
+        if (parent) {
+          state.pathogens.push(makeEntity('pathogen', parent.x + (Math.random() - 0.5) * 20, parent.y + (Math.random() - 0.5) * 20));
+        }
+      }
+    }
+
+    // Move entities
+    moveEntities(state.pathogens, 1.5 * vir);
+    moveEntities(state.macrophages, 1.2);
+    moveEntities(state.bCells, 0.8);
+    moveEntities(state.tCells, 1.4);
+    moveEntities(state.antibodies, 2.5);
+    moveEntities(state.memoryCells, 0.3);
+
+    // Macrophages chase & engulf pathogens
+    chaseAndKill(state.macrophages, state.pathogens, 150, 18, 0.6);
+
+    // T cells chase & kill pathogens
+    chaseAndKill(state.tCells, state.pathogens, 120, 14, 0.4);
+
+    // Antibodies chase & neutralize pathogens
+    chaseAndKill(state.antibodies, state.pathogens, 200, 10, 0.8);
+
+    // Check win/lose
+    if (state.pathogens.length === 0 && state.running && state.time > 0.5) {
+      state.running = false;
+      setStage('cleared', 'Infection cleared in ' + state.time.toFixed(1) + ' days. Memory cells persist.');
+    }
+    if (state.pathogens.length > 60 && state.stage !== 'overwhelmed') {
+      setStage('overwhelmed', 'Immune system overwhelmed — pathogen count exceeded threshold');
+    }
+  }
+
+  function moveEntities(arr, speed) {
+    for (const e of arr) {
+      e.age += 1/60;
+      if (!e.target) {
+        e.x += e.vx * speed;
+        e.y += e.vy * speed;
+        // Random direction changes
+        if (Math.random() < 0.02) {
+          e.vx = (Math.random() - 0.5) * 2;
+          e.vy = (Math.random() - 0.5) * 2;
+        }
+      }
+      // Bounce off walls
+      if (e.x < e.radius) { e.x = e.radius; e.vx = Math.abs(e.vx); }
+      if (e.x > canvas.width - e.radius) { e.x = canvas.width - e.radius; e.vx = -Math.abs(e.vx); }
+      if (e.y < e.radius) { e.y = e.radius; e.vy = Math.abs(e.vy); }
+      if (e.y > canvas.height - e.radius) { e.y = canvas.height - e.radius; e.vy = -Math.abs(e.vy); }
+    }
+  }
+
+  function chaseAndKill(hunters, prey, detectRange, killRange, efficiency) {
+    for (const h of hunters) {
+      if (prey.length === 0) break;
+      // Find nearest prey
+      let nearest = null, minDist = detectRange;
+      for (const p of prey) {
+        const dx = p.x - h.x, dy = p.y - h.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDist) { minDist = dist; nearest = p; }
+      }
+      if (nearest) {
+        // Chase
+        const dx = nearest.x - h.x, dy = nearest.y - h.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0) {
+          h.vx = (dx / dist) * 1.5;
+          h.vy = (dy / dist) * 1.5;
+        }
+        h.target = nearest;
+        // Kill on contact
+        if (dist < killRange && Math.random() < efficiency) {
+          const idx = prey.indexOf(nearest);
+          if (idx > -1) {
+            prey.splice(idx, 1);
+            state.pathogensKilled++;
+          }
+        }
+      } else {
+        h.target = null;
+      }
+    }
+  }
+
+  // --- Drawing ---
+  function drawCell(x, y, r, color, glowColor, shape) {
+    ctx.save();
+    // Glow
+    ctx.shadowColor = glowColor || color;
+    ctx.shadowBlur = 12;
+
+    if (shape === 'spiky') {
+      // Pathogen: spiky circle
+      ctx.beginPath();
+      const spikes = 8;
+      for (let i = 0; i < spikes * 2; i++) {
+        const angle = (i / (spikes * 2)) * Math.PI * 2;
+        const rad = i % 2 === 0 ? r * 1.4 : r * 0.7;
+        const px = x + Math.cos(angle) * rad;
+        const py = y + Math.sin(angle) * rad;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    } else if (shape === 'y') {
+      // Antibody: Y shape
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x, y + r);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x - r * 0.8, y - r);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + r * 0.8, y - r);
+      ctx.stroke();
+    } else if (shape === 'star') {
+      // Memory cell: star
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
+        const rad = i % 2 === 0 ? r : r * 0.5;
+        const px = x + Math.cos(angle) * rad;
+        const py = y + Math.sin(angle) * rad;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    } else {
+      // Default circle
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      if (shape === 'lobed') {
+        // Macrophage: lobed nucleus
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.arc(x - r * 0.3, y, r * 0.5, 0, Math.PI * 2);
+        ctx.arc(x + r * 0.3, y - r * 0.2, r * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background tissue pattern
+    ctx.globalAlpha = 0.04;
+    const gridSize = 40;
+    ctx.strokeStyle = '#84cc16';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < canvas.width; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Draw entities in order: memory, macrophages, B cells, T cells, antibodies, pathogens
+    for (const e of state.memoryCells) drawCell(e.x, e.y, 10, '#84cc16', '#84cc16', 'star');
+    for (const e of state.macrophages) drawCell(e.x, e.y, 14, '#f59e0b', '#fbbf24', 'lobed');
+    for (const e of state.bCells) drawCell(e.x, e.y, 11, '#3b82f6', '#60a5fa', 'circle');
+    for (const e of state.tCells) drawCell(e.x, e.y, 10, '#a855f7', '#c084fc', 'circle');
+    for (const e of state.antibodies) drawCell(e.x, e.y, 5, '#22d3ee', '#22d3ee', 'y');
+    for (const e of state.pathogens) drawCell(e.x, e.y, 8, '#ef4444', '#f87171', 'spiky');
+  }
+
+  function updateUI() {
+    document.getElementById('dPathogens').textContent = state.pathogens.length;
+    document.getElementById('dMacrophages').textContent = state.macrophages.length;
+    document.getElementById('dBCells').textContent = state.bCells.length;
+    document.getElementById('dAntibodies').textContent = state.antibodies.length;
+    document.getElementById('dTCells').textContent = state.tCells.length;
+    document.getElementById('dMemory').textContent = state.memoryCells.length;
+    document.getElementById('dTiter').textContent = state.antibodyTiter.toFixed(1);
+    document.getElementById('dTime').textContent = state.time.toFixed(1);
+  }
+
+  // --- KaTeX formulas ---
+  try {
+    katex.render("\\text{Titer} \\propto B_{\\text{active}} \\times t", document.getElementById('f1'), { throwOnError: false });
+    katex.render("\\text{2° Response} \\gg \\text{1° Response}", document.getElementById('f2'), { throwOnError: false });
+  } catch(e) {}
+
+  // --- Animation loop ---
+  let lastTime = 0;
+  function animate(timestamp) {
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+    lastTime = timestamp;
+    updateSim(dt);
+    draw();
+    updateUI();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

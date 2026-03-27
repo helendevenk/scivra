@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stars & Space — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(249,115,22,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(249,115,22,0.15); color: #f97316; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+    .control-row { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+    .control-row label { color: #94a3b8; min-width: 55px; }
+    input[type="range"] { flex: 1; accent-color: #f97316; height: 4px; }
+    button { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25); color: #fed7aa; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: rgba(249,115,22,0.3); }
+    .data-panel h3 { font-size: 0.75rem; color: #f97316; margin-bottom: 6px; }
+    .data-row { font-size: 0.7rem; margin-bottom: 3px; display: flex; gap: 6px; }
+    .data-row .lbl { color: #94a3b8; }
+    #tooltip { position: absolute; background: rgba(15,23,42,0.92); border: 1px solid rgba(249,115,22,0.4); border-radius: 6px; padding: 8px 12px; font-size: 0.72rem; pointer-events: none; display: none; z-index: 20; max-width: 200px; }
+    #tooltip .star-name { color: #f97316; font-weight: 600; font-size: 0.85rem; }
+    #tooltip .star-info { color: #94a3b8; margin-top: 3px; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="tooltip"><div class="star-name" id="ttName"></div><div class="star-info" id="ttInfo"></div></div>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Stars & Space <span class="badge">Elementary</span></h1>
+      <p>Explore the night sky! Click stars to learn about them.</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>Time:</label>
+        <input type="range" id="timeSlider" min="0" max="23" step="1" value="21">
+        <span class="data-val" id="timeLabel">9 PM</span>
+      </div>
+      <div class="control-row">
+        <label>Moon:</label>
+        <input type="range" id="moonPhase" min="0" max="7" step="1" value="0">
+        <span class="data-val" id="moonLabel">New Moon</span>
+      </div>
+      <div class="control-row">
+        <button id="btnConst">Show Constellations</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Sky Info</h3>
+      <div class="data-row"><span class="lbl">Visible Stars:</span> <span class="data-val" id="dStars">0</span></div>
+      <div class="data-row"><span class="lbl">Brightest:</span> <span class="data-val" id="dBright">—</span></div>
+      <div class="data-row"><span class="lbl">Direction:</span> <span class="data-val" id="dDir">North</span></div>
+    </div>
+    <div class="panel data-panel">
+      <h3>Moon Phase</h3>
+      <div class="data-row"><span class="lbl">Phase:</span> <span class="data-val" id="dMoon">New Moon</span></div>
+      <div class="data-row"><span class="lbl">Illumination:</span> <span class="data-val" id="dIllum">0%</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  const MOON_NAMES = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'];
+  const MOON_ILLUM = [0, 25, 50, 75, 100, 75, 50, 25];
+
+  // Named stars with constellation membership
+  const NAMED_STARS = [
+    { name: 'Polaris', info: 'The North Star. Always points North!', x: 0.5, y: 0.12, mag: 2, color: '#fffbe6', const: 'Little Dipper' },
+    { name: 'Sirius', info: 'Brightest star in the sky. 8.6 light years away.', x: 0.35, y: 0.55, mag: 1, color: '#dbeafe', const: null },
+    { name: 'Betelgeuse', info: 'Red supergiant in Orion. 700x wider than the Sun!', x: 0.25, y: 0.4, mag: 1.5, color: '#fca5a5', const: 'Orion' },
+    { name: 'Rigel', info: 'Blue supergiant in Orion. Very hot and bright.', x: 0.3, y: 0.52, mag: 1.2, color: '#93c5fd', const: 'Orion' },
+    { name: 'Vega', info: 'Part of the Summer Triangle. 25 light years away.', x: 0.65, y: 0.2, mag: 1, color: '#e0f2fe', const: null },
+    { name: 'Altair', info: 'One of the closest bright stars at 17 light years.', x: 0.7, y: 0.35, mag: 1.5, color: '#fff', const: null },
+    { name: 'Deneb', info: '2,600 light years away but still very bright!', x: 0.6, y: 0.15, mag: 1.3, color: '#fef9c3', const: null },
+    { name: 'Arcturus', info: 'Orange giant, 37 light years from Earth.', x: 0.8, y: 0.28, mag: 1.2, color: '#fdba74', const: null },
+  ];
+
+  // Big Dipper constellation
+  const BIG_DIPPER = [
+    { x: 0.38, y: 0.22 }, { x: 0.42, y: 0.2 }, { x: 0.45, y: 0.22 }, { x: 0.47, y: 0.25 },
+    { x: 0.5, y: 0.27 }, { x: 0.53, y: 0.26 }, { x: 0.53, y: 0.22 }
+  ];
+  const BIG_DIPPER_LINES = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]];
+
+  // Orion
+  const ORION = [
+    { x: 0.22, y: 0.38 }, { x: 0.28, y: 0.35 }, { x: 0.25, y: 0.42 },
+    { x: 0.27, y: 0.45 }, { x: 0.23, y: 0.45 }, { x: 0.3, y: 0.52 }, { x: 0.2, y: 0.53 }
+  ];
+  const ORION_LINES = [[0,2],[1,3],[2,3],[2,4],[3,5],[4,6]];
+
+  // Background stars
+  let bgStars = [];
+  for (let i = 0; i < 300; i++) {
+    bgStars.push({ x: Math.random(), y: Math.random(), size: 0.3 + Math.random() * 1.5, twinkle: Math.random() * Math.PI * 2 });
+  }
+
+  let showConst = false;
+  let hoveredStar = null;
+  let frame = 0;
+
+  document.getElementById('btnConst').addEventListener('click', () => {
+    showConst = !showConst;
+    document.getElementById('btnConst').textContent = showConst ? 'Hide Constellations' : 'Show Constellations';
+  });
+
+  document.getElementById('timeSlider').addEventListener('input', updateUI);
+  document.getElementById('moonPhase').addEventListener('input', updateUI);
+
+  function updateUI() {
+    const h = parseInt(document.getElementById('timeSlider').value);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    document.getElementById('timeLabel').textContent = h12 + ' ' + ampm;
+
+    const mp = parseInt(document.getElementById('moonPhase').value);
+    document.getElementById('moonLabel').textContent = MOON_NAMES[mp];
+    document.getElementById('dMoon').textContent = MOON_NAMES[mp];
+    document.getElementById('dIllum').textContent = MOON_ILLUM[mp] + '%';
+
+    const isNight = h >= 19 || h <= 5;
+    const visCount = isNight ? NAMED_STARS.length + bgStars.length : (h >= 18 || h <= 6 ? Math.floor(bgStars.length * 0.3) : 0);
+    document.getElementById('dStars').textContent = visCount;
+    document.getElementById('dBright').textContent = isNight ? 'Sirius' : '—';
+  }
+  updateUI();
+
+  canvas.addEventListener('mousemove', (e) => {
+    const mx = e.clientX / canvas.width, my = e.clientY / canvas.height;
+    hoveredStar = null;
+    const h = parseInt(document.getElementById('timeSlider').value);
+    const isNight = h >= 19 || h <= 5;
+    if (!isNight) return;
+
+    const rotation = (h - 21) * 0.02;
+    for (const s of NAMED_STARS) {
+      const sx = ((s.x + rotation) % 1 + 1) % 1;
+      const dist = Math.sqrt((mx - sx) ** 2 + (my - s.y) ** 2);
+      if (dist < 0.025) {
+        hoveredStar = s;
+        const tt = document.getElementById('tooltip');
+        tt.style.display = 'block';
+        tt.style.left = (e.clientX + 15) + 'px';
+        tt.style.top = (e.clientY - 10) + 'px';
+        document.getElementById('ttName').textContent = s.name;
+        document.getElementById('ttInfo').textContent = s.info;
+        break;
+      }
+    }
+    if (!hoveredStar) document.getElementById('tooltip').style.display = 'none';
+  });
+
+  function drawMoon(cx, cy, phase) {
+    const r = 30;
+    // Full circle (lit side)
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#fef3c7'; ctx.fill();
+
+    // Shadow
+    ctx.beginPath();
+    if (phase === 0) { ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = '#1e293b'; ctx.fill(); }
+    else if (phase < 4) {
+      const f = (phase / 4);
+      ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
+      ctx.ellipse(cx, cy, r * (1 - f * 2), r, 0, Math.PI / 2, -Math.PI / 2, f > 0.5);
+      ctx.fillStyle = '#1e293b'; ctx.fill();
+    } else if (phase > 4) {
+      const f = ((8 - phase) / 4);
+      ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2, false);
+      ctx.ellipse(cx, cy, r * (1 - f * 2), r, 0, -Math.PI / 2, Math.PI / 2, f > 0.5);
+      ctx.fillStyle = '#1e293b'; ctx.fill();
+    }
+    // Craters
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    [[cx-8,cy-5,4],[cx+6,cy+8,3],[cx+2,cy-10,2]].forEach(([x,y,rr]) => { ctx.beginPath(); ctx.arc(x,y,rr,0,Math.PI*2); ctx.fill(); });
+  }
+
+  function draw() {
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const hour = parseInt(document.getElementById('timeSlider').value);
+    const moonP = parseInt(document.getElementById('moonPhase').value);
+    const rotation = (hour - 21) * 0.02;
+
+    // Sky darkness
+    const isNight = hour >= 19 || hour <= 5;
+    const isDusk = (hour >= 17 && hour < 19) || (hour > 5 && hour <= 7);
+    let skyAlpha = isNight ? 1 : isDusk ? 0.5 : 0;
+
+    if (isDusk || !isNight) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      if (hour >= 6 && hour <= 8) { grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(1, '#f97316'); }
+      else if (hour >= 17 && hour <= 19) { grad.addColorStop(0, '#1e293b'); grad.addColorStop(1, '#dc2626'); }
+      else { grad.addColorStop(0, '#3b82f6'); grad.addColorStop(1, '#93c5fd'); }
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+    }
+
+    // Stars
+    if (skyAlpha > 0) {
+      bgStars.forEach(s => {
+        const sx = ((s.x + rotation) % 1 + 1) % 1;
+        const twinkle = 0.3 + 0.7 * Math.abs(Math.sin(frame * 0.03 + s.twinkle));
+        ctx.beginPath();
+        ctx.arc(sx * W, s.y * H, s.size * twinkle, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${skyAlpha * 0.6 * twinkle})`;
+        ctx.fill();
+      });
+
+      NAMED_STARS.forEach(s => {
+        const sx = ((s.x + rotation) % 1 + 1) % 1;
+        const glow = 3 + Math.sin(frame * 0.04) * 1;
+        // Glow
+        ctx.beginPath(); ctx.arc(sx * W, s.y * H, glow + 4, 0, Math.PI * 2);
+        ctx.fillStyle = s === hoveredStar ? 'rgba(249,115,22,0.3)' : `rgba(255,255,255,0.1)`;
+        ctx.fill();
+        // Star
+        ctx.beginPath(); ctx.arc(sx * W, s.y * H, 3 - s.mag * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = s.color; ctx.fill();
+        // Name
+        if (s === hoveredStar) {
+          ctx.fillStyle = '#f97316';
+          ctx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(s.name, sx * W, s.y * H - 12);
+        }
+      });
+
+      // Constellations
+      if (showConst) {
+        ctx.strokeStyle = 'rgba(249,115,22,0.35)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        // Big Dipper
+        BIG_DIPPER_LINES.forEach(([a, b]) => {
+          const sa = BIG_DIPPER[a], sb = BIG_DIPPER[b];
+          const ax = ((sa.x + rotation) % 1 + 1) % 1, bx = ((sb.x + rotation) % 1 + 1) % 1;
+          ctx.beginPath(); ctx.moveTo(ax * W, sa.y * H); ctx.lineTo(bx * W, sb.y * H); ctx.stroke();
+        });
+        BIG_DIPPER.forEach(s => {
+          const sx = ((s.x + rotation) % 1 + 1) % 1;
+          ctx.beginPath(); ctx.arc(sx * W, s.y * H, 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#fef3c7'; ctx.fill();
+        });
+        ctx.fillStyle = 'rgba(249,115,22,0.5)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        const bdx = ((0.45 + rotation) % 1 + 1) % 1;
+        ctx.fillText('Big Dipper', bdx * W, BIG_DIPPER[2].y * H - 10);
+
+        // Orion
+        ORION_LINES.forEach(([a, b]) => {
+          const sa = ORION[a], sb = ORION[b];
+          const ax = ((sa.x + rotation) % 1 + 1) % 1, bx = ((sb.x + rotation) % 1 + 1) % 1;
+          ctx.beginPath(); ctx.moveTo(ax * W, sa.y * H); ctx.lineTo(bx * W, sb.y * H); ctx.stroke();
+        });
+        ORION.forEach(s => {
+          const sx = ((s.x + rotation) % 1 + 1) % 1;
+          ctx.beginPath(); ctx.arc(sx * W, s.y * H, 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#fef3c7'; ctx.fill();
+        });
+        const ox = ((0.25 + rotation) % 1 + 1) % 1;
+        ctx.fillText('Orion', ox * W, ORION[0].y * H - 10);
+
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Moon
+    if (isNight || isDusk) {
+      const moonX = W * 0.8, moonY = H * 0.15;
+      drawMoon(moonX, moonY, moonP);
+    }
+
+    // Horizon
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.88);
+    for (let i = 0; i <= W; i += 20) {
+      ctx.lineTo(i, H * 0.88 + Math.sin(i * 0.01) * 8);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+    // Ground silhouette
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, H * 0.92, W, H * 0.08);
+
+    // Compass
+    ctx.fillStyle = 'rgba(249,115,22,0.5)';
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'].forEach((d, i) => {
+      const dx = W * (i / 8 + 0.0625);
+      ctx.fillText(d, dx, H * 0.9 + 5);
+    });
+    document.getElementById('dDir').textContent = 'Looking ' + ['N','NE','E','SE','S','SW','W','NW'][Math.floor(((rotation * 50) % 8 + 8) % 8)];
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar Energy — Scivra Elementary Science</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; user-select: none; }
+    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; padding: 10px; z-index: 10; }
+    .top-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bottom-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 12px 14px; pointer-events: all; backdrop-filter: blur(10px); }
+    .title-block h1 { font-size: 1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .title-block p { font-size: 0.7rem; color: #94a3b8; }
+    .badge { background: rgba(59,130,246,0.15); color: #3b82f6; padding: 2px 8px; border-radius: 9999px; font-size: 0.6rem; font-weight: 600; }
+    .controls { display: flex; flex-direction: column; gap: 8px; min-width: 220px; }
+    .control-row { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+    .control-row label { color: #94a3b8; min-width: 70px; }
+    input[type="range"] { flex: 1; accent-color: #3b82f6; height: 4px; }
+    .val-label { color: #93c5fd; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; min-width: 45px; text-align: right; }
+    .data-panel h3 { font-size: 0.75rem; color: #3b82f6; margin-bottom: 6px; }
+    .data-row { font-size: 0.7rem; margin-bottom: 3px; display: flex; gap: 6px; }
+    .data-row .lbl { color: #94a3b8; }
+    .meter-bar { width: 120px; height: 10px; background: rgba(59,130,246,0.15); border-radius: 5px; overflow: hidden; display: inline-block; vertical-align: middle; }
+    .meter-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 5px; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="panel title-block">
+      <h1>Solar Energy <span class="badge">Elementary</span></h1>
+      <p>Adjust the solar panel angle and time of day to maximize energy!</p>
+    </div>
+    <div class="panel controls">
+      <div class="control-row">
+        <label>Panel Angle:</label>
+        <input type="range" id="panelAngle" min="0" max="90" value="35">
+        <span class="val-label" id="angleLabel">35°</span>
+      </div>
+      <div class="control-row">
+        <label>Time of Day:</label>
+        <input type="range" id="timeOfDay" min="5" max="20" step="0.5" value="12">
+        <span class="val-label" id="timeLabel">12:00</span>
+      </div>
+      <div class="control-row">
+        <label>Weather:</label>
+        <select id="weather" style="background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd; padding: 4px 8px; border-radius: 5px; font-size: 0.72rem;">
+          <option value="1">Clear Sky</option>
+          <option value="0.7">Partly Cloudy</option>
+          <option value="0.3">Overcast</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="panel data-panel">
+      <h3>Energy Output</h3>
+      <div class="data-row"><span class="lbl">Power:</span> <span class="data-val" id="dPower">0 W</span></div>
+      <div class="data-row"><span class="lbl">Efficiency:</span> <span class="data-val" id="dEff">0%</span> <div class="meter-bar"><div class="meter-fill" id="effBar" style="width:0%"></div></div></div>
+      <div class="data-row"><span class="lbl">Sun Angle:</span> <span class="data-val" id="dSunAngle">0°</span></div>
+    </div>
+    <div class="panel data-panel">
+      <h3>Daily Total</h3>
+      <div class="data-row"><span class="lbl">Energy:</span> <span class="data-val" id="dTotal">0 Wh</span></div>
+      <div class="data-row"><span class="lbl">Best Angle:</span> <span class="data-val" id="dBest">—</span></div>
+      <div class="data-row"><span class="lbl">Tip:</span> <span class="data-val" id="dTip">Adjust panel to face the sun!</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  let frame = 0;
+
+  function getSunAngle(hour) {
+    // Sun angle: 0° at sunrise (6am), 90° at noon, 0° at sunset (18pm)
+    if (hour < 6 || hour > 18) return -10;
+    const normalized = (hour - 6) / 12; // 0 to 1
+    return Math.sin(normalized * Math.PI) * 80;
+  }
+
+  function getSunPosition(hour) {
+    const W = canvas.width, H = canvas.height;
+    const t = (hour - 5) / 15; // 0 to 1 across day
+    const x = W * 0.1 + t * W * 0.8;
+    const peakY = H * 0.08;
+    const y = H * 0.65 - Math.sin(t * Math.PI) * (H * 0.65 - peakY);
+    return { x, y };
+  }
+
+  function calculate() {
+    const panelAngle = parseInt(document.getElementById('panelAngle').value);
+    const hour = parseFloat(document.getElementById('timeOfDay').value);
+    const weatherFactor = parseFloat(document.getElementById('weather').value);
+
+    const sunAngle = getSunAngle(hour);
+    const isDay = sunAngle > 0;
+
+    // Optimal efficiency when panel angle + sun angle = 90
+    const incidenceAngle = Math.abs(sunAngle - panelAngle);
+    const angleFactor = Math.max(0, Math.cos(incidenceAngle * Math.PI / 180));
+    const maxPower = 300; // watts peak
+    const power = isDay ? maxPower * angleFactor * weatherFactor * (sunAngle / 80) : 0;
+    const efficiency = isDay ? angleFactor * weatherFactor * 100 : 0;
+
+    // Best angle for current time
+    const bestAngle = isDay ? Math.round(sunAngle) : 0;
+
+    // Time display
+    const hh = Math.floor(hour);
+    const mm = (hour % 1) * 60;
+    const timeStr = hh + ':' + (mm < 10 ? '0' : '') + Math.round(mm);
+
+    document.getElementById('angleLabel').textContent = panelAngle + '°';
+    document.getElementById('timeLabel').textContent = timeStr;
+    document.getElementById('dPower').textContent = Math.round(power) + ' W';
+    document.getElementById('dEff').textContent = Math.round(efficiency) + '%';
+    document.getElementById('effBar').style.width = Math.round(efficiency) + '%';
+    document.getElementById('dSunAngle').textContent = Math.round(sunAngle) + '°';
+    document.getElementById('dTotal').textContent = Math.round(power * 0.5) + ' Wh';
+    document.getElementById('dBest').textContent = isDay ? bestAngle + '°' : 'Night';
+
+    // Tips
+    if (!isDay) document.getElementById('dTip').textContent = 'No sunlight at night!';
+    else if (Math.abs(panelAngle - sunAngle) < 10) document.getElementById('dTip').textContent = 'Great angle! Maximum energy capture!';
+    else if (panelAngle < sunAngle) document.getElementById('dTip').textContent = 'Try tilting the panel more upright.';
+    else document.getElementById('dTip').textContent = 'Try tilting the panel more flat.';
+
+    return { panelAngle, hour, sunAngle, power, efficiency, weatherFactor, isDay };
+  }
+
+  document.getElementById('panelAngle').addEventListener('input', calculate);
+  document.getElementById('timeOfDay').addEventListener('input', calculate);
+  document.getElementById('weather').addEventListener('change', calculate);
+
+  function drawHouse(cx, groundY) {
+    const W = canvas.width;
+    // House body
+    ctx.fillStyle = '#78716c';
+    ctx.fillRect(cx - 60, groundY - 80, 120, 80);
+    // Roof
+    ctx.fillStyle = '#57534e';
+    ctx.beginPath(); ctx.moveTo(cx - 75, groundY - 80); ctx.lineTo(cx, groundY - 130); ctx.lineTo(cx + 75, groundY - 80); ctx.closePath(); ctx.fill();
+    // Door
+    ctx.fillStyle = '#92400e';
+    ctx.fillRect(cx - 12, groundY - 45, 24, 45);
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath(); ctx.arc(cx + 6, groundY - 22, 2, 0, Math.PI * 2); ctx.fill();
+    // Window
+    ctx.fillStyle = '#fef3c7';
+    ctx.fillRect(cx + 25, groundY - 65, 22, 22);
+    ctx.fillRect(cx - 47, groundY - 65, 22, 22);
+    ctx.strokeStyle = '#57534e'; ctx.lineWidth = 2;
+    ctx.strokeRect(cx + 25, groundY - 65, 22, 22);
+    ctx.strokeRect(cx - 47, groundY - 65, 22, 22);
+  }
+
+  function drawSolarPanel(cx, roofY, angle) {
+    const panelW = 80, panelH = 8;
+    ctx.save();
+    ctx.translate(cx, roofY);
+    ctx.rotate(-angle * Math.PI / 180);
+    // Panel
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
+    // Grid lines
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 0.5;
+    for (let i = -panelW / 2 + 10; i < panelW / 2; i += 10) {
+      ctx.beginPath(); ctx.moveTo(i, -panelH / 2); ctx.lineTo(i, panelH / 2); ctx.stroke();
+    }
+    // Frame
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
+    // Reflection shimmer
+    ctx.fillStyle = 'rgba(147,197,253,0.2)';
+    ctx.fillRect(-panelW / 2 + 5, -panelH / 2, panelW / 3, panelH);
+    ctx.restore();
+    // Support pole
+    ctx.strokeStyle = '#64748b'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx, roofY); ctx.lineTo(cx, roofY + 15); ctx.stroke();
+  }
+
+  function draw() {
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const data = calculate();
+
+    const groundY = H * 0.72;
+
+    // Sky
+    const skyDark = data.hour < 6 || data.hour > 19;
+    const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+    if (skyDark) { grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e293b'); }
+    else if (data.hour < 8 || data.hour > 17) { grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(1, '#f97316'); }
+    else { grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(1, '#60a5fa'); }
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, groundY);
+
+    // Sun
+    if (data.isDay) {
+      const sun = getSunPosition(data.hour);
+      // Glow
+      const glowR = 60 * data.weatherFactor;
+      ctx.beginPath(); ctx.arc(sun.x, sun.y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(251,191,36,${0.15 * data.weatherFactor})`; ctx.fill();
+      // Sun body
+      ctx.beginPath(); ctx.arc(sun.x, sun.y, 30 * data.weatherFactor, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(251,191,36,${data.weatherFactor})`; ctx.fill();
+      // Rays
+      if (data.weatherFactor > 0.5) {
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2 + frame * 0.008;
+          ctx.beginPath();
+          ctx.moveTo(sun.x + Math.cos(a) * 35, sun.y + Math.sin(a) * 35);
+          ctx.lineTo(sun.x + Math.cos(a) * 50, sun.y + Math.sin(a) * 50);
+          ctx.strokeStyle = 'rgba(251,191,36,0.3)'; ctx.lineWidth = 2; ctx.stroke();
+        }
+      }
+
+      // Light rays hitting panel
+      if (data.efficiency > 10) {
+        const panelCx = W * 0.5, panelY = groundY - 125;
+        const rayCount = Math.floor(data.efficiency / 15);
+        for (let i = 0; i < rayCount; i++) {
+          const offset = (i - rayCount / 2) * 12;
+          ctx.strokeStyle = `rgba(251,191,36,${0.1 + data.efficiency * 0.002})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(sun.x, sun.y);
+          ctx.lineTo(panelCx + offset, panelY);
+          ctx.stroke();
+          // Impact sparkle
+          ctx.fillStyle = 'rgba(251,191,36,0.5)';
+          ctx.beginPath(); ctx.arc(panelCx + offset, panelY, 2 + Math.sin(frame * 0.1 + i) * 1, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      // Clouds if not clear
+      if (data.weatherFactor < 1) {
+        const cloudAlpha = 1 - data.weatherFactor;
+        ctx.fillStyle = `rgba(148,163,184,${cloudAlpha * 0.6})`;
+        for (let i = 0; i < 4; i++) {
+          const cx = (W * 0.2 + i * W * 0.2 + frame * 0.3) % (W + 200) - 100;
+          const cy = H * 0.2 + i * 25;
+          ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx + 25, cy - 5, 25, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx - 15, cy + 5, 20, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      // Sun arc path (faint)
+      ctx.strokeStyle = 'rgba(251,191,36,0.08)'; ctx.lineWidth = 1; ctx.setLineDash([4, 8]);
+      ctx.beginPath();
+      for (let h = 5; h <= 20; h += 0.5) {
+        const p = getSunPosition(h);
+        if (h === 5) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    } else {
+      // Stars at night
+      for (let i = 0; i < 50; i++) {
+        const sx = (i * 137.5) % W, sy = (i * 97.3) % (groundY * 0.8);
+        const twinkle = 0.3 + 0.7 * Math.abs(Math.sin(frame * 0.03 + i));
+        ctx.beginPath(); ctx.arc(sx, sy, 1, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${twinkle * 0.6})`; ctx.fill();
+      }
+    }
+
+    // Ground
+    ctx.fillStyle = '#166534';
+    ctx.fillRect(0, groundY, W, H - groundY);
+    ctx.fillStyle = '#15803d';
+    ctx.fillRect(0, groundY, W, 3);
+
+    // House
+    const houseCx = W * 0.5;
+    drawHouse(houseCx, groundY);
+
+    // Solar panel on roof
+    drawSolarPanel(houseCx + 15, groundY - 122, data.panelAngle);
+
+    // Energy meter on side
+    const meterX = W * 0.82, meterY = groundY - 80;
+    ctx.fillStyle = 'rgba(15,23,42,0.8)';
+    ctx.fillRect(meterX - 25, meterY, 50, 80);
+    ctx.strokeStyle = 'rgba(59,130,246,0.4)'; ctx.lineWidth = 1;
+    ctx.strokeRect(meterX - 25, meterY, 50, 80);
+    // Meter bar
+    const meterH = (data.power / 300) * 60;
+    ctx.fillStyle = data.power > 200 ? '#22c55e' : data.power > 100 ? '#3b82f6' : '#f97316';
+    ctx.fillRect(meterX - 15, meterY + 70 - meterH, 30, meterH);
+    ctx.fillStyle = '#93c5fd'; ctx.font = '10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(data.power) + 'W', meterX, meterY - 5);
+    ctx.fillText('ENERGY', meterX, meterY + 78);
+
+    // Light bulb indicator
+    const bulbX = W * 0.35, bulbY = groundY - 50;
+    ctx.beginPath(); ctx.arc(bulbX, bulbY, 10, 0, Math.PI * 2);
+    ctx.fillStyle = data.power > 50 ? `rgba(251,191,36,${Math.min(1, data.power / 200)})` : '#334155';
+    ctx.fill();
+    ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(data.power > 50 ? 'ON' : 'OFF', bulbX, bulbY + 22);
+
+    // Wire from panel to house
+    ctx.strokeStyle = 'rgba(59,130,246,0.3)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(houseCx + 15, groundY - 107); ctx.lineTo(houseCx + 15, groundY - 80);
+    ctx.lineTo(meterX - 25, groundY - 80); ctx.stroke();
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

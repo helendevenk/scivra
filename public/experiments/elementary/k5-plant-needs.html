@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Plants Need — Scivra K-5 Biology</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;min-width:260px;background:rgba(30,41,59,0.95);border-right:1px solid rgba(132,204,22,0.25);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.badge-row{display:flex;gap:8px}
+.badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+.badge-subject{background:rgba(132,204,22,0.25);color:#d9f99d;border:1px solid rgba(132,204,22,0.4)}
+.badge-free{background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+.sidebar h1{font-size:1.2em;color:#84cc16;line-height:1.3}
+.sidebar h1 span{color:#d9f99d;font-size:0.7em;display:block;margin-top:2px}
+.control-group{display:flex;flex-direction:column;gap:6px}
+.control-group label{font-size:13px;color:#d9f99d;font-weight:600}
+.control-group input[type=range]{width:100%;-webkit-appearance:none;height:6px;background:rgba(132,204,22,0.2);border-radius:3px;outline:none;cursor:pointer;padding:0}
+.control-group input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#84cc16;border-radius:50%;cursor:pointer}
+.val{font-family:'JetBrains Mono',monospace;color:#d9f99d;font-size:12px;text-align:right}
+.btn{background:rgba(132,204,22,0.2);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s}
+.btn:hover{background:rgba(132,204,22,0.35)}
+.info-box{background:rgba(132,204,22,0.1);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:12px;font-size:13px;line-height:1.5}
+.info-box h3{color:#84cc16;font-size:14px;margin-bottom:6px}
+.data-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(132,204,22,0.1)}
+.data-label{color:#94a3b8;font-size:12px}
+.data-val{font-family:'JetBrains Mono',monospace;color:#d9f99d;font-size:13px;font-weight:600}
+.health-bar{height:10px;border-radius:5px;background:rgba(132,204,22,0.15);overflow:hidden;margin-top:4px}
+.health-fill{height:100%;border-radius:5px;transition:all 0.5s}
+.canvas-area{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+canvas{border-radius:12px;background:#0f172a;display:block}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="badge-row">
+        <span class="badge badge-subject">K-5 BIOLOGY</span>
+        <span class="badge badge-free">FREE</span>
+    </div>
+    <h1>What Plants Need<span>Scivra K-5 Biology</span></h1>
+
+    <div class="control-group">
+        <label>Sunlight</label>
+        <input type="range" id="sunlight" min="0" max="100" value="70">
+        <div class="val" id="sunVal">70%</div>
+    </div>
+
+    <div class="control-group">
+        <label>Water</label>
+        <input type="range" id="water" min="0" max="100" value="60">
+        <div class="val" id="waterVal">60%</div>
+    </div>
+
+    <div class="control-group">
+        <label>Soil Nutrients</label>
+        <input type="range" id="nutrients" min="0" max="100" value="80">
+        <div class="val" id="nutVal">80%</div>
+    </div>
+
+    <button class="btn" id="growBtn">Grow +5 Days</button>
+
+    <div class="info-box">
+        <h3>Plant Status</h3>
+        <div class="data-row"><span class="data-label">Day</span><span class="data-val" id="dayVal">0</span></div>
+        <div class="data-row"><span class="data-label">Height</span><span class="data-val" id="heightVal">5 cm</span></div>
+        <div class="data-row"><span class="data-label">Leaves</span><span class="data-val" id="leafVal">2</span></div>
+        <div class="data-row"><span class="data-label">Condition</span><span class="data-val" id="condVal">Healthy</span></div>
+        <div style="margin-top:8px">
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Health</div>
+            <div class="health-bar"><div class="health-fill" id="healthBar" style="width:80%;background:#84cc16"></div></div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h3>Plant Tips</h3>
+        <p id="tipText">Plants need sunlight, water, and nutrients to grow. Try adjusting the sliders to see what happens!</p>
+    </div>
+
+    <button class="btn" id="resetBtn" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#fca5a5">Reset Plant</button>
+</div>
+
+<div class="canvas-area">
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, time = 0;
+
+let plant = { day: 0, height: 5, leaves: 2, health: 80, flowers: 0 };
+
+function resize() {
+    const area = canvas.parentElement;
+    W = area.clientWidth - 40;
+    H = area.clientHeight - 40;
+    canvas.width = W; canvas.height = H;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function getConditions() {
+    return {
+        sun: +document.getElementById('sunlight').value,
+        water: +document.getElementById('water').value,
+        nutrients: +document.getElementById('nutrients').value
+    };
+}
+
+function calcHealth(c) {
+    let h = 100;
+    if (c.sun < 20) h -= 40;
+    else if (c.sun < 40) h -= 15;
+    if (c.water < 15) h -= 45;
+    else if (c.water < 30) h -= 20;
+    if (c.nutrients < 20) h -= 30;
+    else if (c.nutrients < 40) h -= 10;
+    if (c.water > 90) h -= 15;
+    return Math.max(0, Math.min(100, h));
+}
+
+function getCondition(health) {
+    if (health >= 80) return 'Healthy';
+    if (health >= 60) return 'OK';
+    if (health >= 40) return 'Stressed';
+    if (health >= 20) return 'Wilting';
+    return 'Dying';
+}
+
+function getTip(c) {
+    if (c.sun < 20) return 'Your plant needs more sunlight! Without light, it cannot make food through photosynthesis.';
+    if (c.water < 15) return 'Your plant is very thirsty! Water helps carry nutrients from soil to leaves.';
+    if (c.nutrients < 20) return 'The soil needs more nutrients! Plants use minerals from soil to build strong stems and leaves.';
+    if (c.water > 90) return 'Too much water! Roots need air too. Overwatering can drown the roots.';
+    if (c.sun > 90 && c.water < 40) return 'Hot sun + low water = stressed plant. Try giving it more water!';
+    return 'Great conditions! Your plant is happy and growing well.';
+}
+
+function growPlant() {
+    const c = getConditions();
+    const health = calcHealth(c);
+    plant.health = health;
+    plant.day += 5;
+
+    const growthRate = health / 100;
+    plant.height += growthRate * 8;
+    if (plant.height > 5 && growthRate > 0.3) {
+        plant.leaves = Math.min(12, 2 + Math.floor((plant.height - 5) / 8));
+    }
+    if (health < 30) plant.leaves = Math.max(1, plant.leaves - 1);
+    if (plant.height > 40 && health > 70) plant.flowers = Math.min(3, Math.floor((plant.height - 40) / 15));
+
+    updateUI();
+}
+
+function resetPlant() {
+    plant = { day: 0, height: 5, leaves: 2, health: 80, flowers: 0 };
+    updateUI();
+}
+
+function updateUI() {
+    const c = getConditions();
+    document.getElementById('sunVal').textContent = c.sun + '%';
+    document.getElementById('waterVal').textContent = c.water + '%';
+    document.getElementById('nutVal').textContent = c.nutrients + '%';
+    document.getElementById('dayVal').textContent = plant.day;
+    document.getElementById('heightVal').textContent = plant.height.toFixed(1) + ' cm';
+    document.getElementById('leafVal').textContent = plant.leaves;
+
+    const health = calcHealth(c);
+    const cond = getCondition(health);
+    document.getElementById('condVal').textContent = cond;
+    document.getElementById('tipText').textContent = getTip(c);
+
+    const bar = document.getElementById('healthBar');
+    bar.style.width = health + '%';
+    bar.style.background = health > 60 ? '#84cc16' : health > 30 ? '#eab308' : '#ef4444';
+}
+
+function drawSun(c) {
+    if (c.sun < 5) return;
+    const sunX = W * 0.8;
+    const sunY = H * 0.12;
+    const brightness = c.sun / 100;
+    const r = 25 + brightness * 15;
+
+    // glow
+    const grd = ctx.createRadialGradient(sunX, sunY, r * 0.5, sunX, sunY, r * 3);
+    grd.addColorStop(0, `rgba(250,204,21,${brightness * 0.3})`);
+    grd.addColorStop(1, 'rgba(250,204,21,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(sunX - r * 3, sunY - r * 3, r * 6, r * 6);
+
+    // sun body
+    ctx.fillStyle = `rgba(250,204,21,${0.4 + brightness * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // rays
+    for (let i = 0; i < 8; i++) {
+        const angle = time * 0.3 + i * Math.PI / 4;
+        ctx.strokeStyle = `rgba(250,204,21,${brightness * 0.5})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sunX + Math.cos(angle) * (r + 5), sunY + Math.sin(angle) * (r + 5));
+        ctx.lineTo(sunX + Math.cos(angle) * (r + 18), sunY + Math.sin(angle) * (r + 18));
+        ctx.stroke();
+    }
+}
+
+function drawRain(c) {
+    if (c.water < 10) return;
+    const drops = Math.floor(c.water / 8);
+    ctx.fillStyle = 'rgba(96,165,250,0.5)';
+    for (let i = 0; i < drops; i++) {
+        const x = 80 + ((i * 73 + time * 40) % (W * 0.5));
+        const y = ((i * 137 + time * 80) % (H * 0.5)) + H * 0.05;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 2, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawPot() {
+    const potX = W / 2;
+    const potY = H * 0.72;
+    const potW = 120;
+    const potH = 70;
+
+    // soil
+    const c = getConditions();
+    const soilDark = c.water > 40 ? 0.35 : 0.25;
+    ctx.fillStyle = `rgba(120,80,40,${soilDark + 0.3})`;
+    ctx.beginPath();
+    ctx.ellipse(potX, potY, potW / 2 - 5, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // pot body
+    ctx.fillStyle = 'rgba(180,100,50,0.7)';
+    ctx.strokeStyle = 'rgba(200,120,60,0.8)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(potX - potW / 2, potY);
+    ctx.lineTo(potX - potW / 2 + 10, potY + potH);
+    ctx.lineTo(potX + potW / 2 - 10, potY + potH);
+    ctx.lineTo(potX + potW / 2, potY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // pot rim
+    ctx.fillStyle = 'rgba(200,120,60,0.8)';
+    ctx.beginPath();
+    ctx.ellipse(potX, potY, potW / 2 + 5, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(220,140,80,0.6)';
+    ctx.stroke();
+
+    return { x: potX, y: potY };
+}
+
+function drawPlant(potPos) {
+    const c = getConditions();
+    const health = calcHealth(c);
+    const px = potPos.x;
+    const potTop = potPos.y - 5;
+    const stemH = Math.min(plant.height * 2.5, H * 0.55);
+    const wilt = health < 40 ? (40 - health) / 40 : 0;
+
+    // determine colors based on conditions
+    let stemColor, leafColor;
+    if (c.sun < 20) {
+        stemColor = 'rgba(200,200,150,0.7)';
+        leafColor = 'rgba(220,220,160,';
+    } else if (c.nutrients < 25) {
+        stemColor = 'rgba(180,200,60,0.7)';
+        leafColor = 'rgba(200,210,80,';
+    } else {
+        stemColor = `rgba(${80 + (100 - health) * 1.2},${160 + health * 0.4},${30},0.8)`;
+        leafColor = `rgba(${60 + (100 - health)},${180 + health * 0.3},${20},`;
+    }
+
+    // stem (with wilt curve)
+    ctx.strokeStyle = stemColor;
+    ctx.lineWidth = 4 + plant.height * 0.05;
+    ctx.beginPath();
+    ctx.moveTo(px, potTop);
+    const tipX = px + wilt * 30 * Math.sin(time * 0.5);
+    const tipY = potTop - stemH;
+    ctx.quadraticCurveTo(px + wilt * 20, potTop - stemH * 0.5, tipX, tipY);
+    ctx.stroke();
+
+    // leaves
+    for (let i = 0; i < plant.leaves; i++) {
+        const t = (i + 1) / (plant.leaves + 1);
+        const lx = px + wilt * 20 * t * Math.sin(time * 0.5);
+        const ly = potTop - stemH * t;
+        const side = i % 2 === 0 ? 1 : -1;
+        const leafSize = 12 + (1 - Math.abs(t - 0.5)) * 18;
+        const droop = wilt * 15;
+
+        ctx.fillStyle = leafColor + (0.5 + health * 0.005) + ')';
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.quadraticCurveTo(
+            lx + side * leafSize * 1.2, ly - leafSize * 0.5 + droop,
+            lx + side * leafSize * 0.3, ly - leafSize + droop * 1.5
+        );
+        ctx.quadraticCurveTo(
+            lx + side * leafSize * 0.8, ly - leafSize * 0.3 + droop,
+            lx, ly
+        );
+        ctx.fill();
+    }
+
+    // flowers
+    if (plant.flowers > 0) {
+        for (let f = 0; f < plant.flowers; f++) {
+            const fy = tipY + f * 20;
+            const fx = tipX + (f - 1) * 15;
+            const petalR = 6;
+            for (let p = 0; p < 5; p++) {
+                const a = p * Math.PI * 2 / 5 + time * 0.2;
+                ctx.fillStyle = 'rgba(244,114,182,0.7)';
+                ctx.beginPath();
+                ctx.arc(fx + Math.cos(a) * petalR, fy + Math.sin(a) * petalR, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+}
+
+function drawGround() {
+    ctx.fillStyle = 'rgba(30,41,59,0.5)';
+    ctx.fillRect(0, H * 0.85, W, H * 0.15);
+    ctx.strokeStyle = 'rgba(132,204,22,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.85);
+    ctx.lineTo(W, H * 0.85);
+    ctx.stroke();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    time += 0.016;
+
+    const c = getConditions();
+
+    // sky gradient based on sun
+    if (c.sun > 20) {
+        const skyGrd = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+        const alpha = (c.sun / 100) * 0.15;
+        skyGrd.addColorStop(0, `rgba(56,189,248,${alpha})`);
+        skyGrd.addColorStop(1, 'rgba(15,23,42,0)');
+        ctx.fillStyle = skyGrd;
+        ctx.fillRect(0, 0, W, H * 0.5);
+    }
+
+    drawSun(c);
+    drawRain(c);
+    drawGround();
+    const potPos = drawPot();
+    drawPlant(potPos);
+
+    // day counter
+    ctx.font = "bold 14px 'Segoe UI'";
+    ctx.fillStyle = 'rgba(217,249,157,0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Day ' + plant.day, W / 2, 25);
+    ctx.textAlign = 'start';
+
+    requestAnimationFrame(draw);
+}
+
+document.getElementById('sunlight').addEventListener('input', updateUI);
+document.getElementById('water').addEventListener('input', updateUI);
+document.getElementById('nutrients').addEventListener('input', updateUI);
+document.getElementById('growBtn').addEventListener('click', growPlant);
+document.getElementById('resetBtn').addEventListener('click', resetPlant);
+
+updateUI();
+draw();
+</script>
+</body>
+</html>
