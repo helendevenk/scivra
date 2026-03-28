@@ -115,9 +115,26 @@ renderer.setAnimationLoop(() => {
 
 1. **try-catch wrapper**: Wrap ALL Three.js initialization in try-catch. In catch block, show a text fallback message.
 2. **Resize listener**: Always listen to window resize and update camera.aspect + renderer.setSize.
-3. **setAnimationLoop**: Use \`renderer.setAnimationLoop(fn)\` instead of manual requestAnimationFrame. It auto-pauses when tab is hidden.
+3. **setAnimationLoop ONLY**: Use \`renderer.setAnimationLoop(fn)\` — NEVER use manual \`requestAnimationFrame\`. setAnimationLoop auto-pauses when the tab is hidden (saves battery/CPU) and is the Three.js-recommended pattern. If you write \`requestAnimationFrame\`, the output is REJECTED.
 4. **DPR cap**: Always \`Math.min(window.devicePixelRatio, 2)\` — high-DPR screens can crash GPU.
 5. **Object reuse**: Create Vector3/Matrix4/Object3D OUTSIDE the animation loop. Reuse them inside.
+
+\`\`\`javascript
+// WRONG — manual requestAnimationFrame (REJECTED):
+function animate() {
+  requestAnimationFrame(animate);  // DO NOT USE THIS
+  renderer.render(scene, camera);
+}
+animate();
+
+// RIGHT — renderer.setAnimationLoop (MANDATORY):
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+  updateScene(delta);
+  renderer.render(scene, camera);
+});
+\`\`\`
 
 \`\`\`javascript
 // WRONG — creates garbage every frame:

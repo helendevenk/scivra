@@ -14,15 +14,23 @@ export const physicsConfig: DisciplineConfig = {
 ## Physics-Specific Visualization Requirements
 
 ### Force & Motion Visualization
-- Forces: Use ArrowHelper — red for force, blue for velocity, green for acceleration
+- Do NOT use ArrowHelper for velocity/force vectors — they rotate with the object angle
+  and confuse students (looks like a bug). Display velocity/force as numbers in the data dashboard.
+- ArrowHelper is acceptable ONLY for static force diagrams (free body diagrams) where the arrow
+  direction is fixed and does not animate.
 - Always show coordinate axes with SI unit labels
 - Trajectories: Use trail lines (circular buffer, MAX_TRAIL=500)
 - Collision: Show momentum vectors before/after, display conservation check
 
-### Energy Visualization
-- Energy bar chart: kinetic (blue), potential (red), total (green dashed line)
-- Total energy should remain constant in conservative systems (visual validation)
-- Show energy transfer animations (e.g., potential↔kinetic in pendulum)
+### Energy Dashboard (Physics-Specific)
+- Top-right overlay panel with horizontal bar chart:
+  - KE (blue #3B82F6) — kinetic energy
+  - PE (red #EF4444) — potential energy
+  - Total (green #22C55E) — should be constant in conservative systems
+- Bar width = percentage of total energy
+- Display numeric values (e.g., "KE: 0.42 J") next to each bar
+- Total energy staying constant is a visual validation for students
+- Energy formula: E = K + U = ½mv² + mgh = const (NOT "E = mgh = ½mv²" which implies KE equals PE)
 
 ### Field Visualization
 - Electric/magnetic fields: Use field lines (ArrowHelper array) or color gradient
@@ -34,11 +42,60 @@ export const physicsConfig: DisciplineConfig = {
 - Display constants in the formula panel with labels
 - If user adjusts g (e.g., for Moon/Mars), show planet label
 
-### Numerical Methods
-- Default: Velocity Verlet (good energy conservation)
+### Numerical Methods — Code Templates
+
+#### Velocity Verlet Integration (DEFAULT — use instead of Euler)
+
+Second-order accuracy, conserves energy — critical for pendulums, orbits, springs.
+
+\`\`\`javascript
+function verletStep(dt) {
+  const a1 = getAcceleration(pos, vel);
+  const velHalf = vel + 0.5 * a1 * dt;
+  pos += velHalf * dt;
+  const a2 = getAcceleration(pos, velHalf);
+  vel = velHalf + 0.5 * a2 * dt;
+}
+\`\`\`
+
+#### Adaptive Sub-Stepping (MANDATORY)
+
+Never run physics with raw frame deltaTime. Always sub-step:
+
+\`\`\`javascript
+function physicsUpdate(dt) {
+  const maxSubStep = 0.002; // 2ms per step
+  const steps = Math.ceil(dt / maxSubStep);
+  const subDt = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    verletStep(subDt);
+  }
+}
+\`\`\`
+
+#### Damping Parameter
+Include a "Damping" slider (0 to 0.5, default 0) when the system has dissipation.
+Implementation: add \`-damping * velocity\` term to acceleration function.
+
 - Complex systems: RK4 (Runge-Kutta 4th order)
-- Time step: adaptive or capped at dt=0.02s to prevent explosion
-- Tab-switch protection: if dt > 0.1s after resume, reset to 0.02s
+- Tab-switch protection: if dt > 0.1s after resume, cap to 0.02s
+
+### Period Measurement (for oscillating systems)
+
+- Detect zero-crossings (e.g., angle crosses 0 going in the same direction)
+- Time the interval between two consecutive same-direction crossings = one full period
+- Display "Measured T" alongside "Theoretical T" in stats panel
+- This teaches: theory is approximation (small angle), simulation solves full nonlinear equation
+
+### Physics Preset Examples (reference for AI)
+
+| Topic | Suggested Presets |
+|-------|------------------|
+| Pendulum | Earth (default), Moon (g=1.6), Mars (g=3.7), Large Angle (θ=80°) |
+| Projectile | Baseball, Cannonball, 45° Optimal, Moon Shot |
+| Spring | Soft/Stiff/Heavy/Critical Damping |
+| Wave | Low/High Freq, Constructive/Destructive |
+| Circuit | LED, Motor, Heater |
 `,
 
   visualizationHints: `

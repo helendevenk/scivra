@@ -4,15 +4,21 @@ import { getVisualDesignPrompt } from './prompt-modules/visual-design';
 import { getSvgHybridPrompt } from './prompt-modules/svg-hybrid';
 import { getInteractionPrompt } from './prompt-modules/interaction';
 import { getPostProcessingPrompt } from './prompt-modules/post-processing';
+import { getPedagogyPrompt } from './prompt-modules/pedagogy';
 import { getAutopilotDomPrompt } from '../autopilot/prompt-modules/autopilot-dom';
 import { getDisciplineConfig } from './disciplines';
+
+import type { ExperimentPromptConfig } from './types';
 
 /**
  * 组装完整 System Prompt
  * @param discipline 学科 ID，不传或传 undefined 时行为与旧版 100% 一致
+ * @param version prompt 版本，'v2' 包含 pedagogy 模块，'v1' 兼容旧版（CTO 回滚方案）
  */
-export function getSystemPrompt(discipline?: string): string {
+export function getSystemPrompt(discipline?: string, version: 'v1' | 'v2' = 'v2'): string {
   const config = discipline ? getDisciplineConfig(discipline) : null;
+  const pedagogyBlock = version === 'v2' ? `\n${getPedagogyPrompt()}\n` : '';
+
   return `You are AetherViz, a world-class interactive scientific visualization generator. Your sole output is a single, complete, self-contained HTML file that produces stunning, interactive 3D educational visualizations.
 
 ## OUTPUT FORMAT
@@ -40,16 +46,16 @@ export function getSystemPrompt(discipline?: string): string {
 - Detect device: \`navigator.hardwareConcurrency\` + WebGL renderer info → high/medium/low quality tier
 - Adaptive: particles (5000/2000/500), geometry segments (32/16/8), shadows (on/off/off)
 - Include FPS counter (top-left, small monospace text)
-- Use requestAnimationFrame via renderer.setAnimationLoop(), never setInterval
+- MUST use \`renderer.setAnimationLoop(fn)\` — NEVER manual \`requestAnimationFrame()\` or \`setInterval\`
 - Cap delta time: \`Math.min(clock.getDelta(), 0.05)\` to prevent physics explosion after tab switch
 
 ## CONTENT STRUCTURE (all sections mandatory)
 1. **Title Bar** — Subject icon + topic name + one-line description, gradient background matching subject
-2. **Left Panel (30%, collapsible)** — Core formulas (KaTeX), principle explanation, knowledge cards (2-3)
-3. **Main Canvas (70%)** — Three.js 3D scene with OrbitControls, FPS counter top-left
-4. **Control Panel** — Glassmorphism style, 3+ sliders with label+value+unit, Play/Pause, Reset, Random Experiment buttons
+2. **Left Panel (30%, collapsible)** — Core formulas (KaTeX), concept explanation, knowledge cards (2-3), Why It Matters section (see Pedagogy section)
+3. **Main Canvas (70%)** — Three.js 3D scene with OrbitControls, FPS counter top-left, data dashboard overlay
+4. **Control Panel** — Glassmorphism style, 3+ sliders with label+value+unit, Play/Pause, Reset, Random Experiment, and 3+ preset experiment buttons
 5. **Formula Section** — 2+ core formulas rendered with \`katex.render()\`, values update when sliders change
-6. **Quiz Panel** — Collapsible (right-bottom floating button when hidden, 360×380px when expanded), 1-2 multiple-choice questions with instant color feedback
+6. **Quiz Panel** — Collapsible (right-bottom floating button when hidden, 360×380px when expanded), 3 application-type multiple-choice questions with instant color feedback (see Pedagogy section for quality standards)
 
 ## SECURITY CONSTRAINTS (STRICTLY ENFORCED)
 - NEVER use: eval(), new Function(), setTimeout/setInterval with string arguments
@@ -76,12 +82,17 @@ ${getPostProcessingPrompt()}
 ${getSvgHybridPrompt()}
 
 ${getInteractionPrompt()}
-
+${pedagogyBlock}
 ${getAutopilotDomPrompt()}
 ${config ? `\n${config.systemPromptModule}\n\n${config.visualizationHints}\n\n${config.analyticalSolutions}` : ''}`;
 }
 
-export function buildUserPrompt(topic: string, language: 'zh' | 'en', discipline?: string): string {
+export function buildUserPrompt(
+  topic: string,
+  language: 'zh' | 'en',
+  discipline?: string,
+  experimentConfig?: ExperimentPromptConfig,
+): string {
   const langInstruction = language === 'zh'
     ? '所有文本内容（标题、描述、知识卡片、测验题目和选项）必须使用中文。变量名和代码注释用英文。'
     : 'All text content (title, description, knowledge cards, quiz questions and options) must be in English.';
@@ -89,18 +100,44 @@ export function buildUserPrompt(topic: string, language: 'zh' | 'en', discipline
   const config = discipline ? getDisciplineConfig(discipline) : null;
   const disciplineContext = config ? `\nThis is a ${config.name.en} visualization.\n` : '';
 
+  // 从实验配置注入具体教学上下文
+  let teachingContext = '';
+  if (experimentConfig) {
+    if (experimentConfig.parameters?.length) {
+      teachingContext += '\nKey parameters to include as sliders:\n';
+      for (const p of experimentConfig.parameters) {
+        teachingContext += `- ${p.label} (${p.unit}): range ${p.min}–${p.max}, default ${p.default}\n`;
+      }
+    }
+    if (experimentConfig.formulas?.length) {
+      teachingContext += '\nCore formulas that MUST appear (KaTeX rendered):\n';
+      for (const f of experimentConfig.formulas) {
+        teachingContext += `- ${f.latex} — ${f.description}\n`;
+      }
+    }
+    if (experimentConfig.theory) {
+      teachingContext += `\nTheory context for the left panel explanation:\n${experimentConfig.theory}\n`;
+    }
+    if (experimentConfig.challenges?.length) {
+      teachingContext += '\nQuiz questions to include (rephrase as multiple-choice with 4 options):\n';
+      for (const c of experimentConfig.challenges) {
+        teachingContext += `- Q: ${c.question} (Hint: ${c.hint})\n`;
+      }
+    }
+  }
+
   return `Create an interactive 3D scientific visualization about: "${topic}"
 ${disciplineContext}
 ${langInstruction}
-
+${teachingContext}
 Requirements:
 - The 3D scene MUST directly visualize the core concept of "${topic}" using the Three.js patterns from the system prompt
 - Choose the correct render mode: pure 3D (spatial phenomena) / SVG (2D graphs) / hybrid (both)
 - Select materials from the decision tree based on what objects represent
 - Sliders MUST control parameters that are physically/scientifically meaningful
-- Slider changes MUST simultaneously update: 3D scene + vectors/particles + formulas (KaTeX recalculation)
-- Formulas must be the actual governing equations with live-calculated values
-- Include ArrowHelper vectors for force/velocity/acceleration where applicable
+- Slider changes MUST simultaneously update: 3D scene + particles/trails + formulas (KaTeX recalculation)
+- Follow ALL pedagogy requirements: data dashboard, 3+ presets with labels, speed control, 3 application-type quiz questions
+- Include discipline-specific numerical methods and measurement tools as specified
 - Include particle trails for trajectories where applicable
 - Use InstancedMesh if scene has >50 identical objects
 
