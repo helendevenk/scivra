@@ -139,6 +139,51 @@ export function checkQuality(html: string, discipline?: string): QualityResult {
     warnings.push('Missing DOMContentLoaded handler — scripts may run before DOM is ready');
   }
 
+  // === Pedagogy checks (CTO D7: warning-level, non-blocking) ===
+  const quizMatches = html.match(/type=["']radio["']/g);
+  const quizGroupCount = quizMatches ? Math.floor(quizMatches.length / 3) : 0; // ~3-4 options per question
+  if (quizGroupCount < 3) {
+    warnings.push(`[pedagogy] Quiz count: found ~${quizGroupCount} questions, expected >= 3`);
+  }
+
+  const presetMatches = html.match(/btn-preset|preset-item|preset-name|applyPreset|data-preset/g);
+  const presetCount = presetMatches ? new Set(presetMatches).size > 1 ? (html.match(/applyPreset|onclick.*preset/g) || []).length : 0 : 0;
+  if (presetCount < 3 && (html.match(/preset/gi) || []).length < 3) {
+    warnings.push('[pedagogy] Preset count: fewer than 3 preset experiment buttons detected');
+  }
+
+  const speedMatches = html.match(/0\.25x|0\.5x|1x|2x|3x/g);
+  if (!speedMatches || speedMatches.length < 3) {
+    warnings.push('[pedagogy] Speed control: fewer than 3 speed options (0.25x/0.5x/1x/2x/3x) detected');
+  }
+
+  const hasDashboard = /overlay-stats|stat-row|data-row|data-label|tabular-nums|SIMULATION DATA/i.test(html);
+  if (!hasDashboard) {
+    warnings.push('[pedagogy] Data dashboard: no real-time statistics overlay detected');
+  }
+
+  // Rough teaching text length check: extract text between left panel tags
+  const textContent = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const educationalKeywords = textContent.match(/\b(because|therefore|this means|for example|in real life|counterintuitive|important|conservation|principle)\b/gi);
+  if (!educationalKeywords || educationalKeywords.length < 5) {
+    warnings.push('[pedagogy] Teaching text: educational content appears thin (fewer than 5 explanatory phrases detected)');
+  }
+
+  // === onclick + try-catch scope bug detection ===
+  // If HTML uses onclick="fn()" AND all JS is inside try{}, functions declared
+  // with const/let are block-scoped and invisible to onclick handlers.
+  // Safe patterns: addEventListener (no onclick needed) or window.fn = fn
+  const hasOnclick = /\bonclick\s*=\s*["']/.test(html);
+  if (hasOnclick && hasTryCatch) {
+    const hasWindowExpose = /window\.\w+\s*=/.test(html);
+    if (!hasWindowExpose) {
+      warnings.push(
+        '[scope] HTML uses onclick="" with try-catch wrapper but no window.fn exposure — ' +
+        'block-scoped functions are invisible to onclick. Use addEventListener or add window.fn = fn'
+      );
+    }
+  }
+
   // === Discipline-specific checks ===
   if (discipline) {
     const config = getDisciplineConfig(discipline);

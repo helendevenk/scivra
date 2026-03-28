@@ -710,6 +710,10 @@ export const upgGeneration = pgTable(
     validationScore: integer('validation_score'),
     validationDetails: text('validation_details'),
     validatedAt: timestamp('validated_at'),
+    // Phase 4: AI Review (PackyAPI)
+    reviewStatus: text('review_status'), // pending/reviewing/passed/failed/error
+    reviewResult: text('review_result'), // JSON stringified review result
+    reviewedAt: timestamp('reviewed_at'),
     // Phase 3.5: Refinement
     version: integer('version').default(1),
     parentId: text('parent_id'),
