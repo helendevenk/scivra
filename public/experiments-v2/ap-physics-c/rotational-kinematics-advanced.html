@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotational Kinematics Advanced — AP Physics C</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { margin:0; background:#0f172a; color:#e2e8f0; font-family:'Inter',sans-serif; overflow:hidden; }
+  .glass { background:rgba(15,23,42,0.75); backdrop-filter:blur(12px); border:1px solid rgba(139,92,246,0.2); }
+  .katex { color:#c4b5fd; font-size:0.88em; }
+  .slider-track { -webkit-appearance:none; height:4px; border-radius:2px; background:linear-gradient(to right,#8B5CF6,#3B82F6); outline:none; width:100%; }
+  .slider-track::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#8B5CF6; cursor:pointer; }
+  .data-overlay { position:absolute; top:12px; left:12px; z-index:10; }
+  .energy-panel { position:absolute; top:12px; right:12px; z-index:10; }
+  .bar-wrap { display:flex; align-items:center; gap:6px; margin:3px 0; }
+  .bar-bg { width:80px; height:8px; background:#1e293b; border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 0.1s; }
+  .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:999; padding:8px 20px; border-radius:20px; background:rgba(139,92,246,0.9); display:none; font-size:0.85rem; }
+  .preset-btn { background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.4); color:#c4b5fd; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.75rem; transition:all 0.2s; }
+  .preset-btn:hover { background:rgba(139,92,246,0.4); }
+  .card { background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:10px; margin:8px 0; }
+  .quiz-option { background:rgba(30,41,59,0.8); border:1px solid rgba(139,92,246,0.3); padding:6px 10px; border-radius:6px; cursor:pointer; margin:3px 0; font-size:0.8rem; transition:all 0.2s; }
+  .quiz-option:hover { border-color:#8B5CF6; }
+  ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:#8B5CF6; border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="flex flex-col h-screen">
+  <!-- NAV -->
+  <nav class="glass flex items-center justify-between px-4 py-2 z-20 border-b border-purple-500/20">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#8B5CF6,#3B82F6)">
+        <span class="text-white text-sm font-bold">I</span>
+      </div>
+      <div>
+        <div class="text-sm font-semibold text-white">Rotational Kinematics — Advanced</div>
+        <div class="text-xs text-purple-300">AP Physics C: Mechanics</div>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="resetSim()" class="preset-btn">↺ Reset</button>
+      <button onclick="toggleFullscreen()" class="preset-btn">⛶ Fullscreen</button>
+      <button onclick="showAbout()" class="preset-btn">ℹ About</button>
+    </div>
+  </nav>
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- LEFT SIDEBAR -->
+    <div class="w-80 flex-shrink-0 overflow-y-auto p-3 glass border-r border-purple-500/20">
+      <h3 class="text-purple-300 font-semibold text-sm mb-2">Core Equations</h3>
+      <div class="card">
+        <div id="eq1" class="mb-1"></div>
+        <div id="eq2" class="mb-1"></div>
+        <div id="eq3" class="mb-1"></div>
+        <div id="eq4" class="mb-1"></div>
+        <div id="eq5"></div>
+      </div>
+
+      <div class="card">
+        <h4 class="text-blue-300 text-xs font-semibold mb-2">Moment of Inertia</h4>
+        <p class="text-slate-300 text-xs leading-relaxed">I = Σmᵢrᵢ² quantifies resistance to rotational acceleration. The distribution of mass relative to the axis determines I. Objects with mass concentrated at the rim have larger I than those with mass near the center.</p>
+      </div>
+
+      <div class="card">
+        <h4 class="text-blue-300 text-xs font-semibold mb-2">Rolling Without Slipping</h4>
+        <p class="text-slate-300 text-xs leading-relaxed">The contact point has zero velocity: <strong class="text-purple-300">v_cm = Rω</strong> and <strong class="text-purple-300">a_cm = Rα</strong>. On an incline, the translational and rotational equations combine: a = g sinθ / (1 + I/MR²).</p>
+      </div>
+
+      <div class="card">
+        <h4 class="text-blue-300 text-xs font-semibold mb-2">Parallel Axis Theorem</h4>
+        <p class="text-slate-300 text-xs leading-relaxed">I about any parallel axis = I_cm + Md². Lets you find I about any axis if you know I about the center of mass axis.</p>
+      </div>
+
+      <div class="card">
+        <h4 class="text-orange-300 text-xs font-semibold mb-2">Why It Matters (AP Physics C)</h4>
+        <p class="text-slate-300 text-xs leading-relaxed">Rolling dynamics, parallel axis theorem, and I calculations are heavily tested. The hollow cylinder always reaches the bottom last because more energy is stored in rotation. Understanding this is essential for both MC and FR sections.</p>
+      </div>
+
+      <!-- I Comparison Table -->
+      <div class="card">
+        <h4 class="text-yellow-300 text-xs font-semibold mb-2">I Comparison</h4>
+        <div class="text-xs space-y-1">
+          <div class="flex justify-between"><span class="text-slate-400">Solid Sphere</span><span class="text-blue-300">2/5 MR²</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Solid Cylinder</span><span class="text-blue-300">1/2 MR²</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Hollow Cylinder</span><span class="text-blue-300">MR²</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Rod (about end)</span><span class="text-blue-300">1/3 ML²</span></div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="card">
+        <h4 class="text-yellow-300 text-xs font-semibold mb-2">Quick Check</h4>
+        <div id="q1" class="mb-3">
+          <p class="text-xs text-slate-200 mb-1">1. A solid sphere rolls down a frictionless incline vs a hollow cylinder of same M,R. Which reaches the bottom first?</p>
+          <div class="quiz-option" onclick="checkQ(1,'a')">a) Hollow cylinder (larger I)</div>
+          <div class="quiz-option" onclick="checkQ(1,'b')">b) Solid sphere (smaller I, less energy in spin)</div>
+          <div class="quiz-option" onclick="checkQ(1,'c')">c) They arrive together</div>
+          <div id="q1-fb" class="text-xs mt-1"></div>
+        </div>
+        <div id="q2" class="mb-3">
+          <p class="text-xs text-slate-200 mb-1">2. A rod (I_cm = 1/12 ML²) is pivoted at one end. What is I about the end?</p>
+          <div class="quiz-option" onclick="checkQ(2,'a')">a) 1/12 ML²</div>
+          <div class="quiz-option" onclick="checkQ(2,'b')">b) 1/3 ML²</div>
+          <div class="quiz-option" onclick="checkQ(2,'c')">c) 1/2 ML²</div>
+          <div id="q2-fb" class="text-xs mt-1"></div>
+        </div>
+        <div id="q3">
+          <p class="text-xs text-slate-200 mb-1">3. For rolling without slipping, what is the ratio of rotational KE to total KE for a solid cylinder?</p>
+          <div class="quiz-option" onclick="checkQ(3,'a')">a) 1/2</div>
+          <div class="quiz-option" onclick="checkQ(3,'b')">b) 1/3</div>
+          <div class="quiz-option" onclick="checkQ(3,'c')">c) 2/5</div>
+          <div id="q3-fb" class="text-xs mt-1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANVAS -->
+    <div id="canvas-container" class="flex-1 relative">
+      <canvas id="main-canvas"></canvas>
+      <div class="data-overlay glass rounded-lg p-2 text-xs">
+        <div class="text-purple-300 font-semibold mb-1">Kinematics</div>
+        <div>v_cm = <span id="val-vcm" class="text-blue-300">0.00</span> m/s</div>
+        <div>ω = <span id="val-omega" class="text-blue-300">0.00</span> rad/s</div>
+        <div>α = <span id="val-alpha" class="text-yellow-300">0.00</span> rad/s²</div>
+        <div>I = <span id="val-I" class="text-purple-300 font-bold">0.000</span> kg·m²</div>
+        <div>a_cm = <span id="val-acm" class="text-green-300">0.00</span> m/s²</div>
+        <div>θ_rot = <span id="val-theta" class="text-slate-300">0.00</span> rad</div>
+      </div>
+      <div class="energy-panel glass rounded-lg p-2 text-xs">
+        <div class="text-purple-300 font-semibold mb-1">Energy</div>
+        <div class="bar-wrap"><span class="text-blue-400 w-8">KE_t</span><div class="bar-bg"><div id="bar-ket" class="bar-fill" style="background:#3B82F6;width:40%"></div></div><span id="lbl-ket" class="text-blue-300 w-12">0J</span></div>
+        <div class="bar-wrap"><span class="text-purple-400 w-8">KE_r</span><div class="bar-bg"><div id="bar-ker" class="bar-fill" style="background:#8B5CF6;width:20%"></div></div><span id="lbl-ker" class="text-purple-300 w-12">0J</span></div>
+        <div class="bar-wrap"><span class="text-red-400 w-8">PE</span><div class="bar-bg"><div id="bar-pe" class="bar-fill" style="background:#EF4444;width:40%"></div></div><span id="lbl-pe" class="text-red-300 w-12">0J</span></div>
+        <div class="bar-wrap"><span class="text-green-400 w-8">Total</span><div class="bar-bg"><div id="bar-tot" class="bar-fill" style="background:#22C55E;width:100%"></div></div><span id="lbl-tot" class="text-green-300 w-12">0J</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CONTROLS -->
+  <div class="glass border-t border-purple-500/20 px-4 py-2">
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex gap-4 flex-1 flex-wrap">
+        <div class="flex flex-col gap-1 min-w-28">
+          <label class="text-xs text-slate-400">Mass M: <span id="lbl-mass" class="text-purple-300">1.0</span> kg</label>
+          <input type="range" id="sl-mass" class="slider-track" min="0.5" max="5.0" value="1.0" step="0.1" oninput="updateSliders()">
+        </div>
+        <div class="flex flex-col gap-1 min-w-28">
+          <label class="text-xs text-slate-400">Radius R: <span id="lbl-radius" class="text-purple-300">0.5</span> m</label>
+          <input type="range" id="sl-radius" class="slider-track" min="0.2" max="1.2" value="0.5" step="0.05" oninput="updateSliders()">
+        </div>
+        <div class="flex flex-col gap-1 min-w-28">
+          <label class="text-xs text-slate-400">Incline θ: <span id="lbl-theta" class="text-purple-300">30</span>°</label>
+          <input type="range" id="sl-theta" class="slider-track" min="5" max="60" value="30" step="1" oninput="updateSliders()">
+        </div>
+      </div>
+      <div class="flex gap-2 items-center">
+        <button onclick="togglePlay()" id="btn-play" class="preset-btn px-3">▶ Play</button>
+        <button onclick="resetSim()" class="preset-btn">↺</button>
+        <select id="speed-sel" class="preset-btn bg-transparent" onchange="updateSpeed()">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+          <option value="3">3×</option>
+        </select>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <span class="text-xs text-slate-500">Presets:</span>
+        <button onclick="loadPreset('sphere')" class="preset-btn">Solid Sphere (2/5MR²)</button>
+        <button onclick="loadPreset('hollowcyl')" class="preset-btn">Hollow Cylinder (MR²)</button>
+        <button onclick="loadPreset('rod')" class="preset-btn">Rod About End (1/3ML²)</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast text-white"></div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0) {
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sd.theta*d; spherical.phi+=sd.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+// Scene
+var canvas = document.getElementById('main-canvas');
+var container = document.getElementById('canvas-container');
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(8, 6, 10);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+var dl1 = new THREE.DirectionalLight(0x8B5CF6, 0.8); dl1.position.set(5,10,5); scene.add(dl1);
+var dl2 = new THREE.DirectionalLight(0x3B82F6, 0.5); dl2.position.set(-5,5,-5); scene.add(dl2);
+var pl = new THREE.PointLight(0xffffff, 0.4); pl.position.set(0,8,0); scene.add(pl);
+
+// State
+var sim = {
+  M: 1.0, R: 0.5, thetaDeg: 30,
+  shapeType: 'sphere', // sphere | hollowcyl | solidcyl | rod
+  vcm: 0, omega_rot: 0,
+  x: 0, rollAngle: 0,
+  playing: false, speed: 1.0
+};
+
+var inclineGroup = new THREE.Group();
+scene.add(inclineGroup);
+
+var inclineMesh = null;
+var rollingObj = null;
+var inclineLen = 8;
+
+function getI() {
+  var M = sim.M, R = sim.R;
+  if (sim.shapeType === 'sphere') return 0.4 * M * R * R;
+  if (sim.shapeType === 'solidcyl') return 0.5 * M * R * R;
+  if (sim.shapeType === 'hollowcyl') return M * R * R;
+  if (sim.shapeType === 'rod') return (1/3) * M * (inclineLen * 0.6) * (inclineLen * 0.6);
+  return 0.5 * M * R * R;
+}
+
+function getAccel() {
+  var theta = sim.thetaDeg * Math.PI / 180;
+  var I = getI();
+  var factor = (sim.shapeType === 'rod') ? 0 : I / (sim.M * sim.R * sim.R);
+  return 9.81 * Math.sin(theta) / (1 + factor);
+}
+
+function buildScene() {
+  // Remove old
+  while (inclineGroup.children.length) inclineGroup.remove(inclineGroup.children[0]);
+  if (inclineMesh) { scene.remove(inclineMesh); }
+  if (rollingObj) { scene.remove(rollingObj); }
+
+  var theta = sim.thetaDeg * Math.PI / 180;
+  // Incline plane
+  var planeGeo = new THREE.BoxGeometry(inclineLen, 0.15, 2.5);
+  var planeMat = new THREE.MeshPhongMaterial({ color: 0x334155, side: THREE.DoubleSide });
+  inclineMesh = new THREE.Mesh(planeGeo, planeMat);
+  inclineMesh.rotation.z = -theta;
+  inclineMesh.position.set(Math.cos(-theta) * inclineLen/2 - 0.5, Math.sin(theta) * inclineLen/2 - 0.1, 0);
+  scene.add(inclineMesh);
+
+  // Rolling object
+  var geo, mat;
+  mat = new THREE.MeshPhongMaterial({ color: 0x8B5CF6, shininess: 80, transparent: true, opacity: 0.9 });
+  if (sim.shapeType === 'sphere') {
+    geo = new THREE.SphereGeometry(sim.R, 32, 32);
+  } else if (sim.shapeType === 'solidcyl' || sim.shapeType === 'hollowcyl') {
+    var innerR = sim.shapeType === 'hollowcyl' ? sim.R * 0.85 : 0;
+    if (innerR > 0) {
+      geo = new THREE.CylinderGeometry(sim.R, sim.R, sim.R * 1.5, 32);
+      // Add inner void visual
+      var innerGeo = new THREE.CylinderGeometry(innerR, innerR, sim.R * 1.6, 32);
+      var innerMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, side: THREE.BackSide });
+      var innerMesh = new THREE.Mesh(innerGeo, innerMat);
+      rollingObj = new THREE.Group();
+      rollingObj.add(new THREE.Mesh(geo, mat));
+      rollingObj.add(innerMesh);
+    } else {
+      geo = new THREE.CylinderGeometry(sim.R, sim.R, sim.R * 1.5, 32);
+      rollingObj = new THREE.Mesh(geo, mat);
+    }
+  } else if (sim.shapeType === 'rod') {
+    geo = new THREE.BoxGeometry(0.15, 0.15, inclineLen * 0.6);
+    rollingObj = new THREE.Mesh(geo, mat);
+  }
+  if (!rollingObj) rollingObj = new THREE.Mesh(geo, mat);
+  scene.add(rollingObj);
+
+  // Axis line through rolling obj
+  var axisGeo = new THREE.CylinderGeometry(0.03, 0.03, sim.R * 1.8, 8);
+  var axisMesh = new THREE.Mesh(axisGeo, new THREE.MeshPhongMaterial({ color: 0x60A5FA }));
+  axisMesh.rotation.x = Math.PI / 2;
+  if (rollingObj instanceof THREE.Group) {
+    rollingObj.add(axisMesh);
+  } else {
+    var grp = new THREE.Group();
+    grp.add(rollingObj);
+    grp.add(axisMesh);
+    rollingObj = grp;
+    scene.remove(rollingObj.children[0]);
+    scene.add(rollingObj);
+  }
+
+  sim.x = 0;
+  sim.vcm = 0;
+  sim.omega_rot = 0;
+  sim.rollAngle = 0;
+  updateObjPosition();
+}
+
+function updateObjPosition() {
+  var theta = sim.thetaDeg * Math.PI / 180;
+  var cosT = Math.cos(theta), sinT = Math.sin(theta);
+  var startX = -inclineLen * 0.5 * cosT + 0.5;
+  var startY = inclineLen * 0.5 * sinT + sim.R;
+  var px = startX + sim.x * cosT;
+  var py = startY - sim.x * sinT;
+  rollingObj.position.set(px, py, 0);
+  rollingObj.rotation.z = sim.rollAngle;
+}
+
+function verletStep(pos, vel, acc, dt) {
+  var a1 = acc(pos, vel);
+  var vHalf = vel + 0.5 * a1 * dt;
+  var newPos = pos + vHalf * dt;
+  var a2 = acc(newPos, vHalf);
+  var newVel = vHalf + 0.5 * a2 * dt;
+  return { pos: newPos, vel: newVel };
+}
+
+function physicsUpdate(dt) {
+  if (dt > 0.1) dt = 0.02;
+  var steps = Math.ceil(dt / 0.002);
+  var subDt = dt / steps;
+  var a = getAccel();
+  for (var i = 0; i < steps; i++) {
+    var res = verletStep(sim.x, sim.vcm, function() { return a; }, subDt);
+    sim.x = res.pos;
+    sim.vcm = res.vel;
+    sim.omega_rot = sim.vcm / sim.R;
+    sim.rollAngle -= sim.omega_rot * subDt;
+    if (sim.x > inclineLen * 0.9) { sim.x = 0; sim.vcm = 0; sim.rollAngle = 0; }
+  }
+}
+
+// Sliders
+function updateSliders() {
+  sim.M = parseFloat(document.getElementById('sl-mass').value);
+  sim.R = parseFloat(document.getElementById('sl-radius').value);
+  sim.thetaDeg = parseFloat(document.getElementById('sl-theta').value);
+  document.getElementById('lbl-mass').textContent = sim.M.toFixed(1);
+  document.getElementById('lbl-radius').textContent = sim.R.toFixed(2);
+  document.getElementById('lbl-theta').textContent = sim.thetaDeg.toFixed(0);
+  buildScene();
+}
+
+function updateSpeed() { sim.speed = parseFloat(document.getElementById('speed-sel').value); }
+
+function togglePlay() {
+  sim.playing = !sim.playing;
+  document.getElementById('btn-play').textContent = sim.playing ? '⏸ Pause' : '▶ Play';
+}
+
+function resetSim() {
+  sim.x = 0; sim.vcm = 0; sim.omega_rot = 0; sim.rollAngle = 0;
+  sim.playing = false;
+  document.getElementById('btn-play').textContent = '▶ Play';
+  updateObjPosition();
+}
+
+function loadPreset(name) {
+  sim.shapeType = name === 'sphere' ? 'sphere' : name === 'hollowcyl' ? 'hollowcyl' : name === 'rod' ? 'rod' : 'solidcyl';
+  document.getElementById('sl-mass').value = 1.0;
+  document.getElementById('sl-radius').value = 0.5;
+  document.getElementById('sl-theta').value = 30;
+  if (name === 'rod') {
+    showToast('Rod pivoting about one end — I = 1/3 ML² via Parallel Axis Theorem');
+  } else if (name === 'hollowcyl') {
+    showToast('Hollow Cylinder — I = MR², reaches bottom last! All mass at rim');
+  } else {
+    showToast('Solid Sphere — I = 2/5 MR², wins the race! Least energy in rotation');
+  }
+  updateSliders();
+}
+
+function checkQ(qn, ans) {
+  var correct = {1:'b', 2:'b', 3:'b'};
+  var fb = document.getElementById('q'+qn+'-fb');
+  if (ans === correct[qn]) {
+    fb.textContent = '✓ Correct!'; fb.style.color = '#22C55E';
+  } else {
+    fb.textContent = '✗ Try again. Hint: smaller I → more translational KE → faster'; fb.style.color = '#EF4444';
+  }
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(window._tt); window._tt = setTimeout(function(){ t.style.display='none'; }, 3000);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+function showAbout() { showToast('AP Physics C: Rotational Kinematics — rolling, I, parallel axis theorem'); }
+
+document.addEventListener('keydown', function(e) {
+  if (e.code==='Space'){e.preventDefault();togglePlay();}
+  if (e.code==='KeyR') resetSim();
+  if (e.key==='1') loadPreset('sphere');
+  if (e.key==='2') loadPreset('hollowcyl');
+  if (e.key==='3') loadPreset('rod');
+});
+
+function resizeIfNeeded() {
+  var w = container.clientWidth, h = container.clientHeight;
+  if (canvas.width !== w || canvas.height !== h) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resizeIfNeeded);
+
+var lastTime = 0;
+renderer.setAnimationLoop(function(time) {
+  var dt = (time - lastTime) / 1000; lastTime = time;
+  resizeIfNeeded();
+  if (sim.playing) physicsUpdate(dt * sim.speed);
+  if (rollingObj) updateObjPosition();
+
+  // Energy
+  var I = getI();
+  var ket = 0.5 * sim.M * sim.vcm * sim.vcm;
+  var ker = 0.5 * I * sim.omega_rot * sim.omega_rot;
+  var theta = sim.thetaDeg * Math.PI / 180;
+  var h0 = inclineLen * 0.5 * Math.sin(theta);
+  var h = Math.max(h0 - sim.x * Math.sin(theta), 0);
+  var pe = sim.M * 9.81 * h;
+  var tot = ket + ker + pe;
+
+  document.getElementById('val-vcm').textContent = sim.vcm.toFixed(2);
+  document.getElementById('val-omega').textContent = sim.omega_rot.toFixed(2);
+  document.getElementById('val-alpha').textContent = (getAccel() / sim.R).toFixed(2);
+  document.getElementById('val-I').textContent = I.toFixed(4);
+  document.getElementById('val-acm').textContent = getAccel().toFixed(3);
+  document.getElementById('val-theta').textContent = (sim.rollAngle % (2*Math.PI)).toFixed(2);
+
+  var mx = Math.max(tot, 0.001);
+  document.getElementById('bar-ket').style.width = Math.min(ket/mx*100,100)+'%';
+  document.getElementById('bar-ker').style.width = Math.min(ker/mx*100,100)+'%';
+  document.getElementById('bar-pe').style.width = Math.min(pe/mx*100,100)+'%';
+  document.getElementById('bar-tot').style.width = '100%';
+  document.getElementById('lbl-ket').textContent = ket.toFixed(2)+'J';
+  document.getElementById('lbl-ker').textContent = ker.toFixed(2)+'J';
+  document.getElementById('lbl-pe').textContent = pe.toFixed(2)+'J';
+  document.getElementById('lbl-tot').textContent = tot.toFixed(2)+'J';
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// KaTeX
+document.addEventListener('DOMContentLoaded', function() {
+  katex.render('I = \\sum m_i r_i^2', document.getElementById('eq1'), {throwOnError:false});
+  katex.render('I_{parallel} = I_{cm} + Md^2', document.getElementById('eq2'), {throwOnError:false});
+  katex.render('v_{cm} = R\\omega,\\quad a_{cm} = R\\alpha', document.getElementById('eq3'), {throwOnError:false});
+  katex.render('a = \\frac{g\\sin\\theta}{1 + I/MR^2}', document.getElementById('eq4'), {throwOnError:false});
+  katex.render('E = \\frac{1}{2}mv^2 + \\frac{1}{2}I\\omega^2 + mgh', document.getElementById('eq5'), {throwOnError:false});
+});
+
+buildScene();
+loadPreset('sphere');
+showToast('Space = Play/Pause | R = Reset | Keys 1-3 = Presets');
+</script>
+</body>
+</html>

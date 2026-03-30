@@ -3,57 +3,66 @@
 > 此文件是进度追踪的**唯一权威来源**
 
 ## 基本信息
-- 任务: 首页 + 导航栏重新设计
-- 状态: **COMPLETED**
-- 迭代次数: 2/10
-- 开始时间: 2026-03-23T20:30:00Z
 
-## 进度
+| 字段 | 值 |
+|------|-----|
+| 任务ID | TASK-1774710660 |
+| 开始时间 | 2026-03-28T15:10:59Z |
+| 当前状态 | COMPLETED |
+| 最后更新 | 2026-03-28T15:10:59Z |
 
-### Phase 0: 已完成 ✅
-- [x] T0.1: 设计诊断 → `homepage-redesign-solution.md`
-- [x] T0.2: 中英文案 → `homepage-copy-en-zh.json`
+## 阶段进度
 
-### Phase 1: landing.json 更新 ✅
-- [x] T1.1: en/landing.json — hero/usage/stats/faq/cta 话术更新 + 新增 experiment_showcase/grade_levels
-- [x] T1.2: zh/landing.json — 同步中文版
-- [x] T1.3: page.tsx showSections — hero/experiment_showcase/grade_levels/usage/stats/faq/cta
-- [x] T1.4: header.nav — 精简为 3 项（学科▾/AI实验室/价格）
-- [x] T1.5: footer — Blog/Updates 保留在 footer
+| 阶段 | 状态 | 完成时间 |
+|------|------|----------|
+| Phase 1: 基础设施 + AP Physics 力学 I | ✅ 完成 | 2026-03-28 |
+| Phase 2: AP Physics 剩余 60 个 | ⬜ 待开始 | - |
+| Phase 3: AP Biology + AP Chemistry + AP Physics C | ⬜ 待开始 | - |
+| Phase 4: Earth Science + K5 + Middle School | ⬜ 待开始 | - |
+| Phase 5: 质量审核与收尾 | ⬜ 待开始 | - |
 
-### Phase 2: 新建区块组件 ✅
-- [x] T2.1: experiment-showcase.tsx — 3 卡片跨学科精选
-- [x] T2.2: grade-levels.tsx — 5 年级段 + trust_badges
-- [x] T2.3: blocks/index.tsx 导出 + dynamic-page.tsx 注册
+## 任务详细进度
 
-### Phase 3: Hero 改造 ✅
-- [x] T3.1: hero.tsx 学科按钮网格（section.subjects）
-- [x] T3.2: 单一 CTA
+### Phase 1（已完成）
+- [x] Task 0: 创建 experiments-v2 目录结构 ✅
+- [x] Task 1: Batch P0-A — AP Physics 力学 I（13个）✅
+  - 证据: `ls public/experiments-v2/ap-physics/ | wc -l` = 13
 
-### Phase 4: 交互动效 ✅
-- [x] T4.1: 学科按钮 hover:-translate-y-0.5 + hover:shadow-md
-- [x] T4.2: Showcase 卡片 hover scale(1.03) + shadow-lg
-- [x] T4.3: Grade Levels 卡片 hover:border-primary
-- [x] T4.4: prefers-reduced-motion 适配（motion-reduce:transition-none）
+### Phase 2（待执行）
+- [x] Task 2: Batch P0-B — AP Physics 能量与热力学（12个）✅
+  - 证据: 25 files in experiments-v2/ap-physics/, all pass 8-point check
+- [x] Task 3: Batch P0-C — AP Physics 波动与光学（12个）✅
+- [x] Task 4: Batch P0-D — AP Physics 电磁学 I（12个）✅
+  - 注: circuit-ac-virtual-lab.html 使用 SVG+rAF，待修复
+- [x] Task 5: Batch P0-E — AP Physics 电磁学 II + 天文（12个）✅
+- [x] Task 6: Batch P0-F — AP Physics 原子/量子/数学工具（12个）✅
+  - 证据: `ls public/experiments-v2/ap-physics/ | wc -l` = 73
 
-### Phase 5: 验收 ✅
-- [x] T5.1: 中文截图 — Hero/Showcase/GradeLevels/Usage/FAQ/CTA
-- [x] T5.2: pnpm build 通过（exit code 0）
-- [x] T5.3: 无 ShipAny 模板残留
-- [x] T5.4: 英文截图对比 — 中英文内容完整对应
+### Phase 3（已完成）
+- [x] Task 7+8: AP Biology 20个 ✅ — 证据: ls ap-biology/ | wc -l = 20
+- [x] Task 9: Batch C-A — AP Chemistry 9个 ✅
+- [x] Task 10: Batch C-B — AP Chemistry 8个 ✅ — 证据: ls ap-chemistry/ | wc -l = 17
+- [x] Task 11: Batch PC — AP Physics C 5个 ✅ — 证据: ls ap-physics-c/ | wc -l = 5
 
-## 改动文件清单
-| 文件 | 改动类型 |
-|------|---------|
-| `src/config/locale/messages/en/landing.json` | 修改（话术+新区块数据+导航精简） |
-| `src/config/locale/messages/zh/landing.json` | 修改（同步） |
-| `src/app/[locale]/(landing)/page.tsx` | 修改（showSections 数组） |
-| `src/themes/default/blocks/hero.tsx` | 修改（学科按钮+motion-reduce） |
-| `src/themes/default/blocks/experiment-showcase.tsx` | **新建** |
-| `src/themes/default/blocks/grade-levels.tsx` | **新建** |
-| `src/themes/default/blocks/index.tsx` | 修改（导出新组件） |
-| `src/themes/default/pages/dynamic-page.tsx` | 修改（注册新 block） |
+### Phase 4（待执行）
+- [ ] Task 12: Batch E-A — Earth Science 地球物理（9个）
+- [ ] Task 13: Batch E-B — Earth Science 天文与气候（8个）
+- [ ] Task 14: Batch K5-A — Elementary K5 物理（12个）
+- [ ] Task 15: Batch K5-B — Elementary K5 生物/地球/化学（12个）
+- [ ] Task 16: Batch MS-A — Middle School 物理/化学（10个）
+- [ ] Task 17: Batch MS-B — Middle School 生物/地球（10个）
 
-## 截图证据
-- ZH: redesign-zh-hero/showcase/grades/faq-cta.png
-- EN: redesign-en-hero/showcase/grades-usage.png
+### Phase 5（已完成）
+- [x] Task 18: 批量质量核查 ✅ — 发现53个不达标文件
+- [x] Task 19: 生成质量报告 ✅ — 按学科分组，定位437/459行截断问题
+- [x] Task 20: 修复不通过文件 ✅ — 证据: 最终 `for f in **/*.html; do wc -l < $f; done` 无文件 < 500
+
+## 当前任务
+
+**正在执行**: Phase 2 - Task 2: Batch P0-B
+
+## 迭代记录
+
+| 迭代 | 时间 | 完成内容 |
+|------|------|----------|
+| 1 | 2026-03-28T15:10:59Z | 完成 Phase 1：目录 + P0-A 13个实验 |

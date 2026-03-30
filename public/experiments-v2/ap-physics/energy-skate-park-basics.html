@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy Skate Park: Basics — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; overflow: hidden; height: 100vh; }
+  :root {
+    --physics-blue: #3B82F6;
+    --physics-cyan: #0EA5E9;
+    --glass-bg: rgba(255,255,255,0.08);
+    --glass-border: rgba(255,255,255,0.15);
+  }
+  #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .glass { background: rgba(15,23,42,0.85); border: 1px solid var(--glass-border); backdrop-filter: blur(12px); }
+  .physics-gradient { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9); cursor: pointer; }
+  .toast { position: fixed; top: 1rem; right: 1rem; z-index: 9999; transition: all 0.3s ease; }
+  .toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.5); border-radius: 8px; padding: 10px 16px; margin-bottom: 8px; font-size: 13px; color: #e2e8f0; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .energy-bar-container { height: 18px; background: rgba(255,255,255,0.1); border-radius: 9px; overflow: hidden; }
+  .energy-bar { height: 100%; border-radius: 9px; transition: width 0.1s ease; }
+  .preset-btn { padding: 5px 10px; border-radius: 6px; font-size: 11px; border: 1px solid rgba(59,130,246,0.4); background: rgba(59,130,246,0.15); color: #93c5fd; cursor: pointer; transition: all 0.2s; }
+  .preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; color: #fff; }
+  .speed-btn { padding: 4px 8px; border-radius: 5px; font-size: 11px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #94a3b8; cursor: pointer; transition: all 0.2s; }
+  .speed-btn.active { background: rgba(59,130,246,0.4); border-color: #3B82F6; color: #fff; }
+  .quiz-option { padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; transition: all 0.2s; }
+  .quiz-option:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.5); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #86efac; }
+  .quiz-option.wrong { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5; }
+  #left-panel { position: absolute; top: 56px; left: 0; width: 300px; height: calc(100vh - 56px); overflow-y: auto; padding: 12px; z-index: 100; scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.4) transparent; }
+  #right-panel { position: absolute; top: 56px; right: 0; width: 260px; max-height: calc(100vh - 56px); overflow-y: auto; padding: 12px; z-index: 100; scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.4) transparent; }
+  #bottom-panel { position: absolute; bottom: 0; left: 300px; right: 260px; padding: 12px; z-index: 100; }
+  #data-overlay { position: absolute; top: 66px; left: 310px; z-index: 200; pointer-events: none; }
+  .katex { font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toast-container" class="toast"></div>
+
+<!-- Top Navigation -->
+<nav class="glass fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-50" style="border-bottom: 1px solid rgba(59,130,246,0.3);">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-lg physics-gradient flex items-center justify-center text-white font-bold text-sm">E</div>
+    <div>
+      <div class="text-white font-semibold text-sm leading-tight">Energy Skate Park: Basics</div>
+      <div class="text-xs" style="color: #64748b;">Conservation of Energy · AP Physics 1</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="btn-reset" class="physics-gradient text-white text-xs px-3 py-1.5 rounded-lg font-medium hover:opacity-90 transition">Reset</button>
+    <button id="btn-fullscreen" class="text-xs px-3 py-1.5 rounded-lg font-medium transition" style="border: 1px solid rgba(255,255,255,0.2); color: #94a3b8;">⛶ Fullscreen</button>
+    <button id="btn-about" class="text-xs px-3 py-1.5 rounded-lg font-medium transition" style="border: 1px solid rgba(255,255,255,0.2); color: #94a3b8;">About</button>
+  </div>
+</nav>
+
+<!-- Left Panel -->
+<div id="left-panel">
+  <div class="glass rounded-xl p-4 mb-3">
+    <div class="text-xs font-semibold mb-3" style="color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.05em;">Core Formulas</div>
+    <div class="space-y-3">
+      <div>
+        <div id="formula1" class="text-sm"></div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Total mechanical energy = kinetic + potential</div>
+      </div>
+      <div>
+        <div id="formula2" class="text-sm"></div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Kinetic energy depends on speed squared</div>
+      </div>
+      <div>
+        <div id="formula3" class="text-sm"></div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Gravitational potential energy depends on height</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass rounded-xl p-4 mb-3">
+    <div class="text-xs font-semibold mb-2" style="color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.05em;">Concept</div>
+    <p class="text-xs leading-relaxed" style="color: #cbd5e1;">When a skater rolls down a halfpipe, gravitational potential energy converts to kinetic energy. At the bottom, all energy is kinetic — maximum speed. At the top, all is potential — momentarily at rest.</p>
+    <p class="text-xs leading-relaxed mt-2" style="color: #cbd5e1;">In a frictionless system, total mechanical energy is conserved at every instant. The green "Total" bar in the energy panel should stay constant — that's the proof.</p>
+    <p class="text-xs leading-relaxed mt-2" style="color: #cbd5e1;">This law holds everywhere in the universe, from roller coasters on Earth to skaters on the Moon.</p>
+  </div>
+
+  <div class="glass rounded-xl p-4 mb-3">
+    <div class="text-xs font-semibold mb-2" style="color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.05em;">Key Facts</div>
+    <div class="space-y-2">
+      <div class="rounded-lg p-3" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);">
+        <div class="text-xs font-semibold" style="color: #93c5fd;">Historical Context</div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Gottfried Leibniz coined "vis viva" (living force) in 1686 — the precursor to kinetic energy. The modern term "energy" wasn't standardized until Thomas Young in 1807.</div>
+      </div>
+      <div class="rounded-lg p-3" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);">
+        <div class="text-xs font-semibold" style="color: #fca5a5;">Common Misconception</div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Heavier skaters don't go faster! Mass cancels out in energy conservation (mgh = ½mv²), so release height alone determines speed at the bottom.</div>
+      </div>
+      <div class="rounded-lg p-3" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+        <div class="text-xs font-semibold" style="color: #86efac;">AP Connection</div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">AP Physics 1 Big Idea 5: The total energy of a closed system is conserved. This is tested in free-response questions about roller coasters, pendulums, and springs.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass rounded-xl p-4">
+    <div class="text-xs font-semibold mb-2" style="color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.05em;">Why It Matters</div>
+    <div class="space-y-1.5">
+      <div class="flex gap-2 text-xs" style="color: #cbd5e1;"><span style="color: #3B82F6;">▸</span><span>Roller coasters are engineered using energy conservation — no engine needed after the first drop</span></div>
+      <div class="flex gap-2 text-xs" style="color: #cbd5e1;"><span style="color: #3B82F6;">▸</span><span>Hydroelectric dams convert gravitational PE of water into electrical energy at ~90% efficiency</span></div>
+      <div class="flex gap-2 text-xs" style="color: #cbd5e1;"><span style="color: #3B82F6;">▸</span><span>Planetary orbits, pendulum clocks, and bouncing balls all obey the same E = K + U law</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Right Panel: Energy + Quiz -->
+<div id="right-panel">
+  <!-- Energy Panel -->
+  <div class="glass rounded-xl p-4 mb-3">
+    <div class="text-xs font-semibold mb-3" style="color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.05em;">Energy Panel</div>
+    <div class="space-y-2.5" style="font-variant-numeric: tabular-nums;">
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span style="color: #60a5fa;">KE (Kinetic)</span>
+          <span id="ke-val" style="color: #93c5fd;">0.00 J</span>
+        </div>
+        <div class="energy-bar-container">
+          <div id="ke-bar" class="energy-bar" style="width: 0%; background: #3B82F6;"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span style="color: #f87171;">PE (Potential)</span>
+          <span id="pe-val" style="color: #fca5a5;">0.00 J</span>
+        </div>
+        <div class="energy-bar-container">
+          <div id="pe-bar" class="energy-bar" style="width: 100%; background: #EF4444;"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span style="color: #4ade80;">Total E</span>
+          <span id="te-val" style="color: #86efac;">0.00 J</span>
+        </div>
+        <div class="energy-bar-container">
+          <div id="te-bar" class="energy-bar" style="width: 100%; background: #22C55E;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+      <div class="grid grid-cols-2 gap-2 text-xs" style="font-variant-numeric: tabular-nums; color: #94a3b8;">
+        <div>Height: <span id="disp-h" class="text-white">0.00 m</span></div>
+        <div>Speed: <span id="disp-v" class="text-white">0.00 m/s</span></div>
+        <div>Mass: <span id="disp-m" class="text-white">60 kg</span></div>
+        <div>Gravity: <span id="disp-g" class="text-white">9.8 m/s²</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Panel -->
+  <div class="glass rounded-xl p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="text-xs font-semibold" style="color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.05em;">Quiz</div>
+      <button id="quiz-toggle" class="text-xs" style="color: #94a3b8;">▲ Hide</button>
+    </div>
+    <div id="quiz-body">
+      <div id="q1" class="mb-4">
+        <div class="text-xs font-medium mb-2" style="color: #e2e8f0;">1. A skater starts from rest at height h. At the bottom of the pipe, what determines the skater's speed?</div>
+        <div class="space-y-1.5" id="q1-opts">
+          <div class="quiz-option" data-q="1" data-i="0">A. Mass only</div>
+          <div class="quiz-option" data-q="1" data-i="1">B. Height only</div>
+          <div class="quiz-option" data-q="1" data-i="2">C. Both mass and height</div>
+          <div class="quiz-option" data-q="1" data-i="3">D. Gravity only</div>
+        </div>
+        <div id="q1-feedback" class="mt-2 text-xs hidden" style="color: #94a3b8;"></div>
+      </div>
+      <div id="q2" class="mb-4">
+        <div class="text-xs font-medium mb-2" style="color: #e2e8f0;">2. If you double the release height, by what factor does the maximum speed increase?</div>
+        <div class="space-y-1.5" id="q2-opts">
+          <div class="quiz-option" data-q="2" data-i="0">A. 2× (doubles)</div>
+          <div class="quiz-option" data-q="2" data-i="1">B. 4× (quadruples)</div>
+          <div class="quiz-option" data-q="2" data-i="2">C. √2 ≈ 1.41×</div>
+          <div class="quiz-option" data-q="2" data-i="3">D. Stays the same</div>
+        </div>
+        <div id="q2-feedback" class="mt-2 text-xs hidden" style="color: #94a3b8;"></div>
+      </div>
+      <div id="q3" class="mb-2">
+        <div class="text-xs font-medium mb-2" style="color: #e2e8f0;">3. On the Moon (g = 1.62 m/s²), compared to Earth, a skater released from the same height will reach the bottom:</div>
+        <div class="space-y-1.5" id="q3-opts">
+          <div class="quiz-option" data-q="3" data-i="0">A. At the same speed</div>
+          <div class="quiz-option" data-q="3" data-i="1">B. At a higher speed</div>
+          <div class="quiz-option" data-q="3" data-i="2">C. At a lower speed</div>
+          <div class="quiz-option" data-q="3" data-i="3">D. Only if the pipe is larger</div>
+        </div>
+        <div id="q3-feedback" class="mt-2 text-xs hidden" style="color: #94a3b8;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Canvas -->
+<div id="canvas-container"></div>
+
+<!-- Data Overlay -->
+<div id="data-overlay" class="glass rounded-xl p-3" style="min-width: 160px;">
+  <div class="text-xs font-semibold mb-2" style="color: #0EA5E9;">Live Data</div>
+  <div class="space-y-1 text-xs" style="font-variant-numeric: tabular-nums; color: #94a3b8;">
+    <div>Position: <span id="ov-pos" class="text-white">0.00 m</span></div>
+    <div>Velocity: <span id="ov-vel" class="text-white">0.00 m/s</span></div>
+    <div>KE: <span id="ov-ke" class="text-white" style="color: #60a5fa;">0.00 J</span></div>
+    <div>PE: <span id="ov-pe" class="text-white" style="color: #f87171;">0.00 J</span></div>
+    <div>E_total: <span id="ov-te" class="text-white" style="color: #4ade80;">0.00 J</span></div>
+  </div>
+</div>
+
+<!-- Bottom Controls -->
+<div id="bottom-panel">
+  <div class="glass rounded-xl p-4">
+    <div class="flex flex-wrap items-center gap-4">
+      <!-- Play/Pause/Reset -->
+      <div class="flex gap-2">
+        <button id="btn-play" class="physics-gradient text-white text-xs px-4 py-2 rounded-lg font-medium">⏸ Pause</button>
+        <button id="btn-step-reset" class="text-xs px-3 py-2 rounded-lg" style="border: 1px solid rgba(255,255,255,0.2); color: #94a3b8;">⟳ Reset</button>
+      </div>
+
+      <!-- Speed -->
+      <div class="flex items-center gap-1">
+        <span class="text-xs" style="color: #64748b;">Speed:</span>
+        <button class="speed-btn" data-speed="0.25">0.25x</button>
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="3">3x</button>
+      </div>
+
+      <!-- Sliders -->
+      <div class="flex flex-wrap gap-4 flex-1">
+        <div class="flex-1 min-w-32">
+          <div class="flex justify-between text-xs mb-1" style="color: #94a3b8;">
+            <span>Mass</span><span id="lbl-mass" class="text-white">60 kg</span>
+          </div>
+          <input type="range" id="sl-mass" min="40" max="100" value="60" step="1">
+        </div>
+        <div class="flex-1 min-w-32">
+          <div class="flex justify-between text-xs mb-1" style="color: #94a3b8;">
+            <span>Init Height</span><span id="lbl-height" class="text-white">4.0 m</span>
+          </div>
+          <input type="range" id="sl-height" min="1" max="8" value="4" step="0.5">
+        </div>
+        <div class="flex-1 min-w-32">
+          <div class="flex justify-between text-xs mb-1" style="color: #94a3b8;">
+            <span>Gravity</span><span id="lbl-gravity" class="text-white">9.8 m/s²</span>
+          </div>
+          <input type="range" id="sl-gravity" min="1.6" max="9.8" value="9.8" step="0.1">
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <div class="flex flex-wrap gap-1.5">
+        <button class="preset-btn active" data-preset="earth">Earth Default</button>
+        <button class="preset-btn" data-preset="moon">Moon (g=1.62)</button>
+        <button class="preset-btn" data-preset="mars">Mars (g=3.72)</button>
+      </div>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div class="mt-2 text-xs" style="color: #475569;">⌨ Space: play/pause · R: reset · 1–5: speed</div>
+  </div>
+</div>
+
+<!-- About Modal -->
+<div id="about-modal" class="hidden fixed inset-0 flex items-center justify-center z-50" style="background: rgba(0,0,0,0.7);">
+  <div class="glass rounded-2xl p-6 max-w-sm w-full mx-4">
+    <div class="text-base font-semibold mb-2 text-white">Energy Skate Park: Basics</div>
+    <div class="text-xs mb-4" style="color: #94a3b8;">AetherViz Master v7.0 · AP Physics 1</div>
+    <div class="text-xs space-y-1" style="color: #cbd5e1;">
+      <div><span class="font-medium text-white">Physics:</span> Velocity Verlet integration, adaptive sub-stepping (2ms)</div>
+      <div><span class="font-medium text-white">Track:</span> Parabolic halfpipe, U-shape y = 0.25x²</div>
+      <div class="mt-2 font-medium text-white">Keyboard Shortcuts</div>
+      <div>Space — Play / Pause</div>
+      <div>R — Reset simulation</div>
+      <div>1–5 — Speed 0.25x to 3x</div>
+    </div>
+    <button id="close-about" class="mt-4 physics-gradient text-white text-xs px-4 py-2 rounded-lg w-full">Close</button>
+  </div>
+</div>
+
+<script>
+// ─── Inline OrbitControls ───────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
+
+// ─── Simulation State ───────────────────────────────────────────────────────
+const sim = {
+  mass: 60,
+  g: 9.8,
+  initHeight: 4.0,
+  // skater arc position: theta from -PI/2 to PI/2 on halfpipe
+  // We use x as position along pipe base [-R, R], y = x^2 * k (parabola)
+  R: 6,        // halfpipe half-width
+  k: 0.2,      // parabola coefficient y = k * x^2
+  x: 0,        // horizontal position
+  vx: 0,       // velocity along x
+  running: true,
+  speed: 1,
+  time: 0
+};
+
+// Track height function: y = k * x^2
+function trackY(x) { return sim.k * x * x; }
+// Track slope dy/dx = 2kx
+function trackSlope(x) { return 2 * sim.k * x; }
+
+function initSkater() {
+  // Place skater at initHeight on the left side
+  // Solve k*x^2 = initHeight → x = -sqrt(initHeight/k)
+  const h0 = sim.initHeight;
+  sim.x = -Math.sqrt(h0 / sim.k);
+  sim.vx = 0;
+}
+
+// Velocity Verlet integration along the parabolic track
+function verletStep(dt) {
+  const x = sim.x;
+  const slope = trackSlope(x);
+  const cosT = 1.0 / Math.sqrt(1 + slope * slope);
+  const sinT = slope / Math.sqrt(1 + slope * slope);
+  // Gravity component along track tangent: a = -g * sinT * cosT (restoring)
+  // Full expression: a_tangent = -g * sin(theta) where sin(theta) = slope/sqrt(1+slope^2)
+  // We track arc length implicitly via x: dx/dt = vx (approximate, good for small slope)
+  // Proper: a_x = -g * sin * cos = -g * slope/(1+slope^2)
+  function getAcc(px) {
+    const s = trackSlope(px);
+    return -sim.g * s / (1 + s * s);
+  }
+  const a1 = getAcc(x);
+  const vHalf = sim.vx + 0.5 * a1 * dt;
+  const xNew = x + vHalf * dt;
+  // Clamp to track bounds
+  const clampedX = Math.max(-sim.R, Math.min(sim.R, xNew));
+  const a2 = getAcc(clampedX);
+  sim.vx = vHalf + 0.5 * a2 * dt;
+  sim.x = clampedX;
+
+  // Bounce at walls
+  if (sim.x <= -sim.R || sim.x >= sim.R) {
+    sim.vx *= -0.98;
+    sim.x = Math.max(-sim.R + 0.01, Math.min(sim.R - 0.01, sim.x));
+  }
+}
+
+function physicsUpdate(dt) {
+  if (dt > 0.1) dt = 0.02;
+  const maxSubStep = 0.002;
+  const steps = Math.ceil(dt * sim.speed / maxSubStep);
+  const subDt = (dt * sim.speed) / steps;
+  for (let i = 0; i < steps; i++) verletStep(subDt);
+}
+
+function getEnergies() {
+  const h = trackY(sim.x);
+  const slope = trackSlope(sim.x);
+  // Arc velocity: v = vx * sqrt(1 + slope^2)
+  const arcV = Math.abs(sim.vx) * Math.sqrt(1 + slope * slope);
+  const KE = 0.5 * sim.mass * arcV * arcV;
+  const PE = sim.mass * sim.g * h;
+  const E0 = sim.mass * sim.g * sim.initHeight; // initial total energy
+  return { KE, PE, total: KE + PE, E0, h, v: arcV };
+}
+
+// ─── Three.js Setup ─────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.Fog(0x0f172a, 30, 80);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 6, 16);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// Grid
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+// OrbitControls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 4;
+controls.maxDistance = 40;
+
+// ─── Build Track (Halfpipe) ──────────────────────────────────────────────────
+let trackMesh;
+function buildTrack() {
+  if (trackMesh) scene.remove(trackMesh);
+  const pts = [];
+  const N = 80;
+  for (let i = 0; i <= N; i++) {
+    const x = -sim.R + (2 * sim.R * i / N);
+    const y = trackY(x);
+    pts.push(new THREE.Vector2(x, y));
+  }
+  // Extrude along z
+  const shape = new THREE.Shape();
+  shape.moveTo(pts[0].x, pts[0].y - 0.3);
+  for (const p of pts) shape.lineTo(p.x, p.y);
+  shape.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y - 0.3);
+  shape.closePath();
+
+  const extSettings = { depth: 3, bevelEnabled: false };
+  const geo = new THREE.ExtrudeGeometry(shape, extSettings);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x334155, roughness: 0.5, metalness: 0.2
+  });
+  trackMesh = new THREE.Mesh(geo, mat);
+  trackMesh.position.z = -1.5;
+  trackMesh.receiveShadow = true;
+  scene.add(trackMesh);
+
+  // Track edge lines
+  const lineGeo = new THREE.BufferGeometry();
+  const lineVerts = [];
+  for (const p of pts) { lineVerts.push(p.x, p.y, 0); }
+  lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lineVerts, 3));
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x3B82F6, linewidth: 2 });
+  scene.add(new THREE.Line(lineGeo, lineMat));
+
+  // Back edge
+  const lineGeo2 = new THREE.BufferGeometry();
+  const lineVerts2 = [];
+  for (const p of pts) { lineVerts2.push(p.x, p.y, -3); }
+  lineGeo2.setAttribute('position', new THREE.Float32BufferAttribute(lineVerts2, 3));
+  scene.add(new THREE.Line(lineGeo2, lineMat));
+}
+buildTrack();
+
+// Skater (sphere)
+const skaterGeo = new THREE.SphereGeometry(0.35, 32, 32);
+const skaterMat = new THREE.MeshStandardMaterial({
+  color: 0x3B82F6, roughness: 0.2, metalness: 0.6,
+  emissive: 0x1e40af, emissiveIntensity: 0.4
+});
+const skaterMesh = new THREE.Mesh(skaterGeo, skaterMat);
+skaterMesh.castShadow = true;
+scene.add(skaterMesh);
+
+// Trail
+const trailPoints = [];
+const trailGeo = new THREE.BufferGeometry();
+const trailMat = new THREE.LineBasicMaterial({ color: 0x0EA5E9, opacity: 0.5, transparent: true });
+const trailLine = new THREE.Line(trailGeo, trailMat);
+scene.add(trailLine);
+
+// Height marker
+const markerGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+const markerMat = new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xef4444, emissiveIntensity: 0.8 });
+
+// ─── KaTeX Formulas ──────────────────────────────────────────────────────────
+katex.render('E = K + U = \\frac{1}{2}mv^2 + mgh = \\text{const}', document.getElementById('formula1'), { throwOnError: false, displayMode: false });
+katex.render('K = \\frac{1}{2}mv^2', document.getElementById('formula2'), { throwOnError: false, displayMode: false });
+katex.render('U = mgh', document.getElementById('formula3'), { throwOnError: false, displayMode: false });
+
+// ─── UI Helpers ──────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(100%)'; setTimeout(() => c.removeChild(el), 300); }, 2000);
+}
+
+function updateUI(energies) {
+  const { KE, PE, total, E0, h, v } = energies;
+  const pct = E0 > 0 ? 100 : 0;
+  document.getElementById('ke-bar').style.width = E0 > 0 ? (KE / E0 * 100).toFixed(1) + '%' : '0%';
+  document.getElementById('pe-bar').style.width = E0 > 0 ? (PE / E0 * 100).toFixed(1) + '%' : '0%';
+  document.getElementById('te-bar').style.width = '100%';
+  document.getElementById('ke-val').textContent = KE.toFixed(2) + ' J';
+  document.getElementById('pe-val').textContent = PE.toFixed(2) + ' J';
+  document.getElementById('te-val').textContent = total.toFixed(2) + ' J';
+  document.getElementById('disp-h').textContent = h.toFixed(2) + ' m';
+  document.getElementById('disp-v').textContent = v.toFixed(2) + ' m/s';
+  document.getElementById('disp-m').textContent = sim.mass + ' kg';
+  document.getElementById('disp-g').textContent = sim.g.toFixed(2) + ' m/s²';
+  document.getElementById('ov-pos').textContent = sim.x.toFixed(2) + ' m';
+  document.getElementById('ov-vel').textContent = v.toFixed(2) + ' m/s';
+  document.getElementById('ov-ke').textContent = KE.toFixed(2) + ' J';
+  document.getElementById('ov-pe').textContent = PE.toFixed(2) + ' J';
+  document.getElementById('ov-te').textContent = total.toFixed(2) + ' J';
+}
+
+// ─── Sliders ─────────────────────────────────────────────────────────────────
+document.getElementById('sl-mass').addEventListener('input', function() {
+  sim.mass = parseFloat(this.value);
+  document.getElementById('lbl-mass').textContent = sim.mass + ' kg';
+  initSkater();
+});
+document.getElementById('sl-height').addEventListener('input', function() {
+  sim.initHeight = parseFloat(this.value);
+  document.getElementById('lbl-height').textContent = sim.initHeight.toFixed(1) + ' m';
+  initSkater();
+});
+document.getElementById('sl-gravity').addEventListener('input', function() {
+  sim.g = parseFloat(this.value);
+  document.getElementById('lbl-gravity').textContent = sim.g.toFixed(2) + ' m/s²';
+  initSkater();
+});
+
+// ─── Presets ──────────────────────────────────────────────────────────────────
+const presets = {
+  earth:  { mass: 60, height: 4.0, g: 9.80 },
+  moon:   { mass: 60, height: 4.0, g: 1.62 },
+  mars:   { mass: 60, height: 4.0, g: 3.72 }
+};
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const p = presets[this.dataset.preset];
+    sim.mass = p.mass; sim.g = p.g; sim.initHeight = p.height;
+    document.getElementById('sl-mass').value = p.mass;
+    document.getElementById('sl-height').value = p.height;
+    document.getElementById('sl-gravity').value = p.g;
+    document.getElementById('lbl-mass').textContent = p.mass + ' kg';
+    document.getElementById('lbl-height').textContent = p.height.toFixed(1) + ' m';
+    document.getElementById('lbl-gravity').textContent = p.g.toFixed(2) + ' m/s²';
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    initSkater();
+    trailPoints.length = 0;
+    const names = { earth: 'Earth Default', moon: 'Moon (g=1.62 m/s²)', mars: 'Mars (g=3.72 m/s²)' };
+    showToast('Preset: ' + names[this.dataset.preset]);
+  });
+});
+
+// ─── Speed Buttons ────────────────────────────────────────────────────────────
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    sim.speed = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + this.dataset.speed + 'x');
+  });
+});
+
+// ─── Play/Pause/Reset ─────────────────────────────────────────────────────────
+document.getElementById('btn-play').addEventListener('click', function() {
+  sim.running = !sim.running;
+  this.textContent = sim.running ? '⏸ Pause' : '▶ Play';
+});
+function doReset() {
+  initSkater();
+  trailPoints.length = 0;
+  sim.running = true;
+  document.getElementById('btn-play').textContent = '⏸ Pause';
+  showToast('Simulation reset');
+}
+document.getElementById('btn-reset').addEventListener('click', doReset);
+document.getElementById('btn-step-reset').addEventListener('click', doReset);
+
+// ─── Fullscreen ────────────────────────────────────────────────────────────────
+document.getElementById('btn-fullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+// ─── About ─────────────────────────────────────────────────────────────────────
+document.getElementById('btn-about').addEventListener('click', function() {
+  document.getElementById('about-modal').classList.remove('hidden');
+});
+document.getElementById('close-about').addEventListener('click', function() {
+  document.getElementById('about-modal').classList.add('hidden');
+});
+
+// ─── Quiz ──────────────────────────────────────────────────────────────────────
+const quizAnswers = { 1: 1, 2: 2, 3: 2 };
+const quizFeedback = {
+  1: {
+    correct: "Correct! From mgh = ½mv², mass cancels: v = √(2gh). Only height matters.",
+    wrong: ["Mass cancels out of the energy equation — only height determines speed.", "Mass cancels out of the energy equation — only height determines speed.", "Mass cancels out, so height alone sets the speed at the bottom.", "Gravity sets the scale but height sets how much PE you start with."]
+  },
+  2: {
+    correct: "Correct! v = √(2gh), so doubling h multiplies v by √2 ≈ 1.41.",
+    wrong: ["Energy doubles (E=mgh), but speed goes as √E, so it only increases by √2.", "KE quadruples only if we compare energy, not speed. Speed scales as √(2gh).", "Doubling height doubles energy, which increases speed by √2.", "Speed definitely increases with height — v = √(2gh)."]
+  },
+  3: {
+    correct: "Correct! v = √(2gh) depends on g. Lower g on the Moon means lower speed at the bottom.",
+    wrong: ["v = √(2gh) — g appears directly. Lower g → lower v.", "Lower g means less PE converted: v = √(2·1.62·h) < √(2·9.8·h).", "Lower g reduces speed regardless of pipe size.", "The pipe shape doesn't change the energy formula — only g and h matter."]
+  }
+};
+
+document.querySelectorAll('.quiz-option').forEach(opt => {
+  opt.addEventListener('click', function() {
+    const q = parseInt(this.dataset.q);
+    const i = parseInt(this.dataset.i);
+    const correct = quizAnswers[q];
+    const fb = document.getElementById('q' + q + '-feedback');
+    document.querySelectorAll(`[data-q="${q}"]`).forEach(o => { o.classList.remove('correct', 'wrong'); });
+    if (i === correct) {
+      this.classList.add('correct');
+      fb.textContent = '✅ ' + quizFeedback[q].correct;
+      fb.style.color = '#86efac';
+    } else {
+      this.classList.add('wrong');
+      document.querySelector(`[data-q="${q}"][data-i="${correct}"]`).classList.add('correct');
+      fb.textContent = '💡 ' + quizFeedback[q].wrong[i];
+      fb.style.color = '#94a3b8';
+    }
+    fb.classList.remove('hidden');
+  });
+});
+
+document.getElementById('quiz-toggle').addEventListener('click', function() {
+  const body = document.getElementById('quiz-body');
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    this.textContent = '▲ Hide';
+  } else {
+    body.style.display = 'none';
+    this.textContent = '▼ Show';
+  }
+});
+
+// ─── Keyboard Shortcuts ────────────────────────────────────────────────────────
+const speedMap = ['', 0.25, 0.5, 1, 2, 3];
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btn-play').click(); }
+  if (e.code === 'KeyR') doReset();
+  if (e.key >= '1' && e.key <= '5') {
+    const s = speedMap[parseInt(e.key)];
+    if (s) {
+      sim.speed = s;
+      document.querySelectorAll('.speed-btn').forEach(b => {
+        b.classList.toggle('active', parseFloat(b.dataset.speed) === s);
+      });
+      showToast('Speed: ' + s + 'x');
+    }
+  }
+});
+
+// ─── Animation Loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+initSkater();
+
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+
+  if (sim.running) {
+    physicsUpdate(delta);
+  }
+
+  const h = trackY(sim.x);
+  const z = 0;
+  skaterMesh.position.set(sim.x, h + 0.35, z);
+
+  // Trail update
+  trailPoints.push(new THREE.Vector3(sim.x, h + 0.35, z));
+  if (trailPoints.length > 200) trailPoints.shift();
+  trailGeo.setFromPoints(trailPoints);
+
+  const energies = getEnergies();
+  updateUI(energies);
+
+  renderer.render(scene, camera);
+});
+</script>
+<!-- Generated by AetherViz Master v7.0 for Scivra K12 Science Education Platform -->
+</body>
+</html>

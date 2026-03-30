@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mitosis & Cell Cycle — AP Biology</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg, #0F172A 0%, #064E3B 50%, #065F46 100%);
+    color: #f1f5f9; font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; }
+  .glass-dark { background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; }
+  .btn-primary { background: linear-gradient(135deg,#10B981,#059669); color:#fff; border:none; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:13px; transition:all .2s; }
+  .btn-primary:hover { filter:brightness(1.15); transform:translateY(-1px); }
+  .btn-speed { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#10B981; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:12px; transition:all .2s; }
+  .btn-speed.active,.btn-speed:hover { background:rgba(16,185,129,0.35); }
+  .btn-preset { background:rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.35); color:#22D3EE; border-radius:7px; padding:5px 12px; cursor:pointer; font-size:12px; transition:all .2s; }
+  .btn-preset.active,.btn-preset:hover { background:rgba(34,211,238,0.28); }
+  input[type=range] { accent-color:#10B981; width:100%; }
+  .data-overlay { position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.82); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:10px 14px; font-size:12px; line-height:1.8; pointer-events:none; }
+  .toast-container { position:fixed; top:70px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+  .toast { background:rgba(16,185,129,0.9); color:#fff; padding:10px 18px; border-radius:9px; font-size:13px; animation:slideIn .3s ease; }
+  @keyframes slideIn { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10000; display:none; align-items:center; justify-content:center; }
+  .modal-bg.open { display:flex; }
+  .quiz-option { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; padding:7px 12px; cursor:pointer; font-size:13px; transition:all .2s; margin-bottom:5px; }
+  .quiz-option:hover { background:rgba(16,185,129,0.2); }
+  .quiz-option.correct { background:rgba(16,185,129,0.35); border-color:#10B981; }
+  .quiz-option.wrong { background:rgba(239,68,68,0.3); border-color:#ef4444; }
+  #sidebar { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(16,185,129,0.4) transparent; }
+  .phase-bar { display:flex; border-radius:8px; overflow:hidden; height:22px; margin-bottom:8px; font-size:11px; }
+  .phase-bar div { display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; transition:flex .3s; }
+  .phase-indicator { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .phase-badge { padding:4px 10px; border-radius:20px; font-size:11px; border:1px solid; cursor:pointer; transition:all .2s; }
+  .phase-badge.active { transform:scale(1.1); box-shadow:0 0 8px rgba(16,185,129,0.5); }
+</style>
+</head>
+<body>
+<nav style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(16,185,129,0.3);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100;flex-shrink:0;">
+  <div>
+    <div style="font-size:18px;font-weight:700;color:#10B981;">Mitosis & Cell Cycle</div>
+    <div style="font-size:12px;color:#64748b;">G1 → S → G2 → M Phase · Prophase → Metaphase → Anaphase → Telophase · AP Biology</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-primary" id="btnReset">↺ Reset</button>
+    <button class="btn-primary" id="btnFullscreen">⛶ Fullscreen</button>
+    <button class="btn-primary" id="btnAbout">? About</button>
+  </div>
+</nav>
+
+<div style="display:flex;flex:1;overflow:hidden;">
+  <aside id="sidebar" style="width:30%;background:rgba(15,23,42,0.92);border-right:1px solid rgba(16,185,129,0.2);padding:16px;overflow-y:auto;flex-shrink:0;">
+
+    <!-- Phase indicator -->
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#10B981;margin-bottom:10px;">Current Phase</div>
+      <div class="phase-indicator" id="phase-badges">
+        <div class="phase-badge" data-phase="G1" style="background:rgba(34,211,238,0.15);color:#22D3EE;border-color:#22D3EE;">G1</div>
+        <div class="phase-badge" data-phase="S" style="background:rgba(251,191,36,0.15);color:#fbbf24;border-color:#fbbf24;">S</div>
+        <div class="phase-badge" data-phase="G2" style="background:rgba(167,139,250,0.15);color:#a78bfa;border-color:#a78bfa;">G2</div>
+        <div class="phase-badge" data-phase="prophase" style="background:rgba(248,113,113,0.15);color:#f87171;border-color:#f87171;">Prophase</div>
+        <div class="phase-badge" data-phase="metaphase" style="background:rgba(16,185,129,0.15);color:#10B981;border-color:#10B981;">Metaphase</div>
+        <div class="phase-badge" data-phase="anaphase" style="background:rgba(249,115,22,0.15);color:#f97316;border-color:#f97316;">Anaphase</div>
+        <div class="phase-badge" data-phase="telophase" style="background:rgba(52,211,153,0.15);color:#34d399;border-color:#34d399;">Telophase</div>
+        <div class="phase-badge" data-phase="cytokinesis" style="background:rgba(96,165,250,0.15);color:#60a5fa;border-color:#60a5fa;">Cytokinesis</div>
+      </div>
+      <div id="phase-description" style="font-size:12px;color:#cbd5e1;line-height:1.7;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px;min-height:60px;"></div>
+    </div>
+
+    <!-- Formulas -->
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#10B981;margin-bottom:10px;">Key Formulas</div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:5px;">Cell cycle timing (human somatic):</div>
+      <div id="formula-cycle" style="padding:4px 0;">\(G_1 \approx 11\text{h},\; S \approx 8\text{h},\; G_2 \approx 4\text{h},\; M \approx 1\text{h}\)</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:10px;margin-bottom:5px;">Chromatin compaction ratio:</div>
+      <div id="formula-compact" style="padding:4px 0;">\(\text{compaction} \approx 10{,}000\times \text{ (DNA→chromosome)}\)</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:10px;margin-bottom:5px;">Chromosome number — human:</div>
+      <div id="formula-chr" style="padding:4px 0;">\(2n = 46,\quad n = 23 \text{ (haploid)}\)</div>
+    </div>
+
+    <!-- Phase descriptions -->
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#22D3EE;margin-bottom:8px;">Phase Overview</div>
+      <div style="font-size:12px;color:#cbd5e1;line-height:1.7;">
+        <div style="margin-bottom:6px;"><strong style="color:#22D3EE;">G1</strong> — Cell grows, synthesizes proteins, organelles. Checkpoint: is cell large enough? DNA intact?</div>
+        <div style="margin-bottom:6px;"><strong style="color:#fbbf24;">S phase</strong> — DNA replication. Each chromosome duplicated → sister chromatids joined at centromere.</div>
+        <div style="margin-bottom:6px;"><strong style="color:#a78bfa;">G2</strong> — Cell continues growing, preps mitotic spindle proteins. Checkpoint: DNA fully replicated?</div>
+        <div style="margin-bottom:6px;"><strong style="color:#f87171;">Prophase</strong> — Chromatin condenses into visible chromosomes. Spindle forms. Nuclear envelope breaks down.</div>
+        <div style="margin-bottom:6px;"><strong style="color:#10B981;">Metaphase</strong> — Chromosomes align at metaphase plate. Spindle checkpoint: all kinetochores attached?</div>
+        <div style="margin-bottom:6px;"><strong style="color:#f97316;">Anaphase</strong> — Sister chromatids separate. Motor proteins walk chromosomes to poles.</div>
+        <div style="margin-bottom:6px;"><strong style="color:#34d399;">Telophase</strong> — Nuclear envelopes reform. Chromosomes decondense. Cell elongates.</div>
+        <div><strong style="color:#60a5fa;">Cytokinesis</strong> — Cytoplasm divides. Cleavage furrow (animals) or cell plate (plants).</div>
+      </div>
+    </div>
+
+    <!-- Knowledge card -->
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#f97316;margin-bottom:8px;">Why It Matters</div>
+      <ul style="font-size:12px;color:#cbd5e1;line-height:1.8;padding-left:16px;">
+        <li>Uncontrolled mitosis = cancer (cell cycle checkpoints fail)</li>
+        <li>Colchicine blocks tubulin polymerization → arrests cells at metaphase (used in cancer therapy)</li>
+        <li>MPF (Maturation Promoting Factor = CDK1 + Cyclin B) drives G2→M transition</li>
+        <li>Aneuploidy from spindle checkpoint failure → trisomy 21 (Down syndrome)</li>
+      </ul>
+    </div>
+
+    <!-- Quiz -->
+    <div class="glass-dark" style="padding:14px;">
+      <div style="font-size:13px;font-weight:600;color:#10B981;margin-bottom:10px;">Predict & Apply</div>
+      <div id="quiz-container"></div>
+    </div>
+  </aside>
+
+  <div id="canvas-container" style="width:70%;position:relative;flex:1;">
+    <div class="data-overlay" id="data-overlay">
+      <div>Phase: <span id="ov-phase" style="color:#10B981;">G1</span></div>
+      <div>Progress: <span id="ov-prog" style="color:#22D3EE;">0%</span></div>
+      <div>Chromosomes: <span id="ov-chr" style="color:#4ade80;">46</span></div>
+      <div>Cell size: <span id="ov-size" style="color:#fbbf24;">1.0×</span></div>
+      <div>DNA content: <span id="ov-dna" style="color:#a78bfa;">2n</span></div>
+      <div>Spindle fibers: <span id="ov-spindle" style="color:#f87171;">0</span></div>
+    </div>
+  </div>
+</div>
+
+<div style="background:rgba(6,78,59,0.75);backdrop-filter:blur(10px);border-top:1px solid rgba(16,185,129,0.25);padding:10px 20px;flex-shrink:0;">
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <div style="display:flex;gap:16px;align-items:center;flex:1;min-width:300px;">
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;"><label style="font-size:12px;color:#94a3b8;">Cell Size</label><span style="font-size:12px;color:#10B981;" id="lbl-cellsize">1.0</span></div>
+        <input type="range" id="sl-cellsize" min="0.5" max="2" step="0.05" value="1.0">
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;"><label style="font-size:12px;color:#94a3b8;">Chromosome #</label><span style="font-size:12px;color:#22D3EE;" id="lbl-chrnum">46</span></div>
+        <input type="range" id="sl-chrnum" min="4" max="64" step="2" value="46">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" id="btnPlay">⏸ Pause</button>
+      <button class="btn-primary" id="btnSkip">⏭ Next Phase</button>
+    </div>
+    <div style="display:flex;gap:4px;">
+      <button class="btn-speed" data-speed="0.25">0.25x</button>
+      <button class="btn-speed" data-speed="0.5">0.5x</button>
+      <button class="btn-speed active" data-speed="1">1x</button>
+      <button class="btn-speed" data-speed="2">2x</button>
+      <button class="btn-speed" data-speed="3">3x</button>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-preset active" data-preset="human">Normal Human Cell (46 chr)</button>
+      <button class="btn-preset" data-preset="cancer">Cancer Cell (abnormal)</button>
+      <button class="btn-preset" data-preset="yeast">Yeast Cell (16 chr)</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="modal-bg" id="aboutModal">
+  <div class="glass-dark" style="padding:28px;max-width:480px;width:90%;">
+    <div style="font-size:16px;font-weight:700;color:#10B981;margin-bottom:14px;">Keyboard Shortcuts</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+      <tr><td style="padding:5px 10px;color:#22D3EE;">Space</td><td style="color:#cbd5e1;">Play / Pause</td></tr>
+      <tr><td style="padding:5px 10px;color:#22D3EE;">R</td><td style="color:#cbd5e1;">Reset to G1</td></tr>
+      <tr><td style="padding:5px 10px;color:#22D3EE;">1–5</td><td style="color:#cbd5e1;">Speed presets</td></tr>
+      <tr><td style="padding:5px 10px;color:#22D3EE;">N</td><td style="color:#cbd5e1;">Skip to next phase</td></tr>
+    </table>
+    <div style="margin-top:14px;font-size:12px;color:#64748b;">Built with Three.js r134 · Scivra 2026</div>
+    <button class="btn-primary" style="margin-top:14px;" id="closeAbout">Close</button>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this;
+  var state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1;
+  var target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = 0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', function() { state = -1; document.removeEventListener('mousemove', onMouseMove); });
+  });
+  function onMouseMove(e) {
+    if (!scope.enabled || state !== 0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) {
+    if (!scope.enabled) return; e.preventDefault();
+    scale *= (e.deltaY > 0) ? 1.1 : 0.9;
+  }, { passive: false });
+  domElement.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) { state = 0; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); }
+  });
+  domElement.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1 && state === 0) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var quatInverse = quat.clone().invert();
+    offset.copy(camera.position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    if (scope.enableDamping) {
+      spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+      spherical.phi += sphericalDelta.phi * scope.dampingFactor;
+    } else {
+      spherical.theta += sphericalDelta.theta;
+      spherical.phi += sphericalDelta.phi;
+    }
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    if (scope.enableDamping) { sphericalDelta.theta *= (1-scope.dampingFactor); sphericalDelta.phi *= (1-scope.dampingFactor); }
+    else { sphericalDelta.set(0,0,0); }
+    scale = 1;
+    offset.setFromSpherical(spherical).applyQuaternion(quatInverse);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+  };
+  this.dispose = function() {};
+};
+
+// ── Phases config ─────────────────────────────────────────────────────────────
+const PHASES = ['G1','S','G2','prophase','metaphase','anaphase','telophase','cytokinesis'];
+const PHASE_DURATION = { G1:4, S:3, G2:2, prophase:2, metaphase:2, anaphase:2, telophase:2, cytokinesis:2 };
+const PHASE_DESC = {
+  G1: 'G1 Phase: Cell grows and prepares for DNA synthesis. Proteins and organelles are produced. The restriction checkpoint evaluates cell size, nutrient availability, and DNA integrity.',
+  S: 'S Phase (DNA Synthesis): All chromosomes are replicated. Each chromosome now consists of two identical sister chromatids joined at the centromere. DNA content doubles from 2n to 4n.',
+  G2: 'G2 Phase: Cell continues growing. Spindle proteins (tubulins) are synthesized. The G2 checkpoint confirms complete, accurate DNA replication before allowing entry into mitosis.',
+  prophase: 'Prophase: Chromatin condenses into visible chromosomes. The mitotic spindle begins forming from centrosomes. The nuclear envelope starts to break down. Chromosomes appear as X-shaped structures.',
+  metaphase: 'Metaphase: Chromosomes align at the metaphase plate (cell equator). Spindle fibers attach to kinetochores on each sister chromatid. The spindle assembly checkpoint ensures all chromosomes are properly attached.',
+  anaphase: 'Anaphase: Cohesin proteins are cleaved by separase. Sister chromatids are pulled to opposite poles by shortening spindle fibers. The cell elongates. Each pole receives the full chromosome number.',
+  telophase: 'Telophase: Chromosomes arrive at poles and begin to decondense. Nuclear envelopes reform around each chromosome set. The nucleolus reappears. The spindle disassembles.',
+  cytokinesis: 'Cytokinesis: The cytoplasm divides. In animal cells, a cleavage furrow (actin-myosin ring) pinches the cell in two. Each daughter cell receives a full complement of chromosomes and organelles.'
+};
+
+// ── Sim State ─────────────────────────────────────────────────────────────────
+const simState = {
+  playing: true, speed: 1.0, phaseIdx: 0, phaseProgress: 0,
+  cellSize: 1.0, chrNum: 46, cancerMode: false, totalAngle: 0
+};
+
+function showToast(msg) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; c.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// ── Three.js Setup ────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.1, 1000);
+camera.position.set(0, 5, 18);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0); keyLight.position.set(5,10,7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5,5,-5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0,5,-10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ── Cell Components ───────────────────────────────────────────────────────────
+const cellGroup = new THREE.Group();
+scene.add(cellGroup);
+
+// Cell membrane
+const cellMat = new THREE.MeshPhongMaterial({ color: 0x10B981, transparent: true, opacity: 0.12, side: THREE.DoubleSide, wireframe: false });
+const cellMesh = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), cellMat);
+cellGroup.add(cellMesh);
+
+// Nuclear envelope
+const nucMat = new THREE.MeshPhongMaterial({ color: 0x22D3EE, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+const nucMesh = new THREE.Mesh(new THREE.SphereGeometry(2.2, 24, 24), nucMat);
+cellGroup.add(nucMesh);
+
+// Chromosomes
+const chrGroup = new THREE.Group();
+cellGroup.add(chrGroup);
+
+// Spindle fibers
+const spindleGroup = new THREE.Group();
+cellGroup.add(spindleGroup);
+
+// Cleavage furrow
+const furrowGroup = new THREE.Group();
+cellGroup.add(furrowGroup);
+
+const chrColors = [0xf87171,0xfbbf24,0x4ade80,0x60a5fa,0xa78bfa,0xf97316,0x22D3EE,0x10B981];
+
+let chromosomeMeshes = [];
+
+function buildChromosomes() {
+  while (chrGroup.children.length) chrGroup.remove(chrGroup.children[0]);
+  chromosomeMeshes = [];
+
+  const phase = PHASES[simState.phaseIdx];
+  const n = simState.chrNum;
+  const t = simState.phaseProgress;
+
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2;
+    const r = 1.6;
+    let x = Math.cos(angle) * r;
+    let y = Math.sin(angle) * r * 0.6;
+    let z = (Math.random() - 0.5) * 0.4;
+
+    let chrScale = 1.0;
+    let xOff = 0;
+
+    if (phase === 'G1') {
+      // Diffuse chromatin
+      x *= 0.9; y *= 0.9; chrScale = 0.4;
+    } else if (phase === 'S') {
+      chrScale = 0.5;
+    } else if (phase === 'G2') {
+      chrScale = 0.55;
+    } else if (phase === 'prophase') {
+      chrScale = 0.4 + t * 0.5; // condense
+    } else if (phase === 'metaphase') {
+      y = 0; z = (i % 2 === 0 ? 1 : -1) * 0.3; // align to equator
+      x = Math.cos(angle) * 2.2;
+      chrScale = 0.9;
+    } else if (phase === 'anaphase') {
+      // Pull to poles
+      const poleDir = i < n/2 ? 1 : -1;
+      y = poleDir * (1.5 + t * 1.5);
+      x = Math.cos(angle) * 1.8;
+      chrScale = 0.75;
+    } else if (phase === 'telophase') {
+      const poleDir = i < n/2 ? 1 : -1;
+      y = poleDir * 2.5;
+      x = Math.cos(angle) * (1.8 - t * 0.8);
+      chrScale = 0.9 - t * 0.4; // decondense
+    } else if (phase === 'cytokinesis') {
+      const poleDir = i < n/2 ? 1 : -1;
+      y = poleDir * 2.5;
+      x = Math.cos(angle) * 1.0;
+      chrScale = 0.5;
+    }
+
+    const color = chrColors[i % chrColors.length];
+    // X-shaped chromosome (torus approximation)
+    const geo = phase === 'prophase' || phase === 'metaphase' || phase === 'anaphase'
+      ? new THREE.CapsuleGeometry(0.08 * chrScale, 0.25 * chrScale, 4, 8)
+      : new THREE.SphereGeometry(0.14 * chrScale, 8, 8);
+    const mat = new THREE.MeshPhongMaterial({ color, shininess: 80, emissive: new THREE.Color(color).multiplyScalar(0.15) });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.rotation.z = angle;
+    chrGroup.add(mesh);
+    chromosomeMeshes.push(mesh);
+  }
+}
+
+function buildSpindle() {
+  while (spindleGroup.children.length) spindleGroup.remove(spindleGroup.children[0]);
+  const phase = PHASES[simState.phaseIdx];
+  if (!['prophase','metaphase','anaphase','telophase'].includes(phase)) return;
+
+  const t = simState.phaseProgress;
+  let spindleLen = 3.5;
+  if (phase === 'anaphase') spindleLen = 3.5 + t * 1.5;
+
+  const spindleMat = new THREE.MeshPhongMaterial({ color: 0x22D3EE, transparent: true, opacity: 0.35, shininess: 60 });
+  const numFibers = Math.min(simState.chrNum / 2, 12);
+
+  for (let i = 0; i < numFibers; i++) {
+    const angle = (i / numFibers) * Math.PI * 2;
+    const spread = 1.8;
+    const tipX = Math.cos(angle) * spread * 0.3;
+    const tipZ = Math.sin(angle) * spread * 0.3;
+
+    const from = new THREE.Vector3(tipX, -spindleLen, tipZ);
+    const to = new THREE.Vector3(tipX, spindleLen, tipZ);
+    const dir = new THREE.Vector3().subVectors(to, from);
+    const len = dir.length();
+    const geo = new THREE.CylinderGeometry(0.03, 0.03, len, 4);
+    const mesh = new THREE.Mesh(geo, spindleMat.clone());
+    const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+    mesh.position.copy(mid);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+    spindleGroup.add(mesh);
+  }
+}
+
+function buildFurrow() {
+  while (furrowGroup.children.length) furrowGroup.remove(furrowGroup.children[0]);
+  const phase = PHASES[simState.phaseIdx];
+  if (phase !== 'cytokinesis') return;
+
+  const t = simState.phaseProgress;
+  const depth = t * 3.5;
+  const furrowMat = new THREE.MeshPhongMaterial({ color: 0x10B981, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+  const geo = new THREE.TorusGeometry(3.5 - depth * 0.5, 0.12, 8, 64);
+  const mesh = new THREE.Mesh(geo, furrowMat);
+  furrowGroup.add(mesh);
+
+  // Second cell forming
+  if (t > 0.5) {
+    const opacity2 = (t - 0.5) * 2;
+    const cell2Mat = new THREE.MeshPhongMaterial({ color: 0x10B981, transparent: true, opacity: 0.1 * opacity2, side: THREE.DoubleSide });
+    const cell2 = new THREE.Mesh(new THREE.SphereGeometry(3.2, 24, 24), cell2Mat);
+    cell2.position.y = 4.5;
+    furrowGroup.add(cell2);
+  }
+}
+
+// ── Nuclear envelope ──────────────────────────────────────────────────────────
+function updateNuclearEnvelope() {
+  const phase = PHASES[simState.phaseIdx];
+  const t = simState.phaseProgress;
+  if (phase === 'G1' || phase === 'S' || phase === 'G2') {
+    nucMesh.visible = true; nucMat.opacity = 0.18;
+  } else if (phase === 'prophase') {
+    nucMesh.visible = true; nucMat.opacity = 0.18 * (1 - t);
+  } else if (phase === 'metaphase' || phase === 'anaphase') {
+    nucMesh.visible = false;
+  } else if (phase === 'telophase') {
+    nucMesh.visible = false; // two separate forming
+  } else {
+    nucMesh.visible = true; nucMat.opacity = 0.18;
+  }
+}
+
+// ── Cell size over phases ─────────────────────────────────────────────────────
+function updateCellShape() {
+  const phase = PHASES[simState.phaseIdx];
+  const t = simState.phaseProgress;
+  const base = simState.cellSize;
+  let sx = base, sy = base, sz = base;
+
+  if (phase === 'G1') { sx = base * (1 + t * 0.15); sy = sx; sz = sx; }
+  else if (phase === 'S' || phase === 'G2') { sx = base * 1.15; sy = sx; sz = sx; }
+  else if (phase === 'anaphase') { sy = base * (1.15 + t * 0.3); sx = base * (1.15 - t * 0.1); sz = sx; }
+  else if (phase === 'cytokinesis') { sy = base * 1.5 - t * 0.5; sx = base * (1.05 + t * 0.05); sz = sx; }
+  else { sx = base * 1.15; sy = base * 1.15; sz = base * 1.15; }
+
+  cellMesh.scale.set(sx, sy, sz);
+}
+
+// ── Overlay update ────────────────────────────────────────────────────────────
+function updateOverlay() {
+  const phase = PHASES[simState.phaseIdx];
+  const dnaMap = { G1:'2n', S:'2n→4n', G2:'4n', prophase:'4n', metaphase:'4n', anaphase:'4n', telophase:'2n×2', cytokinesis:'2n each' };
+  const spindleMap = { G1:0, S:0, G2:0, prophase:Math.floor(simState.phaseProgress * 20), metaphase:simState.chrNum, anaphase:simState.chrNum, telophase:Math.floor((1-simState.phaseProgress)*20), cytokinesis:0 };
+  document.getElementById('ov-phase').textContent = phase;
+  document.getElementById('ov-prog').textContent = (simState.phaseProgress * 100).toFixed(0) + '%';
+  document.getElementById('ov-chr').textContent = simState.chrNum;
+  document.getElementById('ov-size').textContent = simState.cellSize.toFixed(2) + '×';
+  document.getElementById('ov-dna').textContent = dnaMap[phase] || '2n';
+  document.getElementById('ov-spindle').textContent = spindleMap[phase] || 0;
+}
+
+function updatePhaseBadges() {
+  const phase = PHASES[simState.phaseIdx];
+  document.querySelectorAll('.phase-badge').forEach(b => {
+    b.classList.toggle('active', b.dataset.phase === phase);
+  });
+  document.getElementById('phase-description').textContent = PHASE_DESC[phase] || '';
+}
+
+// ── Animation loop ─────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let prevPhase = '';
+
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+
+  if (simState.playing) {
+    const phaseName = PHASES[simState.phaseIdx];
+    const dur = PHASE_DURATION[phaseName] || 2;
+    simState.phaseProgress += (delta * simState.speed) / dur;
+
+    if (simState.phaseProgress >= 1) {
+      simState.phaseProgress = 0;
+      simState.phaseIdx = (simState.phaseIdx + 1) % PHASES.length;
+      const newPhase = PHASES[simState.phaseIdx];
+      showToast('Entering ' + newPhase);
+      updatePhaseBadges();
+    }
+  }
+
+  buildChromosomes();
+  buildSpindle();
+  buildFurrow();
+  updateNuclearEnvelope();
+  updateCellShape();
+  updateOverlay();
+
+  simState.totalAngle += delta * 0.3;
+  cellGroup.rotation.y = simState.totalAngle * 0.2;
+
+  renderer.render(scene, camera);
+});
+
+updatePhaseBadges();
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+const PRESETS_DATA = {
+  human: { cellSize: 1.0, chrNum: 46, cancerMode: false },
+  cancer: { cellSize: 1.4, chrNum: 70, cancerMode: true },
+  yeast: { cellSize: 0.7, chrNum: 16, cancerMode: false }
+};
+function applyPreset(key) {
+  const p = PRESETS_DATA[key];
+  simState.cellSize = p.cellSize; simState.chrNum = p.chrNum; simState.cancerMode = p.cancerMode;
+  document.getElementById('sl-cellsize').value = p.cellSize;
+  document.getElementById('sl-chrnum').value = p.chrNum;
+  document.getElementById('lbl-cellsize').textContent = p.cellSize.toFixed(2);
+  document.getElementById('lbl-chrnum').textContent = p.chrNum;
+  document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-preset="${key}"]`).classList.add('active');
+  showToast('Preset: ' + key);
+}
+
+// ── UI Events ─────────────────────────────────────────────────────────────────
+document.getElementById('sl-cellsize').addEventListener('input', function() {
+  simState.cellSize = parseFloat(this.value);
+  document.getElementById('lbl-cellsize').textContent = simState.cellSize.toFixed(2);
+});
+document.getElementById('sl-chrnum').addEventListener('input', function() {
+  simState.chrNum = parseInt(this.value);
+  document.getElementById('lbl-chrnum').textContent = simState.chrNum;
+});
+document.getElementById('btnPlay').addEventListener('click', function() {
+  simState.playing = !simState.playing;
+  this.textContent = simState.playing ? '⏸ Pause' : '▶ Play';
+  showToast(simState.playing ? 'Playing' : 'Paused');
+});
+document.getElementById('btnSkip').addEventListener('click', function() {
+  simState.phaseProgress = 0;
+  simState.phaseIdx = (simState.phaseIdx + 1) % PHASES.length;
+  const newPhase = PHASES[simState.phaseIdx];
+  showToast('Jumped to ' + newPhase);
+  updatePhaseBadges();
+});
+document.getElementById('btnReset').addEventListener('click', function() {
+  simState.phaseIdx = 0; simState.phaseProgress = 0;
+  applyPreset('human');
+  showToast('Reset to G1');
+  updatePhaseBadges();
+});
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) container.requestFullscreen();
+  else document.exitFullscreen();
+});
+document.getElementById('btnAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.add('open');
+});
+document.getElementById('closeAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.remove('open');
+});
+document.querySelectorAll('.btn-speed').forEach(b => {
+  b.addEventListener('click', function() {
+    simState.speed = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.btn-speed').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + this.dataset.speed + 'x');
+  });
+});
+document.querySelectorAll('.btn-preset').forEach(b => {
+  b.addEventListener('click', function() { applyPreset(this.dataset.preset); });
+});
+document.querySelectorAll('.phase-badge').forEach(b => {
+  b.addEventListener('click', function() {
+    const idx = PHASES.indexOf(this.dataset.phase);
+    if (idx >= 0) { simState.phaseIdx = idx; simState.phaseProgress = 0; updatePhaseBadges(); }
+  });
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btnPlay').click(); }
+  if (e.code === 'KeyR') document.getElementById('btnReset').click();
+  if (e.code === 'KeyN') document.getElementById('btnSkip').click();
+  const speeds = ['0.25','0.5','1','2','3'];
+  if (e.code.startsWith('Digit')) {
+    const d = parseInt(e.key) - 1;
+    if (d >= 0 && d < 5) document.querySelector(`[data-speed="${speeds[d]}"]`)?.click();
+  }
+});
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "A drug inhibits cohesin cleavage. In which mitotic phase would cells arrest, and why?",
+    opts: [
+      "Prophase — chromosomes cannot condense",
+      "Metaphase → Anaphase transition — sister chromatids cannot separate",
+      "Telophase — nuclear envelopes fail to reform",
+      "G2 — MPF cannot be activated"
+    ],
+    ans: 1,
+    explain: "Anaphase onset requires separase to cleave cohesin, releasing sister chromatid cohesion. Blocking cohesin cleavage traps cells at the metaphase-anaphase boundary."
+  },
+  {
+    q: "Cancer cells often skip the spindle assembly checkpoint. What structural consequence would you predict?",
+    opts: [
+      "Shorter Okazaki fragments in S phase",
+      "Chromosomes segregate before all kinetochores are attached, leading to aneuploidy",
+      "Overactivation of ligase during cytokinesis",
+      "Failure of chromatin condensation in prophase"
+    ],
+    ans: 1,
+    explain: "The spindle assembly checkpoint (SAC) prevents anaphase until every kinetochore is bi-oriented. Bypassing it allows premature chromosome separation, producing daughter cells with abnormal chromosome numbers (aneuploidy)."
+  },
+  {
+    q: "During which phase is it most accurate to say a cell has 4n DNA content?",
+    opts: [
+      "G1 and early S",
+      "S phase completion through end of metaphase",
+      "Anaphase — now two sets of 2n are moving",
+      "After cytokinesis"
+    ],
+    ans: 1,
+    explain: "DNA is fully doubled at the end of S phase (4n). This 4n content persists through G2 and all of mitosis until cytokinesis produces two 2n daughter cells."
+  }
+];
+
+const qContainer = document.getElementById('quiz-container');
+quizData.forEach((qd, qi) => {
+  const div = document.createElement('div');
+  div.style.marginBottom = '14px';
+  div.innerHTML = `<div style="font-size:12px;color:#e2e8f0;margin-bottom:6px;font-weight:600;">${qi+1}. ${qd.q}</div>`;
+  qd.opts.forEach((opt, oi) => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', function() {
+      div.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('correct','wrong'));
+      btn.classList.add(oi === qd.ans ? 'correct' : 'wrong');
+      if (oi !== qd.ans) div.querySelectorAll('.quiz-option')[qd.ans].classList.add('correct');
+      showToast(oi === qd.ans ? 'Correct!' : 'Incorrect');
+      let expl = div.querySelector('.explanation');
+      if (!expl) {
+        expl = document.createElement('div'); expl.className = 'explanation';
+        expl.style.cssText = 'font-size:11px;color:#94a3b8;margin-top:6px;padding:6px 8px;background:rgba(255,255,255,0.05);border-radius:6px;';
+        expl.textContent = qd.explain;
+        div.appendChild(expl);
+      }
+    });
+    div.appendChild(btn);
+  });
+  qContainer.appendChild(div);
+});
+
+renderMathInElement(document.body, { delimiters: [{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}] });
+</script>
+</body>
+</html>

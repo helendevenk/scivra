@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Molecular Polarity — AP Chemistry</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#f8fafc;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+  .glass{background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.13)}
+  .btn-preset{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;transition:all 0.2s}
+  .btn-preset:hover,.btn-preset.active{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;border-color:transparent}
+  input[type=range]{width:100%;accent-color:#F59E0B;cursor:pointer}
+  .data-val{font-variant-numeric:tabular-nums;font-size:13px;color:#e2e8f0}
+  #toast{position:fixed;top:64px;right:16px;z-index:999;pointer-events:none}
+  .toast-item{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;margin-bottom:6px;animation:slideIn 0.3s ease}
+  @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
+  .katex-block{margin:6px 0;font-size:12px}
+  .quiz-option{padding:8px 12px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin:4px 0;font-size:12px;transition:all 0.2s}
+  .quiz-option:hover{background:rgba(245,158,11,0.2);border-color:#F59E0B}
+  .quiz-option.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;color:#86efac}
+  .quiz-option.wrong{background:rgba(239,68,68,0.2);border-color:#ef4444;color:#fca5a5}
+  .info-card{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:12px;color:#fde68a}
+</style>
+</head>
+<body>
+<nav class="glass flex items-center justify-between px-4 py-2 z-50" style="border-bottom:1px solid rgba(245,158,11,0.3)">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F59E0B,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Molecular Polarity</span>
+    <span class="text-xs text-slate-400 ml-2">Dipole Moments & VSEPR Geometries</span>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="resetSim()" class="btn-preset text-xs">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset text-xs">⛶ Fullscreen</button>
+    <button onclick="document.getElementById('about-modal').classList.remove('hidden')" class="btn-preset text-xs">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <aside class="glass sidebar-scroll" style="width:300px;min-width:260px;border-right:1px solid rgba(245,158,11,0.2);padding:14px">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-3">Core Formulas</h3>
+    <div class="katex-block" id="f1"></div>
+    <p class="text-xs text-slate-400 mb-2">Dipole moment: product of charge separation and distance (Debye units)</p>
+    <div class="katex-block" id="f2"></div>
+    <p class="text-xs text-slate-400 mb-2">Net dipole = vector sum of all bond dipoles</p>
+    <div class="katex-block" id="f3"></div>
+    <p class="text-xs text-slate-400 mb-3">Bond angle determines whether dipoles cancel or reinforce</p>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-3">Concept</h3>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">A molecule is polar if it has a net nonzero dipole moment. Even if individual bonds are polar, the molecular geometry may cause them to cancel. CO₂ has 2 polar C=O bonds, but linear geometry causes the dipoles to point in exactly opposite directions → net dipole = 0 → nonpolar.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">H₂O has 2 polar O-H bonds and a bent geometry (104.5°). The dipoles don't cancel — they add to give a net dipole of 1.85 D pointing from the H₂ side toward O. This polarity drives water's extraordinary properties: high boiling point, surface tension, solvent capability.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-3">CHCl₃ (chloroform) is tetrahedral. Three C-Cl bonds pull electron density toward Cl, but the one C-H bond is less polar. The asymmetry gives a net dipole of 1.15 D. BCl₃ is trigonal planar with zero net dipole despite polar B-Cl bonds.</p>
+
+    <div class="info-card"><b>Polarity Summary</b><br>Linear AX₂ (CO₂): nonpolar ✗<br>Bent AX₂E₂ (H₂O): polar ✓<br>Trigonal planar AX₃ (BCl₃): nonpolar ✗<br>Trig. pyramidal AX₃E (NH₃): polar ✓<br>Tetrahedral AX₄ (CH₄): nonpolar ✗</div>
+    <div class="info-card"><b>Why Polarity Matters</b><br>"Like dissolves like": polar solvents dissolve polar/ionic solutes. Nonpolar molecules have only London dispersion forces. Polar molecules also have dipole-dipole and H-bonding interactions → higher BP.</div>
+    <div class="info-card"><b>AP Chem Connection</b><br>Unit 3: intermolecular forces, solubility, boiling points. Polarity directly determines IMFs and physical properties.</div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-4">Quiz</h3>
+    <div id="quiz-container"></div>
+  </aside>
+
+  <div id="canvas-container" class="flex-1 relative">
+    <canvas id="mainCanvas"></canvas>
+    <div id="data-overlay" class="absolute top-3 left-3 glass rounded-xl px-4 py-3" style="min-width:210px">
+      <div class="text-xs text-amber-400 font-bold uppercase mb-2">Polarity Data</div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Molecule</span><span class="data-val" id="d-mol">H₂O</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Geometry</span><span class="data-val" id="d-geo">Bent</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Bond Angle</span><span class="data-val" id="d-angle">104.5°</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Net Dipole</span><span class="data-val" id="d-dipole">1.85 D</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Polar?</span><span class="data-val" id="d-polar">Yes ✓</span></div>
+      <div class="flex justify-between"><span class="text-xs text-slate-400">ΔEN</span><span class="data-val" id="d-den">1.4</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="glass border-t px-4 py-3" style="border-top:1px solid rgba(245,158,11,0.2)">
+  <div class="flex flex-wrap gap-4 items-end">
+    <div class="flex-1 min-w-40">
+      <label class="text-xs text-slate-400">Bond Angle θ: <span id="lbl-angle">104.5</span>°</label>
+      <input type="range" id="sl-angle" min="80" max="180" value="1045" step="5" oninput="onAngleChange(this.value)"/>
+    </div>
+    <div class="flex-1 min-w-40">
+      <label class="text-xs text-slate-400">ΔEN: <span id="lbl-den">1.4</span></label>
+      <input type="range" id="sl-den" min="0" max="30" value="14" oninput="onDENChange(this.value)"/>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="applyPreset('H2O')" class="btn-preset">Water (bent)</button>
+      <button onclick="applyPreset('CO2')" class="btn-preset">CO₂ (linear)</button>
+      <button onclick="applyPreset('CHCl3')" class="btn-preset">CHCl₃ (tetrahedral)</button>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="togglePlay()" id="btn-play" class="btn-preset">⏸ Pause</button>
+      <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="about-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+  <div class="glass rounded-2xl p-6 max-w-md mx-4">
+    <h2 class="text-lg font-bold text-amber-400 mb-3">About: Molecular Polarity</h2>
+    <p class="text-sm text-slate-300 mb-3">3D molecules with dipole arrows showing bond dipoles (red arrows) and net dipole (yellow arrow). Shows how geometry determines whether dipoles cancel.</p>
+    <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="btn-preset">Close</button>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled || state!==0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) { if (!scope.enabled) return; e.preventDefault(); scale *= (e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rotateStart.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      rotateEnd.set(e.touches[0].clientX,e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd,rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta-=rotateDelta.x; sphericalDelta.phi-=rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var offset=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sphericalDelta.theta*d; spherical.phi+=sphericalDelta.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sphericalDelta.theta*=(1-d);sphericalDelta.phi*=(1-d);}else sphericalDelta.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(offset.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const container=document.getElementById('canvas-container');
+const canvas=document.getElementById('mainCanvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth,container.clientHeight);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0f172a);
+const camera=new THREE.PerspectiveCamera(50,container.clientWidth/container.clientHeight,0.1,200);
+camera.position.set(0,5,14);
+const controls=new THREE.OrbitControls(camera,canvas);
+scene.add(new THREE.AmbientLight(0xffffff,0.5));
+const dirLight=new THREE.DirectionalLight(0xffd700,1.0);
+dirLight.position.set(5,10,8);scene.add(dirLight);
+const fillLight=new THREE.DirectionalLight(0xef4444,0.3);
+fillLight.position.set(-5,-5,-5);scene.add(fillLight);
+
+let playing=true,speedMult=1.0,currentPreset='H2O',bondAngle=104.5,den=1.4;
+const molGroup=new THREE.Group();
+scene.add(molGroup);
+
+const PRESETS={
+  H2O:{name:'H₂O',geo:'Bent',angle:104.5,den:1.4,dipole:1.85,polar:true},
+  CO2:{name:'CO₂',geo:'Linear',angle:180,den:1.0,dipole:0,polar:false},
+  CHCl3:{name:'CHCl₃',geo:'Tetrahedral',angle:109.5,den:0.96,dipole:1.15,polar:true}
+};
+
+function buildArrow(from,to,color,headScale=1){
+  const dir=new THREE.Vector3().subVectors(to,from);
+  const len=dir.length();
+  const geo=new THREE.CylinderGeometry(0.06,0.06,len*0.75,10);
+  const mat=new THREE.MeshPhongMaterial({color});
+  const m=new THREE.Mesh(geo,mat);
+  const mid=new THREE.Vector3().lerpVectors(from,to,0.375);
+  m.position.copy(mid);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+  // Arrow head
+  const hgeo=new THREE.ConeGeometry(0.18*headScale,0.4*headScale,10);
+  const hm=new THREE.Mesh(hgeo,mat.clone());
+  hm.position.copy(to).addScaledVector(dir.clone().normalize(),-0.2*headScale);
+  hm.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+  const g=new THREE.Group();
+  g.add(m);g.add(hm);
+  return g;
+}
+
+function buildSphere(pos,r,color){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,16),new THREE.MeshPhongMaterial({color,shininess:80}));
+  m.position.copy(pos);
+  return m;
+}
+
+function buildCylinder(from,to,color,radius=0.12){
+  const dir=new THREE.Vector3().subVectors(to,from);
+  const len=dir.length();
+  const mid=new THREE.Vector3().addVectors(from,to).multiplyScalar(0.5);
+  const geo=new THREE.CylinderGeometry(radius,radius,len,10);
+  const mat=new THREE.MeshPhongMaterial({color,shininess:60});
+  const m=new THREE.Mesh(geo,mat);
+  m.position.copy(mid);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  return m;
+}
+
+function clearMol(){while(molGroup.children.length)molGroup.remove(molGroup.children[0]);}
+
+function buildMolecule(key){
+  clearMol();
+  const p=PRESETS[key];
+  const ang=p.angle*Math.PI/180;
+
+  if(key==='H2O'){
+    const posO=new THREE.Vector3(0,0,0);
+    const posH1=new THREE.Vector3(Math.sin(ang/2)*2.0,-Math.cos(ang/2)*2.0,0);
+    const posH2=new THREE.Vector3(-Math.sin(ang/2)*2.0,-Math.cos(ang/2)*2.0,0);
+    molGroup.add(buildSphere(posO,0.7,0xef4444));
+    molGroup.add(buildSphere(posH1,0.45,0xffffff));
+    molGroup.add(buildSphere(posH2,0.45,0xffffff));
+    molGroup.add(buildCylinder(posO,posH1,0xd4d4d4));
+    molGroup.add(buildCylinder(posO,posH2,0xd4d4d4));
+    // Bond dipoles (red arrows pointing toward O)
+    if(p.den>0.3){
+      molGroup.add(buildArrow(posH1,posO.clone().add(posH1.clone().multiplyScalar(-0.3)),0xef4444,0.7));
+      molGroup.add(buildArrow(posH2,posO.clone().add(posH2.clone().multiplyScalar(-0.3)),0xef4444,0.7));
+    }
+    // Net dipole (yellow, pointing up toward O)
+    if(p.polar) molGroup.add(buildArrow(new THREE.Vector3(0,-1.5,0),new THREE.Vector3(0,2.5,0),0xfbbf24,1.3));
+  } else if(key==='CO2'){
+    const posC=new THREE.Vector3(0,0,0);
+    const posO1=new THREE.Vector3(-2.4,0,0);
+    const posO2=new THREE.Vector3(2.4,0,0);
+    molGroup.add(buildSphere(posC,0.6,0x374151));
+    molGroup.add(buildSphere(posO1,0.65,0xef4444));
+    molGroup.add(buildSphere(posO2,0.65,0xef4444));
+    // Double bonds
+    [0.15,-0.15].forEach(off=>{
+      const ov=new THREE.Vector3(0,off,0);
+      molGroup.add(buildCylinder(posC.clone().add(ov),posO1.clone().add(ov),0xfbbf24,0.09));
+      molGroup.add(buildCylinder(posC.clone().add(ov),posO2.clone().add(ov),0xfbbf24,0.09));
+    });
+    // Bond dipoles cancel — show both pointing inward
+    molGroup.add(buildArrow(posO1,posC.clone().add(new THREE.Vector3(-1,0,0)),0xef4444,0.7));
+    molGroup.add(buildArrow(posO2,posC.clone().add(new THREE.Vector3(1,0,0)),0xef4444,0.7));
+    // Net dipole = 0: show crossed-out arrow
+    const crossGeo=new THREE.SphereGeometry(0.3,12,12);
+    const crossMat=new THREE.MeshBasicMaterial({color:0x64748b});
+    const cross=new THREE.Mesh(crossGeo,crossMat);
+    cross.position.set(0,-2,0);
+    molGroup.add(cross);
+  } else if(key==='CHCl3'){
+    const posC=new THREE.Vector3(0,0,0);
+    const posH=new THREE.Vector3(0,2.0,0);
+    const tetAngle=109.5*Math.PI/180;
+    const r=2.0;
+    const posCl1=new THREE.Vector3(r*Math.sin(tetAngle)*Math.cos(0),r*Math.cos(tetAngle),r*Math.sin(tetAngle)*Math.sin(0));
+    const posCl2=new THREE.Vector3(r*Math.sin(tetAngle)*Math.cos(2*Math.PI/3),r*Math.cos(tetAngle),r*Math.sin(tetAngle)*Math.sin(2*Math.PI/3));
+    const posCl3=new THREE.Vector3(r*Math.sin(tetAngle)*Math.cos(4*Math.PI/3),r*Math.cos(tetAngle),r*Math.sin(tetAngle)*Math.sin(4*Math.PI/3));
+    molGroup.add(buildSphere(posC,0.65,0x374151));
+    molGroup.add(buildSphere(posH,0.4,0xffffff));
+    molGroup.add(buildSphere(posCl1,0.85,0x84cc16));
+    molGroup.add(buildSphere(posCl2,0.85,0x84cc16));
+    molGroup.add(buildSphere(posCl3,0.85,0x84cc16));
+    [posH,posCl1,posCl2,posCl3].forEach(p2=>{molGroup.add(buildCylinder(posC,p2,0xd4d4d4));});
+    // Bond dipoles toward Cl atoms
+    [posCl1,posCl2,posCl3].forEach(pCl=>{
+      molGroup.add(buildArrow(posC,pCl.clone().multiplyScalar(0.7),0xef4444,0.6));
+    });
+    // Net dipole pointing down
+    molGroup.add(buildArrow(new THREE.Vector3(0,1,0),new THREE.Vector3(0,-2.5,0),0xfbbf24,1.2));
+  }
+
+  const pr=PRESETS[key];
+  document.getElementById('d-mol').textContent=pr.name;
+  document.getElementById('d-geo').textContent=pr.geo;
+  document.getElementById('d-angle').textContent=pr.angle+'°';
+  document.getElementById('d-dipole').textContent=pr.dipole+' D';
+  document.getElementById('d-polar').textContent=pr.polar?'Yes ✓':'No ✗';
+  document.getElementById('d-den').textContent=pr.den.toFixed(1);
+}
+
+function applyPreset(key){
+  currentPreset=key;
+  const p=PRESETS[key];
+  bondAngle=p.angle; den=p.den;
+  document.getElementById('sl-angle').value=bondAngle*10;
+  document.getElementById('sl-den').value=Math.round(den*10);
+  document.getElementById('lbl-angle').textContent=bondAngle;
+  document.getElementById('lbl-den').textContent=den.toFixed(1);
+  buildMolecule(key);
+  showToast(p.name+': '+(p.polar?'POLAR':'NONPOLAR'));
+}
+
+function onAngleChange(v){
+  bondAngle=v/10;
+  document.getElementById('lbl-angle').textContent=bondAngle.toFixed(1);
+}
+function onDENChange(v){
+  den=v/10;
+  document.getElementById('lbl-den').textContent=den.toFixed(1);
+}
+function togglePlay(){playing=!playing;document.getElementById('btn-play').textContent=playing?'⏸ Pause':'▶ Play';}
+function resetSim(){playing=true;applyPreset('H2O');showToast('Reset');}
+function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function showToast(msg){const d=document.createElement('div');d.className='toast-item';d.textContent=msg;document.getElementById('toast').appendChild(d);setTimeout(()=>d.remove(),2000);}
+
+window.addEventListener('load',()=>{
+  katex.render('\\mu = q \\cdot d', document.getElementById('f1'),{displayMode:true});
+  katex.render('\\vec{\\mu}_{net} = \\sum_i \\vec{\\mu}_i', document.getElementById('f2'),{displayMode:true});
+  katex.render('\\mu_{net}^{CO_2} = 0 \\text{ (linear symmetry)}', document.getElementById('f3'),{displayMode:true});
+});
+
+const quizData=[
+  {q:'Why is CO₂ nonpolar despite having polar C=O bonds?',opts:['C-O bonds are weak','Linear geometry causes dipoles to cancel','CO₂ has no lone pairs','ΔEN is too small'],ans:1,exp:'Linear geometry: both C=O dipoles are equal in magnitude but opposite in direction → vector sum = 0 → nonpolar.'},
+  {q:'Which molecule has the largest dipole moment?',opts:['CO₂ (0 D)','CH₄ (0 D)','H₂O (1.85 D)','N₂ (0 D)'],ans:2,exp:'H₂O has μ = 1.85 D, the highest. Its bent geometry + high ΔEN (O-H = 1.4) combine to give a large net dipole.'},
+  {q:'BCl₃ is trigonal planar and nonpolar. Adding one more Cl to make BCl₄⁻ would make it:',opts:['Polar','Still nonpolar (tetrahedral)','Even less polar','Ionic'],ans:1,exp:'BCl₄⁻ is tetrahedral with 4 identical B-Cl bonds. Perfect tetrahedral symmetry → dipoles cancel → nonpolar.'}
+];
+let quizAnswered=[false,false,false];
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  c.innerHTML=quizData.map((q,qi)=>`<div class="mb-3"><p class="text-xs text-slate-300 mb-1 font-semibold">Q${qi+1}: ${q.q}</p>${q.opts.map((o,oi)=>`<div class="quiz-option" id="qo-${qi}-${oi}" onclick="answerQuiz(${qi},${oi})">${o}</div>`).join('')}<div id="qe-${qi}" class="text-xs text-slate-400 mt-1 hidden">${q.exp}</div></div>`).join('');
+}
+function answerQuiz(qi,oi){
+  if(quizAnswered[qi])return;quizAnswered[qi]=true;
+  document.getElementById(`qo-${qi}-${oi}`).classList.add(oi===quizData[qi].ans?'correct':'wrong');
+  if(oi!==quizData[qi].ans)document.getElementById(`qo-${qi}-${quizData[qi].ans}`).classList.add('correct');
+  document.getElementById(`qe-${qi}`).classList.remove('hidden');
+}
+renderQuiz();
+
+renderer.setAnimationLoop(()=>{
+  if(playing) molGroup.rotation.y+=0.005*speedMult;
+  controls.update();
+  renderer.render(scene,camera);
+});
+
+window.addEventListener('resize',()=>{
+  const w=container.clientWidth,h=container.clientHeight;
+  camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);
+});
+
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='KeyR')resetSim();
+  if(e.code==='Digit1')applyPreset('H2O');
+  if(e.code==='Digit2')applyPreset('CO2');
+  if(e.code==='Digit3')applyPreset('CHCl3');
+});
+
+buildMolecule('H2O');
+
+// Extended VSEPR geometry data
+const VSEPR_GEOMETRIES = {
+  'AX2':   { name: 'Linear',              angle: 180,   example: 'CO₂, BeCl₂, CS₂',   polar: false },
+  'AX2E1': { name: 'Bent',                angle: 117,   example: 'SO₂, NO₂⁻',          polar: true  },
+  'AX2E2': { name: 'Bent',                angle: 104.5, example: 'H₂O, H₂S',           polar: true  },
+  'AX3':   { name: 'Trigonal Planar',     angle: 120,   example: 'BF₃, SO₃, BCl₃',    polar: false },
+  'AX3E1': { name: 'Trigonal Pyramidal',  angle: 107,   example: 'NH₃, PH₃, PCl₃',    polar: true  },
+  'AX4':   { name: 'Tetrahedral',         angle: 109.5, example: 'CH₄, CCl₄, SiCl₄',  polar: false },
+  'AX4E1': { name: 'See-saw',             angle: 102,   example: 'SF₄, XeO₂F₂',       polar: true  },
+  'AX4E2': { name: 'Square Planar',       angle: 90,    example: 'XeF₄, ICl₄⁻',       polar: false },
+  'AX5':   { name: 'Trigonal Bipyramidal',angle: 90,    example: 'PCl₅, PF₅, AsF₅',   polar: false },
+  'AX6':   { name: 'Octahedral',          angle: 90,    example: 'SF₆, XeF₆, [PtCl₆]²⁻', polar: false },
+};
+
+// Electronegativity table (Pauling scale)
+const EN_TABLE = {
+  H: 2.1, Li: 1.0, Be: 1.5, B: 2.0, C: 2.5, N: 3.0, O: 3.5, F: 4.0,
+  Na: 0.9, Mg: 1.2, Al: 1.5, Si: 1.8, P: 2.1, S: 2.5, Cl: 3.0, Br: 2.8,
+  I: 2.5, Xe: 2.6, Kr: 3.0, Fe: 1.8, Cu: 1.9, Zn: 1.6
+};
+
+// Calculate bond dipole moment (Debye units, approximate)
+function calcBondDipole(el1, el2, bondLengthPm) {
+  const dEN = Math.abs((EN_TABLE[el1]||2.0) - (EN_TABLE[el2]||2.0));
+  // Rough formula: μ ≈ dEN × bondLength × 0.004 D/pm
+  return (dEN * bondLengthPm * 0.004).toFixed(2);
+}
+
+// Net dipole from geometry
+function calcNetDipole(molecule) {
+  const dipoles = {
+    H2O: 1.85, NH3: 1.47, HF: 1.91, HCl: 1.08, HBr: 0.82,
+    CHCl3: 1.15, CH2Cl2: 1.60, NF3: 0.24, SO2: 1.63, SO3: 0,
+    CO2: 0, BF3: 0, CCl4: 0, CH4: 0, SF6: 0, PCl5: 0,
+  };
+  return dipoles[molecule] || 0;
+}
+
+// IMF determination based on polarity
+function getIMF(polar, hasHBond, hasLonePairs) {
+  const forces = [];
+  forces.push('London Dispersion (all molecules)');
+  if (polar) forces.push('Dipole-Dipole');
+  if (hasHBond) forces.push('Hydrogen Bonding (N/O/F bonded to H)');
+  return forces.join(', ');
+}
+
+// Polarity effect on boiling point
+function predictBP(MW, polar, hasHBond) {
+  let base = MW * 0.5; // crude baseline
+  if (polar) base *= 1.3;
+  if (hasHBond) base *= 1.8;
+  return Math.round(base - 273); // rough Celsius estimate
+}
+
+// Extended keyboard shortcuts
+window.addEventListener('keydown', e => {
+  if (e.code === 'Digit4') applyPreset('H2O');
+  if (e.code === 'Digit5') {
+    const info = VSEPR_GEOMETRIES['AX2E2'];
+    showToast('Bent (AX2E2): angle=' + info.angle + '°, example=' + info.example);
+  }
+});
+
+// Symmetry checker: list all symmetric (nonpolar) vs asymmetric (polar) geometries
+function listSymmetryMolecules() {
+  const nonpolar = Object.entries(VSEPR_GEOMETRIES).filter(([k,v])=>!v.polar).map(([k,v])=>v.name);
+  const polar = Object.entries(VSEPR_GEOMETRIES).filter(([k,v])=>v.polar).map(([k,v])=>v.name);
+  showToast('Nonpolar: '+[...new Set(nonpolar)].join(', '));
+}
+
+// Bond moment additive rule for polyatomic molecules
+function vectorSumDipoles(dipoles, angles) {
+  // dipoles: array of magnitudes, angles: array in radians from reference axis
+  let sumX = 0, sumY = 0;
+  dipoles.forEach((d, i) => {
+    sumX += d * Math.cos(angles[i]);
+    sumY += d * Math.sin(angles[i]);
+  });
+  return Math.sqrt(sumX*sumX + sumY*sumY).toFixed(3);
+}
+
+// Example: water dipole from O-H bond dipoles
+const waterHOH = vectorSumDipoles([1.51, 1.51], [38 * Math.PI/180, 142 * Math.PI/180]);
+// waterHOH ≈ 1.85 D confirms the vector sum approach
+
+// Resonance structure indicator
+function hasResonance(molecule) {
+  const resonanceMols = ['SO3', 'CO3', 'NO3', 'NO2', 'benzene', 'O3', 'NO'];
+  return resonanceMols.some(r => molecule.includes(r));
+}
+
+// Formal charge display helper
+function formalChargeDisplay(V, N, B) {
+  const fc = V - N - B/2;
+  return fc > 0 ? '+' + fc : String(fc);
+}
+
+// Intermolecular force strength order
+const IMF_STRENGTHS = {
+  'Ion-Ion':           'Strongest (~500-1000 kJ/mol)',
+  'Ion-Dipole':        'Strong (40-600 kJ/mol) — important in solutions',
+  'H-Bond':            'Moderate (10-40 kJ/mol) — requires N-H, O-H, or F-H',
+  'Dipole-Dipole':     'Moderate (5-25 kJ/mol) — requires polar molecules',
+  'London Dispersion': 'Weakest (0.05-40 kJ/mol) — present in ALL molecules',
+};
+
+// Predict boiling point ranking from polarity and MW
+function rankByBoilingPoint(molecules) {
+  const bp_data = {
+    'CH4':    -161.5, 'C2H6':  -89, 'C3H8':  -42,
+    'HCl':    -85, 'HBr':    -67, 'HI':     -35,
+    'NH3':    -33, 'H2O':    100, 'HF':      19.5,
+    'N2':    -196, 'O2':    -183, 'F2':     -188,
+    'CO2':    -78.5, 'SO2':  -10, 'NO2':     21,
+    'CCl4':    76.7, 'CHCl3': 61, 'CH2Cl2':  39.6,
+  };
+  return molecules
+    .filter(m => m in bp_data)
+    .sort((a,b) => bp_data[a] - bp_data[b])
+    .map(m => `${m}: ${bp_data[m]}°C`);
+}
+
+// Solubility prediction: like dissolves like
+function predictSolubility(solute_polar, solvent_polar) {
+  if (solute_polar === solvent_polar) return 'Soluble — like dissolves like';
+  return 'Insoluble — polarity mismatch (polar vs nonpolar)';
+}
+
+// Dipole moment table for common molecules (Debye)
+const DIPOLE_MOMENTS = {
+  H2O:1.85, NH3:1.47, HF:1.91, HCl:1.08, HBr:0.82, HI:0.44,
+  SO2:1.63, SO3:0, CO2:0, NO2:0.32, N2O:0.16,
+  CHCl3:1.15, CH2Cl2:1.60, CH3Cl:1.87, CCl4:0,
+  CH4:0, C6H6:0, BF3:0, NF3:0.24, PCl3:0.97,
+};
+</script>
+</body>
+</html>

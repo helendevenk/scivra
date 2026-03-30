@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enzyme Kinetics — AP Biology</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(16,185,129,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(16,185,129,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;padding:12px; }
+  .panel-card { background:rgba(6,78,59,0.6);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);cursor:pointer; }
+  .sidebar { width:30%;min-width:260px;max-width:360px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(16,185,129,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(16,185,129,0.4);border-radius:2px;}
+  .btn { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(16,185,129,0.3);cursor:pointer;background:rgba(16,185,129,0.1);color:#6ee7b7;transition:all 0.18s; }
+  .btn:hover,.btn.active { background:rgba(16,185,129,0.3);color:#fff;border-color:#10B981; }
+  .btn-speed { padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#10B981,#22D3EE);color:#fff;border-color:#10B981; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#34d399; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#10B981;background:rgba(16,185,129,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100;display:none; }
+  #quiz-fab { position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(16,185,129,0.5); }
+  #info-overlay { position:absolute;top:12px;left:12px;background:rgba(6,78,59,0.85);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;pointer-events:none;min-width:200px; }
+  #canvas-wrap { position:relative;flex:1;overflow:hidden; }
+  canvas { display:block; }
+  #mm-svg { position:absolute;bottom:10px;left:50%;transform:translateX(-50%);pointer-events:none; }
+</style>
+</head>
+<body>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(16,185,129,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#10B981,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Enzyme Kinetics</span>
+    <span class="text-xs text-slate-400 ml-3">Michaelis-Menten · AP Biology</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">Core Formulas</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Michaelis-Menten equation: reaction velocity as a function of substrate concentration [S].</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Km = substrate concentration at half-maximal velocity. Low Km = high affinity.</div>
+    <div id="f3" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Competitive inhibition raises apparent Km; noncompetitive lowers apparent Vmax.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Concept</div>
+    <p class="text-xs text-slate-300 leading-relaxed">Enzymes are biological catalysts that lower the activation energy of reactions without being consumed. They bind substrate at the active site to form an enzyme-substrate (ES) complex, then release product and regenerate.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">The Michaelis-Menten model describes how reaction rate (v) changes with substrate concentration [S]. At low [S], rate increases linearly; at high [S], active sites are saturated and rate approaches Vmax (zero-order kinetics).</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">Km is the substrate concentration at which v = ½Vmax — it reflects binding affinity. A small Km means the enzyme has high affinity and reaches half-maximal rate at low substrate concentrations.</p>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-cyan-400 mb-1">Inhibition Mechanisms</div>
+    <div class="text-xs text-slate-300"><strong class="text-yellow-300">Competitive:</strong> inhibitor resembles substrate, competes for active site. Km↑, Vmax unchanged. Can be overcome with excess substrate.</div>
+    <div class="text-xs text-slate-300 mt-1"><strong class="text-pink-300">Noncompetitive:</strong> inhibitor binds allosteric site, changes enzyme shape. Vmax↓, Km unchanged. Cannot be overcome with substrate.</div>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-amber-400 mb-1">Common Misconception</div>
+    <div class="text-xs text-slate-300">Enzymes are NOT used up. One enzyme molecule catalyzes thousands of reactions per second (turnover number, kcat). Catalase — one of the fastest enzymes — processes ~40 million H₂O₂ molecules per second.</div>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-emerald-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">AP Biology: enzyme kinetics underlies drug design. Statins competitively inhibit HMG-CoA reductase (cholesterol synthesis). HIV protease inhibitors block viral enzyme. Understanding Km/Vmax helps predict drug dosing and resistance.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold text-emerald-400 mb-2">Presets</div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn active" id="p0" onclick="applyPreset(0)">Normal Enzyme (Km=2mM)</button>
+      <button class="btn" id="p1" onclick="applyPreset(1)">Competitive Inhibition</button>
+      <button class="btn" id="p2" onclick="applyPreset(2)">Noncompetitive Inhibition</button>
+    </div>
+  </div>
+</aside>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="info-overlay">
+    <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Live Data</div>
+    <div class="text-xs text-slate-300">Velocity (v): <span class="data-val" id="d-v">—</span> μM/s</div>
+    <div class="text-xs text-slate-300">Vmax: <span class="data-val" id="d-vmax">—</span> μM/s</div>
+    <div class="text-xs text-slate-300">Km (app): <span class="data-val" id="d-km">—</span> mM</div>
+    <div class="text-xs text-slate-300">ES Complexes: <span class="data-val" id="d-es">—</span></div>
+    <div class="text-xs text-slate-300">Saturation: <span class="data-val" id="d-sat">—</span>%</div>
+    <div class="text-xs text-slate-300">Mode: <span class="data-val" id="d-mode" style="color:#fbbf24;">Normal</span></div>
+  </div>
+  <svg id="mm-svg" width="300" height="120"></svg>
+</div>
+</div>
+
+<div class="shrink-0 px-4 py-3" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(12px);border-top:1px solid rgba(16,185,129,0.2);">
+  <div class="flex items-center gap-6 flex-wrap">
+    <div class="flex gap-2">
+      <button onclick="togglePlay()" id="btn-play" class="btn" style="min-width:70px;">⏸ Pause</button>
+      <button onclick="resetSim()" class="btn">↺ Reset</button>
+    </div>
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      Speed:
+      <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+      <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+      <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+      <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+    </div>
+    <div class="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
+      <div class="flex flex-col gap-1" style="min-width:150px;">
+        <label class="text-xs text-slate-400">Substrate [S]: <span id="lbl-s" class="text-emerald-400 font-bold">4.0 mM</span></label>
+        <input type="range" id="sl-s" min="0.5" max="20" step="0.5" value="4" oninput="onSChange()">
+      </div>
+      <div class="flex flex-col gap-1" style="min-width:150px;">
+        <label class="text-xs text-slate-400">Enzyme Amount: <span id="lbl-e" class="text-emerald-400 font-bold">10</span></label>
+        <input type="range" id="sl-e" min="1" max="20" step="1" value="10" oninput="onEChange()">
+      </div>
+      <div class="flex flex-col gap-1" style="min-width:150px;">
+        <label class="text-xs text-slate-400">Inhibitor [I]: <span id="lbl-i" class="text-slate-400 font-bold">0.0 mM</span></label>
+        <input type="range" id="sl-i" min="0" max="10" step="0.5" value="0" oninput="onIChange()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="quiz-fab" onclick="toggleQuiz()" title="Quiz">🧪</div>
+<div id="quiz-panel" class="glass p-4">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-sm font-bold text-emerald-400">Prediction Questions</span>
+    <button onclick="toggleQuiz()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <div id="q-container"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = 0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', function() { state = -1; document.removeEventListener('mousemove', onMouseMove); });
+  });
+  function onMouseMove(e) {
+    if (!scope.enabled || state !== 0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) { if (!scope.enabled) return; e.preventDefault(); scale *= (e.deltaY > 0) ? 1.1 : 0.9; }, { passive: false });
+  domElement.addEventListener('touchstart', function(e) { if (e.touches.length===1) { state=0; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); } });
+  domElement.addEventListener('touchmove', function(e) {
+    if (e.touches.length===1 && state===0) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var qi = quat.clone().invert();
+    offset.copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi += sphericalDelta.phi * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi = Math.max(0.1, Math.min(Math.PI-0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    if (scope.enableDamping) { sphericalDelta.theta *= (1-scope.dampingFactor); sphericalDelta.phi *= (1-scope.dampingFactor); }
+    else sphericalDelta.set(0,0,0);
+    scale = 1;
+    camera.position.copy(target).add(offset.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose = function() {};
+};
+
+// --- Scene Setup ---
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x0f172a);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
+camera.position.set(0, 8, 22);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 5; controls.maxDistance = 40;
+
+// Lighting
+const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambient);
+const dLight1 = new THREE.DirectionalLight(0x10B981, 0.9);
+dLight1.position.set(10, 20, 10);
+scene.add(dLight1);
+const dLight2 = new THREE.DirectionalLight(0x22D3EE, 0.6);
+dLight2.position.set(-10, 5, -10);
+scene.add(dLight2);
+const pLight = new THREE.PointLight(0xffffff, 0.5, 50);
+pLight.position.set(0, 15, 0);
+scene.add(pLight);
+
+// --- Simulation State ---
+let simState = {
+  S: 4.0, E: 10, I: 0.0,
+  Km: 2.0, Vmax: 10.0,
+  mode: 'normal', // normal | competitive | noncompetitive
+  playing: true, speed: 1.0,
+  t: 0
+};
+
+// Enzyme meshes
+const enzymes = [];
+const substrates = [];
+const products = [];
+const inhibitors3d = [];
+
+function buildScene() {
+  // Clear
+  enzymes.forEach(e => scene.remove(e.mesh));
+  substrates.forEach(s => scene.remove(s.mesh));
+  products.forEach(p => scene.remove(p.mesh));
+  inhibitors3d.forEach(i => scene.remove(i.mesh));
+  enzymes.length = 0; substrates.length = 0; products.length = 0; inhibitors3d.length = 0;
+
+  const eCount = Math.round(simState.E);
+  const sCount = Math.min(Math.round(simState.S * 5), 80);
+  const iCount = Math.round(simState.I * 3);
+
+  // Enzyme: large torus (active site = hole)
+  const eMat = new THREE.MeshPhongMaterial({color:0x10B981, shininess:80, transparent:true, opacity:0.9});
+  for (let i = 0; i < eCount; i++) {
+    const geo = new THREE.TorusGeometry(1.1, 0.38, 16, 32);
+    const mesh = new THREE.Mesh(geo, eMat.clone());
+    const angle = (i / eCount) * Math.PI * 2;
+    const r = 4 + Math.random() * 3;
+    mesh.position.set(Math.cos(angle)*r, (Math.random()-0.5)*3, Math.sin(angle)*r);
+    mesh.rotation.set(Math.random(), Math.random(), Math.random());
+    scene.add(mesh);
+    enzymes.push({mesh, bound:false, timer:0, bindTime:0, pos:mesh.position.clone()});
+  }
+
+  // Substrate: small spheres (green)
+  const sMat = new THREE.MeshPhongMaterial({color:0x6EE7B7, shininess:120});
+  for (let i = 0; i < sCount; i++) {
+    const geo = new THREE.SphereGeometry(0.38, 12, 12);
+    const mesh = new THREE.Mesh(geo, sMat.clone());
+    mesh.position.set((Math.random()-0.5)*18, (Math.random()-0.5)*8, (Math.random()-0.5)*18);
+    scene.add(mesh);
+    substrates.push({mesh, free:true, vx:(Math.random()-0.5)*0.04, vy:(Math.random()-0.5)*0.04, vz:(Math.random()-0.5)*0.04});
+  }
+
+  // Inhibitor: octahedron (red/orange)
+  const iColor = simState.mode==='competitive' ? 0xf97316 : 0xec4899;
+  const iMat = new THREE.MeshPhongMaterial({color:iColor, shininess:100, transparent:true, opacity:0.85});
+  for (let i = 0; i < iCount; i++) {
+    const geo = new THREE.OctahedronGeometry(0.42);
+    const mesh = new THREE.Mesh(geo, iMat.clone());
+    mesh.position.set((Math.random()-0.5)*18, (Math.random()-0.5)*8, (Math.random()-0.5)*18);
+    scene.add(mesh);
+    inhibitors3d.push({mesh, free:true, vx:(Math.random()-0.5)*0.03, vy:(Math.random()-0.5)*0.03, vz:(Math.random()-0.5)*0.03, bound:false});
+  }
+}
+
+buildScene();
+
+// --- MM kinetics ---
+function calcVelocity(S, Km, Vmax) {
+  return (Vmax * S) / (Km + S);
+}
+
+function getApparentParams() {
+  const {S, I, Km, Vmax, mode} = simState;
+  if (mode === 'competitive') {
+    // Competitive: app_Km = Km*(1 + I/Ki), Vmax unchanged
+    const Ki = 2.0;
+    return {appKm: Km * (1 + I/Ki), appVmax: Vmax};
+  } else if (mode === 'noncompetitive') {
+    // Noncompetitive: Km unchanged, app_Vmax = Vmax/(1 + I/Ki)
+    const Ki = 2.0;
+    return {appKm: Km, appVmax: Vmax / (1 + I/Ki)};
+  }
+  return {appKm: Km, appVmax: Vmax};
+}
+
+// --- Animation ---
+let playing = true, speed = 1.0;
+let frameT = 0;
+
+function updateUI() {
+  const {appKm, appVmax} = getApparentParams();
+  const v = calcVelocity(simState.S, appKm, appVmax);
+  const sat = (v / appVmax * 100).toFixed(1);
+  const boundCount = enzymes.filter(e=>e.bound).length;
+
+  document.getElementById('d-v').textContent = v.toFixed(2);
+  document.getElementById('d-vmax').textContent = appVmax.toFixed(2);
+  document.getElementById('d-km').textContent = appKm.toFixed(2);
+  document.getElementById('d-es').textContent = boundCount;
+  document.getElementById('d-sat').textContent = sat;
+  document.getElementById('d-mode').textContent = simState.mode==='normal'?'Normal':simState.mode==='competitive'?'Competitive Inh.':'Noncompetitive Inh.';
+
+  drawMMCurve();
+}
+
+function drawMMCurve() {
+  const svg = document.getElementById('mm-svg');
+  const W=300, H=120, pad=30;
+  const {appKm, appVmax} = getApparentParams();
+  const maxS = 20;
+  let pts = '';
+  for (let i=0; i<=60; i++) {
+    const s = (i/60)*maxS;
+    const v = calcVelocity(s, appKm, appVmax);
+    const x = pad + (s/maxS)*(W-2*pad);
+    const y = H - pad - (v/simState.Vmax)*(H-2*pad);
+    pts += (i===0?'M':'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }
+  // current point
+  const cv = calcVelocity(simState.S, appKm, appVmax);
+  const cx = pad + (simState.S/maxS)*(W-2*pad);
+  const cy = H - pad - (cv/simState.Vmax)*(H-2*pad);
+  // Km line
+  const kmx = pad + (appKm/maxS)*(W-2*pad);
+  const vmaxY = H - pad - (appVmax/simState.Vmax)*(H-2*pad);
+  const halfY = H - pad - (appVmax/2/simState.Vmax)*(H-2*pad);
+
+  svg.innerHTML = `
+    <rect x="0" y="0" width="${W}" height="${H}" fill="rgba(6,78,59,0.7)" rx="8"/>
+    <line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#334155" stroke-width="1"/>
+    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#334155" stroke-width="1"/>
+    <path d="${pts}" fill="none" stroke="#10B981" stroke-width="2"/>
+    <line x1="${kmx}" y1="${H-pad}" x2="${kmx}" y2="${halfY}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="${pad}" y1="${halfY}" x2="${kmx}" y2="${halfY}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="${pad}" y1="${vmaxY}" x2="${W-pad}" y2="${vmaxY}" stroke="#22D3EE" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
+    <circle cx="${cx}" cy="${cy}" r="5" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+    <text x="${kmx}" y="${H-4}" fill="#fbbf24" font-size="9" text-anchor="middle">Km</text>
+    <text x="${W-pad+2}" y="${vmaxY+4}" fill="#22D3EE" font-size="9">Vmax</text>
+    <text x="${pad+2}" y="${H-2}" fill="#94a3b8" font-size="9">[S]</text>
+    <text x="${pad-8}" y="${pad+2}" fill="#94a3b8" font-size="9">v</text>
+  `;
+}
+
+function animateParticles(dt) {
+  const {appKm, appVmax} = getApparentParams();
+  const v = calcVelocity(simState.S, appKm, appVmax);
+  const bindRate = v / appVmax;
+
+  // Move free substrates
+  substrates.forEach(s => {
+    if (!s.free) return;
+    s.mesh.position.x += s.vx * speed;
+    s.mesh.position.y += s.vy * speed;
+    s.mesh.position.z += s.vz * speed;
+    // Bounce
+    ['x','y','z'].forEach(ax => {
+      const lim = ax==='y'?5:9;
+      if (Math.abs(s.mesh.position[ax]) > lim) s['v'+ax] *= -1;
+    });
+    s.mesh.rotation.x += 0.02*speed;
+  });
+
+  // Move free inhibitors
+  inhibitors3d.forEach(inh => {
+    if (inh.bound) return;
+    inh.mesh.position.x += inh.vx * speed;
+    inh.mesh.position.y += inh.vy * speed;
+    inh.mesh.position.z += inh.vz * speed;
+    ['x','y','z'].forEach(ax => {
+      const lim = ax==='y'?5:9;
+      if (Math.abs(inh.mesh.position[ax]) > lim) inh['v'+ax] *= -1;
+    });
+    inh.mesh.rotation.y += 0.03*speed;
+  });
+
+  // Enzyme binding logic
+  enzymes.forEach((enz, ei) => {
+    enz.mesh.rotation.y += 0.005 * speed;
+    if (!enz.bound) {
+      // Try to bind substrate based on bindRate
+      if (Math.random() < bindRate * 0.03 * speed) {
+        const free = substrates.filter(s=>s.free);
+        if (free.length > 0) {
+          const s = free[Math.floor(Math.random()*free.length)];
+          s.free = false;
+          s.mesh.position.copy(enz.mesh.position);
+          enz.bound = true;
+          enz.timer = 0;
+          enz.bindTime = 30 + Math.random()*20;
+          enz.mesh.material.color.setHex(0xfbbf24);
+          enz.boundS = s;
+        }
+      }
+    } else {
+      // ES complex: substrate orbits enzyme
+      enz.timer += speed;
+      const orb = enz.timer * 0.05;
+      enz.boundS.mesh.position.set(
+        enz.mesh.position.x + Math.cos(orb)*1.3,
+        enz.mesh.position.y + Math.sin(orb)*0.5,
+        enz.mesh.position.z + Math.sin(orb)*1.3
+      );
+      // Release -> product
+      if (enz.timer > enz.bindTime) {
+        enz.boundS.free = true;
+        enz.boundS.mesh.material.color.setHex(0x22D3EE);
+        enz.boundS.mesh.material.emissive = new THREE.Color(0x0e7490);
+        enz.boundS.mesh.material.emissiveIntensity = 0.5;
+        // Fly away
+        enz.boundS.vx = (Math.random()-0.5)*0.08;
+        enz.boundS.vy = (Math.random()-0.5)*0.08;
+        enz.boundS.vz = (Math.random()-0.5)*0.08;
+        enz.bound = false;
+        enz.mesh.material.color.setHex(0x10B981);
+        // Reset product color after 2s
+        const ps = enz.boundS;
+        setTimeout(()=>{ if(ps){ ps.mesh.material.color.setHex(0x6EE7B7); ps.mesh.material.emissiveIntensity=0; } }, 2000);
+      }
+    }
+  });
+
+  // Inhibitor binding (competitive: bind to enzyme active site)
+  if (simState.mode === 'competitive' && inhibitors3d.length > 0) {
+    enzymes.forEach(enz => {
+      if (!enz.bound && Math.random() < 0.005*speed) {
+        const freeI = inhibitors3d.filter(i=>!i.bound);
+        if (freeI.length > 0) {
+          const inh = freeI[0];
+          inh.bound = true;
+          enz.inhibited = true;
+          inh.bindTo = enz;
+        }
+      }
+      if (enz.inhibited) {
+        const inh = inhibitors3d.find(i=>i.bindTo===enz);
+        if (inh) {
+          inh.mesh.position.set(enz.mesh.position.x+1.2, enz.mesh.position.y, enz.mesh.position.z);
+          inh.mesh.rotation.y += 0.04*speed;
+          if (Math.random() < 0.008*speed) {
+            inh.bound = false; inh.bindTo = null; enz.inhibited = false;
+          }
+        }
+      }
+    });
+  }
+}
+
+renderer.setAnimationLoop(function() {
+  if (playing) {
+    frameT += 0.016 * speed;
+    animateParticles(0.016);
+    updateUI();
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// --- Controls ---
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '⏸ Pause' : '▶ Play';
+}
+function setSpeed(s) {
+  speed = s; simState.speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function onSChange() {
+  simState.S = parseFloat(document.getElementById('sl-s').value);
+  document.getElementById('lbl-s').textContent = simState.S.toFixed(1) + ' mM';
+  buildScene();
+}
+function onEChange() {
+  simState.E = parseInt(document.getElementById('sl-e').value);
+  document.getElementById('lbl-e').textContent = simState.E;
+  buildScene();
+}
+function onIChange() {
+  simState.I = parseFloat(document.getElementById('sl-i').value);
+  document.getElementById('lbl-i').textContent = simState.I.toFixed(1) + ' mM';
+  if (simState.I > 0 && simState.mode === 'normal') {
+    simState.mode = 'competitive';
+    toast('Inhibitor added — Competitive mode');
+    document.getElementById('d-mode').style.color = '#f97316';
+  }
+  if (simState.I === 0) simState.mode = 'normal';
+  buildScene();
+}
+function applyPreset(n) {
+  document.querySelectorAll('[id^=p]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p'+n).classList.add('active');
+  if (n===0) {
+    simState.S=4; simState.I=0; simState.E=10; simState.mode='normal';
+    document.getElementById('sl-s').value=4; document.getElementById('lbl-s').textContent='4.0 mM';
+    document.getElementById('sl-i').value=0; document.getElementById('lbl-i').textContent='0.0 mM';
+    document.getElementById('sl-e').value=10; document.getElementById('lbl-e').textContent='10';
+    toast('Normal enzyme — Km=2mM, Vmax=10 μM/s');
+  } else if (n===1) {
+    simState.S=4; simState.I=4; simState.E=10; simState.mode='competitive';
+    document.getElementById('sl-s').value=4; document.getElementById('lbl-s').textContent='4.0 mM';
+    document.getElementById('sl-i').value=4; document.getElementById('lbl-i').textContent='4.0 mM';
+    document.getElementById('sl-e').value=10; document.getElementById('lbl-e').textContent='10';
+    toast('Competitive inhibition — apparent Km↑, Vmax unchanged');
+  } else {
+    simState.S=4; simState.I=4; simState.E=10; simState.mode='noncompetitive';
+    document.getElementById('sl-s').value=4; document.getElementById('lbl-s').textContent='4.0 mM';
+    document.getElementById('sl-i').value=4; document.getElementById('lbl-i').textContent='4.0 mM';
+    document.getElementById('sl-e').value=10; document.getElementById('lbl-e').textContent='10';
+    toast('Noncompetitive inhibition — Km unchanged, apparent Vmax↓');
+  }
+  buildScene();
+}
+function resetSim() {
+  applyPreset(0);
+  playing = true;
+  document.getElementById('btn-play').textContent = '⏸ Pause';
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() {
+  toast('Enzyme Kinetics — Michaelis-Menten model. Explore substrate binding, ES complex formation, and inhibition. AP Biology Core.');
+}
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+// Resize
+function onResize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// Keyboard
+document.addEventListener('keydown', e=>{
+  if (e.target.tagName==='INPUT') return;
+  if (e.code==='Space') { e.preventDefault(); togglePlay(); }
+  if (e.code==='KeyR') resetSim();
+  if (e.key==='1') applyPreset(0);
+  if (e.key==='2') applyPreset(1);
+  if (e.key==='3') applyPreset(2);
+});
+
+// KaTeX
+document.addEventListener('DOMContentLoaded', ()=>{
+  katex.render('v = \\frac{V_{max}[S]}{K_m + [S]}', document.getElementById('f1'), {throwOnError:false, displayMode:true});
+  katex.render('K_m = \\frac{k_{-1} + k_{cat}}{k_1}', document.getElementById('f2'), {throwOnError:false, displayMode:true});
+  katex.render('K_m^{app} = K_m\\left(1+\\frac{[I]}{K_i}\\right)', document.getElementById('f3'), {throwOnError:false, displayMode:true});
+});
+
+// Quiz
+const questions = [
+  { q:"If you double substrate concentration from Km to 2Km, what happens to reaction velocity?", opts:["Doubles from ½Vmax to Vmax","Increases from ½Vmax to ⅔Vmax","Stays at ½Vmax","Triples"], ans:1, exp:"At [S]=Km: v=Vmax/2. At [S]=2Km: v=2Km·Vmax/(Km+2Km)=2Vmax/3≈0.667Vmax. Rate does not double — enzyme saturation is hyperbolic, not linear." },
+  { q:"A drug inhibits an enzyme. Adding more substrate fully restores activity. What type of inhibition?", opts:["Noncompetitive","Uncompetitive","Competitive","Irreversible"], ans:2, exp:"Competitive inhibitor competes with substrate for the active site. Excess substrate outcompetes inhibitor. This never happens with noncompetitive inhibition." },
+  { q:"Cyanide irreversibly binds cytochrome c oxidase. How does this affect the Michaelis-Menten curve?", opts:["Km increases, Vmax unchanged","Vmax decreases, Km unchanged","Both Km and Vmax decrease","Neither changes"], ans:1, exp:"Irreversible inhibition permanently inactivates enzyme molecules, reducing total functional enzyme. This decreases Vmax. Km is unaffected because it reflects binding affinity of uninhibited enzyme." }
+];
+let quizOpen = false;
+function toggleQuiz() {
+  quizOpen = !quizOpen;
+  document.getElementById('quiz-panel').style.display = quizOpen ? 'block' : 'none';
+  document.getElementById('quiz-fab').style.display = quizOpen ? 'none' : 'flex';
+  if (quizOpen) renderQuiz();
+}
+function renderQuiz() {
+  const c = document.getElementById('q-container');
+  c.innerHTML = questions.map((q,qi)=>`
+    <div class="mb-4">
+      <div class="text-xs font-semibold text-slate-200 mb-2">${qi+1}. ${q.q}</div>
+      ${q.opts.map((o,oi)=>`<div class="quiz-opt" id="qo-${qi}-${oi}" onclick="answerQ(${qi},${oi})">${o}</div>`).join('')}
+      <div id="qe-${qi}" class="text-xs text-slate-400 mt-1 hidden"></div>
+    </div>
+  `).join('');
+}
+function answerQ(qi, oi) {
+  const q = questions[qi];
+  document.querySelectorAll(`[id^=qo-${qi}-]`).forEach(el=>el.style.pointerEvents='none');
+  document.getElementById(`qo-${qi}-${oi}`).classList.add(oi===q.ans?'correct':'wrong');
+  if (oi===q.ans) document.getElementById(`qo-${qi}-${q.ans}`).classList.add('correct');
+  else document.getElementById(`qo-${qi}-${q.ans}`).classList.add('correct');
+  const exp = document.getElementById(`qe-${qi}`);
+  exp.textContent = q.exp; exp.classList.remove('hidden');
+  toast(oi===q.ans ? '✓ Correct!' : '✗ Incorrect — see explanation');
+}
+</script>
+</body>
+</html>

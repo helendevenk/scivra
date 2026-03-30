@@ -1,4 +1,4 @@
-import { callAnthropic } from '@/shared/lib/upg/anthropic-client';
+import { callAnthropic, AnthropicError } from '@/shared/lib/upg/anthropic-client';
 import {
   getSystemPrompt,
   buildUserPrompt,
@@ -33,6 +33,10 @@ export interface GenerateCoreParams {
   existingGenerationId?: string;
   /** Extra fields to merge into the generation record */
   extraFields?: Partial<NewUpgGeneration>;
+  /** Internal: retry attempt number (max 1 retry on quality failure) */
+  _retryAttempt?: number;
+  /** Internal: quality correction hints appended to user prompt on retry */
+  _correctionHints?: string;
 }
 
 export interface GenerateCoreResult {
@@ -54,11 +58,14 @@ export interface GenerateCoreResult {
 export async function generateCore(
   params: GenerateCoreParams
 ): Promise<GenerateCoreResult> {
-  const { prompt, language, userId, discipline, existingGenerationId, extraFields } =
+  const { prompt, language, userId, discipline, existingGenerationId, extraFields, _retryAttempt = 0, _correctionHints } =
     params;
   const model = selectModel();
   const systemPrompt = getSystemPrompt(discipline);
-  const userPrompt = buildUserPrompt(prompt, language, discipline);
+  const baseUserPrompt = buildUserPrompt(prompt, language, discipline);
+  const userPrompt = _correctionHints
+    ? `${baseUserPrompt}\n\n--- PREVIOUS ATTEMPT FAILED — FIX REQUIRED ---\n${_correctionHints}\n\nRegenerate the COMPLETE visualization addressing every issue above.`
+    : baseUserPrompt;
   const promptHash = createHash('sha256').update(prompt).digest('hex');
   const generationId = existingGenerationId || getUuid();
 
@@ -139,7 +146,22 @@ export async function generateCore(
     throw new Error('No AI provider API key configured. Set ANTHROPIC_API_KEY or OPENROUTER_API_KEY.');
   }
 
-  const aiResult = await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl });
+  let aiResult: Awaited<ReturnType<typeof callAnthropic>>;
+  try {
+    aiResult = await callAnthropic(apiKey, { model, systemPrompt, userPrompt, baseUrl });
+  } catch (err: unknown) {
+    if (err instanceof AnthropicError && err.errorType === 'rate_limit') {
+      const fallbackModel = selectModel(true);
+      aiResult = await callAnthropic(apiKey, {
+        model: fallbackModel,
+        systemPrompt,
+        userPrompt,
+        baseUrl,
+      });
+    } else {
+      throw err;
+    }
+  }
 
   // 2. Post-processing
   let { sanitized: htmlContent } = sanitizeHtml(aiResult.html);
@@ -159,7 +181,50 @@ export async function generateCore(
   const htmlSize = new TextEncoder().encode(htmlContent).length;
 
   if (!qualityResult.passed) {
-    // Quality check failed
+    // Retry once with explicit correction hints (only on first attempt)
+    if (_retryAttempt === 0) {
+      console.warn(`[UPG] Quality check failed, retrying with correction hints: ${qualityResult.issues.join('; ')}`);
+
+      // Create the record in failed state before retry — if retry succeeds,
+      // updateUpgGeneration will overwrite it with 'completed'.
+      const initialFailedData: NewUpgGeneration = {
+        id: generationId,
+        userId,
+        prompt,
+        promptHash,
+        language,
+        htmlContent,
+        model,
+        provider: 'anthropic',
+        inputTokens: aiResult.inputTokens,
+        outputTokens: aiResult.outputTokens,
+        costCredits: 0,
+        status: 'failed',
+        errorMessage: `Quality check failed (retrying): ${qualityResult.issues.join('; ')}`,
+        isPublic: false,
+        viewCount: 0,
+        shareCount: 0,
+        downloadCount: 0,
+        ...extraFields,
+      };
+      if (existingGenerationId) {
+        await updateUpgGeneration(existingGenerationId, initialFailedData);
+      } else {
+        await createUpgGeneration(initialFailedData);
+      }
+
+      const correctionHints = qualityResult.issues
+        .map(issue => `⛔ ${issue}`)
+        .join('\n');
+      return generateCore({
+        ...params,
+        _retryAttempt: 1,
+        _correctionHints: correctionHints,
+        existingGenerationId: generationId,
+      });
+    }
+
+    // Quality check failed after retry — save as failed
     const failedData: NewUpgGeneration = {
       id: generationId,
       userId,

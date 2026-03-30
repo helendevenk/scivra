@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Color Vision & Light</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  nav { background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0 1.5rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 50; }
+  nav h1 { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #3B82F6, #0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  nav .nav-btns { display: flex; gap: 0.5rem; }
+  nav button { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  nav button:hover { background: rgba(59,130,246,0.3); color: #fff; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 300px; min-width: 300px; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+  .sidebar h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3B82F6; margin-bottom: 0.5rem; }
+  .card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 0.85rem; }
+  .formula-row { margin-bottom: 0.6rem; }
+  .formula-desc { font-size: 0.72rem; color: #94a3b8; margin-top: 0.2rem; }
+  .concept-text { font-size: 0.8rem; color: #cbd5e1; line-height: 1.6; }
+  .fact-card { background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 8px; padding: 0.7rem; font-size: 0.75rem; color: #7dd3fc; margin-bottom: 0.5rem; }
+  .fact-card strong { color: #38bdf8; }
+  #canvas-container { flex: 1; position: relative; overflow: hidden; }
+  .data-panel { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 0.75rem 1rem; min-width: 210px; font-variant-numeric: tabular-nums; }
+  .data-panel h4 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #3B82F6; margin-bottom: 0.5rem; letter-spacing: 0.06em; }
+  .data-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; margin-bottom: 0.3rem; gap: 1rem; }
+  .data-label { color: #94a3b8; }
+  .data-value { color: #e2e8f0; font-weight: 600; }
+  .color-swatch { width: 28px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); display: inline-block; vertical-align: middle; }
+  .bottom-panel { background: rgba(15,23,42,0.92); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.8rem 1.2rem; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .controls-row { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+  .slider-group { display: flex; align-items: center; gap: 0.5rem; }
+  .slider-group label { font-size: 0.78rem; color: #94a3b8; white-space: nowrap; min-width: 90px; }
+  .slider-r input[type=range] { accent-color: #FF4444; }
+  .slider-g input[type=range] { accent-color: #44FF44; }
+  .slider-b input[type=range] { accent-color: #4488FF; }
+  .slider-group input[type=range] { width: 110px; cursor: pointer; }
+  .slider-group .val { font-size: 0.78rem; min-width: 40px; font-variant-numeric: tabular-nums; }
+  .presets-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .presets-row label { font-size: 0.78rem; color: #94a3b8; }
+  .preset-btn { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+  .preset-btn:hover { background: rgba(59,130,246,0.3); color: #fff; border-color: #3B82F6; }
+  .quiz-panel { position: absolute; bottom: 10px; right: 12px; width: 340px; background: rgba(15,23,42,0.93); border: 1px solid rgba(59,130,246,0.25); border-radius: 12px; padding: 0.9rem; max-height: 350px; overflow-y: auto; }
+  .quiz-panel h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #3B82F6; margin-bottom: 0.7rem; letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; }
+  .quiz-panel h4 button { background: none; border: none; color: #64748b; font-size: 1rem; cursor: pointer; padding: 0; }
+  .q-block { margin-bottom: 0.75rem; }
+  .q-text { font-size: 0.78rem; color: #e2e8f0; margin-bottom: 0.4rem; font-weight: 500; }
+  .q-options { display: flex; flex-direction: column; gap: 0.3rem; }
+  .q-options label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #94a3b8; cursor: pointer; padding: 0.25rem 0.4rem; border-radius: 5px; border: 1px solid transparent; transition: all 0.15s; }
+  .q-options label:hover { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); }
+  .q-options label.correct { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #86efac; }
+  .q-options label.wrong { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+  .check-btn { margin-top: 0.4rem; background: linear-gradient(135deg, #3B82F6, #0EA5E9); border: none; color: white; padding: 0.3rem 0.85rem; border-radius: 6px; font-size: 0.74rem; cursor: pointer; font-weight: 600; }
+  .q-feedback { font-size: 0.72rem; margin-top: 0.35rem; padding: 0.35rem 0.5rem; border-radius: 6px; }
+  .q-feedback.good { background: rgba(34,197,94,0.12); color: #86efac; }
+  .q-feedback.bad { background: rgba(239,68,68,0.1); color: #fca5a5; }
+  .toast { position: fixed; top: 60px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; pointer-events: none; }
+  .toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.35); color: #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; animation: slideIn 0.2s ease-out; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  .quiz-panel::-webkit-scrollbar { width: 3px; } .quiz-panel::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  /* Spectrum bar */
+  .spectrum-bar { height: 18px; width: 100%; border-radius: 4px; background: linear-gradient(to right, #7B00FF, #4400FF, #0000FF, #0088FF, #00FFFF, #00FF00, #AAFF00, #FFFF00, #FF8800, #FF0000); margin-top: 0.3rem; border: 1px solid rgba(255,255,255,0.1); position: relative; }
+  .spectrum-marker { position: absolute; top: 0; width: 3px; height: 100%; background: white; border-radius: 2px; transform: translateX(-50%); pointer-events: none; }
+</style>
+</head>
+<body>
+<nav>
+  <h1>🌈 Color Vision & Light</h1>
+  <div class="nav-btns">
+    <button onclick="resetSim()">Reset</button>
+    <button onclick="toggleFullscreen()">Fullscreen</button>
+    <button onclick="showAbout()">About</button>
+  </div>
+</nav>
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <div>
+      <h3>Core Formulas</h3>
+      <div class="card">
+        <div class="formula-row">
+          <div id="f1"></div>
+          <div class="formula-desc">Speed of light, wavelength and frequency</div>
+        </div>
+        <div class="formula-row" style="margin-top:0.6rem;">
+          <div id="f2"></div>
+          <div class="formula-desc">Photon energy from wavelength</div>
+        </div>
+        <div class="formula-row" style="margin-top:0.6rem;">
+          <div id="f3"></div>
+          <div class="formula-desc">Additive color mixing for luminance</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3>Concept</h3>
+      <div class="card concept-text">
+        <p>Human vision relies on three cone types sensitive to Long (red, ~560 nm), Medium (green, ~530 nm), and Short (blue, ~430 nm) wavelengths. Any perceived color is a combination of these three signals.</p>
+        <p style="margin-top:0.5rem;"><strong style="color:#38bdf8">Additive mixing</strong> (light): Red + Green = Yellow; Green + Blue = Cyan; Red + Blue = Magenta; all three = White. Used in displays and projectors.</p>
+        <p style="margin-top:0.5rem;"><strong style="color:#38bdf8">Subtractive mixing</strong> (pigments): absorbs certain wavelengths. CMY inks remove R, G, B respectively from white light.</p>
+      </div>
+    </div>
+    <div>
+      <h3>Knowledge Cards</h3>
+      <div class="fact-card">
+        <strong>Historical:</strong> Thomas Young proposed the trichromatic theory of color vision in 1802, later extended by Helmholtz and Maxwell.
+      </div>
+      <div class="fact-card">
+        <strong>Misconception:</strong> Mixing red and green paint makes brown — not yellow. Paints use subtractive mixing. Light uses additive mixing.
+      </div>
+      <div class="fact-card">
+        <strong>AP Connection:</strong> AP Physics 1 covers visible spectrum (400–700 nm), wave speed c = fλ, and the electromagnetic spectrum ordering by frequency.
+      </div>
+    </div>
+    <div>
+      <h3>Why It Matters</h3>
+      <div class="card concept-text">
+        <ul style="padding-left:1rem;list-style:disc;display:flex;flex-direction:column;gap:0.35rem;">
+          <li>Display technology (OLED/LCD) — pixel-level RGB mixing</li>
+          <li>Photography and cinema — color grading uses additive model</li>
+          <li>Medical imaging — false-color overlays aid diagnosis</li>
+          <li>AP Physics — Electromagnetic Spectrum Unit</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div id="canvas-container">
+    <div class="data-panel" id="dataPanel">
+      <h4>Live Data</h4>
+      <div class="data-row">
+        <span class="data-label">Resulting Color</span>
+        <span class="data-value"><span class="color-swatch" id="d-swatch"></span></span>
+      </div>
+      <div class="data-row"><span class="data-label">Hex Code</span><span class="data-value" id="d-hex">#000000</span></div>
+      <div class="data-row"><span class="data-label">Luminance</span><span class="data-value" id="d-lum">0.000</span></div>
+      <div class="data-row"><span class="data-label">Dominant λ (nm)</span><span class="data-value" id="d-wl">—</span></div>
+      <div class="data-row"><span class="data-label">Perceived Hue</span><span class="data-value" id="d-hue">Black</span></div>
+      <div class="data-row"><span class="data-label">Saturation</span><span class="data-value" id="d-sat">0%</span></div>
+    </div>
+    <div class="quiz-panel" id="quizPanel">
+      <h4>Quiz <button onclick="toggleQuiz()" id="quizToggleBtn">▲</button></h4>
+      <div id="quizBody">
+        <div class="q-block">
+          <div class="q-text">1. What color results from mixing equal-intensity red (700 nm) and green (550 nm) light?</div>
+          <div class="q-options" id="q1-opts">
+            <label><input type="radio" name="q1" value="0"/> Brown</label>
+            <label><input type="radio" name="q1" value="1"/> Yellow</label>
+            <label><input type="radio" name="q1" value="2"/> Orange</label>
+          </div>
+          <button class="check-btn" onclick="checkQ(1,1)">Check</button>
+          <div class="q-feedback" id="q1-fb" style="display:none"></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">2. A light source emits only at 450 nm. A student sees it through a yellow filter (absorbs blue). What do they see?</div>
+          <div class="q-options" id="q2-opts">
+            <label><input type="radio" name="q2" value="0"/> Yellow light</label>
+            <label><input type="radio" name="q2" value="1"/> Nothing — the filter blocks 450 nm</label>
+            <label><input type="radio" name="q2" value="2"/> Green light</label>
+          </div>
+          <button class="check-btn" onclick="checkQ(2,1)">Check</button>
+          <div class="q-feedback" id="q2-fb" style="display:none"></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">3. If you increase only the Blue channel from 0 to 255 while R=255, G=0, what color transition occurs?</div>
+          <div class="q-options" id="q3-opts">
+            <label><input type="radio" name="q3" value="0"/> Red → Orange</label>
+            <label><input type="radio" name="q3" value="1"/> Red → Magenta</label>
+            <label><input type="radio" name="q3" value="2"/> Red → Purple</label>
+          </div>
+          <button class="check-btn" onclick="checkQ(3,1)">Check</button>
+          <div class="q-feedback" id="q3-fb" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="bottom-panel">
+  <div class="controls-row">
+    <div class="slider-group slider-r">
+      <label style="color:#fca5a5;">Red (R)</label>
+      <input type="range" id="sl-r" min="0" max="255" step="1" value="255"/>
+      <span class="val" id="v-r" style="color:#fca5a5;">255</span>
+    </div>
+    <div class="slider-group slider-g">
+      <label style="color:#86efac;">Green (G)</label>
+      <input type="range" id="sl-g" min="0" max="255" step="1" value="255"/>
+      <span class="val" id="v-g" style="color:#86efac;">255</span>
+    </div>
+    <div class="slider-group slider-b">
+      <label style="color:#93c5fd;">Blue (B)</label>
+      <input type="range" id="sl-b" min="0" max="255" step="1" value="255"/>
+      <span class="val" id="v-b" style="color:#93c5fd;">255</span>
+    </div>
+  </div>
+  <div class="presets-row">
+    <label>Presets:</label>
+    <button class="preset-btn" onclick="applyPreset('white')">White Light (RGB equal)</button>
+    <button class="preset-btn" onclick="applyPreset('yellow')">Yellow (R+G)</button>
+    <button class="preset-btn" onclick="applyPreset('cyan')">Cyan (G+B)</button>
+    <span style="color:#475569;font-size:0.75rem;margin-left:0.5rem;">Space=Pause | R=Reset | 1-5 Speed</span>
+  </div>
+</div>
+<div class="toast" id="toastContainer"></div>
+<script>
+// ── OrbitControls inline ──────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.sub(target));
+  camera.position.add(target);
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
+
+// ── Scene setup ───────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 4, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 0.6);
+keyLight.position.set(5, 10, 7);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.2);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// Grid
+scene.add(new THREE.GridHelper(30, 30, 0x1e293b, 0x0f172a));
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 4;
+controls.maxDistance = 35;
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let rgb = { r: 255, g: 255, b: 255 };
+let simPaused = false;
+let speedFactor = 1.0;
+const speeds = [0.25, 0.5, 1.0, 2.0, 3.0];
+let speedIdx = 2;
+let animT = 0;
+
+// ── 3D Sphere lights ──────────────────────────────────────────────────────────
+// Three source spheres (R, G, B) and one result sphere
+const sphereGeo = new THREE.SphereGeometry(1.2, 32, 32);
+
+function makeSphere(x, y, z, emissiveColor) {
+  const mat = new THREE.MeshStandardMaterial({
+    color: emissiveColor,
+    emissive: emissiveColor,
+    emissiveIntensity: 2.5,
+    roughness: 0.15,
+    metalness: 0.0
+  });
+  const mesh = new THREE.Mesh(sphereGeo, mat);
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+const sphereR = makeSphere(-4.5, 0, 0, 0xFF2222);
+const sphereG = makeSphere(0, 0, 0, 0x22FF22);
+const sphereB = makeSphere(4.5, 0, 0, 0x2244FF);
+
+// Result sphere (larger, floating above)
+const resultGeo = new THREE.SphereGeometry(1.8, 32, 32);
+const resultMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 3.0, roughness: 0.05, metalness: 0 });
+const sphereResult = new THREE.Mesh(resultGeo, resultMat);
+sphereResult.position.set(0, 4.5, 0);
+scene.add(sphereResult);
+
+// Connecting beams (Lines from each source to result)
+function makeBeam(from, to, color) {
+  const pts = [new THREE.Vector3(...from), new THREE.Vector3(...to)];
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5 });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return { line, mat };
+}
+const beamR = makeBeam([-4.5, 0.8, 0], [0, 3.2, 0], 0xFF4444);
+const beamG = makeBeam([0, 0.8, 0], [0, 3.2, 0], 0x44FF44);
+const beamB = makeBeam([4.5, 0.8, 0], [0, 3.2, 0], 0x4488FF);
+
+// Spectrum visualization plane (background quad)
+const specCanvas = document.createElement('canvas');
+specCanvas.width = 512; specCanvas.height = 32;
+const specCtx = specCanvas.getContext('2d');
+const grad = specCtx.createLinearGradient(0, 0, 512, 0);
+grad.addColorStop(0, '#7B00FF');
+grad.addColorStop(0.14, '#4400FF');
+grad.addColorStop(0.28, '#0000FF');
+grad.addColorStop(0.42, '#00BBFF');
+grad.addColorStop(0.57, '#00FF88');
+grad.addColorStop(0.71, '#BBFF00');
+grad.addColorStop(0.85, '#FF8800');
+grad.addColorStop(1.0, '#FF0000');
+specCtx.fillStyle = grad;
+specCtx.fillRect(0, 0, 512, 32);
+const specTex = new THREE.CanvasTexture(specCanvas);
+const specGeo = new THREE.PlaneGeometry(12, 0.8);
+const specMat = new THREE.MeshBasicMaterial({ map: specTex, side: THREE.DoubleSide });
+const specPlane = new THREE.Mesh(specGeo, specMat);
+specPlane.position.set(0, -2.5, 0);
+scene.add(specPlane);
+
+// Wavelength marker on spectrum
+const markerGeo = new THREE.BoxGeometry(0.08, 1.0, 0.05);
+const markerMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+const wlMarker = new THREE.Mesh(markerGeo, markerMat);
+wlMarker.position.set(0, -2.5, 0.05);
+scene.add(wlMarker);
+
+// Label sprites
+function makeLabel(text, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 256, 64);
+  ctx.fillStyle = color;
+  ctx.font = 'bold 26px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 128, 42);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(2.5, 0.65, 1);
+  return spr;
+}
+
+const lblR = makeLabel('Red', '#FF6666'); lblR.position.set(-4.5, -1.8, 0);
+const lblG = makeLabel('Green', '#66FF66'); lblG.position.set(0, -1.8, 0);
+const lblB = makeLabel('Blue', '#6699FF'); lblB.position.set(4.5, -1.8, 0);
+const lblMix = makeLabel('Mixed', '#FFFFFF'); lblMix.position.set(0, 6.8, 0);
+scene.add(lblR, lblG, lblB, lblMix);
+
+// Spectral lights to illuminate scene
+const rLight = new THREE.PointLight(0xFF0000, 0, 8);
+rLight.position.set(-4.5, 0, 3);
+const gLight = new THREE.PointLight(0x00FF00, 0, 8);
+gLight.position.set(0, 0, 3);
+const bLight = new THREE.PointLight(0x0000FF, 0, 8);
+bLight.position.set(4.5, 0, 3);
+scene.add(rLight, gLight, bLight);
+
+// ── Color utilities ───────────────────────────────────────────────────────────
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function hueName(h, s, l) {
+  if (l < 5) return 'Black';
+  if (l > 95 && s < 10) return 'White';
+  if (s < 15) return 'Gray';
+  if (h < 15 || h >= 345) return 'Red';
+  if (h < 40) return 'Orange';
+  if (h < 75) return 'Yellow';
+  if (h < 150) return 'Green';
+  if (h < 195) return 'Cyan';
+  if (h < 255) return 'Blue';
+  if (h < 285) return 'Indigo';
+  if (h < 330) return 'Magenta';
+  return 'Red';
+}
+
+function dominantWavelength(r, g, b) {
+  // Approximate dominant wavelength from hue
+  const { h, s } = rgbToHsl(r, g, b);
+  if (s < 10) return null; // achromatic
+  // Map hue 0-360 to 700-400 nm (red to violet)
+  // hue 0=red(700nm), 60=yellow(580nm), 120=green(530nm), 180=cyan(490nm), 240=blue(450nm), 270=violet(420nm)
+  const hueToNm = [
+    [0, 700], [30, 620], [60, 580], [90, 555], [120, 530],
+    [150, 510], [180, 490], [210, 475], [240, 450], [270, 430], [300, 420], [330, 680]
+  ];
+  for (let i = 0; i < hueToNm.length - 1; i++) {
+    if (h >= hueToNm[i][0] && h < hueToNm[i + 1][0]) {
+      const t = (h - hueToNm[i][0]) / (hueToNm[i + 1][0] - hueToNm[i][0]);
+      return Math.round(hueToNm[i][1] + t * (hueToNm[i + 1][1] - hueToNm[i][1]));
+    }
+  }
+  return null;
+}
+
+function wavelengthToPos(nm) {
+  // Map 400-700nm to -6 to +6 on the spectrum plane
+  return ((nm - 400) / 300) * 12 - 6;
+}
+
+// Luminance (perceptual)
+function luminance(r, g, b) {
+  return 0.2126 * (r / 255) + 0.7152 * (g / 255) + 0.0722 * (b / 255);
+}
+
+// ── Update scene ──────────────────────────────────────────────────────────────
+function updateScene() {
+  const { r, g, b } = rgb;
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+
+  // Update source spheres
+  sphereR.material.emissive.setRGB(rn, 0, 0);
+  sphereR.material.color.setRGB(rn * 0.7, 0, 0);
+  sphereG.material.emissive.setRGB(0, gn, 0);
+  sphereG.material.color.setRGB(0, gn * 0.7, 0);
+  sphereB.material.emissive.setRGB(0, 0, bn);
+  sphereB.material.color.setRGB(0, 0, bn * 0.7);
+
+  // Update result sphere
+  sphereResult.material.emissive.setRGB(rn, gn, bn);
+  sphereResult.material.color.setRGB(rn, gn, bn);
+  sphereResult.material.emissiveIntensity = 1.5 + luminance(r, g, b) * 2.0;
+
+  // Update beams opacity
+  beamR.mat.opacity = 0.15 + rn * 0.6;
+  beamG.mat.opacity = 0.15 + gn * 0.6;
+  beamB.mat.opacity = 0.15 + bn * 0.6;
+
+  // Update scene lights
+  rLight.intensity = rn * 1.5;
+  gLight.intensity = gn * 1.5;
+  bLight.intensity = bn * 1.5;
+
+  // Wavelength marker
+  const wl = dominantWavelength(r, g, b);
+  if (wl) {
+    wlMarker.visible = true;
+    wlMarker.position.x = wavelengthToPos(wl);
+  } else {
+    wlMarker.visible = false;
+  }
+
+  // Data panel
+  const hexR = r.toString(16).padStart(2, '0');
+  const hexG = g.toString(16).padStart(2, '0');
+  const hexB = b.toString(16).padStart(2, '0');
+  const hex = '#' + hexR + hexG + hexB;
+  const lum = luminance(r, g, b);
+  const hsl = rgbToHsl(r, g, b);
+  const hue = hueName(hsl.h, hsl.s, hsl.l);
+
+  document.getElementById('d-swatch').style.background = hex;
+  document.getElementById('d-hex').textContent = hex.toUpperCase();
+  document.getElementById('d-lum').textContent = lum.toFixed(3);
+  document.getElementById('d-wl').textContent = wl ? wl + ' nm' : 'Achromatic';
+  document.getElementById('d-hue').textContent = hue;
+  document.getElementById('d-sat').textContent = hsl.s.toFixed(0) + '%';
+}
+
+// ── Sliders ───────────────────────────────────────────────────────────────────
+document.getElementById('sl-r').addEventListener('input', function() {
+  rgb.r = parseInt(this.value);
+  document.getElementById('v-r').textContent = rgb.r;
+  updateScene();
+});
+document.getElementById('sl-g').addEventListener('input', function() {
+  rgb.g = parseInt(this.value);
+  document.getElementById('v-g').textContent = rgb.g;
+  updateScene();
+});
+document.getElementById('sl-b').addEventListener('input', function() {
+  rgb.b = parseInt(this.value);
+  document.getElementById('v-b').textContent = rgb.b;
+  updateScene();
+});
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+const PRESETS = {
+  white: { r: 255, g: 255, b: 255, label: 'White Light (RGB equal)' },
+  yellow: { r: 255, g: 255, b: 0, label: 'Yellow (R+G)' },
+  cyan: { r: 0, g: 255, b: 255, label: 'Cyan (G+B)' }
+};
+
+function applyPreset(key) {
+  const p = PRESETS[key];
+  rgb.r = p.r; rgb.g = p.g; rgb.b = p.b;
+  document.getElementById('sl-r').value = p.r; document.getElementById('v-r').textContent = p.r;
+  document.getElementById('sl-g').value = p.g; document.getElementById('v-g').textContent = p.g;
+  document.getElementById('sl-b').value = p.b; document.getElementById('v-b').textContent = p.b;
+  updateScene();
+  showToast('Preset: ' + p.label);
+}
+
+// ── KaTeX ─────────────────────────────────────────────────────────────────────
+katex.render('c = f\\lambda', document.getElementById('f1'), { throwOnError: false, displayMode: true });
+katex.render('E = hf = \\frac{hc}{\\lambda}', document.getElementById('f2'), { throwOnError: false, displayMode: true });
+katex.render('Y = 0.2126R + 0.7152G + 0.0722B', document.getElementById('f3'), { throwOnError: false, displayMode: false });
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizAnswers = {
+  1: { correct: 1, explanation: 'Correct! Additive mixing of red and green light produces yellow. This is different from pigment mixing where red + green produces brown (subtractive).' },
+  2: { correct: 1, explanation: 'Correct! A yellow filter absorbs blue/violet wavelengths (around 400–490 nm). Since the only light is at 450 nm (blue), it gets absorbed — nothing passes through.' },
+  3: { correct: 1, explanation: 'Correct! With R=255, B going from 0→255 adds blue to red. Red + Blue = Magenta. This is a fundamental additive color pair.' }
+};
+
+function checkQ(n) {
+  const sel = document.querySelector(`input[name="q${n}"]:checked`);
+  const fb = document.getElementById(`q${n}-fb`);
+  const opts = document.querySelectorAll(`#q${n}-opts label`);
+  if (!sel) { showToast('Select an answer first'); return; }
+  const ans = parseInt(sel.value);
+  const qa = quizAnswers[n];
+  opts.forEach((l, i) => { l.classList.remove('correct', 'wrong'); if (i === qa.correct) l.classList.add('correct'); else if (i === ans && ans !== qa.correct) l.classList.add('wrong'); });
+  fb.style.display = 'block';
+  if (ans === qa.correct) { fb.className = 'q-feedback good'; fb.textContent = '✓ ' + qa.explanation; }
+  else { fb.className = 'q-feedback bad'; fb.textContent = '✗ Not quite — ' + qa.explanation; }
+}
+
+// expose globally for onclick
+window.checkQ = checkQ;
+
+function toggleQuiz() {
+  const body = document.getElementById('quizBody');
+  const btn = document.getElementById('quizToggleBtn');
+  if (body.style.display === 'none') { body.style.display = 'block'; btn.textContent = '▲'; }
+  else { body.style.display = 'none'; btn.textContent = '▼'; }
+}
+window.toggleQuiz = toggleQuiz;
+window.applyPreset = applyPreset;
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const tc = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  tc.appendChild(el);
+  setTimeout(() => { if (el.parentNode) tc.removeChild(el); }, 2000);
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+function resetSim() { applyPreset('white'); showToast('Simulation reset'); }
+function toggleFullscreen() { if (!document.fullscreenElement) container.requestFullscreen(); else document.exitFullscreen(); }
+function showAbout() { showToast('Color Vision & Light | AetherViz v7.0 | Space=Pause R=Reset 1-5=Speed'); }
+window.resetSim = resetSim; window.toggleFullscreen = toggleFullscreen; window.showAbout = showAbout;
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); simPaused = !simPaused; showToast(simPaused ? 'Paused' : 'Playing'); }
+  if (e.code === 'KeyR') resetSim();
+  const spd = parseInt(e.key);
+  if (spd >= 1 && spd <= 5) { speedIdx = spd - 1; speedFactor = speeds[speedIdx]; showToast('Speed: ' + speeds[speedIdx] + 'x'); }
+});
+
+// ── Animation loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const rawDelta = clock.getDelta();
+  const delta = Math.min(rawDelta, 0.05);
+  if (!simPaused) {
+    animT += delta * speedFactor;
+    // Gentle bob on result sphere
+    sphereResult.position.y = 4.5 + Math.sin(animT * 1.2) * 0.15;
+    // Gentle rotation on source spheres
+    sphereR.rotation.y += 0.005 * speedFactor;
+    sphereG.rotation.y += 0.007 * speedFactor;
+    sphereB.rotation.y += 0.006 * speedFactor;
+    // Pulse emissive
+    const pulse = 1.8 + Math.sin(animT * 2) * 0.4;
+    const { r, g, b } = rgb;
+    sphereR.material.emissiveIntensity = pulse * (r / 255);
+    sphereG.material.emissiveIntensity = pulse * (g / 255);
+    sphereB.material.emissiveIntensity = pulse * (b / 255);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// Init
+updateScene();
+</script>
+<div style="display:none">Generated by AetherViz Master v7.0. Light is the language of the universe!</div>
+</body>
+</html>

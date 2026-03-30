@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radiometric Dating | Earth Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  #navbar { background: linear-gradient(135deg, #F97316 0%, #EAB308 100%); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #sidebar { width: 30%; overflow-y: auto; background: #1e293b; padding: 14px; flex-shrink: 0; }
+  #canvas-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  #threeCanvas { display: block; flex: 1; min-height: 0; }
+  #controls { background: rgba(15,23,42,0.97); padding: 10px 14px; flex-shrink: 0; border-top: 1px solid #334155; }
+  #data-overlay { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.78); padding: 10px 14px; border-radius: 8px; font-size: 12px; min-width: 200px; border: 1px solid #334155; pointer-events: none; z-index: 10; line-height: 1.8; }
+  #toast { position: fixed; top: 20px; right: 20px; background: #F97316; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; z-index: 9999; display: none; box-shadow: 0 4px 16px rgba(249,115,22,0.5); }
+  .slider-label { font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+  .preset-btn { background: #334155; border: none; color: #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: background 0.2s; white-space: nowrap; }
+  .preset-btn:hover, .preset-btn.active { background: #F97316; color: white; }
+  .speed-btn { background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .speed-btn.active { background: #F97316; border-color: #F97316; color: white; }
+  .quiz-option { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; cursor: pointer; font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .quiz-option:hover { color: #e2e8f0; }
+  .formula-box { background: #0f172a; border-radius: 6px; padding: 8px 10px; margin: 6px 0; overflow-x: auto; }
+  h3 { color: #F97316; font-size: 13px; margin: 10px 0 5px; font-weight: 600; }
+  .section { border-left: 3px solid #F97316; padding-left: 10px; margin: 10px 0; }
+  input[type=range] { accent-color: #F97316; width: 100%; }
+  .ctrl-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .ctrl-col { flex: 1; min-width: 120px; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  .prop-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+  .prop-key { color: #F97316; font-weight: 500; }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div id="navbar">
+  <div>
+    <div style="font-weight:700;font-size:18px;color:white;">Radiometric Dating</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.85);">Radioactive Decay · Half-life · Age Calculation &middot; Earth Science</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="resetScene()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Reset</button>
+    <button onclick="toggleFullscreen()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Fullscreen</button>
+  </div>
+</div>
+<div id="main">
+  <div id="sidebar">
+    <div class="section">
+      <h3>Learning Objectives</h3>
+      <ul style="font-size:12px;color:#94a3b8;padding-left:14px;line-height:2.0;">
+        <li>Define radioactive decay and half-life</li>
+        <li>Calculate age using parent/daughter isotope ratios</li>
+        <li>Understand different radiometric dating methods</li>
+        <li>Interpret decay curves and isochron diagrams</li>
+        <li>Apply dating to geological and archaeological samples</li>
+        <li>Evaluate uncertainties in radiometric dating</li>
+        <li>Compare carbon-14 vs uranium-lead dating ranges</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h3>Key Formulas</h3>
+      <div style="font-size:11px;color:#64748b;margin-bottom:3px;">Radioactive decay law:</div>
+      <div class="formula-box" id="f1"></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:3px;">Age calculation:</div>
+      <div class="formula-box" id="f2"></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:3px;">Half-life relationship:</div>
+      <div class="formula-box" id="f3"></div>
+    </div>
+    <div class="section">
+      <h3>Common Isotope Systems</h3>
+      <div style="font-size:12px;color:#94a3b8;line-height:2.1;">
+        <b style="color:#F97316;">Carbon-14</b> — t½ = 5,730 yrs; range: &lt;50,000 yrs; organic material<br>
+        <b style="color:#F97316;">Potassium-40</b> — t½ = 1.25 Ga; rocks &gt;100,000 yrs; volcanic<br>
+        <b style="color:#F97316;">Uranium-238</b> — t½ = 4.47 Ga; zircons; oldest Earth rocks<br>
+        <b style="color:#F97316;">Rubidium-87</b> — t½ = 49.7 Ga; ancient igneous rocks<br>
+        <b style="color:#F97316;">Samarium-147</b> — t½ = 106 Ga; meteorites, oldest minerals
+      </div>
+    </div>
+    <div class="section">
+      <h3>How Half-Life Works</h3>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.75;">
+        Each half-life, exactly 50% of remaining parent atoms decay into daughter atoms. After 1 half-life: 50% parent remaining. After 2: 25%. After 5: ~3%. After 10 half-lives, only ~0.1% remains — too little to measure accurately. This defines the practical age range of each isotope system.
+      </p>
+    </div>
+    <div class="section">
+      <h3>Assumptions &amp; Uncertainties</h3>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.75;">
+        Radiometric dating assumes: (1) closed system — no gain/loss of parent or daughter, (2) known initial conditions, (3) constant decay rate (verified by physics). Uncertainties come from mass spectrometer measurement precision, contamination, and system openness. Cross-checking multiple isotopes confirms results.
+      </p>
+    </div>
+    <div id="quiz-panel" style="margin-top:14px;">
+      <h3 style="cursor:pointer;" onclick="toggleQuiz()">Quiz <span id="quiz-arrow">&#9660;</span></h3>
+      <div id="quiz-content">
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">1. After 3 half-lives, what fraction of parent isotope remains?</p>
+          <label class="quiz-option"><input type="radio" name="q1" value="a"> <span>1/2 (50%)</span></label>
+          <label class="quiz-option"><input type="radio" name="q1" value="b"> <span>1/4 (25%)</span></label>
+          <label class="quiz-option"><input type="radio" name="q1" value="c"> <span>1/8 (12.5%)</span></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">2. Carbon-14 dating is most useful for materials up to approximately:</p>
+          <label class="quiz-option"><input type="radio" name="q2" value="a"> <span>50,000 years old</span></label>
+          <label class="quiz-option"><input type="radio" name="q2" value="b"> <span>1 million years old</span></label>
+          <label class="quiz-option"><input type="radio" name="q2" value="c"> <span>1 billion years old</span></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">3. The age formula t = (1/λ) ln(1 + D/P) requires knowing:</p>
+          <label class="quiz-option"><input type="radio" name="q3" value="a"> <span>Only the parent isotope amount</span></label>
+          <label class="quiz-option"><input type="radio" name="q3" value="b"> <span>The decay constant and ratio of daughter to parent</span></label>
+          <label class="quiz-option"><input type="radio" name="q3" value="c"> <span>Only the temperature of the rock</span></label>
+        </div>
+        <button onclick="checkQuiz({q1:'c',q2:'a',q3:'b'})" style="background:linear-gradient(135deg,#F97316,#EAB308);border:none;color:white;padding:8px 20px;border-radius:6px;cursor:pointer;width:100%;font-size:13px;font-weight:600;">Check Answers</button>
+        <div id="quiz-result" style="margin-top:10px;font-size:13px;text-align:center;min-height:22px;padding:4px;"></div>
+      </div>
+    </div>
+  </div>
+  <div id="canvas-area">
+    <canvas id="threeCanvas"></canvas>
+    <div id="data-overlay">
+      <div style="color:#F97316;font-weight:700;font-size:13px;margin-bottom:7px;">Decay Data</div>
+      <div class="prop-row"><span class="prop-key">Isotope</span><span id="ov-iso" style="color:#fbbf24;font-weight:600;">Carbon-14</span></div>
+      <div class="prop-row"><span class="prop-key">Half-life</span><span id="ov-hl" style="color:#fbbf24;">5,730 yrs</span></div>
+      <div class="prop-row"><span class="prop-key">Parent %</span><span id="ov-parent" style="color:#fbbf24;">100%</span></div>
+      <div class="prop-row"><span class="prop-key">Daughter %</span><span id="ov-daughter" style="color:#fbbf24;">0%</span></div>
+      <div class="prop-row"><span class="prop-key">Calculated Age</span><span id="ov-age" style="color:#fbbf24;">0 yrs</span></div>
+      <div class="prop-row" style="border-bottom:none;"><span class="prop-key">Half-lives Elapsed</span><span id="ov-hl-count" style="color:#fbbf24;">0</span></div>
+    </div>
+    <div id="controls">
+      <div class="ctrl-row">
+        <div class="ctrl-col">
+          <div class="slider-label">Parent Remaining: <span id="parent-val">100</span>%</div>
+          <input type="range" id="parentSlider" min="0" max="100" step="1" value="100" oninput="updateParent(this.value)">
+        </div>
+        <div class="ctrl-col">
+          <div class="slider-label">Decay Rate: <span id="decay-val">1.0</span>x</div>
+          <input type="range" id="decaySlider" min="0.1" max="5" step="0.1" value="1" oninput="updateDecayRate(this.value)">
+        </div>
+        <div>
+          <div class="slider-label" style="margin-bottom:4px;">Isotope System</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="preset-btn active" id="btn-c14" onclick="setIsotope('c14',this)">Carbon-14</button>
+            <button class="preset-btn" id="btn-k40" onclick="setIsotope('k40',this)">Potassium-40</button>
+            <button class="preset-btn" id="btn-u238" onclick="setIsotope('u238',this)">Uranium-238</button>
+          </div>
+        </div>
+<div>
+          <div class="slider-label" style="margin-bottom:4px;">Simulation Speed</div>
+          <div style="display:flex;gap:4px;">
+            <button class="speed-btn" onclick="setSpeed(0.25,this)">0.25x</button>
+            <button class="speed-btn" onclick="setSpeed(0.5,this)">0.5x</button>
+            <button class="speed-btn active" onclick="setSpeed(1,this)">1x</button>
+            <button class="speed-btn" onclick="setSpeed(2,this)">2x</button>
+            <button class="speed-btn" onclick="setSpeed(3,this)">3x</button>
+          </div>
+        </div>
+<div style="display:flex;gap:6px;align-items:flex-end;">
+          <button onclick="togglePlay()" id="playBtn" style="background:#F97316;border:none;color:white;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Pause</button>
+          <button onclick="resetScene()" style="background:#334155;border:none;color:white;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// =============================================
+// INLINE OrbitControls
+// =============================================
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this;
+  var STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2 };
+  var state = STATE.NONE;
+  var spherical = new THREE.Spherical();
+  var sphericalDelta = new THREE.Spherical();
+  var scale = 1;
+  var target = new THREE.Vector3();
+  var rotateStart = new THREE.Vector2();
+  var rotateEnd = new THREE.Vector2();
+  var rotateDelta = new THREE.Vector2();
+  function getZoomScale() { return Math.pow(0.95, 1); }
+  function rotateLeft(angle) { sphericalDelta.theta -= angle; }
+  function rotateUp(angle) { sphericalDelta.phi -= angle; }
+  var onMouseDown = function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = STATE.ROTATE; rotateStart.set(e.clientX, e.clientY); }
+  };
+  var onMouseMove = function(e) {
+    if (!scope.enabled || state === STATE.NONE) return;
+    if (state === STATE.ROTATE) {
+      rotateEnd.set(e.clientX, e.clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.01);
+      rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y);
+      rotateStart.copy(rotateEnd);
+    }
+  };
+  var onMouseUp = function() { state = STATE.NONE; };
+  var onWheel = function(e) {
+    if (!scope.enabled) return;
+    if (e.deltaY < 0) scale /= getZoomScale(); else scale *= getZoomScale();
+    e.preventDefault();
+  };
+  var onTouchStart = function(e) {
+    if (e.touches.length === 1) { state = STATE.ROTATE; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); }
+  };
+  var onTouchMove = function(e) {
+    if (e.touches.length === 1 && state === STATE.ROTATE) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.01);
+      rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y);
+      rotateStart.copy(rotateEnd);
+    }
+    e.preventDefault();
+  };
+  domElement.addEventListener('mousedown', onMouseDown);
+  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('mouseup', onMouseUp);
+  domElement.addEventListener('wheel', onWheel, { passive: false });
+  domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+  domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+  domElement.addEventListener('touchend', onMouseUp);
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var quatInverse = quat.clone().invert();
+    var position = camera.position;
+    offset.copy(position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi += sphericalDelta.phi * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius *= scale;
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+    if (scope.enableDamping) {
+      sphericalDelta.theta *= (1 - scope.dampingFactor);
+      sphericalDelta.phi *= (1 - scope.dampingFactor);
+    } else {
+      sphericalDelta.set(0,0,0);
+    }
+    scale = 1;
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    position.copy(target).add(offset);
+    camera.lookAt(target);
+  };
+  this.dispose = function() {
+    domElement.removeEventListener('mousedown', onMouseDown);
+    domElement.removeEventListener('mousemove', onMouseMove);
+    domElement.removeEventListener('mouseup', onMouseUp);
+    domElement.removeEventListener('wheel', onWheel);
+  };
+};
+
+// =============================================
+// SCENE INITIALIZATION
+// =============================================
+var canvas = document.getElementById('threeCanvas');
+var canvasArea = document.getElementById('canvas-area');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.FogExp2(0x0f172a, 0.02);
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
+camera.position.set(0, 4, 12);
+var controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 2; controls.maxDistance = 60;
+var keyLight = new THREE.DirectionalLight(0xfff5e0, 1.0);
+keyLight.position.set(5, 8, 5); keyLight.castShadow = true; scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0xc0d8ff, 0.4);
+fillLight.position.set(-5, 3, -3); scene.add(fillLight);
+var backLight = new THREE.DirectionalLight(0xffd080, 0.3);
+backLight.position.set(0, -5, -8); scene.add(backLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+window._isPlaying = true;
+window._speedMult = 1.0;
+var _time = 0;
+
+// =============================================
+// UTILITY FUNCTIONS
+// =============================================
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.style.display = 'none'; }, 2200);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function toggleQuiz() {
+  var c = document.getElementById('quiz-content');
+  var a = document.getElementById('quiz-arrow');
+  var hidden = c.style.display === 'none';
+  c.style.display = hidden ? 'block' : 'none';
+  a.textContent = hidden ? '\u25bc' : '\u25b6';
+}
+function setSpeed(s, btn) {
+  window._speedMult = s;
+  document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+function checkQuiz(answers) {
+  var score = 0;
+  var total = Object.keys(answers).length;
+  for (var q in answers) {
+    var sel = document.querySelector('input[name="' + q + '"]:checked');
+    if (sel && sel.value === answers[q]) score++;
+  }
+  var r = document.getElementById('quiz-result');
+  var pct = score / total;
+  var msg = pct === 1 ? 'Perfect! Outstanding work!' : pct >= 0.67 ? 'Great effort! Review missed concepts.' : 'Keep studying!';
+  r.textContent = 'Score: ' + score + '/' + total + ' \u2014 ' + msg;
+  r.style.color = pct === 1 ? '#22c55e' : pct >= 0.67 ? '#fbbf24' : '#ef4444';
+}
+function togglePlay() {
+  window._isPlaying = !window._isPlaying;
+  var b = document.getElementById('playBtn');
+  b.textContent = window._isPlaying ? 'Pause' : 'Play';
+  b.style.background = window._isPlaying ? '#F97316' : '#22c55e';
+}
+
+// =============================================
+// RESIZE
+// =============================================
+
+function resize() {
+  var w = canvasArea.clientWidth;
+  var ctrlH = document.getElementById('controls').offsetHeight || 80;
+  var h = Math.max(canvasArea.clientHeight - ctrlH, 200);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 100);
+
+// =============================================
+// KEYBOARD SHORTCUTS
+// =============================================
+
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); showToast(window._isPlaying ? 'Playing' : 'Paused'); }
+  if (e.code === 'KeyR') { resetScene(); }
+});
+
+// =============================================
+// MAIN SIMULATION CODE
+// =============================================
+
+// Radiometric dating simulation
+var decayGroup = new THREE.Group();
+scene.add(decayGroup);
+camera.position.set(0, 3, 12);
+
+var isotopes = {
+  c14:  { name: 'Carbon-14',    hl: 5730,         lambda: 0.693/5730,       color: 0x88ff44, dColor: 0x446622 },
+  k40:  { name: 'Potassium-40', hl: 1.25e9,       lambda: 0.693/1.25e9,     color: 0xff8844, dColor: 0x884422 },
+  u238: { name: 'Uranium-238',  hl: 4.47e9,       lambda: 0.693/4.47e9,     color: 0x44aaff, dColor: 0x224466 }
+};
+
+var currentIsotope = isotopes.c14;
+var parentPercent = 100;
+var decayRateMultiplier = 1.0;
+var atomMeshes = [];
+var numAtoms = 120;
+
+function formatNumber(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(2) + ' Ga';
+  if (n >= 1e6) return (n/1e6).toFixed(2) + ' Ma';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + ' ka';
+  return n.toFixed(0) + ' yrs';
+}
+
+function buildAtomDisplay() {
+  while (decayGroup.children.length > 0) {
+    var c = decayGroup.children[0];
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+    decayGroup.remove(c);
+  }
+  atomMeshes = [];
+
+  var cols = 12, rows = 10;
+  var parentMat = new THREE.MeshPhongMaterial({ color: currentIsotope.color, shininess: 120, emissive: new THREE.Color(currentIsotope.color).multiplyScalar(0.2) });
+  var daughterMat = new THREE.MeshPhongMaterial({ color: currentIsotope.dColor, shininess: 80 });
+  var numParent = Math.round(numAtoms * parentPercent / 100);
+
+  for (var i = 0; i < rows; i++) {
+    for (var j = 0; j < cols; j++) {
+      var idx = i * cols + j;
+      var isParent = idx < numParent;
+      var geo = new THREE.SphereGeometry(0.28, 8, 8);
+      var mat = isParent ? parentMat.clone() : daughterMat.clone();
+      var mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(j * 0.8 - (cols-1)*0.4, i * 0.8 - (rows-1)*0.4, 0);
+      mesh.userData.isParent = isParent;
+      mesh.userData.pulsePhase = Math.random() * Math.PI * 2;
+      decayGroup.add(mesh);
+      atomMeshes.push(mesh);
+    }
+  }
+
+  // Decay curve (visual graph plane)
+  var graphGeo = new THREE.PlaneGeometry(6, 3);
+  var graphMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+  var graph = new THREE.Mesh(graphGeo, graphMat);
+  graph.position.set(5, 0, 0);
+  graph.rotation.y = -0.3;
+  decayGroup.add(graph);
+
+  // Draw decay curve line
+  var pts = [];
+  for (var k = 0; k <= 50; k++) {
+    var t = k / 50;
+    var y = Math.exp(-2 * t * Math.LN2);
+    pts.push(new THREE.Vector3(5 - 3 + k * 0.12, y * 2.5 - 1.25, 0.01));
+  }
+  var curveLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: currentIsotope.color, linewidth: 2 })
+  );
+  decayGroup.add(curveLine);
+}
+
+function updateAtomDisplay() {
+  var numParent = Math.round(numAtoms * parentPercent / 100);
+  atomMeshes.forEach(function(m, i) {
+    var shouldBeParent = i < numParent;
+    if (m.userData.isParent !== shouldBeParent) {
+      m.userData.isParent = shouldBeParent;
+      m.material.color.setHex(shouldBeParent ? currentIsotope.color : currentIsotope.dColor);
+      m.material.emissive.setHex(shouldBeParent ? new THREE.Color(currentIsotope.color).multiplyScalar(0.2).getHex() : 0x000000);
+    }
+  });
+}
+
+function updateParent(v) {
+  parentPercent = parseFloat(v);
+  document.getElementById('parent-val').textContent = v;
+  var daughter = (100 - parentPercent).toFixed(1);
+  document.getElementById('ov-parent').textContent = parseFloat(v).toFixed(1) + '%';
+  document.getElementById('ov-daughter').textContent = daughter + '%';
+
+  // Calculate age: t = -ln(P/100) / lambda
+  var ratio = parentPercent / 100;
+  if (ratio > 0 && ratio <= 1) {
+    var age = -Math.log(ratio) / currentIsotope.lambda;
+    document.getElementById('ov-age').textContent = formatNumber(age);
+    var hlCount = -Math.log2(ratio);
+    document.getElementById('ov-hl-count').textContent = hlCount.toFixed(2);
+  }
+  updateAtomDisplay();
+}
+
+function updateDecayRate(v) {
+  decayRateMultiplier = parseFloat(v);
+  document.getElementById('decay-val').textContent = parseFloat(v).toFixed(1);
+}
+
+function setIsotope(name, btn) {
+  currentIsotope = isotopes[name];
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  document.getElementById('ov-iso').textContent = currentIsotope.name;
+  document.getElementById('ov-hl').textContent = formatNumber(currentIsotope.hl);
+  parentPercent = 100;
+  document.getElementById('parentSlider').value = 100;
+  document.getElementById('parent-val').textContent = '100';
+  buildAtomDisplay();
+  updateParent(100);
+  showToast(currentIsotope.name + ' — half-life: ' + formatNumber(currentIsotope.hl));
+}
+
+function resetScene() {
+  window._isPlaying = true; window._speedMult = 1.0; _time = 0;
+  decayRateMultiplier = 1.0;
+  document.getElementById('decaySlider').value = 1;
+  document.getElementById('decay-val').textContent = '1.0';
+  document.getElementById('playBtn').textContent = 'Pause';
+  document.getElementById('playBtn').style.background = '#F97316';
+  document.querySelectorAll('.speed-btn').forEach(function(b,i){ b.classList.toggle('active',i===2); });
+  camera.position.set(0, 3, 12); controls.update();
+  setIsotope('c14', document.getElementById('btn-c14'));
+  showToast('Scene reset to Carbon-14');
+}
+
+katex.render('N(t) = N_0 \\cdot e^{-\\lambda t}', document.getElementById('f1'), { throwOnError: false });
+katex.render('t = \\frac{1}{\\lambda} \\ln\\!\\left(1 + \\frac{D}{P}\\right)', document.getElementById('f2'), { throwOnError: false });
+katex.render('t_{1/2} = \\frac{\\ln 2}{\\lambda} = \\frac{0.693}{\\lambda}', document.getElementById('f3'), { throwOnError: false });
+
+setIsotope('c14', document.getElementById('btn-c14'));
+
+renderer.setAnimationLoop(function() {
+  if (window._isPlaying) {
+    _time += 0.016 * window._speedMult;
+
+    // Animate parent atoms with pulse
+    atomMeshes.forEach(function(m) {
+      if (m.userData.isParent) {
+        var s = 1.0 + 0.08 * Math.sin(_time * 3 + m.userData.pulsePhase);
+        m.scale.setScalar(s);
+      } else {
+        m.scale.setScalar(0.85);
+      }
+    });
+
+    // Auto-decay animation when playing
+    if (parentPercent > 0) {
+      var decayStep = 0.015 * decayRateMultiplier * window._speedMult;
+      parentPercent = Math.max(0, parentPercent - decayStep);
+      document.getElementById('parentSlider').value = parentPercent;
+      updateParent(parentPercent);
+    }
+
+    decayGroup.rotation.y = Math.sin(_time * 0.1) * 0.1;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

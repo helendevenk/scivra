@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plinko & Probability — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --primary: #3B82F6; --primary-light: #0EA5E9;
+    --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.13);
+    --panel-bg: rgba(15,23,42,0.88);
+  }
+  #navbar { background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0 1.2rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 50; }
+  #navbar h1 { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .nav-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.2s; }
+  .nav-btn:hover { background: rgba(59,130,246,0.2); border-color: #3B82F6; color: #fff; }
+  #main-layout { display: flex; flex: 1; overflow: hidden; }
+  #sidebar { width: 300px; background: var(--panel-bg); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 1rem; flex-shrink: 0; }
+  #sidebar::-webkit-scrollbar { width: 4px; } #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  #canvas-area { flex: 1; position: relative; display: flex; flex-direction: column; }
+  #canvas-container { flex: 1; position: relative; }
+  #bottom-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.75rem 1.2rem; flex-shrink: 0; }
+  .section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0EA5E9; margin-bottom: 0.5rem; margin-top: 1rem; }
+  .section-title:first-child { margin-top: 0; }
+  .formula-block { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem; }
+  .formula-label { font-size: 0.7rem; color: #94a3b8; margin-top: 0.3rem; }
+  .concept-text { font-size: 0.78rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 0.5rem; }
+  .knowledge-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem; font-size: 0.75rem; color: #94a3b8; line-height: 1.5; }
+  .knowledge-card strong { color: #e2e8f0; }
+  .why-item { display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 0.4rem; font-size: 0.75rem; color: #94a3b8; }
+  .why-dot { width: 6px; height: 6px; border-radius: 50%; background: #3B82F6; flex-shrink: 0; margin-top: 5px; }
+  .slider-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .slider-label { font-size: 0.72rem; color: #94a3b8; width: 110px; flex-shrink: 0; }
+  .slider-val { font-size: 0.72rem; color: #0EA5E9; width: 32px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); cursor: pointer; }
+  .btn-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .preset-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; transition: all 0.2s; }
+  .preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.25); border-color: #3B82F6; color: #fff; }
+  .speed-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #94a3b8; padding: 3px 9px; border-radius: 5px; cursor: pointer; font-size: 0.7rem; transition: all 0.15s; }
+  .speed-btn.active { background: rgba(59,130,246,0.3); border-color: #3B82F6; color: #fff; }
+  .action-btn { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: opacity 0.2s; }
+  .action-btn:hover { opacity: 0.85; }
+  #data-overlay { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.82); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.7rem 0.9rem; min-width: 175px; pointer-events: none; z-index: 20; }
+  .data-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.72rem; margin-bottom: 0.25rem; }
+  .data-label { color: #64748b; }
+  .data-val { color: #0EA5E9; font-variant-numeric: tabular-nums; font-weight: 600; }
+  #svg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+  #quiz-panel { position: absolute; bottom: 12px; right: 12px; width: 310px; background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; z-index: 30; overflow: hidden; }
+  #quiz-header { background: rgba(59,130,246,0.15); padding: 0.55rem 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+  #quiz-header span { font-size: 0.78rem; font-weight: 700; color: #0EA5E9; }
+  #quiz-body { padding: 0.8rem; max-height: 260px; overflow-y: auto; }
+  .quiz-q { font-size: 0.75rem; color: #e2e8f0; margin-bottom: 0.5rem; font-weight: 600; }
+  .quiz-opt { display: flex; align-items: center; gap: 0.4rem; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; color: #cbd5e1; transition: background 0.15s; margin-bottom: 3px; border: 1px solid transparent; }
+  .quiz-opt:hover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.18); border-color: #22c55e; color: #86efac; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.18); border-color: #ef4444; color: #fca5a5; }
+  .quiz-check { margin-top: 0.5rem; }
+  .quiz-feedback { font-size: 0.7rem; margin-top: 0.4rem; padding: 0.4rem 0.5rem; border-radius: 5px; line-height: 1.4; }
+  .quiz-feedback.ok { background: rgba(34,197,94,0.12); color: #86efac; }
+  .quiz-feedback.no { background: rgba(239,68,68,0.12); color: #fca5a5; }
+  #toast { position: fixed; top: 60px; right: 16px; background: rgba(59,130,246,0.92); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; pointer-events: none; opacity: 0; transform: translateX(20px); transition: all 0.3s; z-index: 100; }
+  #toast.show { opacity: 1; transform: translateX(0); }
+  #about-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+  #about-modal.show { display: flex; }
+  #about-inner { background: #1e293b; border: 1px solid rgba(59,130,246,0.3); border-radius: 14px; padding: 1.5rem; max-width: 380px; width: 90%; }
+  #about-inner h2 { font-size: 1rem; font-weight: 700; color: #0EA5E9; margin-bottom: 0.8rem; }
+  #about-inner p { font-size: 0.77rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 0.5rem; }
+  .shortcut-row { display: flex; justify-content: space-between; font-size: 0.72rem; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .shortcut-key { background: rgba(59,130,246,0.18); padding: 1px 7px; border-radius: 4px; color: #0EA5E9; font-family: monospace; }
+  #quiz-float-btn { display: none; position: absolute; bottom: 12px; right: 12px; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; z-index: 30; box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
+</style>
+</head>
+<body>
+
+<div id="navbar">
+  <h1>Plinko &amp; Probability — Binomial Distribution</h1>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="nav-btn" onclick="resetSim()">Reset</button>
+    <button class="nav-btn" onclick="applyRandomPreset()">Random</button>
+    <button class="nav-btn" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="nav-btn" onclick="document.getElementById('about-modal').classList.add('show')">About</button>
+  </div>
+</div>
+
+<div id="main-layout">
+  <div id="sidebar">
+    <div class="section-title">Core Formulas</div>
+    <div class="formula-block">
+      <div id="f1"></div>
+      <div class="formula-label">Binomial probability: k successes in n trials</div>
+    </div>
+    <div class="formula-block">
+      <div id="f2"></div>
+      <div class="formula-label">Mean of binomial distribution</div>
+    </div>
+    <div class="formula-block">
+      <div id="f3"></div>
+      <div class="formula-label">Standard deviation of binomial distribution</div>
+    </div>
+    <div class="formula-block">
+      <div id="f4"></div>
+      <div class="formula-label">Normal approximation (central limit theorem)</div>
+    </div>
+
+    <div class="section-title">Concept</div>
+    <p class="concept-text">A Plinko board is a physical computer that runs the same random experiment thousands of times. Each peg forces the ball to choose left or right — one Bernoulli trial. After <em>n</em> rows of pegs, the position of each ball is the sum of <em>n</em> independent ±1 coin flips.</p>
+    <p class="concept-text">The binomial distribution counts how many "right" deflections occurred. For large <em>n</em>, the Central Limit Theorem guarantees convergence to a normal (Gaussian) curve — the histogram you see forming in real time.</p>
+    <p class="concept-text">The bias slider changes <em>p</em>, shifting the mean and skewing the histogram. This is the mechanism behind loaded dice, genetic drift, and A/B test analysis.</p>
+
+    <div class="section-title">Knowledge Cards</div>
+    <div class="knowledge-card"><strong>Pascal's Triangle:</strong> The number of paths to bin <em>k</em> in row <em>n</em> equals C(n,k) — the same value that appears in Pascal's triangle at row <em>n</em>, column <em>k</em>.</div>
+    <div class="knowledge-card"><strong>Common misconception:</strong> "With p=0.5, every ball is equally likely to land in any bin." Wrong — center bins have exponentially more paths than edge bins.</div>
+    <div class="knowledge-card"><strong>AP connection:</strong> Binomial distributions appear on AP Statistics and AP Physics (error analysis). Normal approximation is valid when np ≥ 10 and n(1-p) ≥ 10.</div>
+
+    <div class="section-title">Why It Matters</div>
+    <div class="why-item"><div class="why-dot"></div><span>Galton boards are used in probability education worldwide to demonstrate the Central Limit Theorem physically.</span></div>
+    <div class="why-item"><div class="why-dot"></div><span>Binomial distributions model radioactive decay counts, genetics (allele inheritance), and clinical trial outcomes.</span></div>
+    <div class="why-item"><div class="why-dot"></div><span>The normal approximation justifies why measurement errors are Gaussian — a key assumption in AP Physics lab analysis.</span></div>
+  </div>
+
+  <div id="canvas-area">
+    <div id="canvas-container">
+      <svg id="svg-overlay"></svg>
+      <div id="data-overlay">
+        <div class="data-row"><span class="data-label">Total Balls</span><span class="data-val" id="d-total">0</span></div>
+        <div class="data-row"><span class="data-label">Mean Bin</span><span class="data-val" id="d-mean">—</span></div>
+        <div class="data-row"><span class="data-label">Std Dev</span><span class="data-val" id="d-std">—</span></div>
+        <div class="data-row"><span class="data-label">Expected μ</span><span class="data-val" id="d-expmu">—</span></div>
+        <div class="data-row"><span class="data-label">Expected σ</span><span class="data-val" id="d-expsig">—</span></div>
+        <div class="data-row"><span class="data-label">Active Balls</span><span class="data-val" id="d-active">0</span></div>
+      </div>
+      <div id="quiz-panel">
+        <div id="quiz-header" onclick="toggleQuiz()">
+          <span>Quiz — Test Your Understanding</span>
+          <span id="quiz-arrow">▲</span>
+        </div>
+        <div id="quiz-body"></div>
+      </div>
+      <button id="quiz-float-btn" onclick="showQuiz()" title="Open Quiz">?</button>
+    </div>
+    <div id="bottom-panel">
+      <div style="display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <div class="section-title" style="margin-top:0;">Controls</div>
+          <div class="slider-row">
+            <span class="slider-label">Rows (n)</span>
+            <input type="range" id="sl-rows" min="5" max="15" value="10" oninput="updateRows(this.value)">
+            <span class="slider-val" id="sv-rows">10</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Drop Rate (/s)</span>
+            <input type="range" id="sl-rate" min="1" max="10" value="3" oninput="updateRate(this.value)">
+            <span class="slider-val" id="sv-rate">3</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Bias (p)</span>
+            <input type="range" id="sl-bias" min="0.3" max="0.7" step="0.01" value="0.5" oninput="updateBias(this.value)">
+            <span class="slider-val" id="sv-bias">0.50</span>
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div class="section-title" style="margin-top:0;">Speed</div>
+          <div class="btn-group" style="margin-bottom:0.6rem;">
+            <button class="speed-btn" onclick="setSpeed(0.25)">0.25x</button>
+            <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
+            <button class="speed-btn active" id="sp1" onclick="setSpeed(1)">1x</button>
+            <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+            <button class="speed-btn" onclick="setSpeed(3)">3x</button>
+          </div>
+          <div class="section-title" style="margin-top:0.4rem;">Presets</div>
+          <div class="btn-group">
+            <button class="preset-btn active" onclick="applyPreset('fair')">Fair Board (p=0.5)</button>
+            <button class="preset-btn" onclick="applyPreset('biased')">Biased Left (p=0.3)</button>
+            <button class="preset-btn" onclick="applyPreset('many')">Many Rows (n=15)</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:flex-end;padding-bottom:2px;">
+          <button class="action-btn" onclick="togglePlay()">⏯ Play/Pause</button>
+          <button class="action-btn" style="background:rgba(59,130,246,0.25);border:1px solid #3B82F6;" onclick="resetSim()">↺ Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="about-modal">
+  <div id="about-inner">
+    <h2>Plinko &amp; Probability</h2>
+    <p>Balls drop through a Plinko board with cylindrical pegs. At each peg, the ball deflects left or right with probability p. The histogram shows the binomial distribution forming in real time.</p>
+    <p style="margin-bottom:0.8rem;"><strong style="color:#0EA5E9;">Keyboard Shortcuts</strong></p>
+    <div class="shortcut-row"><span>Play / Pause</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-row"><span>Reset</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span>Speed 0.25x – 3x</span><span class="shortcut-key">1–5</span></div>
+    <br>
+    <button class="action-btn" onclick="document.getElementById('about-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<script>
+// ── INLINE OrbitControls ──────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// ── SCENE SETUP ───────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.Fog(0x0f172a, 30, 60);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(0, 2, 22);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// position canvas behind SVG overlay
+renderer.domElement.style.position = 'absolute';
+renderer.domElement.style.top = '0';
+renderer.domElement.style.left = '0';
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 50;
+controls.target.set(0, 0, 0);
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  drawHistogram();
+});
+
+// ── SIMULATION STATE ──────────────────────────────────────────────────────
+let numRows = 10;
+let dropRate = 3;
+let bias = 0.5;
+let speedFactor = 1.0;
+let isPlaying = true;
+let totalBalls = 0;
+let binCounts = [];
+let activeBalls = [];
+let dropTimer = 0;
+
+// 3D objects
+let pegMeshes = [];
+let boardGroup = new THREE.Group();
+scene.add(boardGroup);
+
+const ballGeo = new THREE.SphereGeometry(0.18, 16, 16);
+const ballMat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, roughness: 0.3, metalness: 0.2, emissive: 0x0EA5E9, emissiveIntensity: 0.3 });
+const pegGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.5, 12);
+const pegMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.4 });
+
+const BOARD_WIDTH = 14;
+const ROW_HEIGHT = 1.1;
+const PEG_RADIUS = 0.12;
+const BALL_RADIUS = 0.18;
+
+function getBoardTop() { return (numRows * ROW_HEIGHT) / 2 + 1; }
+function getBinCount() { return numRows + 1; }
+
+function buildBoard() {
+  boardGroup.clear();
+  binCounts = new Array(getBinCount()).fill(0);
+
+  // Add pegs
+  for (let row = 0; row < numRows; row++) {
+    const pegsInRow = row + 1;
+    const y = getBoardTop() - (row + 1) * ROW_HEIGHT;
+    const xSpacing = BOARD_WIDTH / (numRows);
+    const startX = -(pegsInRow - 1) * xSpacing / 2;
+    for (let col = 0; col < pegsInRow; col++) {
+      const x = startX + col * xSpacing;
+      const peg = new THREE.Mesh(pegGeo, pegMat);
+      peg.position.set(x, y, 0);
+      peg.castShadow = true;
+      boardGroup.add(peg);
+    }
+  }
+
+  // Floor
+  const floorY = getBoardTop() - (numRows + 1) * ROW_HEIGHT - 0.5;
+  const floorGeo = new THREE.BoxGeometry(BOARD_WIDTH + 1, 0.1, 0.6);
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e3a5f, roughness: 0.8 });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.position.set(0, floorY, 0);
+  floor.receiveShadow = true;
+  boardGroup.add(floor);
+
+  // Bin dividers
+  const n = getBinCount();
+  const binWidth = BOARD_WIDTH / n;
+  const dividerMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 });
+  for (let i = 0; i <= n; i++) {
+    const x = -BOARD_WIDTH / 2 + i * binWidth;
+    const divGeo = new THREE.BoxGeometry(0.05, 1.2, 0.6);
+    const div = new THREE.Mesh(divGeo, dividerMat);
+    div.position.set(x, floorY + 0.65, 0);
+    boardGroup.add(div);
+  }
+
+  // Grid
+  const grid = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b);
+  grid.position.set(0, floorY - 0.05, 0);
+  boardGroup.add(grid);
+
+  drawHistogram();
+}
+
+// ── BALL PHYSICS ─────────────────────────────────────────────────────────
+function spawnBall() {
+  const mesh = new THREE.Mesh(ballGeo, ballMat.clone());
+  mesh.position.set((Math.random() - 0.5) * 0.3, getBoardTop(), 0);
+  mesh.castShadow = true;
+  scene.add(mesh);
+
+  const ball = {
+    mesh,
+    vx: 0, vy: -0.5, vz: 0,
+    x: mesh.position.x, y: mesh.position.y, z: 0,
+    deflections: 0,
+    settled: false,
+    pegHitCooldown: 0,
+    lastRow: -1
+  };
+  activeBalls.push(ball);
+}
+
+function getPegPositions() {
+  const pegs = [];
+  for (let row = 0; row < numRows; row++) {
+    const pegsInRow = row + 1;
+    const xSpacing = BOARD_WIDTH / numRows;
+    const startX = -(pegsInRow - 1) * xSpacing / 2;
+    const y = getBoardTop() - (row + 1) * ROW_HEIGHT;
+    for (let col = 0; col < pegsInRow; col++) {
+      pegs.push({ x: startX + col * xSpacing, y, row, col });
+    }
+  }
+  return pegs;
+}
+
+let cachedPegs = null;
+function getPergs() {
+  if (!cachedPegs) cachedPegs = getPegPositions();
+  return cachedPegs;
+}
+
+function verletStep(ball, dt) {
+  const gravity = -9.8;
+  const ay1 = gravity;
+  const vyHalf = ball.vy + 0.5 * ay1 * dt;
+  ball.y += vyHalf * dt;
+  ball.x += ball.vx * dt;
+  const ay2 = gravity;
+  ball.vy = vyHalf + 0.5 * ay2 * dt;
+}
+
+function updateBalls(dt) {
+  const floorY = getBoardTop() - (numRows + 1) * ROW_HEIGHT - 0.5;
+  const pegs = getPergs();
+  const xSpacing = BOARD_WIDTH / numRows;
+
+  for (let i = activeBalls.length - 1; i >= 0; i--) {
+    const ball = activeBalls[i];
+    if (ball.settled) continue;
+    if (ball.pegHitCooldown > 0) ball.pegHitCooldown -= dt;
+
+    verletStep(ball, dt);
+
+    // Check peg collisions
+    if (ball.pegHitCooldown <= 0) {
+      for (const peg of pegs) {
+        const dx = ball.x - peg.x;
+        const dy = ball.y - peg.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < PEG_RADIUS + BALL_RADIUS + 0.05) {
+          // Deflect based on bias
+          const goRight = Math.random() < bias;
+          ball.vx = goRight ? 1.5 * xSpacing : -1.5 * xSpacing;
+          ball.vy = -Math.abs(ball.vy) * 0.7 + 0.5;
+          ball.y = peg.y - PEG_RADIUS - BALL_RADIUS - 0.01;
+          ball.pegHitCooldown = 0.15;
+          ball.deflections++;
+          if (peg.row > ball.lastRow) ball.lastRow = peg.row;
+          break;
+        }
+      }
+    }
+
+    // Settle in bin
+    if (ball.y <= floorY + 0.25) {
+      const n = getBinCount();
+      const binWidth = BOARD_WIDTH / n;
+      let binIdx = Math.floor((ball.x + BOARD_WIDTH / 2) / binWidth);
+      binIdx = Math.max(0, Math.min(n - 1, binIdx));
+      binCounts[binIdx]++;
+      totalBalls++;
+      ball.settled = true;
+
+      // Stack ball in bin
+      const binX = -BOARD_WIDTH / 2 + (binIdx + 0.5) * binWidth;
+      ball.mesh.position.set(binX, floorY + 0.25 + (binCounts[binIdx] - 1) * 0.38, 0);
+
+      activeBalls.splice(i, 1);
+      drawHistogram();
+      updateDataPanel();
+
+      // Fade old balls in bins to keep scene clean
+      if (totalBalls > 200) {
+        const oldest = scene.children.find(c => c.isMesh && c.geometry === ballGeo && c !== ball.mesh);
+        if (oldest) scene.remove(oldest);
+      }
+    }
+
+    ball.mesh.position.set(ball.x, ball.y, ball.z);
+    // Add slight wobble
+    ball.mesh.rotation.x += ball.vy * dt * 0.5;
+  }
+}
+
+// ── HISTOGRAM (SVG) ───────────────────────────────────────────────────────
+function drawHistogram() {
+  const svg = document.getElementById('svg-overlay');
+  const W = container.clientWidth, H = container.clientHeight;
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+
+  const n = getBinCount();
+  const maxCount = Math.max(1, ...binCounts);
+  const barAreaH = Math.min(H * 0.35, 180);
+  const barAreaY = H - barAreaH - 55;
+  const barW = W * 0.6 / n;
+  const barStartX = W * 0.2;
+
+  let html = '';
+
+  // Expected distribution overlay
+  const expMax = binomialExpected(n - 1, bias);
+  for (let k = 0; k < n; k++) {
+    const pk = binomialPMF(n - 1, k, bias);
+    const normH = totalBalls > 0 ? (pk / expMax) * barAreaH * 0.85 : 0;
+    const x = barStartX + k * barW;
+    html += `<rect x="${x}" y="${barAreaY + barAreaH - normH}" width="${barW - 1}" height="${normH}" fill="rgba(14,165,233,0.15)" stroke="rgba(14,165,233,0.4)" stroke-width="1"/>`;
+  }
+
+  // Observed bars
+  for (let k = 0; k < n; k++) {
+    const barH = (binCounts[k] / maxCount) * barAreaH * 0.85;
+    const x = barStartX + k * barW;
+    const hue = 210 + k * (30 / n);
+    html += `<rect x="${x + 1}" y="${barAreaY + barAreaH - barH}" width="${Math.max(1, barW - 3)}" height="${barH}" fill="rgba(59,130,246,0.75)" rx="2"/>`;
+    if (barW > 18 && binCounts[k] > 0) {
+      html += `<text x="${x + barW / 2}" y="${barAreaY + barAreaH + 14}" text-anchor="middle" fill="#64748b" font-size="9">${k}</text>`;
+    }
+  }
+
+  // Axis
+  html += `<line x1="${barStartX}" y1="${barAreaY + barAreaH}" x2="${barStartX + n * barW}" y2="${barAreaY + barAreaH}" stroke="#334155" stroke-width="1"/>`;
+
+  // Label
+  html += `<text x="${barStartX + n * barW / 2}" y="${barAreaY - 6}" text-anchor="middle" fill="#475569" font-size="11">Observed (blue) vs Expected (cyan outline)</text>`;
+
+  svg.innerHTML = html;
+}
+
+function binomialPMF(n, k, p) {
+  if (k < 0 || k > n) return 0;
+  return binomialCoeff(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+}
+
+function binomialCoeff(n, k) {
+  if (k === 0 || k === n) return 1;
+  if (k > n - k) k = n - k;
+  let c = 1;
+  for (let i = 0; i < k; i++) c = c * (n - i) / (i + 1);
+  return c;
+}
+
+function binomialExpected(n, p) {
+  let max = 0;
+  for (let k = 0; k <= n; k++) max = Math.max(max, binomialPMF(n, k, p));
+  return max;
+}
+
+// ── DATA PANEL ────────────────────────────────────────────────────────────
+function updateDataPanel() {
+  document.getElementById('d-total').textContent = totalBalls;
+  document.getElementById('d-active').textContent = activeBalls.length;
+  const n = numRows;
+  document.getElementById('d-expmu').textContent = (n * bias).toFixed(2);
+  document.getElementById('d-expsig').textContent = Math.sqrt(n * bias * (1 - bias)).toFixed(3);
+
+  if (totalBalls > 0) {
+    let sum = 0, sum2 = 0, total = 0;
+    binCounts.forEach((c, k) => { sum += k * c; sum2 += k * k * c; total += c; });
+    const mean = sum / total;
+    const variance = sum2 / total - mean * mean;
+    document.getElementById('d-mean').textContent = mean.toFixed(2);
+    document.getElementById('d-std').textContent = Math.sqrt(Math.max(0, variance)).toFixed(3);
+  }
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────────────
+function updateRows(v) {
+  numRows = parseInt(v);
+  document.getElementById('sv-rows').textContent = v;
+  cachedPegs = null;
+  resetSim();
+}
+
+function updateRate(v) {
+  dropRate = parseInt(v);
+  document.getElementById('sv-rate').textContent = v;
+}
+
+function updateBias(v) {
+  bias = parseFloat(v);
+  document.getElementById('sv-bias').textContent = bias.toFixed(2);
+  updateDataPanel();
+  drawHistogram();
+}
+
+function setSpeed(s) {
+  speedFactor = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  const labels = ['0.25x','0.5x','1x','2x','3x'];
+  const vals = [0.25,0.5,1,2,3];
+  const idx = vals.indexOf(s);
+  if (idx >= 0) document.querySelectorAll('.speed-btn')[idx].classList.add('active');
+  showToast(`Speed: ${s}x`);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  showToast(isPlaying ? 'Simulation running' : 'Simulation paused');
+}
+
+function resetSim() {
+  activeBalls.forEach(b => scene.remove(b.mesh));
+  activeBalls = [];
+  // Remove ball meshes from scene
+  const toRemove = [];
+  scene.traverse(obj => { if (obj.isMesh && obj.geometry === ballGeo) toRemove.push(obj); });
+  toRemove.forEach(m => scene.remove(m));
+  totalBalls = 0;
+  dropTimer = 0;
+  cachedPegs = null;
+  buildBoard();
+  updateDataPanel();
+  showToast('Simulation reset');
+}
+
+function applyPreset(name) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (name === 'fair') {
+    numRows = 10; bias = 0.5; dropRate = 3;
+    document.getElementById('sl-rows').value = 10; document.getElementById('sv-rows').textContent = 10;
+    document.getElementById('sl-bias').value = 0.5; document.getElementById('sv-bias').textContent = '0.50';
+    document.getElementById('sl-rate').value = 3; document.getElementById('sv-rate').textContent = 3;
+    showToast('Preset: Fair Board (p=0.5)');
+  } else if (name === 'biased') {
+    numRows = 10; bias = 0.3; dropRate = 3;
+    document.getElementById('sl-rows').value = 10; document.getElementById('sv-rows').textContent = 10;
+    document.getElementById('sl-bias').value = 0.3; document.getElementById('sv-bias').textContent = '0.30';
+    document.getElementById('sl-rate').value = 3; document.getElementById('sv-rate').textContent = 3;
+    showToast('Preset: Biased Left (p=0.3)');
+  } else if (name === 'many') {
+    numRows = 15; bias = 0.5; dropRate = 5;
+    document.getElementById('sl-rows').value = 15; document.getElementById('sv-rows').textContent = 15;
+    document.getElementById('sl-bias').value = 0.5; document.getElementById('sv-bias').textContent = '0.50';
+    document.getElementById('sl-rate').value = 5; document.getElementById('sv-rate').textContent = 5;
+    showToast('Preset: Many Rows (n=15)');
+  }
+  cachedPegs = null;
+  resetSim();
+}
+
+function applyRandomPreset() {
+  const presets = ['fair','biased','many'];
+  applyPreset(presets[Math.floor(Math.random() * presets.length)]);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "If you double the number of rows from 8 to 16, how does the standard deviation of the distribution change?",
+    opts: ["It doubles", "It stays the same", "It increases by factor √2", "It halves"],
+    correct: 2,
+    fb_ok: "Correct! σ = √(np(1-p)), so doubling n multiplies σ by √2. The distribution gets wider but not proportionally — it becomes more 'bell-shaped' relative to its width.",
+    fb_no: "Not quite. Since σ = √(np(1-p)), doubling n changes σ by a factor of √2 ≈ 1.41. Standard deviation grows as the square root of n, not linearly."
+  },
+  {
+    q: "You observe that balls cluster strongly to the left side of the board. What does this tell you about the bias parameter p?",
+    opts: ["p is close to 1.0", "p is close to 0.0", "p = 0.5 exactly", "p cannot be determined from the histogram"],
+    correct: 1,
+    fb_ok: "Correct! p represents the probability of deflecting right. When p is small (close to 0), most balls deflect left repeatedly, piling up in the low-index bins on the left.",
+    fb_no: "Think about it: p is the probability of going right. If balls cluster left, most deflections were leftward, so p must be small (close to 0)."
+  },
+  {
+    q: "Why does the histogram approximate a normal (Gaussian) distribution for large n, even though each peg decision is a discrete coin flip?",
+    opts: ["Because the pegs are arranged in a triangle", "Because of the Central Limit Theorem — sums of many independent random variables tend toward normal", "Because binomial and normal are the same distribution", "Because gravity pulls balls toward the center"],
+    correct: 1,
+    fb_ok: "Exactly! The Central Limit Theorem states that sums of i.i.d. random variables converge to a normal distribution as n → ∞. Each ball's final bin is the sum of n Bernoulli trials.",
+    fb_no: "The Central Limit Theorem is the key: each ball's position is the sum of n independent ±1 Bernoulli random variables. The CLT guarantees this sum approaches a Gaussian for large n."
+  }
+];
+
+let quizAnswers = [null, null, null];
+let quizChecked = [false, false, false];
+
+function buildQuiz() {
+  let html = '';
+  quizData.forEach((q, qi) => {
+    html += `<div style="margin-bottom:1rem;padding-bottom:0.8rem;border-bottom:1px solid rgba(255,255,255,0.07);">`;
+    html += `<div class="quiz-q">Q${qi+1}. ${q.q}</div>`;
+    q.opts.forEach((opt, oi) => {
+      html += `<div class="quiz-opt" id="opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})">`
+            + `<span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #475569;flex-shrink:0;display:inline-block;" id="dot-${qi}-${oi}"></span>`
+            + `${opt}</div>`;
+    });
+    html += `<div class="quiz-check"><button class="action-btn" style="font-size:0.68rem;padding:3px 10px;" onclick="checkQuiz(${qi})">Check</button></div>`;
+    html += `<div class="quiz-feedback" id="fb-${qi}" style="display:none;"></div>`;
+    html += `</div>`;
+  });
+  document.getElementById('quiz-body').innerHTML = html;
+}
+
+function selectOpt(qi, oi) {
+  if (quizChecked[qi]) return;
+  quizAnswers[qi] = oi;
+  quizData[qi].opts.forEach((_, o) => {
+    const el = document.getElementById(`opt-${qi}-${o}`);
+    const dot = document.getElementById(`dot-${qi}-${o}`);
+    el.style.background = '';
+    el.style.borderColor = 'transparent';
+    dot.style.background = '';
+    dot.style.borderColor = '#475569';
+  });
+  const sel = document.getElementById(`opt-${qi}-${oi}`);
+  sel.style.background = 'rgba(59,130,246,0.18)';
+  sel.style.borderColor = '#3B82F6';
+  document.getElementById(`dot-${qi}-${oi}`).style.background = '#3B82F6';
+  document.getElementById(`dot-${qi}-${oi}`).style.borderColor = '#3B82F6';
+}
+
+function checkQuiz(qi) {
+  if (quizAnswers[qi] === null) return;
+  quizChecked[qi] = true;
+  const q = quizData[qi];
+  const correct = quizAnswers[qi] === q.correct;
+  const fb = document.getElementById(`fb-${qi}`);
+  fb.style.display = 'block';
+  fb.className = 'quiz-feedback ' + (correct ? 'ok' : 'no');
+  fb.textContent = correct ? q.fb_ok : q.fb_no;
+  document.getElementById(`opt-${qi}-${q.correct}`).classList.add('correct');
+  if (!correct) document.getElementById(`opt-${qi}-${quizAnswers[qi]}`).classList.add('wrong');
+}
+
+let quizVisible = true;
+function toggleQuiz() {
+  quizVisible = !quizVisible;
+  document.getElementById('quiz-body').style.display = quizVisible ? '' : 'none';
+  document.getElementById('quiz-arrow').textContent = quizVisible ? '▲' : '▼';
+  if (!quizVisible) {
+    document.getElementById('quiz-panel').style.display = 'none';
+    document.getElementById('quiz-float-btn').style.display = 'flex';
+    document.getElementById('quiz-float-btn').style.alignItems = 'center';
+    document.getElementById('quiz-float-btn').style.justifyContent = 'center';
+  }
+}
+function showQuiz() {
+  document.getElementById('quiz-panel').style.display = '';
+  document.getElementById('quiz-float-btn').style.display = 'none';
+  quizVisible = true;
+  document.getElementById('quiz-body').style.display = '';
+  document.getElementById('quiz-arrow').textContent = '▲';
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.code === 'Digit1') setSpeed(0.25);
+  if (e.code === 'Digit2') setSpeed(0.5);
+  if (e.code === 'Digit3') setSpeed(1);
+  if (e.code === 'Digit4') setSpeed(2);
+  if (e.code === 'Digit5') setSpeed(3);
+});
+
+// ── KaTeX ─────────────────────────────────────────────────────────────────
+function renderFormulas() {
+  katex.render('P(k) = \\binom{n}{k} p^k (1-p)^{n-k}', document.getElementById('f1'), { throwOnError: false, displayMode: true });
+  katex.render('\\mu = np', document.getElementById('f2'), { throwOnError: false, displayMode: true });
+  katex.render('\\sigma = \\sqrt{np(1-p)}', document.getElementById('f3'), { throwOnError: false, displayMode: true });
+  katex.render('f(x) \\approx \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}', document.getElementById('f4'), { throwOnError: false, displayMode: true });
+}
+
+// ── ANIMATION LOOP ────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+renderer.setAnimationLoop(() => {
+  let delta = clock.getDelta();
+  if (delta > 0.1) delta = 0.02;
+  const dt = delta * speedFactor;
+
+  if (isPlaying) {
+    dropTimer += dt;
+    const interval = 1 / dropRate;
+    while (dropTimer >= interval) {
+      spawnBall();
+      dropTimer -= interval;
+    }
+
+    // Sub-stepped physics
+    const maxSubStep = 0.004;
+    const steps = Math.ceil(dt / maxSubStep);
+    const subDt = dt / steps;
+    for (let s = 0; s < steps; s++) updateBalls(subDt);
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderFormulas();
+buildBoard();
+updateDataPanel();
+buildQuiz();
+showToast('Drop balls through the Plinko board!');
+</script>
+
+<!-- Generated by AetherViz Master — Keep exploring the mathematics of chance! -->
+</body>
+</html>

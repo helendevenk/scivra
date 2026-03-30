@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thermochemistry — AP Chemistry</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(245,158,11,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(245,158,11,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px; }
+  .panel-card { background:rgba(78,52,22,0.6);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#EF4444);cursor:pointer; }
+  .sidebar { width:300px;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(245,158,11,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.4);border-radius:2px;}
+  .btn-preset { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(245,158,11,0.3);cursor:pointer;background:rgba(245,158,11,0.1);color:#fcd34d;transition:all 0.18s; }
+  .btn-preset:hover { background:rgba(245,158,11,0.25);color:#fff; }
+  .btn-speed { padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;border-color:#F59E0B; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#fbbf24; }
+  .slider-row { display:flex;flex-direction:column;gap:4px; }
+  .slider-label { display:flex;justify-content:space-between;font-size:12px; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#F59E0B;background:rgba(245,158,11,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100; }
+  .spont-badge { padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-align:center;margin-top:4px; }
+</style>
+</head>
+<body>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(245,158,11,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F59E0B,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Thermochemistry</span>
+    <span class="text-xs text-slate-400 ml-3">Gibbs Free Energy · Entropy · Spontaneity · AP Chemistry</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-3">Core Formulas</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Gibbs free energy: ΔG < 0 → spontaneous</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Equilibrium constant from standard free energy</div>
+    <div id="f3" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Hess's Law: enthalpy is a state function</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">ΔG Analysis</div>
+    <div id="dg-table" class="text-xs space-y-1"></div>
+    <div id="spont-badge" class="spont-badge mt-2"></div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">Concept</div>
+    <p class="text-xs text-slate-300 leading-relaxed">Gibbs free energy ΔG determines spontaneity at constant T and P. A process is spontaneous when ΔG &lt; 0 — it releases useful work. ΔH captures the enthalpy (heat) change; TΔS captures the entropy (disorder) contribution.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">When ΔH &lt; 0 and ΔS &gt; 0 (exothermic, more disorder), the reaction is always spontaneous. When ΔH &gt; 0 and ΔS &lt; 0, never spontaneous. Other combinations depend on temperature.</p>
+  </div>
+
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-cyan-400 mb-1">Spontaneity Table</div>
+    <div class="text-xs text-slate-300">
+      ΔH− ΔS+: always spontaneous<br>
+      ΔH+ ΔS−: never spontaneous<br>
+      ΔH− ΔS−: spontaneous at low T<br>
+      ΔH+ ΔS+: spontaneous at high T
+    </div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">Thermodynamics predicts whether reactions, batteries, industrial processes, and biological reactions can occur spontaneously. ΔG° connects to K and cell potential in electrochemistry.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-slate-400 mb-1">Keyboard Shortcuts</div>
+    <div class="text-xs text-slate-500">Space: Animate | R: Reset | 1-3: Presets</div>
+  </div>
+</aside>
+
+<div class="flex-1 flex flex-col overflow-hidden relative">
+  <div id="canvas-container" class="flex-1 relative">
+
+    <div id="data-overlay" class="absolute top-3 left-3 glass p-3 z-10" style="min-width:230px;">
+      <div class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">ΔH</span><span class="data-val" id="d-dH">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">TΔS</span><span class="data-val" id="d-TdS">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">ΔG</span><span class="data-val" id="d-dG" style="font-size:18px;">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">K (from ΔG°)</span><span class="data-val text-xs" id="d-K">—</span></div>
+      <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">Spontaneous?</span><span class="data-val text-xs" id="d-spont">—</span></div>
+    </div>
+
+    <canvas id="three-canvas" class="w-full h-full block"></canvas>
+    <canvas id="energy-canvas" class="absolute bottom-3 right-3 z-10" width="220" height="130" style="border-radius:10px;background:rgba(15,23,42,0.85);border:1px solid rgba(245,158,11,0.3);"></canvas>
+  </div>
+
+  <div class="shrink-0 glass p-4 m-2 mt-0" style="background:rgba(15,23,42,0.85);">
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex gap-2">
+          <button onclick="loadPreset(0)" class="btn-preset">✅ Exothermic Spontaneous</button>
+          <button onclick="loadPreset(1)" class="btn-preset">🌡️ Endothermic (high T)</button>
+          <button onclick="loadPreset(2)" class="btn-preset">📊 ΔG Analysis</button>
+        </div>
+        <div class="flex gap-1">
+          <button class="btn-speed active" onclick="setSpeed(0.25,this)">0.25x</button>
+          <button class="btn-speed" onclick="setSpeed(1,this)">1x</button>
+          <button class="btn-speed" onclick="setSpeed(2,this)">2x</button>
+          <button class="btn-speed" onclick="setSpeed(3,this)">3x</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">ΔH (kJ/mol)</span><span class="text-white font-bold" id="val-dH">-100</span></div>
+          <input type="range" id="sl-dH" min="-400" max="400" value="-100" step="5" oninput="updateThermo()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">ΔS (J/mol·K)</span><span class="text-white font-bold" id="val-dS">+100</span></div>
+          <input type="range" id="sl-dS" min="-200" max="200" value="100" step="5" oninput="updateThermo()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">Temperature (K)</span><span class="text-white font-bold" id="val-T">298 K</span></div>
+          <input type="range" id="sl-T" min="100" max="1000" value="298" step="10" oninput="updateThermo()">
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="togglePlay()" id="play-btn" class="btn-preset px-4">▶ Animate</button>
+        <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+        <button onclick="showQuiz()" class="btn-preset">? Quiz</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="quiz-panel" class="glass p-4 hidden">
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-sm font-bold text-amber-400">Quick Check</div>
+    <button onclick="document.getElementById('quiz-panel').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">×</button>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0) {
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sd.theta*d; spherical.phi+=sd.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const PRESETS = [
+  { dH:-100, dS:100, T:298, label:'Exothermic Spontaneous (ΔH<0, ΔS>0)' },
+  { dH:80, dS:200, T:600, label:'Endothermic at high T (ΔH>0, ΔS>0)' },
+  { dH:-50, dS:-100, T:200, label:'ΔG Analysis (low T favors)' }
+];
+
+let scene, camera, renderer, controls;
+let orderedParticles = [], disorderedParticles = [];
+let reactantBall, productBall, activeBall;
+let playing = false, speed = 0.25, animT = 0;
+let currentDG = 0;
+
+function loadPreset(idx) {
+  const p = PRESETS[idx];
+  document.getElementById('sl-dH').value = p.dH;
+  document.getElementById('sl-dS').value = p.dS;
+  document.getElementById('sl-T').value = p.T;
+  updateThermo();
+  toast('Loaded: ' + p.label);
+}
+
+function updateThermo() {
+  const dH = parseFloat(document.getElementById('sl-dH').value); // kJ/mol
+  const dS = parseFloat(document.getElementById('sl-dS').value); // J/mol·K
+  const T = parseFloat(document.getElementById('sl-T').value);
+  document.getElementById('val-dH').textContent = (dH >= 0 ? '+' : '') + dH + ' kJ/mol';
+  document.getElementById('val-dS').textContent = (dS >= 0 ? '+' : '') + dS + ' J/mol·K';
+  document.getElementById('val-T').textContent = T + ' K';
+
+  const TdS = T * dS / 1000; // kJ/mol
+  const dG = dH - TdS;
+  currentDG = dG;
+  const R = 8.314;
+  const lnK = -dG * 1000 / (R * T);
+  const K = Math.exp(Math.max(-700, Math.min(700, lnK)));
+  const spontaneous = dG < 0;
+
+  document.getElementById('d-dH').textContent = (dH>=0?'+':'')+dH+' kJ/mol';
+  document.getElementById('d-TdS').textContent = (TdS>=0?'+':'')+TdS.toFixed(1)+' kJ/mol';
+  document.getElementById('d-dG').textContent = (dG>=0?'+':'')+dG.toFixed(1)+' kJ/mol';
+  document.getElementById('d-K').textContent = K > 1e15 ? '>10¹⁵' : K < 1e-15 ? '<10⁻¹⁵' : K.toExponential(2);
+  document.getElementById('d-spont').textContent = spontaneous ? 'Yes ✓' : 'No ✗';
+  document.getElementById('d-spont').style.color = spontaneous ? '#22c55e' : '#ef4444';
+
+  const badge = document.getElementById('spont-badge');
+  badge.textContent = spontaneous ? '✅ SPONTANEOUS (ΔG < 0)' : '❌ NON-SPONTANEOUS (ΔG > 0)';
+  badge.style.background = spontaneous ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)';
+  badge.style.color = spontaneous ? '#22c55e' : '#ef4444';
+  badge.style.border = spontaneous ? '1px solid #22c55e' : '1px solid #ef4444';
+
+  const table = document.getElementById('dg-table');
+  table.innerHTML = `
+    <div class="flex justify-between"><span style="color:#fbbf24">ΔH</span><span>${(dH>=0?'+':'')+dH} kJ/mol ${dH<0?'(exo)':'(endo)'}</span></div>
+    <div class="flex justify-between"><span style="color:#38bdf8">-TΔS</span><span>${((-TdS)>=0?'+':'')+((-TdS)).toFixed(1)} kJ/mol</span></div>
+    <div class="flex justify-between font-bold border-t border-slate-600 pt-1 mt-1"><span style="color:${spontaneous?'#22c55e':'#ef4444'}">ΔG</span><span>${(dG>=0?'+':'')+dG.toFixed(1)} kJ/mol</span></div>
+  `;
+
+  updateEnergyDiagram(dH, dS, T, dG);
+  updateSceneForSpontaneity(spontaneous, dS);
+}
+
+function updateEnergyDiagram(dH, dS, T, dG) {
+  const cvs = document.getElementById('energy-canvas');
+  const ctx = cvs.getContext('2d');
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+  const w = cvs.width-30, h = cvs.height-30;
+  const x0 = 20, y0 = 10;
+  ctx.strokeStyle='rgba(245,158,11,0.3)';
+  ctx.strokeRect(x0, y0, w, h);
+  ctx.fillStyle='#94a3b8'; ctx.font='9px Inter';
+  ctx.fillText('ΔG', 2, 20); ctx.fillText('T (K) →', 100, cvs.height-3);
+
+  // Plot ΔG vs T line
+  const R_mids = [-400,-200,0,200,400];
+  ctx.beginPath(); ctx.strokeStyle='#F59E0B'; ctx.lineWidth=2;
+  for (let ti = 100; ti <= 1000; ti += 20) {
+    const TdSi = ti * dS / 1000;
+    const dGi = dH - TdSi;
+    const xp = x0 + ((ti-100)/900)*w;
+    const yp = y0 + ((200-dGi)/400)*h;
+    const yc = Math.max(y0, Math.min(y0+h, yp));
+    if (ti===100) ctx.moveTo(xp, yc); else ctx.lineTo(xp, yc);
+  }
+  ctx.stroke();
+
+  // Zero line
+  ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.setLineDash([3,3]);
+  const y0line = y0 + (200/400)*h;
+  ctx.moveTo(x0, y0line); ctx.lineTo(x0+w, y0line);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Current point
+  const T_cur = parseFloat(document.getElementById('sl-T').value);
+  const xc = x0 + ((T_cur-100)/900)*w;
+  const yc2 = y0 + ((200-dG)/400)*h;
+  const ycc = Math.max(y0+2, Math.min(y0+h-2, yc2));
+  ctx.beginPath(); ctx.arc(xc, ycc, 5, 0, Math.PI*2);
+  ctx.fillStyle = dG<0?'#22c55e':'#ef4444'; ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='9px Inter';
+  ctx.fillText('ΔG='+dG.toFixed(0)+'kJ', Math.min(xc+6, cvs.width-60), ycc);
+}
+
+function updateSceneForSpontaneity(spontaneous, dS) {
+  if (!orderedParticles.length) return;
+  orderedParticles.forEach((p, i) => {
+    p.visible = !spontaneous || dS < 0;
+  });
+  disorderedParticles.forEach((p, i) => {
+    p.visible = spontaneous || dS > 0;
+  });
+}
+
+function initThree() {
+  const canvas = document.getElementById('three-canvas');
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0x0f172a, 1);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(0, 4, 18);
+  controls = new THREE.OrbitControls(camera, canvas);
+  controls.minDistance = 5; controls.maxDistance = 35;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const d1 = new THREE.DirectionalLight(0xfff5e0, 1.2); d1.position.set(5,10,8); scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0xF59E0B, 0.5); d2.position.set(-8,3,-5); scene.add(d2);
+  const d3 = new THREE.DirectionalLight(0x3b82f6, 0.3); d3.position.set(0,-5,5); scene.add(d3);
+
+  // Reactant and product energy levels
+  const mat1 = new THREE.MeshStandardMaterial({color:0xF59E0B,roughness:0.4,metalness:0.3});
+  const mat2 = new THREE.MeshStandardMaterial({color:0x22c55e,roughness:0.4,metalness:0.3});
+  const matAct = new THREE.MeshStandardMaterial({color:0xEF4444,roughness:0.4,metalness:0.3,emissive:0xEF4444,emissiveIntensity:0.3});
+
+  reactantBall = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 12), mat1);
+  reactantBall.position.set(-5, 2, 0);
+  scene.add(reactantBall);
+
+  productBall = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 12), mat2);
+  productBall.position.set(5, 0, 0);
+  scene.add(productBall);
+
+  activeBall = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), matAct);
+  activeBall.position.set(0, 5, 0);
+  scene.add(activeBall);
+
+  // Energy level platforms
+  const platMat = new THREE.MeshStandardMaterial({color:0x1e3a5f,roughness:0.8});
+  const platGeo = new THREE.BoxGeometry(3, 0.15, 1.5);
+  const r = new THREE.Mesh(platGeo, platMat); r.position.set(-5,1.5,0); scene.add(r);
+  const p = new THREE.Mesh(platGeo, platMat); p.position.set(5,-0.5,0); scene.add(p);
+  const a = new THREE.Mesh(platGeo, platMat); a.position.set(0,4.5,0); scene.add(a);
+
+  // Ordered particles (grid)
+  for (let x=-1;x<=1;x++) {
+    for (let y=-1;y<=1;y++) {
+      const p2 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 8, 6),
+        new THREE.MeshStandardMaterial({color:0x94a3b8,emissive:0x94a3b8,emissiveIntensity:0.1})
+      );
+      p2.position.set(x*1.2-7, y*1.2-3, 0);
+      scene.add(p2); orderedParticles.push(p2);
+    }
+  }
+
+  // Disordered particles (random)
+  for (let i = 0; i < 12; i++) {
+    const p2 = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 8, 6),
+      new THREE.MeshStandardMaterial({color:0xf97316,emissive:0xf97316,emissiveIntensity:0.2})
+    );
+    p2.position.set((Math.random()-0.5)*5+6, (Math.random()-0.5)*5-1, (Math.random()-0.5)*2);
+    p2.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.03,0);
+    scene.add(p2); disorderedParticles.push(p2);
+  }
+
+  window.addEventListener('resize', onResize);
+  onResize();
+  renderer.setAnimationLoop(animate);
+}
+
+let t = 0;
+function animate() {
+  t += 0.01 * speed;
+  if (playing) {
+    animT += 0.02 * speed;
+    if (reactantBall) reactantBall.rotation.y = animT * 0.5;
+    if (productBall) productBall.rotation.y = -animT * 0.5;
+    if (activeBall) {
+      activeBall.position.y = 5 + Math.sin(animT * 2) * 0.3;
+      activeBall.scale.setScalar(0.9 + Math.sin(animT * 3) * 0.15);
+    }
+    disorderedParticles.forEach(p => {
+      if (!p.visible) return;
+      p.position.add(p.userData.vel);
+      if (Math.abs(p.position.x-6) > 2.5) p.userData.vel.x *= -1;
+      if (Math.abs(p.position.y+1) > 2.5) p.userData.vel.y *= -1;
+    });
+  }
+  t += 0; // just increment
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  const c = document.getElementById('canvas-container');
+  const w = c.clientWidth, h = c.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('play-btn').textContent = playing ? '⏸ Pause' : '▶ Animate';
+}
+function setSpeed(s, btn) {
+  speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function resetSim() {
+  playing = false; animT = 0;
+  document.getElementById('play-btn').textContent = '▶ Animate';
+  loadPreset(0);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() { toast('Thermochemistry — AP Chemistry v7.0'); }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  const d = document.createElement('div'); d.className='toast-item'; d.textContent=msg; t.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+
+const QUESTIONS = [
+  { q:'If ΔH = -80 kJ/mol and ΔS = +120 J/mol·K, the reaction is:', opts:['Never spontaneous','Always spontaneous','Spontaneous only at high T','Spontaneous only at low T'], ans:1 },
+  { q:'At what condition is ΔG = 0?', opts:['At STP','When T=0','At equilibrium','When ΔH=0'], ans:2 },
+  { q:'Hess\'s Law states that ΔH for a reaction is:', opts:['Path-dependent','Always negative','Independent of the path taken','Equal to ΔG'], ans:2 }
+];
+let qIdx=0;
+function showQuiz() { document.getElementById('quiz-panel').classList.remove('hidden'); renderQ(); }
+function renderQ() {
+  const q=QUESTIONS[qIdx%QUESTIONS.length];
+  document.getElementById('quiz-content').innerHTML=`<p class="text-sm text-white mb-3">${q.q}</p>`+q.opts.map((o,i)=>`<div class="quiz-opt" onclick="answerQ(${i},${q.ans},this)">${o}</div>`).join('');
+}
+function answerQ(i,ans,el) {
+  el.classList.add(i===ans?'correct':'wrong');
+  toast(i===ans?'✓ Correct!':'✗ Try again!');
+  setTimeout(()=>{ qIdx++; renderQ(); },1400);
+}
+
+function renderFormulas() {
+  katex.render('\\Delta G = \\Delta H - T\\Delta S', document.getElementById('f1'), {throwOnError:false,displayMode:true});
+  katex.render('\\Delta G^\\circ = -RT\\ln K', document.getElementById('f2'), {throwOnError:false,displayMode:true});
+  katex.render('\\Delta H_{\\text{rxn}} = \\sum \\Delta H^\\circ_f(\\text{prod}) - \\sum \\Delta H^\\circ_f(\\text{react})', document.getElementById('f3'), {throwOnError:false,displayMode:false});
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key===' ') { e.preventDefault(); togglePlay(); }
+  if (e.key==='r'||e.key==='R') resetSim();
+  if (e.key==='1') loadPreset(0);
+  if (e.key==='2') loadPreset(1);
+  if (e.key==='3') loadPreset(2);
+  if (e.key==='q'||e.key==='Q') showQuiz();
+});
+
+renderFormulas();
+initThree();
+loadPreset(0);
+
+// ── Extended thermochemistry reference ──────────────────────────────────────
+// Standard enthalpies of formation (ΔH°f, kJ/mol) at 25°C, 1 atm:
+// H₂O(l):   -285.8    H₂O(g):  -241.8
+// CO₂(g):   -393.5    CO(g):   -110.5
+// NH₃(g):   -46.1     NO₂(g):  +33.2
+// HCl(g):   -92.3     SO₂(g):  -296.8
+// NaCl(s):  -411.2    CaCO₃(s): -1207.6
+// Note: ΔH°f of any element in its standard state = 0
+
+// Standard entropies (S°, J/mol·K) at 25°C:
+// H₂(g): 130.6    O₂(g): 205.1   H₂O(l): 69.9   H₂O(g): 188.8
+// CO₂(g): 213.8   Fe(s): 27.3    NaCl(s): 72.1
+// Entropy increases: s < l < g; more complex molecules have higher S°
+
+// ΔG° spontaneity matrix:
+// ΔH  ΔS  Result:          Temperature dependence:
+// -   +   Always spont.    ΔG always negative
+// +   -   Never spont.     ΔG always positive
+// -   -   Low T spont.     ΔG = ΔH - TΔS; neg when TΔS < ΔH (low T)
+// +   +   High T spont.    ΔG = ΔH - TΔS; neg when TΔS > ΔH (high T)
+
+// Third Law of Thermodynamics: S = 0 for a perfect crystal at 0 K
+// All tabulated standard entropies are absolute values (positive)
+
+// ── Additional quiz questions ────────────────────────────────────────────────
+const EXTRA_THERMOQ = [
+  { q: 'A reaction has ΔH=+50 kJ/mol and ΔS=-100 J/mol·K. It is:', opts:['Always spontaneous','Never spontaneous','Spontaneous at high T','Spontaneous at low T'], ans:1 },
+  { q: 'Which process has the highest entropy change (ΔS > 0)?', opts:['Freezing water','Condensing steam','Dissolving NaCl in water','Diamond formation'], ans:2 },
+  { q: 'At the boiling point of a pure liquid, ΔG for vaporization = ?', opts:['>0','<0','= 0','= ΔH'], ans:2 }
+];
+QUESTIONS.push(...EXTRA_THERMOQ);
+
+// ── Resize observer ──────────────────────────────────────────────────────────
+const resizeObserverThermo = new ResizeObserver(() => onResize());
+resizeObserverThermo.observe(document.getElementById('canvas-container'));
+</script>
+</body>
+</html>

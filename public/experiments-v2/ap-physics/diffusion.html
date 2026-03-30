@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Diffusion & Brownian Motion</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#f8fafc;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+  .glass{background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.13)}
+  .physics-grad{background:linear-gradient(135deg,#3B82F6 0%,#0EA5E9 100%)}
+  .btn-speed{padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#cbd5e1;transition:all 0.2s}
+  .btn-speed.active{background:linear-gradient(135deg,#3B82F6,#0EA5E9);color:#fff;border-color:transparent}
+  .btn-preset{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;transition:all 0.2s}
+  .btn-preset:hover,.btn-preset.active{background:linear-gradient(135deg,#3B82F6,#0EA5E9);color:#fff;border-color:transparent}
+  .slider-wrap label{font-size:12px;color:#94a3b8}
+  input[type=range]{width:100%;accent-color:#3B82F6;cursor:pointer}
+  .data-val{font-variant-numeric:tabular-nums;font-size:13px;color:#e2e8f0}
+  #toast{position:fixed;top:64px;right:16px;z-index:999;pointer-events:none}
+  .toast-item{background:linear-gradient(135deg,#3B82F6,#0EA5E9);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;margin-bottom:6px;animation:slideIn 0.3s ease;box-shadow:0 4px 12px rgba(59,130,246,0.4)}
+  @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
+  .katex-block{margin:6px 0;font-size:13px}
+  .quiz-option{padding:8px 12px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin:4px 0;font-size:13px;transition:all 0.2s}
+  .quiz-option:hover{background:rgba(59,130,246,0.2);border-color:#3B82F6}
+  .quiz-option.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;color:#86efac}
+  .quiz-option.wrong{background:rgba(239,68,68,0.2);border-color:#ef4444;color:#fca5a5}
+  #canvas-container{position:relative;flex:1;overflow:hidden}
+  .info-card{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:12px;color:#bfdbfe}
+  #svg-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="glass flex items-center justify-between px-4 py-2 z-50" style="border-bottom:1px solid rgba(59,130,246,0.3)">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Diffusion & Brownian Motion</span>
+    <span class="text-xs text-slate-400 ml-2">Random Walk · Mean Squared Displacement</span>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="resetSim()" class="btn-preset text-xs">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset text-xs">⛶ Fullscreen</button>
+    <button onclick="document.getElementById('about-modal').classList.remove('hidden')" class="btn-preset text-xs">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- SIDEBAR -->
+  <aside class="glass sidebar-scroll" style="width:300px;min-width:260px;border-right:1px solid rgba(59,130,246,0.2);padding:14px">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Core Formulas</h3>
+    <div class="katex-block" id="f1"></div>
+    <p class="text-xs text-slate-400 mb-2">Stokes-Einstein relation: D increases with temperature, decreases with particle size</p>
+    <div class="katex-block" id="f2"></div>
+    <p class="text-xs text-slate-400 mb-2">Mean squared displacement grows linearly with time (3D diffusion)</p>
+    <div class="katex-block" id="f3"></div>
+    <p class="text-xs text-slate-400 mb-3">Fick's first law: flux is proportional to concentration gradient</p>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 mt-4">Concept</h3>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">Brownian motion is the seemingly random jiggling of particles suspended in a fluid, caused by constant collisions with smaller fluid molecules. Einstein (1905) showed this is the same physical process that drives net diffusion from high to low concentration.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">Higher temperature → more energetic fluid molecules → harder random kicks → faster diffusion. Larger particles → more drag from fluid → slower diffusion. This is captured by the Stokes-Einstein equation D = kT/(6πηr).</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-3">On average, a particle travels nowhere — but the mean squared displacement (average of r² over many particles) grows linearly with time. This ⟨r²⟩ = 6Dt is the statistical fingerprint of diffusion in 3D.</p>
+
+    <div class="info-card"><b>🔬 Historical Fact</b><br>Einstein's 1905 paper on Brownian motion gave indirect proof of atoms — before most physicists accepted atomic theory.</div>
+    <div class="info-card"><b>⚠️ Common Misconception</b><br>Diffusion doesn't mean every particle moves from high to low concentration. Individual particles move randomly — the net flux is from statistics.</div>
+    <div class="info-card"><b>🔗 AP Connection</b><br>Diffusion appears in AP Bio (cell transport), AP Chemistry (equilibrium), and AP Physics (kinetic theory). MSD is testable in AP Physics C: Mechanics.</div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 mt-4">Why It Matters</h3>
+    <ul class="text-xs text-slate-300 leading-relaxed space-y-1">
+      <li>• Drug delivery: nanoparticle diffusion through tissue determines therapeutic reach</li>
+      <li>• Cell biology: nutrients and signaling molecules spread by diffusion, not active transport</li>
+      <li>• Finance: the Black-Scholes model for stock prices is mathematically identical to diffusion</li>
+    </ul>
+
+    <!-- QUIZ -->
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 mt-5">Quiz</h3>
+    <div id="quiz-container"></div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="flex flex-col flex-1 overflow-hidden">
+    <div id="canvas-container">
+      <svg id="svg-overlay"></svg>
+      <!-- Data overlay -->
+      <div class="glass absolute top-3 left-3 p-3 rounded-xl" style="min-width:200px;z-index:10">
+        <div class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider">Live Data</div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Temperature</span><span class="data-val" id="d-T">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Particle radius</span><span class="data-val" id="d-r">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Diffusion D</span><span class="data-val" id="d-D">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">⟨r²⟩ measured</span><span class="data-val" id="d-msd">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="data-val text-xs" style="color:#22c55e">⟨r²⟩ theory</span><span class="data-val" id="d-msd-theory">—</span></div>
+        <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">Sim time</span><span class="data-val" id="d-time">—</span></div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="glass p-3" style="border-top:1px solid rgba(59,130,246,0.2)">
+      <div class="flex flex-wrap gap-4 items-start">
+        <!-- Sliders -->
+        <div class="flex flex-col gap-2" style="min-width:220px">
+          <div class="slider-wrap">
+            <label class="flex justify-between"><span>Temperature (K)</span><span class="text-blue-300 font-mono" id="lbl-T">300</span></label>
+            <input type="range" id="sl-T" min="100" max="1000" step="5" value="300"/>
+          </div>
+          <div class="slider-wrap">
+            <label class="flex justify-between"><span>Particle radius (nm)</span><span class="text-blue-300 font-mono" id="lbl-r">5.0</span></label>
+            <input type="range" id="sl-r" min="1" max="100" step="0.5" value="5"/>
+          </div>
+          <div class="slider-wrap">
+            <label class="flex justify-between"><span>Time scale (×)</span><span class="text-blue-300 font-mono" id="lbl-ts">10</span></label>
+            <input type="range" id="sl-ts" min="1" max="100" step="1" value="10"/>
+          </div>
+        </div>
+
+        <!-- Presets -->
+        <div class="flex flex-col gap-1">
+          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Presets</span>
+          <div class="flex gap-2 flex-wrap">
+            <button class="btn-preset" onclick="applyPreset('gas')">Gas Molecules (fast)</button>
+            <button class="btn-preset" onclick="applyPreset('nano')">Nanoparticle (slow)</button>
+            <button class="btn-preset" onclick="applyPreset('room')">Room Temperature</button>
+          </div>
+        </div>
+
+        <!-- Play/Speed -->
+        <div class="flex flex-col gap-1">
+          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Controls</span>
+          <div class="flex gap-2 items-center">
+            <button id="btn-play" onclick="togglePlay()" class="btn-preset px-4">⏸ Pause</button>
+            <button onclick="resetSim()" class="btn-preset px-3">↺</button>
+          </div>
+          <div class="flex gap-1 mt-1">
+            <span class="text-xs text-slate-400 mr-1">Speed:</span>
+            <button class="btn-speed" data-s="0.25" onclick="setSpeed(0.25)">0.25x</button>
+            <button class="btn-speed" data-s="0.5" onclick="setSpeed(0.5)">0.5x</button>
+            <button class="btn-speed active" data-s="1" onclick="setSpeed(1)">1x</button>
+            <button class="btn-speed" data-s="2" onclick="setSpeed(2)">2x</button>
+            <button class="btn-speed" data-s="3" onclick="setSpeed(3)">3x</button>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 self-end">
+          Space: pause | R: reset | 1-5: speed
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- About Modal -->
+<div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.7)">
+  <div class="glass rounded-2xl p-6 max-w-md w-full mx-4">
+    <h2 class="text-lg font-bold text-blue-400 mb-3">About This Simulation</h2>
+    <p class="text-sm text-slate-300 mb-3">Particles undergo random walk (Brownian motion) driven by random Gaussian velocity kicks. Each step uses Velocity Verlet integration. MSD is measured and compared to the theoretical 6Dt prediction.</p>
+    <p class="text-sm text-slate-400 mb-4"><b>Keyboard shortcuts:</b><br>Space — Play/Pause | R — Reset | 1-5 — Speed</p>
+    <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="btn-preset w-full">Close</button>
+  </div>
+</div>
+
+<script>
+// ── OrbitControls inline ──────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.sub(target)); camera.position.add(target);
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// ── Physics Constants ────────────────────────────────────────────
+const k_B = 1.380649e-23; // J/K
+const ETA_WATER = 1e-3;   // Pa·s (water at ~20°C)
+
+// Simulation parameters
+let temp = 300;     // K
+let radius = 5e-9;  // m (5 nm)
+let timescale = 10; // multiplier
+let playing = true;
+let speedFactor = 1;
+let simTime = 0;
+
+const N_PARTICLES = 80;
+const BOX = 10; // display units half-size
+
+// Particle state
+let particles = [];
+let msdHistory = [];
+
+function calcD() {
+  return (k_B * temp) / (6 * Math.PI * ETA_WATER * radius); // m²/s
+}
+
+// Random Gaussian (Box-Muller)
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function initParticles() {
+  particles = [];
+  // Split particles: left half concentrated on left, right half on right
+  for (let i = 0; i < N_PARTICLES; i++) {
+    const side = i < N_PARTICLES / 2 ? -1 : 1;
+    particles.push({
+      x: side * (Math.random() * BOX * 0.5 + 0.5),
+      y: (Math.random() - 0.5) * BOX,
+      z: (Math.random() - 0.5) * BOX,
+      x0: 0, y0: 0, z0: 0, // will be set after spread
+      r2: 0,
+      color: i < N_PARTICLES / 2 ? 0x60a5fa : 0xf472b6
+    });
+  }
+  // Record initial positions for MSD calc
+  particles.forEach(p => { p.x0 = p.x; p.y0 = p.y; p.z0 = p.z; });
+  msdHistory = [];
+  simTime = 0;
+}
+
+function physicsStep(dt_s) {
+  // Effective dt with timescale multiplier
+  const eff_dt = dt_s * timescale * speedFactor;
+  const D = calcD();
+  // Step size for random walk: σ_step = sqrt(2D*dt) per axis
+  const sigma_step = Math.sqrt(2 * D * eff_dt);
+  // Convert m to display units: 1 display unit = BOX * 1e-8 m roughly
+  const DISPLAY_SCALE = 1e7; // m -> display units: 1e-8m = 0.1 display
+
+  particles.forEach(p => {
+    p.x += randn() * sigma_step * DISPLAY_SCALE;
+    p.y += randn() * sigma_step * DISPLAY_SCALE;
+    p.z += randn() * sigma_step * DISPLAY_SCALE;
+    // Wrap around box (periodic boundary)
+    if (p.x > BOX) p.x -= 2 * BOX;
+    if (p.x < -BOX) p.x += 2 * BOX;
+    if (p.y > BOX) p.y -= 2 * BOX;
+    if (p.y < -BOX) p.y += 2 * BOX;
+    if (p.z > BOX) p.z -= 2 * BOX;
+    if (p.z < -BOX) p.z += 2 * BOX;
+    p.r2 = (p.x - p.x0) ** 2 + (p.y - p.y0) ** 2 + (p.z - p.z0) ** 2;
+  });
+  simTime += eff_dt;
+}
+
+function calcMSD() {
+  return particles.reduce((s, p) => s + p.r2, 0) / particles.length;
+}
+
+// ── Three.js ──────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 8, 22);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 50;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// Grid
+scene.add(new THREE.GridHelper(BOX * 2, 20, 0x334155, 0x1e293b));
+
+// Box wireframe (container boundaries)
+const boxGeo = new THREE.BoxGeometry(BOX * 2, BOX * 2, BOX * 2);
+const boxEdges = new THREE.EdgesGeometry(boxGeo);
+const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.4 }));
+scene.add(boxLine);
+
+// Divider plane (shows initial high/low concentration boundary)
+const divGeo = new THREE.PlaneGeometry(0.05, BOX * 2, 1, 1);
+const divMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+const divider = new THREE.Mesh(divGeo, divMat);
+scene.add(divider);
+
+// Particle meshes (InstancedMesh for performance)
+const pGeo = new THREE.SphereGeometry(0.18, 12, 12);
+const pMatBlue = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x1d4ed8, emissiveIntensity: 0.4, metalness: 0.1, roughness: 0.5 });
+const pMatPink = new THREE.MeshStandardMaterial({ color: 0xf472b6, emissive: 0xbe185d, emissiveIntensity: 0.4, metalness: 0.1, roughness: 0.5 });
+const halfN = N_PARTICLES / 2;
+const instBlue = new THREE.InstancedMesh(pGeo, pMatBlue, halfN);
+const instPink = new THREE.InstancedMesh(pGeo, pMatPink, halfN);
+instBlue.castShadow = true;
+instPink.castShadow = true;
+scene.add(instBlue, instPink);
+
+const dummy = new THREE.Object3D();
+
+function updateMeshes() {
+  for (let i = 0; i < halfN; i++) {
+    const p = particles[i];
+    dummy.position.set(p.x, p.y, p.z);
+    dummy.updateMatrix();
+    instBlue.setMatrixAt(i, dummy.matrix);
+  }
+  for (let i = halfN; i < N_PARTICLES; i++) {
+    const p = particles[i];
+    dummy.position.set(p.x, p.y, p.z);
+    dummy.updateMatrix();
+    instPink.setMatrixAt(i - halfN, dummy.matrix);
+  }
+  instBlue.instanceMatrix.needsUpdate = true;
+  instPink.instanceMatrix.needsUpdate = true;
+}
+
+// ── SVG MSD Plot ──────────────────────────────────────────────────
+const svgEl = document.getElementById('svg-overlay');
+
+function drawMSDPlot() {
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+  svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svgEl.innerHTML = '';
+
+  if (msdHistory.length < 2) return;
+
+  const ox = W - 220, oy = H - 160;
+  const cw = 200, ch = 130;
+
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('x', ox - 10); bg.setAttribute('y', oy - 20);
+  bg.setAttribute('width', cw + 20); bg.setAttribute('height', ch + 30);
+  bg.setAttribute('rx', '8'); bg.setAttribute('fill', 'rgba(15,23,42,0.85)');
+  bg.setAttribute('stroke', 'rgba(59,130,246,0.3)');
+  svgEl.appendChild(bg);
+
+  const title = document.createElementNS('http://www.w3.org/2000/svg','text');
+  title.setAttribute('x', ox + cw/2); title.setAttribute('y', oy - 5);
+  title.setAttribute('text-anchor', 'middle'); title.setAttribute('fill', '#93c5fd'); title.setAttribute('font-size', '10');
+  title.textContent = '⟨r²⟩ vs Time';
+  svgEl.appendChild(title);
+
+  const tMax = msdHistory[msdHistory.length - 1].t;
+  const msdMax = Math.max(...msdHistory.map(h => h.msd)) * 1.2 || 1;
+
+  // Axes
+  const axY = document.createElementNS('http://www.w3.org/2000/svg','line');
+  axY.setAttribute('x1', ox); axY.setAttribute('y1', oy);
+  axY.setAttribute('x2', ox); axY.setAttribute('y2', oy + ch);
+  axY.setAttribute('stroke', '#475569'); axY.setAttribute('stroke-width', '1');
+  svgEl.appendChild(axY);
+  const axX = document.createElementNS('http://www.w3.org/2000/svg','line');
+  axX.setAttribute('x1', ox); axX.setAttribute('y1', oy + ch);
+  axX.setAttribute('x2', ox + cw); axX.setAttribute('y2', oy + ch);
+  axX.setAttribute('stroke', '#475569'); axX.setAttribute('stroke-width', '1');
+  svgEl.appendChild(axX);
+
+  // Measured MSD
+  let pathD = '';
+  msdHistory.forEach((h, i) => {
+    const px = ox + (h.t / (tMax || 1)) * cw;
+    const py = oy + ch - (h.msd / msdMax) * ch;
+    pathD += (i === 0 ? 'M' : 'L') + ' ' + px.toFixed(1) + ' ' + py.toFixed(1) + ' ';
+  });
+  const measPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+  measPath.setAttribute('d', pathD); measPath.setAttribute('stroke', '#3B82F6');
+  measPath.setAttribute('stroke-width', '2'); measPath.setAttribute('fill', 'none');
+  svgEl.appendChild(measPath);
+
+  // Theoretical line 6Dt
+  const D = calcD();
+  const DISPLAY_SCALE = 1e7;
+  let thPath = `M ${ox} ${oy + ch} `;
+  for (let i = 1; i <= 50; i++) {
+    const t = (i / 50) * tMax;
+    const msd_th = 6 * D * t * DISPLAY_SCALE * DISPLAY_SCALE;
+    const px = ox + (t / tMax) * cw;
+    const py = oy + ch - Math.min(msd_th / msdMax, 1) * ch;
+    thPath += `L ${px.toFixed(1)} ${py.toFixed(1)} `;
+  }
+  const thLine = document.createElementNS('http://www.w3.org/2000/svg','path');
+  thLine.setAttribute('d', thPath); thLine.setAttribute('stroke', '#22c55e');
+  thLine.setAttribute('stroke-width', '1.5'); thLine.setAttribute('fill', 'none');
+  thLine.setAttribute('stroke-dasharray', '4,3');
+  svgEl.appendChild(thLine);
+
+  // Legend
+  const leg1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  leg1.setAttribute('x', ox + 2); leg1.setAttribute('y', oy + 12);
+  leg1.setAttribute('fill', '#3B82F6'); leg1.setAttribute('font-size', '8');
+  leg1.textContent = '— Measured';
+  svgEl.appendChild(leg1);
+  const leg2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  leg2.setAttribute('x', ox + 2); leg2.setAttribute('y', oy + 22);
+  leg2.setAttribute('fill', '#22c55e'); leg2.setAttribute('font-size', '8');
+  leg2.textContent = '- - 6Dt theory';
+  svgEl.appendChild(leg2);
+}
+
+// ── Data Panel ────────────────────────────────────────────────────
+function updateDataPanel() {
+  const D = calcD();
+  const msd = calcMSD();
+  const msd_theory = 6 * D * simTime * (1e7 * 1e7);
+
+  document.getElementById('d-T').textContent = temp.toFixed(0) + ' K';
+  document.getElementById('d-r').textContent = (radius * 1e9).toFixed(1) + ' nm';
+  document.getElementById('d-D').textContent = D.toExponential(2) + ' m²/s';
+  document.getElementById('d-msd').textContent = msd.toFixed(3) + ' u²';
+  document.getElementById('d-msd-theory').textContent = msd_theory.toFixed(3) + ' u²';
+  document.getElementById('d-time').textContent = simTime.toExponential(2) + ' s';
+
+  // Record history every ~60 frames
+  if (msdHistory.length === 0 || simTime - msdHistory[msdHistory.length-1].t > 1e-5) {
+    msdHistory.push({ t: simTime, msd });
+    if (msdHistory.length > 100) msdHistory.shift();
+  }
+}
+
+// ── Presets ───────────────────────────────────────────────────────
+const presets = {
+  gas: { temp: 800, radius: 1, ts: 1, label: 'Gas Molecules (fast)' },
+  nano: { temp: 300, radius: 50, ts: 100, label: 'Nanoparticle (slow)' },
+  room: { temp: 300, radius: 5, ts: 10, label: 'Room Temperature' }
+};
+
+window.applyPreset = function(key) {
+  const p = presets[key];
+  temp = p.temp; radius = p.radius * 1e-9; timescale = p.ts;
+  document.getElementById('sl-T').value = temp;
+  document.getElementById('sl-r').value = p.radius;
+  document.getElementById('sl-ts').value = timescale;
+  document.getElementById('lbl-T').textContent = temp;
+  document.getElementById('lbl-r').textContent = p.radius.toFixed(1);
+  document.getElementById('lbl-ts').textContent = timescale;
+  resetSim();
+  showToast('Preset: ' + p.label);
+};
+
+// ── Sliders ───────────────────────────────────────────────────────
+document.getElementById('sl-T').addEventListener('input', function() {
+  temp = parseFloat(this.value);
+  document.getElementById('lbl-T').textContent = temp;
+});
+document.getElementById('sl-r').addEventListener('input', function() {
+  radius = parseFloat(this.value) * 1e-9;
+  document.getElementById('lbl-r').textContent = parseFloat(this.value).toFixed(1);
+});
+document.getElementById('sl-ts').addEventListener('input', function() {
+  timescale = parseFloat(this.value);
+  document.getElementById('lbl-ts').textContent = timescale;
+});
+
+// ── Controls ──────────────────────────────────────────────────────
+function resetSim() {
+  initParticles();
+  showToast('Simulation reset');
+}
+
+window.resetSim = resetSim;
+
+window.togglePlay = function() {
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '⏸ Pause' : '▶ Play';
+  showToast(playing ? 'Resumed' : 'Paused');
+};
+
+window.setSpeed = function(s) {
+  speedFactor = s;
+  document.querySelectorAll('.btn-speed').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.s) === s);
+  });
+  showToast('Speed: ' + s + 'x');
+};
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.key === '1') setSpeed(0.25);
+  if (e.key === '2') setSpeed(0.5);
+  if (e.key === '3') setSpeed(1);
+  if (e.key === '4') setSpeed(2);
+  if (e.key === '5') setSpeed(3);
+});
+
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ── KaTeX ─────────────────────────────────────────────────────────
+katex.render('D = \\dfrac{k_B T}{6\\pi\\eta r}', document.getElementById('f1'), { throwOnError: false });
+katex.render('\\langle r^2 \\rangle = 6Dt', document.getElementById('f2'), { throwOnError: false });
+katex.render('J = -D\\,\\dfrac{\\partial c}{\\partial x}', document.getElementById('f3'), { throwOnError: false });
+
+// ── Quiz ──────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: 'If temperature doubles (from 300 K to 600 K), how does the diffusion coefficient D change?',
+    opts: ['Stays the same', 'Doubles', 'Increases by √2', 'Quadruples'],
+    ans: 1,
+    feedback: ['D = kT/(6πηr) is directly proportional to T, so it must change.', 'Correct! D ∝ T, so doubling temperature exactly doubles the diffusion coefficient.', 'The relationship is linear, not square-root.', 'Quadruple scaling would require D ∝ T².']
+  },
+  {
+    q: 'A particle undergoes 3D Brownian motion for time t. After 4t, the mean squared displacement ⟨r²⟩ is:',
+    opts: ['The same (random walk has no memory)', '2× larger', '4× larger', '16× larger'],
+    ans: 2,
+    feedback: ['⟨r²⟩ = 6Dt grows with time — Brownian motion does spread particles out on average.', '⟨r²⟩ would double only if time doubled.', 'Correct! ⟨r²⟩ = 6Dt, so 4× time → 4× mean squared displacement. Note: the RMS distance only doubles (√4 = 2).', '16× scaling would imply ⟨r²⟩ ∝ t², which is ballistic motion, not diffusion.']
+  },
+  {
+    q: 'Why does a larger particle diffuse more slowly than a smaller one at the same temperature?',
+    opts: ['Larger particles have less thermal energy', 'Larger particles experience more fluid drag', 'Larger particles are heavier so they move slower', 'Larger particles repel each other more'],
+    ans: 1,
+    feedback: ['All particles at the same temperature have the same average thermal energy (kT). Size doesn\'t change that.', 'Correct! D = kT/(6πηr): the denominator includes r (radius). Larger r → more viscous drag → smaller D. This is Stokes drag, not a mass effect.', 'Mass affects momentum, but thermal energy kT is size-independent. It\'s the drag that matters.', 'Inter-particle repulsion is not what the Stokes-Einstein equation describes.']
+  }
+];
+
+const quizContainer = document.getElementById('quiz-container');
+quizData.forEach((q, qi) => {
+  const div = document.createElement('div');
+  div.className = 'mb-4';
+  div.innerHTML = `<p class="text-xs text-slate-300 mb-2 font-medium">Q${qi+1}: ${q.q}</p>`;
+  q.opts.forEach((opt, oi) => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => {
+      if (div.dataset.answered) return;
+      div.dataset.answered = '1';
+      div.querySelectorAll('.quiz-option').forEach((b, bi) => {
+        b.classList.add(bi === q.ans ? 'correct' : 'wrong');
+      });
+      btn.classList.add(oi === q.ans ? 'correct' : 'wrong');
+      const fb = document.createElement('p');
+      fb.className = 'text-xs mt-2 ' + (oi === q.ans ? 'text-green-300' : 'text-red-300');
+      fb.textContent = (oi === q.ans ? '✓ ' : '✗ ') + q.feedback[oi];
+      div.appendChild(fb);
+    });
+    div.appendChild(btn);
+  });
+  quizContainer.appendChild(div);
+});
+
+// ── Main Loop ─────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+initParticles();
+
+renderer.setAnimationLoop(() => {
+  let delta = clock.getDelta();
+  if (delta > 0.1) delta = 0.02;
+
+  controls.update();
+
+  if (playing) {
+    physicsStep(delta);
+    updateMeshes();
+    updateDataPanel();
+    drawMSDPlot();
+  }
+
+  renderer.render(scene, camera);
+});
+</script>
+<!-- Generated by AetherViz Master v7.0 — The universe is in perpetual motion! -->
+</body>
+</html>

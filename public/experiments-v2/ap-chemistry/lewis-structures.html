@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lewis Structures — AP Chemistry</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#f8fafc;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+  .glass{background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.13)}
+  .btn-preset{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;transition:all 0.2s}
+  .btn-preset:hover,.btn-preset.active{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;border-color:transparent}
+  input[type=range]{width:100%;accent-color:#F59E0B;cursor:pointer}
+  .data-val{font-variant-numeric:tabular-nums;font-size:13px;color:#e2e8f0}
+  #toast{position:fixed;top:64px;right:16px;z-index:999;pointer-events:none}
+  .toast-item{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;margin-bottom:6px;animation:slideIn 0.3s ease}
+  @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
+  .katex-block{margin:6px 0;font-size:12px}
+  .quiz-option{padding:8px 12px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin:4px 0;font-size:12px;transition:all 0.2s}
+  .quiz-option:hover{background:rgba(245,158,11,0.2);border-color:#F59E0B}
+  .quiz-option.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;color:#86efac}
+  .quiz-option.wrong{background:rgba(239,68,68,0.2);border-color:#ef4444;color:#fca5a5}
+  .info-card{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:12px;color:#fde68a}
+</style>
+</head>
+<body>
+<nav class="glass flex items-center justify-between px-4 py-2 z-50" style="border-bottom:1px solid rgba(245,158,11,0.3)">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F59E0B,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Lewis Structures</span>
+    <span class="text-xs text-slate-400 ml-2">Bonds, Lone Pairs & VSEPR Geometry</span>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="resetSim()" class="btn-preset text-xs">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset text-xs">⛶ Fullscreen</button>
+    <button onclick="document.getElementById('about-modal').classList.remove('hidden')" class="btn-preset text-xs">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <aside class="glass sidebar-scroll" style="width:300px;min-width:260px;border-right:1px solid rgba(245,158,11,0.2);padding:14px">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-3">Core Formulas</h3>
+    <div class="katex-block" id="f1"></div>
+    <p class="text-xs text-slate-400 mb-2">Formal charge on each atom — helps identify best Lewis structure</p>
+    <div class="katex-block" id="f2"></div>
+    <p class="text-xs text-slate-400 mb-2">Total valence electrons available for the structure</p>
+    <div class="katex-block" id="f3"></div>
+    <p class="text-xs text-slate-400 mb-3">VSEPR: electron pairs repel to maximize separation</p>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-3">Concept</h3>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">Lewis dot structures represent valence electrons as dots around atomic symbols. Shared pairs become bonds (lines), and lone (nonbonding) pairs remain as dots. The goal: every atom achieves an octet (except H which wants 2).</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">Formal charge = (valence electrons) − (nonbonding electrons) − ½(bonding electrons). The best Lewis structure minimizes formal charges on all atoms and places negative formal charge on the most electronegative atom.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-3">VSEPR theory predicts geometry: electron pairs (bonding + lone) arrange to minimize repulsion. Lone pairs repel more than bonding pairs, compressing bond angles below ideal values.</p>
+
+    <div class="info-card"><b>VSEPR Geometries</b><br>2 e-groups: linear (180°)<br>3 e-groups: trigonal planar (120°), bent (≈117°)<br>4 e-groups: tetrahedral (109.5°), trigonal pyramidal (107°), bent (104.5°)</div>
+    <div class="info-card"><b>Octet Exceptions</b><br>BF₃ (only 6e on B), PCl₅ and SF₆ (expanded octet using d orbitals), NO (odd-electron radical).</div>
+    <div class="info-card"><b>AP Chem Connection</b><br>Unit 2: molecular and ionic compound structure. Lewis structures predict polarity, reactivity, and intermolecular forces.</div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-4">Molecule Info</h3>
+    <div id="molecule-info" class="text-xs text-slate-300"></div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-4">Quiz</h3>
+    <div id="quiz-container"></div>
+  </aside>
+
+  <div id="canvas-container" class="flex-1 relative">
+    <canvas id="mainCanvas"></canvas>
+    <div id="data-overlay" class="absolute top-3 left-3 glass rounded-xl px-4 py-3" style="min-width:200px">
+      <div class="text-xs text-amber-400 font-bold uppercase mb-2">Structure Data</div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Molecule</span><span class="data-val" id="d-mol">H₂O</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Geometry</span><span class="data-val" id="d-geo">Bent</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Bond Angle</span><span class="data-val" id="d-angle">104.5°</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Lone Pairs</span><span class="data-val" id="d-lone">2</span></div>
+      <div class="flex justify-between"><span class="text-xs text-slate-400">Polar?</span><span class="data-val" id="d-polar">Yes</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="glass border-t px-4 py-3" style="border-top:1px solid rgba(245,158,11,0.2)">
+  <div class="flex flex-wrap gap-4 items-end">
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="applyPreset('H2O')" class="btn-preset">Water H₂O (bent)</button>
+      <button onclick="applyPreset('CO2')" class="btn-preset">CO₂ (linear)</button>
+      <button onclick="applyPreset('NH3')" class="btn-preset">NH₃ (pyramidal)</button>
+      <button onclick="applyPreset('CH4')" class="btn-preset">CH₄ (tetrahedral)</button>
+    </div>
+    <div class="flex-1 min-w-32">
+      <label class="text-xs text-slate-400">Rotation speed: <span id="lbl-spd">1×</span></label>
+      <input type="range" id="sl-spd" min="1" max="4" value="2" oninput="onSpdChange(this.value)"/>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="togglePlay()" id="btn-play" class="btn-preset">⏸ Pause</button>
+      <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="about-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+  <div class="glass rounded-2xl p-6 max-w-md mx-4">
+    <h2 class="text-lg font-bold text-amber-400 mb-3">About: Lewis Structures</h2>
+    <p class="text-sm text-slate-300 mb-3">Visualizes 3D Lewis dot structures with shared bonds as cylinders and lone pairs as dot cloud representations. VSEPR geometry is automatically applied based on electron pair count.</p>
+    <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="btn-preset">Close</button>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled || state!==0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) { if (!scope.enabled) return; e.preventDefault(); scale *= (e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rotateStart.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      rotateEnd.set(e.touches[0].clientX,e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd,rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta-=rotateDelta.x; sphericalDelta.phi-=rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var offset=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sphericalDelta.theta*d; spherical.phi+=sphericalDelta.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sphericalDelta.theta*=(1-d);sphericalDelta.phi*=(1-d);}else sphericalDelta.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(offset.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const container = document.getElementById('canvas-container');
+const canvas = document.getElementById('mainCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth, container.clientHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 200);
+camera.position.set(0, 5, 14);
+
+const controls = new THREE.OrbitControls(camera, canvas);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffd700, 1.0);
+dirLight.position.set(5, 10, 8);
+scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0xef4444, 0.3);
+fillLight.position.set(-5,-5,-5);
+scene.add(fillLight);
+
+let playing = true, speedMult = 1.0, currentMol = 'H2O';
+let molGroup = new THREE.Group();
+scene.add(molGroup);
+
+const ATOM_COLORS = {H:0xffffff, C:0x374151, N:0x3b82f6, O:0xef4444, F:0x22c55e, Cl:0x84cc16, S:0xeab308, P:0xf97316};
+const ATOM_SIZES = {H:0.5, C:0.7, N:0.65, O:0.65, F:0.55, Cl:0.8, S:0.8, P:0.75};
+
+const MOLECULES = {
+  H2O: {
+    name:'Water (H₂O)', geometry:'Bent', angle:'104.5°', lonePairs:2, polar:true,
+    description:'Oxygen has 2 bonding pairs (O-H bonds) and 2 lone pairs → 4 electron groups → tetrahedral electron geometry but BENT molecular geometry. Lone pairs compress bond angle to 104.5°.',
+    atoms:[
+      {el:'O', pos:[0,0,0]},
+      {el:'H', pos:[1.6, -1.1, 0]},
+      {el:'H', pos:[-1.6, -1.1, 0]}
+    ],
+    bonds:[[0,1,1],[0,2,1]],
+    lonePairPositions:[[0,1.2,0.5],[0,1.2,-0.5]]
+  },
+  CO2: {
+    name:'Carbon Dioxide (CO₂)', geometry:'Linear', angle:'180°', lonePairs:2, polar:false,
+    description:'Carbon forms 2 double bonds with oxygen. With only 2 electron groups (no lone pairs), geometry is linear. Despite polar C=O bonds, symmetry cancels the dipoles → nonpolar molecule.',
+    atoms:[
+      {el:'C', pos:[0,0,0]},
+      {el:'O', pos:[-2.4,0,0]},
+      {el:'O', pos:[2.4,0,0]}
+    ],
+    bonds:[[0,1,2],[0,2,2]],
+    lonePairPositions:[]
+  },
+  NH3: {
+    name:'Ammonia (NH₃)', geometry:'Trigonal Pyramidal', angle:'107°', lonePairs:1, polar:true,
+    description:'Nitrogen has 3 bonding pairs (N-H) and 1 lone pair → 4 electron groups → tetrahedral electron geometry but TRIGONAL PYRAMIDAL molecular geometry. The lone pair pushes bond angles to 107°.',
+    atoms:[
+      {el:'N', pos:[0,0,0]},
+      {el:'H', pos:[1.4,-1.0,0]},
+      {el:'H', pos:[-0.7,-1.0,1.2]},
+      {el:'H', pos:[-0.7,-1.0,-1.2]}
+    ],
+    bonds:[[0,1,1],[0,2,1],[0,3,1]],
+    lonePairPositions:[[0,1.4,0]]
+  },
+  CH4: {
+    name:'Methane (CH₄)', geometry:'Tetrahedral', angle:'109.5°', lonePairs:0, polar:false,
+    description:'Carbon has 4 bonding pairs (C-H) and 0 lone pairs → perfect tetrahedral geometry at 109.5°. All C-H bonds are equivalent. Symmetric arrangement → nonpolar.',
+    atoms:[
+      {el:'C', pos:[0,0,0]},
+      {el:'H', pos:[1.4,1.4,0]},
+      {el:'H', pos:[-1.4,1.4,0]},
+      {el:'H', pos:[0,-1.4,1.4]},
+      {el:'H', pos:[0,-1.4,-1.4]}
+    ],
+    bonds:[[0,1,1],[0,2,1],[0,3,1],[0,4,1]],
+    lonePairPositions:[]
+  }
+};
+
+function buildCylinder(from, to, color, radius) {
+  const dir = new THREE.Vector3().subVectors(to, from);
+  const len = dir.length();
+  const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+  const geo = new THREE.CylinderGeometry(radius, radius, len, 10);
+  const mat = new THREE.MeshPhongMaterial({color, shininess:60});
+  const m = new THREE.Mesh(geo, mat);
+  m.position.copy(mid);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+  return m;
+}
+
+function buildMolecule(key) {
+  while(molGroup.children.length) molGroup.remove(molGroup.children[0]);
+  const mol = MOLECULES[key];
+  if(!mol) return;
+
+  // Atoms
+  mol.atoms.forEach(a => {
+    const r = ATOM_SIZES[a.el] || 0.6;
+    const geo = new THREE.SphereGeometry(r, 20, 20);
+    const mat = new THREE.MeshPhongMaterial({color:ATOM_COLORS[a.el]||0x888888, shininess:80});
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(...a.pos);
+    molGroup.add(m);
+    // Label sprite
+  });
+
+  // Bonds
+  mol.bonds.forEach(([a,b,order]) => {
+    const posA = new THREE.Vector3(...mol.atoms[a].pos);
+    const posB = new THREE.Vector3(...mol.atoms[b].pos);
+    if(order===1) {
+      molGroup.add(buildCylinder(posA, posB, 0xd4d4d4, 0.15));
+    } else if(order===2) {
+      const perp = new THREE.Vector3(0.2, 0, 0.2);
+      molGroup.add(buildCylinder(posA.clone().add(perp), posB.clone().add(perp), 0xfbbf24, 0.12));
+      molGroup.add(buildCylinder(posA.clone().sub(perp), posB.clone().sub(perp), 0xfbbf24, 0.12));
+    }
+  });
+
+  // Lone pairs (shown as cloud spheres)
+  mol.lonePairPositions.forEach(lp => {
+    const geo = new THREE.SphereGeometry(0.35, 12, 12);
+    const mat = new THREE.MeshPhongMaterial({color:0x60a5fa, transparent:true, opacity:0.6, emissive:0x1e3a5f});
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(...lp);
+    molGroup.add(m);
+    // Second dot
+    const geo2 = new THREE.SphereGeometry(0.35, 12, 12);
+    const mat2 = new THREE.MeshPhongMaterial({color:0x60a5fa, transparent:true, opacity:0.6, emissive:0x1e3a5f});
+    const m2 = new THREE.Mesh(geo2, mat2);
+    m2.position.set(lp[0]+0.5, lp[1]+0.3, lp[2]+0.3);
+    molGroup.add(m2);
+  });
+
+  // Update UI
+  document.getElementById('d-mol').textContent = mol.name.split(' ')[0];
+  document.getElementById('d-geo').textContent = mol.geometry;
+  document.getElementById('d-angle').textContent = mol.angle;
+  document.getElementById('d-lone').textContent = mol.lonePairs;
+  document.getElementById('d-polar').textContent = mol.polar ? 'Yes' : 'No';
+  document.getElementById('molecule-info').textContent = mol.description;
+  currentMol = key;
+}
+
+function applyPreset(key) {
+  buildMolecule(key);
+  showToast(MOLECULES[key].name);
+}
+
+function onSpdChange(v) {
+  const s=[0.25,0.5,1.0,2.0];
+  speedMult=s[parseInt(v)-1]||1;
+  document.getElementById('lbl-spd').textContent=speedMult+'×';
+}
+
+function togglePlay(){
+  playing=!playing;
+  document.getElementById('btn-play').textContent=playing?'⏸ Pause':'▶ Play';
+}
+
+function resetSim(){
+  playing=true; speedMult=1;
+  document.getElementById('btn-play').textContent='⏸ Pause';
+  buildMolecule('H2O');
+  showToast('Reset to Water');
+}
+
+function toggleFullscreen(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+function showToast(msg){
+  const d=document.createElement('div');
+  d.className='toast-item'; d.textContent=msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(()=>d.remove(),2000);
+}
+
+window.addEventListener('load',()=>{
+  katex.render('FC = V - N - \\dfrac{B}{2}', document.getElementById('f1'), {displayMode:true});
+  katex.render('V_{total} = \\sum (\\text{valence } e^- \\text{ per atom})', document.getElementById('f2'), {displayMode:true});
+  katex.render('\\text{Geometry} = f(\\text{bonding pairs} + \\text{lone pairs})', document.getElementById('f3'), {displayMode:true});
+});
+
+const quizData=[
+  {q:'Water (H₂O) has a bent geometry because:', opts:['H atoms repel each other','2 lone pairs on O compress the angle','O has 2 d orbitals','H-O bonds are very long'], ans:1, exp:'Oxygen has 2 bonding and 2 lone pairs. Lone pairs repel more strongly, compressing the H-O-H angle from ideal 109.5° to 104.5°.'},
+  {q:'The formal charge on carbon in CO₂ is:', opts:['+2','-1','0','+1'], ans:2, exp:'C in CO₂: V=4, N=0, B=8 (two double bonds). FC = 4-0-4 = 0. Carbon has no formal charge in the best Lewis structure.'},
+  {q:'Which molecule has TRIGONAL PLANAR geometry?', opts:['H₂O','NH₃','BF₃','CH₄'], ans:2, exp:'BF₃: B has 3 bonding pairs, 0 lone pairs → trigonal planar, 120° angles. (B is an octet exception with only 6 electrons.)'}
+];
+let quizAnswered=[false,false,false];
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  c.innerHTML=quizData.map((q,qi)=>`
+    <div class="mb-3">
+      <p class="text-xs text-slate-300 mb-1 font-semibold">Q${qi+1}: ${q.q}</p>
+      ${q.opts.map((o,oi)=>`<div class="quiz-option" id="qo-${qi}-${oi}" onclick="answerQuiz(${qi},${oi})">${o}</div>`).join('')}
+      <div id="qe-${qi}" class="text-xs text-slate-400 mt-1 hidden">${q.exp}</div>
+    </div>`).join('');
+}
+function answerQuiz(qi,oi){
+  if(quizAnswered[qi])return;
+  quizAnswered[qi]=true;
+  document.getElementById(`qo-${qi}-${oi}`).classList.add(oi===quizData[qi].ans?'correct':'wrong');
+  if(oi!==quizData[qi].ans) document.getElementById(`qo-${qi}-${quizData[qi].ans}`).classList.add('correct');
+  document.getElementById(`qe-${qi}`).classList.remove('hidden');
+}
+renderQuiz();
+
+renderer.setAnimationLoop(()=>{
+  if(playing) molGroup.rotation.y += 0.005 * speedMult;
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+window.addEventListener('resize',()=>{
+  const w=container.clientWidth,h=container.clientHeight;
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w,h);
+});
+
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='KeyR') resetSim();
+  if(e.code==='Digit1') applyPreset('H2O');
+  if(e.code==='Digit2') applyPreset('CO2');
+  if(e.code==='Digit3') applyPreset('NH3');
+});
+
+buildMolecule('H2O');
+
+// Extended Lewis structure utilities
+
+// Valence electron count table
+const VALENCE_ELECTRONS = {
+  H:1, He:2, Li:1, Be:2, B:3, C:4, N:5, O:6, F:7, Ne:8,
+  Na:1, Mg:2, Al:3, Si:4, P:5, S:6, Cl:7, Ar:8,
+  K:1, Ca:2, Br:7, I:7, Xe:8
+};
+
+// Calculate total valence electrons for a molecule
+function totalValenceElectrons(atoms, charge) {
+  let total = atoms.reduce((sum, {el, count}) => sum + (VALENCE_ELECTRONS[el]||0)*count, 0);
+  total -= charge; // subtract for positive charge, add for negative
+  return total;
+}
+
+// Formal charge calculation for each atom
+function formalCharge(V, nonbonding, bonding) {
+  return V - nonbonding - Math.floor(bonding / 2);
+}
+
+// Step-by-step Lewis structure algorithm
+function lewisAlgorithm(formula) {
+  const steps = [
+    '1. Count total valence electrons from all atoms',
+    '2. Connect atoms with single bonds (use 2e⁻ per bond)',
+    '3. Complete octets on terminal atoms first (except H)',
+    '4. Place remaining electrons on central atom',
+    '5. If central atom lacks octet, form multiple bonds',
+    '6. Calculate formal charges, minimize them',
+    '7. Choose resonance structure with lowest FC'
+  ];
+  return steps;
+}
+
+// Resonance structures data
+const RESONANCE_DATA = {
+  O3: { structures: 2, description: 'Two equivalent resonance structures, O-O bond order = 1.5' },
+  SO3: { structures: 3, description: 'Three equivalent resonance structures, S-O bond order = 1.33' },
+  NO3: { structures: 3, description: 'Three equivalent resonance structures for nitrate ion' },
+  CO3: { structures: 3, description: 'Three equivalent resonance structures for carbonate ion' },
+  benzene: { structures: 2, description: 'Kekulé structures; real structure has delocalized π electrons, C-C bond order = 1.5' }
+};
+
+// VSEPR from Lewis structure
+function vsapr(bondingPairs, lonePairs) {
+  const total = bondingPairs + lonePairs;
+  const geometries = {
+    '2-0': { electron: 'Linear', molecular: 'Linear', angle: 180 },
+    '3-0': { electron: 'Trigonal Planar', molecular: 'Trigonal Planar', angle: 120 },
+    '3-1': { electron: 'Trigonal Planar', molecular: 'Bent', angle: 117 },
+    '4-0': { electron: 'Tetrahedral', molecular: 'Tetrahedral', angle: 109.5 },
+    '4-1': { electron: 'Tetrahedral', molecular: 'Trigonal Pyramidal', angle: 107 },
+    '4-2': { electron: 'Tetrahedral', molecular: 'Bent', angle: 104.5 },
+    '5-0': { electron: 'Trigonal Bipyramidal', molecular: 'Trigonal Bipyramidal', angle: 90 },
+    '6-0': { electron: 'Octahedral', molecular: 'Octahedral', angle: 90 },
+  };
+  const key = `${bondingPairs}-${lonePairs}`;
+  return geometries[key] || { electron: 'Complex', molecular: 'Complex', angle: 109.5 };
+}
+
+// Expanded octets check
+function canExpandOctet(centralAtom) {
+  // Elements in period 3+ with d orbitals available
+  const expandable = ['P', 'S', 'Cl', 'Br', 'I', 'Xe', 'As', 'Se'];
+  return expandable.includes(centralAtom);
+}
+
+// Electronegativity and bond character
+function bondCharacter(en1, en2) {
+  const diff = Math.abs(en1 - en2);
+  if (diff < 0.5) return 'Nonpolar covalent';
+  if (diff < 1.7) return 'Polar covalent (δ+ on less EN atom)';
+  return 'Ionic (electron transfer)';
+}
+
+// Multiple bond indicators
+function multipleBondType(bondOrder) {
+  if (bondOrder === 1) return { type: 'Single bond (σ)', length: 'longest', energy: 'lowest' };
+  if (bondOrder === 2) return { type: 'Double bond (σ + π)', length: 'medium', energy: 'medium' };
+  if (bondOrder === 3) return { type: 'Triple bond (σ + 2π)', length: 'shortest', energy: 'highest' };
+  return { type: 'Fractional (resonance)', length: 'intermediate', energy: 'intermediate' };
+}
+
+// Keyboard shortcuts extended
+window.addEventListener('keydown', e => {
+  if (e.code === 'Digit4') applyPreset('CH4');
+  if (e.code === 'Digit5') {
+    const g = vsapr(4, 0);
+    showToast('CH₄: ' + g.molecular + ', angle=' + g.angle + '°');
+  }
+});
+
+// Polarity prediction from Lewis structure
+function predictMolecularPolarity(molecule) {
+  const polarMolecules = { H2O: true, NH3: true, HF: true, SO2: true, CHCl3: true };
+  const nonpolarMolecules = { CO2: false, CH4: false, BF3: false, CCl4: false, N2: false };
+  if (molecule in polarMolecules) return polarMolecules[molecule];
+  if (molecule in nonpolarMolecules) return nonpolarMolecules[molecule];
+  return null; // unknown
+}
+
+// Octet rule satisfaction check
+function satisfiesOctet(el, bonds, lonePairs) {
+  const totalE = bonds * 2 + lonePairs * 2;
+  if (el === 'H') return bonds === 1; // H wants 2 electrons
+  if (['B','Al'].includes(el)) return totalE === 6; // electron deficient
+  if (['P','S','Cl','Br','I'].includes(el)) return totalE >= 8; // can expand octet
+  return totalE === 8;
+}
+
+// Bond dipole vector for each bond in a Lewis structure
+function bondDipoleVector(from, to, en_from, en_to) {
+  const dEN = en_to - en_from;
+  const dir = { x: to.x - from.x, y: to.y - from.y };
+  const len = Math.sqrt(dir.x*dir.x + dir.y*dir.y);
+  const mag = Math.abs(dEN) * 0.5; // scaled magnitude
+  return { x: dir.x/len * mag * Math.sign(dEN), y: dir.y/len * mag * Math.sign(dEN) };
+}
+
+// Lone pair repulsion order (for VSEPR accuracy)
+// lp-lp > lp-bp > bp-bp in terms of repulsion strength
+function repulsionOrder() {
+  return {
+    'lp-lp': 'Strongest: lone pair — lone pair repulsion',
+    'lp-bp': 'Medium: lone pair — bond pair repulsion',
+    'bp-bp': 'Weakest: bond pair — bond pair repulsion',
+    note: 'This explains why lone pairs compress bond angles below ideal values'
+  };
+}
+</script>
+</body>
+</html>

@@ -19,7 +19,7 @@ describe("EXPERIMENT_HTML_MAP", () => {
 describe("getExperimentHtmlPath", () => {
   it("should return the path for a known experiment", () => {
     const path = getExperimentHtmlPath("simple-harmonic-motion");
-    expect(path).toBe("/experiments/ap-physics/shm-simple-harmonic-motion.html");
+    expect(path).toBe("/experiments-v2/ap-physics/shm-simple-harmonic-motion.html");
   });
 
   it("should return null for an unknown experiment", () => {

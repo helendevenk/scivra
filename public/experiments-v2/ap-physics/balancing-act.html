@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balancing Act — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 2px; }
+.nav { background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.3); backdrop-filter: blur(12px); padding: 0 1.25rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 100; }
+.nav-title { font-size: 1rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-sub { font-size: 0.68rem; color: #94a3b8; margin-left: 0.5rem; }
+.btn { padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-ghost { background: rgba(255,255,255,0.07); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); }
+.btn-ghost:hover { background: rgba(255,255,255,0.13); }
+.main { display: flex; flex: 1; overflow: hidden; }
+.sidebar { width: 30%; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 0.9rem; flex-shrink: 0; }
+.sidebar-section { margin-bottom: 1.1rem; }
+.sidebar-title { font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #3B82F6; margin-bottom: 0.55rem; }
+.formula-block { background: rgba(59,130,246,0.09); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.65rem; margin-bottom: 0.45rem; }
+.formula-desc { font-size: 0.7rem; color: #94a3b8; margin-top: 0.28rem; }
+.concept-text { font-size: 0.76rem; color: #cbd5e1; line-height: 1.6; }
+.concept-text p { margin-bottom: 0.45rem; }
+.info-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.4rem; }
+.info-card-title { font-size: 0.68rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.2rem; }
+.info-card-text { font-size: 0.7rem; color: #94a3b8; line-height: 1.5; }
+.canvas-area { flex: 1; position: relative; overflow: hidden; }
+#canvas-container { width: 100%; height: 100%; position: relative; }
+.data-overlay { position: absolute; top: 10px; left: 10px; background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.65rem 0.9rem; backdrop-filter: blur(8px); min-width: 200px; z-index: 10; }
+.data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; gap: 1rem; }
+.data-label { font-size: 0.68rem; color: #94a3b8; }
+.data-val { font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #60a5fa; }
+.balance-overlay { position: absolute; top: 10px; right: 10px; width: 210px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.65rem 0.9rem; z-index: 10; backdrop-filter: blur(8px); }
+.torque-bar-label { font-size: 0.62rem; color: #94a3b8; margin-bottom: 2px; display: flex; justify-content: space-between; }
+.torque-bar-track { height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-bottom: 0.4rem; }
+.torque-bar-fill { height: 100%; border-radius: 4px; }
+.control-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.75rem 1rem; flex-shrink: 0; z-index: 50; }
+.controls-grid { display: grid; grid-template-columns: repeat(4,1fr) auto; gap: 0.7rem; align-items: center; }
+.slider-group { display: flex; flex-direction: column; gap: 0.2rem; }
+.slider-label { font-size: 0.68rem; color: #94a3b8; display: flex; justify-content: space-between; }
+.slider-val { color: #60a5fa; font-weight: 700; }
+input[type=range] { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 3px; background: rgba(59,130,246,0.25); outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3B82F6; cursor: pointer; }
+.preset-btn { padding: 0.28rem 0.65rem; border-radius: 6px; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(59,130,246,0.35); background: rgba(59,130,246,0.1); color: #93c5fd; transition: all 0.15s; white-space: nowrap; }
+.preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.28); border-color: #3B82F6; color: #fff; }
+.balance-indicator { font-size: 0.9rem; font-weight: 800; text-align: center; padding: 0.3rem; border-radius: 6px; margin-top: 0.4rem; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div style="display:flex;align-items:center;">
+    <span class="nav-title">Balancing Act</span>
+    <span class="nav-sub">AP Physics · Rotational Equilibrium · Στ = 0</span>
+  </div>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="preset-btn" onclick="loadPreset('seesaw',this)">Simple Seesaw</button>
+    <button class="preset-btn" onclick="loadPreset('unequal',this)">Unequal Mass</button>
+    <button class="preset-btn" onclick="loadPreset('crane',this)">Crane Counterweight</button>
+    <button class="btn btn-ghost" onclick="resetSim()">↺ Reset</button>
+  </div>
+</nav>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Core Equations</div>
+      <div class="formula-block">
+        <div>\(\tau = r \times F = rF\sin\theta\)</div>
+        <div class="formula-desc">Torque = lever arm × force (N·m). Counterclockwise positive.</div>
+      </div>
+      <div class="formula-block">
+        <div>\(\sum \tau = 0\)</div>
+        <div class="formula-desc">Rotational equilibrium condition: net torque about any pivot = 0</div>
+      </div>
+      <div class="formula-block">
+        <div>\(m_1 d_1 = m_2 d_2\)</div>
+        <div class="formula-desc">Seesaw balance (perpendicular gravity forces, equal lever arms)</div>
+      </div>
+      <div class="formula-block">
+        <div>\(\tau_{net} = I\alpha\)</div>
+        <div class="formula-desc">Rotational Newton's 2nd Law — unbalanced torque causes angular acceleration</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Key Concepts</div>
+      <div class="info-card">
+        <div class="info-card-title">Lever Arm</div>
+        <div class="info-card-text">Perpendicular distance from pivot to line of action of force. A longer lever arm amplifies torque for the same force magnitude.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Center of Mass</div>
+        <div class="info-card-text">Point where gravity effectively acts. Object tips when CG moves outside base of support. Stable objects: low CG, wide base.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Real Applications</div>
+        <div class="info-card-text">Cranes: counterweight τ balances load τ. Bridges: distributed loads sum to zero. Human posture: spine shifts to keep CG over feet.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Meter Stick Problems</div>
+        <div class="info-card-text">Choose pivot at unknown force to eliminate it from Στ=0. Then solve for remaining unknowns using one torque equation.</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Tipping Point</div>
+      <div class="concept-text">
+        <p>An object tips when its <strong>center of gravity</strong> moves outside its base of support. At the tipping point, the weight vector passes through the edge — any further shift causes irreversible rotation.</p>
+        <p>Drag the sliders to see when the beam tips. The red/blue bar shows which side dominates.</p>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-area">
+    <div id="canvas-container"></div>
+    <div class="data-overlay">
+      <div style="font-size:0.65rem;font-weight:700;color:#3B82F6;margin-bottom:0.4rem;text-transform:uppercase;">Torque Data</div>
+      <div class="data-row"><span class="data-label">τ Left (CCW +)</span><span class="data-val" id="d-tl">0.00 N·m</span></div>
+      <div class="data-row"><span class="data-label">τ Right (CW −)</span><span class="data-val" id="d-tr">0.00 N·m</span></div>
+      <div class="data-row"><span class="data-label">Net Torque</span><span class="data-val" id="d-tnet">0.00 N·m</span></div>
+      <div class="data-row"><span class="data-label">F₁ = m₁g</span><span class="data-val" id="d-f1">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">F₂ = m₂g</span><span class="data-val" id="d-f2">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Pivot Reaction</span><span class="data-val" id="d-rxn">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Beam Angle</span><span class="data-val" id="d-ang">0.0°</span></div>
+    </div>
+    <div class="balance-overlay">
+      <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:0.5rem;">Torque Balance</div>
+      <div class="torque-bar-label"><span>CCW τ (left)</span><span id="bl-ccw">0 N·m</span></div>
+      <div class="torque-bar-track"><div class="torque-bar-fill" id="bar-ccw" style="width:50%;background:#3B82F6;"></div></div>
+      <div class="torque-bar-label"><span>CW τ (right)</span><span id="bl-cw">0 N·m</span></div>
+      <div class="torque-bar-track"><div class="torque-bar-fill" id="bar-cw" style="width:50%;background:#ef4444;"></div></div>
+      <div class="balance-indicator" id="bal-ind" style="background:rgba(34,197,94,0.2);color:#22c55e;">BALANCED</div>
+    </div>
+  </div>
+</div>
+<div class="control-panel">
+  <div class="controls-grid">
+    <div class="slider-group">
+      <div class="slider-label"><span>Mass 1 (kg)</span><span class="slider-val" id="lbl-m1">5.0</span></div>
+      <input type="range" id="sl-m1" min="0.5" max="20" step="0.5" value="5" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Distance 1 (m)</span><span class="slider-val" id="lbl-d1">2.0</span></div>
+      <input type="range" id="sl-d1" min="0.1" max="4" step="0.1" value="2" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Mass 2 (kg)</span><span class="slider-val" id="lbl-m2">5.0</span></div>
+      <input type="range" id="sl-m2" min="0.5" max="20" step="0.5" value="5" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Distance 2 (m)</span><span class="slider-val" id="lbl-d2">2.0</span></div>
+      <input type="range" id="sl-d2" min="0.1" max="4" step="0.1" value="2" oninput="onSlider()">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:0.1rem;">Animate</div>
+      <button class="btn btn-ghost" onclick="toggleAnim()" id="btn-anim" style="font-size:0.7rem;padding:0.25rem 0.6rem;">▶ Play</button>
+    </div>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(0, 7, 14);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+dirLight.position.set(5, 10, 5);
+dirLight.castShadow = true;
+scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0x3B82F6, 0.35);
+fillLight.position.set(-6, 4, -4);
+scene.add(fillLight);
+const backLight = new THREE.DirectionalLight(0x0EA5E9, 0.2);
+backLight.position.set(0, -4, -6);
+scene.add(backLight);
+
+const grid = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x1e293b);
+scene.add(grid);
+
+// Pivot stand
+const standMat = new THREE.MeshPhongMaterial({ color: 0x475569 });
+const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 2.0, 12), standMat);
+stand.position.y = 1.0; stand.castShadow = true;
+scene.add(stand);
+
+// Base plate
+const base = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.8), new THREE.MeshPhongMaterial({ color: 0x334155 }));
+base.position.y = 0.05;
+scene.add(base);
+
+// Pivot sphere
+const pivotSphere = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16),
+  new THREE.MeshPhongMaterial({ color: 0xf59e0b, emissive: 0x78350f, shininess: 100 }));
+pivotSphere.position.y = 2.05;
+scene.add(pivotSphere);
+
+// Beam group (rotates around pivot)
+const beamGroup = new THREE.Group();
+beamGroup.position.y = 2.1;
+scene.add(beamGroup);
+
+const beam = new THREE.Mesh(new THREE.BoxGeometry(10, 0.15, 0.25),
+  new THREE.MeshPhongMaterial({ color: 0x64748b }));
+beam.castShadow = true;
+beamGroup.add(beam);
+
+// Masses
+const mass1Mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5),
+  new THREE.MeshPhongMaterial({ color: 0x3B82F6, emissive: 0x1e3a8a }));
+mass1Mesh.castShadow = true;
+beamGroup.add(mass1Mesh);
+
+const mass2Mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5),
+  new THREE.MeshPhongMaterial({ color: 0xef4444, emissive: 0x7f1d1d }));
+mass2Mesh.castShadow = true;
+beamGroup.add(mass2Mesh);
+
+// Force arrow builders
+function makeForceArrow(color) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshPhongMaterial({ color });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 8), mat);
+  shaft.position.y = -0.5;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.2, 8), mat);
+  head.rotation.z = Math.PI; head.position.y = -1.1;
+  group.add(shaft); group.add(head);
+  return group;
+}
+const arrow1 = makeForceArrow(0x3B82F6);
+const arrow2 = makeForceArrow(0xef4444);
+scene.add(arrow1); scene.add(arrow2);
+
+// Simulation state
+let m1 = 5, d1 = 2, m2 = 5, d2 = 2;
+let beamAngle = 0, beamAngVel = 0;
+let animated = false;
+const G = 9.8;
+const I_eff = 60;
+
+function onSlider() {
+  m1 = parseFloat(document.getElementById('sl-m1').value);
+  d1 = parseFloat(document.getElementById('sl-d1').value);
+  m2 = parseFloat(document.getElementById('sl-m2').value);
+  d2 = parseFloat(document.getElementById('sl-d2').value);
+  document.getElementById('lbl-m1').textContent = m1.toFixed(1);
+  document.getElementById('lbl-d1').textContent = d1.toFixed(1);
+  document.getElementById('lbl-m2').textContent = m2.toFixed(1);
+  document.getElementById('lbl-d2').textContent = d2.toFixed(1);
+}
+
+function toggleAnim() {
+  animated = !animated;
+  document.getElementById('btn-anim').textContent = animated ? '⏸ Pause' : '▶ Play';
+  if (!animated) { beamAngle = 0; beamAngVel = 0; }
+}
+
+function loadPreset(p, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  beamAngle = 0; beamAngVel = 0;
+  const vals = p === 'seesaw' ? [5,2,5,2] : p === 'unequal' ? [10,1,5,2] : [15,0.8,4,3];
+  ['sl-m1','sl-d1','sl-m2','sl-d2'].forEach((id, i) => document.getElementById(id).value = vals[i]);
+  onSlider();
+}
+
+function resetSim() {
+  beamAngle = 0; beamAngVel = 0; animated = false;
+  document.getElementById('btn-anim').textContent = '▶ Play';
+}
+
+let lastTime = null;
+
+renderer.setAnimationLoop(function(time) {
+  if (lastTime === null) lastTime = time;
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
+
+  const tau1 = m1 * G * d1;
+  const tau2 = m2 * G * d2;
+  const tauNet = tau1 - tau2;
+
+  if (animated) {
+    // Velocity Verlet
+    const alpha = (tauNet * Math.cos(beamAngle)) / I_eff;
+    const newAngVel = beamAngVel + alpha * dt;
+    beamAngle += (beamAngVel + newAngVel) * 0.5 * dt;
+    beamAngVel = newAngVel * 0.97;
+    beamAngle = Math.max(-0.42, Math.min(0.42, beamAngle));
+  } else {
+    const target = tauNet / (I_eff * 2);
+    const clampedTarget = Math.max(-0.42, Math.min(0.42, target));
+    beamAngle += (clampedTarget - beamAngle) * 0.07;
+  }
+
+  beamGroup.rotation.z = beamAngle;
+
+  // Mass positions along beam (local X axis)
+  mass1Mesh.position.set(-d1, 0.33, 0);
+  mass1Mesh.scale.setScalar(Math.max(0.4, Math.min(1.3, m1 / 10)));
+  mass2Mesh.position.set(d2, 0.33, 0);
+  mass2Mesh.scale.setScalar(Math.max(0.4, Math.min(1.3, m2 / 10)));
+
+  // Force arrows (world space, point downward)
+  const m1World = new THREE.Vector3(-d1, 0.33, 0).applyEuler(new THREE.Euler(0, 0, beamAngle)).add(new THREE.Vector3(0, 2.1, 0));
+  const m2World = new THREE.Vector3(d2, 0.33, 0).applyEuler(new THREE.Euler(0, 0, beamAngle)).add(new THREE.Vector3(0, 2.1, 0));
+  arrow1.position.copy(m1World.clone().add(new THREE.Vector3(0, 0.25, 0)));
+  arrow1.scale.set(1, Math.min(m1 * G / 30, 1.6), 1);
+  arrow2.position.copy(m2World.clone().add(new THREE.Vector3(0, 0.25, 0)));
+  arrow2.scale.set(1, Math.min(m2 * G / 30, 1.6), 1);
+
+  // HUD
+  document.getElementById('d-tl').textContent = tau1.toFixed(2) + ' N·m';
+  document.getElementById('d-tr').textContent = tau2.toFixed(2) + ' N·m';
+  document.getElementById('d-tnet').textContent = tauNet.toFixed(2) + ' N·m';
+  document.getElementById('d-f1').textContent = (m1 * G).toFixed(1) + ' N';
+  document.getElementById('d-f2').textContent = (m2 * G).toFixed(1) + ' N';
+  document.getElementById('d-rxn').textContent = ((m1 + m2) * G).toFixed(1) + ' N';
+  document.getElementById('d-ang').textContent = (beamAngle * 180 / Math.PI).toFixed(1) + '°';
+
+  const maxTau = Math.max(tau1, tau2, 1);
+  document.getElementById('bl-ccw').textContent = tau1.toFixed(1) + ' N·m';
+  document.getElementById('bl-cw').textContent = tau2.toFixed(1) + ' N·m';
+  document.getElementById('bar-ccw').style.width = (tau1 / maxTau * 100) + '%';
+  document.getElementById('bar-cw').style.width = (tau2 / maxTau * 100) + '%';
+
+  const balanced = Math.abs(tauNet) < 0.6;
+  const ind = document.getElementById('bal-ind');
+  if (balanced) {
+    ind.style.background = 'rgba(34,197,94,0.2)'; ind.style.color = '#22c55e'; ind.textContent = 'BALANCED';
+  } else if (tauNet > 0) {
+    ind.style.background = 'rgba(59,130,246,0.2)'; ind.style.color = '#60a5fa'; ind.textContent = '<-- TIPS LEFT';
+  } else {
+    ind.style.background = 'rgba(239,68,68,0.2)'; ind.style.color = '#f87171'; ind.textContent = 'TIPS RIGHT -->';
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderMathInElement(document.body, { delimiters: [{left:'\\(',right:'\\)',display:false}] });
+  loadPreset('seesaw', document.querySelector('.preset-btn'));
+});
+onSlider();
+
+// ── AP Exam Tips (reference data embedded) ────────────────────────────────────
+// ROTATIONAL EQUILIBRIUM CHECKLIST FOR AP PHYSICS:
+// 1. Draw a free body diagram showing ALL forces.
+// 2. Choose a pivot point (often choose where unknown force acts to eliminate it).
+// 3. Calculate lever arm = perpendicular distance from pivot to line of action.
+// 4. Assign sign: CCW torques = +, CW torques = -.
+// 5. Sum of torques = 0 for equilibrium. Sum of forces = 0 (translational equilibrium).
+// 6. If object accelerates: sum of torques = I * alpha.
+//
+// COMMON MISTAKES ON AP EXAM:
+// - Using the wrong lever arm (must be PERPENDICULAR to force).
+// - Forgetting weight of the beam itself (acts at center of mass of beam).
+// - Forgetting that pivot reaction force exists (normal from support = sum of weights).
+// - Confusing torque direction when force is not perpendicular to beam.
+//
+// REAL WORLD EXAMPLES:
+// Crane: boom weight τ + load τ = counterweight τ. If counterweight τ < load τ, crane tips.
+// Human forearm: bicep muscle acts close to elbow pivot (small lever arm), must exert
+//   very large force to hold heavy object at end of forearm (large lever arm).
+//   If m_object = 5 kg at d = 0.35 m, bicep at d_muscle = 0.04 m:
+//   F_bicep * 0.04 = 5 * 9.8 * 0.35  =>  F_bicep = 428 N (for just 5 kg object!)
+//
+// TIPPING CONDITION:
+// An object tips when center of mass moves beyond base of support.
+// Critical angle (uniform box, width w, height h): tan(θ_tip) = w / h.
+// Low wide objects (w >> h) are very stable. Tall thin objects (h >> w) tip easily.
+//
+// MOMENT OF INERTIA REFERENCE (AP Physics C):
+// Solid cylinder: I = (1/2)MR²
+// Solid sphere:   I = (2/5)MR²
+// Thin rod about center: I = (1/12)ML²
+// Thin rod about end:    I = (1/3)ML²
+// Parallel axis theorem: I = I_cm + Md²
+//
+// STATIC EQUILIBRIUM — FULL SOLUTION STRATEGY FOR AP EXAMS:
+// Given: beam of mass M_b, length L, supported at one end, weight W_1 at distance d₁,
+//   weight W_2 at distance d₂. Find support force at end and reaction at pivot.
+//
+// Step 1: ΣFy = 0  =>  F_left + F_right = W_1 + W_2 + M_b*g
+// Step 2: Choose pivot at left end to eliminate F_left from torque eq.
+//   Στ = 0 about left end:
+//   F_right * L = W_1 * d₁ + W_2 * d₂ + M_b*g * (L/2)
+//   F_right = [W_1*d₁ + W_2*d₂ + M_b*g*L/2] / L
+// Step 3: Substitute back to find F_left.
+//
+// METER STICK WITH MULTIPLE WEIGHTS — WORKED EXAMPLE:
+// Meter stick (100 cm, mass 150g) balanced at 40 cm mark (pivot).
+// Weight A = 200g at 10 cm mark.  Weight B = ? at 80 cm mark.
+// Distances from pivot: d_A = 40-10 = 30 cm (CCW side)
+//                       d_stick_CG = 50-40 = 10 cm (CW side, CG at 50cm)
+//                       d_B = 80-40 = 40 cm (CW side)
+// Στ = 0: W_A * 30 = W_stick * 10 + W_B * 40
+//   0.2*9.8*0.30 = 0.15*9.8*0.10 + m_B*9.8*0.40
+//   0.588 = 0.147 + m_B * 3.92
+//   m_B = (0.588 - 0.147) / 3.92 = 0.1125 kg = 112.5 g
+//
+// BRIDGE DESIGN (DISTRIBUTED LOAD):
+// For a simply supported beam with uniform distributed load w (N/m) over length L:
+//   Each support reaction = wL/2 (symmetric).
+// For point load P at distance a from left, b from right (a+b=L):
+//   R_left = P*b/L,  R_right = P*a/L
+// Maximum bending moment at load point: M = P*a*b/L
+//
+// HUMAN BODY MECHANICS:
+// Spine acts as lever. When bending over, L5/S1 disc is the pivot.
+// Upper body weight (~60% of body weight) acts at center of mass ~30 cm from spine.
+// Back muscle attaches ~5 cm from spine (poor lever arm!).
+// Holding 20 kg box at arms' length (~60 cm from spine):
+//   Back muscle force ≈ (70*0.6*0.30 + 20*9.8*0.60) / 0.05 ≈ 5,000 N+
+//   That's why back injuries are common — muscles work at terrible mechanical advantage!
+// Solution: use leg muscles instead (squat lifting) — pivot at knee/hip, better leverage.
+//
+// ADDITIONAL TORQUE PRACTICE PROBLEMS:
+// Problem 1: A 2.0 m uniform beam (mass 10 kg) is hinged at left end. A 40 kg sign
+//   hangs at right end. What is the force in a cable attached at 60 cm from right end,
+//   at 30° above horizontal?
+//   Soln: Στ about hinge = 0: T*sin30°*1.4 = 10*9.8*1.0 + 40*9.8*2.0
+//   T = (98 + 784) / (0.5 * 1.4) = 882 / 0.7 = 1260 N
+//
+// Problem 2: Car parking brake: wheel radius 0.3 m, brake drum radius 0.15 m.
+//   Brake force at drum 800 N. Required torque to hold on 15° hill (car mass 1200 kg)?
+//   Torque needed = 1200*9.8*sin15°*0.3 = 911 N·m
+//   Brake torque available = 800*0.15 = 120 N·m per wheel.
+//   With 4 wheels: 4*120 = 480 N·m — would the car hold? (No! Parking brake uses
+//   different mechanism — this example shows why gear selection matters on hills.)
+//
+// SIMULATION NOTES:
+// This simulation uses Velocity Verlet integration for the rotating beam.
+// The damping factor of 0.97 per frame models realistic energy dissipation.
+// Static mode uses exponential approach to equilibrium angle for smooth animation.
+// Torque calculation: τ = r × F where r is horizontal distance and F is vertical (mg).
+// In 3D, torque is τ = r × F (cross product), but for this planar case τ = r * F * sin(90°) = rF.
+</script>
+</body>
+</html>

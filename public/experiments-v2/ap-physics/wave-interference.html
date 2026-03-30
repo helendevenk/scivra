@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wave Interference — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: Inter, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  .glass { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); backdrop-filter: blur(12px); border-radius: 12px; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); border: none; color: #fff; cursor: pointer; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); color: #cbd5e1; cursor: pointer; border-radius: 8px; padding: 6px 12px; font-size: 12px; transition: background 0.2s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+  .btn-ghost.active { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); color: #fff; border-color: transparent; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #38bdf8); cursor: pointer; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+  .sidebar { width: 295px; min-width: 295px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+  #canvas-container { flex: 1; position: relative; }
+  .data-overlay { position: absolute; top: 12px; left: 12px; padding: 12px 16px; min-width: 210px; font-size: 13px; line-height: 1.9; font-variant-numeric: tabular-nums; }
+  #toast { position: fixed; top: 60px; right: 16px; z-index: 9999; pointer-events: none; }
+  .toast-msg { background: rgba(30,41,59,0.95); border: 1px solid rgba(59,130,246,0.4); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .quiz-option { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; margin: 4px 0; cursor: pointer; transition: background 0.15s; font-size: 12px; }
+  .quiz-option:hover { background: rgba(255,255,255,0.1); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-option.incorrect { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+  .quiz-feedback { margin-top: 6px; font-size: 12px; line-height: 1.5; padding: 6px 10px; border-radius: 6px; }
+  .speed-btn { padding: 4px 8px; font-size: 11px; border-radius: 5px; }
+  nav { height: 50px; min-height: 50px; background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.25); display: flex; align-items: center; padding: 0 16px; gap: 10px; z-index: 100; }
+  .main-row { flex: 1; display: flex; overflow: hidden; }
+</style>
+</head>
+<body>
+<nav>
+  <span style="font-size:18px;font-weight:700;background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Wave Interference</span>
+  <span style="font-size:11px;color:#94a3b8;margin-left:4px;">AP Physics — Superposition Principle</span>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="resetSim()">Reset</button>
+  <button class="btn-ghost" onclick="toggleFullscreen()">Fullscreen</button>
+  <button class="btn-ghost" onclick="document.getElementById('aboutModal').style.display='flex'">About</button>
+</nav>
+<div class="main-row">
+  <div class="sidebar">
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Core Formulas</div>
+      <div id="formulas" style="font-size:13px;line-height:2.1"></div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Concept</div>
+      <div style="font-size:12px;color:#cbd5e1;line-height:1.7">
+        When two waves occupy the same space, their displacements add linearly — this is the <strong style="color:#60a5fa">Superposition Principle</strong>. The result is interference.
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#cbd5e1;line-height:1.7">
+        <strong style="color:#22c55e">Constructive interference</strong> occurs where path difference Δr = nλ (whole number of wavelengths). Amplitudes add up to 2A.
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#cbd5e1;line-height:1.7">
+        <strong style="color:#ef4444">Destructive interference</strong> occurs where Δr = (n + ½)λ. The waves cancel, leaving zero displacement.
+      </div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Key Facts</div>
+      <div class="glass" style="padding:8px 10px;margin-bottom:6px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">Path Difference:</strong> Δr = r₁ − r₂. This determines the interference pattern, not the absolute distances.
+      </div>
+      <div class="glass" style="padding:8px 10px;margin-bottom:6px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">Young's Double Slit:</strong> Same physics — bright fringes at d·sinθ = nλ, dark fringes at d·sinθ = (n+½)λ.
+      </div>
+      <div class="glass" style="padding:8px 10px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">AP Connection:</strong> AP Physics 2 Unit 14 — Interference & Diffraction. Know constructive/destructive conditions, path difference, and fringe spacing.
+      </div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Why It Matters</div>
+      <ul style="font-size:12px;color:#cbd5e1;line-height:1.8;padding-left:14px">
+        <li>Noise-canceling headphones (destructive interference)</li>
+        <li>Optical coatings (anti-reflection films on lenses)</li>
+        <li>Radio signal dead zones from multi-path interference</li>
+      </ul>
+    </div>
+    <div class="glass" style="padding:12px;font-size:13px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Quiz</div>
+      <div id="quizContainer"></div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div id="canvas-container" style="flex:1;position:relative">
+      <div class="glass data-overlay" id="dataOverlay"></div>
+      <div style="position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:4px">
+        <div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.5);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;color:#86efac">Constructive: Δr = nλ</div>
+        <div style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.5);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;color:#fca5a5">Destructive: Δr = (n+½)λ</div>
+      </div>
+    </div>
+    <div class="glass" style="margin:8px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="btn-primary" id="playBtn" onclick="togglePlay()">Pause</button>
+        <button class="btn-ghost" onclick="resetSim()">Reset</button>
+        <span style="font-size:11px;color:#64748b;margin:0 4px">Speed:</span>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(0.25)">0.25×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(0.5)">0.5×</button>
+        <button class="btn-ghost speed-btn active" onclick="setSpeed(1)">1×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(2)">2×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(3)">3×</button>
+        <span style="font-size:11px;color:#64748b;margin:0 4px">Preset:</span>
+        <button class="btn-ghost" onclick="applyPreset('close')">Close Sources</button>
+        <button class="btn-ghost" onclick="applyPreset('far')">Far Sources</button>
+        <button class="btn-ghost" onclick="applyPreset('highfreq')">High Frequency</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 20px">
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Frequency: <span id="freqVal">1.2</span> Hz</label>
+          <input type="range" id="freqSlider" min="0.5" max="3" step="0.1" value="1.2">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Source Sep: <span id="sepVal">4.0</span> m</label>
+          <input type="range" id="sepSlider" min="1" max="8" step="0.2" value="4.0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Amplitude: <span id="ampVal">1.0</span></label>
+          <input type="range" id="ampSlider" min="0.2" max="2" step="0.05" value="1.0">
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#475569">Space: play/pause · R: reset · 1-5: speed · Drag: orbit · Scroll: zoom</div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div class="glass" style="padding:24px;max-width:420px;width:90%">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:10px;color:#60a5fa">Wave Interference</h3>
+    <p style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:12px">Two coherent point sources create a 3D height-map interference pattern via superposition: y = A·sin(kr₁−ωt) + A·sin(kr₂−ωt).</p>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:12px"><strong>Shortcuts:</strong> Space (play/pause) · R (reset) · 1–5 (speed)</p>
+    <button class="btn-primary" onclick="document.getElementById('aboutModal').style.display='none'">Close</button>
+  </div>
+</div>
+
+<script>
+// ── Inline OrbitControls ──────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 60;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
+
+// ── Parameters ────────────────────────────────────────────────────────────────
+let freq = 1.2, sep = 4.0, amp = 1.0;
+let speedFactor = 1.0, playing = true, simTime = 0;
+
+const GRID = 60;      // grid resolution
+const GSIZE = 14;     // world units, half-extent each direction
+const WAVE_SPEED = 5.0;
+
+// ── Three.js Setup ────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 14, 16);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 15, 7);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
+fillLight.position.set(-5, 8, -5);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, ambient);
+
+// OrbitControls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 4;
+controls.maxDistance = 60;
+
+// ── Interference Surface ──────────────────────────────────────────────────────
+const planeGeo = new THREE.PlaneGeometry(GSIZE * 2, GSIZE * 2, GRID - 1, GRID - 1);
+planeGeo.rotateX(-Math.PI / 2);
+
+// Custom color attribute
+const colorAttr = new THREE.BufferAttribute(new Float32Array(GRID * GRID * 3), 3);
+planeGeo.setAttribute('color', colorAttr);
+
+const planeMat = new THREE.MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.6,
+  metalness: 0.1,
+  side: THREE.DoubleSide
+});
+const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+scene.add(planeMesh);
+
+// Pre-compute flat grid XZ positions (they don't change)
+const gridX = new Float32Array(GRID * GRID);
+const gridZ = new Float32Array(GRID * GRID);
+for (let zi = 0; zi < GRID; zi++) {
+  for (let xi = 0; xi < GRID; xi++) {
+    const idx = zi * GRID + xi;
+    gridX[idx] = (xi / (GRID - 1)) * GSIZE * 2 - GSIZE;
+    gridZ[idx] = (zi / (GRID - 1)) * GSIZE * 2 - GSIZE;
+  }
+}
+
+// Source markers
+const srcGeo = new THREE.SphereGeometry(0.25, 16, 16);
+const srcMat1 = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x1e40af, emissiveIntensity: 1.0 });
+const srcMat2 = new THREE.MeshStandardMaterial({ color: 0xf472b6, emissive: 0x831843, emissiveIntensity: 1.0 });
+const src1 = new THREE.Mesh(srcGeo, srcMat1);
+const src2 = new THREE.Mesh(srcGeo, srcMat2);
+scene.add(src1, src2);
+
+// Point light at each source for glow
+const srcLight1 = new THREE.PointLight(0x3b82f6, 1.5, 6);
+const srcLight2 = new THREE.PointLight(0xf472b6, 1.5, 6);
+scene.add(srcLight1, srcLight2);
+
+// ── Wave computation ──────────────────────────────────────────────────────────
+function computeInterference() {
+  const k = 2 * Math.PI * freq / WAVE_SPEED;
+  const omega = 2 * Math.PI * freq;
+  const posArr = planeGeo.attributes.position;
+  const colArr = planeGeo.attributes.color;
+
+  // Source positions
+  const s1x = -sep / 2, s1z = 0;
+  const s2x =  sep / 2, s2z = 0;
+
+  for (let i = 0; i < GRID * GRID; i++) {
+    const x = gridX[i], z = gridZ[i];
+    const r1 = Math.sqrt((x - s1x) * (x - s1x) + z * z) + 0.001;
+    const r2 = Math.sqrt((x - s2x) * (x - s2x) + z * z) + 0.001;
+
+    // Superposition with 1/r amplitude falloff (cylindrical spreading, capped)
+    const a1 = amp / Math.max(1, Math.sqrt(r1));
+    const a2 = amp / Math.max(1, Math.sqrt(r2));
+    const y1 = a1 * Math.sin(k * r1 - omega * simTime);
+    const y2 = a2 * Math.sin(k * r2 - omega * simTime);
+    const y = y1 + y2;
+
+    // Update vertex Y (index maps: PlaneGeometry row-by-row)
+    posArr.setY(i, y * 0.5); // scale for visual clarity
+
+    // Color: green = constructive (high |y|), red = destructive (low |y|)
+    const norm = Math.abs(y) / (2 * amp);
+    const r = Math.min(1, Math.max(0, (1 - norm) * 1.4));
+    const g = Math.min(1, Math.max(0, norm * 1.8));
+    const b = Math.min(1, Math.max(0, 0.2 + norm * 0.5));
+    colArr.setXYZ(i, r, g, b);
+  }
+
+  posArr.needsUpdate = true;
+  colArr.needsUpdate = true;
+  planeGeo.computeVertexNormals();
+}
+
+// ── Update source positions ───────────────────────────────────────────────────
+function updateSources() {
+  src1.position.set(-sep / 2, 0.4, 0);
+  src2.position.set( sep / 2, 0.4, 0);
+  srcLight1.position.copy(src1.position);
+  srcLight2.position.copy(src2.position);
+
+  // Animate source glow
+  const pulse = 0.8 + 0.6 * Math.abs(Math.sin(2 * Math.PI * freq * simTime));
+  srcMat1.emissiveIntensity = pulse;
+  srcMat2.emissiveIntensity = pulse;
+}
+
+// ── Data overlay ──────────────────────────────────────────────────────────────
+function updateDataOverlay() {
+  const lambda = WAVE_SPEED / freq;
+  const constructCond = `Δr = nλ = n × ${lambda.toFixed(2)} m`;
+  const destructCond  = `Δr = (n+½)λ = (n+½) × ${lambda.toFixed(2)} m`;
+  document.getElementById('dataOverlay').innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Live Data</div>
+    <div style="color:#60a5fa">Frequency f: <strong>${freq.toFixed(2)} Hz</strong></div>
+    <div style="color:#34d399">Wavelength λ: <strong>${lambda.toFixed(2)} m</strong></div>
+    <div style="color:#fbbf24">Source Sep d: <strong>${sep.toFixed(1)} m</strong></div>
+    <div style="color:#22c55e;font-size:11px;margin-top:4px">Constructive: ${constructCond}</div>
+    <div style="color:#ef4444;font-size:11px">Destructive: ${destructCond}</div>
+    <div style="color:#94a3b8;font-size:11px;margin-top:4px">v = ${WAVE_SPEED} m/s (fixed)</div>
+  `;
+}
+
+// ── Sliders ───────────────────────────────────────────────────────────────────
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = parseFloat(this.value);
+  document.getElementById('freqVal').textContent = freq.toFixed(1);
+});
+document.getElementById('sepSlider').addEventListener('input', function() {
+  sep = parseFloat(this.value);
+  document.getElementById('sepVal').textContent = sep.toFixed(1);
+});
+document.getElementById('ampSlider').addEventListener('input', function() {
+  amp = parseFloat(this.value);
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+});
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+window.togglePlay = function() {
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? 'Pause' : 'Play';
+  showToast(playing ? 'Simulation running' : 'Simulation paused');
+};
+
+window.resetSim = function() {
+  simTime = 0;
+  showToast('Simulation reset');
+};
+
+window.setSpeed = function(s) {
+  speedFactor = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  showToast(`Speed: ${s}×`);
+};
+
+window.applyPreset = function(name) {
+  const presets = {
+    close:   { freq: 1.2, sep: 2.0, amp: 1.0 },
+    far:     { freq: 1.0, sep: 7.0, amp: 1.0 },
+    highfreq:{ freq: 2.5, sep: 4.0, amp: 0.8 }
+  };
+  const p = presets[name];
+  if (!p) return;
+  freq = p.freq; sep = p.sep; amp = p.amp;
+  document.getElementById('freqSlider').value = freq;
+  document.getElementById('sepSlider').value = sep;
+  document.getElementById('ampSlider').value = amp;
+  document.getElementById('freqVal').textContent = freq.toFixed(1);
+  document.getElementById('sepVal').textContent = sep.toFixed(1);
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+  simTime = 0;
+  const labels = { close: 'Close Sources', far: 'Far Sources', highfreq: 'High Frequency Pattern' };
+  showToast(`Preset: ${labels[name]}`);
+};
+
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const div = document.createElement('div');
+  div.className = 'toast-msg'; div.textContent = msg;
+  document.getElementById('toast').appendChild(div);
+  setTimeout(() => div.remove(), 2200);
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  const sm = { Digit1: 0.25, Digit2: 0.5, Digit3: 1, Digit4: 2, Digit5: 3 };
+  if (sm[e.code]) { speedFactor = sm[e.code]; showToast(`Speed: ${sm[e.code]}×`); }
+});
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "Two sources are separated by 3 m. A point P is 6 m from source 1 and 7.5 m from source 2. If λ = 3 m, what type of interference occurs at P?",
+    opts: ["Constructive", "Destructive", "Neither — partial", "Cannot be determined"],
+    ans: 1,
+    feedback: ["Δr = 1.5 m = λ/2 — that is destructive, not constructive.", "Correct! Δr = 7.5 − 6 = 1.5 m = λ/2. Destructive condition Δr = (n+½)λ is satisfied.", "Partial interference requires different amplitudes. Here Δr = (n+½)λ exactly.", "Path difference Δr = 1.5 m and λ = 3 m are given, so it is fully determinable."]
+  },
+  {
+    q: "Moving two coherent sources farther apart (larger separation d) while keeping λ constant will:",
+    opts: ["Decrease the number of interference fringes", "Increase the number of interference fringes", "Not change the fringe count", "Eliminate all destructive interference"],
+    ans: 1,
+    feedback: ["More separation means more fringes, not fewer.", "Correct! More path difference range means more values of n satisfy nλ ≤ d, creating more fringes.", "Fringe count depends on d/λ — changing d does change the count.", "Destructive interference still exists; the pattern just becomes denser."]
+  },
+  {
+    q: "At a point of perfect constructive interference, the two waves are:",
+    opts: ["180° out of phase", "90° out of phase", "In phase (0° or 360°)", "The phase relationship is irrelevant"],
+    ans: 2,
+    feedback: ["180° out of phase gives destructive interference.", "90° out of phase gives partial cancellation.", "Correct! Constructive interference requires Δφ = 0, 2π, 4π... (in phase). Crests align with crests.", "Phase difference is exactly what determines the type of interference."]
+  }
+];
+
+function buildQuiz() {
+  const c = document.getElementById('quizContainer');
+  c.innerHTML = '';
+  quizData.forEach((qd, qi) => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '14px';
+    div.innerHTML = `<div style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:6px">Q${qi+1}. ${qd.q}</div>`;
+    qd.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-option'; btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        if (div.querySelector('.quiz-feedback')) return;
+        div.querySelectorAll('.quiz-option').forEach(b => b.style.pointerEvents = 'none');
+        btn.classList.add(oi === qd.ans ? 'correct' : 'incorrect');
+        if (oi !== qd.ans) div.querySelectorAll('.quiz-option')[qd.ans].classList.add('correct');
+        const fb = document.createElement('div');
+        fb.className = 'quiz-feedback';
+        fb.style.background = oi === qd.ans ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+        fb.style.color = oi === qd.ans ? '#4ade80' : '#fca5a5';
+        fb.textContent = (oi === qd.ans ? '✓ ' : '✗ ') + qd.feedback[oi];
+        div.appendChild(fb);
+      });
+      div.appendChild(btn);
+    });
+    c.appendChild(div);
+  });
+}
+
+// ── KaTeX ─────────────────────────────────────────────────────────────────────
+document.getElementById('formulas').innerHTML = `
+  <div>$$y = A\\sin(kr_1 - \\omega t) + A\\sin(kr_2 - \\omega t)$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Superposition of two coherent sources</div>
+  <div>$$\\Delta r = n\\lambda \\quad \\text{(constructive)}$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Path difference = integer wavelengths → bright</div>
+  <div>$$\\Delta r = \\left(n + \\tfrac{1}{2}\\right)\\lambda \\quad \\text{(destructive)}$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 4px">Half-integer path diff → dark (cancellation)</div>
+`;
+renderMathInElement(document.getElementById('formulas'), { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] });
+
+// ── Animation Loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frameCount = 0;
+
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (delta > 0.1) delta = 0.02;
+
+  if (playing) {
+    simTime += delta * speedFactor;
+    computeInterference();
+    updateSources();
+  }
+
+  controls.update();
+  frameCount++;
+  if (frameCount % 3 === 0) updateDataOverlay();
+  if (frameCount % 30 === 0) maybeUpdateLines();
+
+  renderer.render(scene, camera);
+});
+
+// ── Nodal line markers ────────────────────────────────────────────────────────
+// Draw thin lines along the destructive interference nodes (where Δr = (n+½)λ)
+// We visualize this as floating tubes above the interference plane
+
+const nodalLineGroup = new THREE.Group();
+scene.add(nodalLineGroup);
+
+function updateNodalLines() {
+  // Remove old children
+  while (nodalLineGroup.children.length) {
+    const c = nodalLineGroup.children[0];
+    c.geometry.dispose();
+    nodalLineGroup.remove(c);
+  }
+
+  const lambda = WAVE_SPEED / freq;
+  const s1x = -sep / 2;
+  const s2x =  sep / 2;
+  const nodal_mat = new THREE.LineBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.55 });
+
+  // Sample 80 points along each potential nodal line segment
+  // A nodal line is where |r1 - r2| = (n + 0.5)*lambda
+  for (let n = -4; n <= 4; n++) {
+    const targetDiff = (n + 0.5) * lambda;
+    const pts = [];
+    for (let xi = -GSIZE; xi <= GSIZE; xi += 0.3) {
+      // For each x in the plane, find the z where r1-r2 = targetDiff
+      // r1 = sqrt((x-s1x)^2 + z^2), r2 = sqrt((x-s2x)^2 + z^2)
+      // No closed form, but we sample z and find sign change
+      let prevDiff = null;
+      for (let zi = -GSIZE; zi <= GSIZE; zi += 0.3) {
+        const r1 = Math.sqrt((xi - s1x) ** 2 + zi ** 2) + 1e-6;
+        const r2 = Math.sqrt((xi - s2x) ** 2 + zi ** 2) + 1e-6;
+        const diff = r1 - r2 - targetDiff;
+        if (prevDiff !== null && prevDiff * diff < 0) {
+          pts.push(new THREE.Vector3(xi, 0.12, zi));
+        }
+        prevDiff = diff;
+      }
+    }
+    if (pts.length > 1) {
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const line = new THREE.Line(geo, nodal_mat);
+      nodalLineGroup.add(line);
+    }
+  }
+}
+
+// ── Constructive line markers (antinodal) ─────────────────────────────────────
+const antinodalGroup = new THREE.Group();
+scene.add(antinodalGroup);
+
+function updateAntinodalLines() {
+  while (antinodalGroup.children.length) {
+    const c = antinodalGroup.children[0];
+    c.geometry.dispose();
+    antinodalGroup.remove(c);
+  }
+
+  const lambda = WAVE_SPEED / freq;
+  const s1x = -sep / 2;
+  const s2x =  sep / 2;
+  const anti_mat = new THREE.LineBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.4 });
+
+  for (let n = -4; n <= 4; n++) {
+    const targetDiff = n * lambda;
+    const pts = [];
+    for (let xi = -GSIZE; xi <= GSIZE; xi += 0.3) {
+      let prevDiff = null;
+      for (let zi = -GSIZE; zi <= GSIZE; zi += 0.3) {
+        const r1 = Math.sqrt((xi - s1x) ** 2 + zi ** 2) + 1e-6;
+        const r2 = Math.sqrt((xi - s2x) ** 2 + zi ** 2) + 1e-6;
+        const diff = r1 - r2 - targetDiff;
+        if (prevDiff !== null && prevDiff * diff < 0) {
+          pts.push(new THREE.Vector3(xi, 0.08, zi));
+        }
+        prevDiff = diff;
+      }
+    }
+    if (pts.length > 1) {
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const line = new THREE.Line(geo, anti_mat);
+      antinodalGroup.add(line);
+    }
+  }
+}
+
+// Update nodal/antinodal lines when parameters change (not every frame — expensive)
+let linesDirty = true;
+let linesLastFreq = -1, linesLastSep = -1;
+
+['freqSlider','sepSlider'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { linesDirty = true; });
+});
+
+function maybeUpdateLines() {
+  if (linesDirty || linesLastFreq !== freq || linesLastSep !== sep) {
+    updateNodalLines();
+    updateAntinodalLines();
+    linesLastFreq = freq;
+    linesLastSep = sep;
+    linesDirty = false;
+  }
+}
+
+// Initial line draw
+updateNodalLines();
+updateAntinodalLines();
+
+buildQuiz();
+showToast('Wave Interference loaded — watch the constructive/destructive pattern!');
+</script>
+<div style="display:none">Interference is everywhere — from ripples to radio. Generated by AetherViz Master for you.</div>
+</body>
+</html>

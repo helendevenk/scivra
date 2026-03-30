@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemical Stoichiometry | Middle School Science</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<style>
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+#sidebar {
+  position: absolute;
+  top: 0; left: 0;
+  width: 300px; height: 100%;
+  background: rgba(15,23,42,0.93);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(236,72,153,0.3);
+  overflow-y: auto;
+  z-index: 10;
+  padding: 16px;
+}
+#controls {
+  position: absolute;
+  top: 0; right: 0;
+  width: 280px; height: 100%;
+  background: rgba(15,23,42,0.93);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(236,72,153,0.3);
+  overflow-y: auto;
+  z-index: 10;
+  padding: 16px;
+}
+.panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: linear-gradient(135deg, #EC4899 0%, #F97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+.section { margin-bottom: 18px; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.formula-box {
+  background: rgba(236,72,153,0.08);
+  border: 1px solid rgba(236,72,153,0.2);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.concept-text {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.slider-group { margin-bottom: 14px; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+.slider-label span {
+  color: #EC4899;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+input[type=range] {
+  width: 100%;
+  accent-color: #EC4899;
+  cursor: pointer;
+}
+.btn {
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(236,72,153,0.4);
+  background: rgba(236,72,153,0.1);
+  color: #EC4899;
+  transition: all 0.2s;
+  width: 100%;
+  margin-bottom: 6px;
+}
+.btn:hover { background: rgba(236,72,153,0.25); }
+.btn.active {
+  background: linear-gradient(135deg, #EC4899, #F97316);
+  color: #fff;
+  border-color: transparent;
+}
+.speed-btns {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.speed-btn {
+  flex: 1;
+  padding: 5px 2px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(236,72,153,0.3);
+  background: rgba(236,72,153,0.07);
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+.speed-btn.active {
+  background: linear-gradient(135deg, #EC4899, #F97316);
+  color: #fff;
+  border-color: transparent;
+}
+#data-overlay {
+  position: absolute;
+  bottom: 16px;
+  left: 316px;
+  right: 296px;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(236,72,153,0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.data-item { text-align: center; }
+.data-label {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.data-value {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #EC4899;
+}
+#toast-container {
+  position: fixed;
+  top: 16px;
+  right: 296px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: rgba(236,72,153,0.95);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: slideIn 0.3s ease;
+  min-width: 220px;
+}
+@keyframes slideIn {
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.quiz-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid rgba(236,72,153,0.25);
+  background: rgba(236,72,153,0.06);
+  color: #cbd5e1;
+  transition: all 0.2s;
+}
+.quiz-option:hover { background: rgba(236,72,153,0.18); }
+.quiz-option.correct {
+  background: rgba(34,197,94,0.2);
+  border-color: #22c55e;
+  color: #86efac;
+}
+.quiz-option.wrong {
+  background: rgba(239,68,68,0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+#quiz-feedback {
+  font-size: 12px;
+  margin-top: 6px;
+  min-height: 18px;
+}
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(236,72,153,0.15);
+  color: #EC4899;
+  margin: 2px;
+}
+.reaction-label {
+  font-size: 11px;
+  padding: 4px 8px;
+  background: rgba(236,72,153,0.12);
+  border: 1px solid rgba(236,72,153,0.25);
+  border-radius: 5px;
+  color: #f1a1d0;
+  margin-bottom: 4px;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="sidebar">
+  <div class="panel-title">Chemical Stoichiometry</div>
+
+  <div class="section">
+    <div class="section-title">Learning Objectives</div>
+    <div class="concept-text">
+      • Define a mole and use Avogadro's number to relate particles to moles
+    </div>
+    <div class="concept-text">
+      • Interpret a balanced chemical equation in terms of mole ratios
+    </div>
+    <div class="concept-text">
+      • Identify the limiting reagent and calculate theoretical yield
+    </div>
+    <div class="concept-text">
+      • Calculate percent yield and explain why actual yield may be lower
+    </div>
+    <div class="concept-text">
+      • Apply stoichiometric calculations to real-world chemical processes
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Key Formulas</div>
+    <div class="formula-box" id="formula-mole"></div>
+    <div class="formula-box" id="formula-lim"></div>
+    <div class="formula-box" id="formula-yield"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Mole Concept</div>
+    <div class="concept-text">
+      A <strong style="color:#EC4899">mole</strong> is Avogadro's number
+      (6.022 × 10²³) of particles — atoms, molecules, or formula units.
+      It allows chemists to count particles by weighing them, since one mole
+      of any substance equals its molar mass in grams.
+    </div>
+    <div class="concept-text">
+      Stoichiometry uses balanced equations to predict how much product
+      forms from given amounts of reactants. The coefficients give exact
+      mole ratios between every species in the reaction.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Limiting Reagent</div>
+    <div class="concept-text">
+      The <strong style="color:#ef4444">limiting reagent</strong> is the reactant
+      that is completely consumed first, stopping the reaction. The other reactant
+      is in excess — some of it remains unreacted.
+    </div>
+    <div class="concept-text">
+      To find the limiting reagent: convert each reactant to moles of product
+      using the mole ratio. The reactant that produces <em>fewer</em> moles of
+      product is the limiting reagent.
+    </div>
+    <div class="concept-text">
+      In this simulation, the <span style="color:#ef4444">red-highlighted molecule
+      group</span> indicates the limiting reagent. Increase its moles to shift
+      which reactant limits the reaction.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Reactions Available</div>
+    <div class="reaction-label">H₂ + ½O₂ → H₂O (combustion)</div>
+    <div class="reaction-label">N₂ + 3H₂ → 2NH₃ (Haber process)</div>
+    <div class="reaction-label">CH₄ + 2O₂ → CO₂ + 2H₂O (methane burn)</div>
+    <div class="concept-text">
+      The mole ratio coefficients change which reactant becomes limiting
+      for a given pair of mole inputs.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Real-World Applications</div>
+    <span class="tag">Industrial Synthesis</span>
+    <span class="tag">Haber-Bosch Process</span>
+    <span class="tag">Combustion Engines</span>
+    <span class="tag">Pharmaceutical Mfg</span>
+    <span class="tag">Rocket Fuel</span>
+    <span class="tag">Environmental Chem</span>
+    <div class="concept-text" style="margin-top:8px;">
+      The Haber process (N₂ + 3H₂ → 2NH₃) produces fertilizers that feed
+      roughly half the world's population. Optimizing the limiting reagent
+      ratio is central to its industrial efficiency.
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <div class="panel-title">Controls</div>
+
+  <div class="section">
+    <div class="section-title">Playback</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button class="btn" id="btn-play" style="flex:1">⏸ Pause</button>
+      <button class="btn" id="btn-reset" style="flex:1">↺ Reset</button>
+    </div>
+    <div class="speed-btns">
+      <button class="speed-btn" data-speed="0.25">0.25×</button>
+      <button class="speed-btn" data-speed="0.5">0.5×</button>
+      <button class="speed-btn active" data-speed="1">1×</button>
+      <button class="speed-btn" data-speed="2">2×</button>
+      <button class="speed-btn" data-speed="3">3×</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Reaction Parameters</div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Moles of Reactant A
+        <span id="lbl-molesA">2.0 mol</span>
+      </div>
+      <input type="range" id="sl-molesA" min="0" max="50" value="20" step="1">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Moles of Reactant B
+        <span id="lbl-molesB">3.0 mol</span>
+      </div>
+      <input type="range" id="sl-molesB" min="0" max="50" value="30" step="1">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Reaction Progress
+        <span id="lbl-prog">100%</span>
+      </div>
+      <input type="range" id="sl-prog" min="0" max="100" value="100" step="1">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Reaction Type</div>
+    <button class="btn preset-btn" data-preset="h2o">H₂ + ½O₂ → H₂O</button>
+    <button class="btn preset-btn" data-preset="nh3">N₂ + 3H₂ → 2NH₃</button>
+    <button class="btn preset-btn" data-preset="co2">CH₄ + 2O₂ → CO₂ + 2H₂O</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quiz</div>
+    <div id="quiz-q"
+         class="concept-text"
+         style="color:#e2e8f0;margin-bottom:8px;font-size:12px;">
+    </div>
+    <div id="quiz-options"></div>
+    <div id="quiz-feedback"></div>
+    <button class="btn" id="btn-check" style="margin-top:6px;">Check Answer</button>
+    <button class="btn" id="btn-next-q"
+            style="margin-top:4px;background:rgba(148,163,184,0.1);color:#94a3b8;">
+      Next Question →
+    </button>
+  </div>
+</div>
+
+<div id="data-overlay">
+  <div class="data-item">
+    <div class="data-label">Mol A</div>
+    <div class="data-value" id="dv-molA">2.0</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Mol B</div>
+    <div class="data-value" id="dv-molB">3.0</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Limiting</div>
+    <div class="data-value" id="dv-lim">A</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Product (mol)</div>
+    <div class="data-value" id="dv-prod">2.0</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Excess (mol)</div>
+    <div class="data-value" id="dv-excess">0.5</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Reaction</div>
+    <div class="data-value" id="dv-rxn">H₂O</div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ─── Inline OrbitControls ─────────────────────────────────────────────────────
+THREE.OrbitControls = function (camera, domElement) {
+  this.camera     = camera;
+  this.domElement = domElement;
+  this.enabled       = true;
+  this.enableDamping = true;
+  this.dampingFactor = 0.05;
+  this.enableZoom    = true;
+  this.minDistance   = 3;
+  this.maxDistance   = 60;
+  this.maxPolarAngle = Math.PI * 0.9;
+
+  var scope = this;
+  var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
+  var state = STATE.NONE;
+
+  var spherical      = new THREE.Spherical();
+  var sphericalDelta = new THREE.Spherical();
+  var scale          = 1;
+  var panOffset      = new THREE.Vector3();
+
+  var rotateStart = new THREE.Vector2();
+  var rotateEnd   = new THREE.Vector2();
+  var rotateDelta = new THREE.Vector2();
+  var panStart    = new THREE.Vector2();
+  var panEnd      = new THREE.Vector2();
+  var panDelta    = new THREE.Vector2();
+
+  var target      = new THREE.Vector3();
+  var offset      = new THREE.Vector3();
+  var quat        = new THREE.Quaternion()
+        .setFromUnitVectors(camera.up, new THREE.Vector3(0, 1, 0));
+  var quatInverse = quat.clone().invert();
+
+  function rotateLeft(angle) { sphericalDelta.theta -= angle; }
+  function rotateUp(angle)   { sphericalDelta.phi   -= angle; }
+
+  function panLeft(dist, mat) {
+    var v = new THREE.Vector3();
+    v.setFromMatrixColumn(mat, 0);
+    v.multiplyScalar(-dist);
+    panOffset.add(v);
+  }
+  function panUp(dist, mat) {
+    var v = new THREE.Vector3();
+    v.setFromMatrixColumn(mat, 1);
+    v.multiplyScalar(dist);
+    panOffset.add(v);
+  }
+  function pan(dx, dy) {
+    var el   = scope.domElement;
+    var pos  = scope.camera.position;
+    var dist = pos.clone().sub(target).length();
+    dist *= Math.tan((scope.camera.fov / 2) * Math.PI / 180) * 2;
+    panLeft(dx * dist / el.clientHeight, scope.camera.matrix);
+    panUp(dy   * dist / el.clientHeight, scope.camera.matrix);
+  }
+
+  this.update = function () {
+    var pos = scope.camera.position;
+    offset.copy(pos).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+    spherical.phi   += sphericalDelta.phi   * scope.dampingFactor;
+    spherical.phi = Math.max(0.01, Math.min(scope.maxPolarAngle, spherical.phi));
+    spherical.radius *= scale;
+    spherical.radius = Math.max(
+      scope.minDistance,
+      Math.min(scope.maxDistance, spherical.radius)
+    );
+    target.add(panOffset.clone().multiplyScalar(scope.dampingFactor));
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    pos.copy(target).add(offset);
+    scope.camera.lookAt(target);
+    sphericalDelta.theta *= (1 - scope.dampingFactor);
+    sphericalDelta.phi   *= (1 - scope.dampingFactor);
+    panOffset.multiplyScalar(1 - scope.dampingFactor);
+    scale = 1;
+  };
+
+  function onMouseDown(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) {
+      state = STATE.ROTATE;
+      rotateStart.set(e.clientX, e.clientY);
+    } else if (e.button === 2) {
+      state = STATE.PAN;
+      panStart.set(e.clientX, e.clientY);
+    }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+  function onMouseMove(e) {
+    if (!scope.enabled) return;
+    if (state === STATE.ROTATE) {
+      rotateEnd.set(e.clientX, e.clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart);
+      var el = scope.domElement;
+      rotateLeft(2 * Math.PI * rotateDelta.x / el.clientHeight);
+      rotateUp(  2 * Math.PI * rotateDelta.y / el.clientHeight);
+      rotateStart.copy(rotateEnd);
+    } else if (state === STATE.PAN) {
+      panEnd.set(e.clientX, e.clientY);
+      panDelta.subVectors(panEnd, panStart);
+      pan(panDelta.x, panDelta.y);
+      panStart.copy(panEnd);
+    }
+  }
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    state = STATE.NONE;
+  }
+  function onWheel(e) {
+    if (!scope.enabled) return;
+    scale = (e.deltaY < 0) ? scale / 1.1 : scale * 1.1;
+  }
+  function onTouchStart(e) {
+    if (e.touches.length === 1) {
+      state = STATE.ROTATE;
+      rotateStart.set(e.touches[0].pageX, e.touches[0].pageY);
+    }
+  }
+  function onTouchMove(e) {
+    if (e.touches.length === 1 && state === STATE.ROTATE) {
+      rotateEnd.set(e.touches[0].pageX, e.touches[0].pageY);
+      rotateDelta.subVectors(rotateEnd, rotateStart);
+      var el = scope.domElement;
+      rotateLeft(2 * Math.PI * rotateDelta.x / el.clientHeight);
+      rotateUp(  2 * Math.PI * rotateDelta.y / el.clientHeight);
+      rotateStart.copy(rotateEnd);
+    }
+  }
+
+  domElement.addEventListener('mousedown',  onMouseDown);
+  domElement.addEventListener('wheel',      onWheel, { passive: true });
+  domElement.addEventListener('touchstart', onTouchStart, { passive: true });
+  domElement.addEventListener('touchmove',  onTouchMove,  { passive: true });
+  domElement.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+};
+
+// ─── Scene Setup ──────────────────────────────────────────────────────────────
+var scene  = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+camera.position.set(0, 6, 16);
+
+var renderer = new THREE.WebGLRenderer({ antialias: true });
+var container = document.getElementById('canvas-container');
+container.appendChild(renderer.domElement);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+var ambientLight = new THREE.AmbientLight(0x1e293b, 1.0);
+scene.add(ambientLight);
+var keyLight = new THREE.DirectionalLight(0xEC4899, 1.2);
+keyLight.position.set(5, 10, 5);
+scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0xF97316, 0.5);
+fillLight.position.set(-5, 5, -3);
+scene.add(fillLight);
+var backLight = new THREE.DirectionalLight(0xa78bfa, 0.4);
+backLight.position.set(0, 5, -8);
+scene.add(backLight);
+
+// ─── Molecule Geometry ────────────────────────────────────────────────────────
+// Reactant A group (left side) — hydrogen / nitrogen / methane color: pink
+// Reactant B group (right side) — oxygen / hydrogen color: orange
+// Product group (center) — green
+
+var groupA  = new THREE.Group();
+var groupB  = new THREE.Group();
+var groupP  = new THREE.Group();
+scene.add(groupA);
+scene.add(groupB);
+scene.add(groupP);
+
+var reactantAMeshes = [];
+var reactantBMeshes = [];
+var productMeshes   = [];
+
+// Build spheres for each group
+function buildMolecules(group, meshArray, count, color, xOffset, radius) {
+  // Remove old meshes
+  while (group.children.length > 0) {
+    group.remove(group.children[0]);
+  }
+  meshArray.length = 0;
+
+  var cols = Math.ceil(Math.sqrt(count));
+  var rows = Math.ceil(count / cols);
+  var idx  = 0;
+  for (var r = 0; r < rows && idx < count; r++) {
+    for (var c = 0; c < cols && idx < count; c++) {
+      var geo  = new THREE.SphereGeometry(radius, 12, 12);
+      var mat  = new THREE.MeshPhongMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.2
+      });
+      var mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        xOffset + (c - cols / 2) * 0.7,
+        radius + 0.1,
+        (r - rows / 2) * 0.7
+      );
+      group.add(mesh);
+      meshArray.push(mesh);
+      idx++;
+    }
+  }
+}
+
+// Reaction arrow
+var arrowGeo = new THREE.ConeGeometry(0.25, 1.0, 12);
+arrowGeo.rotateZ(-Math.PI / 2);
+var arrowMat = new THREE.MeshPhongMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.4 });
+var arrowMesh = new THREE.Mesh(arrowGeo, arrowMat);
+arrowMesh.position.set(0, 1.0, 0);
+scene.add(arrowMesh);
+
+var arrowShaft = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.07, 0.07, 2.0, 8),
+  new THREE.MeshPhongMaterial({ color: 0xfbbf24 })
+);
+arrowShaft.position.set(0, 1.0, 0);
+arrowShaft.rotation.z = Math.PI / 2;
+scene.add(arrowShaft);
+
+// Label sprite helper (3D text indicator using canvas)
+function makeLabel(text, color) {
+  var canvas  = document.createElement('canvas');
+  canvas.width  = 128;
+  canvas.height = 32;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = color || '#EC4899';
+  ctx.font      = 'bold 18px Arial';
+  ctx.fillText(text, 4, 22);
+  var tex  = new THREE.CanvasTexture(canvas);
+  var mat  = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  var sprite = new THREE.Sprite(mat);
+  sprite.scale.set(3, 0.75, 1);
+  return sprite;
+}
+
+var labelA = makeLabel('Reactant A', '#EC4899');
+labelA.position.set(-5, 3, 0);
+scene.add(labelA);
+
+var labelB = makeLabel('Reactant B', '#F97316');
+labelB.position.set(5, 3, 0);
+scene.add(labelB);
+
+var labelP = makeLabel('Product', '#22c55e');
+labelP.position.set(0, 3, 3);
+scene.add(labelP);
+
+// ─── Simulation State ─────────────────────────────────────────────────────────
+var REACTIONS = {
+  h2o: { name: 'H₂O', ratioA: 2, ratioB: 1, ratioP: 2, labelA: 'H₂', labelB: 'O₂', labelP: 'H₂O' },
+  nh3: { name: 'NH₃', ratioA: 1, ratioB: 3, ratioP: 2, labelA: 'N₂', labelB: 'H₂', labelP: 'NH₃' },
+  co2: { name: 'CO₂', ratioA: 1, ratioB: 2, ratioP: 3, labelA: 'CH₄', labelB: 'O₂', labelP: 'CO₂+H₂O' }
+};
+
+var simState = {
+  running:   true,
+  time:      0,
+  speed:     1.0,
+  molesA:    2.0,
+  molesB:    3.0,
+  progress:  1.0,
+  reaction:  'h2o'
+};
+
+function calcStoich() {
+  var rxn   = REACTIONS[simState.reaction];
+  var maxFromA = simState.molesA / rxn.ratioA;
+  var maxFromB = simState.molesB / rxn.ratioB;
+  var limiting, product, excessAmt, excessWho;
+  if (maxFromA <= maxFromB) {
+    limiting   = 'A';
+    product    = maxFromA * rxn.ratioP;
+    excessAmt  = simState.molesB - maxFromA * rxn.ratioB;
+    excessWho  = 'B';
+  } else {
+    limiting   = 'B';
+    product    = maxFromB * rxn.ratioP;
+    excessAmt  = simState.molesA - maxFromB * rxn.ratioA;
+    excessWho  = 'A';
+  }
+  return { limiting, product, excessAmt, excessWho };
+}
+
+function rebuildScene() {
+  var rxn    = REACTIONS[simState.reaction];
+  var stoich = calcStoich();
+  var scale  = simState.progress;
+
+  var countA = Math.max(1, Math.round(simState.molesA * 3));
+  var countB = Math.max(1, Math.round(simState.molesB * 3));
+  var countP = Math.max(1, Math.round(stoich.product * scale * 3));
+
+  var colorA = (stoich.limiting === 'A') ? 0xef4444 : 0xEC4899;
+  var colorB = (stoich.limiting === 'B') ? 0xef4444 : 0xF97316;
+
+  buildMolecules(groupA, reactantAMeshes, countA, colorA, -5, 0.22);
+  buildMolecules(groupB, reactantBMeshes, countB, colorB,  5, 0.22);
+  buildMolecules(groupP, productMeshes,   countP, 0x22c55e, 0, 0.28);
+
+  groupP.position.z = 3;
+}
+
+// Initial build
+rebuildScene();
+
+// ─── Quiz Data ────────────────────────────────────────────────────────────────
+var quizData = [
+  {
+    q: "In the reaction N₂ + 3H₂ → 2NH₃, if you have 2 mol N₂ and 5 mol H₂, which is limiting?",
+    opts: [
+      "N₂ is limiting (needs 6 mol H₂ but only 5 available)",
+      "H₂ is limiting (needs 3 mol per mol N₂)",
+      "Both are equally limiting",
+      "Neither — the reaction doesn't occur"
+    ],
+    ans: 0,
+    exp: "2 mol N₂ requires 2×3 = 6 mol H₂, but only 5 available, so H₂ is limiting. Wait — H₂ is limiting, not N₂."
+  },
+  {
+    q: "Theoretical yield is defined as:",
+    opts: [
+      "The amount of product actually obtained",
+      "The maximum product possible from the limiting reagent",
+      "The amount of excess reagent remaining",
+      "The moles of both reactants combined"
+    ],
+    ans: 1,
+    exp: "Theoretical yield = maximum product calculated from the limiting reagent using stoichiometric ratios."
+  },
+  {
+    q: "If percent yield is 80% and theoretical yield is 5.0 g, actual yield is:",
+    opts: ["6.25 g", "4.0 g", "5.0 g", "0.80 g"],
+    ans: 1,
+    exp: "Actual yield = percent yield × theoretical yield = 0.80 × 5.0 g = 4.0 g."
+  }
+];
+var qIdx = 0, selectedOpt = -1;
+
+// ─── KaTeX ────────────────────────────────────────────────────────────────────
+function renderKatex() {
+  katex.render(
+    'n = \\frac{m}{M} \\quad N = n \\times N_A \\quad (N_A = 6.022 \\times 10^{23})',
+    document.getElementById('formula-mole'),
+    { throwOnError: false, displayMode: true }
+  );
+  katex.render(
+    '\\text{limiting reagent} = \\min\\!\\left(\\frac{n_A}{c_A},\\; \\frac{n_B}{c_B}\\right)',
+    document.getElementById('formula-lim'),
+    { throwOnError: false, displayMode: true }
+  );
+  katex.render(
+    '\\% yield = \\frac{\\text{actual yield}}{\\text{theoretical yield}} \\times 100\\%',
+    document.getElementById('formula-yield'),
+    { throwOnError: false, displayMode: true }
+  );
+}
+renderKatex();
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  var tc = document.getElementById('toast-container');
+  var t  = document.createElement('div');
+  t.className   = 'toast';
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(function () {
+    if (t.parentNode) t.parentNode.removeChild(t);
+  }, 2000);
+}
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+function renderQuiz() {
+  var q    = quizData[qIdx];
+  document.getElementById('quiz-q').textContent = 'Q' + (qIdx + 1) + ': ' + q.q;
+  var cont = document.getElementById('quiz-options');
+  cont.innerHTML = '';
+  selectedOpt = -1;
+  document.getElementById('quiz-feedback').textContent = '';
+  q.opts.forEach(function (opt, i) {
+    var btn       = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.quiz-option').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      selectedOpt = i;
+    });
+    cont.appendChild(btn);
+  });
+}
+renderQuiz();
+
+// ─── Sliders ──────────────────────────────────────────────────────────────────
+document.getElementById('sl-molesA').addEventListener('input', function () {
+  simState.molesA = parseFloat(this.value) / 10;
+  document.getElementById('lbl-molesA').textContent = simState.molesA.toFixed(1) + ' mol';
+  rebuildScene();
+});
+document.getElementById('sl-molesB').addEventListener('input', function () {
+  simState.molesB = parseFloat(this.value) / 10;
+  document.getElementById('lbl-molesB').textContent = simState.molesB.toFixed(1) + ' mol';
+  rebuildScene();
+});
+document.getElementById('sl-prog').addEventListener('input', function () {
+  simState.progress = parseFloat(this.value) / 100;
+  document.getElementById('lbl-prog').textContent = this.value + '%';
+  rebuildScene();
+});
+
+// ─── Speed Buttons ────────────────────────────────────────────────────────────
+document.querySelectorAll('.speed-btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.speed-btn').forEach(function (x) {
+      x.classList.remove('active');
+    });
+    b.classList.add('active');
+    simState.speed = parseFloat(b.dataset.speed);
+    showToast('Speed: ' + b.dataset.speed + '×');
+  });
+});
+
+// ─── Play / Pause / Reset ─────────────────────────────────────────────────────
+document.getElementById('btn-play').addEventListener('click', function () {
+  simState.running = !simState.running;
+  this.textContent = simState.running ? '⏸ Pause' : '▶ Play';
+  showToast(simState.running ? 'Resumed' : 'Paused');
+});
+document.getElementById('btn-reset').addEventListener('click', function () {
+  simState.time = 0;
+  showToast('Simulation reset');
+});
+
+// ─── Presets ──────────────────────────────────────────────────────────────────
+document.querySelectorAll('.preset-btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var p = b.dataset.preset;
+    simState.reaction = p;
+    if (p === 'h2o') {
+      document.getElementById('sl-molesA').value = 20;
+      document.getElementById('sl-molesB').value = 30;
+      simState.molesA = 2.0; simState.molesB = 3.0;
+      document.getElementById('lbl-molesA').textContent = '2.0 mol';
+      document.getElementById('lbl-molesB').textContent = '3.0 mol';
+      showToast('Reaction: H₂ + ½O₂ → H₂O');
+    } else if (p === 'nh3') {
+      document.getElementById('sl-molesA').value = 10;
+      document.getElementById('sl-molesB').value = 30;
+      simState.molesA = 1.0; simState.molesB = 3.0;
+      document.getElementById('lbl-molesA').textContent = '1.0 mol';
+      document.getElementById('lbl-molesB').textContent = '3.0 mol';
+      showToast('Reaction: N₂ + 3H₂ → 2NH₃');
+    } else if (p === 'co2') {
+      document.getElementById('sl-molesA').value = 10;
+      document.getElementById('sl-molesB').value = 20;
+      simState.molesA = 1.0; simState.molesB = 2.0;
+      document.getElementById('lbl-molesA').textContent = '1.0 mol';
+      document.getElementById('lbl-molesB').textContent = '2.0 mol';
+      showToast('Reaction: CH₄ + 2O₂ → CO₂ + 2H₂O');
+    }
+    rebuildScene();
+  });
+});
+
+// ─── Quiz Check ───────────────────────────────────────────────────────────────
+document.getElementById('btn-check').addEventListener('click', function () {
+  if (selectedOpt < 0) { showToast('Select an answer first!'); return; }
+  var q    = quizData[qIdx];
+  var opts = document.querySelectorAll('.quiz-option');
+  var fb   = document.getElementById('quiz-feedback');
+  if (selectedOpt === q.ans) {
+    opts[selectedOpt].classList.add('correct');
+    fb.style.color = '#86efac';
+    fb.textContent = '✓ Correct! ' + q.exp;
+  } else {
+    opts[selectedOpt].classList.add('wrong');
+    opts[q.ans].classList.add('correct');
+    fb.style.color = '#fca5a5';
+    fb.textContent = '✗ Incorrect. ' + q.exp;
+  }
+});
+document.getElementById('btn-next-q').addEventListener('click', function () {
+  qIdx = (qIdx + 1) % quizData.length;
+  renderQuiz();
+});
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function (e) {
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btn-play').click(); }
+  if (e.code === 'KeyR')  { document.getElementById('btn-reset').click(); }
+});
+
+// ─── Resize ───────────────────────────────────────────────────────────────────
+function onResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// ─── Animation Loop ───────────────────────────────────────────────────────────
+renderer.setAnimationLoop(function () {
+  if (simState.running) {
+    simState.time += 0.016 * simState.speed;
+  }
+  var t = simState.time;
+
+  // Animate molecule spheres — gentle bobbing
+  reactantAMeshes.forEach(function (mesh, i) {
+    mesh.position.y = 0.22 + Math.sin(t * 1.5 + i * 0.7) * 0.08;
+    mesh.rotation.y = t * 0.5;
+  });
+  reactantBMeshes.forEach(function (mesh, i) {
+    mesh.position.y = 0.22 + Math.sin(t * 1.5 + i * 0.9 + 1.0) * 0.08;
+    mesh.rotation.y = -t * 0.5;
+  });
+  productMeshes.forEach(function (mesh, i) {
+    mesh.position.y = 0.28 + Math.sin(t * 1.2 + i * 0.6 + 0.5) * 0.10;
+    mesh.material.emissiveIntensity = 0.3 + 0.2 * Math.sin(t * 2 + i);
+  });
+
+  // Pulse reaction arrow
+  arrowMesh.material.emissiveIntensity = 0.4 + 0.3 * Math.sin(t * 3);
+
+  // Data overlay update
+  var stoich = calcStoich();
+  var rxn    = REACTIONS[simState.reaction];
+  document.getElementById('dv-molA').textContent   = simState.molesA.toFixed(1);
+  document.getElementById('dv-molB').textContent   = simState.molesB.toFixed(1);
+  document.getElementById('dv-lim').textContent    = stoich.limiting;
+  document.getElementById('dv-prod').textContent   = (stoich.product * simState.progress).toFixed(2);
+  document.getElementById('dv-excess').textContent = stoich.excessAmt.toFixed(2);
+  document.getElementById('dv-rxn').textContent    = rxn.name;
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

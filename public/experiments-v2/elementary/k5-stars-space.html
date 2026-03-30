@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stars & Space | K5 Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#030712;color:#f1f5f9;overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+.navbar{background:linear-gradient(135deg,#EAB308 0%,#84CC16 100%);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.navbar h1{font-size:1.1rem;font-weight:700;color:#000;}
+.navbar p{font-size:0.7rem;color:#1a1a1a;}
+.main-area{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:280px;background:#0f172a;overflow-y:auto;padding:12px;flex-shrink:0;border-right:1px solid #1e293b;}
+.sidebar h3{font-size:0.75rem;font-weight:700;color:#EAB308;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;margin-top:10px;}
+.sidebar p{font-size:0.72rem;color:#94a3b8;line-height:1.5;margin-bottom:6px;}
+.obj-item{display:flex;gap:6px;margin-bottom:4px;font-size:0.7rem;color:#cbd5e1;align-items:flex-start;}
+.formula-box{background:#1e293b;border-radius:6px;padding:8px;margin:6px 0;text-align:center;overflow-x:auto;}
+.canvas-container{flex:1;position:relative;}
+#threeCanvas{width:100%;height:100%;display:block;}
+.data-overlay{position:absolute;top:12px;left:12px;background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid #334155;border-radius:8px;padding:10px 14px;font-size:0.7rem;font-variant-numeric:tabular-nums;min-width:200px;}
+.data-row{display:flex;justify-content:space-between;gap:16px;padding:2px 0;border-bottom:1px solid #1e293b;}
+.data-row:last-child{border-bottom:none;}
+.data-label{color:#64748b;}
+.data-value{color:#EAB308;font-weight:600;}
+.controls-panel{background:#0f172a;border-top:1px solid #1e293b;padding:10px 16px;flex-shrink:0;}
+.controls-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.slider-group{display:flex;flex-direction:column;gap:2px;min-width:160px;}
+.slider-group label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between;}
+.slider-group input[type=range]{width:100%;accent-color:#EAB308;}
+.preset-btn{background:#1e293b;border:1px solid #334155;color:#cbd5e1;padding:4px 10px;border-radius:6px;font-size:0.7rem;cursor:pointer;transition:all 0.2s;}
+.preset-btn:hover,.preset-btn.active{background:#EAB308;color:#000;border-color:#EAB308;}
+.speed-btn{background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:3px 8px;border-radius:4px;font-size:0.68rem;cursor:pointer;}
+.speed-btn.active{background:#84CC16;color:#000;border-color:#84CC16;}
+.ctrl-btn{background:#1e293b;border:1px solid #334155;color:#cbd5e1;padding:4px 12px;border-radius:6px;font-size:0.72rem;cursor:pointer;}
+.ctrl-btn:hover{background:#334155;}
+.quiz-panel{background:#0f172a;border-top:1px solid #1e293b;padding:10px 16px;flex-shrink:0;}
+.quiz-toggle{cursor:pointer;color:#EAB308;font-size:0.75rem;font-weight:700;user-select:none;}
+.quiz-content{display:none;margin-top:8px;}
+.quiz-content.open{display:block;}
+.quiz-q{font-size:0.72rem;color:#e2e8f0;margin-bottom:4px;font-weight:600;}
+.quiz-options label{display:block;font-size:0.7rem;color:#94a3b8;margin:2px 0;cursor:pointer;}
+.check-btn{background:linear-gradient(135deg,#EAB308,#84CC16);color:#000;border:none;padding:4px 14px;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer;margin-top:6px;}
+.quiz-feedback{font-size:0.7rem;margin-top:4px;padding:3px 8px;border-radius:4px;}
+.feedback-correct{background:#14532d;color:#86efac;}
+.feedback-wrong{background:#450a0a;color:#fca5a5;}
+.toast{position:fixed;top:16px;right:16px;background:#1e293b;border:1px solid #EAB308;color:#f1f5f9;padding:10px 16px;border-radius:8px;font-size:0.75rem;z-index:9999;transform:translateX(120%);transition:transform 0.3s ease;max-width:240px;}
+.toast.show{transform:translateX(0);}
+.kcard{background:#1e293b;border-left:3px solid #EAB308;border-radius:4px;padding:6px 10px;margin:5px 0;font-size:0.7rem;color:#cbd5e1;}
+</style>
+</head>
+<body>
+<div class="navbar">
+  <div><h1>⭐ Stars & Space</h1><p>K5 Earth Science — Grades 3-5 | Ages 8-11</p></div>
+  <div style="display:flex;gap:8px;">
+    <button class="ctrl-btn" id="btnReset">Reset</button>
+    <button class="ctrl-btn" id="btnFullscreen">⛶ Fullscreen</button>
+  </div>
+</div>
+
+<div class="main-area">
+  <div class="sidebar">
+    <h3>Learning Objectives</h3>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Classify stars by color, size, and temperature</span></div>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Explain what a star is and how it produces energy</span></div>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Understand the stellar lifecycle from nebula to remnant</span></div>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Identify familiar constellations and our solar system's place</span></div>
+
+    <h3>Key Formulas</h3>
+    <div class="formula-box" id="formula1"></div>
+    <div class="formula-box" id="formula2"></div>
+
+    <h3>Star Types by Color</h3>
+    <div class="kcard">🔵 <strong>Blue/White Stars</strong> — Hottest (10,000–50,000 K). Burn bright but die young. (e.g., Rigel)</div>
+    <div class="kcard">⚪ <strong>White Stars</strong> — Very hot (~7,000 K). (e.g., Sirius)</div>
+    <div class="kcard">🌕 <strong>Yellow Stars</strong> — Medium temperature (~6,000 K). Our Sun is a yellow dwarf!</div>
+    <div class="kcard">🟠 <strong>Orange Stars</strong> — Cooler (~4,000 K). (e.g., Arcturus)</div>
+    <div class="kcard">🔴 <strong>Red Stars</strong> — Coolest (~3,000 K). Can be red dwarfs (tiny, long-lived) or red giants (dying).</div>
+
+    <h3>Stellar Lifecycle</h3>
+    <p>Nebula → Protostar → Main Sequence Star → Red Giant/Supergiant → White Dwarf / Neutron Star / Black Hole</p>
+    <p>Our Sun is about <strong style="color:#EAB308">halfway through its 10-billion-year life</strong>.</p>
+
+    <h3>Fun Facts</h3>
+    <p>The nearest star beyond our Sun is Proxima Centauri, ~4.24 light-years away. Light from it takes over 4 years to reach us!</p>
+    <p>There are more stars in the universe than grains of sand on all Earth's beaches combined.</p>
+
+    <h3>Why It Matters</h3>
+    <p>Stars forge the chemical elements inside them through nuclear fusion. Every atom of carbon, oxygen, and iron in your body was made in a star!</p>
+  </div>
+
+  <div class="canvas-container">
+    <canvas id="threeCanvas"></canvas>
+    <div class="data-overlay">
+      <div style="font-size:0.65rem;color:#EAB308;font-weight:700;margin-bottom:4px;">LIVE DATA</div>
+      <div class="data-row"><span class="data-label">Star Count</span><span class="data-value" id="dCount">500</span></div>
+      <div class="data-row"><span class="data-label">Nearest Star</span><span class="data-value" id="dNearest">4.24 ly</span></div>
+      <div class="data-row"><span class="data-label">Closest Type</span><span class="data-value" id="dType">Red Dwarf</span></div>
+      <div class="data-row"><span class="data-label">Magnitude</span><span class="data-value" id="dMag">11.1</span></div>
+      <div class="data-row"><span class="data-label">View Mode</span><span class="data-value" id="dMode">Night Sky</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="controls-panel">
+  <div class="controls-row">
+    <div class="slider-group">
+      <label>Star Count <span id="lblCount">500</span></label>
+      <input type="range" id="sliderCount" min="100" max="3000" step="50" value="500">
+    </div>
+    <div class="slider-group">
+      <label>Zoom Level <span id="lblZoom">1.0x</span></label>
+      <input type="range" id="sliderZoom" min="0.3" max="5" step="0.1" value="1">
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:0.68rem;color:#64748b;">Presets:</span>
+      <button class="preset-btn" id="presetNight">Night Sky</button>
+      <button class="preset-btn" id="presetMilkyWay">Milky Way Core</button>
+      <button class="preset-btn" id="presetNearby">Nearby Stars</button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center;">
+      <span style="font-size:0.68rem;color:#64748b;">Speed:</span>
+      <button class="speed-btn" data-speed="0.25">0.25x</button>
+      <button class="speed-btn" data-speed="0.5">0.5x</button>
+      <button class="speed-btn active" data-speed="1">1x</button>
+      <button class="speed-btn" data-speed="2">2x</button>
+      <button class="speed-btn" data-speed="3">3x</button>
+    </div>
+    <button class="ctrl-btn" id="btnPlayPause">⏸ Pause</button>
+  </div>
+</div>
+
+<div class="quiz-panel">
+  <div class="quiz-toggle" id="quizToggle">▶ Quiz — Test Your Knowledge</div>
+  <div class="quiz-content" id="quizContent">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px;">
+      <div>
+        <div class="quiz-q">Q1: What color is the hottest type of star?</div>
+        <div class="quiz-options">
+          <label><input type="radio" name="q1" value="a"> Red</label>
+          <label><input type="radio" name="q1" value="b"> Yellow</label>
+          <label><input type="radio" name="q1" value="c"> Blue-White</label>
+        </div>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div>
+        <div class="quiz-q">Q2: What type of star is our Sun?</div>
+        <div class="quiz-options">
+          <label><input type="radio" name="q2" value="a"> Red Giant</label>
+          <label><input type="radio" name="q2" value="b"> Yellow Dwarf</label>
+          <label><input type="radio" name="q2" value="c"> Blue Supergiant</label>
+        </div>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+      <div>
+        <div class="quiz-q">Q3: A light-year is a unit of…</div>
+        <div class="quiz-options">
+          <label><input type="radio" name="q3" value="a"> Time</label>
+          <label><input type="radio" name="q3" value="b"> Distance</label>
+          <label><input type="radio" name="q3" value="c"> Brightness</label>
+        </div>
+        <div class="quiz-feedback" id="fb3"></div>
+      </div>
+    </div>
+    <button class="check-btn" id="checkAnswers">Check Answers</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this, STATE = { NONE: -1, ROTATE: 0 }, state = STATE.NONE;
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical(), scale = 1;
+  var target = new THREE.Vector3(), rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var onMouseDown = function(e) { if (!scope.enabled) return; state = STATE.ROTATE; rotateStart.set(e.clientX, e.clientY); };
+  var onMouseMove = function(e) { if (!scope.enabled || state === STATE.NONE) return; rotateEnd.set(e.clientX, e.clientY); rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005); sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y; rotateStart.copy(rotateEnd); };
+  var onMouseUp = function() { state = STATE.NONE; };
+  var onWheel = function(e) { if (!scope.enabled) return; scale *= (e.deltaY > 0) ? 1.1 : 0.9; e.preventDefault(); };
+  var onTouchStart = function(e) { if (e.touches.length === 1) { state = STATE.ROTATE; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); } };
+  var onTouchMove = function(e) { if (e.touches.length === 1 && state === STATE.ROTATE) { rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY); rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005); sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y; rotateStart.copy(rotateEnd); } e.preventDefault(); };
+  domElement.addEventListener('mousedown', onMouseDown); domElement.addEventListener('mousemove', onMouseMove); domElement.addEventListener('mouseup', onMouseUp);
+  domElement.addEventListener('wheel', onWheel, { passive: false }); domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+  domElement.addEventListener('touchmove', onTouchMove, { passive: false }); domElement.addEventListener('touchend', onMouseUp);
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0, 1, 0));
+    var quatInverse = quat.clone().invert();
+    offset.copy(camera.position).sub(target); offset.applyQuaternion(quat); spherical.setFromVector3(offset);
+    if (scope.enableDamping) { spherical.theta += sphericalDelta.theta * scope.dampingFactor; spherical.phi += sphericalDelta.phi * scope.dampingFactor; sphericalDelta.theta *= (1 - scope.dampingFactor); sphericalDelta.phi *= (1 - scope.dampingFactor); } else { spherical.theta += sphericalDelta.theta; spherical.phi += sphericalDelta.phi; sphericalDelta.set(0, 0, 0); }
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    scale = 1; offset.setFromSpherical(spherical); offset.applyQuaternion(quatInverse);
+    camera.position.copy(target).add(offset); camera.lookAt(target);
+  };
+  this.dispose = function() { domElement.removeEventListener('mousedown', onMouseDown); domElement.removeEventListener('mousemove', onMouseMove); domElement.removeEventListener('mouseup', onMouseUp); domElement.removeEventListener('wheel', onWheel); domElement.removeEventListener('touchstart', onTouchStart); domElement.removeEventListener('touchmove', onTouchMove); domElement.removeEventListener('touchend', onMouseUp); };
+};
+
+var canvas = document.getElementById('threeCanvas');
+var container = canvas.parentElement;
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth, container.clientHeight);
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020408);
+
+var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 5000);
+camera.position.set(0, 0, 50);
+camera.lookAt(0, 0, 0);
+
+var controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 5;
+controls.maxDistance = 300;
+
+// Lighting
+var keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7);
+scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0x4444ff, 0.4);
+fillLight.position.set(-5, 5, -5);
+scene.add(fillLight);
+var backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+scene.add(backLight);
+scene.add(new THREE.AmbientLight(0x111122, 0.5));
+
+// Star color types
+var starTypes = [
+  { name: 'Blue Supergiant', color: 0x8899ff, size: 0.8, prob: 0.02, temp: '25,000K' },
+  { name: 'Blue-White', color: 0xaabbff, size: 0.5, prob: 0.05, temp: '10,000K' },
+  { name: 'White', color: 0xeeeeff, size: 0.4, prob: 0.1, temp: '7,500K' },
+  { name: 'Yellow Dwarf', color: 0xffeeaa, size: 0.35, prob: 0.15, temp: '6,000K' },
+  { name: 'Orange', color: 0xff9944, size: 0.3, prob: 0.18, temp: '4,500K' },
+  { name: 'Red Dwarf', color: 0xff4422, size: 0.2, prob: 0.45, temp: '3,000K' },
+  { name: 'Red Giant', color: 0xff2200, size: 1.2, prob: 0.05, temp: '3,500K' }
+];
+
+// Create star field
+var MAX_STARS = 3000;
+var starMeshes = [];
+var starData = [];
+
+function pickStarType() {
+  var r = Math.random();
+  var cum = 0;
+  for (var i = 0; i < starTypes.length; i++) {
+    cum += starTypes[i].prob;
+    if (r < cum) return i;
+  }
+  return starTypes.length - 1;
+}
+
+function createStars(count, spread) {
+  // Clear old stars
+  starMeshes.forEach(function(s) { scene.remove(s); });
+  starMeshes = []; starData = [];
+
+  for (var si = 0; si < count; si++) {
+    var typeIdx = pickStarType();
+    var st = starTypes[typeIdx];
+    var geo = new THREE.SphereGeometry(st.size * (0.5 + Math.random() * 0.5), 6, 6);
+    var mat = new THREE.MeshBasicMaterial({ color: st.color });
+    var mesh = new THREE.Mesh(geo, mat);
+
+    var theta = Math.random() * Math.PI * 2;
+    var phi = Math.acos(2 * Math.random() - 1);
+    var r = spread * (0.1 + Math.pow(Math.random(), 0.5) * 0.9);
+
+    mesh.position.set(
+      r * Math.sin(phi) * Math.cos(theta),
+      r * Math.sin(phi) * Math.sin(theta) * 0.3,
+      r * Math.cos(phi)
+    );
+    mesh.userData.phase = Math.random() * Math.PI * 2;
+    mesh.userData.typeIdx = typeIdx;
+    scene.add(mesh);
+    starMeshes.push(mesh);
+    starData.push({ type: st.name, color: st.color, dist: r.toFixed(1) });
+  }
+}
+
+// Our Sun
+var sun = new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), new THREE.MeshBasicMaterial({ color: 0xffee66 }));
+sun.position.set(0, 0, 0);
+scene.add(sun);
+
+// Sun corona glow
+var sunGlow = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 24), new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.15, side: THREE.BackSide }));
+scene.add(sunGlow);
+
+// Milky Way band (flat disk of stars)
+var mwGroup = new THREE.Group();
+scene.add(mwGroup);
+var mwVerts = [];
+for (var mi = 0; mi < 5000; mi++) {
+  var mtheta = Math.random() * Math.PI * 2;
+  var mr = 15 + Math.random() * 200;
+  var my = (Math.random() - 0.5) * mr * 0.08;
+  mwVerts.push(Math.cos(mtheta) * mr, my, Math.sin(mtheta) * mr);
+}
+var mwGeo = new THREE.BufferGeometry();
+mwGeo.setAttribute('position', new THREE.Float32BufferAttribute(mwVerts, 3));
+var mwMat = new THREE.PointsMaterial({ color: 0xaaaaee, size: 0.3, transparent: true, opacity: 0.4 });
+mwGroup.add(new THREE.Points(mwGeo, mwMat));
+mwGroup.visible = false;
+
+// Nebula (colorful gas cloud)
+var nebula = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 16, 12),
+  new THREE.MeshBasicMaterial({ color: 0x4422aa, transparent: true, opacity: 0, side: THREE.DoubleSide, wireframe: false })
+);
+nebula.position.set(30, 5, -20);
+scene.add(nebula);
+
+// Constellation lines (Big Dipper approximate)
+var bdPoints = [
+  new THREE.Vector3(-8, 3, -40), new THREE.Vector3(-5, 5, -42), new THREE.Vector3(-2, 4, -41),
+  new THREE.Vector3(1, 6, -43), new THREE.Vector3(4, 4, -40), new THREE.Vector3(6, 2, -38), new THREE.Vector3(8, 4, -37)
+];
+var bdGeo = new THREE.BufferGeometry().setFromPoints(bdPoints);
+var constellationLine = new THREE.Line(bdGeo, new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.5 }));
+constellationLine.visible = false;
+scene.add(constellationLine);
+
+// Constellation stars
+bdPoints.forEach(function(p) {
+  var cs = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0xaaccff }));
+  cs.position.copy(p);
+  scene.add(cs);
+});
+
+// State
+var starCount = 500;
+var zoomLevel = 1.0;
+var isPlaying = true;
+var speedMult = 1.0;
+var time = 0;
+var viewMode = 'Night Sky';
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+createStars(starCount, 80);
+
+renderer.setAnimationLoop(function() {
+  if (isPlaying) time += 0.016 * speedMult;
+
+  // Twinkle effect
+  starMeshes.forEach(function(s) {
+    var t2 = starTypes[s.userData.typeIdx];
+    var twinkle = 0.85 + 0.15 * Math.sin(time * 3 + s.userData.phase);
+    s.material.color.setHex(t2.color);
+    s.scale.setScalar(twinkle);
+  });
+
+  // Slow rotation of whole star field
+  scene.rotation.y += 0.0003 * speedMult;
+
+  // Nebula pulse
+  nebula.material.opacity = 0.05 + 0.03 * Math.sin(time * 0.5);
+  nebula.rotation.y += 0.001 * speedMult;
+
+  // Data
+  var nearestStar = viewMode === 'Nearby Stars' ? '4.24 ly (Proxima Cen)' : viewMode === 'Milky Way Core' ? '26,000 ly (Galactic C)' : '4.24 ly';
+  var nearType = viewMode === 'Nearby Stars' ? 'Red Dwarf' : viewMode === 'Milky Way Core' ? 'Various' : 'Red Dwarf';
+  var mag = viewMode === 'Night Sky' ? '11.1' : viewMode === 'Milky Way Core' ? '-6.5' : '11.1';
+
+  document.getElementById('dCount').textContent = starCount;
+  document.getElementById('dNearest').textContent = nearestStar;
+  document.getElementById('dType').textContent = nearType;
+  document.getElementById('dMag').textContent = mag;
+  document.getElementById('dMode').textContent = viewMode;
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+document.getElementById('sliderCount').addEventListener('input', function() {
+  starCount = parseInt(this.value);
+  document.getElementById('lblCount').textContent = starCount;
+  createStars(starCount, 80);
+});
+
+document.getElementById('sliderZoom').addEventListener('input', function() {
+  zoomLevel = parseFloat(this.value);
+  document.getElementById('lblZoom').textContent = zoomLevel.toFixed(1) + 'x';
+  camera.position.set(0, 0, 50 / zoomLevel);
+  camera.lookAt(0, 0, 0);
+});
+
+document.getElementById('presetNight').addEventListener('click', function() {
+  starCount = 500; zoomLevel = 1.0;
+  document.getElementById('sliderCount').value = 500; document.getElementById('lblCount').textContent = '500';
+  document.getElementById('sliderZoom').value = 1; document.getElementById('lblZoom').textContent = '1.0x';
+  mwGroup.visible = false;
+  constellationLine.visible = true;
+  viewMode = 'Night Sky';
+  createStars(500, 80);
+  camera.position.set(0, 0, 50); camera.lookAt(0, 0, 0);
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  showToast('Night Sky: See stars and constellations from Earth');
+});
+document.getElementById('presetMilkyWay').addEventListener('click', function() {
+  starCount = 2000; zoomLevel = 0.4;
+  document.getElementById('sliderCount').value = 2000; document.getElementById('lblCount').textContent = '2000';
+  document.getElementById('sliderZoom').value = 0.4; document.getElementById('lblZoom').textContent = '0.4x';
+  mwGroup.visible = true;
+  constellationLine.visible = false;
+  viewMode = 'Milky Way Core';
+  createStars(2000, 150);
+  camera.position.set(0, 30, 120); camera.lookAt(0, 0, 0);
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  showToast('Milky Way Core: Our galaxy has 200–400 billion stars!');
+});
+document.getElementById('presetNearby').addEventListener('click', function() {
+  starCount = 150; zoomLevel = 3.0;
+  document.getElementById('sliderCount').value = 150; document.getElementById('lblCount').textContent = '150';
+  document.getElementById('sliderZoom').value = 3; document.getElementById('lblZoom').textContent = '3.0x';
+  mwGroup.visible = false;
+  constellationLine.visible = false;
+  viewMode = 'Nearby Stars';
+  createStars(150, 20);
+  camera.position.set(0, 0, 18); camera.lookAt(0, 0, 0);
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  showToast('Nearby Stars: Our stellar neighborhood within 15 light-years');
+});
+
+document.querySelectorAll('.speed-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    speedMult = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+    this.classList.add('active');
+  });
+});
+
+document.getElementById('btnPlayPause').addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  this.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+});
+
+document.getElementById('btnReset').addEventListener('click', function() {
+  starCount = 500; zoomLevel = 1; isPlaying = true; speedMult = 1; time = 0;
+  viewMode = 'Night Sky';
+  scene.rotation.y = 0;
+  document.getElementById('sliderCount').value = 500; document.getElementById('lblCount').textContent = '500';
+  document.getElementById('sliderZoom').value = 1; document.getElementById('lblZoom').textContent = '1.0x';
+  document.getElementById('btnPlayPause').textContent = '⏸ Pause';
+  document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.speed-btn[data-speed="1"]').classList.add('active');
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  mwGroup.visible = false;
+  constellationLine.visible = true;
+  createStars(500, 80);
+  camera.position.set(0, 0, 50); camera.lookAt(0, 0, 0);
+  showToast('Scene reset');
+});
+
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); isPlaying = !isPlaying; document.getElementById('btnPlayPause').textContent = isPlaying ? '⏸ Pause' : '▶ Play'; }
+  if (e.code === 'KeyR') document.getElementById('btnReset').click();
+});
+
+window.addEventListener('resize', function() {
+  var w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+});
+
+document.getElementById('quizToggle').addEventListener('click', function() {
+  document.getElementById('quizContent').classList.toggle('open');
+  this.textContent = document.getElementById('quizContent').classList.contains('open') ? '▼ Quiz — Test Your Knowledge' : '▶ Quiz — Test Your Knowledge';
+});
+
+document.getElementById('checkAnswers').addEventListener('click', function() {
+  var answers = { q1: 'c', q2: 'b', q3: 'b' };
+  var score = 0;
+  ['q1','q2','q3'].forEach(function(q, i) {
+    var sel = document.querySelector('input[name="' + q + '"]:checked');
+    var fb = document.getElementById('fb' + (i + 1));
+    if (!sel) { fb.textContent = 'Please select an answer.'; fb.className = 'quiz-feedback feedback-wrong'; return; }
+    if (sel.value === answers[q]) { fb.textContent = '✓ Correct!'; fb.className = 'quiz-feedback feedback-correct'; score++; }
+    else { fb.textContent = '✗ Not quite!'; fb.className = 'quiz-feedback feedback-wrong'; }
+  });
+  if (score === 3) showToast('⭐ Perfect! You are a star expert!');
+  else showToast(score + '/3 — keep exploring the cosmos!');
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  katex.render('E = mc^2 \\quad (\\text{stellar fusion})', document.getElementById('formula1'), { throwOnError: false, displayMode: true });
+  katex.render('d = v_{\\text{light}} \\times t \\quad (1 \\text{ ly} \\approx 9.46 \\times 10^{15} \\text{ m})', document.getElementById('formula2'), { throwOnError: false, displayMode: true });
+});
+
+// Hertzsprung-Russell diagram overlay (small inset)
+var hrPanel = document.createElement('div');
+hrPanel.style.cssText = 'position:absolute;bottom:10px;right:10px;background:rgba(15,23,42,0.9);border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:0.68rem;color:#94a3b8;min-width:200px;';
+hrPanel.innerHTML = '<div style="color:#EAB308;font-weight:700;margin-bottom:3px;">H-R DIAGRAM (Simplified)</div>' +
+  '<canvas id="hrCanvas" width="185" height="90" style="display:block;border-radius:4px;"></canvas>';
+document.querySelector('.canvas-container').appendChild(hrPanel);
+
+function drawHRDiagram() {
+  var hc = document.getElementById('hrCanvas');
+  if (!hc) return;
+  var ctx4 = hc.getContext('2d');
+  ctx4.fillStyle = '#050a14';
+  ctx4.fillRect(0, 0, 185, 90);
+
+  // Axes
+  ctx4.strokeStyle = '#334155';
+  ctx4.strokeRect(20, 5, 160, 80);
+
+  // Labels
+  ctx4.fillStyle = '#64748b';
+  ctx4.font = '8px monospace';
+  ctx4.fillText('Hot ←', 22, 82);
+  ctx4.fillText('→ Cool', 140, 82);
+  ctx4.fillText('Bright', 2, 15);
+  ctx4.fillText('Dim', 4, 78);
+
+  // Main sequence diagonal
+  ctx4.beginPath();
+  ctx4.strokeStyle = '#4466aa';
+  ctx4.lineWidth = 12;
+  ctx4.globalAlpha = 0.3;
+  ctx4.moveTo(22, 8);
+  ctx4.lineTo(178, 83);
+  ctx4.stroke();
+  ctx4.globalAlpha = 1;
+  ctx4.lineWidth = 1;
+
+  // Plot star types
+  var plotData = [
+    { x: 30, y: 10, color: '#8899ff', r: 4, label: 'Blue' },
+    { x: 55, y: 22, color: '#aabbff', r: 3, label: 'White' },
+    { x: 90, y: 40, color: '#ffeeaa', r: 3.5, label: 'Sun' },
+    { x: 120, y: 55, color: '#ff9944', r: 3, label: 'Orange' },
+    { x: 155, y: 70, color: '#ff4422', r: 2.5, label: 'Red Dwarf' },
+    { x: 40, y: 12, color: '#ff2200', r: 7, label: 'Red Giant' }
+  ];
+
+  plotData.forEach(function(d) {
+    ctx4.beginPath();
+    ctx4.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx4.fillStyle = d.color;
+    ctx4.fill();
+    ctx4.fillStyle = '#888';
+    ctx4.font = '7px monospace';
+    ctx4.fillText(d.label, d.x + d.r + 2, d.y + 3);
+  });
+
+  // Highlight our Sun
+  ctx4.beginPath();
+  ctx4.arc(90, 40, 5, 0, Math.PI * 2);
+  ctx4.strokeStyle = '#ffee44';
+  ctx4.lineWidth = 1;
+  ctx4.stroke();
+
+  ctx4.fillStyle = '#EAB308';
+  ctx4.font = 'bold 7px monospace';
+  ctx4.fillText('← Our Sun', 92, 37);
+}
+
+drawHRDiagram();
+
+// Star color legend panel
+var legendPanel = document.createElement('div');
+legendPanel.style.cssText = 'position:absolute;top:12px;right:12px;background:rgba(15,23,42,0.85);border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:0.68rem;min-width:160px;';
+legendPanel.innerHTML = '<div style="color:#EAB308;font-weight:700;margin-bottom:3px;">STAR COLOR KEY</div>' +
+  '<div style="display:flex;align-items:center;gap:5px;margin:2px 0;"><div style="width:8px;height:8px;background:#8899ff;border-radius:50%;"></div><span style="color:#94a3b8;">Blue — hottest (50,000K)</span></div>' +
+  '<div style="display:flex;align-items:center;gap:5px;margin:2px 0;"><div style="width:8px;height:8px;background:#eeeeff;border-radius:50%;"></div><span style="color:#94a3b8;">White (7,500K)</span></div>' +
+  '<div style="display:flex;align-items:center;gap:5px;margin:2px 0;"><div style="width:8px;height:8px;background:#ffeeaa;border-radius:50%;"></div><span style="color:#94a3b8;">Yellow — our Sun (6,000K)</span></div>' +
+  '<div style="display:flex;align-items:center;gap:5px;margin:2px 0;"><div style="width:8px;height:8px;background:#ff9944;border-radius:50%;"></div><span style="color:#94a3b8;">Orange (4,500K)</span></div>' +
+  '<div style="display:flex;align-items:center;gap:5px;margin:2px 0;"><div style="width:8px;height:8px;background:#ff4422;border-radius:50%;"></div><span style="color:#94a3b8;">Red — coolest (3,000K)</span></div>';
+document.querySelector('.canvas-container').appendChild(legendPanel);
+
+// Shooting star periodic effect
+var shootingStar = new THREE.Mesh(
+  new THREE.SphereGeometry(0.2, 6, 6),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 })
+);
+scene.add(shootingStar);
+
+var shootingTrail = [];
+for (var sti = 0; sti < 15; sti++) {
+  var stm = new THREE.Mesh(
+    new THREE.SphereGeometry(0.05, 4, 4),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 })
+  );
+  scene.add(stm);
+  shootingTrail.push(stm);
+}
+
+var shootTimer = 0;
+var shootActive = false;
+var shootPos = new THREE.Vector3();
+var shootDir = new THREE.Vector3();
+
+setInterval(function() {
+  shootTimer++;
+  if (shootTimer > 200) { // trigger every ~10 seconds
+    shootTimer = 0;
+    shootActive = true;
+    shootPos.set(-50 + Math.random() * 100, 30 + Math.random() * 20, -60 - Math.random() * 40);
+    shootDir.set(0.8 + Math.random() * 0.4, -0.6 - Math.random() * 0.3, 0.2);
+    shootDir.normalize().multiplyScalar(0.8);
+  }
+
+  if (shootActive) {
+    shootPos.add(shootDir);
+    shootingStar.position.copy(shootPos);
+    shootingStar.material.opacity = 1;
+    shootingTrail.forEach(function(t, i) {
+      t.position.set(shootPos.x - shootDir.x * i * 1.5, shootPos.y - shootDir.y * i * 1.5, shootPos.z - shootDir.z * i * 1.5);
+      t.material.opacity = (1 - i / 15) * 0.6;
+    });
+    if (shootPos.y < -30) {
+      shootActive = false;
+      shootingStar.material.opacity = 0;
+      shootingTrail.forEach(function(t) { t.material.opacity = 0; });
+    }
+  }
+}, 50);
+
+// Extra keyboard: G = go to Milky Way
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'KeyG') document.getElementById('presetMilkyWay').click();
+  if (e.code === 'KeyN') document.getElementById('presetNight').click();
+});
+</script>
+</body>
+</html>

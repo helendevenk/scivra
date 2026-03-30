@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecological Succession</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #1e293b; } ::-webkit-scrollbar-thumb { background: #10B981; border-radius: 2px; }
+  .glass { background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.13); }
+  .bio-gradient { background: linear-gradient(135deg, #10B981 0%, #22D3EE 100%); }
+  .bio-text { background: linear-gradient(135deg, #10B981 0%, #22D3EE 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, #10B981, #22D3EE); cursor: pointer; }
+  .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: linear-gradient(135deg, #10B981, #22D3EE); color: #0f172a; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost { background: rgba(255,255,255,0.07); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.13); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+  .speed-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #94a3b8; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .speed-btn.active { background: linear-gradient(135deg, #10B981, #22D3EE); color: #0f172a; border-color: transparent; }
+  #toast { position: fixed; top: 70px; right: 20px; z-index: 9999; pointer-events: none; }
+  .toast-item { background: rgba(16,185,129,0.9); color: white; padding: 10px 18px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; font-weight: 600; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  #sidebar { width: 300px; min-width: 300px; overflow-y: auto; }
+  .stage-indicator { height: 6px; border-radius: 3px; transition: width 0.5s ease; }
+</style>
+</head>
+<body>
+
+<nav class="glass fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3" style="border-bottom: 1px solid rgba(16,185,129,0.3);">
+  <div>
+    <span class="text-lg font-bold bio-text">Ecological Succession</span>
+    <span class="text-slate-400 text-sm ml-2">Primary & Secondary · Climax Community</span>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost" onclick="resetSim()">Reset</button>
+    <button class="btn btn-ghost" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="btn btn-ghost" onclick="showAbout()">About</button>
+  </div>
+</nav>
+
+<div id="toast"></div>
+
+<div class="flex h-screen pt-12">
+  <div id="sidebar" class="glass p-4 flex flex-col gap-4" style="border-right: 1px solid rgba(16,185,129,0.2);">
+
+    <div>
+      <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Key Formulas</h3>
+      <div class="glass rounded-lg p-3 mb-2">
+        <div id="formula1" class="text-center mb-1"></div>
+        <p class="text-xs text-slate-400 mt-1">Shannon diversity index — measures species evenness and richness</p>
+      </div>
+      <div class="glass rounded-lg p-3">
+        <div id="formula2" class="text-center mb-1"></div>
+        <p class="text-xs text-slate-400 mt-1">Biomass accumulates faster early, slows near climax community</p>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">Succession Stages</h3>
+      <div class="flex flex-col gap-2">
+        <div class="glass rounded-lg p-2">
+          <p class="text-xs font-bold text-slate-200">Stage 1: Pioneer (0–15 yr)</p>
+          <p class="text-xs text-slate-400">Lichens, mosses, bare rock microbes. Soil formation begins.</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <p class="text-xs font-bold text-slate-200">Stage 2: Annual Plants (15–40 yr)</p>
+          <p class="text-xs text-slate-400">Grasses and fast-growing annuals establish thin soil layer.</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <p class="text-xs font-bold text-slate-200">Stage 3: Shrubs (40–100 yr)</p>
+          <p class="text-xs text-slate-400">Woody shrubs dominate, creating shade and deeper root systems.</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <p class="text-xs font-bold text-slate-200">Stage 4: Young Forest (100–250 yr)</p>
+          <p class="text-xs text-slate-400">Pioneer trees (birch, aspen) colonize. Diversity peaks.</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <p class="text-xs font-bold text-emerald-300">Stage 5: Climax Forest (250+ yr)</p>
+          <p class="text-xs text-slate-400">Stable old-growth community. Shade-tolerant trees dominate.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-lg p-3">
+      <p class="text-xs font-bold text-cyan-300 mb-1">Primary vs Secondary</p>
+      <p class="text-xs text-slate-400">Primary: starts on bare substrate (no soil). Secondary: disturbed area with existing soil — much faster recovery.</p>
+    </div>
+
+    <div class="glass rounded-lg p-3">
+      <p class="text-xs font-bold text-emerald-300 mb-1">AP Biology Connection</p>
+      <p class="text-xs text-slate-400">AP Bio Unit 8 — Community ecology, species interactions, and the concept of a climax community with stable biodiversity.</p>
+    </div>
+
+    <!-- Stage Progress -->
+    <div>
+      <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Succession Progress</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Pioneer</span><span id="stage-label" class="text-emerald-300 font-bold">Pioneer</span></div>
+        <div class="bg-slate-800 rounded-full h-2 overflow-hidden">
+          <div id="stage-bar" class="stage-indicator bio-gradient" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 flex flex-col relative">
+    <div id="canvas-container" class="flex-1 relative"></div>
+
+    <!-- Data overlay -->
+    <div class="glass absolute top-3 left-3 p-3 rounded-xl" style="min-width:200px; font-variant-numeric: tabular-nums;">
+      <p class="text-xs text-emerald-400 font-bold mb-2">ECOSYSTEM DATA</p>
+      <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Years elapsed</span><span id="d-years" class="text-green-300 font-mono">0</span></div>
+      <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Species count</span><span id="d-species" class="text-cyan-300 font-mono">1</span></div>
+      <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Biomass (t/ha)</span><span id="d-biomass" class="text-emerald-300 font-mono">0.0</span></div>
+      <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Shannon H'</span><span id="d-diversity" class="text-yellow-300 font-mono">0.00</span></div>
+      <div class="flex justify-between text-xs"><span class="text-slate-400">Disturbance</span><span id="d-disturb" class="text-red-300 font-mono">0%</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="glass fixed bottom-0 left-0 right-0 px-5 py-3" style="border-top: 1px solid rgba(16,185,129,0.2);">
+  <div class="flex gap-6 items-center flex-wrap">
+    <div class="flex gap-2 items-center">
+      <button class="btn btn-primary" id="playBtn" onclick="togglePlay()">⏸ Pause</button>
+      <button class="btn btn-ghost" onclick="resetSim()">↺ Reset</button>
+    </div>
+    <div class="flex gap-1 items-center">
+      <span class="text-xs text-slate-500 mr-1">Speed</span>
+      <button class="speed-btn" onclick="setSpeed(0.25,'0.25x')">0.25x</button>
+      <button class="speed-btn" onclick="setSpeed(0.5,'0.5x')">0.5x</button>
+      <button class="speed-btn active" onclick="setSpeed(1,'1x')">1x</button>
+      <button class="speed-btn" onclick="setSpeed(2,'2x')">2x</button>
+      <button class="speed-btn" onclick="setSpeed(3,'3x')">3x</button>
+    </div>
+    <div class="flex gap-2 items-center">
+      <span class="text-xs text-slate-500">Preset</span>
+      <button class="btn btn-ghost text-xs" onclick="loadPreset('primary')">Primary (bare rock)</button>
+      <button class="btn btn-ghost text-xs" onclick="loadPreset('secondary')">Secondary (after fire)</button>
+      <button class="btn btn-ghost text-xs" onclick="loadPreset('rainforest')">Rainforest Dev.</button>
+    </div>
+    <div class="flex gap-4 flex-wrap flex-1">
+      <div class="flex flex-col gap-1 min-w-[130px]">
+        <label class="text-xs text-slate-400">Time speed: <span id="lbl-tspeed" class="text-emerald-300">10 yr/s</span></label>
+        <input type="range" id="sl-tspeed" min="1" max="100" step="1" value="10" oninput="updateTSpeed(this.value)">
+      </div>
+      <div class="flex flex-col gap-1 min-w-[130px]">
+        <label class="text-xs text-slate-400">Disturbance: <span id="lbl-disturb" class="text-emerald-300">0%</span></label>
+        <input type="range" id="sl-disturb" min="0" max="100" step="5" value="0" oninput="updateDisturb(this.value)">
+      </div>
+      <div class="flex flex-col gap-1 min-w-[130px]">
+        <label class="text-xs text-slate-400">Rainfall: <span id="lbl-rain" class="text-emerald-300">Medium</span></label>
+        <input type="range" id="sl-rain" min="0" max="2" step="1" value="1" oninput="updateRain(this.value)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz -->
+<div id="quiz-panel" class="glass fixed right-4 bottom-20 w-80 p-4 rounded-xl" style="border: 1px solid rgba(16,185,129,0.3); z-index: 100;">
+  <div class="flex justify-between items-center mb-3">
+    <h3 class="text-sm font-bold bio-text">Quick Quiz</h3>
+    <button onclick="toggleQuiz()" class="text-slate-400 hover:text-white text-lg">×</button>
+  </div>
+  <div id="q1" class="mb-3">
+    <p class="text-xs text-slate-300 mb-2">1. What makes secondary succession faster than primary succession?</p>
+    <div class="flex flex-col gap-1">
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q1" value="a"> <span>More rainfall in disturbed areas</span></label>
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q1" value="b"> <span>Pre-existing soil and seed bank are retained</span></label>
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q1" value="c"> <span>Fewer competing species</span></label>
+    </div>
+    <button class="btn btn-primary text-xs mt-2" onclick="checkQ(1,'b','Correct! Soil and seed banks allow rapid recolonization — skipping the slow pioneer stage of rock weathering.')">Check</button>
+    <p id="q1-feedback" class="text-xs mt-1 hidden"></p>
+  </div>
+  <div id="q2" class="mb-3">
+    <p class="text-xs text-slate-300 mb-2">2. During succession, species diversity (Shannon H') typically:</p>
+    <div class="flex flex-col gap-1">
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q2" value="a"> <span>Increases monotonically to a maximum at climax</span></label>
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q2" value="b"> <span>Peaks at intermediate stages then slightly decreases</span></label>
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q2" value="c"> <span>Stays constant throughout succession</span></label>
+    </div>
+    <button class="btn btn-primary text-xs mt-2" onclick="checkQ(2,'b','Correct! Diversity often peaks at mid-succession (intermediate disturbance hypothesis). Climax forests have fewer but dominant species.')">Check</button>
+    <p id="q2-feedback" class="text-xs mt-1 hidden"></p>
+  </div>
+  <div id="q3">
+    <p class="text-xs text-slate-300 mb-2">3. A "climax community" is best described as:</p>
+    <div class="flex flex-col gap-1">
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q3" value="a"> <span>The most species-rich stage of succession</span></label>
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q3" value="b"> <span>A self-perpetuating community in dynamic equilibrium with local climate</span></label>
+      <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="radio" name="q3" value="c"> <span>A community that never experiences disturbance</span></label>
+    </div>
+    <button class="btn btn-primary text-xs mt-2" onclick="checkQ(3,'b','Correct! A climax community is stable relative to the regional climate — self-replacing unless major disturbance occurs.')">Check</button>
+    <p id="q3-feedback" class="text-xs mt-1 hidden"></p>
+  </div>
+</div>
+<button id="quiz-fab" onclick="toggleQuiz()" class="hidden fixed right-4 bottom-20 bio-gradient text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg z-50">Quiz</button>
+
+<div id="about-modal" class="hidden fixed inset-0 bg-black/60 z-[200] flex items-center justify-center">
+  <div class="glass p-6 rounded-2xl max-w-md w-full mx-4">
+    <h2 class="text-lg font-bold bio-text mb-3">Ecological Succession</h2>
+    <p class="text-sm text-slate-300 mb-3">3D time-lapse of ecosystem development from bare rock to mature forest.</p>
+    <p class="text-xs text-slate-400 mb-3"><strong>Shortcuts:</strong> Space = Play/Pause · R = Reset · 1-5 = Speed</p>
+    <button class="btn btn-primary" onclick="document.getElementById('about-modal').classList.add('hidden')">Close</button>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// State
+let yearsElapsed = 0;
+let timeSpeed = 10; // years per real second
+let disturbance = 0;
+let rainfall = 1; // 0=low, 1=medium, 2=high
+let rainfallMultiplier = 1.0;
+let isPlaying = true;
+let speedFactor = 1;
+let startYear = 0; // for preset offsets
+
+// Stage thresholds (years)
+const STAGES = [
+  { name: 'Bare Rock', maxYr: 5, color: 0x5a4a3a },
+  { name: 'Pioneer', maxYr: 40, color: 0x8b9467 },
+  { name: 'Shrubs', maxYr: 100, color: 0x4a7c3f },
+  { name: 'Young Forest', maxYr: 250, color: 0x2d6b2f },
+  { name: 'Climax Forest', maxYr: Infinity, color: 0x1a4a1e }
+];
+
+// Three.js
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 20, 30);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 8; controls.maxDistance = 60;
+
+// Lighting
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+scene.add(keyLight);
+scene.add(new THREE.DirectionalLight(0xffffff, 0.4).position.set(-5,5,-5) && new THREE.DirectionalLight(0xffffff, 0.4));
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+// Ground plane that changes color with stage
+const groundGeo = new THREE.PlaneGeometry(30, 30, 1, 1);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x3b2e1e, roughness: 0.9 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Trees and vegetation objects
+const plantObjects = [];
+const NUM_PLANTS = 80;
+const plantData = [];
+
+// Initialize plant positions
+for (let i = 0; i < NUM_PLANTS; i++) {
+  const angle = Math.random() * Math.PI * 2;
+  const r = Math.random() * 13;
+  plantData.push({
+    x: Math.cos(angle) * r,
+    z: Math.sin(angle) * r,
+    growthStart: Math.random() * 300, // year this plant starts growing
+    type: Math.floor(Math.random() * 5), // 0=moss, 1=grass, 2=shrub, 3=young tree, 4=tall tree
+    scale: 0,
+    targetScale: 1 + Math.random() * 0.5
+  });
+  plantObjects.push(null);
+}
+
+function createPlant(type, scale) {
+  const group = new THREE.Group();
+  if (type === 0) {
+    // Moss / pioneer: small flat disk
+    const geo = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 6);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8fbe6a });
+    group.add(new THREE.Mesh(geo, mat));
+  } else if (type === 1) {
+    // Grass: thin cone
+    const geo = new THREE.ConeGeometry(0.1, 0.6, 5);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x90c060 });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.y = 0.3;
+    group.add(m);
+  } else if (type === 2) {
+    // Shrub: sphere on cylinder
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.8, 5), new THREE.MeshStandardMaterial({ color: 0x6b4226 }));
+    trunk.position.y = 0.4;
+    const foliage = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a8040 }));
+    foliage.position.y = 1.1;
+    group.add(trunk, foliage);
+  } else if (type === 3) {
+    // Young tree: taller cone on cylinder
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.15, 2, 6), new THREE.MeshStandardMaterial({ color: 0x5c3a1e }));
+    trunk.position.y = 1;
+    const foliage = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2, 7), new THREE.MeshStandardMaterial({ color: 0x2d6b2f }));
+    foliage.position.y = 3;
+    group.add(trunk, foliage);
+  } else {
+    // Tall tree: large canopy
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 3.5, 7), new THREE.MeshStandardMaterial({ color: 0x3d2409 }));
+    trunk.position.y = 1.75;
+    const foliage = new THREE.Mesh(new THREE.SphereGeometry(1.5, 9, 7), new THREE.MeshStandardMaterial({ color: 0x1a5922 }));
+    foliage.position.y = 4.5;
+    group.add(trunk, foliage);
+  }
+  group.scale.set(scale, scale, scale);
+  return group;
+}
+
+function getStageIndex(years) {
+  for (let i = 0; i < STAGES.length - 1; i++) {
+    if (years < STAGES[i + 1].maxYr) return i;
+  }
+  return STAGES.length - 1;
+}
+
+function computeSpeciesCount(yr) {
+  if (yr < 5) return 1;
+  if (yr < 40) return Math.min(8, Math.floor(yr / 5));
+  if (yr < 100) return Math.min(18, 8 + Math.floor((yr - 40) / 8));
+  if (yr < 250) return Math.min(25, 18 + Math.floor((yr - 100) / 25));
+  return 20 + Math.floor(Math.random() * 3); // slight variation at climax
+}
+
+function computeBiomass(yr, rain) {
+  const rfMult = [0.6, 1.0, 1.4][rain];
+  const base = Math.min(400, yr * 1.2 * rfMult);
+  return base * (1 - disturbance / 100 * 0.5);
+}
+
+function computeShannonH(yr) {
+  const s = computeSpeciesCount(yr);
+  if (s <= 1) return 0;
+  // Simulate diversity peaking mid-succession
+  if (yr < 150) return Math.min(3.2, (yr / 150) * 3.2);
+  return Math.max(2.2, 3.2 - (yr - 150) / 500);
+}
+
+function updateScene(dt) {
+  const stageIdx = getStageIndex(yearsElapsed);
+  const stage = STAGES[stageIdx];
+
+  // Ground color transition
+  const targetColor = new THREE.Color(stageIdx === 0 ? 0x3b2e1e :
+    stageIdx === 1 ? 0x6b7a3a :
+    stageIdx === 2 ? 0x3a6630 :
+    stageIdx === 3 ? 0x2a5428 : 0x1a4020);
+  groundMat.color.lerp(targetColor, 0.02);
+
+  // Update plants
+  plantData.forEach((pd, i) => {
+    const shouldShow = yearsElapsed >= pd.growthStart && stageIdx >= pd.type;
+    if (shouldShow && !plantObjects[i]) {
+      plantObjects[i] = createPlant(pd.type, 0.01);
+      plantObjects[i].position.set(pd.x, 0, pd.z);
+      scene.add(plantObjects[i]);
+    }
+    if (plantObjects[i]) {
+      const s = plantObjects[i].scale.x;
+      const target = shouldShow ? pd.targetScale : 0;
+      const newS = s + (target - s) * 0.03;
+      plantObjects[i].scale.set(newS, newS, newS);
+    }
+  });
+
+  // Stage bar
+  const maxYrForBar = stageIdx < STAGES.length - 1 ? STAGES[stageIdx + 1].maxYr : 400;
+  const minYr = stageIdx > 0 ? STAGES[stageIdx].maxYr : 0;
+  const pct = Math.min(100, ((yearsElapsed - minYr) / (maxYrForBar - minYr)) * 100);
+  document.getElementById('stage-bar').style.width = pct + '%';
+  document.getElementById('stage-label').textContent = stage.name;
+
+  // Data panel
+  document.getElementById('d-years').textContent = Math.round(yearsElapsed) + ' yr';
+  document.getElementById('d-species').textContent = computeSpeciesCount(yearsElapsed);
+  document.getElementById('d-biomass').textContent = computeBiomass(yearsElapsed, rainfall).toFixed(1);
+  document.getElementById('d-diversity').textContent = computeShannonH(yearsElapsed).toFixed(2);
+  document.getElementById('d-disturb').textContent = disturbance + '%';
+}
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let dt = Math.min(clock.getDelta(), 0.05);
+  if (dt > 0.1) dt = 0.02;
+  controls.update();
+  if (isPlaying) {
+    const rfMult = [0.6, 1.0, 1.4][rainfall];
+    yearsElapsed += dt * timeSpeed * speedFactor * rfMult * (1 - disturbance / 200);
+    if (yearsElapsed > 500) yearsElapsed = 500;
+    updateScene(dt);
+  }
+  renderer.render(scene, camera);
+});
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  document.getElementById('playBtn').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+  showToast(isPlaying ? 'Simulation running' : 'Simulation paused');
+}
+
+function resetSim() {
+  yearsElapsed = startYear;
+  plantData.forEach((pd, i) => {
+    if (plantObjects[i]) { scene.remove(plantObjects[i]); plantObjects[i] = null; }
+  });
+  showToast('Simulation reset');
+}
+
+function updateTSpeed(v) {
+  timeSpeed = parseFloat(v);
+  document.getElementById('lbl-tspeed').textContent = v + ' yr/s';
+}
+
+function updateDisturb(v) {
+  disturbance = parseInt(v);
+  document.getElementById('lbl-disturb').textContent = v + '%';
+  document.getElementById('d-disturb').textContent = v + '%';
+}
+
+function updateRain(v) {
+  rainfall = parseInt(v);
+  const labels = ['Low', 'Medium', 'High'];
+  document.getElementById('lbl-rain').textContent = labels[rainfall];
+}
+
+function setSpeed(s, label) {
+  speedFactor = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  showToast('Speed: ' + label);
+}
+
+function loadPreset(name) {
+  const presets = {
+    primary: { start: 0, tspeed: 10, disturb: 0, rain: 1 },
+    secondary: { start: 0, tspeed: 20, disturb: 40, rain: 1 },
+    rainforest: { start: 0, tspeed: 15, disturb: 0, rain: 2 }
+  };
+  const p = presets[name];
+  startYear = p.start;
+  timeSpeed = p.tspeed;
+  disturbance = p.disturb;
+  rainfall = p.rain;
+  document.getElementById('sl-tspeed').value = p.tspeed;
+  document.getElementById('lbl-tspeed').textContent = p.tspeed + ' yr/s';
+  document.getElementById('sl-disturb').value = p.disturb;
+  document.getElementById('lbl-disturb').textContent = p.disturb + '%';
+  document.getElementById('sl-rain').value = p.rain;
+  const names = { primary: 'Primary (bare rock)', secondary: 'Secondary (after fire)', rainforest: 'Rainforest Dev.' };
+  showToast('Preset: ' + names[name]);
+  resetSim();
+}
+
+function checkQ(n, correct, feedback) {
+  const sel = document.querySelector(`input[name="q${n}"]:checked`);
+  const fb = document.getElementById(`q${n}-feedback`);
+  if (!sel) { showToast('Please select an answer'); return; }
+  fb.classList.remove('hidden');
+  fb.style.color = sel.value === correct ? '#22c55e' : '#ef4444';
+  fb.textContent = sel.value === correct ? '✓ ' + feedback : '✗ Not quite. ' + feedback;
+}
+
+let quizVisible = true;
+function toggleQuiz() {
+  quizVisible = !quizVisible;
+  document.getElementById('quiz-panel').classList.toggle('hidden', !quizVisible);
+  document.getElementById('quiz-fab').classList.toggle('hidden', quizVisible);
+}
+
+function showAbout() { document.getElementById('about-modal').classList.remove('hidden'); }
+function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item'; el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.code === 'Digit1') setSpeed(0.25, '0.25x');
+  if (e.code === 'Digit2') setSpeed(0.5, '0.5x');
+  if (e.code === 'Digit3') setSpeed(1, '1x');
+  if (e.code === 'Digit4') setSpeed(2, '2x');
+  if (e.code === 'Digit5') setSpeed(3, '3x');
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  katex.render("H' = -\\sum_{i=1}^{S} p_i \\ln p_i", document.getElementById('formula1'), { throwOnError: false });
+  katex.render('B(t) \\approx B_{\\max}(1 - e^{-rt})', document.getElementById('formula2'), { throwOnError: false });
+});
+</script>
+<!-- Generated by AetherViz Master — witness the living world rebuild itself! -->
+</body>
+</html>

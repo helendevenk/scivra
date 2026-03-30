@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Six Simple Machines — K5 Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(234,179,8,0.95);color:#000;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(234,179,8,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px; }
+  .panel-card { background:rgba(78,63,0,0.6);border:1px solid rgba(234,179,8,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#EAB308,#84CC16);cursor:pointer; }
+  .sidebar { width:30%;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(234,179,8,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(234,179,8,0.4);border-radius:2px;}
+  .btn-preset { padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid rgba(234,179,8,0.4);cursor:pointer;background:rgba(234,179,8,0.15);color:#FDE047;transition:all 0.18s; }
+  .btn-preset:hover { background:rgba(234,179,8,0.3);color:#fff; }
+  .btn-speed { padding:5px 11px;border-radius:6px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#EAB308,#84CC16);color:#000;border-color:#EAB308; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:15px;font-weight:800;color:#FDE047; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:6px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#EAB308;background:rgba(234,179,8,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100; }
+  #quiz-fab { position:fixed;bottom:16px;right:16px;z-index:101;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#EAB308,#84CC16);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:22px;box-shadow:0 4px 16px rgba(234,179,8,0.5); }
+  .machine-btn { padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid rgba(132,204,22,0.3);cursor:pointer;background:rgba(132,204,22,0.1);color:#BEF264;transition:all 0.18s;text-align:center; }
+  .machine-btn:hover, .machine-btn.active { background:rgba(132,204,22,0.3);border-color:#84CC16;color:#fff; }
+</style>
+</head>
+<body>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(234,179,8,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#EAB308,#84CC16);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Six Simple Machines</span>
+    <span class="text-xs text-slate-400 ml-3">Mechanical Advantage · K5 Science</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-3">Key Formula</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-2">Mechanical Advantage: output force divided by input force. Greater than 1 means the machine helps you!</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Work stays the same — simple machines just let you use less force over a greater distance.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-2">Pick a Machine</div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <button class="machine-btn active" id="mb-lever" onclick="selectMachine('lever')">⚖️ Lever</button>
+      <button class="machine-btn" id="mb-wheel" onclick="selectMachine('wheel')">🎡 Wheel & Axle</button>
+      <button class="machine-btn" id="mb-pulley" onclick="selectMachine('pulley')">🪝 Pulley</button>
+      <button class="machine-btn" id="mb-incline" onclick="selectMachine('incline')">📐 Inclined Plane</button>
+      <button class="machine-btn" id="mb-wedge" onclick="selectMachine('wedge')">🪓 Wedge</button>
+      <button class="machine-btn" id="mb-screw" onclick="selectMachine('screw')">🔩 Screw</button>
+    </div>
+    <div id="machine-desc" class="text-xs text-slate-300 leading-relaxed">A lever has a fulcrum (pivot point). Push one side down and the other side goes up! Like a see-saw.</div>
+  </div>
+
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-lime-400 mb-1">Fun Fact</div>
+    <div class="text-xs text-slate-300" id="fun-fact">Archimedes said "Give me a lever long enough and I will move the Earth!" He understood mechanical advantage over 2,000 years ago.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Remember</div>
+    <div class="text-xs text-slate-300">Simple machines don't create energy — they change HOW you apply force. You always do the same total work!</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-lime-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">Simple machines are everywhere: scissors (wedge), doorknobs (wheel & axle), ramps (inclined plane), and bottle caps (screw)!</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-slate-400 mb-1">Keyboard Shortcuts</div>
+    <div class="text-xs text-slate-500">Space: Play/Pause | R: Reset | 1-5: Speed</div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="flex-1 flex flex-col overflow-hidden relative">
+  <div id="canvas-container" class="flex-1 relative">
+    <div id="data-overlay" class="absolute top-3 left-3 glass p-3 z-10" style="min-width:230px;">
+      <div class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Machine Type</span><span class="data-val" id="d-type">Lever</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Input Force</span><span class="data-val" id="d-fin">— N</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Output Force</span><span class="data-val" id="d-fout">— N</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Mech. Advantage</span><span class="data-val" id="d-ma">—</span></div>
+      <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">Efficiency</span><span class="data-val" id="d-eff">—</span></div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="shrink-0 glass p-4" style="border-top:1px solid rgba(234,179,8,0.2);max-height:230px;overflow-y:auto;">
+    <div class="flex flex-wrap gap-4 mb-3">
+      <div class="flex-1 min-w-40">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Input Force (effort)</span><span class="text-yellow-300 font-mono font-bold" id="lbl-fin">10 N</span></label>
+        <input type="range" id="sl-fin" min="1" max="50" step="1" value="10">
+      </div>
+      <div class="flex-1 min-w-40">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Lever Arm Ratio / MA</span><span class="text-yellow-300 font-mono font-bold" id="lbl-ma">3.0</span></label>
+        <input type="range" id="sl-ma" min="1" max="8" step="0.5" value="3">
+      </div>
+      <div class="flex-1 min-w-40">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Load Weight</span><span class="text-yellow-300 font-mono font-bold" id="lbl-load">20 N</span></label>
+        <input type="range" id="sl-load" min="5" max="100" step="5" value="20">
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-xs text-slate-400">Presets:</span>
+      <button class="btn-preset" onclick="applyPreset('lever')">⚖️ Lever (teeter-totter)</button>
+      <button class="btn-preset" onclick="applyPreset('pulley')">🪝 Pulley (flagpole)</button>
+      <button class="btn-preset" onclick="applyPreset('incline')">📐 Inclined Plane (ramp)</button>
+      <div class="ml-auto flex gap-1 items-center">
+        <span class="text-xs text-slate-400">Speed:</span>
+        <button class="btn-speed" id="spd1" onclick="setSpeed(0.25)">0.25x</button>
+        <button class="btn-speed" id="spd2" onclick="setSpeed(0.5)">0.5x</button>
+        <button class="btn-speed active" id="spd3" onclick="setSpeed(1)">1x</button>
+        <button class="btn-speed" id="spd4" onclick="setSpeed(2)">2x</button>
+        <button class="btn-speed" id="spd5" onclick="setSpeed(3)">3x</button>
+        <button class="btn-preset ml-2" id="btn-play" onclick="togglePlay()">⏸ Pause</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Quiz -->
+<div id="quiz-panel" class="glass p-4" style="max-height:420px;overflow-y:auto;">
+  <div class="flex justify-between items-center mb-3">
+    <span class="text-sm font-bold text-yellow-400">Quiz Time! (3 questions)</span>
+    <button onclick="hideQuiz()" class="text-slate-400 hover:text-white text-xs">✕ Hide</button>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+<div id="quiz-fab" onclick="showQuiz()">🎓</div>
+<div id="toast"></div>
+
+<div id="about-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.7);">
+  <div class="glass p-6 max-w-sm w-full mx-4">
+    <div class="font-bold text-yellow-400 mb-2">About: Six Simple Machines</div>
+    <p class="text-xs text-slate-300 mb-3">Explore all six types of simple machines and see how mechanical advantage lets you lift heavy loads with less effort.</p>
+    <button onclick="document.getElementById('about-modal').style.display='none'" class="btn-preset w-full">Close</button>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sd.theta*d; spherical.phi+=sd.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+camera.position.set(0, 8, 22);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.minDistance = 5; controls.maxDistance = 40;
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dir1 = new THREE.DirectionalLight(0xffffff, 0.8);
+dir1.position.set(10, 20, 10); dir1.castShadow = true;
+scene.add(dir1);
+scene.add(new THREE.DirectionalLight(0x84CC16, 0.3).position.set(-10,5,-10));
+const fill2 = new THREE.DirectionalLight(0xEAB308, 0.3);
+fill2.position.set(0, -5, 15);
+scene.add(fill2);
+
+// Ground
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 30),
+  new THREE.MeshLambertMaterial({ color: 0x1e293b })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -3;
+ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(60, 30, 0x334155, 0x1e293b);
+grid.position.y = -2.99;
+scene.add(grid);
+
+// Machine objects
+const machineGroups = {};
+let currentMachine = 'lever';
+let simRunning = true, simSpeed = 1, time = 0;
+let inputForce = 10, leverMA = 3, loadWeight = 20;
+
+// Build all machines
+function buildAll() {
+  ['lever','wheel','pulley','incline','wedge','screw'].forEach(n => {
+    if (machineGroups[n]) scene.remove(machineGroups[n]);
+    machineGroups[n] = new THREE.Group();
+    scene.add(machineGroups[n]);
+    machineGroups[n].visible = false;
+  });
+
+  // --- Lever ---
+  const lg = machineGroups.lever;
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 0.6), new THREE.MeshPhongMaterial({ color: 0xB45309 }));
+  lg.add(beam);
+  const fulcrum = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.5, 8), new THREE.MeshPhongMaterial({ color: 0x6B7280 }));
+  fulcrum.position.y = -0.9;
+  lg.add(fulcrum);
+  // Weights
+  const loadBox = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshPhongMaterial({ color: 0xEF4444 }));
+  loadBox.position.set(-5, 0.75, 0);
+  loadBox.name = 'loadBox';
+  lg.add(loadBox);
+  const effortBox = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshPhongMaterial({ color: 0x3B82F6 }));
+  effortBox.position.set(3.5, 0.6, 0);
+  effortBox.name = 'effortBox';
+  lg.add(effortBox);
+
+  // --- Wheel & Axle ---
+  const wg = machineGroups.wheel;
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 6, 16), new THREE.MeshPhongMaterial({ color: 0x6B7280 }));
+  axle.rotation.z = Math.PI / 2;
+  wg.add(axle);
+  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.4, 32), new THREE.MeshPhongMaterial({ color: 0xEAB308 }));
+  wheel.rotation.z = Math.PI / 2;
+  wheel.position.x = -1;
+  wheel.name = 'wheel';
+  wg.add(wheel);
+  const axleWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.4, 16), new THREE.MeshPhongMaterial({ color: 0xF97316 }));
+  axleWheel.rotation.z = Math.PI / 2;
+  axleWheel.position.x = 2;
+  axleWheel.name = 'axleWheel';
+  wg.add(axleWheel);
+
+  // --- Pulley ---
+  const pg = machineGroups.pulley;
+  const pulleyWheel = new THREE.Mesh(new THREE.TorusGeometry(2, 0.3, 8, 32), new THREE.MeshPhongMaterial({ color: 0xEAB308 }));
+  pulleyWheel.position.y = 3;
+  pulleyWheel.name = 'pulleyWheel';
+  pg.add(pulleyWheel);
+  const support = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2, 8), new THREE.MeshPhongMaterial({ color: 0x6B7280 }));
+  support.position.y = 4;
+  pg.add(support);
+  const rope1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 5, 8), new THREE.MeshPhongMaterial({ color: 0xD97706 }));
+  rope1.position.set(-1.5, 0.5, 0);
+  rope1.name = 'rope1';
+  pg.add(rope1);
+  const rope2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 5, 8), new THREE.MeshPhongMaterial({ color: 0xD97706 }));
+  rope2.position.set(1.5, 0.5, 0);
+  rope2.name = 'rope2';
+  pg.add(rope2);
+  const loadCube = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshPhongMaterial({ color: 0xEF4444 }));
+  loadCube.position.set(-1.5, -2.5, 0);
+  loadCube.name = 'pulleyLoad';
+  pg.add(loadCube);
+
+  // --- Inclined Plane ---
+  const ig = machineGroups.incline;
+  const rampShape = new THREE.Shape();
+  rampShape.moveTo(0,0); rampShape.lineTo(8,0); rampShape.lineTo(8,3); rampShape.lineTo(0,0);
+  const rampGeo = new THREE.ExtrudeGeometry(rampShape, { depth: 2, bevelEnabled: false });
+  const ramp = new THREE.Mesh(rampGeo, new THREE.MeshPhongMaterial({ color: 0x78716C }));
+  ramp.position.set(-4, -2.5, -1);
+  ig.add(ramp);
+  const box = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8), new THREE.MeshPhongMaterial({ color: 0xEF4444 }));
+  box.name = 'rampBox';
+  box.position.set(-2, -0.7, 0);
+  ig.add(box);
+
+  // --- Wedge ---
+  const wdg = machineGroups.wedge;
+  const wedgeShape = new THREE.Shape();
+  wedgeShape.moveTo(-4,0); wedgeShape.lineTo(4,0); wedgeShape.lineTo(0,2); wedgeShape.lineTo(-4,0);
+  const wedgeGeo = new THREE.ExtrudeGeometry(wedgeShape, { depth: 2, bevelEnabled: false });
+  const wedgeMesh = new THREE.Mesh(wedgeGeo, new THREE.MeshPhongMaterial({ color: 0xB45309 }));
+  wedgeMesh.position.z = -1;
+  wedgeMesh.name = 'wedgeMesh';
+  wdg.add(wedgeMesh);
+  const log1 = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,3,16), new THREE.MeshPhongMaterial({ color: 0x78350F }));
+  log1.rotation.z = Math.PI/2; log1.position.set(-2, 1.5, 0);
+  log1.name = 'log1';
+  wdg.add(log1);
+  const log2 = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,3,16), new THREE.MeshPhongMaterial({ color: 0x78350F }));
+  log2.rotation.z = Math.PI/2; log2.position.set(2, 1.5, 0);
+  log2.name = 'log2';
+  wdg.add(log2);
+
+  // --- Screw ---
+  const sg = machineGroups.screw;
+  // Screw shaft
+  for (let i = 0; i < 20; i++) {
+    const seg = new THREE.Mesh(
+      new THREE.TorusGeometry(0.6, 0.12, 6, 12, Math.PI),
+      new THREE.MeshPhongMaterial({ color: 0x94A3B8 })
+    );
+    seg.position.y = i * 0.35 - 3;
+    seg.rotation.y = i * 0.5;
+    sg.add(seg);
+  }
+  const screwBody = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,7,12), new THREE.MeshPhongMaterial({ color: 0x6B7280 }));
+  sg.add(screwBody);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(3,0.4,3), new THREE.MeshPhongMaterial({ color: 0x78350F }));
+  board.position.y = -2;
+  sg.add(board);
+}
+
+buildAll();
+machineGroups.lever.visible = true;
+
+const machineDescriptions = {
+  lever: "A lever has a fulcrum (pivot point). Push one side down and the other side goes up! Like a see-saw or a crowbar.",
+  wheel: "A wheel and axle lets a small turn of a large wheel move a load on a small axle with less effort. Like a doorknob!",
+  pulley: "A pulley uses a wheel and rope to change the direction of a force. More pulleys = more mechanical advantage!",
+  incline: "A ramp (inclined plane) lets you slide heavy objects up instead of lifting them straight up. You use less force over a longer distance.",
+  wedge: "A wedge is two inclined planes back-to-back. A small push splits or lifts objects apart. Like an axe or a knife!",
+  screw: "A screw is an inclined plane wrapped around a cylinder. Each turn moves the screw a tiny bit — great mechanical advantage!"
+};
+
+const funFacts = {
+  lever: "Archimedes said 'Give me a lever long enough and I will move the Earth!' He understood mechanical advantage over 2,000 years ago.",
+  wheel: "Wheels were invented around 3500 BC in Mesopotamia. A doorknob is a wheel and axle — it multiplies your turning force!",
+  pulley: "Ancient Egyptians may have used pulleys to help build the pyramids! Sailors use pulleys (called 'blocks') to raise sails.",
+  incline: "The Great Pyramid's stones were likely moved up long ramps. A gentle ramp needs less force than a steep one.",
+  wedge: "Your front teeth are wedges! They help you bite into apples by splitting the food apart with less force.",
+  screw: "A screw jack can lift a whole car with just one person turning a handle. The spiral thread gives huge mechanical advantage!"
+};
+
+function selectMachine(name) {
+  currentMachine = name;
+  Object.keys(machineGroups).forEach(k => machineGroups[k].visible = false);
+  machineGroups[name].visible = true;
+  document.querySelectorAll('.machine-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mb-' + name).classList.add('active');
+  document.getElementById('machine-desc').textContent = machineDescriptions[name];
+  document.getElementById('fun-fact').textContent = funFacts[name];
+  document.getElementById('d-type').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  time = 0;
+  updateData();
+}
+
+let lastT = 0;
+function updateData() {
+  const ma = leverMA;
+  const fout = inputForce * ma;
+  document.getElementById('d-fin').textContent = inputForce.toFixed(1) + ' N';
+  document.getElementById('d-fout').textContent = fout.toFixed(1) + ' N';
+  document.getElementById('d-ma').textContent = ma.toFixed(1) + 'x';
+  const canLift = fout >= loadWeight;
+  document.getElementById('d-eff').textContent = canLift ? '✅ Can lift!' : '❌ Too heavy';
+}
+
+document.getElementById('sl-fin').addEventListener('input', function() {
+  inputForce = parseFloat(this.value);
+  document.getElementById('lbl-fin').textContent = inputForce + ' N';
+  updateData();
+});
+document.getElementById('sl-ma').addEventListener('input', function() {
+  leverMA = parseFloat(this.value);
+  document.getElementById('lbl-ma').textContent = leverMA.toFixed(1);
+  updateData();
+});
+document.getElementById('sl-load').addEventListener('input', function() {
+  loadWeight = parseFloat(this.value);
+  document.getElementById('lbl-load').textContent = loadWeight + ' N';
+  updateData();
+});
+
+function applyPreset(name) {
+  const presets = {
+    lever:   { fin: 10, ma: 4, load: 30, machine: 'lever' },
+    pulley:  { fin: 15, ma: 2, load: 25, machine: 'pulley' },
+    incline: { fin: 8,  ma: 3, load: 20, machine: 'incline' },
+  };
+  const p = presets[name];
+  inputForce = p.fin; leverMA = p.ma; loadWeight = p.load;
+  document.getElementById('sl-fin').value = p.fin;
+  document.getElementById('sl-ma').value = p.ma;
+  document.getElementById('sl-load').value = p.load;
+  document.getElementById('lbl-fin').textContent = p.fin + ' N';
+  document.getElementById('lbl-ma').textContent = p.ma.toFixed(1);
+  document.getElementById('lbl-load').textContent = p.load + ' N';
+  selectMachine(p.machine);
+  showToast('Preset: ' + name);
+}
+
+function resetSim() { time = 0; showToast('Reset!'); updateData(); }
+function togglePlay() {
+  simRunning = !simRunning;
+  document.getElementById('btn-play').textContent = simRunning ? '⏸ Pause' : '▶ Play';
+}
+function setSpeed(s) {
+  simSpeed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  const map = { 0.25:'spd1', 0.5:'spd2', 1:'spd3', 2:'spd4', 3:'spd5' };
+  document.getElementById(map[s]).classList.add('active');
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() { document.getElementById('about-modal').style.display='flex'; }
+
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast-item'; el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// Quiz
+const quizData = [
+  { q: "What does 'Mechanical Advantage = 3' mean?", opts: ["You use 3 times more force", "The machine makes you 3 times stronger", "The machine is 3 meters long", "You need 3 people"], ans: 1 },
+  { q: "Which simple machine is a see-saw?", opts: ["Pulley", "Wedge", "Lever", "Screw"], ans: 2 },
+  { q: "A ramp is which type of simple machine?", opts: ["Lever", "Inclined Plane", "Wheel and Axle", "Pulley"], ans: 1 },
+];
+let quizAnswered = [false, false, false];
+function renderQuiz() {
+  const cont = document.getElementById('quiz-content');
+  cont.innerHTML = '';
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'mb-4';
+    div.innerHTML = `<div class="text-sm font-semibold text-slate-200 mb-2">${qi+1}. ${q.q}</div>`;
+    q.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-opt'; btn.textContent = opt;
+      if (!quizAnswered[qi]) {
+        btn.onclick = () => {
+          quizAnswered[qi] = true;
+          const sibs = btn.parentElement.querySelectorAll('.quiz-opt');
+          sibs[q.ans].classList.add('correct');
+          if (oi !== q.ans) btn.classList.add('wrong');
+          showToast(oi === q.ans ? '✅ Correct!' : '❌ Try again next time!');
+        };
+      }
+      div.appendChild(btn);
+    });
+    cont.appendChild(div);
+  });
+}
+function showQuiz() { document.getElementById('quiz-panel').style.display='block'; document.getElementById('quiz-fab').style.display='none'; renderQuiz(); }
+function hideQuiz() { document.getElementById('quiz-panel').style.display='none'; document.getElementById('quiz-fab').style.display='flex'; }
+renderQuiz();
+
+katex.render('MA = \\frac{F_{out}}{F_{in}}', document.getElementById('f1'), { throwOnError: false, displayMode: true });
+katex.render('W = F \\times d \\text{ (same for machine)}', document.getElementById('f2'), { throwOnError: false, displayMode: true });
+
+renderer.setAnimationLoop(function(timestamp) {
+  const elapsed = (timestamp - lastT) / 1000;
+  lastT = timestamp;
+  const dt = Math.min(elapsed, 0.05) * simSpeed;
+  if (simRunning) time += dt;
+
+  // Animate current machine
+  if (currentMachine === 'lever') {
+    const angle = Math.sin(time * 0.8) * 0.25;
+    machineGroups.lever.children.find(c => c.geometry && c.geometry.type === 'BoxGeometry' && c.scale.x > 5) && null;
+    machineGroups.lever.rotation.z = angle * 0.3;
+  }
+  if (currentMachine === 'wheel') {
+    const w = machineGroups.wheel.getObjectByName('wheel');
+    const aw = machineGroups.wheel.getObjectByName('axleWheel');
+    if (w) w.rotation.x += dt * 1.5 * simSpeed;
+    if (aw) aw.rotation.x += dt * 1.5 * simSpeed * 0.3;
+  }
+  if (currentMachine === 'pulley') {
+    const pw = machineGroups.pulley.getObjectByName('pulleyWheel');
+    const pl = machineGroups.pulley.getObjectByName('pulleyLoad');
+    if (pw) pw.rotation.y += dt * 1.2;
+    if (pl) pl.position.y = -2.5 + Math.sin(time * 0.6) * 1.5;
+  }
+  if (currentMachine === 'incline') {
+    const rb = machineGroups.incline.getObjectByName('rampBox');
+    if (rb) {
+      const t = (time * 0.3) % 1;
+      rb.position.x = -2 + t * 8;
+      rb.position.y = -0.7 + t * 3;
+    }
+  }
+  if (currentMachine === 'wedge') {
+    const wm = machineGroups.wedge.getObjectByName('wedgeMesh');
+    const l1 = machineGroups.wedge.getObjectByName('log1');
+    const l2 = machineGroups.wedge.getObjectByName('log2');
+    if (wm) wm.position.z = Math.sin(time * 0.7) * 0.8;
+    if (l1) l1.position.x = -2 - Math.abs(Math.sin(time * 0.7)) * 1.5;
+    if (l2) l2.position.x = 2 + Math.abs(Math.sin(time * 0.7)) * 1.5;
+  }
+  if (currentMachine === 'screw') {
+    machineGroups.screw.rotation.y += dt * 0.8;
+    machineGroups.screw.position.y = Math.sin(time * 0.5) * 0.5;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+function onResize() {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.code === 'Digit1') setSpeed(0.25);
+  if (e.code === 'Digit2') setSpeed(0.5);
+  if (e.code === 'Digit3') setSpeed(1);
+  if (e.code === 'Digit4') setSpeed(2);
+  if (e.code === 'Digit5') setSpeed(3);
+});
+
+updateData();
+showToast('Pick a machine to explore!');
+</script>
+</body>
+</html>

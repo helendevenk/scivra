@@ -132,21 +132,23 @@ export function sanitizeHtml(html: string): SanitizeResult {
   const cookiePattern = /\bdocument\s*\.\s*cookie\b/g;
   if (cookiePattern.test(sanitized)) {
     issues.push('Removed document.cookie access');
-    sanitized = sanitized.replace(cookiePattern, '/* cookie blocked */');
+    sanitized = sanitized.replace(cookiePattern, '/* _cookie_blocked_ */');
   }
 
   // 9. Remove localStorage access
+  // NOTE: replacement must NOT contain the word "localStorage" — quality checker
+  // runs after sanitizer and would re-detect it inside the comment text.
   const localStoragePattern = /\blocalStorage\s*\.\s*\w+/g;
   if (localStoragePattern.test(sanitized)) {
     issues.push('Removed localStorage access');
-    sanitized = sanitized.replace(/\blocalStorage\b/g, '/* localStorage blocked */');
+    sanitized = sanitized.replace(/\blocalStorage\b/g, '/* _ls_blocked_ */');
   }
 
   // 10. Remove sessionStorage access
   const sessionStoragePattern = /\bsessionStorage\s*\.\s*\w+/g;
   if (sessionStoragePattern.test(sanitized)) {
     issues.push('Removed sessionStorage access');
-    sanitized = sanitized.replace(/\bsessionStorage\b/g, '/* sessionStorage blocked */');
+    sanitized = sanitized.replace(/\bsessionStorage\b/g, '/* _ss_blocked_ */');
   }
 
   // 11. Check for common XSS vectors in attributes

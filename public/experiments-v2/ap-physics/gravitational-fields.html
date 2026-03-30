@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravitational Fields — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.5); border-radius: 3px; }
+  .glass { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(12px); }
+  .glass-panel { background: rgba(22,78,99,0.7); border: 1px solid rgba(20,184,166,0.25); backdrop-filter: blur(12px); }
+  .physics-gradient { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); }
+  .physics-text { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #canvas-container { position: relative; flex: 1; overflow: hidden; }
+  .data-overlay { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 12px 16px; min-width: 200px; font-variant-numeric: tabular-nums; }
+  .data-row { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; margin: 3px 0; }
+  .data-label { color: #94a3b8; } .data-value { color: #60a5fa; font-weight: 600; }
+  .sidebar { width: 300px; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; display: flex; flex-direction: column; transition: width 0.3s; }
+  .sidebar.collapsed { width: 0; overflow: hidden; }
+  .formula-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+  .knowledge-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+  .control-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 12px 16px; }
+  .slider-group { display: flex; flex-direction: column; gap: 4px; }
+  .slider-label { font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9); cursor: pointer; }
+  .btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; font-weight: 500; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6, #0EA5E9); color: white; }
+  .btn-primary:hover { background: linear-gradient(135deg, #60a5fa, #38bdf8); }
+  .btn-ghost { background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.15); }
+  .btn-preset { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); padding: 5px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .btn-preset:hover, .btn-preset.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; }
+  .speed-btn { padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: #94a3b8; transition: all 0.2s; }
+  .speed-btn.active { background: rgba(59,130,246,0.3); border-color: #3B82F6; color: #60a5fa; }
+  #toast { position: fixed; top: 60px; right: 16px; z-index: 1000; pointer-events: none; }
+  .toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .quiz-panel { position: absolute; bottom: 12px; right: 12px; width: 320px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 14px; max-height: 400px; overflow-y: auto; }
+  .quiz-option { padding: 7px 10px; margin: 4px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 13px; transition: all 0.2s; background: rgba(255,255,255,0.04); }
+  .quiz-option:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-option.incorrect { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+  .quiz-feedback { font-size: 12px; margin-top: 6px; padding: 6px 8px; border-radius: 6px; }
+  .quiz-toggle { position: absolute; bottom: 12px; right: 12px; z-index: 10; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="glass flex items-center justify-between px-4 py-2.5 border-b" style="border-color:rgba(59,130,246,0.2); background:rgba(15,23,42,0.85);">
+  <div>
+    <span class="text-lg font-bold physics-text">Gravitational Fields</span>
+    <span class="text-sm text-slate-400 ml-2">引力场可视化</span>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost text-xs" id="toggleSidebar">☰ Panel</button>
+    <button class="btn btn-ghost text-xs" id="btnReset">↺ Reset</button>
+    <button class="btn btn-ghost text-xs" id="btnFullscreen">⛶ Full</button>
+    <button class="btn btn-ghost text-xs" id="btnAbout">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="p-4">
+      <h3 class="text-sm font-semibold text-blue-400 mb-3 uppercase tracking-wider">Core Formulas</h3>
+      <div class="formula-card">
+        <div id="f1"></div>
+        <p class="text-xs text-slate-400 mt-1">Gravitational field strength at distance r from mass M</p>
+      </div>
+      <div class="formula-card">
+        <div id="f2"></div>
+        <p class="text-xs text-slate-400 mt-1">Gravitational potential (energy per unit mass)</p>
+      </div>
+      <div class="formula-card">
+        <div id="f3"></div>
+        <p class="text-xs text-slate-400 mt-1">Escape velocity — minimum speed to leave the field</p>
+      </div>
+      <div class="formula-card">
+        <div id="f4"></div>
+        <p class="text-xs text-slate-400 mt-1">Gravitational PE for a test mass m at distance r</p>
+      </div>
+
+      <h3 class="text-sm font-semibold text-blue-400 mt-4 mb-2 uppercase tracking-wider">Concept</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2">A gravitational field is a region of space where any mass experiences a force. The field <em>g</em> points toward the source mass and grows stronger as you approach it — an inverse-square relationship.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2">The gravitational potential well (bowl shape) shows that you must do work to climb out. Deeper in the well = more tightly bound. A black hole is an infinitely deep well that nothing can escape.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-3">Escape velocity is the speed at which KE exactly cancels the (negative) gravitational PE. At that threshold, total mechanical energy is exactly zero.</p>
+
+      <h3 class="text-sm font-semibold text-blue-400 mb-2 uppercase tracking-wider">Knowledge Cards</h3>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-blue-300">Historical Fact</p>
+        <p class="text-xs text-slate-300 mt-1">Newton derived the inverse-square law by noting that the Moon's centripetal acceleration is ~1/3600 of surface g — exactly (60 R_E)² ratio.</p>
+      </div>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-amber-300">Common Misconception</p>
+        <p class="text-xs text-slate-300 mt-1">Gravity in orbit is NOT zero. Astronauts are weightless because they are in free-fall, not because gravity vanished. g at ISS altitude is ~88% of surface value.</p>
+      </div>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-emerald-300">Advanced Connection</p>
+        <p class="text-xs text-slate-300 mt-1">In General Relativity, the potential well is literal spacetime curvature. Gravitational time dilation is directly proportional to the depth in the well.</p>
+      </div>
+
+      <h3 class="text-sm font-semibold text-blue-400 mt-4 mb-2 uppercase tracking-wider">Why It Matters</h3>
+      <ul class="text-xs text-slate-300 space-y-1.5">
+        <li>• Spacecraft trajectory planning — every mission uses g-field maps</li>
+        <li>• GPS satellites require GR corrections (44 µs/day from weaker field at altitude)</li>
+        <li>• AP Physics: Field concept connects Newton to E&M to quantum</li>
+        <li>• Black hole event horizons defined by escape velocity reaching c</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main canvas -->
+  <div id="canvas-container" class="flex-1 relative">
+    <div class="data-overlay" id="dataOverlay">
+      <div class="text-xs font-semibold text-blue-400 mb-2">Field Data</div>
+      <div class="data-row"><span class="data-label">g at r</span><span class="data-value" id="dG">—</span></div>
+      <div class="data-row"><span class="data-label">Distance r</span><span class="data-value" id="dR">—</span></div>
+      <div class="data-row"><span class="data-label">Potential V</span><span class="data-value" id="dV">—</span></div>
+      <div class="data-row"><span class="data-label">Escape v</span><span class="data-value" id="dEsc">—</span></div>
+      <div class="data-row"><span class="data-label">Binding E</span><span class="data-value" id="dBind">—</span></div>
+      <div class="data-row"><span class="data-label">Planet Type</span><span class="data-value" id="dPlanet">—</span></div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="quiz-panel" id="quizPanel">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-semibold text-blue-400">Quick Quiz</span>
+        <button class="text-slate-400 hover:text-white text-xs" id="closeQuiz">✕ Hide</button>
+      </div>
+      <div id="quizContainer"></div>
+    </div>
+    <button class="quiz-toggle btn btn-primary text-xs hidden" id="showQuiz">Quiz</button>
+  </div>
+</div>
+
+<!-- Control Panel -->
+<div class="control-panel">
+  <div class="flex items-start gap-6 flex-wrap">
+    <div class="flex-1 min-w-48">
+      <div class="slider-group mb-3">
+        <div class="slider-label"><span>Central Mass</span><span id="massVal" class="text-blue-400">10 M_E</span></div>
+        <input type="range" id="sliderMass" min="1" max="100" step="0.5" value="10">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Test Distance</span><span id="distVal" class="text-blue-400">3 AU</span></div>
+        <input type="range" id="sliderDist" min="0.5" max="10" step="0.1" value="3">
+      </div>
+    </div>
+    <div class="flex-1 min-w-48">
+      <div class="slider-group mb-3">
+        <div class="slider-label"><span>Planet Type</span><span id="planetVal" class="text-blue-400">Rocky</span></div>
+        <input type="range" id="sliderPlanet" min="0" max="2" step="1" value="0">
+      </div>
+      <div class="flex gap-2 items-center mt-2">
+        <span class="text-xs text-slate-400">Speed:</span>
+        <button class="speed-btn" data-speed="0.25">0.25x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="3">3x</button>
+      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <div class="text-xs text-slate-400 mb-1">Presets</div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn-preset" data-preset="earth">Earth Surface</button>
+        <button class="btn-preset" data-preset="blackhole">Near Black Hole</button>
+        <button class="btn-preset" data-preset="jupiter">Jupiter Gravity</button>
+      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button class="btn btn-primary" id="btnPlay">⏸ Pause</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- About modal -->
+<div id="aboutModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur flex items-center justify-center z-50">
+  <div class="glass-panel rounded-xl p-6 max-w-md w-full mx-4">
+    <h3 class="text-lg font-bold text-blue-400 mb-3">Gravitational Fields</h3>
+    <p class="text-sm text-slate-300 mb-4">3D visualization of gravitational field vectors and potential well around a massive body.</p>
+    <div class="text-xs text-slate-400 mb-4">
+      <div class="font-semibold text-slate-300 mb-1">Keyboard Shortcuts:</div>
+      <div>Space — Play/Pause | R — Reset</div>
+      <div>1-5 — Speed presets | E/J/B — Planet presets</div>
+    </div>
+    <button class="btn btn-primary w-full" id="closeAbout">Close</button>
+  </div>
+</div>
+
+<script>
+// ─── Physics constants ───────────────────────────────────────────────────────
+const G_SI = 6.674e-11;
+const M_EARTH = 5.972e24;
+const R_EARTH = 6.371e6;
+const AU = 1.496e11;
+const C_LIGHT = 3e8;
+
+// ─── Inline OrbitControls ────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let centralMassEarths = 10;
+let testDistAU = 3;
+let planetType = 0; // 0=rocky,1=gas,2=black hole
+let speedFactor = 1;
+let isPlaying = true;
+let time = 0;
+
+const planetNames = ['Rocky Planet', 'Gas Giant', 'Black Hole'];
+const planetColors = [0x3B82F6, 0xF59E0B, 0x1a1a2e];
+const planetSizes  = [0.4, 0.8, 0.2];
+const planetDensityScale = [1.0, 0.3, 50.0];
+
+// ─── Three.js setup ──────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 8, 18);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 3; controls.maxDistance = 40;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// ─── Central body ─────────────────────────────────────────────────────────────
+let centralMesh;
+function buildCentralBody() {
+  if (centralMesh) scene.remove(centralMesh);
+  const size = planetSizes[planetType] * (0.5 + 0.5 * Math.cbrt(centralMassEarths / 10));
+  const geo = new THREE.SphereGeometry(size, 32, 32);
+  let mat;
+  if (planetType === 2) {
+    mat = new THREE.MeshStandardMaterial({ color: 0x111133, emissive: 0x000033, emissiveIntensity: 1, roughness: 0.1, metalness: 0.9 });
+  } else if (planetType === 1) {
+    mat = new THREE.MeshStandardMaterial({ color: planetColors[planetType], emissive: new THREE.Color(planetColors[planetType]).multiplyScalar(0.3), roughness: 0.6, metalness: 0.1 });
+  } else {
+    mat = new THREE.MeshStandardMaterial({ color: planetColors[planetType], emissive: new THREE.Color(planetColors[planetType]).multiplyScalar(0.2), roughness: 0.7, metalness: 0.0 });
+  }
+  centralMesh = new THREE.Mesh(geo, mat);
+  centralMesh.castShadow = true;
+  scene.add(centralMesh);
+
+  // Glow for black hole
+  if (planetType === 2) {
+    const glowGeo = new THREE.SphereGeometry(size * 2.5, 32, 32);
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0x5500ff, transparent: true, opacity: 0.08, side: THREE.BackSide });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    centralMesh.add(glow);
+  }
+}
+
+// ─── Potential well mesh ──────────────────────────────────────────────────────
+let wellMesh;
+function buildPotentialWell() {
+  if (wellMesh) scene.remove(wellMesh);
+  const N = 60;
+  const range = 12;
+  const geo = new THREE.PlaneGeometry(range * 2, range * 2, N - 1, N - 1);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  const M = centralMassEarths * M_EARTH;
+  const scale = 4e-3;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    const r = Math.sqrt(x * x + z * z);
+    const rClamped = Math.max(r, 0.5);
+    // V = -GM/r, map to y (negative potential = depression)
+    const V = -G_SI * M / (rClamped * AU);
+    pos.setY(i, V * scale);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x1e3a5f, wireframe: false, transparent: true, opacity: 0.7,
+    side: THREE.DoubleSide, roughness: 0.8, metalness: 0.1
+  });
+  wellMesh = new THREE.Mesh(geo, mat);
+  wellMesh.receiveShadow = true;
+  scene.add(wellMesh);
+
+  // Wireframe overlay
+  const wireMat = new THREE.MeshBasicMaterial({ color: 0x3B82F6, wireframe: true, transparent: true, opacity: 0.15 });
+  const wireMesh = new THREE.Mesh(geo.clone(), wireMat);
+  scene.add(wireMesh);
+  wellMesh.userData.wire = wireMesh;
+}
+
+// ─── Field arrows ─────────────────────────────────────────────────────────────
+const arrowGroup = new THREE.Group();
+scene.add(arrowGroup);
+
+function buildFieldArrows() {
+  while (arrowGroup.children.length) arrowGroup.remove(arrowGroup.children[0]);
+  const M = centralMassEarths * M_EARTH;
+  const gridN = 7;
+  const halfGrid = 8;
+  for (let ix = 0; ix < gridN; ix++) {
+    for (let iz = 0; iz < gridN; iz++) {
+      const x = -halfGrid + ix * (halfGrid * 2 / (gridN - 1));
+      const z = -halfGrid + iz * (halfGrid * 2 / (gridN - 1));
+      const r = Math.sqrt(x * x + z * z);
+      if (r < 1.0) continue;
+      const rReal = r * AU;
+      const g = G_SI * M / (rReal * rReal);
+      const logG = Math.log10(Math.max(g, 1e-5));
+      const gNorm = Math.min(Math.max((logG + 3) / 6, 0.1), 1.0);
+      const arrowLen = gNorm * 1.5 + 0.3;
+
+      // Direction: toward origin
+      const dirX = -x / r, dirZ = -z / r;
+
+      const shaftGeo = new THREE.CylinderGeometry(0.03, 0.03, arrowLen * 0.75, 6);
+      const headGeo = new THREE.ConeGeometry(0.09, arrowLen * 0.25, 6);
+      const color = new THREE.Color().setHSL(0.6 - gNorm * 0.3, 0.9, 0.5 + gNorm * 0.2);
+      const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.3 });
+
+      const arrow = new THREE.Group();
+      const shaft = new THREE.Mesh(shaftGeo, mat);
+      shaft.position.y = arrowLen * 0.375;
+      const head = new THREE.Mesh(headGeo, mat);
+      head.position.y = arrowLen * 0.75 + arrowLen * 0.125;
+      arrow.add(shaft, head);
+
+      // Rotate to point toward center (in xz plane, slightly above well)
+      const angle = Math.atan2(dirX, dirZ);
+      arrow.rotation.z = Math.PI / 2;
+      arrow.rotation.y = -angle;
+      arrow.position.set(x, 0.2, z);
+      arrowGroup.add(arrow);
+    }
+  }
+}
+
+// ─── Test mass marker ─────────────────────────────────────────────────────────
+const testGeo = new THREE.SphereGeometry(0.18, 16, 16);
+const testMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.5 });
+const testMesh = new THREE.Mesh(testGeo, testMat);
+scene.add(testMesh);
+
+// Distance ring
+const ringGeo = new THREE.RingGeometry(0, 0, 64);
+const ringMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.4 });
+let distanceRing;
+
+function buildDistanceRing() {
+  if (distanceRing) scene.remove(distanceRing);
+  const r = testDistAU;
+  const points = [];
+  for (let i = 0; i <= 64; i++) {
+    const a = (i / 64) * Math.PI * 2;
+    points.push(new THREE.Vector3(Math.cos(a) * r, 0.05, Math.sin(a) * r));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  distanceRing = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.35 }));
+  scene.add(distanceRing);
+}
+
+// ─── Build / rebuild scene ───────────────────────────────────────────────────
+function rebuildScene() {
+  buildCentralBody();
+  buildPotentialWell();
+  buildFieldArrows();
+  buildDistanceRing();
+  updateTestMass();
+}
+
+function updateTestMass() {
+  const angle = time * 0.3 * speedFactor;
+  const r = testDistAU;
+  testMesh.position.set(Math.cos(angle) * r, 0.25, Math.sin(angle) * r);
+  updateDataPanel();
+}
+
+// ─── Data panel ──────────────────────────────────────────────────────────────
+function updateDataPanel() {
+  const M = centralMassEarths * M_EARTH;
+  const r = testDistAU * AU;
+  const g = G_SI * M / (r * r);
+  const V = -G_SI * M / r;
+  const vEsc = Math.sqrt(2 * G_SI * M / r);
+  const mTest = 1; // 1 kg test mass
+  const Eb = -G_SI * M * mTest / r; // binding energy (negative)
+
+  document.getElementById('dG').textContent = g.toExponential(3) + ' m/s²';
+  document.getElementById('dR').textContent = testDistAU.toFixed(2) + ' AU';
+  document.getElementById('dV').textContent = (V / 1e6).toExponential(3) + ' MJ/kg';
+  document.getElementById('dEsc').textContent = (vEsc / 1e3).toFixed(2) + ' km/s';
+  document.getElementById('dBind').textContent = Eb.toExponential(3) + ' J';
+  document.getElementById('dPlanet').textContent = planetNames[planetType];
+}
+
+// ─── Animation loop ───────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (!isPlaying) delta = 0;
+  time += delta * speedFactor;
+  controls.update();
+  if (isPlaying) {
+    updateTestMass();
+    // Gentle well pulsation
+    if (wellMesh) {
+      wellMesh.material.opacity = 0.6 + 0.1 * Math.sin(time * 0.5);
+    }
+  }
+  renderer.render(scene, camera);
+});
+
+// ─── Resize ──────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── UI controls ─────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+document.getElementById('sliderMass').addEventListener('input', function() {
+  centralMassEarths = parseFloat(this.value);
+  document.getElementById('massVal').textContent = centralMassEarths.toFixed(1) + ' M_E';
+  rebuildScene();
+});
+
+document.getElementById('sliderDist').addEventListener('input', function() {
+  testDistAU = parseFloat(this.value);
+  document.getElementById('distVal').textContent = testDistAU.toFixed(1) + ' AU';
+  buildDistanceRing();
+  updateDataPanel();
+});
+
+document.getElementById('sliderPlanet').addEventListener('input', function() {
+  planetType = parseInt(this.value);
+  document.getElementById('planetVal').textContent = planetNames[planetType];
+  rebuildScene();
+  showToast('Planet type: ' + planetNames[planetType]);
+});
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    speedFactor = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + this.dataset.speed + 'x');
+  });
+});
+
+const presets = {
+  earth:     { mass: 1,   dist: 1.0, planet: 0, label: 'Earth Surface' },
+  blackhole: { mass: 100, dist: 0.5, planet: 2, label: 'Near Black Hole' },
+  jupiter:   { mass: 318, dist: 5.2, planet: 1, label: 'Jupiter Gravity' }
+};
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const p = presets[this.dataset.preset];
+    centralMassEarths = Math.min(p.mass, 100);
+    testDistAU = Math.min(p.dist, 10);
+    planetType = p.planet;
+    document.getElementById('sliderMass').value = centralMassEarths;
+    document.getElementById('sliderDist').value = testDistAU;
+    document.getElementById('sliderPlanet').value = planetType;
+    document.getElementById('massVal').textContent = centralMassEarths.toFixed(1) + ' M_E';
+    document.getElementById('distVal').textContent = testDistAU.toFixed(1) + ' AU';
+    document.getElementById('planetVal').textContent = planetNames[planetType];
+    document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    rebuildScene();
+    showToast('Preset: ' + p.label);
+  });
+});
+
+document.getElementById('btnPlay').addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  this.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+  showToast(isPlaying ? 'Playing' : 'Paused');
+});
+
+document.getElementById('btnReset').addEventListener('click', function() {
+  time = 0; isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  rebuildScene();
+  showToast('Simulation reset');
+});
+
+document.getElementById('toggleSidebar').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.getElementById('btnAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.remove('hidden');
+});
+document.getElementById('closeAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.add('hidden');
+});
+
+document.getElementById('closeQuiz').addEventListener('click', function() {
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('showQuiz').classList.remove('hidden');
+});
+document.getElementById('showQuiz').addEventListener('click', function() {
+  document.getElementById('quizPanel').classList.remove('hidden');
+  this.classList.add('hidden');
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btnPlay').click(); }
+  if (e.code === 'KeyR') { document.getElementById('btnReset').click(); }
+  if (e.code === 'Digit1') document.querySelector('[data-speed="0.25"]').click();
+  if (e.code === 'Digit2') document.querySelector('[data-speed="0.5"]') && document.querySelector('[data-speed="0.5"]').click();
+  if (e.code === 'Digit3') document.querySelector('[data-speed="1"]').click();
+  if (e.code === 'Digit4') document.querySelector('[data-speed="2"]').click();
+  if (e.code === 'Digit5') document.querySelector('[data-speed="3"]').click();
+  if (e.code === 'KeyE') document.querySelector('[data-preset="earth"]').click();
+  if (e.code === 'KeyJ') document.querySelector('[data-preset="jupiter"]').click();
+  if (e.code === 'KeyB') document.querySelector('[data-preset="blackhole"]').click();
+});
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "If you double the distance from a planet's center, the gravitational field strength g becomes:",
+    opts: ['1/2 as strong', '1/4 as strong', '1/8 as strong', '2x stronger'],
+    correct: 1,
+    explanation: "g = GM/r². Doubling r gives r² → 4r², so g is divided by 4. This inverse-square law is why fields drop off quickly with distance.",
+    praise: "Correct! The inverse-square dependence means g scales as 1/r² — doubling r reduces g to one-quarter."
+  },
+  {
+    q: "A planet has negative gravitational potential V = −GM/r. If a probe moves farther from the planet, what happens to V?",
+    opts: ['V becomes more negative', 'V becomes less negative (increases toward zero)', 'V stays the same', 'V becomes positive'],
+    correct: 1,
+    explanation: "V = −GM/r is always negative, but increases (becomes less negative) as r increases toward ∞, where V → 0. Deeper = more negative = more tightly bound.",
+    praise: "Exactly right! As r → ∞, V → 0 from below. The probe gains potential energy as it climbs out of the well."
+  },
+  {
+    q: "Escape velocity from Earth's surface is ~11.2 km/s. From a point 4× Earth's radius from the center, escape velocity is approximately:",
+    opts: ['11.2 km/s', '5.6 km/s', '44.8 km/s', '2.8 km/s'],
+    correct: 1,
+    explanation: "v_esc = √(2GM/r). If r increases by 4×, v_esc decreases by √4 = 2. So 11.2 / 2 = 5.6 km/s.",
+    praise: "Perfect! v_esc ∝ 1/√r, so quadrupling the distance halves the escape speed."
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'mb-4';
+    div.innerHTML = `<p class="text-xs font-semibold text-slate-200 mb-2">Q${qi+1}: ${q.q}</p>`;
+    q.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', function() {
+        if (div.dataset.answered) return;
+        div.dataset.answered = '1';
+        const allOpts = div.querySelectorAll('.quiz-option');
+        allOpts.forEach((b, i) => {
+          if (i === q.correct) b.classList.add('correct');
+          else if (i === oi && oi !== q.correct) b.classList.add('incorrect');
+        });
+        const fb = document.createElement('div');
+        fb.className = 'quiz-feedback ' + (oi === q.correct ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300');
+        fb.textContent = oi === q.correct ? q.praise : '💡 ' + q.explanation;
+        div.appendChild(fb);
+      });
+      div.appendChild(btn);
+    });
+    container.appendChild(div);
+  });
+}
+
+// ─── KaTeX formulas ───────────────────────────────────────────────────────────
+function renderFormulas() {
+  katex.render('g = \\dfrac{GM}{r^2}', document.getElementById('f1'), { displayMode: true, throwOnError: false });
+  katex.render('V = -\\dfrac{GM}{r}', document.getElementById('f2'), { displayMode: true, throwOnError: false });
+  katex.render('v_{esc} = \\sqrt{\\dfrac{2GM}{r}}', document.getElementById('f3'), { displayMode: true, throwOnError: false });
+  katex.render('U = -\\dfrac{GMm}{r}', document.getElementById('f4'), { displayMode: true, throwOnError: false });
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderFormulas();
+buildQuiz();
+rebuildScene();
+showToast('Gravitational Fields loaded — drag to rotate');
+</script>
+<div style="display:none">Generated by AetherViz Master — explore the universe one field line at a time.</div>
+</body>
+</html>

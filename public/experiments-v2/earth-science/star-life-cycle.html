@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Life Cycle — Earth Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#000011;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+  #toast{position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none;}
+  .toast-item{background:rgba(249,115,22,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;animation:toastIn 0.3s ease;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+  .glass{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;}
+  .panel-card{background:rgba(78,45,22,0.6);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:12px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EAB308);cursor:pointer;}
+  .sidebar{width:300px;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(249,115,22,0.2);}
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(249,115,22,0.4);border-radius:2px;}
+  .btn-preset{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(249,115,22,0.3);cursor:pointer;background:rgba(249,115,22,0.1);color:#fdba74;transition:all 0.18s;}
+  .btn-preset:hover,.btn-preset.active{background:rgba(249,115,22,0.25);color:#fff;}
+  .btn-speed{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s;}
+  .btn-speed.active{background:linear-gradient(135deg,#F97316,#EAB308);color:#fff;border-color:#F97316;}
+  .data-val{font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#fb923c;}
+  .quiz-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s;}
+  .quiz-opt:hover{border-color:#F97316;background:rgba(249,115,22,0.1);}
+  .quiz-opt.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;}
+  .quiz-opt.wrong{background:rgba(239,68,68,0.15);border-color:#ef4444;}
+  #quiz-panel{position:fixed;bottom:16px;right:16px;width:340px;z-index:100;display:none;}
+  #quiz-fab{position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EAB308);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(249,115,22,0.5);}
+  #data-overlay{position:absolute;top:12px;left:12px;pointer-events:none;z-index:10;}
+  .stage-btn{padding:4px 8px;border-radius:6px;font-size:10px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.05);color:#94a3b8;transition:all 0.15s;margin:2px;}
+  .stage-btn.active{background:rgba(249,115,22,0.3);border-color:#F97316;color:#fff;}
+  #about-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;}
+  #about-modal.open{display:flex;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(249,115,22,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F97316,#EAB308);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Star Life Cycle</span>
+    <span class="text-xs text-slate-400 ml-3">Stellar Evolution · H-R Diagram · Earth Science</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="togglePlay()" id="play-btn" class="btn-preset">⏸ Pause</button>
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <div class="sidebar p-4 flex flex-col gap-4">
+
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Stellar Mass Determines Fate</div>
+      <p class="text-xs text-slate-300 leading-relaxed">Stars live and die by their mass. A star like our Sun (1 solar mass, M☉) spends ~10 billion years on the main sequence fusing hydrogen into helium. When core hydrogen is exhausted, the core contracts while the outer layers expand — the star becomes a red giant. Low-mass stars (under ~8 M☉) end life as planetary nebulae, ejecting their outer layers while the core becomes a white dwarf — an Earth-sized stellar remnant cooling over billions of years.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mt-2">Massive stars (above ~8 M☉) live fast and die violently. Their intense gravity drives fusion all the way to iron (Fe-56). Since iron fusion consumes energy rather than releasing it, the core collapses catastrophically in under one second — a core-collapse supernova. The remnant is either a neutron star (ultra-dense, ~20 km diameter, 1.4–3 M☉) or if the original star exceeds ~20–25 M☉, a stellar black hole where gravity overcomes all known forces.</p>
+    </div>
+
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Key Equations</div>
+      <div class="text-xs text-slate-300 mb-2">Main Sequence Lifetime:</div>
+      <div id="eq1" class="text-sm mb-2">\(t_{MS} \approx \frac{t_\odot}{(M/M_\odot)^{2.5}}\)</div>
+      <div class="text-xs text-slate-400 mb-3">Where t☉ ≈ 10 Gyr for the Sun. A 10 M☉ star lives only ~30 Myr.</div>
+      <div class="text-xs text-slate-300 mb-2">Stefan-Boltzmann Luminosity:</div>
+      <div id="eq2" class="text-sm mb-2">\(L = 4\pi R^2 \sigma T_{eff}^4\)</div>
+      <div class="text-xs text-slate-400 mb-3">Luminosity depends on radius² and temperature⁴ — temperature dominates.</div>
+      <div class="text-xs text-slate-300 mb-2">Mass-Luminosity Relation:</div>
+      <div id="eq3" class="text-sm">\(\frac{L}{L_\odot} \approx \left(\frac{M}{M_\odot}\right)^{3.5}\)</div>
+      <div class="text-xs text-slate-400 mt-1">A 10 M☉ star is ~3162× more luminous than the Sun.</div>
+    </div>
+
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Spectral Classification (OBAFGKM)</div>
+      <div class="grid grid-cols-7 gap-1 text-center">
+        <div style="background:#9bb0ff" class="rounded text-xs font-bold text-black py-1">O</div>
+        <div style="background:#aabfff" class="rounded text-xs font-bold text-black py-1">B</div>
+        <div style="background:#cad7ff" class="rounded text-xs font-bold text-black py-1">A</div>
+        <div style="background:#f8f7ff" class="rounded text-xs font-bold text-black py-1">F</div>
+        <div style="background:#fff4e8" class="rounded text-xs font-bold text-black py-1">G</div>
+        <div style="background:#ffd2a1" class="rounded text-xs font-bold text-black py-1">K</div>
+        <div style="background:#ffcc6f" class="rounded text-xs font-bold text-black py-1">M</div>
+      </div>
+      <div class="flex justify-between text-xs text-slate-400 mt-1">
+        <span>50,000 K</span><span>←  Temperature  →</span><span>3,000 K</span>
+      </div>
+      <div class="text-xs text-slate-400 mt-1">Our Sun is a G2V star (5,778 K surface temperature).</div>
+    </div>
+
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Controls</div>
+      <label class="text-xs text-slate-300">Stellar Mass: <span id="mass-val" class="data-val">1.0</span> M☉</label>
+      <input type="range" id="mass-slider" min="0.5" max="25" step="0.1" value="1.0" class="mt-1 mb-2" oninput="onMassChange(this.value)">
+      <label class="text-xs text-slate-300">Evolution Stage: <span id="stage-val" class="data-val">Main Sequence</span></label>
+      <input type="range" id="stage-slider" min="0" max="100" step="1" value="30" class="mt-1 mb-2" oninput="onStageChange(this.value)">
+      <label class="text-xs text-slate-300">Nebula Density: <span id="density-val" class="data-val">1.0</span></label>
+      <input type="range" id="density-slider" min="0.1" max="3" step="0.1" value="1.0" class="mt-1 mb-3" oninput="onDensityChange(this.value)">
+      <div class="text-xs font-bold text-slate-400 mb-1">Presets</div>
+      <div class="flex flex-wrap gap-1">
+        <button class="stage-btn active" onclick="setPreset('sun')">Sun-like Star (1 M☉)</button>
+        <button class="stage-btn" onclick="setPreset('massive')">Massive Star (10 M☉)</button>
+        <button class="stage-btn" onclick="setPreset('verymassive')">Very Massive (>20 M☉)</button>
+      </div>
+      <div class="text-xs font-bold text-slate-400 mt-2 mb-1">Speed</div>
+      <div class="flex gap-1">
+        <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+        <button class="btn-speed" onclick="setSpeed(0.5)">0.5×</button>
+        <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+        <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+        <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Why It Matters — NGSS</div>
+      <p class="text-xs text-slate-300 leading-relaxed">ESS1.A: The Universe and Its Stars — stellar nucleosynthesis creates all elements heavier than hydrogen and helium. Every carbon atom in your body was forged in a star that exploded before our solar system formed. Supernovae seed molecular clouds with metals (astronomers call all elements heavier than He "metals"), triggering the next generation of star and planet formation. Understanding stellar evolution is fundamental to cosmochemistry, planetary science, and astrobiology.</p>
+    </div>
+  </div>
+
+  <div class="flex-1 relative">
+    <canvas id="c" class="w-full h-full"></canvas>
+    <div id="data-overlay" class="glass p-3 rounded-xl text-xs" style="min-width:200px;">
+      <div class="font-bold text-orange-400 mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Stage</span><span class="data-val" id="d-stage">Main Sequence</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Mass</span><span class="data-val" id="d-mass">1.0 M☉</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Luminosity</span><span class="data-val" id="d-lum">1.0 L☉</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Temperature</span><span class="data-val" id="d-temp">5,778 K</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Radius</span><span class="data-val" id="d-radius">1.0 R☉</span></div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Lifetime</span><span class="data-val" id="d-life">10 Gyr</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="quiz-fab" onclick="toggleQuiz()">❓</div>
+<div id="quiz-panel" class="glass p-4 rounded-xl" style="max-height:480px;overflow-y:auto;">
+  <div class="flex justify-between items-center mb-3">
+    <span class="font-bold text-orange-400">Knowledge Check</span>
+    <button onclick="toggleQuiz()" class="text-slate-400 hover:text-white text-lg">✕</button>
+  </div>
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Q1: What determines whether a massive star becomes a neutron star or black hole?</div>
+    <div class="quiz-opt" onclick="checkQ(1,'a')"><span>A</span> Its initial temperature</div>
+    <div class="quiz-opt" onclick="checkQ(1,'b')"><span>B</span> Its mass at collapse</div>
+    <div class="quiz-opt" onclick="checkQ(1,'c')"><span>C</span> Its age when it explodes</div>
+    <div class="quiz-opt" onclick="checkQ(1,'d')"><span>D</span> Its distance from Earth</div>
+    <div id="q1-feedback" class="text-xs mt-2 hidden"></div>
+  </div>
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Q2: On the H-R diagram, where does a star spend most of its life?</div>
+    <div class="quiz-opt" onclick="checkQ(2,'a')"><span>A</span> Red giant branch</div>
+    <div class="quiz-opt" onclick="checkQ(2,'b')"><span>B</span> White dwarf region</div>
+    <div class="quiz-opt" onclick="checkQ(2,'c')"><span>C</span> Main sequence</div>
+    <div class="quiz-opt" onclick="checkQ(2,'d')"><span>D</span> Planetary nebula phase</div>
+    <div id="q2-feedback" class="text-xs mt-2 hidden"></div>
+  </div>
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Q3: A 10 M☉ star lives approximately how long on the main sequence?</div>
+    <div class="quiz-opt" onclick="checkQ(3,'a')"><span>A</span> 10 billion years</div>
+    <div class="quiz-opt" onclick="checkQ(3,'b')"><span>B</span> 1 billion years</div>
+    <div class="quiz-opt" onclick="checkQ(3,'c')"><span>C</span> 30 million years</div>
+    <div class="quiz-opt" onclick="checkQ(3,'d')"><span>D</span> 100 million years</div>
+    <div id="q3-feedback" class="text-xs mt-2 hidden"></div>
+  </div>
+</div>
+
+<div id="about-modal">
+  <div class="glass p-6 rounded-2xl max-w-md w-full mx-4">
+    <div class="font-bold text-orange-400 text-lg mb-3">About — Star Life Cycle</div>
+    <p class="text-sm text-slate-300 mb-3">Interactive stellar evolution simulation. Explore how a star's mass determines its fate — from nebula birth through main sequence fusion to final remnant.</p>
+    <div class="text-xs text-slate-400 mb-4">
+      <div class="font-bold mb-1">Keyboard Shortcuts</div>
+      <div>Space — Play/Pause</div>
+      <div>R — Reset simulation</div>
+      <div>1–5 — Set speed (0.25×–3×)</div>
+      <div>Q — Toggle quiz panel</div>
+    </div>
+    <button onclick="closeAbout()" class="btn-preset w-full text-center">Close</button>
+  </div>
+</div>
+
+<script>
+// ── Inline OrbitControls ──────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0) {
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+// ── Scene Setup ──────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+renderer.setClearColor(0x000011, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth/canvas.clientHeight, 0.01, 1000);
+camera.position.set(0, 3, 12);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 3;
+controls.maxDistance = 50;
+
+// Lights
+const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambient);
+const sun1 = new THREE.PointLight(0xffa040, 2, 50);
+sun1.position.set(5,5,5);
+scene.add(sun1);
+const sun2 = new THREE.PointLight(0x4060ff, 1, 50);
+sun2.position.set(-5,-3,-5);
+scene.add(sun2);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+dirLight.position.set(0,10,5);
+scene.add(dirLight);
+
+// Background stars
+const starGeo = new THREE.BufferGeometry();
+const starCount = 2000;
+const starPos = new Float32Array(starCount*3);
+for(let i=0;i<starCount*3;i++) starPos[i]=(Math.random()-0.5)*400;
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+const starMat = new THREE.PointsMaterial({color:0xffffff,size:0.3,sizeAttenuation:true});
+scene.add(new THREE.Points(starGeo, starMat));
+
+// Main star sphere
+const starGeoMain = new THREE.SphereGeometry(1,64,64);
+const starMatMain = new THREE.MeshStandardMaterial({color:0xffcc44,emissive:0xffaa00,emissiveIntensity:1.2,roughness:0.7,metalness:0.0});
+const starMesh = new THREE.Mesh(starGeoMain, starMatMain);
+scene.add(starMesh);
+
+// Corona glow
+const glowGeo = new THREE.SphereGeometry(1.4,32,32);
+const glowMat = new THREE.MeshBasicMaterial({color:0xff8800,transparent:true,opacity:0.15,side:THREE.BackSide});
+const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+scene.add(glowMesh);
+
+// Nebula particles
+const nebCount = 800;
+const nebGeo = new THREE.BufferGeometry();
+const nebPos = new Float32Array(nebCount*3);
+const nebCol = new Float32Array(nebCount*3);
+for(let i=0;i<nebCount;i++){
+  const r=3+Math.random()*5;
+  const theta=Math.random()*Math.PI*2;
+  const phi=Math.acos(2*Math.random()-1);
+  nebPos[i*3]=r*Math.sin(phi)*Math.cos(theta);
+  nebPos[i*3+1]=r*Math.sin(phi)*Math.sin(theta)*(0.3+Math.random()*0.7);
+  nebPos[i*3+2]=r*Math.cos(phi);
+  nebCol[i*3]=0.9+Math.random()*0.1;
+  nebCol[i*3+1]=0.3+Math.random()*0.4;
+  nebCol[i*3+2]=0.1+Math.random()*0.2;
+}
+nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos.slice(),3));
+nebGeo.setAttribute('color', new THREE.BufferAttribute(nebCol,3));
+const nebMat = new THREE.PointsMaterial({vertexColors:true,size:0.2,transparent:true,opacity:0.7,sizeAttenuation:true});
+const nebPoints = new THREE.Points(nebGeo, nebMat);
+scene.add(nebPoints);
+
+// Ejected shell for nebula phase
+const shellGeo = new THREE.SphereGeometry(3,32,32);
+const shellMat = new THREE.MeshBasicMaterial({color:0xff6600,transparent:true,opacity:0.08,wireframe:false,side:THREE.DoubleSide});
+const shellMesh = new THREE.Mesh(shellGeo, shellMat);
+shellMesh.visible = false;
+scene.add(shellMesh);
+
+// Simulation state
+let playing = true;
+let speed = 1;
+let t = 0;
+let mass = 1.0;
+let density = 1.0;
+let stageProgress = 0.3;
+let currentPreset = 'sun';
+
+const quizAnswers = {1:'b', 2:'c', 3:'c'};
+
+function stageInfo(sp, m) {
+  if(sp < 0.1) return {name:'Molecular Cloud',color:0x8844aa,radius:3.5,temp:20,glow:0.05};
+  if(sp < 0.2) return {name:'Protostar',color:0xff6600,radius:1.8,temp:3000,glow:0.5};
+  if(sp < 0.65) return {name:'Main Sequence',color: m>8?0x9bb0ff:(m>2?0xffffff:0xffcc44),radius:1,temp:m>8?25000:(m>2?10000:5778),glow:1.0};
+  if(sp < 0.75) return {name:'Red Giant',color:0xff4400,radius:4.5,temp:3800,glow:0.8};
+  if(m < 8) {
+    if(sp < 0.88) return {name:'Planetary Nebula',color:0xff6600,radius:1.5,temp:50000,glow:1.5};
+    return {name:'White Dwarf',color:0xddeeff,radius:0.15,temp:80000,glow:2.0};
+  } else {
+    if(sp < 0.85) return {name:'Supergiant',color:0xff2200,radius:8,temp:3500,glow:0.6};
+    if(sp < 0.93) return {name:'Supernova!',color:0xffffff,radius:6,temp:200000,glow:5.0};
+    if(m > 20) return {name:'Black Hole',color:0x000000,radius:0.05,temp:0,glow:0.0};
+    return {name:'Neutron Star',color:0xaaccff,radius:0.05,temp:1000000,glow:3.0};
+  }
+}
+
+function getLuminosity(m) { return Math.pow(m, 3.5); }
+function getLifetime(m) { return (10/Math.pow(m,2.5)).toFixed(2); }
+function tempToColor(T) {
+  if(T>30000) return new THREE.Color(0x9bb0ff);
+  if(T>10000) return new THREE.Color(0xcad7ff);
+  if(T>7500) return new THREE.Color(0xf8f7ff);
+  if(T>6000) return new THREE.Color(0xfff4e8);
+  if(T>5200) return new THREE.Color(0xffcc88);
+  if(T>3700) return new THREE.Color(0xff8844);
+  return new THREE.Color(0xff4400);
+}
+
+function updateScene() {
+  const info = stageInfo(stageProgress, mass);
+  const targetR = info.radius;
+  starMesh.scale.setScalar(targetR);
+  glowMesh.scale.setScalar(targetR*1.4);
+
+  const col = tempToColor(info.temp);
+  starMatMain.color.set(col);
+  starMatMain.emissive.set(col);
+  starMatMain.emissiveIntensity = info.glow;
+  glowMat.color.set(col);
+  glowMat.opacity = Math.min(0.3, info.glow*0.1);
+
+  // Nebula visibility
+  nebPoints.visible = stageProgress < 0.2 || (stageProgress > 0.73 && stageProgress < 0.92 && mass < 8) || (stageProgress > 0.92);
+  shellMesh.visible = stageProgress > 0.73 && stageProgress < 0.92 && mass < 8;
+  if(shellMesh.visible) shellMesh.scale.setScalar(1 + (stageProgress-0.73)*15);
+
+  // Black hole: hide star
+  starMesh.visible = info.name !== 'Black Hole';
+
+  // Update data overlay
+  document.getElementById('d-stage').textContent = info.name;
+  document.getElementById('d-mass').textContent = mass.toFixed(1)+' M☉';
+  document.getElementById('d-lum').textContent = getLuminosity(mass).toFixed(1)+' L☉';
+  document.getElementById('d-temp').textContent = info.temp.toLocaleString()+' K';
+  document.getElementById('d-radius').textContent = targetR.toFixed(2)+' R☉';
+  document.getElementById('d-life').textContent = getLifetime(mass)+' Gyr';
+  document.getElementById('stage-val').textContent = info.name;
+
+  sun1.color.set(col);
+  sun1.intensity = 1+info.glow;
+}
+
+function onMassChange(v) {
+  mass = parseFloat(v);
+  document.getElementById('mass-val').textContent = mass.toFixed(1);
+  updateScene();
+  toast('Mass set to '+mass.toFixed(1)+' M☉');
+}
+function onStageChange(v) {
+  stageProgress = parseFloat(v)/100;
+  document.getElementById('stage-slider').value = v;
+  updateScene();
+}
+function onDensityChange(v) {
+  density = parseFloat(v);
+  document.getElementById('density-val').textContent = density.toFixed(1);
+  nebMat.opacity = Math.min(1, 0.7*density);
+}
+function setPreset(p) {
+  currentPreset = p;
+  document.querySelectorAll('.stage-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(p==='sun'){mass=1.0;stageProgress=0.3;}
+  else if(p==='massive'){mass=10.0;stageProgress=0.3;}
+  else if(p==='verymassive'){mass=22.0;stageProgress=0.3;}
+  document.getElementById('mass-slider').value=mass;
+  document.getElementById('mass-val').textContent=mass.toFixed(1);
+  document.getElementById('stage-slider').value=stageProgress*100;
+  updateScene();
+  toast('Preset: '+p);
+}
+function setSpeed(s) {
+  speed=s;
+  document.querySelectorAll('.btn-speed').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function togglePlay() {
+  playing=!playing;
+  document.getElementById('play-btn').textContent=playing?'⏸ Pause':'▶ Play';
+}
+function resetSim() {
+  stageProgress=0; t=0;
+  document.getElementById('stage-slider').value=0;
+  updateScene();
+  toast('Simulation reset');
+}
+function toggleFullscreen() {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout(){document.getElementById('about-modal').classList.add('open');}
+function closeAbout(){document.getElementById('about-modal').classList.remove('open');}
+function toggleQuiz() {
+  const p=document.getElementById('quiz-panel');
+  const f=document.getElementById('quiz-fab');
+  p.style.display=p.style.display==='none'?'block':'none';
+  f.style.display=p.style.display==='none'?'flex':'none';
+}
+function checkQ(q,a) {
+  const fb=document.getElementById('q'+q+'-feedback');
+  const opts=document.querySelectorAll('#quiz-panel .mb-4:nth-child('+(q+1)+') .quiz-opt');
+  opts.forEach(o=>o.classList.remove('correct','wrong'));
+  const letters=['a','b','c','d'];
+  opts.forEach((o,i)=>{
+    if(letters[i]===quizAnswers[q]) o.classList.add('correct');
+    else if(letters[i]===a&&a!==quizAnswers[q]) o.classList.add('wrong');
+  });
+  fb.classList.remove('hidden');
+  if(a===quizAnswers[q]){fb.className='text-xs mt-2 text-green-400';fb.textContent='Correct! Well done.';}
+  else{fb.className='text-xs mt-2 text-red-400';fb.textContent='Not quite. Review the concept above.';}
+}
+function toast(msg) {
+  const d=document.createElement('div');
+  d.className='toast-item';d.textContent=msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(()=>d.remove(),2800);
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='KeyR') resetSim();
+  if(e.code==='Digit1') setSpeedKey(0.25);
+  if(e.code==='Digit2') setSpeedKey(0.5);
+  if(e.code==='Digit3') setSpeedKey(1);
+  if(e.code==='Digit4') setSpeedKey(2);
+  if(e.code==='Digit5') setSpeedKey(3);
+  if(e.code==='KeyQ') toggleQuiz();
+});
+function setSpeedKey(s){speed=s;}
+
+// Resize
+window.addEventListener('resize',()=>{
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+});
+
+// Init
+updateScene();
+renderAutoRender();
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]});
+});
+
+// Animation
+function renderAutoRender() {
+  renderer.setAnimationLoop(()=>{
+    if(playing) {
+      t += 0.005*speed;
+      stageProgress = Math.min(1, stageProgress + 0.0002*speed);
+      document.getElementById('stage-slider').value = stageProgress*100;
+      updateScene();
+    }
+    starMesh.rotation.y += 0.002*speed;
+    nebPoints.rotation.y += 0.0005*speed;
+    // Pulsate glow
+    const pulse = 1 + 0.05*Math.sin(t*3);
+    glowMesh.scale.setScalar(starMesh.scale.x*1.4*pulse);
+    controls.update();
+    renderer.render(scene, camera);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food Web Dynamics — Middle School Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+  #toast{position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none;}
+  .toast-item{background:rgba(236,72,153,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(236,72,153,0.4);animation:toastIn 0.3s ease;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+  .glass{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;}
+  .panel-card{background:rgba(74,4,40,0.5);border:1px solid rgba(236,72,153,0.25);border-radius:10px;padding:12px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#EC4899,#F97316);cursor:pointer;}
+  .sidebar{width:300px;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(236,72,153,0.2);}
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(236,72,153,0.4);border-radius:2px;}
+  .btn-preset{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(236,72,153,0.3);cursor:pointer;background:rgba(236,72,153,0.1);color:#f9a8d4;transition:all 0.18s;}
+  .btn-preset:hover{background:rgba(236,72,153,0.25);color:#fff;}
+  .btn-preset.active{background:linear-gradient(135deg,#EC4899,#F97316);color:#fff;border-color:#EC4899;}
+  .btn-speed{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s;}
+  .btn-speed.active{background:linear-gradient(135deg,#EC4899,#F97316);color:#fff;border-color:#EC4899;}
+  .data-val{font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#f472b6;}
+  .quiz-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s;}
+  .quiz-opt:hover{border-color:#EC4899;background:rgba(236,72,153,0.1);}
+  .quiz-opt.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;}
+  .quiz-opt.wrong{background:rgba(239,68,68,0.15);border-color:#ef4444;}
+  #quiz-panel{position:fixed;bottom:16px;right:16px;width:330px;z-index:100;}
+  #quiz-fab{position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#EC4899,#F97316);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(236,72,153,0.5);}
+  #data-overlay{position:absolute;top:12px;left:12px;z-index:10;pointer-events:none;}
+</style>
+</head>
+<body>
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(236,72,153,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#EC4899,#F97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Food Web Dynamics</span>
+    <span class="text-xs text-slate-400 ml-3">Trophic Cascades · Keystone Species · Predator-Prey · Grade 6-8</span>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-pink-400 mb-3">Predator-Prey Model</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-2">Lotka-Volterra prey equation</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Lotka-Volterra predator equation</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-pink-400 mb-2">Key Concepts</div>
+    <p class="text-xs text-slate-300 leading-relaxed">
+      <strong class="text-yellow-300">Keystone species:</strong> has outsized impact on ecosystem balance<br>
+      <strong class="text-red-300">Trophic cascade:</strong> removing a predator causes chain reaction through all levels<br>
+      <strong class="text-blue-300">Invasive species:</strong> disrupts established food web relationships<br>
+      <strong class="text-green-300">Predator-prey oscillations:</strong> populations cycle out of phase
+    </p>
+  </div>
+
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-orange-400 mb-1">Yellowstone Wolves</div>
+    <div class="text-xs text-slate-300">Wolves removed 1926. Elk populations exploded → overgrazing → riverbanks eroded → fish disappeared. Wolves reintroduced 1995 → elk moved → vegetation recovered → rivers recovered. One keystone species changed everything.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Sea Otters (Kelp Forest)</div>
+    <div class="text-xs text-slate-300">Sea otters eat sea urchins. Without otters, urchins explode → eat kelp roots → kelp forest destroyed → fish, seals, eagles lose habitat. Otters as keystone species maintain entire ecosystem.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-emerald-400 mb-1">Why It Matters (NGSS)</div>
+    <div class="text-xs text-slate-300">NGSS MS-LS2-2: Construct an explanation that predicts patterns of interactions among organisms across multiple ecosystems.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold text-pink-400 mb-2">Presets</div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn-preset active" onclick="loadPreset('yellowstone')">Wolves in Yellowstone</button>
+      <button class="btn-preset" onclick="loadPreset('invasive')">Invasive Species</button>
+      <button class="btn-preset" onclick="loadPreset('kelp')">Kelp Forest (sea otters)</button>
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold text-pink-400 mb-2">Controls</div>
+    <label class="text-xs text-slate-400">Predator Population: <span id="predVal" class="data-val">10</span></label>
+    <input type="range" min="0" max="30" value="10" id="predSlider" oninput="updatePred(this.value)">
+    <label class="text-xs text-slate-400 mt-2 block">Prey Population: <span id="preyVal" class="data-val">100</span></label>
+    <input type="range" min="10" max="300" value="100" id="preySlider" oninput="updatePrey(this.value)">
+    <div class="flex gap-2 mt-3">
+      <button onclick="togglePlay()" id="playBtn" class="btn-preset flex-1">▶ Play</button>
+      <button onclick="resetSim()" class="btn-preset flex-1">↺ Reset</button>
+    </div>
+    <div class="flex gap-1 mt-2 flex-wrap">
+      <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+      <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+      <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+      <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+    </div>
+  </div>
+</aside>
+
+<div class="flex-1 relative">
+  <div id="data-overlay">
+    <div class="glass p-2 text-xs space-y-1" style="min-width:190px;">
+      <div class="text-pink-400 font-bold">Live Data</div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Scenario:</span><span id="d-scene" class="data-val text-xs">Yellowstone</span></div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Predators:</span><span id="d-pred" class="data-val text-xs">10</span></div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Prey:</span><span id="d-prey" class="data-val text-xs">100</span></div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Balance:</span><span id="d-balance" class="data-val text-xs">Stable</span></div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Time:</span><span id="d-time" class="data-val text-xs">0 yr</span></div>
+    </div>
+  </div>
+  <canvas id="c"></canvas>
+</div>
+</div>
+
+<div id="quiz-fab" onclick="toggleQuiz()">?</div>
+<div id="quiz-panel" class="glass p-4 hidden">
+  <div class="text-sm font-bold text-pink-400 mb-3">Quick Quiz</div>
+  <div id="quiz-content"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0) {
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a1628);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 500);
+camera.position.set(0, 6, 25);
+const controls = new THREE.OrbitControls(camera, canvas);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dLight = new THREE.DirectionalLight(0xffffff, 0.8); dLight.position.set(5,10,5); scene.add(dLight);
+const rLight = new THREE.PointLight(0xEC4899, 1, 40); rLight.position.set(-8,4,0); scene.add(rLight);
+const bLight = new THREE.PointLight(0x4488ff, 1, 40); bLight.position.set(8,4,0); scene.add(bLight);
+
+let allObjects = [], flowParticles = [], nodeMeshes = [];
+let playing = false, speed = 1, simTime = 0, dispTime = 0;
+let predPop = 10, preyPop = 100;
+let currentPreset = 'yellowstone';
+
+// Lotka-Volterra params
+const LV = { alpha:0.1, beta:0.02, gamma:0.3, delta:0.01 };
+let predN = 10, preyN = 100;
+
+const FOOD_WEBS = {
+  yellowstone: {
+    name:'Yellowstone',
+    nodes:[
+      {id:0, label:'Grass', x:-8, y:-4, color:0x22c55e, r:1.2},
+      {id:1, label:'Berries', x:0, y:-4, color:0x84cc16, r:0.9},
+      {id:2, label:'Elk', x:-6, y:-1, color:0x78716c, r:1.0},
+      {id:3, label:'Rabbit', x:2, y:-1, color:0xd4a373, r:0.7},
+      {id:4, label:'Beaver', x:6, y:-1, color:0x92400e, r:0.8},
+      {id:5, label:'Wolf', x:-4, y:3, color:0x94a3b8, r:0.9, keystone:true},
+      {id:6, label:'Bear', x:2, y:3, color:0x44403c, r:1.0},
+      {id:7, label:'Eagle', x:8, y:3, color:0xb45309, r:0.8},
+      {id:8, label:'Fish', x:4, y:0, color:0x38bdf8, r:0.7},
+      {id:9, label:'Mouse', x:-2, y:0, color:0xa8a29e, r:0.5},
+    ],
+    edges:[[0,2],[0,9],[1,3],[1,6],[2,5],[2,6],[3,5],[3,7],[4,6],[8,7],[9,5],[9,7]]
+  },
+  invasive: {
+    name:'Invasive Species',
+    nodes:[
+      {id:0, label:'Plankton', x:-8, y:-4, color:0x86efac, r:0.8},
+      {id:1, label:'Native Fish', x:-4, y:-1, color:0x38bdf8, r:1.0},
+      {id:2, label:'Small Fish', x:0, y:-1, color:0x7dd3fc, r:0.8},
+      {id:3, label:'Crayfish', x:4, y:-1, color:0xfb923c, r:0.7},
+      {id:4, label:'Invasive Carp', x:-2, y:2, color:0xef4444, r:1.3, invasive:true},
+      {id:5, label:'Heron', x:-6, y:3, color:0x8b5cf6, r:0.9},
+      {id:6, label:'Eagle', x:2, y:4, color:0xb45309, r:1.0},
+      {id:7, label:'Bass', x:6, y:2, color:0x2dd4bf, r:1.0},
+      {id:8, label:'Frog', x:-4, y:1, color:0x4ade80, r:0.6},
+      {id:9, label:'Turtle', x:6, y:0, color:0x65a30d, r:0.8},
+    ],
+    edges:[[0,1],[0,2],[0,4],[1,5],[2,7],[3,7],[4,5],[4,6],[8,5],[8,6],[9,6],[1,8]]
+  },
+  kelp: {
+    name:'Kelp Forest',
+    nodes:[
+      {id:0, label:'Kelp', x:-8, y:-4, color:0x16a34a, r:1.3},
+      {id:1, label:'Urchin', x:-4, y:-2, color:0xa855f7, r:0.9},
+      {id:2, label:'Snail', x:0, y:-3, color:0xd97706, r:0.6},
+      {id:3, label:'Small Fish', x:4, y:-2, color:0x38bdf8, r:0.8},
+      {id:4, label:'Sea Otter', x:-2, y:2, color:0x78716c, r:1.0, keystone:true},
+      {id:5, label:'Seal', x:4, y:1, color:0x64748b, r:1.0},
+      {id:6, label:'Orca', x:0, y:5, color:0x1e293b, r:1.2},
+      {id:7, label:'Crab', x:-6, y:0, color:0xf97316, r:0.7},
+      {id:8, label:'Abalone', x:6, y:-1, color:0xec4899, r:0.7},
+      {id:9, label:'Rockfish', x:2, y:2, color:0xdc2626, r:0.8},
+    ],
+    edges:[[0,1],[0,2],[1,4],[2,7],[3,9],[3,5],[4,6],[5,6],[7,4],[8,3],[9,5],[1,7]]
+  }
+};
+
+function clearScene() {
+  allObjects.forEach(o => { scene.remove(o); o.geometry&&o.geometry.dispose(); o.material&&o.material.dispose(); });
+  allObjects = [];
+  flowParticles.forEach(p => scene.remove(p));
+  flowParticles = [];
+  nodeMeshes = [];
+}
+
+function buildWeb(name) {
+  clearScene();
+  const web = FOOD_WEBS[name];
+
+  // Draw edges as tubes
+  web.edges.forEach(([from, to]) => {
+    const nA = web.nodes[from], nB = web.nodes[to];
+    const points = [new THREE.Vector3(nA.x, nA.y, 0), new THREE.Vector3(nB.x, nB.y, 0)];
+    const curve = new THREE.LineCurve3(points[0], points[1]);
+    const g = new THREE.TubeGeometry(curve, 4, 0.06, 4, false);
+    const m = new THREE.MeshBasicMaterial({color:0x334155, transparent:true, opacity:0.5});
+    const mesh = new THREE.Mesh(g, m);
+    mesh.userData = {edge:[from,to]};
+    scene.add(mesh); allObjects.push(mesh);
+  });
+
+  // Draw nodes as spheres
+  web.nodes.forEach(node => {
+    const g = new THREE.SphereGeometry(node.r, 16, 12);
+    const color = node.keystone ? 0xfbbf24 : (node.invasive ? 0xef4444 : node.color);
+    const m = new THREE.MeshPhongMaterial({color, shininess:60, emissive:node.keystone?0x443300:0, emissiveIntensity:0.3});
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set(node.x, node.y, 0);
+    mesh.userData = {nodeId:node.id, label:node.label};
+    scene.add(mesh); allObjects.push(mesh);
+    nodeMeshes.push(mesh);
+
+    // Label
+    const c2 = document.createElement('canvas');
+    c2.width = 160; c2.height = 36;
+    const ctx = c2.getContext('2d');
+    ctx.font = 'bold 14px Inter';
+    ctx.fillStyle = node.keystone ? '#fbbf24' : '#f8fafc';
+    ctx.textAlign = 'center';
+    ctx.fillText(node.label, 80, 22);
+    const tex = new THREE.CanvasTexture(c2);
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.6), new THREE.MeshBasicMaterial({map:tex, transparent:true, depthWrite:false}));
+    label.position.set(node.x, node.y + node.r + 0.5, 0.1);
+    scene.add(label); allObjects.push(label);
+  });
+
+  // Floor
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,16), new THREE.MeshPhongMaterial({color:0x0a1628}));
+  floor.rotation.x = -Math.PI/2; floor.position.y = -6;
+  scene.add(floor); allObjects.push(floor);
+}
+
+function spawnFlowParticle(fromNode, toNode) {
+  const web = FOOD_WEBS[currentPreset];
+  const nA = web.nodes[fromNode], nB = web.nodes[toNode];
+  const g = new THREE.SphereGeometry(0.15, 6, 4);
+  const m = new THREE.MeshBasicMaterial({color:0xffcc00, transparent:true, opacity:0.9});
+  const mesh = new THREE.Mesh(g, m);
+  mesh.position.set(nA.x, nA.y, 0);
+  mesh.userData = {
+    startX:nA.x, startY:nA.y,
+    endX:nB.x, endY:nB.y,
+    progress:0, speed:0.5+Math.random()*0.5
+  };
+  scene.add(mesh); flowParticles.push(mesh);
+}
+
+let pTimer = 0;
+const PRESETS = FOOD_WEBS;
+
+function loadPreset(name) {
+  currentPreset = name;
+  playing = false;
+  document.getElementById('playBtn').textContent = '▶ Play';
+  document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+  buildWeb(name);
+  document.getElementById('d-scene').textContent = FOOD_WEBS[name].name;
+  simTime = 0; dispTime = 0;
+  predN = predPop; preyN = preyPop;
+  updateDataOverlay();
+  toast(`Loaded: ${FOOD_WEBS[name].name}`);
+}
+
+function updateDataOverlay() {
+  document.getElementById('d-pred').textContent = Math.round(predN);
+  document.getElementById('d-prey').textContent = Math.round(preyN);
+  const ratio = predN / preyN;
+  document.getElementById('d-balance').textContent = ratio < 0.05 ? 'Overpopulated' : ratio > 0.3 ? 'Collapse Risk' : 'Stable';
+  document.getElementById('d-time').textContent = Math.round(dispTime)+' yr';
+}
+
+renderer.setAnimationLoop((t) => {
+  const dt = Math.min((t-(renderer._lt||0))/1000, 0.05)*speed;
+  renderer._lt = t;
+  simTime += dt;
+
+  if (playing) {
+    dispTime += dt * 2;
+
+    // Lotka-Volterra simulation
+    const dprey = (LV.alpha * preyN - LV.beta * preyN * predN) * dt * 5;
+    const dpred = (LV.delta * preyN * predN - LV.gamma * predN) * dt * 5;
+    preyN = Math.max(1, preyN + dprey);
+    predN = Math.max(0.1, predN + dpred);
+    updateDataOverlay();
+
+    // Scale node meshes by population
+    pTimer += dt;
+    if (pTimer > 0.3) {
+      pTimer = 0;
+      const web = FOOD_WEBS[currentPreset];
+      if (web.edges.length > 0) {
+        const randEdge = web.edges[Math.floor(Math.random()*web.edges.length)];
+        spawnFlowParticle(randEdge[0], randEdge[1]);
+      }
+    }
+
+    // Scale prey/predator nodes
+    const preyScale = Math.max(0.3, Math.min(2, preyN/100));
+    const predScale = Math.max(0.2, Math.min(2, predN/10));
+    nodeMeshes.forEach((m, i) => {
+      const web = FOOD_WEBS[currentPreset];
+      if (i < web.nodes.length) {
+        const tier = web.nodes[i].id;
+        if (tier >= 4 && tier <= 6) m.scale.setScalar(predScale);
+        else if (tier >= 1 && tier <= 3) m.scale.setScalar(preyScale);
+      }
+    });
+  }
+
+  // Update flow particles
+  for (let i = flowParticles.length-1; i >= 0; i--) {
+    const p = flowParticles[i];
+    p.userData.progress += dt * p.userData.speed;
+    const pr = p.userData.progress;
+    p.position.x = p.userData.startX + (p.userData.endX-p.userData.startX)*pr;
+    p.position.y = p.userData.startY + (p.userData.endY-p.userData.startY)*pr;
+    p.material.opacity = pr < 0.8 ? 0.9 : (1-pr)*4.5;
+    if (pr >= 1) { scene.remove(p); flowParticles.splice(i,1); }
+  }
+
+  // Gentle bob
+  nodeMeshes.forEach((m, i) => {
+    m.position.z = Math.sin(simTime*0.8+i*0.7)*0.2;
+  });
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? '⏸ Pause' : '▶ Play';
+}
+
+function resetSim() {
+  playing = false;
+  document.getElementById('playBtn').textContent = '▶ Play';
+  simTime = 0; dispTime = 0;
+  predN = predPop; preyN = preyPop;
+  buildWeb(currentPreset);
+  updateDataOverlay();
+}
+
+function updatePred(v) {
+  predPop = parseInt(v); predN = predPop;
+  document.getElementById('predVal').textContent = v;
+  updateDataOverlay();
+}
+
+function updatePrey(v) {
+  preyPop = parseInt(v); preyN = preyPop;
+  document.getElementById('preyVal').textContent = v;
+  updateDataOverlay();
+}
+
+function setSpeed(s) {
+  speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.toggle('active', parseFloat(b.textContent)===s));
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+function showAbout() {
+  toast('Food Web Dynamics — aetherviz-master v7.0 | NGSS MS-LS2');
+}
+
+function toast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  const d = document.createElement('div');
+  d.className = 'toast-item'; d.textContent = msg;
+  t.appendChild(d);
+  setTimeout(() => d.remove(), dur);
+}
+
+const questions = [
+  {q:'What is a keystone species?', opts:['The largest animal in the ecosystem','Species with outsized impact on ecosystem balance','First species in a food chain','Species at the bottom of the food web'], ans:1},
+  {q:'In Yellowstone, removing wolves caused elk to...', opts:['Decrease','Stay the same','Increase rapidly','Migrate south'], ans:2},
+  {q:'Predator-prey populations cycle how?', opts:['Both increase together','Both decrease together','Out of phase — predators lag prey','Randomly'], ans:2},
+];
+let qIdx=0, quizVisible=false;
+
+function toggleQuiz() {
+  quizVisible = !quizVisible;
+  document.getElementById('quiz-panel').classList.toggle('hidden', !quizVisible);
+  if (quizVisible) renderQuiz();
+}
+
+function renderQuiz() {
+  const q = questions[qIdx % questions.length];
+  document.getElementById('quiz-content').innerHTML = `
+    <p class="text-xs text-slate-300 mb-3">${q.q}</p>
+    ${q.opts.map((o,i)=>`<div class="quiz-opt" onclick="answerQuiz(${i})">${o}</div>`).join('')}
+  `;
+}
+
+function answerQuiz(i) {
+  const q = questions[qIdx % questions.length];
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts[q.ans].classList.add('correct');
+  if (i !== q.ans) opts[i].classList.add('wrong');
+  toast(i===q.ans ? '✓ Correct!' : `✗ Answer: ${q.opts[q.ans]}`);
+  setTimeout(() => { qIdx++; renderQuiz(); }, 1500);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  katex.render('\\frac{dx}{dt} = \\alpha x - \\beta xy', document.getElementById('f1'), {throwOnError:false});
+  katex.render('\\frac{dy}{dt} = \\delta xy - \\gamma y', document.getElementById('f2'), {throwOnError:false});
+});
+
+document.addEventListener('keydown', e => {
+  if (e.code==='Space') { e.preventDefault(); togglePlay(); }
+  if (e.code==='KeyR') resetSim();
+  if (e.code==='Digit1') loadPreset('yellowstone');
+  if (e.code==='Digit2') loadPreset('invasive');
+  if (e.code==='Digit3') loadPreset('kelp');
+});
+
+function resize() {
+  const w = canvas.parentElement.clientWidth;
+  const h = canvas.parentElement.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+loadPreset('yellowstone');
+</script>
+</body>
+</html>

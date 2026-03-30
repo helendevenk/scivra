@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curve Fitting & Data Analysis — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root { --primary: #3B82F6; --primary-light: #0EA5E9; --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.13); --panel-bg: rgba(15,23,42,0.9); }
+  #navbar { background: rgba(15,23,42,0.92); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0 1.2rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 50; }
+  #navbar h1 { font-size: 1.05rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .nav-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.2s; }
+  .nav-btn:hover { background: rgba(59,130,246,0.2); border-color: #3B82F6; color: #fff; }
+  #main-layout { display: flex; flex: 1; overflow: hidden; }
+  #sidebar { width: 290px; background: var(--panel-bg); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 1rem; flex-shrink: 0; }
+  #sidebar::-webkit-scrollbar { width: 4px; } #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  #center { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #plot-container { flex: 1; position: relative; background: #0c1526; }
+  #bottom-panel { background: rgba(15,23,42,0.97); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.7rem 1.2rem; flex-shrink: 0; }
+  .section-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0EA5E9; margin-bottom: 0.5rem; margin-top: 0.9rem; }
+  .section-title:first-child { margin-top: 0; }
+  .formula-block { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 0.55rem 0.75rem; margin-bottom: 0.45rem; }
+  .formula-label { font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem; }
+  .concept-text { font-size: 0.76rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 0.45rem; }
+  .knowledge-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.55rem 0.75rem; margin-bottom: 0.45rem; font-size: 0.73rem; color: #94a3b8; line-height: 1.5; }
+  .knowledge-card strong { color: #e2e8f0; }
+  .why-item { display: flex; gap: 0.4rem; align-items: flex-start; margin-bottom: 0.35rem; font-size: 0.73rem; color: #94a3b8; }
+  .why-dot { width: 6px; height: 6px; border-radius: 50%; background: #3B82F6; flex-shrink: 0; margin-top: 5px; }
+  .slider-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+  .slider-label { font-size: 0.7rem; color: #94a3b8; width: 105px; flex-shrink: 0; }
+  .slider-val { font-size: 0.7rem; color: #0EA5E9; width: 32px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); cursor: pointer; }
+  .btn-group { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  .preset-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.18s; }
+  .preset-btn:hover,.preset-btn.active { background: rgba(59,130,246,0.25); border-color: #3B82F6; color: #fff; }
+  .model-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.18s; }
+  .model-btn:hover,.model-btn.active { background: rgba(59,130,246,0.3); border-color: #0EA5E9; color: #fff; }
+  .action-btn { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 0.76rem; font-weight: 600; transition: opacity 0.2s; }
+  .action-btn:hover { opacity: 0.85; }
+  #data-overlay { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.65rem 0.85rem; min-width: 200px; z-index: 20; pointer-events: none; }
+  .data-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.7rem; margin-bottom: 0.22rem; }
+  .data-label { color: #64748b; }
+  .data-val { color: #0EA5E9; font-variant-numeric: tabular-nums; font-weight: 600; }
+  #eq-display { position: absolute; top: 12px; right: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 0.65rem 0.9rem; z-index: 20; max-width: 200px; pointer-events: none; }
+  #eq-display .eq-label { font-size: 0.65rem; color: #64748b; margin-bottom: 0.3rem; }
+  #quiz-panel { position: absolute; bottom: 12px; right: 12px; width: 315px; background: rgba(15,23,42,0.96); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; z-index: 30; overflow: hidden; }
+  #quiz-header { background: rgba(59,130,246,0.15); padding: 0.5rem 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+  #quiz-header span { font-size: 0.76rem; font-weight: 700; color: #0EA5E9; }
+  #quiz-body { padding: 0.75rem; max-height: 260px; overflow-y: auto; }
+  .quiz-q { font-size: 0.73rem; color: #e2e8f0; margin-bottom: 0.4rem; font-weight: 600; }
+  .quiz-opt { display: flex; align-items: center; gap: 0.4rem; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; color: #cbd5e1; transition: background 0.15s; margin-bottom: 3px; border: 1px solid transparent; }
+  .quiz-opt:hover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.18); border-color: #22c55e; color: #86efac; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.18); border-color: #ef4444; color: #fca5a5; }
+  .quiz-feedback { font-size: 0.68rem; margin-top: 0.35rem; padding: 0.35rem 0.45rem; border-radius: 5px; line-height: 1.4; }
+  .quiz-feedback.ok { background: rgba(34,197,94,0.12); color: #86efac; }
+  .quiz-feedback.no { background: rgba(239,68,68,0.12); color: #fca5a5; }
+  #toast { position: fixed; top: 60px; right: 16px; background: rgba(59,130,246,0.92); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; pointer-events: none; opacity: 0; transform: translateX(20px); transition: all 0.3s; z-index: 100; }
+  #toast.show { opacity: 1; transform: translateX(0); }
+  #about-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+  #about-modal.show { display: flex; }
+  #about-inner { background: #1e293b; border: 1px solid rgba(59,130,246,0.3); border-radius: 14px; padding: 1.4rem; max-width: 370px; width: 90%; }
+  #about-inner h2 { font-size: 0.95rem; font-weight: 700; color: #0EA5E9; margin-bottom: 0.7rem; }
+  #about-inner p { font-size: 0.75rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 0.45rem; }
+  .shortcut-row { display: flex; justify-content: space-between; font-size: 0.7rem; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .shortcut-key { background: rgba(59,130,246,0.18); padding: 1px 7px; border-radius: 4px; color: #0EA5E9; font-family: monospace; }
+  #main-svg { width: 100%; height: 100%; display: block; cursor: crosshair; }
+  #quiz-float-btn { display: none; position: absolute; bottom: 12px; right: 12px; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; z-index: 30; box-shadow: 0 4px 14px rgba(59,130,246,0.4); align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div id="navbar">
+  <h1>Curve Fitting &amp; Data Analysis — Regression &amp; Goodness of Fit</h1>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="nav-btn" onclick="resetData()">Reset</button>
+    <button class="nav-btn" onclick="applyRandomPreset()">Random</button>
+    <button class="nav-btn" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="nav-btn" onclick="document.getElementById('about-modal').classList.add('show')">About</button>
+  </div>
+</div>
+
+<div id="main-layout">
+  <div id="sidebar">
+    <div class="section-title">Core Formulas</div>
+    <div class="formula-block">
+      <div id="f-linear"></div>
+      <div class="formula-label">Linear model: slope m and intercept b</div>
+    </div>
+    <div class="formula-block">
+      <div id="f-r2"></div>
+      <div class="formula-label">R² — proportion of variance explained by the model</div>
+    </div>
+    <div class="formula-block">
+      <div id="f-rmse"></div>
+      <div class="formula-label">RMSE — root mean square error (residuals)</div>
+    </div>
+    <div class="formula-block">
+      <div id="f-exp"></div>
+      <div class="formula-label">Exponential and power-law transformations</div>
+    </div>
+
+    <div class="section-title">Concept</div>
+    <p class="concept-text">Curve fitting is the art of finding the mathematical function that best describes a noisy dataset. The goal isn't a perfect fit — it's the simplest model that captures the underlying physics.</p>
+    <p class="concept-text">R² measures how much of the data's variance is explained by the model. R²=1 is a perfect fit; R²=0 means the model is no better than a flat horizontal line. RMSE gives the average prediction error in the same units as y.</p>
+    <p class="concept-text">Drag data points to update the fit in real time. Watch how R² changes — and notice that adding polynomial terms always improves fit, but may not improve understanding (overfitting).</p>
+
+    <div class="section-title">Knowledge Cards</div>
+    <div class="knowledge-card"><strong>Linearization trick:</strong> Exponential data (y = Ae^(bx)) becomes linear if you plot ln(y) vs x. Power laws (y = ax^n) linearize as log(y) vs log(x). AP Physics labs use this to identify relationships.</div>
+    <div class="knowledge-card"><strong>Residuals matter:</strong> A good fit has residuals that look random. Patterns in residuals mean your model is wrong — there's structure you haven't captured.</div>
+    <div class="knowledge-card"><strong>AP connection:</strong> AP Physics 1 explicitly requires students to analyze best-fit lines, calculate slopes with units, and interpret y-intercepts physically. R² is tested in AP Statistics.</div>
+
+    <div class="section-title">Why It Matters</div>
+    <div class="why-item"><div class="why-dot"></div><span>Every AP Physics lab report requires a best-fit line and slope interpretation. Understanding R² separates good analysis from guessing.</span></div>
+    <div class="why-item"><div class="why-dot"></div><span>Machine learning is fundamentally curve fitting at scale — neural networks are regression models with millions of parameters.</span></div>
+    <div class="why-item"><div class="why-dot"></div><span>Kepler's Third Law (T² ∝ r³) was discovered by noticing that a power law fit planetary data perfectly.</span></div>
+  </div>
+
+  <div id="center">
+    <div id="plot-container">
+      <svg id="main-svg"></svg>
+      <div id="data-overlay">
+        <div class="data-row"><span class="data-label">Model</span><span class="data-val" id="d-model">Linear</span></div>
+        <div class="data-row"><span class="data-label">R²</span><span class="data-val" id="d-r2">—</span></div>
+        <div class="data-row"><span class="data-label">RMSE</span><span class="data-val" id="d-rmse">—</span></div>
+        <div class="data-row"><span class="data-label">Points</span><span class="data-val" id="d-pts">—</span></div>
+        <div class="data-row"><span class="data-label">x Range</span><span class="data-val" id="d-range">—</span></div>
+      </div>
+      <div id="eq-display">
+        <div class="eq-label">Fitted Equation</div>
+        <div id="eq-katex" style="font-size:0.8rem;color:#0EA5E9;min-height:24px;"></div>
+      </div>
+      <div id="quiz-panel">
+        <div id="quiz-header" onclick="toggleQuiz()">
+          <span>Quiz — Curve Fitting</span>
+          <span id="quiz-arrow">▲</span>
+        </div>
+        <div id="quiz-body"></div>
+      </div>
+      <button id="quiz-float-btn" onclick="showQuiz()">?</button>
+    </div>
+    <div id="bottom-panel">
+      <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <div class="section-title" style="margin-top:0;">Controls</div>
+          <div class="slider-row">
+            <span class="slider-label">Noise Level</span>
+            <input type="range" id="sl-noise" min="0" max="2" step="0.05" value="0.5" oninput="updateNoise(this.value)">
+            <span class="slider-val" id="sv-noise">0.50</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Num Points</span>
+            <input type="range" id="sl-npts" min="5" max="50" value="20" oninput="updateNpts(this.value)">
+            <span class="slider-val" id="sv-npts">20</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">X Range</span>
+            <input type="range" id="sl-xrange" min="1" max="10" step="0.5" value="5" oninput="updateXrange(this.value)">
+            <span class="slider-val" id="sv-xrange">5</span>
+          </div>
+        </div>
+        <div style="flex:1;min-width:220px;">
+          <div class="section-title" style="margin-top:0;">Model</div>
+          <div class="btn-group" style="margin-bottom:0.55rem;">
+            <button class="model-btn active" id="mb-linear" onclick="setModel('linear')">Linear</button>
+            <button class="model-btn" id="mb-quad" onclick="setModel('quad')">Quadratic</button>
+            <button class="model-btn" id="mb-exp" onclick="setModel('exp')">Exponential</button>
+            <button class="model-btn" id="mb-power" onclick="setModel('power')">Power Law</button>
+          </div>
+          <div class="section-title" style="margin-top:0.3rem;">Presets</div>
+          <div class="btn-group">
+            <button class="preset-btn active" onclick="applyPreset('linear')">Linear (y=mx+b)</button>
+            <button class="preset-btn" onclick="applyPreset('exp')">Exponential Growth</button>
+            <button class="preset-btn" onclick="applyPreset('power')">Power Law (y=axⁿ)</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:flex-end;padding-bottom:2px;">
+          <button class="action-btn" onclick="regenerateData()">↺ Regenerate</button>
+          <button class="action-btn" style="background:rgba(59,130,246,0.25);border:1px solid #3B82F6;" onclick="resetData()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="about-modal">
+  <div id="about-inner">
+    <h2>Curve Fitting &amp; Data Analysis</h2>
+    <p>Interactive scatter plot — drag data points to see the fit update instantly. Select different models and observe how R² changes. Residuals are shown as vertical red lines from each point to the fit curve.</p>
+    <p style="margin-bottom:0.7rem;"><strong style="color:#0EA5E9;">Keyboard Shortcuts</strong></p>
+    <div class="shortcut-row"><span>Regenerate data</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-row"><span>Reset</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span>Model: Linear / Quad / Exp / Power</span><span class="shortcut-key">1–4</span></div>
+    <br>
+    <button class="action-btn" onclick="document.getElementById('about-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────
+let noiseLevel = 0.5;
+let numPoints = 20;
+let xRange = 5;
+let currentModel = 'linear';
+let dataPoints = [];
+let trueModel = { type: 'linear', a: 1.5, b: 0.5 };
+let dragIdx = -1;
+let fitParams = null;
+
+const MARGIN = { top: 40, right: 50, bottom: 60, left: 65 };
+
+// ── DATA GENERATION ───────────────────────────────────────────────────────
+function generateData() {
+  dataPoints = [];
+  for (let i = 0; i < numPoints; i++) {
+    const x = 0.1 + (xRange - 0.1) * (i + Math.random() * 0.5) / numPoints;
+    let y;
+    if (trueModel.type === 'linear') {
+      y = trueModel.a * x + trueModel.b + (Math.random() - 0.5) * 2 * noiseLevel;
+    } else if (trueModel.type === 'quadratic') {
+      y = trueModel.a * x * x + trueModel.b * x + trueModel.c + (Math.random() - 0.5) * 2 * noiseLevel;
+    } else if (trueModel.type === 'exp') {
+      y = trueModel.a * Math.exp(trueModel.b * x) + (Math.random() - 0.5) * 2 * noiseLevel * trueModel.a * 0.5;
+    } else if (trueModel.type === 'power') {
+      y = trueModel.a * Math.pow(x, trueModel.b) + (Math.random() - 0.5) * 2 * noiseLevel;
+    }
+    y = Math.max(0.01, y);
+    dataPoints.push({ x, y });
+  }
+  dataPoints.sort((a, b) => a.x - b.x);
+}
+
+// ── CURVE FITTING ─────────────────────────────────────────────────────────
+function fitLinear(pts) {
+  const n = pts.length;
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
+  pts.forEach(p => { sx += p.x; sy += p.y; sxx += p.x * p.x; sxy += p.x * p.y; });
+  const det = n * sxx - sx * sx;
+  if (Math.abs(det) < 1e-10) return { m: 0, b: sy / n };
+  const m = (n * sxy - sx * sy) / det;
+  const b = (sy - m * sx) / n;
+  return { m, b };
+}
+
+function fitQuadratic(pts) {
+  // Least squares for ax^2 + bx + c
+  const n = pts.length;
+  let s0 = n, s1 = 0, s2 = 0, s3 = 0, s4 = 0, sy0 = 0, sy1 = 0, sy2 = 0;
+  pts.forEach(p => {
+    const x = p.x, y = p.y;
+    s1 += x; s2 += x*x; s3 += x*x*x; s4 += x*x*x*x;
+    sy0 += y; sy1 += x*y; sy2 += x*x*y;
+  });
+  // Solve 3x3 system [s0,s1,s2; s1,s2,s3; s2,s3,s4] * [c,b,a] = [sy0,sy1,sy2]
+  const A = [[s0,s1,s2],[s1,s2,s3],[s2,s3,s4]];
+  const B = [sy0,sy1,sy2];
+  const sol = solve3x3(A, B);
+  return { c: sol[0], b: sol[1], a: sol[2] };
+}
+
+function solve3x3(A, B) {
+  const n = 3;
+  const M = A.map((r, i) => [...r, B[i]]);
+  for (let col = 0; col < n; col++) {
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++) if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    for (let row = col + 1; row < n; row++) {
+      const f = M[row][col] / M[col][col];
+      for (let k = col; k <= n; k++) M[row][k] -= f * M[col][k];
+    }
+  }
+  const x = [0, 0, 0];
+  for (let i = n - 1; i >= 0; i--) {
+    x[i] = M[i][n] / M[i][i];
+    for (let k = i - 1; k >= 0; k--) M[k][n] -= M[k][i] * x[i];
+  }
+  return x;
+}
+
+function fitExponential(pts) {
+  // Linearize: ln(y) = ln(a) + b*x, then linear regression
+  const validPts = pts.filter(p => p.y > 0);
+  if (validPts.length < 2) return { a: 1, b: 0.1 };
+  const logPts = validPts.map(p => ({ x: p.x, y: Math.log(p.y) }));
+  const { m, b } = fitLinear(logPts);
+  return { a: Math.exp(b), b: m };
+}
+
+function fitPowerLaw(pts) {
+  // Linearize: ln(y) = ln(a) + n*ln(x)
+  const validPts = pts.filter(p => p.x > 0 && p.y > 0);
+  if (validPts.length < 2) return { a: 1, n: 1 };
+  const logPts = validPts.map(p => ({ x: Math.log(p.x), y: Math.log(p.y) }));
+  const { m, b } = fitLinear(logPts);
+  return { a: Math.exp(b), n: m };
+}
+
+function evalFit(x, params, model) {
+  switch (model) {
+    case 'linear': return params.m * x + params.b;
+    case 'quad': return params.a * x * x + params.b * x + params.c;
+    case 'exp': return params.a * Math.exp(params.b * x);
+    case 'power': return x > 0 ? params.a * Math.pow(x, params.n) : 0;
+    default: return 0;
+  }
+}
+
+function computeStats(pts, params, model) {
+  const n = pts.length;
+  let ss_res = 0, ss_tot = 0;
+  const ymean = pts.reduce((s, p) => s + p.y, 0) / n;
+  pts.forEach(p => {
+    const pred = evalFit(p.x, params, model);
+    ss_res += (p.y - pred) ** 2;
+    ss_tot += (p.y - ymean) ** 2;
+  });
+  const r2 = ss_tot > 0 ? 1 - ss_res / ss_tot : 1;
+  const rmse = Math.sqrt(ss_res / n);
+  return { r2: Math.max(0, r2), rmse };
+}
+
+function doFit() {
+  if (dataPoints.length < 2) return;
+  switch (currentModel) {
+    case 'linear': fitParams = fitLinear(dataPoints); break;
+    case 'quad': fitParams = fitQuadratic(dataPoints); break;
+    case 'exp': fitParams = fitExponential(dataPoints); break;
+    case 'power': fitParams = fitPowerLaw(dataPoints); break;
+  }
+}
+
+// ── PLOT RENDERING ────────────────────────────────────────────────────────
+function getPlotDims() {
+  const svg = document.getElementById('main-svg');
+  const W = svg.clientWidth || svg.getBoundingClientRect().width || 600;
+  const H = svg.clientHeight || svg.getBoundingClientRect().height || 400;
+  return { W, H, plotW: W - MARGIN.left - MARGIN.right, plotH: H - MARGIN.top - MARGIN.bottom };
+}
+
+function scaleX(x, xMin, xMax, plotW) { return (x - xMin) / (xMax - xMin) * plotW; }
+function scaleY(y, yMin, yMax, plotH) { return plotH - (y - yMin) / (yMax - yMin) * plotH; }
+
+function draw() {
+  doFit();
+  const svg = document.getElementById('main-svg');
+  const { W, H, plotW, plotH } = getPlotDims();
+
+  if (!dataPoints.length) { svg.innerHTML = ''; return; }
+
+  const xVals = dataPoints.map(p => p.x);
+  const yVals = dataPoints.map(p => p.y);
+  const xMin = 0, xMax = Math.max(...xVals) * 1.08;
+  const yMin = Math.min(0, Math.min(...yVals) * 0.85);
+  const yMax = Math.max(...yVals) * 1.15;
+
+  const ox = MARGIN.left, oy = MARGIN.top;
+  const sx = x => ox + scaleX(x, xMin, xMax, plotW);
+  const sy = y => oy + scaleY(y, yMin, yMax, plotH);
+
+  let html = `<g>`;
+
+  // Grid
+  for (let i = 0; i <= 5; i++) {
+    const gx = xMin + i * (xMax - xMin) / 5;
+    const px = sx(gx);
+    html += `<line x1="${px}" y1="${oy}" x2="${px}" y2="${oy + plotH}" stroke="#1e3a5f" stroke-width="1"/>`;
+    html += `<text x="${px}" y="${oy + plotH + 18}" text-anchor="middle" fill="#475569" font-size="10">${gx.toFixed(1)}</text>`;
+    const gy = yMin + i * (yMax - yMin) / 5;
+    const py = sy(gy);
+    html += `<line x1="${ox}" y1="${py}" x2="${ox + plotW}" y2="${py}" stroke="#1e3a5f" stroke-width="1"/>`;
+    html += `<text x="${ox - 8}" y="${py + 4}" text-anchor="end" fill="#475569" font-size="10">${gy.toFixed(1)}</text>`;
+  }
+
+  // Axes
+  html += `<line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + plotH}" stroke="#334155" stroke-width="1.5"/>`;
+  html += `<line x1="${ox}" y1="${oy + plotH}" x2="${ox + plotW}" y2="${oy + plotH}" stroke="#334155" stroke-width="1.5"/>`;
+
+  // Axis labels
+  html += `<text x="${ox + plotW / 2}" y="${H - 8}" text-anchor="middle" fill="#64748b" font-size="11">x</text>`;
+  html += `<text x="14" y="${oy + plotH / 2}" text-anchor="middle" fill="#64748b" font-size="11" transform="rotate(-90,14,${oy + plotH / 2})">y</text>`;
+
+  // Fit curve + residuals
+  if (fitParams) {
+    // Residuals first (behind curve)
+    dataPoints.forEach(p => {
+      const pred = evalFit(p.x, fitParams, currentModel);
+      const py1 = sy(p.y), py2 = sy(Math.max(yMin, Math.min(yMax, pred)));
+      html += `<line x1="${sx(p.x)}" y1="${py1}" x2="${sx(p.x)}" y2="${py2}" stroke="rgba(239,68,68,0.45)" stroke-width="1" stroke-dasharray="3,2"/>`;
+    });
+
+    // Fit curve
+    const steps = 200;
+    let pathD = '';
+    for (let i = 0; i <= steps; i++) {
+      const x = xMin + i * (xMax - xMin) / steps;
+      const y = evalFit(x, fitParams, currentModel);
+      if (y < yMin * 2 || y > yMax * 2) continue;
+      const px = sx(x), py = sy(Math.max(yMin, Math.min(yMax * 2, y)));
+      pathD += i === 0 ? `M${px},${py}` : ` L${px},${py}`;
+    }
+    html += `<path d="${pathD}" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.9"/>`;
+  }
+
+  // Data points
+  dataPoints.forEach((p, i) => {
+    const px = sx(p.x), py = sy(p.y);
+    html += `<circle cx="${px}" cy="${py}" r="6" fill="#3B82F6" stroke="#fff" stroke-width="1.5" opacity="0.9" class="data-pt" data-idx="${i}" style="cursor:grab;"/>`;
+  });
+
+  html += `</g>`;
+  svg.innerHTML = html;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  // Attach drag events
+  svg.querySelectorAll('.data-pt').forEach(el => {
+    el.addEventListener('mousedown', e => {
+      dragIdx = parseInt(el.getAttribute('data-idx'));
+      e.preventDefault();
+    });
+  });
+
+  updateDataPanel();
+  updateEquation();
+}
+
+// Drag logic
+document.addEventListener('mousemove', e => {
+  if (dragIdx < 0) return;
+  const svg = document.getElementById('main-svg');
+  const rect = svg.getBoundingClientRect();
+  const { plotW, plotH } = getPlotDims();
+  const xVals = dataPoints.map(p => p.x);
+  const yVals = dataPoints.map(p => p.y);
+  const xMin = 0, xMax = Math.max(...xVals) * 1.08;
+  const yMin = Math.min(0, Math.min(...yVals) * 0.85);
+  const yMax = Math.max(...yVals) * 1.15;
+
+  const relX = e.clientX - rect.left - MARGIN.left;
+  const relY = e.clientY - rect.top - MARGIN.top;
+  const newX = xMin + (relX / plotW) * (xMax - xMin);
+  const newY = yMax - (relY / plotH) * (yMax - yMin);
+  dataPoints[dragIdx].x = Math.max(0.01, Math.min(xRange * 1.1, newX));
+  dataPoints[dragIdx].y = Math.max(0.01, newY);
+  draw();
+});
+
+document.addEventListener('mouseup', () => { dragIdx = -1; });
+
+// ── DATA/EQ PANEL ─────────────────────────────────────────────────────────
+function updateDataPanel() {
+  if (!fitParams || !dataPoints.length) return;
+  const stats = computeStats(dataPoints, fitParams, currentModel);
+  document.getElementById('d-model').textContent = { linear:'Linear', quad:'Quadratic', exp:'Exponential', power:'Power Law' }[currentModel];
+  document.getElementById('d-r2').textContent = stats.r2.toFixed(4);
+  document.getElementById('d-rmse').textContent = stats.rmse.toFixed(3);
+  document.getElementById('d-pts').textContent = dataPoints.length;
+  document.getElementById('d-range').textContent = `0 – ${xRange.toFixed(1)}`;
+}
+
+function updateEquation() {
+  if (!fitParams) return;
+  let latex = '';
+  switch (currentModel) {
+    case 'linear': latex = `y = ${fitParams.m.toFixed(3)}x ${fitParams.b >= 0 ? '+' : ''} ${fitParams.b.toFixed(3)}`; break;
+    case 'quad': latex = `y = ${fitParams.a.toFixed(3)}x^2 ${fitParams.b >= 0 ? '+' : ''}${fitParams.b.toFixed(3)}x ${fitParams.c >= 0 ? '+' : ''}${fitParams.c.toFixed(3)}`; break;
+    case 'exp': latex = `y = ${fitParams.a.toFixed(3)} e^{${fitParams.b.toFixed(3)}x}`; break;
+    case 'power': latex = `y = ${fitParams.a.toFixed(3)} x^{${fitParams.n.toFixed(3)}}`; break;
+  }
+  try { katex.render(latex, document.getElementById('eq-katex'), { throwOnError: false }); }
+  catch(e) { document.getElementById('eq-katex').textContent = latex; }
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────────────
+function updateNoise(v) { noiseLevel = parseFloat(v); document.getElementById('sv-noise').textContent = parseFloat(v).toFixed(2); regenerateData(); }
+function updateNpts(v) { numPoints = parseInt(v); document.getElementById('sv-npts').textContent = v; regenerateData(); }
+function updateXrange(v) { xRange = parseFloat(v); document.getElementById('sv-xrange').textContent = v; regenerateData(); }
+
+function setModel(m) {
+  currentModel = m;
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mb-' + m).classList.add('active');
+  draw();
+  showToast('Model: ' + {linear:'Linear',quad:'Quadratic',exp:'Exponential',power:'Power Law'}[m]);
+}
+
+function regenerateData() { generateData(); draw(); }
+function resetData() { regenerateData(); showToast('Data regenerated'); }
+
+function applyPreset(name) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (name === 'linear') {
+    trueModel = { type: 'linear', a: 1.5, b: 0.8 };
+    currentModel = 'linear'; noiseLevel = 0.5; numPoints = 20; xRange = 5;
+    setModelUI('linear');
+    showToast('Preset: Linear (y=mx+b)');
+  } else if (name === 'exp') {
+    trueModel = { type: 'exp', a: 0.5, b: 0.6 };
+    currentModel = 'exp'; noiseLevel = 0.3; numPoints = 20; xRange = 5;
+    setModelUI('exp');
+    showToast('Preset: Exponential Growth');
+  } else if (name === 'power') {
+    trueModel = { type: 'power', a: 1.0, b: 1.5 };
+    currentModel = 'power'; noiseLevel = 0.4; numPoints = 25; xRange = 6;
+    setModelUI('power');
+    showToast('Preset: Power Law (y=axⁿ)');
+  }
+  updateSliders();
+  regenerateData();
+}
+
+function setModelUI(m) {
+  currentModel = m;
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mb-' + m).classList.add('active');
+}
+
+function updateSliders() {
+  document.getElementById('sl-noise').value = noiseLevel; document.getElementById('sv-noise').textContent = noiseLevel.toFixed(2);
+  document.getElementById('sl-npts').value = numPoints; document.getElementById('sv-npts').textContent = numPoints;
+  document.getElementById('sl-xrange').value = xRange; document.getElementById('sv-xrange').textContent = xRange.toFixed(1);
+}
+
+function applyRandomPreset() {
+  const presets = ['linear','exp','power'];
+  const p = presets[Math.floor(Math.random() * presets.length)];
+  // Find the button
+  const btns = document.querySelectorAll('.preset-btn');
+  const idx = ['linear','exp','power'].indexOf(p);
+  const fakeEvt = { target: btns[idx] };
+  const orig = window.event;
+  Object.defineProperty(window, 'event', { value: fakeEvt, writable: true });
+  applyPreset(p);
+  Object.defineProperty(window, 'event', { value: orig, writable: true });
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "A dataset shows a perfectly straight line when you plot ln(y) vs x. Which model best describes the relationship?",
+    opts: ["Linear: y = mx + b", "Exponential: y = Ae^(bx)", "Power Law: y = ax^n", "Quadratic: y = ax² + bx + c"],
+    correct: 1,
+    fb_ok: "Correct! Taking ln of y = Ae^(bx) gives ln(y) = ln(A) + bx, which is linear. This linearization technique is fundamental to AP Physics lab analysis.",
+    fb_no: "If ln(y) vs x is linear, the slope is b and intercept is ln(A) in y = Ae^(bx). Exponential models linearize when you plot ln(y) vs x."
+  },
+  {
+    q: "You fit a quadratic to 10 data points and get R²=0.99. You then add more polynomial terms and get R²=0.999. What concern should you have?",
+    opts: ["The model is now definitely more correct physically", "You may be overfitting — more parameters always improve R² but may not improve predictions", "R² above 0.99 guarantees a correct model", "The higher R² means less noise in the data"],
+    correct: 1,
+    fb_ok: "Exactly! Overfitting is a real danger. Adding parameters always improves R² on the training data, but the model may capture noise rather than signal. Always prefer the simplest model that fits well.",
+    fb_no: "Adding polynomial terms always improves R² — even fitting to random noise perfectly with enough parameters. Overfitting means excellent fit on known data but poor prediction for new data."
+  },
+  {
+    q: "The residuals from a linear fit show a clear U-shape (positive at both ends, negative in the middle). What does this tell you?",
+    opts: ["The linear fit is good — residuals should vary", "The model is incorrect — a quadratic or curved model would be better", "You need more data points", "The noise level is too high"],
+    correct: 1,
+    fb_ok: "Correct! Random residuals mean a good fit. Systematic patterns (like a U-shape) mean there is structure in the data that your model hasn't captured — it's a sign you need a different model.",
+    fb_no: "Residual patterns reveal model mismatch. A U-shape in residuals is the signature of a quadratic trend being fit by a line. Good models produce residuals that look like random noise."
+  }
+];
+
+let quizAnswers = [null, null, null];
+let quizChecked = [false, false, false];
+
+function buildQuiz() {
+  let html = '';
+  quizData.forEach((q, qi) => {
+    html += `<div style="margin-bottom:0.9rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.07);">`;
+    html += `<div class="quiz-q">Q${qi+1}. ${q.q}</div>`;
+    q.opts.forEach((opt, oi) => {
+      html += `<div class="quiz-opt" id="opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})">`
+            + `<span style="width:15px;height:15px;border-radius:50%;border:1.5px solid #475569;flex-shrink:0;display:inline-block;" id="dot-${qi}-${oi}"></span>${opt}</div>`;
+    });
+    html += `<div style="margin-top:0.4rem;"><button class="action-btn" style="font-size:0.66rem;padding:2px 9px;" onclick="checkQuiz(${qi})">Check</button></div>`;
+    html += `<div class="quiz-feedback" id="fb-${qi}" style="display:none;"></div>`;
+    html += `</div>`;
+  });
+  document.getElementById('quiz-body').innerHTML = html;
+}
+
+function selectOpt(qi, oi) {
+  if (quizChecked[qi]) return;
+  quizAnswers[qi] = oi;
+  quizData[qi].opts.forEach((_, o) => {
+    const el = document.getElementById(`opt-${qi}-${o}`);
+    el.style.background = '';
+    el.style.borderColor = 'transparent';
+    document.getElementById(`dot-${qi}-${o}`).style.background = '';
+    document.getElementById(`dot-${qi}-${o}`).style.borderColor = '#475569';
+  });
+  document.getElementById(`opt-${qi}-${oi}`).style.background = 'rgba(59,130,246,0.18)';
+  document.getElementById(`opt-${qi}-${oi}`).style.borderColor = '#3B82F6';
+  document.getElementById(`dot-${qi}-${oi}`).style.background = '#3B82F6';
+  document.getElementById(`dot-${qi}-${oi}`).style.borderColor = '#3B82F6';
+}
+
+function checkQuiz(qi) {
+  if (quizAnswers[qi] === null) return;
+  quizChecked[qi] = true;
+  const q = quizData[qi];
+  const correct = quizAnswers[qi] === q.correct;
+  const fb = document.getElementById(`fb-${qi}`);
+  fb.style.display = 'block';
+  fb.className = 'quiz-feedback ' + (correct ? 'ok' : 'no');
+  fb.textContent = correct ? q.fb_ok : q.fb_no;
+  document.getElementById(`opt-${qi}-${q.correct}`).classList.add('correct');
+  if (!correct) document.getElementById(`opt-${qi}-${quizAnswers[qi]}`).classList.add('wrong');
+}
+
+let quizVisible = true;
+function toggleQuiz() {
+  quizVisible = !quizVisible;
+  document.getElementById('quiz-body').style.display = quizVisible ? '' : 'none';
+  document.getElementById('quiz-arrow').textContent = quizVisible ? '▲' : '▼';
+  if (!quizVisible) {
+    document.getElementById('quiz-panel').style.display = 'none';
+    document.getElementById('quiz-float-btn').style.display = 'flex';
+  }
+}
+function showQuiz() {
+  document.getElementById('quiz-panel').style.display = '';
+  document.getElementById('quiz-float-btn').style.display = 'none';
+  quizVisible = true;
+  document.getElementById('quiz-body').style.display = '';
+  document.getElementById('quiz-arrow').textContent = '▲';
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); regenerateData(); }
+  if (e.code === 'KeyR') resetData();
+  if (e.code === 'Digit1') setModel('linear');
+  if (e.code === 'Digit2') setModel('quad');
+  if (e.code === 'Digit3') setModel('exp');
+  if (e.code === 'Digit4') setModel('power');
+});
+
+// ── KaTeX ─────────────────────────────────────────────────────────────────
+function renderFormulas() {
+  katex.render('y = mx + b', document.getElementById('f-linear'), { throwOnError: false, displayMode: true });
+  katex.render('R^2 = 1 - \\frac{\\sum(y_i - \\hat{y}_i)^2}{\\sum(y_i - \\bar{y})^2}', document.getElementById('f-r2'), { throwOnError: false, displayMode: true });
+  katex.render('\\text{RMSE} = \\sqrt{\\frac{1}{n}\\sum_{i=1}^{n}(y_i - \\hat{y}_i)^2}', document.getElementById('f-rmse'), { throwOnError: false, displayMode: true });
+  katex.render('y = Ae^{bx} \\;\\;\\Leftrightarrow\\;\\; \\ln y = bx + \\ln A', document.getElementById('f-exp'), { throwOnError: false, displayMode: true });
+}
+
+// ── RESIZE → REDRAW ───────────────────────────────────────────────────────
+window.addEventListener('resize', () => draw());
+
+// ── INLINE OrbitControls ──────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// Three.js renderer (minimal — used for scene background glow effect)
+const threeContainer = document.createElement('div');
+threeContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.12;z-index:0;';
+document.getElementById('plot-container').appendChild(threeContainer);
+
+const tScene = new THREE.Scene();
+tScene.background = new THREE.Color(0x0c1526);
+const tCamera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+tCamera.position.set(0, 5, 12);
+const tRenderer = new THREE.WebGLRenderer({ antialias: false });
+tRenderer.setPixelRatio(1);
+threeContainer.appendChild(tRenderer.domElement);
+tRenderer.domElement.style.width = '100%';
+tRenderer.domElement.style.height = '100%';
+
+const clock = new THREE.Clock();
+tRenderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime();
+  tCamera.position.x = Math.sin(t * 0.1) * 2;
+  tCamera.lookAt(0, 0, 0);
+  tRenderer.setSize(threeContainer.clientWidth, threeContainer.clientHeight, false);
+  tCamera.aspect = threeContainer.clientWidth / threeContainer.clientHeight;
+  tCamera.updateProjectionMatrix();
+  tRenderer.render(tScene, tCamera);
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderFormulas();
+trueModel = { type: 'linear', a: 1.5, b: 0.8 };
+generateData();
+buildQuiz();
+
+// Wait for SVG to have dimensions
+setTimeout(() => { draw(); }, 50);
+setTimeout(() => draw(), 120);
+showToast('Drag data points to update the fit!');
+</script>
+
+<!-- Generated by AetherViz Master — Master the math of discovery! -->
+</body>
+</html>

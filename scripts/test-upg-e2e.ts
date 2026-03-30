@@ -209,7 +209,7 @@ async function main() {
 
   // Step 3: Validation
   console.log('\n3. Full validation...');
-  const validation = runFullValidation(sanitized);
+  const validation = runFullValidation(sanitized, 'physics');
   console.log(`   Overall score: ${validation.overallScore}/100`);
   for (const [key, val] of Object.entries(validation.details || {})) {
     if (typeof val === 'object' && val && 'score' in val) {

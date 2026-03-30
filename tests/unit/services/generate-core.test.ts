@@ -6,9 +6,13 @@ const savedEnv = { ...process.env };
 
 // ── Mock all external dependencies ──
 
-vi.mock('@/shared/lib/upg/anthropic-client', () => ({
-  callAnthropic: vi.fn(),
-}));
+vi.mock('@/shared/lib/upg/anthropic-client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/lib/upg/anthropic-client')>();
+  return {
+    ...actual,
+    callAnthropic: vi.fn(),
+  };
+});
 
 vi.mock('@/shared/lib/upg/system-prompt', () => ({
   getSystemPrompt: vi.fn(() => 'mock-system-prompt'),
@@ -150,16 +154,19 @@ describe('generateCore', () => {
   });
 
   // 3. LLM returns invalid HTML → sanitizer strips to empty → quality rejects
+  // Retry fires once, but quality still fails → final status is failed
   it('should fail when sanitizer returns problematic HTML that fails quality check', async () => {
     mockedSanitizeHtml.mockReturnValueOnce({
       sanitized: '<html><body>no three.js here</body></html>',
       issues: ['stripped dangerous script'],
     });
-    mockedCheckQuality.mockReturnValueOnce({
+    // Fail on first attempt AND on retry
+    const qualityFailResult = {
       passed: false,
       issues: ['Missing Three.js library — 3D will not render'],
       warnings: [],
-    });
+    };
+    mockedCheckQuality.mockReturnValueOnce(qualityFailResult).mockReturnValueOnce(qualityFailResult);
 
     const result = await generateCore(baseParams());
 
@@ -167,13 +174,15 @@ describe('generateCore', () => {
     expect(result.errorMessage).toContain('Quality check failed');
   });
 
-  // 4. quality check fails → marks as failed
+  // 4. quality check fails → retry fires → still fails → marks as failed
   it('should store failed record when quality check fails', async () => {
-    mockedCheckQuality.mockReturnValueOnce({
+    const qualityFailResult = {
       passed: false,
       issues: ['HTML too small'],
       warnings: [],
-    });
+    };
+    // Fail on first attempt AND on retry
+    mockedCheckQuality.mockReturnValueOnce(qualityFailResult).mockReturnValueOnce(qualityFailResult);
 
     const result = await generateCore(baseParams());
 

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mineral Identification | Earth Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  #navbar { background: linear-gradient(135deg, #F97316 0%, #EAB308 100%); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #sidebar { width: 30%; overflow-y: auto; background: #1e293b; padding: 14px; flex-shrink: 0; }
+  #canvas-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  #threeCanvas { display: block; flex: 1; min-height: 0; }
+  #controls { background: rgba(15,23,42,0.97); padding: 10px 14px; flex-shrink: 0; border-top: 1px solid #334155; }
+  #data-overlay { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.78); padding: 10px 14px; border-radius: 8px; font-size: 12px; min-width: 200px; border: 1px solid #334155; pointer-events: none; z-index: 10; line-height: 1.8; }
+  #toast { position: fixed; top: 20px; right: 20px; background: #F97316; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; z-index: 9999; display: none; box-shadow: 0 4px 16px rgba(249,115,22,0.5); }
+  .slider-label { font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+  .preset-btn { background: #334155; border: none; color: #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: background 0.2s; white-space: nowrap; }
+  .preset-btn:hover, .preset-btn.active { background: #F97316; color: white; }
+  .speed-btn { background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .speed-btn.active { background: #F97316; border-color: #F97316; color: white; }
+  .quiz-option { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; cursor: pointer; font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .quiz-option:hover { color: #e2e8f0; }
+  .formula-box { background: #0f172a; border-radius: 6px; padding: 8px 10px; margin: 6px 0; overflow-x: auto; }
+  h3 { color: #F97316; font-size: 13px; margin: 10px 0 5px; font-weight: 600; }
+  .section { border-left: 3px solid #F97316; padding-left: 10px; margin: 10px 0; }
+  input[type=range] { accent-color: #F97316; width: 100%; }
+  .ctrl-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .ctrl-col { flex: 1; min-width: 120px; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  .mohs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; font-size: 11px; margin-top: 6px; }
+  .mohs-item { background: #0f172a; padding: 3px 7px; border-radius: 4px; }
+  .mohs-num { color: #F97316; font-weight: 700; margin-right: 4px; }
+  .prop-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+  .prop-key { color: #F97316; font-weight: 500; }
+  .prop-val { color: #94a3b8; }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- Navbar -->
+<div id="navbar">
+  <div>
+    <div style="font-weight:700;font-size:18px;color:white;">Mineral Identification</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.85);">Crystal Structure · Hardness · Luster · Earth Science</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="resetScene()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Reset</button>
+    <button onclick="toggleFullscreen()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Fullscreen</button>
+  </div>
+</div>
+
+<div id="main">
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="section">
+      <h3>Learning Objectives</h3>
+      <ul style="font-size:12px;color:#94a3b8;padding-left:14px;line-height:2.0;">
+        <li>Identify minerals using physical properties</li>
+        <li>Apply and interpret the Mohs hardness scale</li>
+        <li>Recognize the 7 crystal systems and habits</li>
+        <li>Distinguish metallic from non-metallic luster types</li>
+        <li>Use streak, cleavage, and fracture for identification</li>
+        <li>Connect mineral chemistry to crystal structure</li>
+        <li>Understand specific gravity as diagnostic property</li>
+        <li>Identify minerals in real-world geological contexts</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Key Formulas</h3>
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Identification relationship:</div>
+      <div class="formula-box" id="f1"></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Specific gravity:</div>
+      <div class="formula-box" id="f2"></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Quartz refractive index:</div>
+      <div class="formula-box" id="f3"></div>
+    </div>
+
+    <div class="section">
+      <h3>Mohs Hardness Scale</h3>
+      <div class="mohs-grid">
+        <div class="mohs-item"><span class="mohs-num">1</span>Talc</div>
+        <div class="mohs-item"><span class="mohs-num">2</span>Gypsum</div>
+        <div class="mohs-item"><span class="mohs-num">3</span>Calcite</div>
+        <div class="mohs-item"><span class="mohs-num">4</span>Fluorite</div>
+        <div class="mohs-item"><span class="mohs-num">5</span>Apatite</div>
+        <div class="mohs-item"><span class="mohs-num">6</span>Feldspar</div>
+        <div class="mohs-item"><span class="mohs-num">7</span>Quartz</div>
+        <div class="mohs-item"><span class="mohs-num">8</span>Topaz</div>
+        <div class="mohs-item"><span class="mohs-num">9</span>Corundum</div>
+        <div class="mohs-item"><span class="mohs-num">10</span>Diamond</div>
+      </div>
+      <p style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.5;">
+        Reference: fingernail ~2.5, copper coin ~3, glass ~5.5, steel file ~6.5
+      </p>
+    </div>
+
+    <div class="section">
+      <h3>Crystal Systems</h3>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.75;">
+        <b style="color:#fbbf24;">Cubic</b> (pyrite, halite): 3 equal axes at 90°, high symmetry.<br>
+        <b style="color:#fbbf24;">Hexagonal</b> (quartz, calcite): 6-fold axis, forms prisms.<br>
+        <b style="color:#fbbf24;">Tetragonal</b> (zircon): 4-fold axis, elongated prisms.<br>
+        <b style="color:#fbbf24;">Orthorhombic</b> (olivine): 3 unequal axes at 90°.<br>
+        <b style="color:#fbbf24;">Monoclinic</b> (mica, gypsum): 2 axes at 90°, 1 oblique.<br>
+        <b style="color:#fbbf24;">Triclinic</b> (feldspar): no right angles, least symmetric.<br>
+        Crystal habit: prismatic, tabular, bladed, fibrous, massive.
+      </p>
+    </div>
+
+    <div class="section">
+      <h3>Identification Properties Guide</h3>
+      <div style="font-size:12px;color:#94a3b8;line-height:2.1;">
+        <b style="color:#F97316;">Color</b> — least reliable; impurities cause wide variation<br>
+        <b style="color:#F97316;">Streak</b> — powder on unglazed ceramic; true diagnostic color<br>
+        <b style="color:#F97316;">Luster</b> — metallic, vitreous, resinous, pearly, silky, waxy, earthy<br>
+        <b style="color:#F97316;">Hardness</b> — Mohs 1–10; scratch test with known minerals<br>
+        <b style="color:#F97316;">Cleavage</b> — breaks along crystal planes (mica: 1 perfect)<br>
+        <b style="color:#F97316;">Fracture</b> — conchoidal (quartz), irregular, hackly, splintery<br>
+        <b style="color:#F97316;">Specific Gravity</b> — galena 7.6; quartz 2.65; feldspar 2.57
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Real-World Applications</h3>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.8;">
+        <b style="color:#fbbf24;">Quartz</b> — oscillators in electronics, fiber optics, glass, abrasives.
+        <b style="color:#fbbf24;">Feldspar</b> — 60% of Earth's crust; ceramics, porcelain, glass.
+        <b style="color:#fbbf24;">Pyrite</b> — sulfuric acid production; historically confused with gold.
+        <b style="color:#fbbf24;">Mica</b> — electrical insulators, capacitors, paint, cosmetics.
+        <b style="color:#fbbf24;">Diamond</b> — cutting tools, drill bits, quantum computing.
+      </p>
+    </div>
+
+    <!-- Quiz -->
+    <div id="quiz-panel" style="margin-top:14px;">
+      <h3 style="cursor:pointer;" onclick="toggleQuiz()">Quiz <span id="quiz-arrow">▼</span></h3>
+      <div id="quiz-content">
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">1. Which mineral rates 10 on the Mohs hardness scale?</p>
+          <label class="quiz-option"><input type="radio" name="q1" value="a"> <span>Quartz (hardness 7)</span></label>
+          <label class="quiz-option"><input type="radio" name="q1" value="b"> <span>Diamond (hardness 10)</span></label>
+          <label class="quiz-option"><input type="radio" name="q1" value="c"> <span>Corundum (hardness 9)</span></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">2. What physical property describes how a mineral reflects light?</p>
+          <label class="quiz-option"><input type="radio" name="q2" value="a"> <span>Streak</span></label>
+          <label class="quiz-option"><input type="radio" name="q2" value="b"> <span>Cleavage</span></label>
+          <label class="quiz-option"><input type="radio" name="q2" value="c"> <span>Luster</span></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">3. Pyrite forms cubic crystals and has what type of luster?</p>
+          <label class="quiz-option"><input type="radio" name="q3" value="a"> <span>Vitreous luster (glass-like)</span></label>
+          <label class="quiz-option"><input type="radio" name="q3" value="b"> <span>Metallic luster (gold-like)</span></label>
+          <label class="quiz-option"><input type="radio" name="q3" value="c"> <span>Pearly luster (iridescent)</span></label>
+        </div>
+        <button onclick="checkQuiz({q1:'b',q2:'c',q3:'b'})" style="background:linear-gradient(135deg,#F97316,#EAB308);border:none;color:white;padding:8px 20px;border-radius:6px;cursor:pointer;width:100%;font-size:13px;font-weight:600;">Check Answers</button>
+        <div id="quiz-result" style="margin-top:10px;font-size:13px;text-align:center;min-height:22px;padding:4px;"></div>
+      </div>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- Canvas Area -->
+  <div id="canvas-area">
+    <canvas id="threeCanvas"></canvas>
+
+    <!-- Data Overlay -->
+    <div id="data-overlay">
+      <div style="color:#F97316;font-weight:700;font-size:13px;margin-bottom:7px;">Mineral Properties</div>
+      <div class="prop-row"><span class="prop-key">Name</span><span id="ov-name" style="color:#fbbf24;font-weight:600;">Quartz</span></div>
+      <div class="prop-row"><span class="prop-key">Formula</span><span id="ov-formula" style="color:#fbbf24;">SiO₂</span></div>
+      <div class="prop-row"><span class="prop-key">Hardness</span><span id="ov-hardness" style="color:#fbbf24;">7 / 10</span></div>
+      <div class="prop-row"><span class="prop-key">Luster</span><span id="ov-luster" style="color:#fbbf24;">Vitreous</span></div>
+      <div class="prop-row"><span class="prop-key">Crystal</span><span id="ov-crystal" style="color:#fbbf24;">Hexagonal</span></div>
+      <div class="prop-row"><span class="prop-key">Sp. Gravity</span><span id="ov-sg" style="color:#fbbf24;">2.65</span></div>
+      <div class="prop-row" style="border-bottom:none;"><span class="prop-key">Rotation</span><span id="ov-rotation" style="color:#fbbf24;">0°</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+      <div class="ctrl-row">
+        <div class="ctrl-col">
+          <div class="slider-label">Crystal Size: <span id="size-val">1.0</span>x</div>
+          <input type="range" id="sizeSlider" min="0.3" max="2.5" step="0.1" value="1" oninput="updateSize(this.value)">
+        </div>
+        <div class="ctrl-col">
+          <div class="slider-label">Rotation Speed: <span id="rot-val">1.0</span></div>
+          <input type="range" id="rotSlider" min="0" max="3" step="0.1" value="1" oninput="updateRotSpeed(this.value)">
+        </div>
+        <div>
+          <div class="slider-label" style="margin-bottom:4px;">Select Mineral</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="preset-btn active" id="btn-quartz" onclick="setMineral('quartz',this)">Quartz</button>
+            <button class="preset-btn" id="btn-feldspar" onclick="setMineral('feldspar',this)">Feldspar</button>
+            <button class="preset-btn" id="btn-pyrite" onclick="setMineral('pyrite',this)">Pyrite (Fool's Gold)</button>
+            <button class="preset-btn" id="btn-mica" onclick="setMineral('mica',this)">Biotite Mica</button>
+          </div>
+        </div>
+        <div>
+          <div class="slider-label" style="margin-bottom:4px;">Simulation Speed</div>
+          <div style="display:flex;gap:4px;">
+            <button class="speed-btn" onclick="setSpeed(0.25,this)">0.25x</button>
+            <button class="speed-btn" onclick="setSpeed(0.5,this)">0.5x</button>
+            <button class="speed-btn active" onclick="setSpeed(1,this)">1x</button>
+            <button class="speed-btn" onclick="setSpeed(2,this)">2x</button>
+            <button class="speed-btn" onclick="setSpeed(3,this)">3x</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;">
+          <button onclick="togglePlay()" id="playBtn" style="background:#F97316;border:none;color:white;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Pause</button>
+          <button onclick="resetScene()" style="background:#334155;border:none;color:white;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /canvas-area -->
+</div><!-- /main -->
+
+<script>
+// =============================================
+// INLINE OrbitControls
+// =============================================
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this;
+  var STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2 };
+  var state = STATE.NONE;
+  var spherical = new THREE.Spherical();
+  var sphericalDelta = new THREE.Spherical();
+  var scale = 1;
+  var target = new THREE.Vector3();
+  var rotateStart = new THREE.Vector2();
+  var rotateEnd = new THREE.Vector2();
+  var rotateDelta = new THREE.Vector2();
+  function getZoomScale() { return Math.pow(0.95, 1); }
+  function rotateLeft(angle) { sphericalDelta.theta -= angle; }
+  function rotateUp(angle) { sphericalDelta.phi -= angle; }
+  var onMouseDown = function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = STATE.ROTATE; rotateStart.set(e.clientX, e.clientY); }
+  };
+  var onMouseMove = function(e) {
+    if (!scope.enabled || state === STATE.NONE) return;
+    if (state === STATE.ROTATE) {
+      rotateEnd.set(e.clientX, e.clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.01);
+      rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y);
+      rotateStart.copy(rotateEnd);
+    }
+  };
+  var onMouseUp = function() { state = STATE.NONE; };
+  var onWheel = function(e) {
+    if (!scope.enabled) return;
+    if (e.deltaY < 0) scale /= getZoomScale(); else scale *= getZoomScale();
+    e.preventDefault();
+  };
+  var onTouchStart = function(e) {
+    if (e.touches.length === 1) { state = STATE.ROTATE; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); }
+  };
+  var onTouchMove = function(e) {
+    if (e.touches.length === 1 && state === STATE.ROTATE) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.01);
+      rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y);
+      rotateStart.copy(rotateEnd);
+    }
+    e.preventDefault();
+  };
+  domElement.addEventListener('mousedown', onMouseDown);
+  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('mouseup', onMouseUp);
+  domElement.addEventListener('wheel', onWheel, { passive: false });
+  domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+  domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+  domElement.addEventListener('touchend', onMouseUp);
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var quatInverse = quat.clone().invert();
+    var position = camera.position;
+    offset.copy(position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi += sphericalDelta.phi * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius *= scale;
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+    if (scope.enableDamping) {
+      sphericalDelta.theta *= (1 - scope.dampingFactor);
+      sphericalDelta.phi *= (1 - scope.dampingFactor);
+    } else {
+      sphericalDelta.set(0,0,0);
+    }
+    scale = 1;
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    position.copy(target).add(offset);
+    camera.lookAt(target);
+  };
+  this.dispose = function() {
+    domElement.removeEventListener('mousedown', onMouseDown);
+    domElement.removeEventListener('mousemove', onMouseMove);
+    domElement.removeEventListener('mouseup', onMouseUp);
+    domElement.removeEventListener('wheel', onWheel);
+  };
+};
+
+// =============================================
+// THREE.JS SCENE SETUP
+// =============================================
+
+  var canvas = document.getElementById('threeCanvas');
+  var canvasArea = document.getElementById('canvas-area');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.03);
+  scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+  var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
+  camera.position.set(0, 4, 10);
+  var controls = new THREE.OrbitControls(camera, canvas);
+  controls.minDistance = 3; controls.maxDistance = 50;
+  var keyLight = new THREE.DirectionalLight(0xfff5e0, 1.0);
+  keyLight.position.set(5, 8, 5); keyLight.castShadow = true; scene.add(keyLight);
+  var fillLight = new THREE.DirectionalLight(0xc0d8ff, 0.4);
+  fillLight.position.set(-5, 3, -3); scene.add(fillLight);
+  var backLight = new THREE.DirectionalLight(0xffd080, 0.3);
+  backLight.position.set(0, -5, -8); scene.add(backLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  window._isPlaying = true;
+  window._speedMult = 1.0;
+  var mineralGroup = new THREE.Group();
+  scene.add(mineralGroup);
+  var sparkles = [];
+  var time = 0;
+  var rotSpeed = 1.0;
+  var crystalSize = 1.0;
+
+// =============================================
+// SPARKLE SYSTEM
+// =============================================
+function createSparkles(hexColor) {
+  sparkles.forEach(function(s) {
+    scene.remove(s);
+    if (s.geometry) s.geometry.dispose();
+    if (s.material) s.material.dispose();
+  });
+  sparkles = [];
+  for (var i = 0; i < 60; i++) {
+    var s = new THREE.Mesh(
+      new THREE.SphereGeometry(0.022, 4, 4),
+      new THREE.MeshBasicMaterial({ color: hexColor, transparent: true, opacity: 0.6 })
+    );
+    s.userData.offset = Math.random() * Math.PI * 2;
+    s.userData.radius = 2.0 + Math.random() * 3.0;
+    s.userData.height = (Math.random() - 0.5) * 5;
+    s.userData.speed = 0.2 + Math.random() * 0.7;
+    sparkles.push(s);
+    scene.add(s);
+  }
+}
+
+// =============================================
+// MINERAL DEFINITIONS
+// =============================================
+var minerals = {
+  quartz: {
+    name: 'Quartz', formula: 'SiO₂', hardness: '7', luster: 'Vitreous',
+    crystal: 'Hexagonal', sg: '2.65', sparkle: 0x9be8fa,
+    build: function(g) {
+      var m = new THREE.MeshPhongMaterial({
+        color: 0x9be8fa, transparent: true, opacity: 0.82, shininess: 130, specular: 0xffffff
+      });
+      var prism = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 2.6, 6), m);
+      g.add(prism);
+      var top = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.1, 6), m);
+      top.position.y = 1.85; g.add(top);
+      var bot = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.85, 6), m);
+      bot.position.y = -1.73; bot.rotation.z = Math.PI; g.add(bot);
+      for (var i = 0; i < 6; i++) {
+        var a = (i / 6) * Math.PI * 2 + 0.4;
+        var sg = new THREE.Group();
+        var h = 0.8 + Math.random() * 0.7;
+        var r = 0.18 + Math.random() * 0.12;
+        var sp = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 6), m);
+        var st = new THREE.Mesh(new THREE.ConeGeometry(r, h * 0.45, 6), m);
+        st.position.y = h * 0.72;
+        sg.add(sp); sg.add(st);
+        sg.position.set(Math.cos(a) * 1.2, -0.5, Math.sin(a) * 1.2);
+        sg.rotation.z = (Math.random() - 0.5) * 0.6;
+        g.add(sg);
+      }
+      var glow = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 2.2, 6),
+        new THREE.MeshBasicMaterial({ color: 0xd0f8ff, transparent: true, opacity: 0.12 })
+      );
+      g.add(glow);
+    }
+  },
+  feldspar: {
+    name: 'Feldspar', formula: 'KAlSi₃O₈', hardness: '6', luster: 'Pearly',
+    crystal: 'Triclinic', sg: '2.57', sparkle: 0xffcc88,
+    build: function(g) {
+      var m = new THREE.MeshPhongMaterial({ color: 0xffe0c0, shininess: 55, specular: 0xffeedd });
+      var main = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 0.9), m);
+      main.rotation.y = 0.25; g.add(main);
+      for (var i = 0; i < 12; i++) {
+        var sm = new THREE.MeshPhongMaterial({ color: (i % 2 === 0) ? 0xffd8a0 : 0xffe8c0, shininess: 80 });
+        var strip = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.03, 0.92), sm);
+        strip.position.y = -1.1 + i * 0.2; strip.rotation.y = 0.25; g.add(strip);
+      }
+      var twin = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.0, 0.85),
+        new THREE.MeshPhongMaterial({ color: 0xf2c09a, shininess: 45, transparent: true, opacity: 0.88 }));
+      twin.position.set(0.65, 0, 0.35); twin.rotation.y = -0.35; g.add(twin);
+      var side = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.5, 0.6), m);
+      side.position.set(-1.2, -0.35, 0.1); side.rotation.y = -0.55; g.add(side);
+    }
+  },
+  pyrite: {
+    name: 'Pyrite', formula: 'FeS₂', hardness: '6.5', luster: 'Metallic',
+    crystal: 'Cubic', sg: '5.0', sparkle: 0xffd700,
+    build: function(g) {
+      var mat = new THREE.MeshPhongMaterial({ color: 0xd4a820, shininess: 230, specular: 0xffd700 });
+      var dod = new THREE.Mesh(new THREE.DodecahedronGeometry(1.1, 0),
+        new THREE.MeshPhongMaterial({ color: 0xe0b828, shininess: 215, specular: 0xffe880 }));
+      g.add(dod);
+      var positions = [[-1.7,0.2,0.1],[1.6,-0.1,0.2],[0.1,0,-1.7],[0,0.1,1.6],
+                       [-0.9,-1.3,0.8],[0.9,1.2,-0.7],[-0.3,-0.8,1.5],[0.5,1.5,0.4]];
+      positions.forEach(function(p) {
+        var s = 0.35 + Math.random() * 0.5;
+        var cube = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), mat);
+        cube.position.set(p[0], p[1], p[2]);
+        cube.rotation.set(Math.random() * 0.5, Math.random() * 0.8, Math.random() * 0.4);
+        g.add(cube);
+      });
+      // Striation lines on main crystal
+      var stMat = new THREE.LineBasicMaterial({ color: 0xcc9900 });
+      for (var i = 0; i < 8; i++) {
+        var pts = [new THREE.Vector3(-1.1 + i * 0.28, -1.1, 1.12), new THREE.Vector3(-1.1 + i * 0.28, 1.1, 1.12)];
+        var lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        g.add(new THREE.Line(lineGeo, stMat));
+      }
+    }
+  },
+  mica: {
+    name: 'Biotite Mica', formula: 'K(Mg,Fe)₃AlSi₃O₁₀(OH)₂', hardness: '2.5', luster: 'Pearly/Silky',
+    crystal: 'Monoclinic', sg: '2.9', sparkle: 0xd4cc88,
+    build: function(g) {
+      for (var i = 0; i < 18; i++) {
+        var sheetMat = new THREE.MeshPhongMaterial({
+          color: (i < 10) ? 0xb8a870 : 0x9a8850,
+          shininess: 200, specular: 0xffffff, transparent: true, opacity: 0.92, side: THREE.DoubleSide
+        });
+        var sheet = new THREE.Mesh(new THREE.BoxGeometry(3.2 - i * 0.06, 0.032, 2.6 - i * 0.05), sheetMat);
+        sheet.position.y = -1.1 + i * 0.12;
+        sheet.rotation.y = i * 0.07;
+        g.add(sheet);
+      }
+      // Cleavage indicator
+      var arrowMat = new THREE.MeshBasicMaterial({ color: 0xF97316, transparent: true, opacity: 0.7 });
+      for (var j = 0; j < 4; j++) {
+        var arrow = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.35, 8), arrowMat);
+        arrow.position.set(-1.9, 0.3 + j * 0.35, 0);
+        arrow.rotation.z = Math.PI / 2;
+        g.add(arrow);
+      }
+    }
+  }
+};
+
+function clearGroup(g) {
+  while (g.children.length > 0) {
+    var c = g.children[0];
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+    g.remove(c);
+  }
+}
+
+function setMineral(name, btn) {
+  var m = minerals[name];
+  if (!m) return;
+  clearGroup(mineralGroup);
+  m.build(mineralGroup);
+  mineralGroup.scale.setScalar(crystalSize);
+  createSparkles(m.sparkle);
+  document.getElementById('ov-name').textContent = m.name;
+  document.getElementById('ov-formula').textContent = m.formula;
+  document.getElementById('ov-hardness').textContent = m.hardness + ' / 10';
+  document.getElementById('ov-luster').textContent = m.luster;
+  document.getElementById('ov-crystal').textContent = m.crystal;
+  document.getElementById('ov-sg').textContent = m.sg;
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  showToast(m.name + '  •  Hardness: ' + m.hardness + '  •  ' + m.luster + ' luster');
+}
+
+function updateSize(v) {
+  crystalSize = parseFloat(v);
+  document.getElementById('size-val').textContent = parseFloat(v).toFixed(1);
+  mineralGroup.scale.setScalar(crystalSize);
+}
+
+function updateRotSpeed(v) {
+  rotSpeed = parseFloat(v);
+  document.getElementById('rot-val').textContent = parseFloat(v).toFixed(1);
+}
+
+function resetScene() {
+  window._isPlaying = true;
+  window._speedMult = 1.0;
+  rotSpeed = 1.0;
+  crystalSize = 1.0;
+  time = 0;
+  document.getElementById('sizeSlider').value = 1;
+  document.getElementById('rotSlider').value = 1;
+  document.getElementById('size-val').textContent = '1.0';
+  document.getElementById('rot-val').textContent = '1.0';
+  var pb = document.getElementById('playBtn');
+  pb.textContent = 'Pause'; pb.style.background = '#F97316';
+  mineralGroup.rotation.set(0, 0, 0);
+  camera.position.set(0, 4, 10);
+  controls.update();
+  document.querySelectorAll('.speed-btn').forEach(function(b, i) { b.classList.toggle('active', i === 2); });
+  setMineral('quartz', document.getElementById('btn-quartz'));
+  showToast('Scene reset to Quartz');
+}
+
+// =============================================
+// UTILITY FUNCTIONS
+// =============================================
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.style.display = 'none'; }, 2200);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function toggleQuiz() {
+  var c = document.getElementById('quiz-content');
+  var a = document.getElementById('quiz-arrow');
+  var hidden = c.style.display === 'none';
+  c.style.display = hidden ? 'block' : 'none';
+  a.textContent = hidden ? '▼' : '▶';
+}
+
+function setSpeed(s, btn) {
+  window._speedMult = s;
+  document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+
+function checkQuiz(answers) {
+  var score = 0;
+  var total = Object.keys(answers).length;
+  for (var q in answers) {
+    var sel = document.querySelector('input[name="' + q + '"]:checked');
+    if (sel && sel.value === answers[q]) score++;
+  }
+  var r = document.getElementById('quiz-result');
+  var pct = score / total;
+  var msg = pct === 1 ? 'Perfect! Outstanding work!' : pct >= 0.67 ? 'Great effort! Review the missed concept.' : 'Keep studying — you\'re getting there!';
+  r.textContent = 'Score: ' + score + '/' + total + ' — ' + msg;
+  r.style.color = pct === 1 ? '#22c55e' : pct >= 0.67 ? '#fbbf24' : '#ef4444';
+}
+
+function togglePlay() {
+  window._isPlaying = !window._isPlaying;
+  var b = document.getElementById('playBtn');
+  b.textContent = window._isPlaying ? 'Pause' : 'Play';
+  b.style.background = window._isPlaying ? '#F97316' : '#22c55e';
+}
+
+// KaTeX Formulas
+katex.render('\\text{Mohs: } H_A > H_B \\Rightarrow A \\text{ scratches } B', document.getElementById('f1'), { throwOnError: false });
+katex.render('\\text{Sp. Gravity} = \\frac{\\rho_{\\text{mineral}}}{\\rho_{\\text{water}}}', document.getElementById('f2'), { throwOnError: false });
+katex.render('n_{\\text{quartz}} = 1.544{-}1.553', document.getElementById('f3'), { throwOnError: false });
+
+// =============================================
+// RESIZE
+// =============================================
+
+function resize() {
+  var w = canvasArea.clientWidth;
+  var ctrlH = document.getElementById('controls').offsetHeight || 80;
+  var h = Math.max(canvasArea.clientHeight - ctrlH, 200);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 100);
+
+// =============================================
+// KEYBOARD SHORTCUTS
+// =============================================
+
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); showToast(window._isPlaying ? 'Playing' : 'Paused'); }
+  if (e.code === 'KeyR') { resetScene(); }
+});
+
+// Initialize
+setMineral('quartz', document.getElementById('btn-quartz'));
+
+// =============================================
+// ANIMATION LOOP
+// =============================================
+renderer.setAnimationLoop(function() {
+  if (window._isPlaying) {
+    time += 0.016 * window._speedMult;
+    mineralGroup.rotation.y += 0.007 * rotSpeed * window._speedMult;
+    mineralGroup.rotation.x = Math.sin(time * 0.22) * 0.08;
+
+    sparkles.forEach(function(s) {
+      var a = time * s.userData.speed + s.userData.offset;
+      s.position.set(
+        Math.cos(a) * s.userData.radius * 0.5,
+        s.userData.height + Math.sin(time * 0.7 + s.userData.offset) * 0.45,
+        Math.sin(a) * s.userData.radius * 0.5
+      );
+      s.material.opacity = 0.2 + 0.75 * Math.abs(Math.sin(time * 1.8 + s.userData.offset));
+    });
+  }
+
+  controls.update();
+
+  var deg = ((mineralGroup.rotation.y * 180 / Math.PI) % 360 + 360) % 360;
+  document.getElementById('ov-rotation').textContent = deg.toFixed(0) + '\u00b0';
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

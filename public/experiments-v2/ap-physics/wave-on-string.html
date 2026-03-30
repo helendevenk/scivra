@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wave on a String — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: Inter, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --primary: #3B82F6; --primary-end: #0EA5E9;
+    --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.13);
+  }
+  .glass { background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(12px); border-radius: 12px; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); border: none; color: #fff; cursor: pointer; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; cursor: pointer; border-radius: 8px; padding: 6px 12px; font-size: 12px; transition: background 0.2s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+  .btn-ghost.active { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); color: #fff; border-color: transparent; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #38bdf8); cursor: pointer; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+  .sidebar { width: 300px; min-width: 300px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+  #canvas-container { flex: 1; position: relative; }
+  .data-overlay { position: absolute; top: 12px; left: 12px; padding: 12px 16px; min-width: 200px; font-size: 13px; line-height: 1.8; font-variant-numeric: tabular-nums; }
+  .energy-overlay { position: absolute; top: 12px; right: 12px; padding: 12px 16px; min-width: 200px; font-size: 12px; }
+  .energy-bar-track { background: rgba(255,255,255,0.1); border-radius: 4px; height: 10px; margin: 3px 0 8px; overflow: hidden; }
+  .energy-bar-fill { height: 100%; border-radius: 4px; transition: width 0.1s; }
+  #toast { position: fixed; top: 60px; right: 16px; z-index: 9999; pointer-events: none; }
+  .toast-msg { background: rgba(30,41,59,0.95); border: 1px solid rgba(59,130,246,0.4); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .quiz-section { padding: 12px; font-size: 13px; }
+  .quiz-option { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; margin: 4px 0; cursor: pointer; transition: background 0.15s; }
+  .quiz-option:hover { background: rgba(255,255,255,0.1); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-option.incorrect { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+  .quiz-feedback { margin-top: 6px; font-size: 12px; line-height: 1.5; padding: 6px 10px; border-radius: 6px; }
+  .katex { font-size: 1em; }
+  .speed-btn { padding: 4px 8px; font-size: 11px; border-radius: 5px; }
+  nav { height: 50px; min-height: 50px; background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.25); display: flex; align-items: center; padding: 0 16px; gap: 10px; z-index: 100; }
+  .main-row { flex: 1; display: flex; overflow: hidden; }
+</style>
+</head>
+<body>
+<nav>
+  <span style="font-size:18px;font-weight:700;background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Wave on a String</span>
+  <span style="font-size:11px;color:#94a3b8;margin-left:4px;">AP Physics — Mechanical Waves</span>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="resetSim()">Reset</button>
+  <button class="btn-ghost" id="fullscreenBtn" onclick="toggleFullscreen()">Fullscreen</button>
+  <button class="btn-ghost" onclick="document.getElementById('aboutModal').style.display='flex'">About</button>
+</nav>
+<div class="main-row">
+  <div class="sidebar">
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Core Formulas</div>
+      <div id="formulas" style="font-size:13px;line-height:2"></div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Concept</div>
+      <div style="font-size:12px;color:#cbd5e1;line-height:1.7">
+        A wave on a string transfers energy through coupled oscillators. Each mass point is pulled toward equilibrium by tension from its neighbors — like a chain of tiny pendulums.
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#cbd5e1;line-height:1.7">
+        Wave speed depends only on tension T and linear mass density μ. Doubling tension increases speed by √2 — not double. This surprises most students.
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#cbd5e1;line-height:1.7">
+        Standing waves form when the string length is a half-integer multiple of the wavelength. Nodes are fixed points; antinodes vibrate with maximum amplitude.
+      </div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Key Facts</div>
+      <div class="glass" style="padding:8px 10px;margin-bottom:6px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">Standing Waves:</strong> Nodes occur at multiples of λ/2 from a fixed end. The 1st harmonic has exactly one antinode.
+      </div>
+      <div class="glass" style="padding:8px 10px;margin-bottom:6px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">Common Misconception:</strong> Wave speed ≠ particle speed. The string particles oscillate transversely; the wave pattern moves horizontally.
+      </div>
+      <div class="glass" style="padding:8px 10px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">AP Connection:</strong> AP Physics 1 Unit 10 — Mechanical Waves. Know v=√(T/μ), standing wave conditions, and energy proportional to A².
+      </div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Why It Matters</div>
+      <ul style="font-size:12px;color:#cbd5e1;line-height:1.8;padding-left:14px">
+        <li>Guitar/violin strings — tuning by changing tension</li>
+        <li>Seismic S-waves travel through Earth's mantle</li>
+        <li>Resonance in bridges (Tacoma Narrows collapse, 1940)</li>
+      </ul>
+    </div>
+    <div class="glass quiz-section">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Quiz</div>
+      <div id="quizContainer"></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div id="canvas-container" style="flex:1;position:relative">
+      <div class="glass data-overlay" id="dataOverlay"></div>
+      <div class="glass energy-overlay" id="energyOverlay"></div>
+    </div>
+    <div class="glass" style="margin:8px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="btn-primary" id="playBtn" onclick="togglePlay()">Pause</button>
+        <button class="btn-ghost" onclick="resetSim()">Reset</button>
+        <span style="font-size:11px;color:#64748b;margin:0 4px">Speed:</span>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(0.25)">0.25×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(0.5)">0.5×</button>
+        <button class="btn-ghost speed-btn active" id="spd1" onclick="setSpeed(1)">1×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(2)">2×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(3)">3×</button>
+        <span style="font-size:11px;color:#64748b;margin:0 6px">Preset:</span>
+        <button class="btn-ghost" onclick="applyPreset('traveling')">Traveling Wave</button>
+        <button class="btn-ghost" onclick="applyPreset('standing')">Standing Wave (1st)</button>
+        <button class="btn-ghost" onclick="applyPreset('highTension')">High Tension</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px 20px">
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Frequency: <span id="freqVal">1.0</span> Hz</label>
+          <input type="range" id="freqSlider" min="0.1" max="3" step="0.05" value="1.0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Amplitude: <span id="ampVal">0.8</span> m</label>
+          <input type="range" id="ampSlider" min="0.1" max="2" step="0.05" value="0.8">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Tension: <span id="tensionVal">80</span> N</label>
+          <input type="range" id="tensionSlider" min="10" max="200" step="5" value="80">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Damping: <span id="dampingVal">0.01</span></label>
+          <input type="range" id="dampingSlider" min="0" max="0.1" step="0.002" value="0.01">
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#475569">Space: play/pause · R: reset · 1-5: speed · Drag: orbit · Scroll: zoom</div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div class="glass" style="padding:24px;max-width:420px;width:90%">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:10px;color:#60a5fa">Wave on a String</h3>
+    <p style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:12px">Velocity Verlet integration for N coupled mass-spring oscillators. Adaptive sub-stepping for numerical stability.</p>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:12px"><strong>Shortcuts:</strong> Space (play/pause) · R (reset) · 1–5 (speed)</p>
+    <button class="btn-primary" onclick="document.getElementById('aboutModal').style.display='none'">Close</button>
+  </div>
+</div>
+
+<script>
+// ── Inline OrbitControls ──────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
+
+// ── Physics & Scene ───────────────────────────────────────────────────────────
+const N = 80;         // number of mass points
+const L = 10.0;       // string length (m)
+const mu = 0.05;      // linear mass density (kg/m)
+const dx = L / (N - 1);
+const segMass = mu * dx;
+
+let freq = 1.0, amp = 0.8, tension = 80, damping = 0.01;
+let speedFactor = 1.0;
+let playing = true;
+let simTime = 0;
+
+// State arrays
+let pos = new Float64Array(N);
+let vel = new Float64Array(N);
+let acc = new Float64Array(N);
+
+function computeAccel(p, v) {
+  const a = new Float64Array(N);
+  for (let i = 1; i < N - 1; i++) {
+    const fLeft  = tension * (p[i-1] - p[i]) / dx;
+    const fRight = tension * (p[i+1] - p[i]) / dx;
+    a[i] = (fLeft + fRight) / segMass - damping * v[i];
+  }
+  // fixed right end
+  a[0] = 0;
+  a[N-1] = 0;
+  return a;
+}
+
+function verletStep(dt) {
+  // half-step velocity
+  const aOld = computeAccel(pos, vel);
+  const velHalf = new Float64Array(N);
+  for (let i = 0; i < N; i++) velHalf[i] = vel[i] + 0.5 * aOld[i] * dt;
+  // update position
+  for (let i = 1; i < N - 1; i++) pos[i] += velHalf[i] * dt;
+  // new acceleration
+  const aNew = computeAccel(pos, velHalf);
+  // full-step velocity
+  for (let i = 0; i < N; i++) vel[i] = velHalf[i] + 0.5 * aNew[i] * dt;
+}
+
+function driveLeftEnd() {
+  pos[0] = amp * Math.sin(2 * Math.PI * freq * simTime);
+  vel[0] = amp * 2 * Math.PI * freq * Math.cos(2 * Math.PI * freq * simTime);
+}
+
+function physicsUpdate(dt) {
+  const maxSubDt = 0.0005;
+  const steps = Math.ceil(dt / maxSubDt);
+  const subDt = dt / steps;
+  for (let s = 0; s < steps; s++) {
+    driveLeftEnd();
+    verletStep(subDt);
+  }
+}
+
+function initString() {
+  for (let i = 0; i < N; i++) { pos[i] = 0; vel[i] = 0; }
+}
+
+// ── Three.js Setup ────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 4, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// Grid
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// OrbitControls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 2;
+controls.maxDistance = 50;
+
+// String geometry
+const stringGeom = new THREE.BufferGeometry();
+const positions = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) {
+  positions[i*3]   = (i / (N-1)) * L - L/2;
+  positions[i*3+1] = 0;
+  positions[i*3+2] = 0;
+}
+stringGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const stringMat = new THREE.LineBasicMaterial({ color: 0x60a5fa, linewidth: 2 });
+const stringLine = new THREE.Line(stringGeom, stringMat);
+scene.add(stringLine);
+
+// Tube for 3D rope effect
+const tubePath = new THREE.CatmullRomCurve3(
+  Array.from({length: N}, (_, i) => new THREE.Vector3((i/(N-1))*L - L/2, 0, 0))
+);
+const tubeGeom = new THREE.TubeGeometry(tubePath, N*2, 0.08, 8, false);
+const tubeMat = new THREE.MeshStandardMaterial({
+  color: 0x3b82f6, roughness: 0.4, metalness: 0.1,
+  emissive: 0x1e3a5f, emissiveIntensity: 0.3
+});
+const tubeMesh = new THREE.Mesh(tubeGeom, tubeMat);
+scene.add(tubeMesh);
+stringLine.visible = false;
+
+// End markers
+const endGeo = new THREE.SphereGeometry(0.15, 16, 16);
+const endMatL = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x14532d, emissiveIntensity: 0.5 });
+const endMatR = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x7f1d1d, emissiveIntensity: 0.5 });
+const leftEnd = new THREE.Mesh(endGeo, endMatL);
+const rightEnd = new THREE.Mesh(endGeo, endMatR);
+leftEnd.position.x = -L/2; rightEnd.position.x = L/2;
+scene.add(leftEnd, rightEnd);
+
+// Node/antinode markers (small spheres along string)
+const nodeMarkers = [];
+for (let i = 0; i < 6; i++) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 1.0 })
+  );
+  m.visible = false;
+  scene.add(m);
+  nodeMarkers.push(m);
+}
+
+// Tube update function
+function updateTube() {
+  scene.remove(tubeMesh);
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    pts.push(new THREE.Vector3((i/(N-1))*L - L/2, pos[i], 0));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const newGeom = new THREE.TubeGeometry(curve, Math.min(N*2, 240), 0.06, 8, false);
+  tubeMesh.geometry.dispose();
+  tubeMesh.geometry = newGeom;
+  scene.add(tubeMesh);
+}
+
+// ── Energy ────────────────────────────────────────────────────────────────────
+function computeEnergy() {
+  let KE = 0, PE = 0;
+  for (let i = 0; i < N; i++) {
+    KE += 0.5 * segMass * vel[i] * vel[i];
+  }
+  for (let i = 0; i < N - 1; i++) {
+    const dy = pos[i+1] - pos[i];
+    PE += 0.5 * tension * dy * dy / dx;
+  }
+  return { KE, PE };
+}
+
+// ── UI Update ─────────────────────────────────────────────────────────────────
+function updateDataOverlay() {
+  const v = Math.sqrt(tension / mu);
+  const lambda = v / freq;
+  const T = 1 / freq;
+  document.getElementById('dataOverlay').innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Live Data</div>
+    <div style="color:#60a5fa">Wave Speed: <strong>${v.toFixed(2)} m/s</strong></div>
+    <div style="color:#34d399">Wavelength λ: <strong>${lambda.toFixed(2)} m</strong></div>
+    <div style="color:#f8fafc">Frequency f: <strong>${freq.toFixed(2)} Hz</strong></div>
+    <div style="color:#f8fafc">Period T: <strong>${T.toFixed(3)} s</strong></div>
+    <div style="color:#fbbf24">Tension T: <strong>${tension.toFixed(0)} N</strong></div>
+    <div style="color:#94a3b8">μ = ${mu} kg/m · sim t: ${simTime.toFixed(1)}s</div>
+  `;
+}
+
+function updateEnergyOverlay() {
+  const { KE, PE } = computeEnergy();
+  const total = KE + PE + 0.001;
+  const kePct = Math.min(100, (KE / total) * 100);
+  const pePct = Math.min(100, (PE / total) * 100);
+  document.getElementById('energyOverlay').innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Energy</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#60a5fa"><span>KE</span><span>${KE.toFixed(3)} J</span></div>
+    <div class="energy-bar-track"><div class="energy-bar-fill" style="width:${kePct}%;background:#3b82f6"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#f87171"><span>PE</span><span>${PE.toFixed(3)} J</span></div>
+    <div class="energy-bar-track"><div class="energy-bar-fill" style="width:${pePct}%;background:#ef4444"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#4ade80;margin-top:2px"><span>Total E</span><span>${(KE+PE).toFixed(3)} J</span></div>
+  `;
+}
+
+// ── Sliders ───────────────────────────────────────────────────────────────────
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = parseFloat(this.value);
+  document.getElementById('freqVal').textContent = freq.toFixed(2);
+});
+document.getElementById('ampSlider').addEventListener('input', function() {
+  amp = parseFloat(this.value);
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+});
+document.getElementById('tensionSlider').addEventListener('input', function() {
+  tension = parseFloat(this.value);
+  document.getElementById('tensionVal').textContent = tension.toFixed(0);
+});
+document.getElementById('dampingSlider').addEventListener('input', function() {
+  damping = parseFloat(this.value);
+  document.getElementById('dampingVal').textContent = damping.toFixed(3);
+});
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+window.togglePlay = function() {
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? 'Pause' : 'Play';
+  showToast(playing ? 'Simulation running' : 'Simulation paused');
+};
+
+window.resetSim = function() {
+  initString();
+  simTime = 0;
+  showToast('Simulation reset');
+};
+
+window.setSpeed = function(s) {
+  speedFactor = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  showToast(`Speed: ${s}×`);
+};
+
+window.applyPreset = function(name) {
+  const presets = {
+    traveling: { freq: 1.0, amp: 0.8, tension: 80, damping: 0.01 },
+    standing:  { freq: 1.57, amp: 1.0, tension: 100, damping: 0.001 },
+    highTension: { freq: 2.0, amp: 0.5, tension: 180, damping: 0.005 }
+  };
+  const p = presets[name];
+  if (!p) return;
+  freq = p.freq; amp = p.amp; tension = p.tension; damping = p.damping;
+  document.getElementById('freqSlider').value = freq;
+  document.getElementById('ampSlider').value = amp;
+  document.getElementById('tensionSlider').value = tension;
+  document.getElementById('dampingSlider').value = damping;
+  document.getElementById('freqVal').textContent = freq.toFixed(2);
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+  document.getElementById('tensionVal').textContent = tension.toFixed(0);
+  document.getElementById('dampingVal').textContent = damping.toFixed(3);
+  initString(); simTime = 0;
+  const labels = { traveling: 'Traveling Wave', standing: 'Standing Wave (1st Harmonic)', highTension: 'High Tension' };
+  showToast(`Preset: ${labels[name]}`);
+};
+
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+  else { document.exitFullscreen(); }
+};
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const div = document.createElement('div');
+  div.className = 'toast-msg';
+  div.textContent = msg;
+  document.getElementById('toast').appendChild(div);
+  setTimeout(() => div.remove(), 2200);
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  const speedMap = { Digit1: 0.25, Digit2: 0.5, Digit3: 1, Digit4: 2, Digit5: 3 };
+  if (speedMap[e.code]) { speedFactor = speedMap[e.code]; showToast(`Speed: ${speedMap[e.code]}×`); }
+});
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "If tension quadruples while μ stays constant, wave speed:",
+    opts: ["Doubles", "Quadruples", "Stays the same", "Halves"],
+    ans: 0,
+    feedback: ["Correct! v = √(T/μ), so 4T → v becomes √4 = 2× faster.", "Not quite — speed scales as √T, not T.", "Speed does change with tension.", "Speed increases when tension increases."]
+  },
+  {
+    q: "In a standing wave on a fixed string, where is kinetic energy maximum?",
+    opts: ["At the nodes", "At the antinodes", "Uniformly distributed", "At the driven end"],
+    ans: 1,
+    feedback: ["Nodes are stationary — no KE there.", "Correct! Antinodes have maximum transverse velocity, hence maximum KE.", "KE is not uniform in a standing wave.", "The driven end has fixed motion, not necessarily max KE."]
+  },
+  {
+    q: "Increasing the driving frequency (at fixed tension) will:",
+    opts: ["Increase wave speed", "Decrease wavelength", "Increase amplitude", "Decrease frequency of oscillation"],
+    ans: 1,
+    feedback: ["Wave speed v = √(T/μ) is independent of frequency.", "Correct! λ = v/f. With v fixed, higher f means shorter λ.", "Amplitude depends on driving, not wave speed-frequency relation.", "Frequency is what you are changing — it increases."]
+  }
+];
+
+function buildQuiz() {
+  const c = document.getElementById('quizContainer');
+  c.innerHTML = '';
+  quizData.forEach((qd, qi) => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '14px';
+    div.innerHTML = `<div style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:6px">Q${qi+1}. ${qd.q}</div>`;
+    qd.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        if (div.querySelector('.quiz-feedback')) return;
+        div.querySelectorAll('.quiz-option').forEach(b => b.style.pointerEvents = 'none');
+        btn.classList.add(oi === qd.ans ? 'correct' : 'incorrect');
+        if (oi === qd.ans) div.querySelectorAll('.quiz-option')[qd.ans].classList.add('correct');
+        const fb = document.createElement('div');
+        fb.className = 'quiz-feedback';
+        fb.style.background = oi === qd.ans ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+        fb.style.color = oi === qd.ans ? '#4ade80' : '#fca5a5';
+        fb.textContent = (oi === qd.ans ? '✓ ' : '✗ ') + qd.feedback[oi];
+        div.appendChild(fb);
+      });
+      div.appendChild(btn);
+    });
+    c.appendChild(div);
+  });
+}
+
+// ── KaTeX Formulas ────────────────────────────────────────────────────────────
+document.getElementById('formulas').innerHTML = `
+  <div>$$v = \\sqrt{\\frac{T}{\\mu}}$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Wave speed from tension T and linear density μ</div>
+  <div>$$\\lambda = \\frac{v}{f}$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Wavelength from wave speed and frequency</div>
+  <div>$$L = \\frac{n\\lambda}{2}, \\; n=1,2,3\\ldots$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Standing wave condition (fixed-fixed string)</div>
+  <div>$$E \\propto A^2 f^2$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 4px">Wave energy proportional to square of amplitude</div>
+`;
+renderMathInElement(document.getElementById('formulas'), { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] });
+
+// ── Animation Loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frameCount = 0;
+
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (delta > 0.1) delta = 0.02;
+
+  if (playing) {
+    const physDt = delta * speedFactor;
+    simTime += physDt;
+    physicsUpdate(physDt);
+    updateTube();
+    leftEnd.position.y = pos[0];
+    rightEnd.position.y = pos[N-1];
+  }
+
+  controls.update();
+  frameCount++;
+  if (frameCount % 3 === 0) {
+    updateDataOverlay();
+    updateEnergyOverlay();
+  }
+
+  renderer.render(scene, camera);
+});
+
+// Init
+initString();
+buildQuiz();
+showToast('Wave on a String loaded — try the presets!');
+</script>
+<div style="display:none;text-align:center;font-size:11px;color:#475569;padding:4px">Explore waves with curiosity. Generated by AetherViz Master for you.</div>
+</body>
+</html>

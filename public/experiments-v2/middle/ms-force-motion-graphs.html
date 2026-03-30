@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Force &amp; Motion Graphs | Middle School Science</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<style>
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+#sidebar {
+  position: absolute;
+  top: 0; left: 0;
+  width: 300px; height: 100%;
+  background: rgba(15,23,42,0.93);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(236,72,153,0.3);
+  overflow-y: auto;
+  z-index: 10;
+  padding: 16px;
+}
+#controls {
+  position: absolute;
+  top: 0; right: 0;
+  width: 280px; height: 100%;
+  background: rgba(15,23,42,0.93);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(236,72,153,0.3);
+  overflow-y: auto;
+  z-index: 10;
+  padding: 16px;
+}
+.panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: linear-gradient(135deg, #EC4899 0%, #F97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+.section { margin-bottom: 18px; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.formula-box {
+  background: rgba(236,72,153,0.08);
+  border: 1px solid rgba(236,72,153,0.2);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.concept-text {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.slider-group { margin-bottom: 14px; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+.slider-label span {
+  color: #EC4899;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+input[type=range] { width: 100%; accent-color: #EC4899; cursor: pointer; }
+.btn {
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(236,72,153,0.4);
+  background: rgba(236,72,153,0.1);
+  color: #EC4899;
+  transition: all 0.2s;
+  width: 100%;
+  margin-bottom: 6px;
+}
+.btn:hover { background: rgba(236,72,153,0.25); }
+.btn.active {
+  background: linear-gradient(135deg, #EC4899, #F97316);
+  color: #fff;
+  border-color: transparent;
+}
+.speed-btns {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.speed-btn {
+  flex: 1;
+  padding: 5px 2px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(236,72,153,0.3);
+  background: rgba(236,72,153,0.07);
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+.speed-btn.active {
+  background: linear-gradient(135deg, #EC4899, #F97316);
+  color: #fff;
+  border-color: transparent;
+}
+#data-overlay {
+  position: absolute;
+  bottom: 200px;
+  left: 316px;
+  right: 296px;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(236,72,153,0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.data-item { text-align: center; }
+.data-label {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.data-value {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #EC4899;
+}
+#graph-canvas {
+  position: absolute;
+  bottom: 16px;
+  left: 316px;
+  right: 296px;
+  height: 175px;
+  border: 1px solid rgba(236,72,153,0.3);
+  border-radius: 8px;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+#toast-container {
+  position: fixed;
+  top: 16px;
+  right: 296px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: rgba(236,72,153,0.95);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: slideIn 0.3s ease;
+  min-width: 220px;
+}
+@keyframes slideIn {
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.quiz-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid rgba(236,72,153,0.25);
+  background: rgba(236,72,153,0.06);
+  color: #cbd5e1;
+  transition: all 0.2s;
+}
+.quiz-option:hover { background: rgba(236,72,153,0.18); }
+.quiz-option.correct {
+  background: rgba(34,197,94,0.2);
+  border-color: #22c55e;
+  color: #86efac;
+}
+.quiz-option.wrong {
+  background: rgba(239,68,68,0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+#quiz-feedback {
+  font-size: 12px;
+  margin-top: 6px;
+  min-height: 18px;
+}
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(236,72,153,0.15);
+  color: #EC4899;
+  margin: 2px;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<canvas id="graph-canvas"></canvas>
+
+<div id="sidebar">
+  <div class="panel-title">Force &amp; Motion Graphs</div>
+
+  <div class="section">
+    <div class="section-title">Learning Objectives</div>
+    <div class="concept-text">
+      • Apply Newton's second law: F_net = ma to calculate acceleration
+    </div>
+    <div class="concept-text">
+      • Use kinematic equations to predict position and velocity from initial conditions
+    </div>
+    <div class="concept-text">
+      • Interpret position-time, velocity-time, and acceleration-time graphs
+    </div>
+    <div class="concept-text">
+      • Explain how friction and air resistance affect net force and motion
+    </div>
+    <div class="concept-text">
+      • Identify constant velocity, constant acceleration, and deceleration on graphs
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Key Formulas</div>
+    <div class="formula-box" id="formula-newton"></div>
+    <div class="formula-box" id="formula-kinematics"></div>
+    <div class="formula-box" id="formula-work"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Newton's Second Law</div>
+    <div class="concept-text">
+      <strong style="color:#EC4899">F = ma</strong> — Net force equals the product
+      of mass and acceleration. When the net force is zero, velocity is constant
+      (Newton's first law — inertia). Only a non-zero net force causes acceleration.
+    </div>
+    <div class="concept-text">
+      The 3D car simulation integrates Newton's law in real time:
+      acceleration = F_net / mass, velocity += a × dt,
+      position += v × dt. When velocity reaches ±10 m/s, the car
+      bounces back to simulate a finite track.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Reading the Graphs</div>
+    <div class="concept-text">
+      <strong style="color:#22c55e">Position (green)</strong> — the slope of
+      the position-time graph equals velocity. Curved = accelerating; straight = constant velocity.
+    </div>
+    <div class="concept-text">
+      <strong style="color:#3b82f6">Velocity (blue)</strong> — the slope equals
+      acceleration. Horizontal line = zero acceleration; rising line = positive acceleration.
+    </div>
+    <div class="concept-text">
+      <strong style="color:#f59e0b">Acceleration (yellow)</strong> — horizontal line
+      on the a-t graph indicates constant acceleration. Area under a-t graph = change in velocity.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Real-World Applications</div>
+    <span class="tag">Vehicle Crash Testing</span>
+    <span class="tag">Roller Coaster Design</span>
+    <span class="tag">Projectile Motion</span>
+    <span class="tag">Sports Biomechanics</span>
+    <span class="tag">Rocket Trajectory</span>
+    <span class="tag">Traffic Engineering</span>
+    <div class="concept-text" style="margin-top:8px;">
+      Traffic engineers use position-time and velocity-time analysis to design
+      safe following distances and braking zones. Understanding the area under
+      a velocity-time graph (= displacement) is critical for highway design.
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <div class="panel-title">Controls</div>
+
+  <div class="section">
+    <div class="section-title">Playback</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button class="btn" id="btn-play" style="flex:1">⏸ Pause</button>
+      <button class="btn" id="btn-reset" style="flex:1">↺ Reset</button>
+    </div>
+    <div class="speed-btns">
+      <button class="speed-btn" data-speed="0.25">0.25×</button>
+      <button class="speed-btn" data-speed="0.5">0.5×</button>
+      <button class="speed-btn active" data-speed="1">1×</button>
+      <button class="speed-btn" data-speed="2">2×</button>
+      <button class="speed-btn" data-speed="3">3×</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Motion Parameters</div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Initial Velocity (m/s)
+        <span id="lbl-v0">0.0 m/s</span>
+      </div>
+      <input type="range" id="sl-v0" min="-20" max="20" value="0" step="1">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Net Force (N)
+        <span id="lbl-force">10.0 N</span>
+      </div>
+      <input type="range" id="sl-force" min="-50" max="50" value="10" step="1">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Mass (kg)
+        <span id="lbl-mass">5.0 kg</span>
+      </div>
+      <input type="range" id="sl-mass" min="1" max="20" value="5" step="1">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        Friction (N)
+        <span id="lbl-fric">0.0 N</span>
+      </div>
+      <input type="range" id="sl-fric" min="0" max="30" value="0" step="1">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Presets</div>
+    <button class="btn preset-btn" data-preset="free">Free Acceleration (no friction)</button>
+    <button class="btn preset-btn" data-preset="decel">Deceleration with Friction</button>
+    <button class="btn preset-btn" data-preset="const">Constant Velocity (F=f)</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quiz</div>
+    <div id="quiz-q"
+         class="concept-text"
+         style="color:#e2e8f0;margin-bottom:8px;font-size:12px;">
+    </div>
+    <div id="quiz-options"></div>
+    <div id="quiz-feedback"></div>
+    <button class="btn" id="btn-check" style="margin-top:6px;">Check Answer</button>
+    <button class="btn" id="btn-next-q"
+            style="margin-top:4px;background:rgba(148,163,184,0.1);color:#94a3b8;">
+      Next Question →
+    </button>
+  </div>
+</div>
+
+<div id="data-overlay">
+  <div class="data-item">
+    <div class="data-label">Position</div>
+    <div class="data-value" id="dv-pos">0.00 m</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Velocity</div>
+    <div class="data-value" id="dv-vel">0.00 m/s</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">Acceleration</div>
+    <div class="data-value" id="dv-acc">2.00 m/s²</div>
+  </div>
+  <div class="data-item">
+    <div class="data-label">KE</div>
+    <div class="data-value" id="dv-ke">0.0 J</div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ─── Inline OrbitControls ─────────────────────────────────────────────────────
+THREE.OrbitControls = function (camera, domElement) {
+  this.camera     = camera;
+  this.domElement = domElement;
+  this.enabled       = true;
+  this.enableDamping = true;
+  this.dampingFactor = 0.05;
+  this.enableZoom    = true;
+  this.minDistance   = 3;
+  this.maxDistance   = 60;
+  this.maxPolarAngle = Math.PI * 0.9;
+
+  var scope = this;
+  var STATE = { NONE: -1, ROTATE: 0, PAN: 1 };
+  var state = STATE.NONE;
+  var spherical      = new THREE.Spherical();
+  var sphericalDelta = new THREE.Spherical();
+  var scale          = 1;
+  var panOffset      = new THREE.Vector3();
+  var rotateStart    = new THREE.Vector2();
+  var rotateEnd      = new THREE.Vector2();
+  var rotateDelta    = new THREE.Vector2();
+  var panStart       = new THREE.Vector2();
+  var panEnd         = new THREE.Vector2();
+  var panDelta       = new THREE.Vector2();
+  var target         = new THREE.Vector3();
+  var offset         = new THREE.Vector3();
+  var quat           = new THREE.Quaternion()
+        .setFromUnitVectors(camera.up, new THREE.Vector3(0, 1, 0));
+  var quatInverse    = quat.clone().invert();
+
+  function rotateLeft(a) { sphericalDelta.theta -= a; }
+  function rotateUp(a)   { sphericalDelta.phi   -= a; }
+  function panLeft(d, m) {
+    var v = new THREE.Vector3();
+    v.setFromMatrixColumn(m, 0);
+    v.multiplyScalar(-d);
+    panOffset.add(v);
+  }
+  function panUp(d, m) {
+    var v = new THREE.Vector3();
+    v.setFromMatrixColumn(m, 1);
+    v.multiplyScalar(d);
+    panOffset.add(v);
+  }
+  function pan(dx, dy) {
+    var el   = scope.domElement;
+    var dist = scope.camera.position.clone().sub(target).length();
+    dist *= Math.tan((scope.camera.fov / 2) * Math.PI / 180) * 2;
+    panLeft(dx * dist / el.clientHeight, scope.camera.matrix);
+    panUp(dy   * dist / el.clientHeight, scope.camera.matrix);
+  }
+
+  this.update = function () {
+    var pos = scope.camera.position;
+    offset.copy(pos).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+    spherical.phi   += sphericalDelta.phi   * scope.dampingFactor;
+    spherical.phi    = Math.max(0.01, Math.min(scope.maxPolarAngle, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance,
+                        Math.min(scope.maxDistance, spherical.radius * scale));
+    target.add(panOffset.clone().multiplyScalar(scope.dampingFactor));
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    pos.copy(target).add(offset);
+    scope.camera.lookAt(target);
+    sphericalDelta.theta *= (1 - scope.dampingFactor);
+    sphericalDelta.phi   *= (1 - scope.dampingFactor);
+    panOffset.multiplyScalar(1 - scope.dampingFactor);
+    scale = 1;
+  };
+
+  function onMouseDown(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) {
+      state = STATE.ROTATE;
+      rotateStart.set(e.clientX, e.clientY);
+    } else if (e.button === 2) {
+      state = STATE.PAN;
+      panStart.set(e.clientX, e.clientY);
+    }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+  function onMouseMove(e) {
+    if (!scope.enabled) return;
+    if (state === STATE.ROTATE) {
+      rotateEnd.set(e.clientX, e.clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart);
+      var el = scope.domElement;
+      rotateLeft(2 * Math.PI * rotateDelta.x / el.clientHeight);
+      rotateUp(  2 * Math.PI * rotateDelta.y / el.clientHeight);
+      rotateStart.copy(rotateEnd);
+    } else if (state === STATE.PAN) {
+      panEnd.set(e.clientX, e.clientY);
+      panDelta.subVectors(panEnd, panStart);
+      pan(panDelta.x, panDelta.y);
+      panStart.copy(panEnd);
+    }
+  }
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    state = STATE.NONE;
+  }
+  function onWheel(e) {
+    if (!scope.enabled) return;
+    scale = (e.deltaY < 0) ? scale / 1.1 : scale * 1.1;
+  }
+
+  domElement.addEventListener('mousedown',  onMouseDown);
+  domElement.addEventListener('wheel',      onWheel, { passive: true });
+  domElement.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+};
+
+// ─── Scene Setup ──────────────────────────────────────────────────────────────
+var scene  = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+camera.position.set(0, 5, 14);
+
+var renderer = new THREE.WebGLRenderer({ antialias: true });
+var container = document.getElementById('canvas-container');
+container.appendChild(renderer.domElement);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+var ambientLight = new THREE.AmbientLight(0x1e293b, 1.0);
+scene.add(ambientLight);
+var keyLight = new THREE.DirectionalLight(0xEC4899, 1.2);
+keyLight.position.set(5, 10, 5); scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0xF97316, 0.5);
+fillLight.position.set(-5, 5, -3); scene.add(fillLight);
+var backLight = new THREE.DirectionalLight(0xa78bfa, 0.4);
+backLight.position.set(0, 5, -8); scene.add(backLight);
+
+// ─── Track ────────────────────────────────────────────────────────────────────
+var trackGeo = new THREE.BoxGeometry(18, 0.15, 1.2);
+var trackMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 40 });
+var track    = new THREE.Mesh(trackGeo, trackMat);
+track.position.set(0, 0.075, 0);
+scene.add(track);
+
+// Track rails
+var railGeo = new THREE.CylinderGeometry(0.05, 0.05, 18, 8);
+railGeo.rotateZ(Math.PI / 2);
+var railMat = new THREE.MeshPhongMaterial({ color: 0x94a3b8 });
+var rail1   = new THREE.Mesh(railGeo, railMat);
+var rail2   = new THREE.Mesh(railGeo, railMat);
+rail1.position.set(0, 0.2, -0.5);
+rail2.position.set(0, 0.2,  0.5);
+scene.add(rail1); scene.add(rail2);
+
+// ─── Car ─────────────────────────────────────────────────────────────────────
+var carBody = new THREE.Mesh(
+  new THREE.BoxGeometry(1.4, 0.6, 0.9),
+  new THREE.MeshPhongMaterial({ color: 0xEC4899, emissive: 0xEC4899, emissiveIntensity: 0.3 })
+);
+carBody.position.set(0, 0.55, 0);
+scene.add(carBody);
+
+var carTop = new THREE.Mesh(
+  new THREE.BoxGeometry(0.8, 0.35, 0.75),
+  new THREE.MeshPhongMaterial({ color: 0x1e40af })
+);
+carTop.position.set(0, 0.55 + 0.475, 0);
+scene.add(carTop);
+
+// Wheels
+var wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.15, 16);
+wheelGeo.rotateX(Math.PI / 2);
+var wheelMat = new THREE.MeshPhongMaterial({ color: 0x1e293b });
+var wheelPositions = [
+  [-0.5, 0.2, -0.5],
+  [ 0.5, 0.2, -0.5],
+  [-0.5, 0.2,  0.5],
+  [ 0.5, 0.2,  0.5]
+];
+var wheels = wheelPositions.map(function (pos) {
+  var w = new THREE.Mesh(wheelGeo.clone(), wheelMat.clone());
+  w.position.set(pos[0], pos[1], pos[2]);
+  scene.add(w);
+  return w;
+});
+
+// ─── Force Arrow ──────────────────────────────────────────────────────────────
+var forceGroup = new THREE.Group();
+scene.add(forceGroup);
+
+var arrowBody = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.06, 0.06, 2.0, 8),
+  new THREE.MeshPhongMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.5 })
+);
+arrowBody.rotation.z = Math.PI / 2;
+arrowBody.position.set(1.5, 0.8, 0);
+forceGroup.add(arrowBody);
+
+var arrowHead = new THREE.Mesh(
+  new THREE.ConeGeometry(0.18, 0.5, 12),
+  new THREE.MeshPhongMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.5 })
+);
+arrowHead.rotation.z = -Math.PI / 2;
+arrowHead.position.set(2.75, 0.8, 0);
+forceGroup.add(arrowHead);
+
+// ─── State ────────────────────────────────────────────────────────────────────
+var simState = {
+  running:  true,
+  time:     0,
+  speed:    1.0,
+  pos:      0,
+  vel:      0,
+  v0:       0,
+  force:    10,
+  mass:     5,
+  friction: 0
+};
+
+// Graph data buffers
+var MAX_HISTORY = 200;
+var posHistory  = [];
+var velHistory  = [];
+var accHistory  = [];
+
+// ─── Quiz Data ────────────────────────────────────────────────────────────────
+var quizData = [
+  {
+    q: "A 4 kg object experiences a net force of 20 N. Its acceleration is:",
+    opts: ["5 m/s²", "80 m/s²", "0.2 m/s²", "16 m/s²"],
+    ans: 0,
+    exp: "a = F/m = 20/4 = 5 m/s²"
+  },
+  {
+    q: "On a velocity-time graph, a horizontal line (slope = 0) means:",
+    opts: [
+      "Zero velocity",
+      "Constant acceleration",
+      "Constant velocity (zero acceleration)",
+      "Negative displacement"
+    ],
+    ans: 2,
+    exp: "Slope of v-t graph = acceleration. Horizontal line means a = 0, so velocity is constant."
+  },
+  {
+    q: "The area under a velocity-time graph represents:",
+    opts: ["Acceleration", "Force", "Displacement", "Power"],
+    ans: 2,
+    exp: "Area under v-t graph = ∫v dt = displacement (change in position)."
+  }
+];
+var qIdx = 0, selectedOpt = -1;
+
+// KaTeX
+function renderKatex() {
+  katex.render(
+    'F_{net} = ma \\quad a = \\frac{F_{net}}{m}',
+    document.getElementById('formula-newton'),
+    { throwOnError: false, displayMode: true }
+  );
+  katex.render(
+    'v = v_0 + at \\quad x = x_0 + v_0 t + \\tfrac{1}{2}at^2',
+    document.getElementById('formula-kinematics'),
+    { throwOnError: false, displayMode: true }
+  );
+  katex.render(
+    'KE = \\tfrac{1}{2}mv^2 \\quad W = F \\cdot d',
+    document.getElementById('formula-work'),
+    { throwOnError: false, displayMode: true }
+  );
+}
+renderKatex();
+
+function showToast(msg) {
+  var tc = document.getElementById('toast-container');
+  var t  = document.createElement('div');
+  t.className   = 'toast';
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 2000);
+}
+
+function renderQuiz() {
+  var q    = quizData[qIdx];
+  document.getElementById('quiz-q').textContent = 'Q' + (qIdx + 1) + ': ' + q.q;
+  var cont = document.getElementById('quiz-options');
+  cont.innerHTML = '';
+  selectedOpt = -1;
+  document.getElementById('quiz-feedback').textContent = '';
+  q.opts.forEach(function (opt, i) {
+    var btn       = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.quiz-option').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      selectedOpt = i;
+    });
+    cont.appendChild(btn);
+  });
+}
+renderQuiz();
+
+// Sliders
+document.getElementById('sl-v0').addEventListener('input', function () {
+  simState.v0 = parseFloat(this.value);
+  document.getElementById('lbl-v0').textContent = this.value + ' m/s';
+});
+document.getElementById('sl-force').addEventListener('input', function () {
+  simState.force = parseFloat(this.value);
+  document.getElementById('lbl-force').textContent = this.value + ' N';
+});
+document.getElementById('sl-mass').addEventListener('input', function () {
+  simState.mass = parseFloat(this.value);
+  document.getElementById('lbl-mass').textContent = this.value + ' kg';
+});
+document.getElementById('sl-fric').addEventListener('input', function () {
+  simState.friction = parseFloat(this.value);
+  document.getElementById('lbl-fric').textContent = this.value + ' N';
+});
+
+// Speed
+document.querySelectorAll('.speed-btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.speed-btn').forEach(function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    simState.speed = parseFloat(b.dataset.speed);
+    showToast('Speed: ' + b.dataset.speed + '×');
+  });
+});
+
+// Play/Reset
+document.getElementById('btn-play').addEventListener('click', function () {
+  simState.running = !simState.running;
+  this.textContent = simState.running ? '⏸ Pause' : '▶ Play';
+  showToast(simState.running ? 'Resumed' : 'Paused');
+});
+document.getElementById('btn-reset').addEventListener('click', function () {
+  simState.time = 0;
+  simState.pos  = 0;
+  simState.vel  = simState.v0;
+  posHistory.length = 0;
+  velHistory.length = 0;
+  accHistory.length = 0;
+  showToast('Simulation reset');
+});
+
+// Presets
+document.querySelectorAll('.preset-btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var p = b.dataset.preset;
+    if (p === 'free') {
+      simState.v0 = 0; simState.force = 15; simState.mass = 5; simState.friction = 0;
+      document.getElementById('sl-v0').value    = 0;
+      document.getElementById('sl-force').value = 15;
+      document.getElementById('sl-mass').value  = 5;
+      document.getElementById('sl-fric').value  = 0;
+      document.getElementById('lbl-v0').textContent    = '0 m/s';
+      document.getElementById('lbl-force').textContent = '15 N';
+      document.getElementById('lbl-mass').textContent  = '5 kg';
+      document.getElementById('lbl-fric').textContent  = '0 N';
+      showToast('Preset: Free Acceleration');
+    } else if (p === 'decel') {
+      simState.v0 = 8; simState.force = 0; simState.mass = 5; simState.friction = 10;
+      document.getElementById('sl-v0').value    = 8;
+      document.getElementById('sl-force').value = 0;
+      document.getElementById('sl-mass').value  = 5;
+      document.getElementById('sl-fric').value  = 10;
+      document.getElementById('lbl-v0').textContent    = '8 m/s';
+      document.getElementById('lbl-force').textContent = '0 N';
+      document.getElementById('lbl-mass').textContent  = '5 kg';
+      document.getElementById('lbl-fric').textContent  = '10 N';
+      simState.vel = 8;
+      showToast('Preset: Deceleration with Friction');
+    } else if (p === 'const') {
+      simState.v0 = 0; simState.force = 8; simState.mass = 4; simState.friction = 8;
+      document.getElementById('sl-v0').value    = 0;
+      document.getElementById('sl-force').value = 8;
+      document.getElementById('sl-mass').value  = 4;
+      document.getElementById('sl-fric').value  = 8;
+      document.getElementById('lbl-v0').textContent    = '0 m/s';
+      document.getElementById('lbl-force').textContent = '8 N';
+      document.getElementById('lbl-mass').textContent  = '4 kg';
+      document.getElementById('lbl-fric').textContent  = '8 N';
+      showToast('Preset: Constant Velocity (F = friction)');
+    }
+    simState.time = 0; simState.pos = 0; simState.vel = simState.v0;
+    posHistory.length = 0; velHistory.length = 0; accHistory.length = 0;
+  });
+});
+
+// Quiz check
+document.getElementById('btn-check').addEventListener('click', function () {
+  if (selectedOpt < 0) { showToast('Select an answer first!'); return; }
+  var q    = quizData[qIdx];
+  var opts = document.querySelectorAll('.quiz-option');
+  var fb   = document.getElementById('quiz-feedback');
+  if (selectedOpt === q.ans) {
+    opts[selectedOpt].classList.add('correct');
+    fb.style.color = '#86efac';
+    fb.textContent = '✓ Correct! ' + q.exp;
+  } else {
+    opts[selectedOpt].classList.add('wrong');
+    opts[q.ans].classList.add('correct');
+    fb.style.color = '#fca5a5';
+    fb.textContent = '✗ Incorrect. ' + q.exp;
+  }
+});
+document.getElementById('btn-next-q').addEventListener('click', function () {
+  qIdx = (qIdx + 1) % quizData.length;
+  renderQuiz();
+});
+
+// Keyboard
+document.addEventListener('keydown', function (e) {
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btn-play').click(); }
+  if (e.code === 'KeyR')  { document.getElementById('btn-reset').click(); }
+});
+
+// Resize
+var graphCanvas = document.getElementById('graph-canvas');
+var gctx        = graphCanvas.getContext('2d');
+
+function onResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  var rect = graphCanvas.getBoundingClientRect();
+  graphCanvas.width  = rect.width;
+  graphCanvas.height = rect.height;
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// Graph drawing
+function drawGraphs() {
+  var W  = graphCanvas.width;
+  var H  = graphCanvas.height;
+  gctx.clearRect(0, 0, W, H);
+
+  if (posHistory.length < 2) return;
+
+  var N   = posHistory.length;
+  var panelW = Math.floor(W / 3) - 2;
+
+  // Panel helper
+  function drawLine(data, xOffset, color, minVal, maxVal) {
+    gctx.beginPath();
+    gctx.strokeStyle = color;
+    gctx.lineWidth   = 1.5;
+    for (var i = 0; i < data.length; i++) {
+      var px = xOffset + (i / MAX_HISTORY) * panelW;
+      var py = H * 0.9 - ((data[i] - minVal) / (maxVal - minVal + 0.001)) * H * 0.7;
+      if (i === 0) gctx.moveTo(px, py);
+      else         gctx.lineTo(px, py);
+    }
+    gctx.stroke();
+
+    // Axis labels
+    gctx.fillStyle = '#64748b';
+    gctx.font      = '9px sans-serif';
+    gctx.fillText(color === '#22c55e' ? 'pos' : color === '#3b82f6' ? 'vel' : 'acc',
+                  xOffset + 2, 12);
+  }
+
+  // Grid lines
+  gctx.strokeStyle = '#1e293b';
+  gctx.lineWidth   = 0.5;
+  [H * 0.2, H * 0.5, H * 0.8].forEach(function (y) {
+    gctx.beginPath();
+    gctx.moveTo(0, y);
+    gctx.lineTo(W, y);
+    gctx.stroke();
+  });
+
+  drawLine(posHistory, 0,          '#22c55e', -12,  12);
+  drawLine(velHistory, panelW + 2, '#3b82f6', -15,  15);
+  drawLine(accHistory, (panelW + 2) * 2, '#f59e0b', -15, 15);
+
+  // Zero lines
+  gctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  gctx.lineWidth   = 0.8;
+  gctx.beginPath(); gctx.moveTo(0,                H * 0.5); gctx.lineTo(panelW,             H * 0.5); gctx.stroke();
+  gctx.beginPath(); gctx.moveTo(panelW + 2,       H * 0.5); gctx.lineTo(panelW * 2 + 2,     H * 0.5); gctx.stroke();
+  gctx.beginPath(); gctx.moveTo((panelW + 2) * 2, H * 0.5); gctx.lineTo((panelW + 2) * 2 + panelW, H * 0.5); gctx.stroke();
+}
+
+// Initialize vel
+simState.vel = simState.v0;
+
+// ─── Animation Loop ───────────────────────────────────────────────────────────
+renderer.setAnimationLoop(function () {
+  if (simState.running) {
+    var dt = 0.016 * simState.speed;
+    simState.time += dt;
+
+    // Physics integration
+    var fricForce = simState.friction * (simState.vel > 0 ? -1 : simState.vel < 0 ? 1 : 0);
+    var accel     = (simState.force + fricForce) / simState.mass;
+    simState.vel += accel * dt;
+    simState.vel  = Math.max(-12, Math.min(12, simState.vel));
+    simState.pos += simState.vel * dt;
+
+    // Bounce at track ends
+    if (simState.pos > 8) {
+      simState.pos = 8;
+      simState.vel = -Math.abs(simState.vel) * 0.6;
+    }
+    if (simState.pos < -8) {
+      simState.pos = -8;
+      simState.vel = Math.abs(simState.vel) * 0.6;
+    }
+
+    // Record history
+    posHistory.push(simState.pos);
+    velHistory.push(simState.vel);
+    accHistory.push(accel);
+    if (posHistory.length > MAX_HISTORY) {
+      posHistory.shift();
+      velHistory.shift();
+      accHistory.shift();
+    }
+  }
+
+  var t = simState.time;
+
+  // Move car and components
+  carBody.position.x = simState.pos;
+  carTop.position.x  = simState.pos;
+  forceGroup.position.x = simState.pos;
+
+  // Spin wheels based on velocity
+  var wheelRot = simState.vel * t;
+  wheels.forEach(function (w, i) {
+    w.position.x = simState.pos + (i < 2 ? -0.5 : 0.5);
+    w.rotation.x = wheelRot * 2;
+  });
+
+  // Force arrow direction
+  if (simState.force > 0) {
+    arrowBody.scale.x =  simState.force / 15;
+    arrowBody.position.set(1.5 * simState.force / 15, 0.8, 0);
+    arrowHead.position.set(1.5 + 1.25 * simState.force / 15, 0.8, 0);
+  } else if (simState.force < 0) {
+    arrowBody.scale.x =  -simState.force / 15;
+    arrowBody.position.set(-1.5 * (-simState.force / 15), 0.8, 0);
+    arrowHead.position.set(-1.5 - 1.25 * (-simState.force / 15), 0.8, 0);
+    arrowHead.rotation.z = Math.PI / 2;
+  }
+
+  // Data overlay
+  var accel2   = (simState.force - simState.friction * Math.sign(simState.vel)) / simState.mass;
+  var ke       = 0.5 * simState.mass * simState.vel * simState.vel;
+  document.getElementById('dv-pos').textContent = simState.pos.toFixed(2) + ' m';
+  document.getElementById('dv-vel').textContent = simState.vel.toFixed(2) + ' m/s';
+  document.getElementById('dv-acc').textContent = accel2.toFixed(2) + ' m/s²';
+  document.getElementById('dv-ke').textContent  = ke.toFixed(1) + ' J';
+
+  drawGraphs();
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

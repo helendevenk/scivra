@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Waves — K5 Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0f172a; color:#f8fafc; font-family:Inter,system-ui,sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:rgba(234,179,8,0.5);border-radius:2px;}
+.nav { background:rgba(15,23,42,0.9); border-bottom:1px solid rgba(234,179,8,0.25); padding:0 1.25rem; height:52px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; z-index:50; }
+.nav-title { font-size:1rem; font-weight:700; background:linear-gradient(135deg,#EAB308,#84CC16); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-sub { font-size:0.68rem; color:#94a3b8; margin-left:0.5rem; }
+.main { display:flex; flex:1; overflow:hidden; }
+.sidebar { width:30%; background:rgba(15,23,42,0.92); border-right:1px solid rgba(234,179,8,0.2); overflow-y:auto; padding:0.9rem; flex-shrink:0; }
+.sidebar-section { margin-bottom:1.1rem; }
+.sidebar-title { font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#EAB308; margin-bottom:0.55rem; }
+.fact-card { background:rgba(234,179,8,0.1); border:1px solid rgba(234,179,8,0.25); border-radius:8px; padding:0.65rem; margin-bottom:0.45rem; }
+.fact-title { font-size:0.72rem; font-weight:700; color:#FDE047; margin-bottom:0.2rem; }
+.fact-text { font-size:0.7rem; color:#cbd5e1; line-height:1.55; }
+.formula-block { background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.2); border-radius:8px; padding:0.6rem; margin-bottom:0.4rem; }
+.formula-desc { font-size:0.68rem; color:#94a3b8; margin-top:0.25rem; }
+.canvas-area { flex:1; position:relative; overflow:hidden; }
+#canvas-container { width:100%; height:100%; }
+.data-overlay { position:absolute; top:10px; left:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:0.65rem 0.9rem; backdrop-filter:blur(8px); min-width:175px; z-index:10; }
+.data-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem; gap:0.75rem; }
+.data-label { font-size:0.68rem; color:#94a3b8; }
+.data-val { font-size:0.72rem; font-weight:700; font-variant-numeric:tabular-nums; color:#FDE047; }
+.wave-overlay { position:absolute; top:10px; right:10px; width:200px; background:rgba(15,23,42,0.88); border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:0.65rem 0.9rem; z-index:10; backdrop-filter:blur(8px); }
+.wave-canvas { width:100%; height:70px; border-radius:6px; background:rgba(255,255,255,0.04); margin-top:0.4rem; }
+.control-panel { background:rgba(15,23,42,0.95); border-top:1px solid rgba(234,179,8,0.2); padding:0.75rem 1rem; flex-shrink:0; z-index:50; }
+.controls-grid { display:grid; grid-template-columns:repeat(3,1fr) auto; gap:0.7rem; align-items:center; }
+.slider-group { display:flex; flex-direction:column; gap:0.2rem; }
+.slider-label { font-size:0.68rem; color:#94a3b8; display:flex; justify-content:space-between; }
+.slider-val { color:#FDE047; font-weight:700; }
+input[type=range] { -webkit-appearance:none; width:100%; height:5px; border-radius:3px; background:rgba(234,179,8,0.2); outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg,#EAB308,#84CC16); cursor:pointer; }
+.preset-btn { padding:0.28rem 0.65rem; border-radius:6px; font-size:0.68rem; font-weight:600; cursor:pointer; border:1px solid rgba(234,179,8,0.35); background:rgba(234,179,8,0.1); color:#FDE047; transition:all 0.15s; white-space:nowrap; }
+.preset-btn:hover,.preset-btn.active { background:rgba(234,179,8,0.28); border-color:#EAB308; color:#fff; }
+.btn { padding:0.3rem 0.8rem; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; }
+.btn-ghost { background:rgba(255,255,255,0.07); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); }
+.btn-ghost:hover { background:rgba(255,255,255,0.13); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div style="display:flex;align-items:center;">
+    <span class="nav-title">Sound Waves</span>
+    <span class="nav-sub">K5 Science · Vibrations &amp; Sound · Ages 5–11</span>
+  </div>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="preset-btn" onclick="loadPreset('bass',this)">Low Pitch (Bass)</button>
+    <button class="preset-btn" onclick="loadPreset('treble',this)">High Pitch (Treble)</button>
+    <button class="preset-btn" onclick="loadPreset('loud',this)">Loud vs Quiet</button>
+    <button class="btn btn-ghost" onclick="resetSim()">↺ Reset</button>
+  </div>
+</nav>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">What is Sound?</div>
+      <div class="fact-card">
+        <div class="fact-title">Sound is Vibration!</div>
+        <div class="fact-text">Sound is made by vibrating objects. When a guitar string vibrates, it pushes air molecules back and forth, creating a wave that travels to your ears. No vibration = no sound!</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-title">Sound Needs a Medium</div>
+        <div class="fact-text">Sound travels through solids, liquids, and gases. It CANNOT travel through empty space (vacuum). That's why there's no sound in outer space! Speed in air ≈ 343 m/s.</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Pitch &amp; Frequency</div>
+      <div class="fact-card">
+        <div class="fact-title">High Frequency = High Pitch</div>
+        <div class="fact-text">Frequency = how many vibrations per second (Hz). High Hz = squeaky/high pitch. Low Hz = deep/low pitch. A dog whistle is ~40,000 Hz — too high for humans to hear!</div>
+      </div>
+      <div class="formula-block">
+        <div>Musical note A = 440 Hz</div>
+        <div class="formula-desc">Middle A on a piano vibrates 440 times every second</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-title">Human Hearing Range</div>
+        <div class="fact-text">Humans hear 20 Hz to 20,000 Hz. Bats and dolphins use echolocation with ultrasound (&gt;20,000 Hz) to "see" in the dark or underwater.</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Loudness &amp; Amplitude</div>
+      <div class="fact-card">
+        <div class="fact-title">Big Vibration = Loud Sound</div>
+        <div class="fact-text">Amplitude = size of the vibration. Big amplitude = loud (high decibels). Small amplitude = quiet. A whisper is ~30 dB. A jet engine is ~140 dB — that's 10,000× louder!</div>
+      </div>
+      <div class="formula-block">
+        <div>Speed of sound = 343 m/s</div>
+        <div class="formula-desc">In air at 20°C. Much faster in water (1500 m/s) and steel (5000 m/s)!</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Speed in Different Materials</div>
+      <div class="fact-card">
+        <div class="fact-title">Solids &gt; Liquids &gt; Gases</div>
+        <div class="fact-text">Molecules are closer together in solids, so vibrations pass faster. Steel: ~5000 m/s. Water: ~1500 m/s. Air: ~343 m/s. That's why you can hear a train coming by putting your ear on the rail!</div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-area">
+    <div id="canvas-container"></div>
+    <div class="data-overlay">
+      <div style="font-size:0.65rem;font-weight:700;color:#EAB308;margin-bottom:0.4rem;text-transform:uppercase;">Sound Data</div>
+      <div class="data-row"><span class="data-label">Frequency</span><span class="data-val" id="d-freq">440 Hz</span></div>
+      <div class="data-row"><span class="data-label">Amplitude</span><span class="data-val" id="d-amp">1.0</span></div>
+      <div class="data-row"><span class="data-label">Wavelength</span><span class="data-val" id="d-wave">0.78 m</span></div>
+      <div class="data-row"><span class="data-label">Period</span><span class="data-val" id="d-per">2.3 ms</span></div>
+      <div class="data-row"><span class="data-label">Speed</span><span class="data-val" id="d-spd">343 m/s</span></div>
+      <div class="data-row"><span class="data-label">Loudness</span><span class="data-val" id="d-loud">80 dB</span></div>
+    </div>
+    <div class="wave-overlay">
+      <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">Waveform</div>
+      <canvas class="wave-canvas" id="wave-canvas" width="180" height="70"></canvas>
+      <div style="margin-top:0.3rem;font-size:0.62rem;color:#64748b;" id="wave-desc">Medium pitch, medium volume</div>
+    </div>
+  </div>
+</div>
+<div class="control-panel">
+  <div class="controls-grid">
+    <div class="slider-group">
+      <div class="slider-label"><span>Frequency (Hz)</span><span class="slider-val" id="lbl-freq">440</span></div>
+      <input type="range" id="sl-freq" min="50" max="2000" step="10" value="440" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Amplitude (Volume)</span><span class="slider-val" id="lbl-amp">1.0</span></div>
+      <input type="range" id="sl-amp" min="0.1" max="3" step="0.1" value="1.0" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Medium</span><span class="slider-val" id="lbl-medium">Air</span></div>
+      <input type="range" id="sl-medium" min="0" max="2" step="1" value="0" oninput="onMediumChange()">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:0.1rem;">Show</div>
+      <button class="btn btn-ghost" onclick="toggleParticles()" id="btn-part" style="font-size:0.7rem;padding:0.3rem 0.7rem;">Particles</button>
+    </div>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(0, 5, 14);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8); dirLight.position.set(5,10,5); scene.add(dirLight);
+scene.add(Object.assign(new THREE.DirectionalLight(0xEAB308, 0.3), { position: new THREE.Vector3(-5,4,-4) }));
+
+const grid = new THREE.GridHelper(20, 20, 0x2d2000, 0x1a1400); scene.add(grid);
+
+// Source speaker
+const speakerGroup = new THREE.Group();
+const speakerBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 0.8), new THREE.MeshPhongMaterial({ color: 0x334155 }));
+speakerBody.position.y = 0.9;
+const speakerCone = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.3,0.2,16), new THREE.MeshPhongMaterial({ color: 0x1e293b }));
+speakerCone.rotation.z = Math.PI/2; speakerCone.position.set(0.65, 0.9, 0);
+speakerGroup.add(speakerBody); speakerGroup.add(speakerCone);
+speakerGroup.position.set(-7, 0, 0);
+scene.add(speakerGroup);
+
+// Speaker membrane (vibrating disk)
+const membraneMesh = new THREE.Mesh(new THREE.CircleGeometry(0.45, 24),
+  new THREE.MeshPhongMaterial({ color: 0x94a3b8, side: THREE.DoubleSide }));
+membraneMesh.rotation.y = Math.PI/2; membraneMesh.position.set(-6.3, 0.9, 0);
+scene.add(membraneMesh);
+
+// Wave rings (expanding circles)
+const MAX_RINGS = 12;
+const rings = [];
+for (let i = 0; i < MAX_RINGS; i++) {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.04, 6, 32),
+    new THREE.MeshPhongMaterial({ color: 0xEAB308, transparent: true, opacity: 0 }));
+  ring.rotation.y = Math.PI/2; ring.position.set(-6, 0.9, 0);
+  ring.userData = { r: 0, active: false, phase: i / MAX_RINGS };
+  scene.add(ring); rings.push(ring);
+}
+
+// Particle grid (air molecules)
+const PART_COUNT = 200;
+const particleGeo = new THREE.BufferGeometry();
+const partPositions = new Float32Array(PART_COUNT * 3);
+const partRestX = [];
+for (let i = 0; i < PART_COUNT; i++) {
+  const x = -5 + (i % 20) * 0.7;
+  const y = 0.1 + Math.floor(i / 20) * 0.6;
+  const z = (Math.random() - 0.5) * 2;
+  partPositions[i*3] = x; partPositions[i*3+1] = y; partPositions[i*3+2] = z;
+  partRestX.push(x);
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(partPositions, 3));
+const particlePoints = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x60a5fa, size: 0.12, transparent: true, opacity: 0.7 }));
+scene.add(particlePoints);
+let showParticles = true;
+
+// Ear receiver
+const earGroup = new THREE.Group();
+const earBody = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshPhongMaterial({ color: 0xf59e0b }));
+earBody.position.y = 0.9;
+earGroup.add(earBody);
+earGroup.position.set(7, 0, 0);
+scene.add(earGroup);
+
+// Waveform 2D canvas
+const waveCanvas = document.getElementById('wave-canvas');
+const wctx = waveCanvas.getContext('2d');
+
+function drawWaveform(freq, amp) {
+  wctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+  wctx.strokeStyle = '#EAB308';
+  wctx.lineWidth = 2;
+  wctx.beginPath();
+  const cycles = Math.min(freq / 100, 6);
+  for (let x = 0; x < waveCanvas.width; x++) {
+    const t = x / waveCanvas.width * cycles * Math.PI * 2;
+    const y = waveCanvas.height/2 - amp * 20 * Math.sin(t + simTime * 5);
+    if (x === 0) wctx.moveTo(x, Math.max(5, Math.min(waveCanvas.height-5, y)));
+    else wctx.lineTo(x, Math.max(5, Math.min(waveCanvas.height-5, y)));
+  }
+  wctx.stroke();
+}
+
+let freq = 440, amp = 1.0, mediumIdx = 0, simTime = 0;
+const MEDIA = [{ name: 'Air', speed: 343, color: 0x60a5fa }, { name: 'Water', speed: 1500, color: 0x3b82f6 }, { name: 'Steel', speed: 5000, color: 0x94a3b8 }];
+
+function loadPreset(p, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (p === 'bass') { document.getElementById('sl-freq').value = 100; document.getElementById('sl-amp').value = 1.5; document.getElementById('e-mode') && (document.getElementById('e-mode').textContent='Low pitch'); }
+  else if (p === 'treble') { document.getElementById('sl-freq').value = 1500; document.getElementById('sl-amp').value = 0.8; }
+  else if (p === 'loud') { document.getElementById('sl-freq').value = 440; document.getElementById('sl-amp').value = 2.5; }
+  onSlider();
+}
+
+function onSlider() {
+  freq = parseFloat(document.getElementById('sl-freq').value);
+  amp = parseFloat(document.getElementById('sl-amp').value);
+  document.getElementById('lbl-freq').textContent = freq;
+  document.getElementById('lbl-amp').textContent = amp.toFixed(1);
+  updateDesc();
+}
+
+function onMediumChange() {
+  mediumIdx = parseInt(document.getElementById('sl-medium').value);
+  document.getElementById('lbl-medium').textContent = MEDIA[mediumIdx].name;
+  scene.background = new THREE.Color(mediumIdx === 1 ? 0x0a1628 : mediumIdx === 2 ? 0x100a08 : 0x0f172a);
+}
+
+function toggleParticles() {
+  showParticles = !showParticles;
+  particlePoints.visible = showParticles;
+  document.getElementById('btn-part').textContent = showParticles ? 'Particles' : 'Rings';
+}
+
+function updateDesc() {
+  const p = freq < 200 ? 'Low' : freq < 800 ? 'Medium' : 'High';
+  const v = amp < 1 ? 'quiet' : amp < 2 ? 'medium volume' : 'loud';
+  document.getElementById('wave-desc').textContent = p + ' pitch, ' + v;
+}
+
+function resetSim() {
+  simTime = 0;
+  rings.forEach(r => { r.userData.r = 0; r.userData.active = false; r.scale.setScalar(0); r.material.opacity = 0; });
+}
+
+let lastTime = null, ringTimer = 0;
+
+renderer.setAnimationLoop(function(time) {
+  if (lastTime === null) lastTime = time;
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
+  simTime += dt;
+
+  const soundSpeed = MEDIA[mediumIdx].speed;
+  const wavelength = soundSpeed / freq;
+  const period = 1 / freq;
+
+  // Emit rings
+  ringTimer += dt;
+  const emitInterval = period * 0.5; // visual: half period
+  if (ringTimer >= emitInterval) {
+    ringTimer = 0;
+    const ring = rings.find(r => !r.userData.active);
+    if (ring) { ring.userData.active = true; ring.userData.r = 0.3; ring.position.set(-6, 0.9, 0); }
+  }
+
+  // Update rings
+  const ringSpeed = soundSpeed / 100; // scale for scene
+  rings.forEach(ring => {
+    if (!ring.userData.active) return;
+    ring.userData.r += ringSpeed * dt;
+    const r = ring.userData.r;
+    ring.geometry.dispose();
+    ring.geometry = new THREE.TorusGeometry(r, 0.04 * amp, 6, 32);
+    ring.material.opacity = Math.max(0, 0.8 * (1 - r / 14)) * (amp / 2);
+    ring.material.color.set(MEDIA[mediumIdx].color);
+    if (r > 14) { ring.userData.active = false; ring.material.opacity = 0; }
+  });
+
+  // Speaker membrane vibration
+  const membraneDisp = amp * 0.08 * Math.sin(2 * Math.PI * freq * simTime);
+  membraneMesh.position.x = -6.3 + membraneDisp;
+  speakerBody.scale.y = 1 + Math.abs(membraneDisp) * 0.05;
+
+  // Particle displacement (longitudinal wave)
+  if (showParticles) {
+    for (let i = 0; i < PART_COUNT; i++) {
+      const restX = partRestX[i];
+      const waveDist = (restX - (-6)) / (wavelength / 5);
+      const disp = amp * 0.15 * Math.sin(2 * Math.PI * (simTime / period - waveDist));
+      partPositions[i*3] = restX + disp;
+    }
+    particleGeo.attributes.position.needsUpdate = true;
+  }
+
+  // Ear bob
+  earBody.position.x = 7 + 0.05 * Math.sin(2 * Math.PI * freq * simTime * 0.1);
+
+  // HUD
+  const dB = Math.max(0, 20 * Math.log10(amp * 5e5));
+  document.getElementById('d-freq').textContent = freq + ' Hz';
+  document.getElementById('d-amp').textContent = amp.toFixed(1);
+  document.getElementById('d-wave').textContent = (soundSpeed / freq).toFixed(3) + ' m';
+  document.getElementById('d-per').textContent = (period * 1000).toFixed(2) + ' ms';
+  document.getElementById('d-spd').textContent = soundSpeed + ' m/s';
+  document.getElementById('d-loud').textContent = dB.toFixed(0) + ' dB';
+
+  drawWaveform(freq, amp);
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderMathInElement(document.body, { delimiters: [{left:'\\(',right:'\\)',display:false}] });
+  loadPreset('bass', document.querySelector('.preset-btn'));
+});
+onSlider();
+
+// ── K5 Science: Sound Waves Educator Notes ───────────────────────────────────
+// NGSS ALIGNMENT:
+// 1-PS4-1: Plan and conduct investigations to provide evidence that vibrating
+//   materials can make sound and that sound can make materials vibrate.
+// 1-PS4-4: Use tools and materials to design and build a device that uses light
+//   or sound to solve the problem of communicating over a distance.
+// 4-PS4-1: Develop a model of waves to describe patterns in terms of amplitude
+//   and wavelength and that waves can cause objects to move.
+//
+// CORE CONCEPTS FOR K5:
+// Sound is a mechanical wave — it requires a medium (matter) to travel through.
+// It CANNOT travel through vacuum (empty space). This is why space is silent!
+//
+// FREQUENCY AND PITCH:
+// Frequency (Hz) = number of vibrations per second
+// Low frequency (20-300 Hz)   = bass, rumble, thunder, tuba
+// Mid frequency (300-3000 Hz) = human speech (most important range for us)
+// High frequency (3000-20000) = treble, birds chirping, piccolo
+//
+// Human hearing: 20 Hz to 20,000 Hz (decreases with age)
+// Dogs hear up to 65,000 Hz. Bats use 20,000-200,000 Hz for echolocation.
+//
+// AMPLITUDE AND LOUDNESS:
+// Amplitude = maximum displacement of the vibrating medium from rest
+// Larger amplitude = more energy = louder sound
+// Decibel scale is logarithmic:
+//   0 dB   = threshold of hearing (barely audible)
+//   30 dB  = whisper
+//   60 dB  = normal conversation
+//   85 dB  = traffic (prolonged exposure can cause hearing damage)
+//   120 dB = rock concert (pain threshold nearby)
+//   140 dB = jet engine at close range (immediate hearing damage)
+//   194 dB = theoretical maximum in Earth's atmosphere
+//
+// SPEED OF SOUND IN DIFFERENT MEDIA:
+// Speed depends on density and elasticity of medium.
+// Air (20°C):  343 m/s   (≈ 1 mile per 5 seconds — count between lightning/thunder!)
+// Water:       1482 m/s  (4.3× faster than air)
+// Wood:        ~3960 m/s
+// Steel:       5120 m/s  (15× faster than air — put ear on rail!)
+// Glass:       5640 m/s
+// Rule: Solids > Liquids > Gases (molecules closer = faster transfer)
+//
+// WAVELENGTH RELATIONSHIP:
+// wavelength (m) = speed (m/s) / frequency (Hz)
+// Low notes have LONG wavelengths. High notes have SHORT wavelengths.
+// Example: 60 Hz bass note: λ = 343/60 = 5.7 m (longer than a car!)
+// Example: 4000 Hz treble:  λ = 343/4000 = 0.086 m = 8.6 cm
+//
+// FUN FACTS:
+// - Sound travels 1 km in about 3 seconds. Count seconds after lightning!
+// - Blue whales communicate with sounds as low as 10 Hz — heard 800 km away
+// - The crack of a whip is a tiny sonic boom (tip moves faster than sound)
+// - Humans can speak due to vocal cords vibrating 100-200 Hz for normal speech
+// - Musical instruments work by resonance — forcing air columns or strings to
+//   vibrate at natural frequencies (harmonics)
+//
+// CLASSROOM ACTIVITIES FOR SOUND:
+// Activity 1 — Feel vibrations: hold your hand on your throat while humming.
+//   You can feel your vocal cords vibrating! Try different pitches.
+//
+// Activity 2 — Rubber band guitar: stretch rubber bands of different thicknesses
+//   over a box. Pluck them. Thicker/looser band = lower pitch. Tighter/thinner = higher.
+//   This shows how frequency relates to tension and mass of vibrating object.
+//
+// Activity 3 — Tuning fork in water: touch a vibrating tuning fork to water surface.
+//   Water splashes — proving the fork is vibrating even though you barely see it!
+//
+// Activity 4 — Sound and distance: whisper at different distances. Sound gets quieter
+//   farther away because energy spreads over larger sphere (intensity ∝ 1/r²).
+//
+// Activity 5 — Telephone string: connect two paper cups with taut string.
+//   Speak into one, hear in other. Vibrations travel through string!
+//   Works because string conducts vibrations better than air at low volumes.
+//
+// MUSIC AND SCIENCE CONNECTION:
+// Musical notes are defined by frequency:
+//   A4 = 440 Hz (concert pitch reference)
+//   A5 = 880 Hz (one octave up — exactly 2× frequency)
+//   A3 = 220 Hz (one octave down — exactly 0.5× frequency)
+// Each octave = doubling of frequency. This is a logarithmic relationship.
+//
+// Harmonics: strings/pipes vibrate at fundamental frequency AND integer multiples.
+// These overtones give each instrument its unique timbre (sound quality).
+// Flute: few overtones. Violin: rich overtones. This is why they sound different
+// even playing the exact same note.
+//
+// ECHOLOCATION AND REAL-WORLD APPLICATIONS:
+// Bats use ultrasound (20,000-200,000 Hz) pulses. Time the echo to calculate distance.
+// Dolphins use ~200,000 Hz clicks — can resolve objects 1 cm at 30 m distance.
+// Medical ultrasound: 1-20 MHz to image soft tissue (frequencies too high for hearing).
+// Sonar (Sound Navigation And Ranging): submarines map ocean floor using echoes.
+// Seismology: earthquakes produce seismic waves — scientists use echoes to map
+//   Earth's interior (different wave speeds reveal Earth's layers).
+</script>
+</body>
+</html>

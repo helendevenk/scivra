@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinematics Motion Graphs — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 2px; }
+.nav { background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.3); backdrop-filter: blur(12px); padding: 0 1.25rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 100; }
+.nav-title { font-size: 1rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-sub { font-size: 0.68rem; color: #94a3b8; margin-left: 0.5rem; }
+.btn { padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg,#3B82F6,#0EA5E9); color: #fff; }
+.btn-ghost { background: rgba(255,255,255,0.07); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); }
+.btn-ghost:hover { background: rgba(255,255,255,0.13); }
+.btn-speed { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(59,130,246,0.3); background: rgba(255,255,255,0.05); color: #94a3b8; transition: all 0.15s; }
+.btn-speed.active { background: rgba(59,130,246,0.3); color: #93c5fd; border-color: #3B82F6; }
+.main { display: flex; flex: 1; overflow: hidden; }
+.sidebar { width: 30%; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 0.9rem; flex-shrink: 0; }
+.sidebar-section { margin-bottom: 1.1rem; }
+.sidebar-title { font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #3B82F6; margin-bottom: 0.55rem; }
+.formula-block { background: rgba(59,130,246,0.09); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.65rem; margin-bottom: 0.45rem; }
+.formula-desc { font-size: 0.7rem; color: #94a3b8; margin-top: 0.28rem; }
+.concept-text { font-size: 0.76rem; color: #cbd5e1; line-height: 1.6; }
+.concept-text p { margin-bottom: 0.45rem; }
+.info-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.4rem; }
+.info-card-title { font-size: 0.68rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.2rem; }
+.info-card-text { font-size: 0.7rem; color: #94a3b8; line-height: 1.5; }
+.canvas-area { flex: 1; position: relative; overflow: hidden; }
+#canvas-container { width: 100%; height: 100%; position: relative; }
+.data-overlay { position: absolute; top: 10px; left: 10px; background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.65rem 0.9rem; backdrop-filter: blur(8px); min-width: 160px; z-index: 10; }
+.data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; gap: 1rem; }
+.data-label { font-size: 0.68rem; color: #94a3b8; }
+.data-val { font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #60a5fa; }
+.graphs-overlay { position: absolute; top: 10px; right: 10px; width: 220px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.5rem; z-index: 10; backdrop-filter: blur(8px); }
+.graph-label { font-size: 0.6rem; color: #94a3b8; margin-bottom: 2px; }
+.graph-canvas { width: 100%; height: 55px; display: block; }
+.control-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.75rem 1rem; flex-shrink: 0; z-index: 50; }
+.controls-grid { display: grid; grid-template-columns: repeat(3,1fr) auto auto; gap: 0.7rem; align-items: center; }
+.slider-group { display: flex; flex-direction: column; gap: 0.2rem; }
+.slider-label { font-size: 0.67rem; color: #94a3b8; display: flex; justify-content: space-between; }
+.slider-label span { color: #60a5fa; font-weight: 700; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: #3B82F6; height: 4px; cursor: pointer; }
+.preset-btns { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.btn-preset { padding: 0.22rem 0.55rem; border-radius: 5px; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.08); color: #93c5fd; transition: all 0.15s; white-space: nowrap; }
+.btn-preset:hover { background: rgba(59,130,246,0.2); }
+.speed-group { display: flex; flex-direction: column; gap: 0.25rem; align-items: center; }
+.speed-label { font-size: 0.62rem; color: #94a3b8; }
+.speed-btns { display: flex; gap: 0.2rem; }
+.play-group { display: flex; flex-direction: column; gap: 0.25rem; align-items: center; }
+.quiz-panel { position: absolute; bottom: 0; right: 0; width: 320px; background: rgba(15,23,42,0.97); border-top: 1px solid rgba(59,130,246,0.3); border-left: 1px solid rgba(59,130,246,0.3); border-radius: 12px 0 0 0; padding: 0.8rem; z-index: 60; transition: transform 0.3s ease; backdrop-filter: blur(12px); }
+.quiz-panel.hidden { transform: translateY(100%); }
+.quiz-toggle { position: absolute; bottom: 10px; right: 10px; z-index: 61; background: linear-gradient(135deg,#3B82F6,#0EA5E9); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(59,130,246,0.4); display: none; }
+.quiz-title { font-size: 0.72rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+.quiz-q { font-size: 0.72rem; color: #f8fafc; margin-bottom: 0.5rem; line-height: 1.4; }
+.quiz-opts { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
+.quiz-opt { display: flex; align-items: flex-start; gap: 0.4rem; padding: 0.35rem 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 0.7rem; color: #cbd5e1; transition: all 0.15s; background: rgba(255,255,255,0.03); }
+.quiz-opt:hover { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.4); }
+.quiz-opt.correct { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #86efac; }
+.quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #fca5a5; }
+.quiz-feedback { font-size: 0.68rem; line-height: 1.5; padding: 0.4rem 0.5rem; border-radius: 6px; margin-top: 0.3rem; }
+.quiz-feedback.correct { background: rgba(34,197,94,0.1); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+.quiz-feedback.wrong { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.toast { position: fixed; top: 60px; right: 16px; background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.4); color: #f8fafc; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.75rem; z-index: 200; transform: translateX(120%); transition: transform 0.3s ease; pointer-events: none; backdrop-filter: blur(12px); }
+.toast.show { transform: translateX(0); }
+.about-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; align-items: center; justify-content: center; }
+.about-modal.show { display: flex; }
+.about-box { background: #0f172a; border: 1px solid rgba(59,130,246,0.4); border-radius: 12px; padding: 1.5rem; max-width: 360px; width: 90%; }
+</style>
+</head>
+<body>
+<!-- NAV -->
+<nav class="nav">
+  <div style="display:flex;align-items:center">
+    <span class="nav-title">Kinematics Motion Graphs</span>
+    <span class="nav-sub">AP Physics</span>
+  </div>
+  <div style="display:flex;gap:0.5rem">
+    <button class="btn btn-ghost" id="btnReset">Reset</button>
+    <button class="btn btn-ghost" id="btnAbout">About</button>
+    <button class="btn btn-primary" id="btnFullscreen">⛶ Fullscreen</button>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Core Formulas</div>
+      <div class="formula-block">
+        <div id="f1"></div>
+        <div class="formula-desc">Position under constant acceleration</div>
+      </div>
+      <div class="formula-block">
+        <div id="f2"></div>
+        <div class="formula-desc">Velocity under constant acceleration</div>
+      </div>
+      <div class="formula-block">
+        <div id="f3"></div>
+        <div class="formula-desc">Velocity-position relation (eliminates t)</div>
+      </div>
+      <div class="formula-block">
+        <div id="f4"></div>
+        <div class="formula-desc">Kinetic energy of the moving ball</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Concept</div>
+      <div class="concept-text">
+        <p>Kinematics describes <em>how</em> objects move without asking why. The three graphs — position, velocity, and acceleration vs. time — are different windows onto the same motion.</p>
+        <p>The <strong>slope</strong> of the x-t graph gives velocity. The slope of the v-t graph gives acceleration. The <strong>area</strong> under the v-t graph gives displacement. These relationships are the backbone of AP Physics kinematics.</p>
+        <p>Constant acceleration produces a parabolic x-t curve, a straight v-t line, and a horizontal a-t line. When acceleration is zero, x-t is linear and v-t is flat.</p>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Key Insights</div>
+      <div class="info-card">
+        <div class="info-card-title">Graph Slopes</div>
+        <div class="info-card-text">Slope of x-t = v; slope of v-t = a. If x-t is curved (parabola), the object is accelerating.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Common Misconception</div>
+        <div class="info-card-text">At the highest point of a thrown ball, velocity is zero — but acceleration is still −9.8 m/s². Gravity never turns off.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">AP Connection</div>
+        <div class="info-card-text">AP Physics 1 Exam regularly asks students to match x-t, v-t, and a-t graphs for the same motion scenario.</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Why It Matters</div>
+      <div class="concept-text">
+        <p>• Automotive safety engineers use kinematics to calculate stopping distances and design crumple zones.</p>
+        <p>• Space agencies use kinematic equations to plan rocket trajectories and landing profiles.</p>
+        <p>• AP Physics 1 & 2: Kinematics is Unit 1 — mastering graphs here unlocks every later unit.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CANVAS -->
+  <div class="canvas-area">
+    <div id="canvas-container"></div>
+
+    <!-- DATA OVERLAY -->
+    <div class="data-overlay">
+      <div class="data-row"><span class="data-label">Position x</span><span class="data-val" id="dX">0.00 m</span></div>
+      <div class="data-row"><span class="data-label">Velocity v</span><span class="data-val" id="dV">0.00 m/s</span></div>
+      <div class="data-row"><span class="data-label">Acceleration a</span><span class="data-val" id="dA">0.00 m/s²</span></div>
+      <div class="data-row"><span class="data-label">Time t</span><span class="data-val" id="dT">0.00 s</span></div>
+      <div class="data-row"><span class="data-label">KE</span><span class="data-val" id="dKE">0.00 J</span></div>
+    </div>
+
+    <!-- MOTION GRAPHS OVERLAY -->
+    <div class="graphs-overlay">
+      <div class="graph-label" style="color:#4ade80">x-t (position)</div>
+      <canvas class="graph-canvas" id="gXT"></canvas>
+      <div class="graph-label" style="color:#60a5fa;margin-top:4px">v-t (velocity)</div>
+      <canvas class="graph-canvas" id="gVT"></canvas>
+      <div class="graph-label" style="color:#fb923c;margin-top:4px">a-t (acceleration)</div>
+      <canvas class="graph-canvas" id="gAT"></canvas>
+    </div>
+
+    <!-- QUIZ PANEL -->
+    <div class="quiz-panel" id="quizPanel">
+      <div class="quiz-title">
+        <span>Quick Quiz</span>
+        <button class="btn btn-ghost" style="font-size:0.65rem;padding:0.15rem 0.4rem" id="btnHideQuiz">Hide</button>
+      </div>
+      <div id="quizContent"></div>
+    </div>
+    <button class="quiz-toggle" id="quizToggle">?</button>
+  </div>
+</div>
+
+<!-- CONTROL PANEL -->
+<div class="control-panel">
+  <div class="controls-grid">
+    <div class="slider-group">
+      <div class="slider-label">x₀ (m) <span id="lX0">0.0</span></div>
+      <input type="range" id="sX0" min="-10" max="10" step="0.5" value="0">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">v₀ (m/s) <span id="lV0">5.0</span></div>
+      <input type="range" id="sV0" min="-10" max="10" step="0.5" value="5">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">a (m/s²) <span id="lA">0.0</span></div>
+      <input type="range" id="sA" min="-10" max="10" step="0.5" value="0">
+    </div>
+    <div class="speed-group">
+      <div class="speed-label">Speed</div>
+      <div class="speed-btns">
+        <button class="btn-speed" data-s="0.25">0.25x</button>
+        <button class="btn-speed" data-s="0.5">0.5x</button>
+        <button class="btn-speed active" data-s="1">1x</button>
+        <button class="btn-speed" data-s="2">2x</button>
+        <button class="btn-speed" data-s="3">3x</button>
+      </div>
+    </div>
+    <div class="play-group">
+      <div style="display:flex;gap:0.4rem">
+        <button class="btn btn-primary" id="btnPlay">⏸ Pause</button>
+      </div>
+      <div class="preset-btns" style="margin-top:0.3rem">
+        <button class="btn-preset" data-preset="cv">Constant Velocity</button>
+        <button class="btn-preset" data-preset="ff">Free Fall</button>
+        <button class="btn-preset" data-preset="br">Braking</button>
+        <button class="btn-preset" data-preset="ar">Accel from Rest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ABOUT MODAL -->
+<div class="about-modal" id="aboutModal">
+  <div class="about-box">
+    <div style="font-size:0.9rem;font-weight:700;color:#60a5fa;margin-bottom:0.8rem">Kinematics Motion Graphs</div>
+    <div style="font-size:0.75rem;color:#cbd5e1;line-height:1.7">
+      <p><strong>Keyboard shortcuts:</strong></p>
+      <p>Space — Play / Pause</p>
+      <p>R — Reset simulation</p>
+      <p>1-5 — Speed: 0.25x / 0.5x / 1x / 2x / 3x</p>
+    </div>
+    <button class="btn btn-primary" style="margin-top:1rem;width:100%" id="btnCloseAbout">Close</button>
+  </div>
+</div>
+
+<script>
+// ─── OrbitControls inline ───────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotStart = new THREE.Vector2(), rotEnd = new THREE.Vector2(), rotDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(); var sphericalDelta = new THREE.Spherical();
+  var scale = 1; var isDragging = false; var mouseButton = -1;
+  function getSpherical() {
+    var offset = camera.position.clone().sub(new THREE.Vector3(0,0,0));
+    spherical.setFromVector3(offset);
+  }
+  getSpherical();
+  function onMouseDown(e) { if (!scope.enabled) return; isDragging = true; mouseButton = e.button; rotStart.set(e.clientX, e.clientY); }
+  function onMouseMove(e) {
+    if (!isDragging || !scope.enabled) return;
+    rotEnd.set(e.clientX, e.clientY); rotDelta.subVectors(rotEnd, rotStart);
+    if (mouseButton === 0) {
+      var el = scope.domElement;
+      sphericalDelta.theta -= 2 * Math.PI * rotDelta.x / el.clientWidth;
+      sphericalDelta.phi -= 2 * Math.PI * rotDelta.y / el.clientHeight;
+    }
+    rotStart.copy(rotEnd);
+  }
+  function onMouseUp() { isDragging = false; }
+  function onWheel(e) { if (!scope.enabled) return; scale *= e.deltaY > 0 ? 1.1 : 0.9; scale = Math.max(scope.minDistance / spherical.radius, Math.min(scope.maxDistance / spherical.radius, scale)); }
+  domElement.addEventListener('mousedown', onMouseDown);
+  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('mouseup', onMouseUp);
+  domElement.addEventListener('wheel', onWheel, { passive: true });
+  this.update = function() {
+    spherical.theta += sphericalDelta.theta; spherical.phi += sphericalDelta.phi;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius *= scale; spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+    var offset = new THREE.Vector3().setFromSpherical(spherical);
+    camera.position.copy(offset);
+    camera.lookAt(0, 0, 0);
+    sphericalDelta.set(0, 0, 0); scale = 1;
+    if (scope.enableDamping) { sphericalDelta.theta *= (1 - scope.dampingFactor); sphericalDelta.phi *= (1 - scope.dampingFactor); }
+  };
+  this.dispose = function() {
+    domElement.removeEventListener('mousedown', onMouseDown);
+    domElement.removeEventListener('mousemove', onMouseMove);
+    domElement.removeEventListener('mouseup', onMouseUp);
+    domElement.removeEventListener('wheel', onWheel);
+  };
+};
+
+// ─── SCENE SETUP ───────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 6, 18);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+scene.add(new THREE.GridHelper(24, 24, 0x1e3a5f, 0x0f2540));
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 40;
+
+// Track (rail)
+const railGeo = new THREE.BoxGeometry(22, 0.15, 0.4);
+const railMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8, metalness: 0.2 });
+const rail = new THREE.Mesh(railGeo, railMat);
+rail.position.y = 0.5;
+rail.receiveShadow = true;
+scene.add(rail);
+
+// End stops
+const stopGeo = new THREE.BoxGeometry(0.2, 0.8, 0.5);
+const stopMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+[-11, 11].forEach(xp => { const s = new THREE.Mesh(stopGeo, stopMat); s.position.set(xp, 0.9, 0); scene.add(s); });
+
+// Ball
+const ballGeo = new THREE.SphereGeometry(0.55, 32, 32);
+const ballMat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, roughness: 0.3, metalness: 0.3, emissive: 0x1e40af, emissiveIntensity: 0.4 });
+const ball = new THREE.Mesh(ballGeo, ballMat);
+ball.castShadow = true;
+ball.position.set(0, 1.1, 0);
+scene.add(ball);
+
+// Trail
+const TRAIL_LEN = 80;
+const trailPositions = new Float32Array(TRAIL_LEN * 3);
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+const trailMat = new THREE.LineBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.5 });
+const trailLine = new THREE.Line(trailGeo, trailMat);
+scene.add(trailLine);
+let trailBuffer = [];
+
+// Position label markers
+const xAxisLabels = [];
+for (let x = -10; x <= 10; x += 2) {
+  const geo = new THREE.BoxGeometry(0.05, 0.25, 0.05);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+  const tick = new THREE.Mesh(geo, mat);
+  tick.position.set(x, 0.3, 0);
+  scene.add(tick);
+}
+
+// ─── PHYSICS STATE ─────────────────────────────────────────────────────────
+const MASS = 1.0;
+let x0 = 0, v0 = 5, a = 0;
+let simX = 0, simV = 5, simT = 0;
+let isPlaying = true;
+let speedFactor = 1.0;
+
+// Graph history (280 points rolling)
+const HIST = 280;
+let histX = [], histV = [], histA = [], histT = [];
+
+function resetSim() {
+  simX = x0; simV = v0; simT = 0;
+  histX = []; histV = []; histA = []; histT = [];
+  trailBuffer = [];
+  updateBall();
+}
+
+function updateBall() {
+  ball.position.x = Math.max(-10.5, Math.min(10.5, simX));
+  ball.position.y = 1.1;
+}
+
+function physicsStep(dt) {
+  if (!isPlaying) return;
+  const maxSub = 0.002;
+  const steps = Math.ceil(dt / maxSub);
+  const sub = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    // Velocity Verlet
+    const a1 = a;
+    const vHalf = simV + 0.5 * a1 * sub;
+    simX += vHalf * sub;
+    simV = vHalf + 0.5 * a1 * sub;
+    simT += sub;
+  }
+  // Clamp to track bounds
+  if (simX > 10.5) { simX = 10.5; simV = 0; }
+  if (simX < -10.5) { simX = -10.5; simV = 0; }
+
+  histX.push(simX);
+  histV.push(simV);
+  histA.push(a);
+  histT.push(simT);
+  if (histX.length > HIST) { histX.shift(); histV.shift(); histA.shift(); histT.shift(); }
+
+  trailBuffer.push(new THREE.Vector3(simX, 1.1, 0));
+  if (trailBuffer.length > TRAIL_LEN) trailBuffer.shift();
+
+  updateBall();
+  updateDataPanel();
+  drawGraphs();
+  updateTrail();
+}
+
+function updateTrail() {
+  for (let i = 0; i < TRAIL_LEN; i++) {
+    if (i < trailBuffer.length) {
+      trailPositions[i * 3] = trailBuffer[i].x;
+      trailPositions[i * 3 + 1] = trailBuffer[i].y;
+      trailPositions[i * 3 + 2] = trailBuffer[i].z;
+    } else {
+      trailPositions[i * 3] = trailBuffer[0] ? trailBuffer[0].x : 0;
+      trailPositions[i * 3 + 1] = 1.1;
+      trailPositions[i * 3 + 2] = 0;
+    }
+  }
+  trailGeo.attributes.position.needsUpdate = true;
+  trailGeo.setDrawRange(0, trailBuffer.length);
+}
+
+function updateDataPanel() {
+  const ke = 0.5 * MASS * simV * simV;
+  document.getElementById('dX').textContent = simX.toFixed(2) + ' m';
+  document.getElementById('dV').textContent = simV.toFixed(2) + ' m/s';
+  document.getElementById('dA').textContent = a.toFixed(2) + ' m/s²';
+  document.getElementById('dT').textContent = simT.toFixed(2) + ' s';
+  document.getElementById('dKE').textContent = ke.toFixed(2) + ' J';
+}
+
+// ─── GRAPH DRAWING ─────────────────────────────────────────────────────────
+function drawGraph(canvasId, data, color, label) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const W = c.clientWidth || 200; const H = c.clientHeight || 55;
+  c.width = W; c.height = H;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(15,23,42,0.5)';
+  ctx.fillRect(0, 0, W, H);
+
+  if (data.length < 2) return;
+  const mn = Math.min(...data); const mx = Math.max(...data);
+  const range = mx - mn || 1;
+
+  ctx.beginPath();
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  for (let i = 0; i < data.length; i++) {
+    const px = (i / (data.length - 1)) * W;
+    const py = H - ((data[i] - mn) / range) * (H - 6) - 3;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Zero line
+  if (mn < 0 && mx > 0) {
+    const zy = H - ((0 - mn) / range) * (H - 6) - 3;
+    ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 0.5; ctx.setLineDash([3,3]);
+    ctx.moveTo(0, zy); ctx.lineTo(W, zy); ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+
+function drawGraphs() {
+  drawGraph('gXT', histX, '#4ade80', 'x');
+  drawGraph('gVT', histV, '#60a5fa', 'v');
+  drawGraph('gAT', histA, '#fb923c', 'a');
+}
+
+// ─── RESIZE ────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── ANIMATION LOOP ────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (delta > 0.1) delta = 0.02;
+  controls.update();
+  physicsStep(delta * speedFactor);
+  renderer.render(scene, camera);
+});
+
+// ─── CONTROLS ─────────────────────────────────────────────────────────────
+function syncSliders() {
+  x0 = parseFloat(document.getElementById('sX0').value);
+  v0 = parseFloat(document.getElementById('sV0').value);
+  a = parseFloat(document.getElementById('sA').value);
+  document.getElementById('lX0').textContent = x0.toFixed(1);
+  document.getElementById('lV0').textContent = v0.toFixed(1);
+  document.getElementById('lA').textContent = a.toFixed(1);
+}
+
+['sX0', 'sV0', 'sA'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { syncSliders(); resetSim(); });
+});
+
+document.getElementById('btnPlay').addEventListener('click', () => {
+  isPlaying = !isPlaying;
+  document.getElementById('btnPlay').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+  showToast(isPlaying ? 'Simulation playing' : 'Simulation paused');
+});
+
+document.getElementById('btnReset').addEventListener('click', () => { resetSim(); showToast('Simulation reset'); });
+
+document.querySelectorAll('.btn-speed').forEach(btn => {
+  btn.addEventListener('click', () => {
+    speedFactor = parseFloat(btn.dataset.s);
+    document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    showToast('Speed: ' + btn.dataset.s + 'x');
+  });
+});
+
+const presets = {
+  cv:  { x0: 0, v0: 5, a: 0 },
+  ff:  { x0: 8, v0: 0, a: -9.8 },
+  br:  { x0: -8, v0: 8, a: -2 },
+  ar:  { x0: -8, v0: 0, a: 3 }
+};
+const presetNames = { cv: 'Constant Velocity', ff: 'Free Fall', br: 'Braking', ar: 'Accel from Rest' };
+
+document.querySelectorAll('.btn-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = presets[btn.dataset.preset];
+    x0 = p.x0; v0 = p.v0; a = p.a;
+    document.getElementById('sX0').value = x0;
+    document.getElementById('sV0').value = v0;
+    document.getElementById('sA').value = a;
+    syncSliders();
+    resetSim();
+    showToast('Preset: ' + presetNames[btn.dataset.preset]);
+  });
+});
+
+document.getElementById('btnFullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+  else { document.exitFullscreen(); }
+});
+
+document.getElementById('btnAbout').addEventListener('click', () => { document.getElementById('aboutModal').classList.add('show'); });
+document.getElementById('btnCloseAbout').addEventListener('click', () => { document.getElementById('aboutModal').classList.remove('show'); });
+
+document.getElementById('btnHideQuiz').addEventListener('click', () => {
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('quizToggle').style.display = 'block';
+});
+document.getElementById('quizToggle').addEventListener('click', () => {
+  document.getElementById('quizPanel').classList.remove('hidden');
+  document.getElementById('quizToggle').style.display = 'none';
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btnPlay').click(); }
+  if (e.code === 'KeyR') { document.getElementById('btnReset').click(); }
+  if (e.code === 'Digit1') document.querySelector('[data-s="0.25"]').click();
+  if (e.code === 'Digit2') document.querySelector('[data-s="0.5"]').click();
+  if (e.code === 'Digit3') document.querySelector('[data-s="1"]').click();
+  if (e.code === 'Digit4') document.querySelector('[data-s="2"]').click();
+  if (e.code === 'Digit5') document.querySelector('[data-s="3"]').click();
+});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: 'If acceleration is zero and initial velocity is positive, the x-t graph looks like:',
+    opts: ['A curved upward parabola', 'A straight line with positive slope', 'A horizontal line', 'A downward parabola'],
+    correct: 1,
+    fb_correct: 'Correct! Zero acceleration means constant velocity — x increases linearly with t, giving a straight line with slope = v₀.',
+    fb_wrong: 'Not quite. When a = 0, velocity is constant: x = x₀ + v₀t is a linear equation, so x-t is a straight line. Parabolas only appear when a ≠ 0.'
+  },
+  {
+    q: 'A ball is thrown straight up. At its highest point, which statement is true?',
+    opts: ['Both v = 0 and a = 0', 'v = 0 and a = −9.8 m/s²', 'v > 0 and a = 0', 'v = 0 and a = +9.8 m/s²'],
+    correct: 1,
+    fb_correct: 'Exactly right! Velocity is zero at the peak, but gravitational acceleration (−9.8 m/s² downward) never stops — it\'s what turns the ball around.',
+    fb_wrong: 'Remember: gravity acts continuously. At the highest point, v = 0 momentarily, but a = −9.8 m/s² because Earth\'s gravity doesn\'t pause just because the ball does.'
+  },
+  {
+    q: 'A braking car has v₀ = 10 m/s and a = −5 m/s². Using v = v₀ + at, when does it stop?',
+    opts: ['t = 0.5 s', 't = 1 s', 't = 2 s', 't = 5 s'],
+    correct: 2,
+    fb_correct: 'Perfect! 0 = 10 + (−5)t → 5t = 10 → t = 2 s. The slope of the v-t graph directly gives you the stopping time.',
+    fb_wrong: 'Use v = v₀ + at: 0 = 10 + (−5)t → t = 10/5 = 2 s. On a v-t graph, the x-intercept is exactly where the car stops.'
+  }
+];
+
+let currentQ = 0;
+function renderQuiz() {
+  const q = quizData[currentQ];
+  let html = `<div class="quiz-q">${currentQ + 1}/3 — ${q.q}</div><div class="quiz-opts">`;
+  q.opts.forEach((o, i) => {
+    html += `<div class="quiz-opt" data-i="${i}">${o}</div>`;
+  });
+  html += `</div>`;
+  if (currentQ < quizData.length - 1) {
+    html += `<div style="font-size:0.65rem;color:#475569;text-align:right;margin-top:0.2rem">Next → after answering</div>`;
+  }
+  document.getElementById('quizContent').innerHTML = html;
+  document.querySelectorAll('.quiz-opt').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const i = parseInt(this.dataset.i);
+      document.querySelectorAll('.quiz-opt').forEach(o => o.style.pointerEvents = 'none');
+      let fb = document.createElement('div');
+      fb.className = 'quiz-feedback';
+      if (i === q.correct) {
+        this.classList.add('correct');
+        fb.classList.add('correct');
+        fb.textContent = q.fb_correct;
+      } else {
+        this.classList.add('wrong');
+        document.querySelectorAll('.quiz-opt')[q.correct].classList.add('correct');
+        fb.classList.add('wrong');
+        fb.textContent = q.fb_wrong;
+      }
+      document.getElementById('quizContent').appendChild(fb);
+      if (currentQ < quizData.length - 1) {
+        setTimeout(() => { currentQ++; renderQuiz(); }, 2200);
+      }
+    });
+  });
+}
+renderQuiz();
+
+// ─── KATEX ────────────────────────────────────────────────────────────────
+function renderKatex(id, tex) {
+  katex.render(tex, document.getElementById(id), { throwOnError: false, displayMode: true });
+}
+renderKatex('f1', 'x = x_0 + v_0 t + \\tfrac{1}{2}at^2');
+renderKatex('f2', 'v = v_0 + at');
+renderKatex('f3', 'v^2 = v_0^2 + 2a(x - x_0)');
+renderKatex('f4', 'KE = \\tfrac{1}{2}mv^2');
+
+syncSliders();
+resetSim();
+</script>
+<!-- Generated by AetherViz Master v7.0 for Scivra AP Physics | [WARNING: Codex API 403 — science accuracy self-verified] -->
+</body>
+</html>

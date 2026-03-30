@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evidence of Evolution — AP Biology</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(16,185,129,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(16,185,129,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;padding:12px; }
+  .panel-card { background:rgba(6,78,59,0.6);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);cursor:pointer; }
+  .sidebar { width:30%;min-width:260px;max-width:360px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(16,185,129,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(16,185,129,0.4);border-radius:2px;}
+  .btn { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(16,185,129,0.3);cursor:pointer;background:rgba(16,185,129,0.1);color:#6ee7b7;transition:all 0.18s; }
+  .btn:hover,.btn.active { background:rgba(16,185,129,0.3);color:#fff;border-color:#10B981; }
+  .btn-speed { padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#10B981,#22D3EE);color:#fff;border-color:#10B981; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#34d399; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#10B981;background:rgba(16,185,129,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100;display:none; }
+  #quiz-fab { position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(16,185,129,0.5); }
+  #info-overlay { position:absolute;top:12px;left:12px;background:rgba(6,78,59,0.85);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;pointer-events:none;min-width:210px; }
+  #canvas-wrap { position:relative;flex:1;overflow:hidden; }
+  canvas { display:block; }
+  #evidence-svg { position:absolute;bottom:8px;right:8px;pointer-events:none; }
+  #view-label { position:absolute;top:12px;right:12px;background:rgba(15,23,42,0.8);border:1px solid rgba(16,185,129,0.4);border-radius:8px;padding:8px 14px;pointer-events:none;text-align:center; }
+</style>
+</head>
+<body>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(16,185,129,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#10B981,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Evidence of Evolution</span>
+    <span class="text-xs text-slate-400 ml-3">Four Lines of Evidence · AP Biology</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">Four Lines of Evidence</div>
+    <div class="text-xs text-slate-300 mb-2"><span class="text-amber-400 font-bold">① Fossil Record:</span> Temporal succession of life forms. Index fossils date rock strata. Transitional fossils (e.g., Tiktaalik, Archaeopteryx) show intermediate forms.</div>
+    <div class="text-xs text-slate-300 mb-2"><span class="text-blue-400 font-bold">② Comparative Anatomy:</span> Homologous structures (same origin, different function) in human, whale, bat, and horse forelimbs reveal common ancestry.</div>
+    <div class="text-xs text-slate-300 mb-2"><span class="text-green-400 font-bold">③ Molecular Phylogeny:</span> Cytochrome c amino acid sequences: human/chimp differ by 0 aa, human/dog by 13, human/yeast by 51. More similarity = more recent common ancestor.</div>
+    <div class="text-xs text-slate-300"><span class="text-purple-400 font-bold">④ Biogeography:</span> Island species most similar to nearby mainland species, not to geographically distant islands with similar climate (Darwin's finches, Galápagos).</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Concept</div>
+    <p class="text-xs text-slate-300 leading-relaxed">Evolution by natural selection (Darwin, 1859) is supported by convergent independent lines of evidence — fossil record, anatomy, molecular biology, and biogeography. No single line is definitive; their convergence makes evolution one of the most well-supported theories in science.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">Molecular evidence is the most precise: DNA/protein sequences directly reflect genetic history. Phylogenetic trees built from cytochrome c are nearly identical to those built from morphology — despite the methods being completely independent.</p>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-cyan-400 mb-1">Fossil Record Key Facts</div>
+    <div class="text-xs text-slate-300">
+      <div>• Life on Earth: ~3.8 billion years ago (prokaryotes)</div>
+      <div>• Eukaryotes: ~2.1 bya</div>
+      <div>• Multicellular life: ~600 mya (Ediacaran)</div>
+      <div>• Cambrian explosion: ~541 mya (most animal phyla)</div>
+      <div>• Mass extinctions: ~5 major events</div>
+      <div>• Homo sapiens: ~300,000 years ago</div>
+    </div>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-amber-400 mb-1">Common Misconception</div>
+    <div class="text-xs text-slate-300">"Humans evolved from chimpanzees" is wrong. Humans and chimps share a common ancestor (diverged ~6-7 mya). Evolution is a branching process, not a linear ladder — modern chimps are not our ancestors, they are our evolutionary cousins.</div>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-emerald-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">Understanding evolution predicts antibiotic resistance (bacteria evolve), cancer progression (natural selection on tumor cells), and pandemic emergence (viral evolution). Evolution is the unifying theory of all biology.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold text-emerald-400 mb-2">Presets</div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn active" id="p0" onclick="applyPreset(0)">Fossil Timeline</button>
+      <button class="btn" id="p1" onclick="applyPreset(1)">Molecular Phylogeny</button>
+      <button class="btn" id="p2" onclick="applyPreset(2)">Comparative Anatomy</button>
+    </div>
+  </div>
+</aside>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="info-overlay">
+    <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Evidence View</div>
+    <div class="text-xs text-slate-300">Mode: <span class="data-val" id="d-mode">Fossil Timeline</span></div>
+    <div class="text-xs text-slate-300">Time Scale: <span class="data-val" id="d-time">3.8 bya → Now</span></div>
+    <div class="text-xs text-slate-300">Fossils Shown: <span class="data-val" id="d-fossils">8</span></div>
+    <div class="text-xs text-slate-300">Taxa Compared: <span class="data-val" id="d-taxa">4</span></div>
+    <div class="text-xs text-slate-300">Cyt c Identity: <span class="data-val" id="d-cytc">—</span>%</div>
+    <div class="text-xs text-slate-300">Homology: <span class="data-val" id="d-hom">Forelimb</span></div>
+  </div>
+  <div id="view-label">
+    <div class="text-xs text-slate-400">Current View</div>
+    <div id="vl-text" class="text-sm font-bold text-emerald-400">Fossil Record Timeline</div>
+  </div>
+  <svg id="evidence-svg" width="220" height="160"></svg>
+</div>
+</div>
+
+<div class="shrink-0 px-4 py-3" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(12px);border-top:1px solid rgba(16,185,129,0.2);">
+  <div class="flex items-center gap-6 flex-wrap">
+    <div class="flex gap-2">
+      <button onclick="togglePlay()" id="btn-play" class="btn" style="min-width:70px;">⏸ Pause</button>
+      <button onclick="nextEvidence()" class="btn">→ Next Evidence</button>
+      <button onclick="resetSim()" class="btn">↺ Reset</button>
+    </div>
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      Speed:
+      <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+      <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+      <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+      <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+    </div>
+    <div class="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
+      <div class="flex flex-col gap-1" style="min-width:140px;">
+        <label class="text-xs text-slate-400">Time Scale (mya): <span id="lbl-time" class="text-emerald-400 font-bold">3800</span></label>
+        <input type="range" id="sl-time" min="100" max="3800" step="100" value="3800" oninput="onTimeChange()">
+      </div>
+      <div class="flex flex-col gap-1" style="min-width:140px;">
+        <label class="text-xs text-slate-400">Sequence Similarity: <span id="lbl-sim" class="text-emerald-400 font-bold">Human-Chimp</span></label>
+        <input type="range" id="sl-sim" min="0" max="3" step="1" value="0" oninput="onSimChange()">
+      </div>
+      <div class="flex flex-col gap-1" style="min-width:140px;">
+        <label class="text-xs text-slate-400">Rotation Speed: <span id="lbl-rot" class="text-emerald-400 font-bold">Normal</span></label>
+        <input type="range" id="sl-rot" min="0" max="3" step="1" value="1" oninput="onRotChange()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="quiz-fab" onclick="toggleQuiz()" title="Quiz">🦕</div>
+<div id="quiz-panel" class="glass p-4">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-sm font-bold text-emerald-400">Prediction Questions</span>
+    <button onclick="toggleQuiz()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <div id="q-container"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = 0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', function() { state = -1; document.removeEventListener('mousemove', onMouseMove); });
+  });
+  function onMouseMove(e) {
+    if (!scope.enabled || state !== 0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) { if (!scope.enabled) return; e.preventDefault(); scale *= (e.deltaY > 0) ? 1.1 : 0.9; }, { passive: false });
+  domElement.addEventListener('touchstart', function(e) { if (e.touches.length===1) { state=0; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); } });
+  domElement.addEventListener('touchmove', function(e) {
+    if (e.touches.length===1 && state===0) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var qi = quat.clone().invert();
+    offset.copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi += sphericalDelta.phi * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi = Math.max(0.1, Math.min(Math.PI-0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    if (scope.enableDamping) { sphericalDelta.theta *= (1-scope.dampingFactor); sphericalDelta.phi *= (1-scope.dampingFactor); }
+    else sphericalDelta.set(0,0,0);
+    scale = 1;
+    camera.position.copy(target).add(offset.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose = function() {};
+};
+
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x0f172a);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 300);
+camera.position.set(0, 10, 28);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 5; controls.maxDistance = 50;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const dl1 = new THREE.DirectionalLight(0x10B981, 0.9); dl1.position.set(10,18,8); scene.add(dl1);
+const dl2 = new THREE.DirectionalLight(0x22D3EE, 0.5); dl2.position.set(-10,5,-10); scene.add(dl2);
+const pl = new THREE.PointLight(0xffffff, 0.4, 80); pl.position.set(0,15,0); scene.add(pl);
+
+// --- Scene Objects Pool ---
+let sceneObjects = [];
+let simState = { mode:'fossil', speed:1.0, playing:true, t:0, simIdx:0, rotSpeed:1, timeScale:3800, simChoice:0 };
+
+function clearScene() {
+  sceneObjects.forEach(o=>scene.remove(o));
+  sceneObjects=[];
+}
+
+// ========== FOSSIL TIMELINE VIEW ==========
+function buildFossilTimeline() {
+  clearScene();
+  // Ground layer strata
+  const strata = [
+    {age:3800, color:0x92400e, label:'Prokaryotes', y:-4},
+    {age:2100, color:0x78350f, label:'Eukaryotes', y:-3},
+    {age:600, color:0x713f12, label:'Multicellular', y:-2},
+    {age:541, color:0x854d0e, label:'Cambrian Explosion', y:-1},
+    {age:250, color:0x7c3aed, label:'Permian Extinction', y:0},
+    {age:65, color:0xb91c1c, label:'K-Pg Extinction', y:1},
+    {age:6, color:0x064e3b, label:'Hominins', y:2},
+    {age:0.0003, color:0x10B981, label:'Homo sapiens', y:3}
+  ];
+
+  strata.forEach((s, i) => {
+    // Rock strata slab
+    const geo = new THREE.BoxGeometry(20, 0.7, 3);
+    const mat = new THREE.MeshPhongMaterial({color:s.color, shininess:20});
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(0, s.y * 1.2 - 2, 0);
+    scene.add(mesh);
+    sceneObjects.push(mesh);
+
+    // Fossil sphere on each layer
+    const fgeo = new THREE.SphereGeometry(0.3 + Math.random()*0.15, 12, 12);
+    const fmat = new THREE.MeshPhongMaterial({color:0xfde68a, emissive:0x92400e, emissiveIntensity:0.3});
+    const fmesh = new THREE.Mesh(fgeo, fmat);
+    fmesh.position.set((Math.random()-0.5)*14, s.y * 1.2 - 2 + 0.5, (Math.random()-0.5)*1.5);
+    scene.add(fmesh);
+    sceneObjects.push(fmesh);
+
+    // Age marker sphere
+    const ago = s.age >= 1000 ? (s.age/1000).toFixed(1)+'bya' : s.age+'mya';
+    // Vertical timeline bar
+  });
+
+  // Vertical timeline axis
+  const axGeo = new THREE.CylinderGeometry(0.06, 0.06, 14, 8);
+  const axMat = new THREE.MeshPhongMaterial({color:0x10B981, emissive:0x10B981, emissiveIntensity:0.4});
+  const ax = new THREE.Mesh(axGeo, axMat);
+  ax.position.set(-9, -1, 0);
+  scene.add(ax);
+  sceneObjects.push(ax);
+
+  // Time arrow tip
+  const arrowGeo = new THREE.ConeGeometry(0.2, 0.6, 8);
+  const arrowMesh = new THREE.Mesh(arrowGeo, axMat.clone());
+  arrowMesh.position.set(-9, 6, 0);
+  scene.add(arrowMesh);
+  sceneObjects.push(arrowMesh);
+
+  // Transitional fossil highlight (Tiktaalik-like)
+  const tikGeo = new THREE.CapsuleGeometry(0.4, 1.2, 8, 16);
+  const tikMat = new THREE.MeshPhongMaterial({color:0x22D3EE, emissive:0x0891b2, emissiveIntensity:0.5});
+  const tikMesh = new THREE.Mesh(tikGeo, tikMat);
+  tikMesh.position.set(5, -1 * 1.2 - 2 + 0.6, 0);
+  tikMesh.rotation.z = Math.PI/2;
+  scene.add(tikMesh);
+  sceneObjects.push(tikMesh);
+}
+
+// ========== MOLECULAR PHYLOGENY VIEW ==========
+function buildMolecularPhylogeny() {
+  clearScene();
+  // Cytochrome c similarity data (% identity to human)
+  const taxa = [
+    {name:'Chimp', sim:100, color:0xfbbf24, angle:0},
+    {name:'Rhesus', sim:99, color:0xf97316, angle:Math.PI/4},
+    {name:'Dog', sim:90, color:0x10B981, angle:Math.PI/2},
+    {name:'Pigeon', sim:84, color:0x22D3EE, angle:3*Math.PI/4},
+    {name:'Frog', sim:81, color:0x60a5fa, angle:Math.PI},
+    {name:'Tuna', sim:78, color:0xa78bfa, angle:5*Math.PI/4},
+    {name:'Yeast', sim:60, color:0xf43f5e, angle:3*Math.PI/2},
+    {name:'Human', sim:100, color:0x34d399, angle:7*Math.PI/4}
+  ];
+
+  // Central human node
+  const humanGeo = new THREE.SphereGeometry(0.9, 16, 16);
+  const humanMat = new THREE.MeshPhongMaterial({color:0x34d399, emissive:0x10B981, emissiveIntensity:0.5, shininess:100});
+  const humanMesh = new THREE.Mesh(humanGeo, humanMat);
+  humanMesh.position.set(0, 0, 0);
+  scene.add(humanMesh);
+  sceneObjects.push(humanMesh);
+
+  taxa.slice(0,7).forEach(taxon => {
+    const r = 5 + (100-taxon.sim)*0.15; // more distant = farther from center
+    const x = Math.cos(taxon.angle)*r;
+    const z = Math.sin(taxon.angle)*r;
+    const y = (Math.random()-0.5)*2;
+
+    // Taxon node
+    const size = 0.3 + taxon.sim/200;
+    const geo = new THREE.SphereGeometry(size, 12, 12);
+    const mat = new THREE.MeshPhongMaterial({color:taxon.color, shininess:80, emissive:taxon.color, emissiveIntensity:0.2});
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+    sceneObjects.push(mesh);
+
+    // Branch line (cylinder from center to node)
+    const branchLen = new THREE.Vector3(x,y,z).length();
+    const branchGeo = new THREE.CylinderGeometry(0.04, 0.04, branchLen, 6);
+    const branchMat = new THREE.MeshPhongMaterial({color:taxon.color, transparent:true, opacity:0.5});
+    const branchMesh = new THREE.Mesh(branchGeo, branchMat);
+    branchMesh.position.set(x/2, y/2, z/2);
+    branchMesh.lookAt(0,0,0);
+    branchMesh.rotateX(Math.PI/2);
+    scene.add(branchMesh);
+    sceneObjects.push(branchMesh);
+
+    // Similarity ring (torus proportional to similarity)
+    const ringR = taxon.sim/100 * 0.4;
+    const ringGeo = new THREE.TorusGeometry(ringR, 0.04, 8, 24);
+    const ringMesh = new THREE.Mesh(ringGeo, mat.clone());
+    ringMesh.position.set(x, y, z);
+    scene.add(ringMesh);
+    sceneObjects.push(ringMesh);
+  });
+
+  // Phylogeny tree base
+  const baseGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 8);
+  const baseMat = new THREE.MeshPhongMaterial({color:0x10B981, emissive:0x10B981, emissiveIntensity:0.3});
+  const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+  baseMesh.position.set(0, -3.5, 0);
+  scene.add(baseMesh);
+  sceneObjects.push(baseMesh);
+
+  // Universal ancestor sphere (LUCA)
+  const lucaGeo = new THREE.IcosahedronGeometry(0.6, 1);
+  const lucaMat = new THREE.MeshPhongMaterial({color:0xfde68a, emissive:0xd97706, emissiveIntensity:0.5});
+  const lucaMesh = new THREE.Mesh(lucaGeo, lucaMat);
+  lucaMesh.position.set(0, -5, 0);
+  scene.add(lucaMesh);
+  sceneObjects.push(lucaMesh);
+}
+
+// ========== COMPARATIVE ANATOMY VIEW ==========
+function buildComparativeAnatomy() {
+  clearScene();
+  // Four taxa forelimb representations (abstract bone shapes)
+  const taxa = [
+    {name:'Human', color:0x22D3EE, x:-7.5},
+    {name:'Whale', color:0x6366f1, x:-2.5},
+    {name:'Bat', color:0xa78bfa, x:2.5},
+    {name:'Horse', color:0x10B981, x:7.5}
+  ];
+
+  // Bone color coding (same bones = same color across species)
+  const boneColors = {
+    humerus:0xfbbf24, radius:0xf97316, ulna:0xef4444,
+    carpals:0x10B981, metacarpals:0x22D3EE, phalanges:0x60a5fa
+  };
+
+  taxa.forEach(taxon => {
+    // Humerus (upper arm — same in all)
+    const humGeo = new THREE.CylinderGeometry(0.22, 0.18, 1.5, 8);
+    const humMat = new THREE.MeshPhongMaterial({color:boneColors.humerus, shininess:80});
+    const humMesh = new THREE.Mesh(humGeo, humMat);
+    humMesh.position.set(taxon.x, 2, 0);
+    scene.add(humMesh); sceneObjects.push(humMesh);
+
+    // Radius
+    const radGeo = new THREE.CylinderGeometry(0.14, 0.12, 1.1, 8);
+    const radMat = new THREE.MeshPhongMaterial({color:boneColors.radius, shininess:80});
+    const radMesh = new THREE.Mesh(radGeo, radMat);
+    radMesh.position.set(taxon.x-0.2, 0.5, 0);
+    scene.add(radMesh); sceneObjects.push(radMesh);
+
+    // Ulna
+    const ulnGeo = new THREE.CylinderGeometry(0.12, 0.10, 1.1, 8);
+    const ulnMat = new THREE.MeshPhongMaterial({color:boneColors.ulna, shininess:80});
+    const ulnMesh = new THREE.Mesh(ulnGeo, ulnMat);
+    ulnMesh.position.set(taxon.x+0.2, 0.5, 0);
+    scene.add(ulnMesh); sceneObjects.push(ulnMesh);
+
+    // Carpals (wrist - different arrangements per species)
+    const carpN = taxon.name==='Human'?8:taxon.name==='Whale'?7:taxon.name==='Bat'?6:3;
+    for (let i=0; i<carpN; i++) {
+      const cGeo = new THREE.SphereGeometry(0.1, 8, 8);
+      const cMat = new THREE.MeshPhongMaterial({color:boneColors.carpals});
+      const cMesh = new THREE.Mesh(cGeo, cMat);
+      cMesh.position.set(taxon.x + (i%3-1)*0.22, -0.3 + Math.floor(i/3)*0.22, 0);
+      scene.add(cMesh); sceneObjects.push(cMesh);
+    }
+
+    // Metacarpals / digits (highly modified per species)
+    const digitLen = taxon.name==='Bat'?2.2:taxon.name==='Whale'?0.6:taxon.name==='Horse'?1.4:0.8;
+    const digitCount = taxon.name==='Human'?5:taxon.name==='Whale'?5:taxon.name==='Bat'?5:1;
+    for (let i=0; i<digitCount; i++) {
+      const dGeo = new THREE.CylinderGeometry(0.07, 0.05, digitLen, 6);
+      const dMat = new THREE.MeshPhongMaterial({color:boneColors.metacarpals, shininess:60});
+      const dMesh = new THREE.Mesh(dGeo, dMat);
+      const spread = (i - (digitCount-1)/2) * 0.22;
+      dMesh.position.set(taxon.x + spread, -0.9 - digitLen/2, 0);
+      scene.add(dMesh); sceneObjects.push(dMesh);
+    }
+
+    // Label disc
+    const discGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 16);
+    const discMat = new THREE.MeshPhongMaterial({color:taxon.color, transparent:true, opacity:0.6});
+    const discMesh = new THREE.Mesh(discGeo, discMat);
+    discMesh.position.set(taxon.x, 4, 0);
+    scene.add(discMesh); sceneObjects.push(discMesh);
+  });
+
+  // Shared ancestor indicator
+  const ancGeo = new THREE.DodecahedronGeometry(0.7);
+  const ancMat = new THREE.MeshPhongMaterial({color:0xfde68a, emissive:0xd97706, emissiveIntensity:0.4});
+  const ancMesh = new THREE.Mesh(ancGeo, ancMat);
+  ancMesh.position.set(0, -4, 0);
+  scene.add(ancMesh); sceneObjects.push(ancMesh);
+
+  // Divergence lines
+  [-7.5,-2.5,2.5,7.5].forEach(x => {
+    const pts = [new THREE.Vector3(0,-4,0), new THREE.Vector3(x,-2.5,0)];
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({color:0x475569, transparent:true, opacity:0.5});
+    const line = new THREE.Line(geo, mat);
+    scene.add(line); sceneObjects.push(line);
+  });
+}
+
+let currentPreset = 0;
+function applyPreset(n) {
+  document.querySelectorAll('[id^=p]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p'+n).classList.add('active');
+  currentPreset = n;
+  simState.simIdx = n;
+  if (n===0) {
+    simState.mode='fossil';
+    buildFossilTimeline();
+    document.getElementById('vl-text').textContent='Fossil Record Timeline';
+    document.getElementById('d-mode').textContent='Fossil Timeline';
+    toast('Fossil Record — strata layers show temporal succession of life forms');
+  } else if (n===1) {
+    simState.mode='molecular';
+    buildMolecularPhylogeny();
+    document.getElementById('vl-text').textContent='Molecular Phylogeny (Cytochrome c)';
+    document.getElementById('d-mode').textContent='Molecular Phylogeny';
+    toast('Molecular phylogeny — distance from human node = cytochrome c difference');
+  } else {
+    simState.mode='anatomy';
+    buildComparativeAnatomy();
+    document.getElementById('vl-text').textContent='Comparative Anatomy — Homologous Forelimbs';
+    document.getElementById('d-mode').textContent='Comparative Anatomy';
+    toast('Homologous forelimbs — same bones (same colors), modified for different functions');
+  }
+}
+
+// Cytochrome c similarity lookup
+const cytcSim = {0:'100% (identical)', 1:'99% (1 aa diff)', 2:'90% (13 aa diff)', 3:'60% (51 aa diff)'};
+let simChoice = 0;
+
+function onSimChange() {
+  simChoice = parseInt(document.getElementById('sl-sim').value);
+  const labels = ['Human-Chimp','Human-Rhesus','Human-Dog','Human-Yeast'];
+  document.getElementById('lbl-sim').textContent = labels[simChoice];
+  document.getElementById('d-cytc').textContent = ['100','99','90','60'][simChoice];
+}
+
+let playing = true, speed = 1.0;
+let rotSpeed = 0.003;
+
+renderer.setAnimationLoop(function() {
+  if (playing) {
+    simState.t += 0.016 * speed;
+    // Gentle rotation of objects
+    sceneObjects.forEach((o, i) => {
+      if (o.isMesh) {
+        o.rotation.y += rotSpeed * speed * (i%2===0?1:-0.3);
+      }
+    });
+    updateUI();
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+function updateUI() {
+  const mode = simState.mode;
+  const fossilCount = mode==='fossil'?8:mode==='molecular'?8:4;
+  document.getElementById('d-fossils').textContent = mode==='fossil'?'8':'—';
+  document.getElementById('d-taxa').textContent = mode==='molecular'?'8':mode==='anatomy'?'4':'—';
+  document.getElementById('d-cytc').textContent = mode==='molecular'?['100','99','90','60'][simChoice]+'%':'—';
+  document.getElementById('d-hom').textContent = mode==='anatomy'?'Forelimb':'—';
+  document.getElementById('d-time').textContent = mode==='fossil'?simState.timeScale+' mya':'—';
+  drawEvidenceSVG();
+}
+
+function drawEvidenceSVG() {
+  const svg = document.getElementById('evidence-svg');
+  if (simState.mode === 'molecular') {
+    const pairs = [
+      {label:'H-Chimp', sim:100, color:'#fbbf24'},
+      {label:'H-Dog', sim:90, color:'#10B981'},
+      {label:'H-Tuna', sim:78, color:'#a78bfa'},
+      {label:'H-Yeast', sim:60, color:'#f43f5e'}
+    ];
+    const W=220, H=160, padL=55, padT=15, barW=W-padL-10;
+    svg.innerHTML = `<rect x="0" y="0" width="${W}" height="${H}" fill="rgba(6,78,59,0.8)" rx="8"/>
+      <text x="8" y="12" fill="#94a3b8" font-size="9">Cytochrome c % Identity</text>
+      ${pairs.map((p,i)=>`
+        <text x="2" y="${padT+i*32+16}" fill="#94a3b8" font-size="9" dominant-baseline="middle">${p.label}</text>
+        <rect x="${padL}" y="${padT+i*32+4}" width="${barW*p.sim/100}" height="18" fill="${p.color}" rx="3" opacity="0.8"/>
+        <text x="${padL+barW*p.sim/100+3}" y="${padT+i*32+16}" fill="${p.color}" font-size="9" dominant-baseline="middle">${p.sim}%</text>
+      `).join('')}`;
+  } else if (simState.mode === 'fossil') {
+    const events = [
+      {label:'Prokaryotes', age:3800, color:'#92400e'},
+      {label:'Eukaryotes', age:2100, color:'#b45309'},
+      {label:'Cambrian', age:541, color:'#d97706'},
+      {label:'K-Pg', age:65, color:'#ef4444'},
+      {label:'Homo s.', age:0.3, color:'#10B981'}
+    ];
+    const W=220, H=160, pad=12;
+    const maxAge=3800;
+    svg.innerHTML = `<rect x="0" y="0" width="${W}" height="${H}" fill="rgba(6,78,59,0.8)" rx="8"/>
+      <text x="8" y="12" fill="#94a3b8" font-size="9">Fossil Timeline</text>
+      <line x1="${pad}" y1="20" x2="${pad}" y2="${H-pad}" stroke="#334155" stroke-width="1"/>
+      ${events.map(e=>{
+        const y = 22 + (e.age/maxAge)*(H-pad-22);
+        return `<line x1="${pad}" y1="${y}" x2="${pad+8}" y2="${y}" stroke="${e.color}" stroke-width="2"/>
+          <text x="${pad+11}" y="${y+4}" fill="${e.color}" font-size="8">${e.label} (${e.age>=1000?(e.age/1000).toFixed(1)+'bya':e.age+'mya'})</text>`;
+      }).join('')}`;
+  } else {
+    const W=220, H=160;
+    svg.innerHTML = `<rect x="0" y="0" width="${W}" height="${H}" fill="rgba(6,78,59,0.8)" rx="8"/>
+      <text x="8" y="14" fill="#94a3b8" font-size="9">Homologous Bone Colors</text>
+      ${[['Humerus','#fbbf24'],['Radius','#f97316'],['Ulna','#ef4444'],['Carpals','#10B981'],['Metacarpals','#22D3EE'],['Phalanges','#60a5fa']].map(([n,c],i)=>`
+        <rect x="10" y="${20+i*22}" width="14" height="14" fill="${c}" rx="3"/>
+        <text x="30" y="${20+i*22+11}" fill="#cbd5e1" font-size="9">${n}</text>
+      `).join('')}
+      <text x="10" y="${20+6*22+8}" fill="#475569" font-size="8">Same color = same homologous bone</text>`;
+  }
+}
+
+function nextEvidence() {
+  const n = (currentPreset+1)%3;
+  applyPreset(n);
+}
+function togglePlay() {
+  playing=!playing;
+  document.getElementById('btn-play').textContent=playing?'⏸ Pause':'▶ Play';
+}
+function setSpeed(s) {
+  speed=s; simState.speed=s;
+  document.querySelectorAll('.btn-speed').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function onTimeChange() {
+  simState.timeScale = parseInt(document.getElementById('sl-time').value);
+  document.getElementById('lbl-time').textContent = simState.timeScale;
+  document.getElementById('d-time').textContent = simState.timeScale + ' mya';
+}
+function onRotChange() {
+  const v = parseInt(document.getElementById('sl-rot').value);
+  rotSpeed = [0, 0.003, 0.008, 0.015][v];
+  document.getElementById('lbl-rot').textContent = ['Off','Normal','Fast','Very Fast'][v];
+}
+function resetSim() {
+  playing=true; simChoice=0; simState.t=0;
+  document.getElementById('btn-play').textContent='⏸ Pause';
+  document.getElementById('sl-sim').value=0;
+  document.getElementById('lbl-sim').textContent='Human-Chimp';
+  applyPreset(0);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() {
+  toast('Four lines of evidence for evolution: Fossil Record, Comparative Anatomy, Molecular Phylogeny, Biogeography.');
+}
+function toast(msg) {
+  const el=document.createElement('div'); el.className='toast-item'; el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+function onResize() {
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+onResize();
+document.addEventListener('keydown', e=>{
+  if (e.target.tagName==='INPUT') return;
+  if (e.code==='Space'){e.preventDefault();togglePlay();}
+  if (e.code==='KeyR') resetSim();
+  if (e.code==='KeyN') nextEvidence();
+  if (e.key==='1') applyPreset(0);
+  if (e.key==='2') applyPreset(1);
+  if (e.key==='3') applyPreset(2);
+});
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  applyPreset(0);
+  updateUI();
+});
+
+const questions = [
+  { q:"Cytochrome c in humans and chimpanzees is identical (0 amino acid differences), while human and yeast differ by 51 aa. What does this indicate?", opts:["Humans and chimps have the same diet","Humans and chimps share a much more recent common ancestor than humans and yeast","Yeast cytochrome c evolved faster","Cytochrome c is not a useful phylogenetic marker"], ans:1, exp:"Sequence similarity reflects time since divergence. More differences = longer independent evolution = more ancient common ancestor. Human-chimp divergence (~6-7 mya) vs human-yeast (~1.5 billion years) is reflected in molecular similarity." },
+  { q:"The forelimbs of a bat, whale, and human all contain the same bones (humerus, radius, ulna, carpals) despite very different functions. This is an example of:", opts:["Analogous structures (convergent evolution)","Homologous structures (divergent evolution from common ancestor)","Vestigial structures","Parallel evolution"], ans:1, exp:"Homologous structures share the same evolutionary origin (common ancestor) but have been modified for different functions. Analogous structures (e.g., whale fin and fish fin) look similar but have different origins. Homology is evidence of common descent." },
+  { q:"Which type of fossil would be MOST useful as evidence for a transitional form between fish and tetrapods?", opts:["A completely aquatic fish with no limb-like fins","A fossil showing features of both fish (gills, scales) and amphibians (limb-like fins, flat head)","A modern amphibian fossil","A fossilized fish egg"], ans:1, exp:"Tiktaalik (discovered 2004, ~375 mya) is exactly this — it had fish features (scales, gills, fins) AND tetrapod-like features (a neck, ribs, limb-like lobed fins). Transitional fossils fill morphological gaps between major groups." }
+];
+let quizOpen=false;
+function toggleQuiz() {
+  quizOpen=!quizOpen;
+  document.getElementById('quiz-panel').style.display=quizOpen?'block':'none';
+  document.getElementById('quiz-fab').style.display=quizOpen?'none':'flex';
+  if (quizOpen) renderQuiz();
+}
+function renderQuiz() {
+  document.getElementById('q-container').innerHTML=questions.map((q,qi)=>`
+    <div class="mb-4">
+      <div class="text-xs font-semibold text-slate-200 mb-2">${qi+1}. ${q.q}</div>
+      ${q.opts.map((o,oi)=>`<div class="quiz-opt" id="qo-${qi}-${oi}" onclick="answerQ(${qi},${oi})">${o}</div>`).join('')}
+      <div id="qe-${qi}" class="text-xs text-slate-400 mt-1 hidden"></div>
+    </div>
+  `).join('');
+}
+function answerQ(qi,oi) {
+  const q=questions[qi];
+  document.querySelectorAll(`[id^=qo-${qi}-]`).forEach(el=>el.style.pointerEvents='none');
+  document.getElementById(`qo-${qi}-${oi}`).classList.add(oi===q.ans?'correct':'wrong');
+  document.getElementById(`qo-${qi}-${q.ans}`).classList.add('correct');
+  document.getElementById(`qe-${qi}`).textContent=q.exp;
+  document.getElementById(`qe-${qi}`).classList.remove('hidden');
+  toast(oi===q.ans?'✓ Correct!':'✗ Incorrect — see explanation');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masses and Springs Basics | AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+#nav { background: rgba(15,23,42,0.88); border-bottom: 1px solid rgba(59,130,246,0.35); backdrop-filter: blur(12px); flex-shrink: 0; padding: 0 16px; height: 48px; display: flex; align-items: center; justify-content: space-between; }
+#main-layout { display: flex; flex: 1; min-height: 0; }
+#sidebar { width: 30%; min-width: 260px; max-width: 340px; background: rgba(15,23,42,0.94); border-right: 1px solid rgba(59,130,246,0.18); overflow-y: auto; flex-shrink: 0; padding: 12px; }
+#canvas-area { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+#canvas-container { flex: 1; position: relative; min-height: 0; overflow: hidden; }
+#controls-bar { background: rgba(15,23,42,0.97); border-top: 1px solid rgba(59,130,246,0.2); flex-shrink: 0; padding: 8px 14px; }
+.glass { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.sec-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #60a5fa; margin-bottom: 7px; }
+input[type=range] { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); outline: none; cursor: pointer; -webkit-appearance: none; appearance: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: linear-gradient(135deg,#60a5fa,#38bdf8); cursor: pointer; }
+.pbtn { padding: 4px 10px; border-radius: 7px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; font-size: 11px; cursor: pointer; transition: all .18s; white-space: nowrap; }
+.pbtn:hover { border-color: #3B82F6; color: #93c5fd; }
+.spd { padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.11); color: #94a3b8; font-size: 11px; cursor: pointer; transition: all .18s; }
+.spd.on { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border-color: #3B82F6; color: #fff; }
+#data-ov { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 10px 13px; pointer-events: none; font-variant-numeric: tabular-nums; min-width: 185px; z-index: 10; }
+#energy-ov { position: absolute; top: 12px; right: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 10px 13px; pointer-events: none; min-width: 165px; z-index: 10; }
+.e-bar-bg { background: rgba(255,255,255,0.08); border-radius: 3px; height: 7px; margin-top: 3px; overflow: hidden; }
+.e-bar-fill { height: 100%; border-radius: 3px; transition: width .05s; }
+#toast { position: fixed; top: 56px; right: 14px; z-index: 100; pointer-events: none; }
+.toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.4); border-radius: 8px; padding: 7px 13px; font-size: 12px; color: #93c5fd; margin-bottom: 6px; animation: slideIn .2s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);} }
+#quiz-panel { position: absolute; bottom: 0; right: 0; width: 310px; background: rgba(15,23,42,0.96); border: 1px solid rgba(59,130,246,0.25); border-radius: 12px 0 0 0; z-index: 20; overflow: hidden; }
+#quiz-toggle { position: absolute; bottom: 14px; right: 14px; z-index: 30; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; border-radius: 50%; width: 38px; height: 38px; font-size: 16px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(59,130,246,0.5); }
+.q-opt { display: flex; align-items: flex-start; gap: 7px; padding: 6px 9px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; margin-bottom: 5px; font-size: 11.5px; transition: all .15s; background: rgba(255,255,255,0.03); }
+.q-opt:hover { border-color: #3B82F6; background: rgba(59,130,246,0.08); }
+.q-opt.correct { background: rgba(34,197,94,0.15); border-color: #22c55e; }
+.q-opt.wrong { background: rgba(239,68,68,0.12); border-color: #ef4444; }
+.katex-display { overflow-x: auto; margin: 6px 0; font-size: 13px; }
+.slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.slider-label { font-size: 11px; color: #94a3b8; width: 80px; flex-shrink: 0; }
+.slider-val { font-size: 11px; color: #22d3ee; width: 58px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="nav">
+  <div class="flex items-center gap-3">
+    <span style="background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:16px;">Masses &amp; Springs Basics</span>
+    <span style="font-size:11px;color:#64748b;">Vertical Oscillation · AP Physics</span>
+  </div>
+  <div class="flex gap-2">
+    <button class="pbtn" id="btn-reset">↺ Reset</button>
+    <button class="pbtn" id="btn-fullscreen">⛶ Fullscreen</button>
+    <button class="pbtn" id="btn-about">? About</button>
+  </div>
+</div>
+
+<div id="main-layout">
+<div id="sidebar">
+  <div class="glass">
+    <div class="sec-title">Core Formulas</div>
+    <div class="katex-f" data-formula="x_{eq} = \dfrac{mg}{k}"></div>
+    <p style="font-size:11px;color:#94a3b8;margin:-2px 0 7px;">Equilibrium extension: gravity balanced by spring force.</p>
+    <div class="katex-f" data-formula="F_{net} = -k\,(x - x_{eq})"></div>
+    <p style="font-size:11px;color:#94a3b8;margin:-2px 0 7px;">Net restoring force measured from equilibrium position.</p>
+    <div class="katex-f" data-formula="T = 2\pi\sqrt{\dfrac{m}{k}}"></div>
+    <p style="font-size:11px;color:#94a3b8;margin:-2px 0 7px;">Period — no g term. Same on Earth, Moon, or Mars.</p>
+    <div class="katex-f" data-formula="E = \tfrac{1}{2}mv^2 + \tfrac{1}{2}k(x-x_{eq})^2 = \text{const}"></div>
+    <p style="font-size:11px;color:#94a3b8;margin:-2px 0 4px;">Energy conserved about equilibrium (gravity already absorbed).</p>
+  </div>
+
+  <div class="glass">
+    <div class="sec-title">Concept</div>
+    <p style="font-size:12px;color:#cbd5e1;line-height:1.6;margin-bottom:7px;">A hanging mass stretches the spring until the spring force exactly balances gravity — that is the equilibrium point (yellow dashed line). Displace the mass from there and release it: it oscillates symmetrically about equilibrium.</p>
+    <p style="font-size:12px;color:#cbd5e1;line-height:1.6;margin-bottom:7px;"><strong style="color:#93c5fd;">The key AP insight:</strong> T = 2π√(m/k) contains no g. On the Moon (g = 1.62 m/s²) the equilibrium is much closer to the ceiling — less stretch — but the period is <em>identical</em> to Earth. Gravity shifts where you oscillate, not how fast.</p>
+    <p style="font-size:12px;color:#cbd5e1;line-height:1.6;">This follows from the math: when you measure displacement from equilibrium, the gravitational PE and extra spring PE cancel out, and you recover pure SHM with the same restoring constant k/m.</p>
+  </div>
+
+  <div class="glass">
+    <div class="sec-title">Knowledge Cards</div>
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:8px;margin-bottom:7px;">
+      <div style="font-size:10px;font-weight:700;color:#fbbf24;margin-bottom:3px;">KEY MISCONCEPTION</div>
+      <p style="font-size:11px;color:#cbd5e1;line-height:1.5;">Many students predict a spring oscillates slower on the Moon because gravity is weaker. It doesn't — period is unchanged. Try "Moon Gravity" preset and compare T to Earth!</p>
+    </div>
+    <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:8px;margin-bottom:7px;">
+      <div style="font-size:10px;font-weight:700;color:#60a5fa;margin-bottom:3px;">REAL-WORLD APPLICATION</div>
+      <p style="font-size:11px;color:#cbd5e1;line-height:1.5;">NASA measures astronaut body mass on the ISS using the Body Mass Measurement Device — an oscillating spring chair — because T = 2π√(m/k) works perfectly without gravity.</p>
+    </div>
+    <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:8px;">
+      <div style="font-size:10px;font-weight:700;color:#22c55e;margin-bottom:3px;">AP EXAM STRATEGY</div>
+      <p style="font-size:11px;color:#cbd5e1;line-height:1.5;">AP Physics 1 free-response frequently compares spring-mass systems on different planets. Template answer: "same T because T = 2π√(m/k) is independent of g; different x_eq because x_eq = mg/k."</p>
+    </div>
+  </div>
+
+  <div class="glass">
+    <div class="sec-title">Why It Matters</div>
+    <ul style="font-size:12px;color:#cbd5e1;line-height:1.7;padding-left:14px;">
+      <li>Seismographs use spring-mass systems to detect ground motion — gravity variation across locations doesn't affect their calibration</li>
+      <li>MEMS accelerometers in smartphones contain microscopic spring-mass oscillators sensing 1–5 g forces</li>
+      <li>Bridge and building resonance analysis requires knowing the natural oscillation frequency — k and m, not g</li>
+    </ul>
+  </div>
+</div>
+
+<div id="canvas-area">
+  <div id="canvas-container">
+    <div id="data-ov">
+      <div style="font-size:10px;font-weight:700;color:#60a5fa;margin-bottom:6px;letter-spacing:.06em;">LIVE DATA</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:11.5px;">
+        <span style="color:#94a3b8;">Position x</span><span id="d-x" style="color:#22d3ee;text-align:right;"></span>
+        <span style="color:#94a3b8;">x_eq</span><span id="d-xeq" style="color:#fbbf24;text-align:right;"></span>
+        <span style="color:#94a3b8;">Velocity</span><span id="d-v" style="color:#22d3ee;text-align:right;"></span>
+        <span style="color:#94a3b8;">Acceleration</span><span id="d-a" style="color:#fb923c;text-align:right;"></span>
+        <span style="color:#94a3b8;">T (measured)</span><span id="d-tm" style="color:#a78bfa;text-align:right;"></span>
+        <span style="color:#94a3b8;">T (theory)</span><span id="d-tt" style="color:#a78bfa;text-align:right;"></span>
+        <span style="color:#94a3b8;">KE</span><span id="d-ke" style="color:#3b82f6;text-align:right;"></span>
+        <span style="color:#94a3b8;">PE</span><span id="d-pe" style="color:#ef4444;text-align:right;"></span>
+      </div>
+    </div>
+    <div id="energy-ov">
+      <div style="font-size:10px;font-weight:700;color:#60a5fa;margin-bottom:6px;letter-spacing:.06em;">ENERGY (J)</div>
+      <div style="font-size:11px;margin-bottom:4px;color:#94a3b8;">KE <span id="e-ke-v" style="color:#3b82f6;float:right;">0.00</span></div>
+      <div class="e-bar-bg"><div id="e-ke-bar" class="e-bar-fill" style="background:#3b82f6;width:0%;"></div></div>
+      <div style="font-size:11px;margin:5px 0 4px;color:#94a3b8;">Spring PE <span id="e-pe-v" style="color:#ef4444;float:right;">0.00</span></div>
+      <div class="e-bar-bg"><div id="e-pe-bar" class="e-bar-fill" style="background:#ef4444;width:0%;"></div></div>
+      <div style="font-size:11px;margin:5px 0 4px;color:#94a3b8;">Total <span id="e-tot-v" style="color:#22c55e;float:right;">0.00</span></div>
+      <div class="e-bar-bg"><div id="e-tot-bar" class="e-bar-fill" style="background:#22c55e;width:100%;"></div></div>
+    </div>
+  </div>
+
+  <div id="controls-bar">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;">
+      <div style="flex:1;min-width:240px;">
+        <div class="slider-row">
+          <span class="slider-label">k (N/m)</span>
+          <input type="range" id="sl-k" min="1" max="200" step="1" value="40">
+          <span class="slider-val" id="lbl-k">40</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Mass (kg)</span>
+          <input type="range" id="sl-m" min="0.1" max="10" step="0.1" value="1.0">
+          <span class="slider-val" id="lbl-m">1.0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Displace (m)</span>
+          <input type="range" id="sl-x0" min="-1" max="1" step="0.02" value="0.4">
+          <span class="slider-val" id="lbl-x0">0.40</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Gravity (m/s²)</span>
+          <input type="range" id="sl-g" min="1.6" max="25" step="0.1" value="9.8">
+          <span class="slider-val" id="lbl-g">9.8</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="flex gap-2">
+          <button class="pbtn" id="btn-play">⏸ Pause</button>
+          <button class="pbtn" id="btn-step">Step</button>
+          <button class="pbtn" id="btn-resetSim">↺ Reset Sim</button>
+        </div>
+        <div class="flex gap-1">
+          <span style="font-size:11px;color:#64748b;margin-right:3px;">Speed:</span>
+          <button class="spd" data-s="0.25">0.25×</button>
+          <button class="spd" data-s="0.5">0.5×</button>
+          <button class="spd on" data-s="1">1×</button>
+          <button class="spd" data-s="2">2×</button>
+          <button class="spd" data-s="3">3×</button>
+        </div>
+        <div class="flex gap-1 flex-wrap">
+          <span style="font-size:11px;color:#64748b;margin-right:3px;">Preset:</span>
+          <button class="pbtn" data-preset="earth">Earth Default</button>
+          <button class="pbtn" data-preset="moon">Moon Gravity</button>
+          <button class="pbtn" data-preset="stiff">Stiff Spring</button>
+          <button class="pbtn" data-preset="heavy">Heavy Mass</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<button id="quiz-toggle" title="Quiz">?</button>
+<div id="quiz-panel">
+  <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:13px;font-weight:700;color:#93c5fd;">Quick Quiz</span>
+    <button id="btn-hide-quiz" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;">✕</button>
+  </div>
+  <div style="padding:12px;max-height:340px;overflow-y:auto;">
+    <div style="margin-bottom:14px;">
+      <p style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:7px;">Q1. You move this spring-mass system to the Moon (g = 1.62 m/s²). What happens to the period T?</p>
+      <div class="q-opt" data-q="1" data-ans="a"><span style="color:#64748b;">A</span><span>T increases — weaker gravity means slower oscillation</span></div>
+      <div class="q-opt" data-q="1" data-ans="b"><span style="color:#64748b;">B</span><span>T stays the same — T = 2π√(m/k) has no g term</span></div>
+      <div class="q-opt" data-q="1" data-ans="c"><span style="color:#64748b;">C</span><span>T decreases — less weight, spring moves faster</span></div>
+      <div class="q-opt" data-q="1" data-ans="d"><span style="color:#64748b;">D</span><span>It depends on the amplitude of oscillation</span></div>
+      <div class="q-fb" id="fb1" style="display:none;"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <p style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:7px;">Q2. Doubling the mass while keeping k and g constant — what changes?</p>
+      <div class="q-opt" data-q="2" data-ans="a"><span style="color:#64748b;">A</span><span>T increases by √2; x_eq doubles (stretches further)</span></div>
+      <div class="q-opt" data-q="2" data-ans="b"><span style="color:#64748b;">B</span><span>T doubles; x_eq stays the same</span></div>
+      <div class="q-opt" data-q="2" data-ans="c"><span style="color:#64748b;">C</span><span>T halves; x_eq doubles</span></div>
+      <div class="q-opt" data-q="2" data-ans="d"><span style="color:#64748b;">D</span><span>T stays the same; only amplitude changes</span></div>
+      <div class="q-fb" id="fb2" style="display:none;"></div>
+    </div>
+    <div>
+      <p style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:7px;">Q3. At the equilibrium position, which quantity is zero?</p>
+      <div class="q-opt" data-q="3" data-ans="a"><span style="color:#64748b;">A</span><span>Velocity of the mass</span></div>
+      <div class="q-opt" data-q="3" data-ans="b"><span style="color:#64748b;">B</span><span>Kinetic energy</span></div>
+      <div class="q-opt" data-q="3" data-ans="c"><span style="color:#64748b;">C</span><span>Net force on the mass</span></div>
+      <div class="q-opt" data-q="3" data-ans="d"><span style="color:#64748b;">D</span><span>Spring extension</span></div>
+      <div class="q-fb" id="fb3" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<div id="about-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#0f172a;border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:22px;max-width:360px;width:90%;">
+    <h3 style="font-size:15px;font-weight:700;color:#93c5fd;margin-bottom:10px;">Masses &amp; Springs Basics</h3>
+    <p style="font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:10px;">Vertical spring oscillation with gravity. Yellow dashed line = equilibrium. Try Moon Gravity preset to see that T is unchanged even when x_eq is very different. Physics uses Velocity Verlet with adaptive sub-stepping.</p>
+    <div style="font-size:11px;color:#64748b;margin-bottom:12px;">Keyboard: <span style="color:#93c5fd;">Space</span> play/pause · <span style="color:#93c5fd;">R</span> reset · <span style="color:#93c5fd;">1-5</span> speed</div>
+    <button id="close-about" class="pbtn" style="width:100%;">Close</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ── OrbitControls inline ───────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  var scope = this;
+  var STATE = {NONE:-1,ROTATE:0,DOLLY:1,PAN:2};
+  var state = STATE.NONE;
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var panStart = new THREE.Vector2(), panEnd = new THREE.Vector2(), panDelta = new THREE.Vector2();
+  var target = new THREE.Vector3(), offset = new THREE.Vector3();
+  var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+  var quatInverse = quat.clone().invert();
+  function rotateLeft(a){sphericalDelta.theta-=a;}
+  function rotateUp(a){sphericalDelta.phi-=a;}
+  function panLeft(d,m){var v=new THREE.Vector3();v.setFromMatrixColumn(m,0);v.multiplyScalar(-d);panOffset.add(v);}
+  function panUp(d,m){var v=new THREE.Vector3();v.setFromMatrixColumn(m,1);v.multiplyScalar(d);panOffset.add(v);}
+  function pan(dx,dy){if(camera.isPerspectiveCamera){var p=camera.position.clone().sub(target);var tD=p.length()*Math.tan((camera.fov/2)*Math.PI/180);panLeft(2*dx*tD/scope.domElement.clientHeight,camera.matrix);panUp(2*dy*tD/scope.domElement.clientHeight,camera.matrix);}}
+  this.update=function(){
+    offset.copy(camera.position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;
+    spherical.phi=Math.max(0.01,Math.min(Math.PI-0.01,spherical.phi));
+    spherical.radius*=scale;
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));
+    target.add(panOffset);
+    offset.setFromSpherical(spherical);offset.applyQuaternion(quatInverse);
+    camera.position.copy(target).add(offset);camera.lookAt(target);
+    if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}
+    else{sphericalDelta.set(0,0,0);panOffset.set(0,0,0);}
+    scale=1;
+  };
+  function onMouseDown(e){
+    if(e.button===0){state=STATE.ROTATE;rotateStart.set(e.clientX,e.clientY);}
+    else if(e.button===2){state=STATE.PAN;panStart.set(e.clientX,e.clientY);}
+    document.addEventListener('mousemove',onMouseMove);document.addEventListener('mouseup',onMouseUp);
+  }
+  function onMouseMove(e){
+    if(state===STATE.ROTATE){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart).multiplyScalar(Math.PI/180);rotateLeft(2*Math.PI*rotateDelta.x/scope.domElement.clientWidth);rotateUp(2*Math.PI*rotateDelta.y/scope.domElement.clientHeight);rotateStart.copy(rotateEnd);}
+    else if(state===STATE.PAN){panEnd.set(e.clientX,e.clientY);panDelta.subVectors(panEnd,panStart);pan(panDelta.x,panDelta.y);panStart.copy(panEnd);}
+  }
+  function onMouseUp(){state=STATE.NONE;document.removeEventListener('mousemove',onMouseMove);document.removeEventListener('mouseup',onMouseUp);}
+  function onWheel(e){e.preventDefault();if(e.deltaY<0)scale*=0.9;else scale/=0.9;}
+  function onTouchStart(e){if(e.touches.length===1){state=STATE.ROTATE;rotateStart.set(e.touches[0].pageX,e.touches[0].pageY);}}
+  function onTouchMove(e){e.preventDefault();if(e.touches.length===1&&state===STATE.ROTATE){rotateEnd.set(e.touches[0].pageX,e.touches[0].pageY);rotateDelta.subVectors(rotateEnd,rotateStart).multiplyScalar(0.4*Math.PI/180);rotateLeft(2*Math.PI*rotateDelta.x/scope.domElement.clientWidth);rotateUp(2*Math.PI*rotateDelta.y/scope.domElement.clientHeight);rotateStart.copy(rotateEnd);}}
+  domElement.addEventListener('mousedown',onMouseDown);
+  domElement.addEventListener('wheel',onWheel,{passive:false});
+  domElement.addEventListener('touchstart',onTouchStart,{passive:false});
+  domElement.addEventListener('touchmove',onTouchMove,{passive:false});
+  domElement.addEventListener('contextmenu',function(e){e.preventDefault();});
+};
+
+// ── Scene ──────────────────────────────────────────────────────────────────
+var container = document.getElementById('canvas-container');
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+var camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.1, 1000);
+camera.position.set(0, 1, 10);
+var renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+window.addEventListener('resize', function(){
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+var kLight = new THREE.DirectionalLight(0xffffff, 1.0); kLight.position.set(5,10,7); kLight.castShadow=true;
+var fLight = new THREE.DirectionalLight(0xffffff, 0.4); fLight.position.set(-5,5,-5);
+var bLight = new THREE.DirectionalLight(0xffffff, 0.3); bLight.position.set(0,5,-10);
+var aLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(kLight, fLight, bLight, aLight);
+scene.add(new THREE.GridHelper(20,20,0x334155,0x1e293b));
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 2; controls.maxDistance = 50;
+
+// ── Scene Objects ──────────────────────────────────────────────────────────
+var ATTACH_Y = 5.0;
+var NATURAL_LEN = 1.5;
+
+var ceil = new THREE.Mesh(
+  new THREE.BoxGeometry(2.2,0.2,0.6),
+  new THREE.MeshStandardMaterial({color:0x334155,roughness:0.6})
+);
+ceil.position.set(0, ATTACH_Y, 0);
+scene.add(ceil);
+
+var massMesh = new THREE.Mesh(
+  new THREE.BoxGeometry(0.7,0.7,0.7),
+  new THREE.MeshStandardMaterial({color:0x3b82f6,metalness:0.4,roughness:0.3,emissive:0x1d4ed8,emissiveIntensity:0.2})
+);
+massMesh.castShadow = true;
+scene.add(massMesh);
+
+var springMesh = null;
+function buildSpring(topY, botY) {
+  if (springMesh) scene.remove(springMesh);
+  var len = topY - botY;
+  if (len < 0.05) return;
+  var turns = 10, seg = turns*20;
+  var pts = [];
+  for (var i = 0; i <= seg; i++) {
+    var t = i/seg;
+    var y = topY - t*len;
+    var a = t*turns*Math.PI*2;
+    pts.push(new THREE.Vector3(Math.cos(a)*0.18, y, Math.sin(a)*0.18));
+  }
+  var curve = new THREE.CatmullRomCurve3(pts);
+  var geo = new THREE.TubeGeometry(curve, seg, 0.025, 8, false);
+  var mat = new THREE.MeshStandardMaterial({color:0x22d3ee,metalness:0.7,roughness:0.3,emissive:0x0e7490,emissiveIntensity:0.3});
+  springMesh = new THREE.Mesh(geo, mat);
+  scene.add(springMesh);
+}
+
+// Equilibrium dashes
+var eqDashes = [];
+var dashMat = new THREE.MeshBasicMaterial({color:0xfbbf24, transparent:true, opacity:0.55});
+for (var di = -5; di <= 5; di++) {
+  var d = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.12), dashMat);
+  d.rotation.z = Math.PI/2;
+  d.position.set(di*0.3, 0, 0);
+  scene.add(d);
+  eqDashes.push(d);
+}
+
+// ── Physics ────────────────────────────────────────────────────────────────
+var simK=40, simM=1.0, simG=9.8;
+var pos=0, vel=0; // pos = extension from natural length (downward positive)
+var running=true, speedFactor=1;
+var simTime=0, measuredT=0, lastZero=-1, lastDir=0;
+
+function getXeq() { return simM*simG/simK; }
+
+function getAccel(x) {
+  // F_spring = -k*x (upward), F_gravity = m*g (downward)
+  // Net = m*g - k*x
+  return (simM*simG - simK*x) / simM;
+}
+
+function verletStep(dt) {
+  var a1 = getAccel(pos);
+  var vH = vel + 0.5*a1*dt;
+  pos += vH*dt;
+  var a2 = getAccel(pos);
+  vel = vH + 0.5*a2*dt;
+}
+
+function physicsUpdate(dt) {
+  if (dt > 0.1) dt = 0.02;
+  var maxSub = 0.002;
+  var steps = Math.ceil(dt/maxSub);
+  var subDt = dt/steps;
+  for (var i = 0; i < steps; i++) verletStep(subDt);
+}
+
+function checkZeroCross() {
+  var xeq = getXeq();
+  var dx = pos - xeq;
+  var dir = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
+  if (dir !== 0 && dir !== lastDir && lastDir !== 0) {
+    if (lastZero > 0) measuredT = (simTime - lastZero)*2;
+    lastZero = simTime;
+  }
+  if (dir !== 0) lastDir = dir;
+}
+
+function getMassWorldY() {
+  return ATTACH_Y - NATURAL_LEN - pos - 0.35;
+}
+function getEqWorldY() {
+  return ATTACH_Y - NATURAL_LEN - getXeq() - 0.35;
+}
+
+function resetSim() {
+  var xeq = getXeq();
+  var disp = parseFloat(document.getElementById('sl-x0').value);
+  pos = xeq + disp;
+  vel = 0;
+  simTime = 0; lastZero = -1; lastDir = 0; measuredT = 0;
+  showToast('Simulation reset');
+}
+
+// ── Presets ────────────────────────────────────────────────────────────────
+var PRESETS = {
+  earth:  {k:40, m:1.0, x0:0.4, g:9.8},
+  moon:   {k:40, m:1.0, x0:0.4, g:1.62},
+  stiff:  {k:150,m:1.0, x0:0.2, g:9.8},
+  heavy:  {k:40, m:5.0, x0:0.4, g:9.8}
+};
+var PRESET_LABELS = {earth:'Earth Default', moon:'Moon (g=1.62 m/s²)', stiff:'Stiff Spring', heavy:'Heavy Mass'};
+
+function applyPreset(name) {
+  var p = PRESETS[name];
+  document.getElementById('sl-k').value = p.k; document.getElementById('lbl-k').textContent = p.k;
+  document.getElementById('sl-m').value = p.m; document.getElementById('lbl-m').textContent = p.m.toFixed(1);
+  document.getElementById('sl-x0').value = p.x0; document.getElementById('lbl-x0').textContent = p.x0.toFixed(2);
+  document.getElementById('sl-g').value = p.g; document.getElementById('lbl-g').textContent = p.g.toFixed(2);
+  simK = p.k; simM = p.m; simG = p.g;
+  resetSim();
+  showToast('Preset: ' + PRESET_LABELS[name]);
+}
+
+function showToast(msg) {
+  var el = document.createElement('div');
+  el.className = 'toast-item'; el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(function(){el.remove();}, 2000);
+}
+
+// ── UI Events ──────────────────────────────────────────────────────────────
+document.getElementById('sl-k').addEventListener('input', function(){simK=parseFloat(this.value); document.getElementById('lbl-k').textContent=this.value;});
+document.getElementById('sl-m').addEventListener('input', function(){simM=parseFloat(this.value); document.getElementById('lbl-m').textContent=parseFloat(this.value).toFixed(1);});
+document.getElementById('sl-x0').addEventListener('input', function(){document.getElementById('lbl-x0').textContent=parseFloat(this.value).toFixed(2);});
+document.getElementById('sl-g').addEventListener('input', function(){simG=parseFloat(this.value); document.getElementById('lbl-g').textContent=parseFloat(this.value).toFixed(2);});
+
+document.getElementById('btn-play').addEventListener('click', function(){running=!running; this.textContent=running?'⏸ Pause':'▶ Play';});
+document.getElementById('btn-step').addEventListener('click', function(){running=false; document.getElementById('btn-play').textContent='▶ Play'; physicsUpdate(0.016); simTime+=0.016;});
+document.getElementById('btn-resetSim').addEventListener('click', resetSim);
+document.getElementById('btn-reset').addEventListener('click', function(){
+  simK=40; simM=1.0; simG=9.8;
+  document.getElementById('sl-k').value=40; document.getElementById('lbl-k').textContent='40';
+  document.getElementById('sl-m').value=1.0; document.getElementById('lbl-m').textContent='1.0';
+  document.getElementById('sl-x0').value=0.4; document.getElementById('lbl-x0').textContent='0.40';
+  document.getElementById('sl-g').value=9.8; document.getElementById('lbl-g').textContent='9.8';
+  resetSim();
+});
+
+document.querySelectorAll('.spd').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    speedFactor=parseFloat(this.dataset.s);
+    document.querySelectorAll('.spd').forEach(function(b){b.classList.remove('on');});
+    this.classList.add('on');
+    showToast('Speed: '+this.dataset.s+'×');
+  });
+});
+document.querySelectorAll('[data-preset]').forEach(function(btn){btn.addEventListener('click',function(){applyPreset(this.dataset.preset);});});
+document.getElementById('btn-fullscreen').addEventListener('click', function(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();});
+document.getElementById('btn-about').addEventListener('click', function(){document.getElementById('about-modal').style.display='flex';});
+document.getElementById('close-about').addEventListener('click', function(){document.getElementById('about-modal').style.display='none';});
+document.getElementById('about-modal').addEventListener('click', function(e){if(e.target===this)this.style.display='none';});
+document.getElementById('btn-hide-quiz').addEventListener('click', function(){document.getElementById('quiz-panel').style.display='none';document.getElementById('quiz-toggle').style.display='flex';});
+document.getElementById('quiz-toggle').addEventListener('click', function(){document.getElementById('quiz-panel').style.display='block';document.getElementById('quiz-toggle').style.display='none';});
+
+// Quiz
+var CORRECT = {1:'b', 2:'a', 3:'c'};
+var FEEDBACK = {
+  1: {
+    b: '✅ Correct! T = 2π√(m/k) has no g term at all. The equilibrium position shifts, but the frequency of oscillation is exactly the same on the Moon as on Earth.',
+    wrong: "❌ Not quite. T = 2π√(m/k) — gravity doesn't appear in the period formula. Use the Moon Gravity preset and watch the Measured T stay the same!"
+  },
+  2: {
+    a: '✅ Right! T ∝ √m, so doubling m increases T by √2 ≈ 1.41. The equilibrium also stretches further because x_eq = mg/k also doubles.',
+    wrong: '❌ T = 2π√(m/k) — doubling m multiplies T by √2 (not double). And x_eq = mg/k also doubles, so the spring stretches more at rest.'
+  },
+  3: {
+    c: '✅ Exactly! At equilibrium, spring force (kx_eq) exactly balances gravity (mg), so F_net = 0. The mass passes through with maximum speed and maximum KE.',
+    wrong: '❌ At equilibrium the net force is zero — spring force balances gravity perfectly. Velocity (and KE) is actually at its maximum here, not zero.'
+  }
+};
+
+document.querySelectorAll('.q-opt').forEach(function(opt){
+  opt.addEventListener('click', function(){
+    var q=parseInt(this.dataset.q), ans=this.dataset.ans;
+    var fb=document.getElementById('fb'+q);
+    document.querySelectorAll('[data-q="'+q+'"]').forEach(function(o){o.classList.remove('correct','wrong');});
+    if(ans===CORRECT[q]){
+      this.classList.add('correct');
+      fb.style.cssText='display:block;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;font-size:11px;padding:6px 8px;border-radius:6px;margin-top:5px;';
+      fb.textContent=FEEDBACK[q][ans];
+    } else {
+      this.classList.add('wrong');
+      fb.style.cssText='display:block;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:11px;padding:6px 8px;border-radius:6px;margin-top:5px;';
+      fb.textContent=FEEDBACK[q]['wrong'];
+    }
+  });
+});
+
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName==='INPUT') return;
+  if(e.code==='Space'){e.preventDefault();document.getElementById('btn-play').click();}
+  if(e.code==='KeyR') resetSim();
+  if(e.key>='1'&&e.key<='5'){var s=['0.25','0.5','1','2','3'];var b=document.querySelector('.spd[data-s="'+s[parseInt(e.key)-1]+'"]');if(b)b.click();}
+});
+
+// ── Render Loop ────────────────────────────────────────────────────────────
+var clock = new THREE.Clock();
+renderer.setAnimationLoop(function(){
+  var delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+
+  if (running) {
+    var eDt = delta * speedFactor;
+    physicsUpdate(eDt);
+    simTime += eDt;
+    checkZeroCross();
+  }
+
+  var massY = getMassWorldY();
+  massMesh.position.set(0, massY, 0);
+  buildSpring(ATTACH_Y - 0.1, massY + 0.35);
+
+  var eqY = getEqWorldY();
+  eqDashes.forEach(function(d){d.position.y = eqY;});
+
+  var xeq = getXeq();
+  var dx = pos - xeq;
+  var KE = 0.5*simM*vel*vel;
+  var PE = 0.5*simK*dx*dx;
+  var Total = KE+PE;
+  var maxE = Math.max(Total, 0.001);
+  var accel = getAccel(pos);
+  var tT = 2*Math.PI*Math.sqrt(simM/simK);
+
+  document.getElementById('d-x').textContent = pos.toFixed(3)+' m';
+  document.getElementById('d-xeq').textContent = xeq.toFixed(3)+' m';
+  document.getElementById('d-v').textContent = vel.toFixed(3)+' m/s';
+  document.getElementById('d-a').textContent = accel.toFixed(3)+' m/s²';
+  document.getElementById('d-tt').textContent = tT.toFixed(3)+' s';
+  document.getElementById('d-tm').textContent = measuredT>0 ? measuredT.toFixed(3)+' s' : '—';
+  document.getElementById('d-ke').textContent = KE.toFixed(3)+' J';
+  document.getElementById('d-pe').textContent = PE.toFixed(3)+' J';
+  document.getElementById('e-ke-v').textContent = KE.toFixed(2);
+  document.getElementById('e-pe-v').textContent = PE.toFixed(2);
+  document.getElementById('e-tot-v').textContent = Total.toFixed(2);
+  document.getElementById('e-ke-bar').style.width = Math.min(100,KE/maxE*100).toFixed(1)+'%';
+  document.getElementById('e-pe-bar').style.width = Math.min(100,PE/maxE*100).toFixed(1)+'%';
+  document.getElementById('e-tot-bar').style.width = '100%';
+
+  renderer.render(scene, camera);
+});
+
+document.querySelectorAll('.katex-f').forEach(function(el){
+  try{katex.render(el.dataset.formula,el,{throwOnError:false,displayMode:true});}catch(e){}
+});
+
+resetSim();
+</script>
+<div style="position:fixed;bottom:6px;left:50%;transform:translateX(-50%);font-size:10px;color:#334155;pointer-events:none;">Gravity changes where you oscillate, not how fast — the deepest insight in spring-mass physics. Generated by AetherViz Master.</div>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atmosphere Layers — Earth Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#000011;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+  #toast{position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none;}
+  .toast-item{background:rgba(249,115,22,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;animation:toastIn 0.3s ease;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+  .glass{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;}
+  .panel-card{background:rgba(78,40,10,0.6);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:12px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EAB308);cursor:pointer;}
+  .sidebar{width:300px;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(249,115,22,0.2);}
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(249,115,22,0.4);border-radius:2px;}
+  .btn-preset{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(249,115,22,0.3);cursor:pointer;background:rgba(249,115,22,0.1);color:#fdba74;transition:all 0.18s;}
+  .btn-preset:hover,.btn-preset.active{background:rgba(249,115,22,0.25);color:#fff;}
+  .btn-speed{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s;}
+  .btn-speed.active{background:linear-gradient(135deg,#F97316,#EAB308);color:#fff;border-color:#F97316;}
+  .data-val{font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#fb923c;}
+  .quiz-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s;}
+  .quiz-opt:hover{border-color:#F97316;background:rgba(249,115,22,0.1);}
+  .quiz-opt.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;}
+  .quiz-opt.wrong{background:rgba(239,68,68,0.15);border-color:#ef4444;}
+  #quiz-panel{position:fixed;bottom:16px;right:16px;width:340px;z-index:100;display:none;}
+  #quiz-fab{position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EAB308);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(249,115,22,0.5);}
+  #data-overlay{position:absolute;top:12px;left:12px;pointer-events:none;z-index:10;}
+  #about-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;}
+  #about-modal.open{display:flex;}
+  .layer-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(249,115,22,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F97316,#EAB308);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Atmosphere Layers</span>
+    <span class="text-xs text-slate-400 ml-3">Troposphere · Stratosphere · Mesosphere · Thermosphere · Exosphere</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="togglePlay()" id="play-btn" class="btn-preset">⏸ Pause</button>
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+<div class="flex flex-1 overflow-hidden">
+  <div class="sidebar p-4 flex flex-col gap-4">
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Atmospheric Layers</div>
+      <div class="layer-row"><div style="width:12px;height:12px;background:#87ceeb;border-radius:2px;flex-shrink:0;"></div><span class="text-xs text-slate-300"><strong class="text-sky-300">Troposphere</strong> 0–12 km · Contains 75% of atmospheric mass and virtually all weather. Temperature decreases from ~15°C at surface to ~−60°C at tropopause. Lapse rate ~6.5°C/km.</span></div>
+      <div class="layer-row mt-1"><div style="width:12px;height:12px;background:#4a9860;border-radius:2px;flex-shrink:0;"></div><span class="text-xs text-slate-300"><strong class="text-green-300">Stratosphere</strong> 12–50 km · Contains the ozone layer (O₃) which absorbs UV radiation. Temperature increases with altitude from −60°C to ~0°C at stratopause. Aircraft cruise here (less turbulence).</span></div>
+      <div class="layer-row mt-1"><div style="width:12px;height:12px;background:#6633aa;border-radius:2px;flex-shrink:0;"></div><span class="text-xs text-slate-300"><strong class="text-purple-300">Mesosphere</strong> 50–80 km · Coldest layer, −100°C at mesopause. Meteors (shooting stars) burn up here by friction. Noctilucent clouds form here at high latitudes.</span></div>
+      <div class="layer-row mt-1"><div style="width:12px;height:12px;background:#ff6600;border-radius:2px;flex-shrink:0;"></div><span class="text-xs text-slate-300"><strong class="text-orange-300">Thermosphere</strong> 80–700 km · Temperature rises dramatically to 1,500°C (though gas is very thin). ISS orbits here (~400 km). Aurora borealis/australis occur here as solar particles excite atmospheric gases.</span></div>
+      <div class="layer-row mt-1"><div style="width:12px;height:12px;background:#220044;border-radius:2px;flex-shrink:0;"></div><span class="text-xs text-slate-300"><strong class="text-indigo-300">Exosphere</strong> 700 km+ · Outermost layer where gas molecules escape to space. No distinct upper boundary — gradually fades into interplanetary medium. Hydrogen and helium dominate.</span></div>
+    </div>
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Temperature Profile</div>
+      <p class="text-xs text-slate-300 leading-relaxed">Temperature in the atmosphere does not decrease monotonically with altitude. The stratosphere <em>warms</em> because ozone (O₃) absorbs UV. The thermosphere warms because extreme UV dissociates molecules and X-rays ionize the thin gas. The mesosphere cools because there is too little ozone above (too little UV heating) and insufficient greenhouse gas below. This layered temperature structure creates stable layers separated by "pauses" (tropopause, stratopause, mesopause).</p>
+    </div>
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Key Equations</div>
+      <div class="text-xs text-slate-300 mb-1">Hydrostatic equation:</div>
+      <div id="eq1" class="text-sm mb-2">\(\frac{dP}{dz} = -\rho g\)</div>
+      <div class="text-xs text-slate-400 mb-3">Pressure decreases with altitude at rate proportional to density. ~50% of atmosphere is below 5.5 km altitude.</div>
+      <div class="text-xs text-slate-300 mb-1">Barometric formula:</div>
+      <div id="eq2" class="text-sm mb-2">\(P(z) = P_0 e^{-z/H}\)</div>
+      <div class="text-xs text-slate-400 mb-3">H = scale height ≈ 8.5 km for Earth's atmosphere. Pressure halves every ~5.5 km.</div>
+      <div class="text-xs text-slate-300 mb-1">Ozone absorption (Chapman cycle):</div>
+      <div id="eq3" class="text-sm">\(O_2 + h\nu \rightarrow 2O, \quad O + O_2 \rightarrow O_3\)</div>
+      <div class="text-xs text-slate-400 mt-1">UV photons (hν) drive ozone formation and destruction, creating the warm stratosphere.</div>
+    </div>
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Controls</div>
+      <label class="text-xs text-slate-300">Altitude Focus: <span id="alt-val" class="data-val">0</span> km</label>
+      <input type="range" id="alt-slider" min="0" max="700" step="5" value="0" class="mt-1 mb-2" oninput="onAltChange(this.value)">
+      <label class="text-xs text-slate-300">Solar Activity: <span id="solar-val" class="data-val">1.0</span></label>
+      <input type="range" id="solar-slider" min="0.1" max="5" step="0.1" value="1.0" class="mt-1 mb-2" oninput="onSolarChange(this.value)">
+      <label class="text-xs text-slate-300">Ozone Opacity: <span id="ozone-val" class="data-val">1.0</span></label>
+      <input type="range" id="ozone-slider" min="0.1" max="2" step="0.05" value="1.0" class="mt-1 mb-3" oninput="onOzoneChange(this.value)">
+      <div class="text-xs font-bold text-slate-400 mb-1">Presets</div>
+      <div class="flex flex-wrap gap-1">
+        <button class="btn-preset active" onclick="setPreset('standard',event)">Standard Atmosphere</button>
+        <button class="btn-preset" onclick="setPreset('aurora',event)">Aurora (solar storm)</button>
+        <button class="btn-preset" onclick="setPreset('ozone',event)">Ozone Layer Focus</button>
+      </div>
+      <div class="text-xs font-bold text-slate-400 mt-2 mb-1">Speed</div>
+      <div class="flex gap-1">
+        <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+        <button class="btn-speed" onclick="setSpeed(0.5)">0.5×</button>
+        <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+        <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+        <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Why It Matters — NGSS</div>
+      <p class="text-xs text-slate-300 leading-relaxed">ESS2.D: Weather and Climate. The atmosphere's layered structure regulates Earth's temperature, blocks harmful radiation, enables weather, and protects life. The stratospheric ozone layer blocks UV-B and UV-C radiation — without it, surface DNA damage would make complex life impossible. CFC-driven ozone depletion (Montreal Protocol, 1987) demonstrated humanity's ability to cause and reverse global atmospheric changes. The troposphere's greenhouse effect and its anthropogenic enhancement (CO₂, CH₄, N₂O) is the central challenge of 21st-century Earth science.</p>
+    </div>
+  </div>
+  <div class="flex-1 relative">
+    <canvas id="c" class="w-full h-full"></canvas>
+    <div id="data-overlay" class="glass p-3 rounded-xl text-xs" style="min-width:200px;">
+      <div class="font-bold text-orange-400 mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Active Layer</span><span class="data-val" id="d-layer">Troposphere</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Altitude</span><span class="data-val" id="d-alt">0 km</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Temperature</span><span class="data-val" id="d-temp">15 °C</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Pressure</span><span class="data-val" id="d-pres">101.3 kPa</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-slate-400">Solar Activity</span><span class="data-val" id="d-solar">1.0</span></div>
+      <div class="flex justify-between gap-4"><span class="text-slate-400">Aurora Active</span><span class="data-val" id="d-aurora">No</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="quiz-fab" onclick="toggleQuiz()">❓</div>
+<div id="quiz-panel" class="glass p-4 rounded-xl" style="max-height:480px;overflow-y:auto;">
+  <div class="flex justify-between items-center mb-3">
+    <span class="font-bold text-orange-400">Knowledge Check</span>
+    <button onclick="toggleQuiz()" class="text-slate-400 hover:text-white text-lg">✕</button>
+  </div>
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Q1: In which layer does virtually all weather occur?</div>
+    <div class="quiz-opt" onclick="checkQ(1,'a')"><span>A</span> Stratosphere</div>
+    <div class="quiz-opt" onclick="checkQ(1,'b')"><span>B</span> Mesosphere</div>
+    <div class="quiz-opt" onclick="checkQ(1,'c')"><span>C</span> Troposphere</div>
+    <div class="quiz-opt" onclick="checkQ(1,'d')"><span>D</span> Thermosphere</div>
+    <div id="q1-feedback" class="text-xs mt-2 hidden"></div>
+  </div>
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Q2: Why does temperature increase with altitude in the stratosphere?</div>
+    <div class="quiz-opt" onclick="checkQ(2,'a')"><span>A</span> Proximity to the Sun</div>
+    <div class="quiz-opt" onclick="checkQ(2,'b')"><span>B</span> Ozone absorbs UV radiation</div>
+    <div class="quiz-opt" onclick="checkQ(2,'c')"><span>C</span> Greenhouse gases concentrate there</div>
+    <div class="quiz-opt" onclick="checkQ(2,'d')"><span>D</span> Convection from the troposphere</div>
+    <div id="q2-feedback" class="text-xs mt-2 hidden"></div>
+  </div>
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Q3: The International Space Station orbits in the:</div>
+    <div class="quiz-opt" onclick="checkQ(3,'a')"><span>A</span> Mesosphere (~70 km)</div>
+    <div class="quiz-opt" onclick="checkQ(3,'b')"><span>B</span> Stratosphere (~30 km)</div>
+    <div class="quiz-opt" onclick="checkQ(3,'c')"><span>C</span> Thermosphere (~400 km)</div>
+    <div class="quiz-opt" onclick="checkQ(3,'d')"><span>D</span> Exosphere (~1000 km)</div>
+    <div id="q3-feedback" class="text-xs mt-2 hidden"></div>
+  </div>
+</div>
+
+<div id="about-modal">
+  <div class="glass p-6 rounded-2xl max-w-md w-full mx-4">
+    <div class="font-bold text-orange-400 text-lg mb-3">About — Atmosphere Layers</div>
+    <p class="text-sm text-slate-300 mb-3">3D cross-section of Earth's atmosphere showing all five layers with color-coded temperature profiles. Switch presets to see aurora, ozone focus, and standard atmosphere views.</p>
+    <div class="text-xs text-slate-400 mb-4">
+      <div class="font-bold mb-1">Keyboard Shortcuts</div>
+      <div>Space — Play/Pause</div><div>R — Reset</div><div>1–5 — Speed</div><div>Q — Quiz</div>
+    </div>
+    <button onclick="closeAbout()" class="btn-preset w-full text-center">Close</button>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0) {
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(canvas.clientWidth,canvas.clientHeight);
+renderer.setClearColor(0x000011,1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50,canvas.clientWidth/canvas.clientHeight,0.1,500);
+camera.position.set(0,3,20);
+const controls = new THREE.OrbitControls(camera,canvas);
+
+scene.add(new THREE.AmbientLight(0xffffff,0.4));
+const sunL = new THREE.DirectionalLight(0xffeebb,1.5); sunL.position.set(10,5,8); scene.add(sunL);
+const rimL = new THREE.PointLight(0x2244ff,0.8,40); rimL.position.set(-8,-3,-8); scene.add(rimL);
+
+// Earth core
+const earthGeo = new THREE.SphereGeometry(3,48,48);
+const earthMat = new THREE.MeshStandardMaterial({color:0x1a4060,roughness:0.8});
+const earth = new THREE.Mesh(earthGeo,earthMat);
+scene.add(earth);
+
+// Atmosphere layers as concentric transparent shells
+const layers = [
+  {name:'Troposphere',  innerR:3.00, outerR:3.36, color:0x87ceeb, opacity:0.25, minKm:0,   maxKm:12,  minT:15,   maxT:-60},
+  {name:'Stratosphere', innerR:3.36, outerR:4.50, color:0x40a870, opacity:0.18, minKm:12,  maxKm:50,  minT:-60,  maxT:0},
+  {name:'Mesosphere',   innerR:4.50, outerR:5.24, color:0x8844cc, opacity:0.14, minKm:50,  maxKm:80,  minT:0,    maxT:-100},
+  {name:'Thermosphere', innerR:5.24, outerR:9.00, color:0xff6600, opacity:0.08, minKm:80,  maxKm:700, minT:-100, maxT:1500},
+  {name:'Exosphere',    innerR:9.00, outerR:12.0, color:0x220044, opacity:0.04, minKm:700, maxKm:10000, minT:1500, maxT:2500},
+];
+const layerMeshes = [];
+layers.forEach(l=>{
+  const geo = new THREE.SphereGeometry((l.innerR+l.outerR)/2,(l.outerR-l.innerR)*10|32,32);
+  const mat = new THREE.MeshStandardMaterial({color:l.color,transparent:true,opacity:l.opacity,side:THREE.DoubleSide,roughness:0.9,depthWrite:false});
+  const mesh = new THREE.Mesh(geo,mat);
+  mesh.scale.setScalar(1);
+  scene.add(mesh);
+  layerMeshes.push({mesh,mat,l});
+});
+
+// ISS orbit ring (in thermosphere ~400km)
+const issPts=[];
+for(let i=0;i<=128;i++) issPts.push(new THREE.Vector3(6.5*Math.cos(i*Math.PI/64),0,6.5*Math.sin(i*Math.PI/64)));
+const issOrbit=new THREE.Line(new THREE.BufferGeometry().setFromPoints(issPts),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.4}));
+scene.add(issOrbit);
+
+// ISS dot
+const issGeo=new THREE.SphereGeometry(0.12,8,8);
+const issMat=new THREE.MeshBasicMaterial({color:0xffffff});
+const iss=new THREE.Mesh(issGeo,issMat);
+scene.add(iss);
+
+// Ozone layer ring (in stratosphere ~25km)
+const ozonePts=[];
+for(let i=0;i<=128;i++) ozonePts.push(new THREE.Vector3(4.0*Math.cos(i*Math.PI/64),0,4.0*Math.sin(i*Math.PI/64)));
+const ozoneRing=new THREE.Line(new THREE.BufferGeometry().setFromPoints(ozonePts),new THREE.LineBasicMaterial({color:0x40ff80,transparent:true,opacity:0.6}));
+scene.add(ozoneRing);
+
+// Aurora particles
+const auroraCount = 200;
+const auroraGeo = new THREE.BufferGeometry();
+const auroraPos = new Float32Array(auroraCount*3);
+const auroraCol = new Float32Array(auroraCount*3);
+for(let i=0;i<auroraCount;i++){
+  const theta=Math.random()*Math.PI*2;
+  const phi=Math.PI/8+Math.random()*Math.PI/8; // near poles
+  const sign=Math.random()>0.5?1:-1;
+  const r=5.5+Math.random()*2;
+  auroraPos[i*3]=r*Math.sin(phi)*Math.cos(theta);
+  auroraPos[i*3+1]=sign*r*Math.cos(phi);
+  auroraPos[i*3+2]=r*Math.sin(phi)*Math.sin(theta);
+  auroraCol[i*3]=0;auroraCol[i*3+1]=0.8+Math.random()*0.2;auroraCol[i*3+2]=0.3+Math.random()*0.4;
+}
+auroraGeo.setAttribute('position',new THREE.BufferAttribute(auroraPos.slice(),3));
+auroraGeo.setAttribute('color',new THREE.BufferAttribute(auroraCol,3));
+const auroraMat=new THREE.PointsMaterial({vertexColors:true,size:0.25,transparent:true,opacity:0,sizeAttenuation:true});
+const auroraPoints=new THREE.Points(auroraGeo,auroraMat);
+scene.add(auroraPoints);
+
+// Background stars
+const starGeo=new THREE.BufferGeometry();
+const sp=new Float32Array(1500*3);
+for(let i=0;i<1500*3;i++) sp[i]=(Math.random()-0.5)*300;
+starGeo.setAttribute('position',new THREE.BufferAttribute(sp,3));
+scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:0.3})));
+
+let playing=true, speed=1, t=0;
+let altitudeFocus=0, solarActivity=1.0, ozoneOpacity=1.0;
+let currentPreset='standard';
+
+function getLayer(km){
+  if(km<12) return layers[0];
+  if(km<50) return layers[1];
+  if(km<80) return layers[2];
+  if(km<700) return layers[3];
+  return layers[4];
+}
+function getTemp(km){
+  if(km<=12) return Math.round(15-6.5*km);
+  if(km<=50) return Math.round(-60+(km-12)*(60/38));
+  if(km<=80) return Math.round(0-(km-50)*(100/30));
+  if(km<=700) return Math.round(-100+(km-80)*(1600/620));
+  return 2500;
+}
+function getPressure(km){
+  return (101.325*Math.exp(-km/8.5)).toFixed(1);
+}
+
+function updateOverlay(){
+  const lyr=getLayer(altitudeFocus);
+  document.getElementById('d-layer').textContent=lyr.name;
+  document.getElementById('d-alt').textContent=altitudeFocus.toFixed(0)+' km';
+  document.getElementById('d-temp').textContent=getTemp(altitudeFocus)+' \u00b0C';
+  document.getElementById('d-pres').textContent=getPressure(altitudeFocus)+' kPa';
+  document.getElementById('d-solar').textContent=solarActivity.toFixed(1);
+  document.getElementById('d-aurora').textContent=solarActivity>2.5?'Yes (active!)':'No';
+}
+
+function onAltChange(v){
+  altitudeFocus=parseFloat(v);
+  document.getElementById('alt-val').textContent=altitudeFocus.toFixed(0);
+  updateOverlay();
+  // Highlight focused layer
+  const lyr=getLayer(altitudeFocus);
+  layerMeshes.forEach(({mat,l})=>{
+    mat.opacity=l.name===lyr.name?Math.min(0.5,l.opacity*3):l.opacity;
+  });
+}
+function onSolarChange(v){
+  solarActivity=parseFloat(v);
+  document.getElementById('solar-val').textContent=solarActivity.toFixed(1);
+  auroraMat.opacity=Math.min(0.9,Math.max(0,(solarActivity-1.5)*0.5));
+  sunL.intensity=solarActivity;
+  updateOverlay();
+}
+function onOzoneChange(v){
+  ozoneOpacity=parseFloat(v);
+  document.getElementById('ozone-val').textContent=ozoneOpacity.toFixed(2);
+  layerMeshes[1].mat.opacity=0.18*ozoneOpacity;
+  ozoneRing.material.opacity=0.6*ozoneOpacity;
+}
+function setPreset(p,e){
+  document.querySelectorAll('.btn-preset').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentPreset=p;
+  if(p==='standard'){altitudeFocus=0;solarActivity=1;ozoneOpacity=1;}
+  else if(p==='aurora'){altitudeFocus=200;solarActivity=4;ozoneOpacity=1;}
+  else if(p==='ozone'){altitudeFocus=25;solarActivity=1;ozoneOpacity=0.2;}
+  document.getElementById('alt-slider').value=altitudeFocus;document.getElementById('alt-val').textContent=altitudeFocus.toFixed(0);
+  document.getElementById('solar-slider').value=solarActivity;document.getElementById('solar-val').textContent=solarActivity.toFixed(1);
+  document.getElementById('ozone-slider').value=ozoneOpacity;document.getElementById('ozone-val').textContent=ozoneOpacity.toFixed(2);
+  onAltChange(altitudeFocus);onSolarChange(solarActivity);onOzoneChange(ozoneOpacity);
+  updateOverlay();
+  toast('Preset: '+p);
+}
+function setSpeed(s){speed=s;document.querySelectorAll('.btn-speed').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');}
+function togglePlay(){playing=!playing;document.getElementById('play-btn').textContent=playing?'\u23f8 Pause':'\u25b6 Play';}
+function resetSim(){t=0;toast('Reset');}
+function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function showAbout(){document.getElementById('about-modal').classList.add('open');}
+function closeAbout(){document.getElementById('about-modal').classList.remove('open');}
+function toggleQuiz(){const p=document.getElementById('quiz-panel');const f=document.getElementById('quiz-fab');p.style.display=p.style.display==='none'?'block':'none';f.style.display=p.style.display==='none'?'flex':'none';}
+function checkQ(q,a){
+  const ans={1:'c',2:'b',3:'c'};
+  const fb=document.getElementById('q'+q+'-feedback');
+  const opts=document.querySelectorAll('#quiz-panel .mb-4:nth-child('+(q+1)+') .quiz-opt');
+  const letters=['a','b','c','d'];
+  opts.forEach((o,i)=>{o.classList.remove('correct','wrong');if(letters[i]===ans[q])o.classList.add('correct');else if(letters[i]===a&&a!==ans[q])o.classList.add('wrong');});
+  fb.classList.remove('hidden');
+  if(a===ans[q]){fb.className='text-xs mt-2 text-green-400';fb.textContent='Correct!';}
+  else{fb.className='text-xs mt-2 text-red-400';fb.textContent='Incorrect. Review the atmosphere layers description.';}
+}
+function toast(msg){const d=document.createElement('div');d.className='toast-item';d.textContent=msg;document.getElementById('toast').appendChild(d);setTimeout(()=>d.remove(),2800);}
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='KeyR')resetSim();
+  if(e.code==='KeyQ')toggleQuiz();
+  if(e.code==='Digit1')speed=0.25;if(e.code==='Digit2')speed=0.5;if(e.code==='Digit3')speed=1;if(e.code==='Digit4')speed=2;if(e.code==='Digit5')speed=3;
+});
+window.addEventListener('resize',()=>{
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+});
+
+updateOverlay();
+const auroraAttr = auroraGeo.getAttribute('position');
+
+renderer.setAnimationLoop(()=>{
+  if(playing){
+    t+=0.01*speed;
+    earth.rotation.y+=0.002*speed;
+    // ISS orbit
+    iss.position.set(6.5*Math.cos(t*0.3),0,6.5*Math.sin(t*0.3));
+    // Aurora shimmer
+    if(solarActivity>1.5){
+      for(let i=0;i<auroraCount;i++){
+        auroraAttr.array[i*3+1]+=Math.sin(t*3+i*0.5)*0.01*speed;
+      }
+      auroraAttr.needsUpdate=true;
+    }
+    // Layer pulsate
+    layerMeshes.forEach(({mat,l},i)=>{
+      mat.opacity=l.opacity*(1+0.1*Math.sin(t*0.5+i));
+    });
+  }
+  controls.update();
+  renderer.render(scene,camera);
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]});
+});
+
+// ─── Extended Atmosphere Reference Data ───────────────────────────────────
+
+// Standard atmosphere data (US Standard Atmosphere 1976)
+const STD_ATM = [
+  { alt:0,    T:288.15, P:101325,  rho:1.225,    layer:'Troposphere'  },
+  { alt:2,    T:275.15, P:79501,   rho:1.007,    layer:'Troposphere'  },
+  { alt:4,    T:262.17, P:61660,   rho:0.8194,   layer:'Troposphere'  },
+  { alt:6,    T:249.19, P:47217,   rho:0.6601,   layer:'Troposphere'  },
+  { alt:8,    T:236.22, P:35651,   rho:0.5258,   layer:'Troposphere'  },
+  { alt:10,   T:223.25, P:26500,   rho:0.4135,   layer:'Troposphere'  },
+  { alt:12,   T:216.65, P:19399,   rho:0.3119,   layer:'Tropopause'   },
+  { alt:15,   T:216.65, P:12112,   rho:0.1948,   layer:'Stratosphere' },
+  { alt:20,   T:216.65, P:5529,    rho:0.0889,   layer:'Stratosphere' },
+  { alt:25,   T:221.55, P:2549,    rho:0.04008,  layer:'Stratosphere' },
+  { alt:30,   T:226.51, P:1197,    rho:0.01841,  layer:'Stratosphere' },
+  { alt:40,   T:250.35, P:287.1,   rho:0.003996, layer:'Stratosphere' },
+  { alt:50,   T:270.65, P:79.78,   rho:0.001027, layer:'Stratopause'  },
+  { alt:60,   T:247.02, P:22.65,   rho:0.000319, layer:'Mesosphere'   },
+  { alt:70,   T:219.59, P:5.520,   rho:8.76e-5,  layer:'Mesosphere'   },
+  { alt:80,   T:198.64, P:1.052,   rho:1.85e-5,  layer:'Mesopause'    },
+];
+
+// Atmospheric composition at sea level (volume fraction)
+const ATM_COMPOSITION = {
+  'N₂ (Nitrogen)':    0.78084,
+  'O₂ (Oxygen)':      0.20946,
+  'Ar (Argon)':       0.00934,
+  'CO₂ (Carbon dioxide)': 0.000421,
+  'Ne (Neon)':        1.818e-5,
+  'He (Helium)':      5.24e-6,
+  'CH₄ (Methane)':    1.87e-6,
+  'Kr (Krypton)':     1.14e-6,
+  'H₂ (Hydrogen)':    5.0e-7,
+  'N₂O (Nitrous oxide)': 3.3e-7,
+  'O₃ (Ozone, stratosphere)': 8e-6,
+};
+
+// Aurora color emission lines
+const AURORA_EMISSIONS = [
+  { wavelength:557.7,  color:'#00ff44', element:'O',  height:'90–150 km', notes:'Most common green aurora' },
+  { wavelength:630.0,  color:'#ff2200', element:'O',  height:'>200 km',   notes:'Red aurora (rare, high altitude)' },
+  { wavelength:427.8,  color:'#6644ff', element:'N₂⁺',height:'100–130 km',notes:'Blue-purple aurora' },
+  { wavelength:391.4,  color:'#8888ff', element:'N₂⁺',height:'90–150 km', notes:'Blue aurora' },
+  { wavelength:636.4,  color:'#ff4400', element:'O',  height:'200–300 km',notes:'Red oxygen emission' },
+  { wavelength:486.1,  color:'#44bbff', element:'H',  height:'100–200 km',notes:'Hydrogen Balmer beta' },
+];
+
+// Ozone column depth reference (Dobson Units)
+const OZONE_REFERENCE = {
+  normal:       300,  // DU — typical midlatitude value
+  polar_vortex: 100,  // DU — Antarctic ozone hole
+  tropical:     250,  // DU — tropics average
+  arctic_hole:  200,  // DU — Arctic spring depletion
+};
+
+// Pressure interpolation using barometric formula
+function pressureAtAlt(altKm) {
+  const P0 = 101325;
+  const H = 8.5; // scale height km
+  return P0 * Math.exp(-altKm / H);
+}
+
+// Temperature profile function
+function tempAtAlt(altKm) {
+  if (altKm <= 11)  return 288.15 - 6.5 * altKm;
+  if (altKm <= 20)  return 216.65;
+  if (altKm <= 32)  return 216.65 + 1.0 * (altKm - 20);
+  if (altKm <= 47)  return 228.65 + 2.8 * (altKm - 32);
+  if (altKm <= 51)  return 270.65;
+  if (altKm <= 71)  return 270.65 - 2.8 * (altKm - 51);
+  if (altKm <= 85)  return 214.65 - 2.0 * (altKm - 71);
+  if (altKm <= 100) return 186.87;
+  if (altKm <= 400) return 186.87 + (altKm - 85) * 4.5;
+  return 1500 + (altKm - 400) * 0.5;
+}
+
+// Kp-index to aurora visibility latitude
+function auroraLatitude(kpIndex) {
+  // Approximate: at Kp=0, aurora only near magnetic poles (~65°), at Kp=9 visible to ~40°N
+  return Math.max(40, 67 - kpIndex * 3);
+}
+</script>
+</body>
+</html>

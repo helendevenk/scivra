@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gases: Introduction — AetherViz</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: linear-gradient(180deg,#0F172A 0%,#164E63 50%,#155E75 100%); color: #F8FAFC; font-family: Inter, system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.5); border-radius: 3px; }
+  .glass { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(12px); }
+  .physics-grad { background: linear-gradient(135deg,#3B82F6 0%,#0EA5E9 100%); }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg,#2DD4BF,#5EEAD4); cursor: pointer; }
+  .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: linear-gradient(135deg,#3B82F6,#0EA5E9); color: #fff; }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-glass { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #CBD5E1; }
+  .btn-glass:hover { background: rgba(255,255,255,0.14); }
+  .btn-speed { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #94A3B8; cursor: pointer; transition: all 0.2s; }
+  .btn-speed.active { background: linear-gradient(135deg,#3B82F6,#0EA5E9); color: #fff; border-color: transparent; }
+  .data-val { font-variant-numeric: tabular-nums; font-weight: 700; color: #22D3EE; }
+  .quiz-opt { padding: 8px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); transition: all 0.2s; font-size: 13px; }
+  .quiz-opt:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22C55E; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.2); border-color: #EF4444; }
+  #toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #fff; background: rgba(59,130,246,0.9); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); animation: slideIn 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { opacity: 1; } to { opacity: 0; transform: translateX(60px); } }
+  .sidebar { width: 280px; min-width: 280px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #canvas-container { flex: 1; position: relative; overflow: hidden; }
+  .control-panel { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .katex { font-size: 0.95em; }
+  .wall-flash { position: absolute; pointer-events: none; background: rgba(59,130,246,0.4); border-radius: 4px; animation: flashFade 0.15s ease; }
+  @keyframes flashFade { 0%{opacity:1;} 100%{opacity:0;} }
+</style>
+</head>
+<body>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Top nav -->
+<nav class="glass flex items-center justify-between px-4 py-2 border-b border-blue-500/20">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Gases: Introduction</span>
+    <span class="text-slate-400 text-sm ml-2">AP Physics / Thermodynamics</span>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-glass text-xs" onclick="resetSim()">Reset</button>
+    <button class="btn btn-glass text-xs" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    <button class="btn btn-glass text-xs" onclick="document.getElementById('about-modal').classList.remove('hidden')">About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- Left sidebar -->
+  <aside class="sidebar glass border-r border-white/10">
+    <div class="glass rounded-xl p-3">
+      <h3 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Core Formulas</h3>
+      <div class="space-y-2 text-sm">
+        <div class="glass rounded-lg p-2">
+          <div id="f1"></div>
+          <p class="text-slate-400 text-xs mt-1">Ideal Gas Law — relates pressure, volume, moles, temperature</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <div id="f2"></div>
+          <p class="text-slate-400 text-xs mt-1">Boyle's Law — at constant T, pressure and volume are inversely proportional</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <div id="f3"></div>
+          <p class="text-slate-400 text-xs mt-1">Charles' Law — at constant P, volume is proportional to temperature</p>
+        </div>
+        <div class="glass rounded-lg p-2">
+          <div id="f4"></div>
+          <p class="text-slate-400 text-xs mt-1">Gay-Lussac's Law — at constant V, pressure is proportional to temperature</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-xl p-3">
+      <h3 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">How Gases Work</h3>
+      <p class="text-xs text-slate-300 leading-relaxed">Gas molecules are in constant, random motion. They collide with each other and with container walls, creating pressure. The faster they move (higher temperature), the harder and more frequently they hit — raising pressure.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mt-2">Reduce the container size and molecules hit the walls more often per second, increasing pressure. This is Boyle's Law in action: smaller volume → higher pressure at fixed temperature.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mt-2">The ideal gas approximation assumes molecules have negligible volume and no intermolecular forces — a very good model at low pressures and high temperatures.</p>
+    </div>
+
+    <div class="glass rounded-xl p-3">
+      <h3 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Key Facts</h3>
+      <div class="space-y-2">
+        <div class="glass rounded-lg p-2 border-l-2 border-blue-400">
+          <p class="text-xs font-semibold text-blue-300">Universal Gas Constant</p>
+          <p class="text-xs text-slate-400">R = 8.314 J/(mol·K) — same for all ideal gases everywhere in the universe.</p>
+        </div>
+        <div class="glass rounded-lg p-2 border-l-2 border-cyan-400">
+          <p class="text-xs font-semibold text-cyan-300">Common Misconception</p>
+          <p class="text-xs text-slate-400">Temperature measures average kinetic energy per molecule — not total energy. More molecules = more total energy even at same T.</p>
+        </div>
+        <div class="glass rounded-lg p-2 border-l-2 border-emerald-400">
+          <p class="text-xs font-semibold text-emerald-300">AP Connection</p>
+          <p class="text-xs text-slate-400">PV = nRT is central to AP Physics 2. Expect to calculate P, V, or T after one variable changes while others are held fixed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-xl p-3">
+      <h3 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Why It Matters</h3>
+      <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+        <li>Car engines compress air-fuel mix — Boyle's Law determines compression ratio</li>
+        <li>Hot-air balloons use Charles' Law: heat air → expand → become buoyant</li>
+        <li>Pressure cookers raise boiling point via Gay-Lussac's Law</li>
+      </ul>
+    </div>
+
+    <!-- Quiz panel -->
+    <div class="glass rounded-xl p-3" id="quiz-section">
+      <h3 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Quick Quiz</h3>
+      <div id="quiz-container" class="space-y-4"></div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div id="canvas-container" class="relative">
+      <!-- Data overlay -->
+      <div class="absolute top-3 left-3 glass rounded-xl p-3 z-10" style="min-width:170px;">
+        <p class="text-xs font-bold text-blue-300 mb-2 uppercase tracking-wider">Live Data</p>
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+          <span class="text-slate-400">Pressure</span><span class="data-val" id="d-pressure">—</span>
+          <span class="text-slate-400">Temperature</span><span class="data-val" id="d-temp">—</span>
+          <span class="text-slate-400">Volume</span><span class="data-val" id="d-volume">—</span>
+          <span class="text-slate-400">Particles</span><span class="data-val" id="d-count">—</span>
+          <span class="text-slate-400">PV/nRT</span><span class="data-val" id="d-pvnrt">—</span>
+          <span class="text-slate-400">Collisions/s</span><span class="data-val" id="d-collisions">—</span>
+        </div>
+      </div>
+      <!-- Keyboard hints -->
+      <div class="absolute bottom-3 right-3 glass rounded-lg px-2 py-1 text-xs text-slate-500">
+        Space: play/pause · R: reset · 1–5: speed
+      </div>
+    </div>
+
+    <!-- Control panel -->
+    <div class="control-panel glass">
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Play/Pause/Reset -->
+        <button id="btn-play" class="btn btn-primary" onclick="togglePlay()">⏸ Pause</button>
+        <button class="btn btn-glass" onclick="resetSim()">↺ Reset</button>
+        <!-- Speed -->
+        <div class="flex gap-1">
+          <span class="text-xs text-slate-400 self-center mr-1">Speed:</span>
+          <button class="btn-speed" onclick="setSpeed(0.25,this)">0.25×</button>
+          <button class="btn-speed" onclick="setSpeed(0.5,this)">0.5×</button>
+          <button class="btn-speed active" onclick="setSpeed(1,this)">1×</button>
+          <button class="btn-speed" onclick="setSpeed(2,this)">2×</button>
+          <button class="btn-speed" onclick="setSpeed(3,this)">3×</button>
+        </div>
+        <!-- Presets -->
+        <div class="flex gap-1 ml-auto">
+          <span class="text-xs text-slate-400 self-center mr-1">Preset:</span>
+          <button class="btn btn-glass text-xs" onclick="applyPreset('boyle')">Boyle's Demo</button>
+          <button class="btn btn-glass text-xs" onclick="applyPreset('charles')">Charles' Demo</button>
+          <button class="btn btn-glass text-xs" onclick="applyPreset('highdensity')">High Density</button>
+        </div>
+      </div>
+      <!-- Sliders -->
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs text-slate-400 flex justify-between mb-1">Temperature <span class="text-blue-300 font-semibold" id="lbl-temp">400 K</span></label>
+          <input type="range" id="sl-temp" min="200" max="800" value="400" step="10" oninput="onSlider()">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 flex justify-between mb-1">Volume Scale <span class="text-blue-300 font-semibold" id="lbl-vol">3×</span></label>
+          <input type="range" id="sl-vol" min="1" max="5" value="3" step="0.1" oninput="onSlider()">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 flex justify-between mb-1">Particle Count <span class="text-blue-300 font-semibold" id="lbl-count">50</span></label>
+          <input type="range" id="sl-count" min="20" max="100" value="50" step="1" oninput="onSlider()">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About modal -->
+<div id="about-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onclick="this.classList.add('hidden')">
+  <div class="glass rounded-2xl p-6 max-w-sm mx-4" onclick="event.stopPropagation()">
+    <h2 class="font-bold text-lg text-blue-300 mb-2">Gases: Introduction</h2>
+    <p class="text-sm text-slate-300 mb-3">Interactive 3D simulation of ideal gas behavior. Observe how temperature, volume, and particle count affect pressure via real-time particle-wall collisions.</p>
+    <p class="text-xs text-slate-400 mb-3"><strong>Keyboard:</strong> Space = play/pause · R = reset · 1–5 = speed</p>
+    <p class="text-xs text-slate-500">Generated by AetherViz Master v7.0</p>
+    <button class="btn btn-primary mt-3 w-full" onclick="document.getElementById('about-modal').classList.add('hidden')">Close</button>
+  </div>
+</div>
+
+<script>
+// ─── OrbitControls (inline) ───────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
+
+// ─── Scene setup ─────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 8, 18);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 4;
+controls.maxDistance = 50;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// Grid
+scene.add(new THREE.GridHelper(30, 30, 0x334155, 0x1e293b));
+
+// ─── Simulation state ─────────────────────────────────────────────────────
+let simState = {
+  temperature: 400,
+  volumeScale: 3,
+  particleCount: 50,
+  isPlaying: true,
+  speedFactor: 1
+};
+
+let particles = [];
+let particleMeshes = [];
+let boxWireframe = null;
+let boxHalfSize = 4;
+let collisionCount = 0;
+let collisionRate = 0;
+let collisionAccum = 0;
+let collisionTimer = 0;
+
+// Wall flash overlays (per face: +x,-x,+y,-y,+z,-z)
+const wallFlashMeshes = [];
+const wallMats = [];
+
+function buildContainer(half) {
+  if (boxWireframe) scene.remove(boxWireframe);
+  wallFlashMeshes.forEach(m => scene.remove(m));
+  wallFlashMeshes.length = 0;
+  wallMats.length = 0;
+
+  const geo = new THREE.BoxGeometry(half*2, half*2, half*2);
+  const edges = new THREE.EdgesGeometry(geo);
+  const mat = new THREE.LineBasicMaterial({ color: 0x3B82F6, transparent: true, opacity: 0.6 });
+  boxWireframe = new THREE.LineSegments(edges, mat);
+  scene.add(boxWireframe);
+
+  // Flash planes for each of 6 faces
+  const faceData = [
+    { pos: [half, 0, 0], rot: [0, Math.PI/2, 0], size: [half*2, half*2] },
+    { pos: [-half, 0, 0], rot: [0, -Math.PI/2, 0], size: [half*2, half*2] },
+    { pos: [0, half, 0], rot: [-Math.PI/2, 0, 0], size: [half*2, half*2] },
+    { pos: [0, -half, 0], rot: [Math.PI/2, 0, 0], size: [half*2, half*2] },
+    { pos: [0, 0, half], rot: [0, 0, 0], size: [half*2, half*2] },
+    { pos: [0, 0, -half], rot: [0, Math.PI, 0], size: [half*2, half*2] },
+  ];
+  faceData.forEach(fd => {
+    const fg = new THREE.PlaneGeometry(fd.size[0]*0.99, fd.size[1]*0.99);
+    const fm = new THREE.MeshBasicMaterial({ color: 0x3B82F6, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+    const mesh = new THREE.Mesh(fg, fm);
+    mesh.position.set(...fd.pos);
+    mesh.rotation.set(...fd.rot);
+    scene.add(mesh);
+    wallFlashMeshes.push(mesh);
+    wallMats.push(fm);
+  });
+}
+
+function flashWall(faceIndex) {
+  if (!wallMats[faceIndex]) return;
+  wallMats[faceIndex].opacity = 0.45;
+  setTimeout(() => { if(wallMats[faceIndex]) wallMats[faceIndex].opacity = 0; }, 120);
+}
+
+const particleGeom = new THREE.SphereGeometry(0.18, 12, 8);
+
+function getParticleColor(temperature) {
+  const t = (temperature - 200) / 600;
+  const r = Math.floor(59 + t * (239 - 59));
+  const g = Math.floor(130 + t * (68 - 130));
+  const b = Math.floor(246 + t * (68 - 246));
+  return new THREE.Color(r/255, g/255, b/255);
+}
+
+function buildParticles() {
+  particleMeshes.forEach(m => scene.remove(m));
+  particleMeshes.length = 0;
+  particles.length = 0;
+
+  const half = boxHalfSize - 0.25;
+  const speed = Math.sqrt(simState.temperature / 300) * 3.5;
+
+  for (let i = 0; i < simState.particleCount; i++) {
+    const pos = new THREE.Vector3(
+      (Math.random() * 2 - 1) * half * 0.9,
+      (Math.random() * 2 - 1) * half * 0.9,
+      (Math.random() * 2 - 1) * half * 0.9
+    );
+    const dir = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize();
+    const vel = dir.multiplyScalar(speed * (0.7 + Math.random() * 0.6));
+    const mat = new THREE.MeshStandardMaterial({
+      color: getParticleColor(simState.temperature),
+      emissive: getParticleColor(simState.temperature),
+      emissiveIntensity: 0.6,
+      roughness: 0.3, metalness: 0.1
+    });
+    const mesh = new THREE.Mesh(particleGeom, mat);
+    mesh.position.copy(pos);
+    scene.add(mesh);
+    particles.push({ pos: pos.clone(), vel: vel.clone(), mesh });
+    particleMeshes.push(mesh);
+  }
+}
+
+function updateParticleColors() {
+  const col = getParticleColor(simState.temperature);
+  particles.forEach(p => {
+    p.mesh.material.color.copy(col);
+    p.mesh.material.emissive.copy(col);
+  });
+}
+
+function updateParticleSpeeds() {
+  const targetSpeed = Math.sqrt(simState.temperature / 300) * 3.5;
+  particles.forEach(p => {
+    const curSpeed = p.vel.length();
+    if (curSpeed > 0.001) p.vel.normalize().multiplyScalar(targetSpeed * (0.7 + Math.random() * 0.6));
+  });
+}
+
+function initSim() {
+  const s = simState.volumeScale;
+  boxHalfSize = 3 + s * 0.6;
+  buildContainer(boxHalfSize);
+  buildParticles();
+  collisionCount = 0;
+  collisionAccum = 0;
+  collisionTimer = 0;
+  updateDataPanel();
+}
+
+// ─── Physics update ───────────────────────────────────────────────────────
+const _tmpVec = new THREE.Vector3();
+
+function physicsStep(dt) {
+  const maxSub = 0.004;
+  const steps = Math.ceil(dt / maxSub);
+  const subDt = dt / steps;
+  for (let s = 0; s < steps; s++) stepParticles(subDt);
+}
+
+function stepParticles(dt) {
+  const bound = boxHalfSize - 0.22;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    p.pos.addScaledVector(p.vel, dt);
+    let hit = false;
+    // X walls
+    if (p.pos.x > bound) { p.pos.x = bound; p.vel.x = -Math.abs(p.vel.x); flashWall(0); hit = true; }
+    if (p.pos.x < -bound) { p.pos.x = -bound; p.vel.x = Math.abs(p.vel.x); flashWall(1); hit = true; }
+    // Y walls
+    if (p.pos.y > bound) { p.pos.y = bound; p.vel.y = -Math.abs(p.vel.y); flashWall(2); hit = true; }
+    if (p.pos.y < -bound) { p.pos.y = -bound; p.vel.y = Math.abs(p.vel.y); flashWall(3); hit = true; }
+    // Z walls
+    if (p.pos.z > bound) { p.pos.z = bound; p.vel.z = -Math.abs(p.vel.z); flashWall(4); hit = true; }
+    if (p.pos.z < -bound) { p.pos.z = -bound; p.vel.z = Math.abs(p.vel.z); flashWall(5); hit = true; }
+    if (hit) { collisionAccum++; collisionCount++; }
+    p.mesh.position.copy(p.pos);
+  }
+}
+
+// ─── Data panel ────────────────────────────────────────────────────────────
+let dataUpdateTimer = 0;
+function updateDataPanel() {
+  const T = simState.temperature;
+  const L = boxHalfSize * 2;
+  const V = L * L * L;
+  const n = simState.particleCount / 100;
+  const R = 8.314;
+  const P = (n * R * T) / (V * 0.001);
+  const pvnrt = (P * V * 0.001) / (n * R * T);
+
+  document.getElementById('d-pressure').textContent = P.toFixed(1) + ' Pa';
+  document.getElementById('d-temp').textContent = T.toFixed(0) + ' K';
+  document.getElementById('d-volume').textContent = (V * 0.001).toFixed(3) + ' L';
+  document.getElementById('d-count').textContent = simState.particleCount;
+  document.getElementById('d-pvnrt').textContent = pvnrt.toFixed(3);
+  document.getElementById('d-collisions').textContent = collisionRate.toFixed(0);
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────────
+function onSlider() {
+  simState.temperature = parseInt(document.getElementById('sl-temp').value);
+  simState.volumeScale = parseFloat(document.getElementById('sl-vol').value);
+  simState.particleCount = parseInt(document.getElementById('sl-count').value);
+
+  document.getElementById('lbl-temp').textContent = simState.temperature + ' K';
+  document.getElementById('lbl-vol').textContent = simState.volumeScale.toFixed(1) + '×';
+  document.getElementById('lbl-count').textContent = simState.particleCount;
+
+  // Rebuild box if volume changed significantly
+  const newHalf = 3 + simState.volumeScale * 0.6;
+  if (Math.abs(newHalf - boxHalfSize) > 0.05) {
+    boxHalfSize = newHalf;
+    buildContainer(boxHalfSize);
+    // Clamp particles to new bounds
+    const bound = boxHalfSize - 0.25;
+    particles.forEach(p => {
+      p.pos.clampScalar(-bound, bound);
+      p.mesh.position.copy(p.pos);
+    });
+  }
+
+  // Rebuild if count changed
+  if (particles.length !== simState.particleCount) {
+    buildParticles();
+  }
+
+  updateParticleColors();
+  updateParticleSpeeds();
+  updateDataPanel();
+}
+
+function togglePlay() {
+  simState.isPlaying = !simState.isPlaying;
+  document.getElementById('btn-play').textContent = simState.isPlaying ? '⏸ Pause' : '▶ Play';
+  showToast(simState.isPlaying ? 'Simulation running' : 'Simulation paused');
+}
+
+function setSpeed(val, el) {
+  simState.speedFactor = val;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  showToast('Speed: ' + val + '×');
+}
+
+function resetSim() {
+  simState.temperature = 400;
+  simState.volumeScale = 3;
+  simState.particleCount = 50;
+  document.getElementById('sl-temp').value = 400;
+  document.getElementById('sl-vol').value = 3;
+  document.getElementById('sl-count').value = 50;
+  document.getElementById('lbl-temp').textContent = '400 K';
+  document.getElementById('lbl-vol').textContent = '3.0×';
+  document.getElementById('lbl-count').textContent = '50';
+  simState.isPlaying = true;
+  simState.speedFactor = 1;
+  document.getElementById('btn-play').textContent = '⏸ Pause';
+  document.querySelectorAll('.btn-speed').forEach((b,i) => b.classList.toggle('active', i===2));
+  initSim();
+  showToast('Simulation reset');
+}
+
+const presets = {
+  boyle: { temperature: 400, volumeScale: 2, particleCount: 50, label: "Boyle's Law Demo" },
+  charles: { temperature: 600, volumeScale: 4.5, particleCount: 50, label: "Charles' Law Demo" },
+  highdensity: { temperature: 500, volumeScale: 1.5, particleCount: 90, label: 'High Density Gas' }
+};
+
+function applyPreset(key) {
+  const p = presets[key];
+  simState.temperature = p.temperature;
+  simState.volumeScale = p.volumeScale;
+  simState.particleCount = p.particleCount;
+  document.getElementById('sl-temp').value = p.temperature;
+  document.getElementById('sl-vol').value = p.volumeScale;
+  document.getElementById('sl-count').value = p.particleCount;
+  document.getElementById('lbl-temp').textContent = p.temperature + ' K';
+  document.getElementById('lbl-vol').textContent = p.volumeScale.toFixed(1) + '×';
+  document.getElementById('lbl-count').textContent = p.particleCount;
+  initSim();
+  showToast('Preset: ' + p.label);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 2000);
+}
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.code === 'Digit1') setSpeed(0.25, document.querySelectorAll('.btn-speed')[0]);
+  if (e.code === 'Digit2') setSpeed(0.5, document.querySelectorAll('.btn-speed')[1]);
+  if (e.code === 'Digit3') setSpeed(1, document.querySelectorAll('.btn-speed')[2]);
+  if (e.code === 'Digit4') setSpeed(2, document.querySelectorAll('.btn-speed')[3]);
+  if (e.code === 'Digit5') setSpeed(3, document.querySelectorAll('.btn-speed')[4]);
+});
+
+// ─── Animation loop ───────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (delta > 0.1) delta = 0.02;
+  controls.update();
+
+  if (simState.isPlaying) {
+    const dt = delta * simState.speedFactor;
+    physicsStep(dt);
+
+    collisionTimer += delta;
+    if (collisionTimer >= 0.5) {
+      collisionRate = collisionAccum / collisionTimer;
+      collisionAccum = 0;
+      collisionTimer = 0;
+    }
+
+    dataUpdateTimer += delta;
+    if (dataUpdateTimer >= 0.1) {
+      updateDataPanel();
+      dataUpdateTimer = 0;
+    }
+  }
+  renderer.render(scene, camera);
+});
+
+// ─── Quiz ──────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "A gas is compressed to half its original volume at constant temperature. What happens to its pressure?",
+    opts: ["It doubles", "It halves", "It stays the same", "It quadruples"],
+    correct: 0,
+    feedback: {
+      correct: "Correct! By Boyle's Law (PV = const at fixed T), halving V doubles P.",
+      wrong: "By Boyle's Law (PV = const), if V is halved then P must double to keep the product constant."
+    }
+  },
+  {
+    q: "If you heat a gas in a rigid container (constant volume), what happens to pressure?",
+    opts: ["Pressure decreases", "Pressure stays constant", "Pressure increases", "Volume increases"],
+    correct: 2,
+    feedback: {
+      correct: "Exactly! Gay-Lussac's Law: at constant V, P ∝ T. Higher T → faster molecules → more forceful wall collisions.",
+      wrong: "This is Gay-Lussac's Law: at constant volume, P/T = constant. Higher temperature means higher pressure."
+    }
+  },
+  {
+    q: "The PV/nRT ratio in the data panel stays close to 1.0. What does this confirm?",
+    opts: ["The gas is cooling down", "The simulation follows the ideal gas law", "Particles are losing energy", "Volume is fixed"],
+    correct: 1,
+    feedback: {
+      correct: "Right! PV/nRT = 1 is the definition of ideal gas behavior. The simulation obeys PV = nRT perfectly.",
+      wrong: "PV = nRT means PV/nRT = 1. When this ratio equals 1, the gas is behaving ideally — no intermolecular forces or volume effects."
+    }
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'space-y-2';
+    div.innerHTML = `<p class="text-xs font-semibold text-slate-200">Q${qi+1}: ${q.q}</p>`;
+    q.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-opt';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => checkAnswer(qi, oi, btn, div));
+      div.appendChild(btn);
+    });
+    const fb = document.createElement('p');
+    fb.className = 'text-xs text-slate-400 hidden mt-1';
+    fb.id = `fb-${qi}`;
+    div.appendChild(fb);
+    container.appendChild(div);
+  });
+}
+
+function checkAnswer(qi, oi, btn, div) {
+  const q = quizData[qi];
+  const allOpts = div.querySelectorAll('.quiz-opt');
+  allOpts.forEach(o => { o.style.pointerEvents = 'none'; });
+  const fb = document.getElementById(`fb-${qi}`);
+  if (oi === q.correct) {
+    btn.classList.add('correct');
+    fb.textContent = '✅ ' + q.feedback.correct;
+    fb.classList.remove('hidden');
+    fb.style.color = '#22C55E';
+  } else {
+    btn.classList.add('wrong');
+    allOpts[q.correct].classList.add('correct');
+    fb.textContent = '💡 ' + q.feedback.wrong;
+    fb.classList.remove('hidden');
+    fb.style.color = '#FCD34D';
+  }
+}
+
+// ─── KaTeX formulas ───────────────────────────────────────────────────────
+katex.render('PV = nRT', document.getElementById('f1'), {throwOnError: false});
+katex.render('P_1V_1 = P_2V_2', document.getElementById('f2'), {throwOnError: false});
+katex.render('\\dfrac{V_1}{T_1} = \\dfrac{V_2}{T_2}', document.getElementById('f3'), {throwOnError: false});
+katex.render('\\dfrac{P_1}{T_1} = \\dfrac{P_2}{T_2}', document.getElementById('f4'), {throwOnError: false});
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+buildQuiz();
+initSim();
+</script>
+
+<div style="display:none;">Generated with curiosity and rigor — by AetherViz Master for you.</div>
+</body>
+</html>

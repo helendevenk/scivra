@@ -25,6 +25,16 @@ export function getSystemPrompt(discipline?: string, version: 'v1' | 'v2' = 'v2'
 - Output ONLY raw HTML starting with <!DOCTYPE html>. No markdown fences, no explanation, no commentary.
 - The entire visualization must be in ONE file — all CSS inline in <style>, all JS inline in <script>.
 
+## ⛔ ABSOLUTE PROHIBITIONS (violation = generation rejected)
+These are HARD rules. Violating any one causes the output to be discarded and the user is charged for nothing.
+- NEVER use localStorage, sessionStorage, indexedDB — these are blocked at the security layer
+- NEVER use eval(), new Function(), setTimeout/setInterval with string args
+- NEVER use fetch(), XMLHttpRequest, WebSocket, navigator.sendBeacon
+- NEVER use document.cookie, window.open(), window.location (except hash)
+- ALWAYS include: renderer.setAnimationLoop(fn) — NEVER requestAnimationFrame()
+- ALWAYS include: window.addEventListener('resize', ...) with camera/renderer update
+- ALWAYS include: renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
 ## TECHNOLOGY STACK (CDN + local assets — no other external dependencies allowed)
 - Three.js r134: https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js
 - OrbitControls r134: /lib/orbit-controls.js (local, precompiled from Three.js r134)

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Buoyancy: Basics — Scivra Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  :root { --primary: #3B82F6; --primary-light: #0EA5E9; --glass-bg: rgba(255,255,255,0.08); --glass-border: rgba(255,255,255,0.15); --panel-bg: rgba(15,23,42,0.9); --panel-border: rgba(59,130,246,0.25); }
+  #navbar { background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; backdrop-filter: blur(12px); z-index: 100; }
+  #navbar h1 { font-size: 1.25rem; font-weight: 700; background: linear-gradient(135deg, #3B82F6, #0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #navbar .subtitle { font-size: 0.75rem; color: #94a3b8; margin-top: 1px; }
+  .nav-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #f8fafc; padding: 0.4rem 0.85rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+  .nav-btn:hover { background: rgba(59,130,246,0.2); border-color: #3B82F6; }
+  #main-layout { display: flex; flex: 1; overflow: hidden; }
+  #sidebar { width: 300px; min-width: 300px; background: var(--panel-bg); border-right: 1px solid var(--panel-border); overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 2px; }
+  .panel-section { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 0.75rem; padding: 1rem; }
+  .panel-section h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0EA5E9; margin-bottom: 0.75rem; }
+  .formula-row { margin-bottom: 0.6rem; }
+  .formula-label { font-size: 0.7rem; color: #94a3b8; margin-top: 0.3rem; }
+  .concept-text { font-size: 0.82rem; color: #cbd5e1; line-height: 1.6; }
+  .fact-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; font-size: 0.78rem; color: #94a3b8; }
+  .fact-card strong { color: #0EA5E9; display: block; margin-bottom: 0.2rem; font-size: 0.72rem; text-transform: uppercase; }
+  #canvas-area { flex: 1; position: relative; overflow: hidden; }
+  #canvas-container { width: 100%; height: 100%; }
+  #data-panel { position: absolute; top: 1rem; left: 1rem; background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.35); border-radius: 0.75rem; padding: 0.85rem 1rem; backdrop-filter: blur(8px); min-width: 210px; }
+  #data-panel h4 { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #0EA5E9; margin-bottom: 0.6rem; }
+  .data-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; font-variant-numeric: tabular-nums; }
+  .data-label { color: #94a3b8; }
+  .data-value { color: #f8fafc; font-weight: 600; }
+  .data-value.positive { color: #22c55e; }
+  .data-value.negative { color: #ef4444; }
+  .data-value.warning { color: #f59e0b; }
+  #controls-bar { background: rgba(15,23,42,0.92); border-top: 1px solid rgba(59,130,246,0.25); padding: 0.85rem 1.5rem; flex-shrink: 0; backdrop-filter: blur(12px); }
+  .controls-grid { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 1rem; align-items: end; }
+  .slider-group label { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; display: flex; justify-content: space-between; margin-bottom: 0.35rem; }
+  .slider-group label span { color: #f8fafc; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: #3B82F6; cursor: pointer; }
+  .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .btn { padding: 0.45rem 0.9rem; border-radius: 0.5rem; border: 1px solid var(--glass-border); background: var(--glass-bg); color: #f8fafc; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; white-space: nowrap; }
+  .btn:hover { background: rgba(59,130,246,0.25); border-color: #3B82F6; }
+  .btn.active { background: linear-gradient(135deg, #3B82F6, #0EA5E9); border-color: #0EA5E9; }
+  .speed-btn { padding: 0.35rem 0.65rem; font-size: 0.75rem; }
+  #toast-container { position: fixed; top: 4.5rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+  .toast { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.5); border-radius: 0.5rem; padding: 0.65rem 1rem; font-size: 0.82rem; color: #f8fafc; animation: slideIn 0.25s ease; min-width: 200px; }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  #quiz-panel { position: absolute; bottom: 0; right: 0; width: 340px; background: var(--panel-bg); border-top: 1px solid var(--panel-border); border-left: 1px solid var(--panel-border); border-radius: 0.75rem 0 0 0; overflow: hidden; }
+  #quiz-header { background: rgba(59,130,246,0.15); padding: 0.65rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  #quiz-header h4 { font-size: 0.8rem; font-weight: 700; color: #0EA5E9; text-transform: uppercase; letter-spacing: 0.06em; }
+  #quiz-body { padding: 1rem; max-height: 320px; overflow-y: auto; }
+  .quiz-question { margin-bottom: 1rem; }
+  .quiz-question p { font-size: 0.82rem; color: #e2e8f0; margin-bottom: 0.5rem; line-height: 1.5; }
+  .quiz-option { display: block; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.4rem; padding: 0.4rem 0.7rem; margin-bottom: 0.3rem; font-size: 0.78rem; color: #cbd5e1; cursor: pointer; transition: all 0.2s; }
+  .quiz-option:hover { background: rgba(59,130,246,0.15); border-color: #3B82F6; }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #86efac; }
+  .quiz-option.wrong { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5; }
+  .quiz-feedback { font-size: 0.76rem; margin-top: 0.4rem; padding: 0.5rem; border-radius: 0.35rem; line-height: 1.5; }
+  .quiz-feedback.correct-fb { background: rgba(34,197,94,0.1); color: #86efac; }
+  .quiz-feedback.wrong-fb { background: rgba(239,68,68,0.1); color: #fca5a5; }
+  #quiz-float-btn { display: none; position: absolute; bottom: 1rem; right: 1rem; background: linear-gradient(135deg, #3B82F6, #0EA5E9); border: none; color: white; padding: 0.65rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.8rem; font-weight: 600; z-index: 50; }
+  #about-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; align-items: center; justify-content: center; }
+  #about-dialog.open { display: flex; }
+  #about-inner { background: #1e293b; border: 1px solid rgba(59,130,246,0.4); border-radius: 1rem; padding: 2rem; max-width: 420px; width: 90%; }
+  #about-inner h2 { font-size: 1.1rem; font-weight: 700; color: #0EA5E9; margin-bottom: 1rem; }
+  #about-inner p { font-size: 0.83rem; color: #94a3b8; line-height: 1.65; margin-bottom: 0.5rem; }
+  #about-inner kbd { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); border-radius: 3px; padding: 1px 5px; font-size: 0.75rem; }
+  .stability-bar-wrap { margin-top: 0.4rem; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .stability-bar { height: 100%; border-radius: 4px; transition: width 0.3s, background 0.3s; }
+</style>
+</head>
+<body>
+
+<div id="navbar">
+  <div>
+    <h1>Buoyancy: Basics</h1>
+    <div class="subtitle">Floating, Sinking & Stability · Introductory Physics</div>
+  </div>
+  <div class="btn-group">
+    <button class="nav-btn" onclick="window.resetSim()">Reset</button>
+    <button class="nav-btn" onclick="window.toggleFullscreen()">Fullscreen</button>
+    <button class="nav-btn" onclick="document.getElementById('about-dialog').classList.add('open')">About</button>
+  </div>
+</div>
+
+<div id="main-layout">
+  <div id="sidebar">
+    <div class="panel-section">
+      <h3>Core Formulas</h3>
+      <div class="formula-row">
+        <div id="f1"></div>
+        <div class="formula-label">A floating object: buoyant force balances total weight</div>
+      </div>
+      <div class="formula-row">
+        <div id="f2"></div>
+        <div class="formula-label">Buoyant force equals displaced fluid weight</div>
+      </div>
+      <div class="formula-row">
+        <div id="f3"></div>
+        <div class="formula-label">Depth the hull sinks to balance total load weight</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3>Concept</h3>
+      <p class="concept-text">
+        When an object floats, two forces are perfectly balanced: its weight pulling down and the buoyant force pushing up. The buoyant force equals the weight of water that the object pushes out of the way (displaces).<br/><br/>
+        Add mass to a boat, and it sinks lower — displacing more water until the new, larger buoyant force matches the heavier weight. If you add too much mass, the boat can't displace enough water before it runs out of hull, and it sinks!<br/><br/>
+        The stability margin tells you how much extra mass the hull can accept before flooding.
+      </p>
+    </div>
+
+    <div class="panel-section">
+      <h3>Knowledge Cards</h3>
+      <div class="fact-card"><strong>Real Life</strong>A cargo ship can carry thousands of tons because its steel hull is hollow — the average density of ship + air inside is less than water.</div>
+      <div class="fact-card"><strong>Common Mistake</strong>Students often think heavier objects always sink. But a steel battleship floats while a solid steel ball sinks — shape and hollow volume matter!</div>
+      <div class="fact-card"><strong>Why It Matters</strong>Engineers must calculate exactly how low a ship will sit when fully loaded to ensure water doesn't pour over the deck (freeboard calculation).</div>
+    </div>
+
+    <div class="panel-section">
+      <h3>Why It Matters</h3>
+      <p class="concept-text">
+        • Ship designers use load line marks ("Plimsoll line") to ensure vessels aren't overloaded.<br/>
+        • Pontoon bridges use buoyancy to support vehicle weight over water.<br/>
+        • Life vests keep people afloat by adding low-density foam volume.
+      </p>
+    </div>
+  </div>
+
+  <div id="canvas-area">
+    <div id="canvas-container"></div>
+
+    <div id="data-panel">
+      <h4>Live Data</h4>
+      <div class="data-row"><span class="data-label">Waterline Depth</span><span class="data-value" id="d-depth">0.00 m</span></div>
+      <div class="data-row"><span class="data-label">Buoyant Force</span><span class="data-value positive" id="d-buoy">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Total Weight</span><span class="data-value negative" id="d-weight">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Stability Margin</span><span class="data-value" id="d-margin">100%</span></div>
+      <div class="stability-bar-wrap"><div class="stability-bar" id="stab-bar" style="width:100%;background:#22c55e;"></div></div>
+      <div class="data-row" style="margin-top:0.4rem;"><span class="data-label">Status</span><span class="data-value" id="d-status">Floating</span></div>
+    </div>
+
+    <div id="quiz-panel">
+      <div id="quiz-header" onclick="window.toggleQuiz()">
+        <h4>Quick Quiz</h4>
+        <span id="quiz-chevron" style="color:#0EA5E9;font-size:0.9rem;">▼</span>
+      </div>
+      <div id="quiz-body">
+        <div class="quiz-question">
+          <p><strong>Q1.</strong> You add mass to a floating boat. Which statement correctly describes what happens?</p>
+          <label class="quiz-option" data-q="1" data-val="a">A. The buoyant force decreases</label>
+          <label class="quiz-option" data-q="1" data-val="b">B. The boat sinks lower, displacing more water until F_b = new weight</label>
+          <label class="quiz-option" data-q="1" data-val="c">C. The boat floats at the same level because water pushes back harder</label>
+          <label class="quiz-option" data-q="1" data-val="d">D. The boat immediately sinks</label>
+          <div class="quiz-feedback" id="qf1" style="display:none;"></div>
+        </div>
+        <div class="quiz-question">
+          <p><strong>Q2.</strong> A boat hull has volume 8 L. The boat (empty) has mass 2 kg. Water density is 1000 kg/m³. What is the maximum mass that can be added before sinking? (g = 10 m/s²)</p>
+          <label class="quiz-option" data-q="2" data-val="a">A. 6 kg</label>
+          <label class="quiz-option" data-q="2" data-val="b">B. 2 kg</label>
+          <label class="quiz-option" data-q="2" data-val="c">C. 8 kg</label>
+          <label class="quiz-option" data-q="2" data-val="d">D. 10 kg</label>
+          <div class="quiz-feedback" id="qf2" style="display:none;"></div>
+        </div>
+        <div class="quiz-question">
+          <p><strong>Q3.</strong> You move a floating boat from fresh water (ρ = 1000 kg/m³) to salt water (ρ = 1025 kg/m³). The boat's waterline depth will:</p>
+          <label class="quiz-option" data-q="3" data-val="a">A. Increase — salt water is heavier so it pushes up harder</label>
+          <label class="quiz-option" data-q="3" data-val="b">B. Decrease — less volume needs to be submerged to displace the same weight</label>
+          <label class="quiz-option" data-q="3" data-val="c">C. Stay the same — the boat weight doesn't change</label>
+          <label class="quiz-option" data-q="3" data-val="d">D. The boat sinks in salt water</label>
+          <div class="quiz-feedback" id="qf3" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+    <button id="quiz-float-btn" onclick="window.toggleQuiz()">Quiz</button>
+  </div>
+</div>
+
+<div id="controls-bar">
+  <div class="controls-grid">
+    <div class="slider-group">
+      <label>Added Mass <span id="lbl-mass">0.0</span> kg</label>
+      <input type="range" id="sl-mass" min="0" max="5" step="0.1" value="0"/>
+    </div>
+    <div class="slider-group">
+      <label>Hull Volume <span id="lbl-hullvol">5.0</span> L</label>
+      <input type="range" id="sl-hullvol" min="1" max="10" step="0.1" value="5.0"/>
+    </div>
+    <div class="slider-group">
+      <label>Water Density <span id="lbl-waterDens">1000</span> kg/m³</label>
+      <input type="range" id="sl-waterDens" min="900" max="1100" step="5" value="1000"/>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      <div class="btn-group">
+        <button class="btn" onclick="window.applyPreset('empty')">Empty Boat</button>
+        <button class="btn" onclick="window.applyPreset('loaded')">Loaded Boat</button>
+        <button class="btn" onclick="window.applyPreset('almost')">Almost Sinking</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn speed-btn" id="spd-025" onclick="window.setSpeed(0.25)">0.25×</button>
+        <button class="btn speed-btn" id="spd-05" onclick="window.setSpeed(0.5)">0.5×</button>
+        <button class="btn speed-btn active" id="spd-1" onclick="window.setSpeed(1)">1×</button>
+        <button class="btn speed-btn" id="spd-2" onclick="window.setSpeed(2)">2×</button>
+        <button class="btn speed-btn" id="spd-3" onclick="window.setSpeed(3)">3×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<div id="about-dialog">
+  <div id="about-inner">
+    <h2>Buoyancy: Basics</h2>
+    <p>Explore how boats float and how adding mass changes the waterline depth. Perfect for introductory physics students.</p>
+    <p><strong>Keyboard Shortcuts:</strong></p>
+    <p><kbd>Space</kbd> Play / Pause &nbsp; <kbd>R</kbd> Reset &nbsp; <kbd>1</kbd>–<kbd>5</kbd> Speed</p>
+    <p style="margin-top:1rem;color:#64748b;font-size:0.75rem;">Generated by AetherViz Master for Scivra</p>
+    <button class="btn" style="margin-top:1rem;" onclick="document.getElementById('about-dialog').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<script>
+// ── THREE.JS OrbitControls (inline) ──────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
+
+// ── KATEX ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  katex.render('F_b = W_{total} \\quad \\text{(floating condition)}', document.getElementById('f1'), {throwOnError:false});
+  katex.render('F_b = \\rho_{water} \\cdot V_{displaced} \\cdot g', document.getElementById('f2'), {throwOnError:false});
+  katex.render('d = \\frac{(m_{hull} + m_{added})}{\\rho_{water} \\cdot A_{hull}}', document.getElementById('f3'), {throwOnError:false});
+});
+
+// ── SIM STATE ─────────────────────────────────────────────────────────────────
+const G = 9.81;
+const HULL_MASS = 0.5; // kg, base boat mass
+const HULL_WIDTH = 3.0; // scene units
+const HULL_HEIGHT = 2.5; // scene units tall
+const HULL_DEPTH = 2.0; // scene units
+let addedMass = 0, hullVolLiters = 5.0, waterDens = 1000;
+let boatY = 0, boatVelY = 0;
+let isPlaying = true, speedFactor = 1.0, quizVisible = true;
+
+// Physics helpers
+const HULL_AREA = 3.0 * 2.0; // scene-unit area (width * depth for flat-bottom boat)
+const WATER_LEVEL_Y = 0.0; // scene y of water surface
+
+function computeBoatPhysics() {
+  const totalMassKg = HULL_MASS + addedMass;
+  const hullVolM3 = hullVolLiters * 0.001;
+  const hullHeightM = 1.0; // normalized 1 m hull height for depth calc
+  const areaM2 = hullVolM3 / hullHeightM;
+  // Depth submerged to float
+  const depthNeeded = totalMassKg / (waterDens * areaM2); // m
+  const maxDepth = hullHeightM;
+  const sinks = depthNeeded > maxDepth;
+  const actualDepth = sinks ? maxDepth : depthNeeded;
+  const dispVol = areaM2 * actualDepth;
+  const fb = waterDens * dispVol * G;
+  const weight = totalMassKg * G;
+  const margin = sinks ? 0 : (maxDepth - depthNeeded) / maxDepth;
+  return { fb, weight, depthNeeded, actualDepth, maxDepth, sinks, margin, areaM2 };
+}
+
+function physicsStep(dt) {
+  if (dt > 0.1) dt = 0.02;
+  const { fb, weight } = computeBoatPhysics();
+  const totalMassKg = HULL_MASS + addedMass;
+  const maxSubStepDt = 0.002;
+  const steps = Math.ceil(dt / maxSubStepDt);
+  const subDt = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    const fnet = fb - weight;
+    const acc = fnet / totalMassKg;
+    const velHalf = boatVelY + 0.5 * acc * subDt;
+    boatY += velHalf * subDt;
+    boatVelY = velHalf + 0.5 * acc * subDt;
+    boatVelY *= 0.97; // fluid damping
+    // Clamp
+    if (boatY < -3.5) { boatY = -3.5; boatVelY = 0; }
+    if (boatY > 3.5) { boatY = 3.5; boatVelY = 0; }
+  }
+}
+
+// ── THREE.JS SCENE ────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(0, 4, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 4;
+controls.maxDistance = 35;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0); keyLight.position.set(5,10,7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5,5,-5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0,5,-10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// Water body
+const waterBodyGeom = new THREE.BoxGeometry(14, 5, 8);
+const waterBodyMat = new THREE.MeshStandardMaterial({ color: 0x0369a1, opacity: 0.7, transparent: true, roughness: 0.1 });
+const waterBody = new THREE.Mesh(waterBodyGeom, waterBodyMat);
+waterBody.position.set(0, -2.5 + WATER_LEVEL_Y, 0);
+scene.add(waterBody);
+
+// Water surface
+const wSurfGeom = new THREE.PlaneGeometry(14, 8, 30, 30);
+const wSurfMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, opacity: 0.45, transparent: true, roughness: 0.05, metalness: 0.1 });
+const wSurface = new THREE.Mesh(wSurfGeom, wSurfMat);
+wSurface.rotation.x = -Math.PI / 2;
+wSurface.position.set(0, WATER_LEVEL_Y, 0);
+scene.add(wSurface);
+
+// Boat hull — flat-bottomed box boat
+const hullGeom = new THREE.BoxGeometry(HULL_WIDTH, HULL_HEIGHT, HULL_DEPTH);
+const hullMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.6, metalness: 0.3 });
+const hullMesh = new THREE.Mesh(hullGeom, hullMat);
+hullMesh.castShadow = true;
+scene.add(hullMesh);
+
+// Hull inner (open top — show emptiness)
+const innerGeom = new THREE.BoxGeometry(HULL_WIDTH - 0.2, HULL_HEIGHT - 0.1, HULL_DEPTH - 0.2);
+const innerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+const innerMesh = new THREE.Mesh(innerGeom, innerMat);
+innerMesh.position.y = 0.05;
+scene.add(innerMesh);
+
+// Cargo block (represents added mass)
+const cargoGeom = new THREE.BoxGeometry(0.8, 0.4, 0.8);
+const cargoMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5, metalness: 0.2 });
+const cargoMesh = new THREE.Mesh(cargoGeom, cargoMat);
+scene.add(cargoMesh);
+
+// Force arrows (FBD — static display)
+function makeCylArrow(color) {
+  const g = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 8), new THREE.MeshStandardMaterial({color}));
+  shaft.position.y = 0.5;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 8), new THREE.MeshStandardMaterial({color}));
+  head.position.y = 1.2;
+  g.add(shaft, head);
+  return g;
+}
+const arrowBuoy = makeCylArrow(0x22c55e);
+const arrowWeight = makeCylArrow(0xef4444);
+arrowWeight.rotation.z = Math.PI;
+scene.add(arrowBuoy, arrowWeight);
+
+// Labels overlay (SVG)
+const svgDiv = document.createElement('div');
+svgDiv.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+document.getElementById('canvas-area').appendChild(svgDiv);
+
+// Grid
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+// ── WATERLINE MARKER ──────────────────────────────────────────────────────────
+const waterLineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, linewidth: 2 });
+const wlPts = [new THREE.Vector3(-2.5, 0, 1.5), new THREE.Vector3(2.5, 0, 1.5)];
+const wlGeom = new THREE.BufferGeometry().setFromPoints(wlPts);
+const waterlineMarker = new THREE.Line(wlGeom, waterLineMat);
+scene.add(waterlineMarker);
+
+// ── ANIMATION LOOP ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let time = 0;
+
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  time += delta;
+  if (isPlaying) {
+    physicsStep(delta * speedFactor);
+  }
+
+  const physics = computeBoatPhysics();
+
+  // Determine target boat Y from physics (waterline should sit at WATER_LEVEL_Y)
+  // The boat top is boatY + HULL_HEIGHT/2, bottom is boatY - HULL_HEIGHT/2
+  // When floating, waterline cuts at: boatY - HULL_HEIGHT/2 + actualDepth*scene_scale
+  const sceneScale = HULL_HEIGHT; // 1 m hull height = HULL_HEIGHT scene units
+  const depthScene = Math.min(physics.actualDepth, 1.0) * sceneScale;
+  const targetBoatY = WATER_LEVEL_Y - depthScene + HULL_HEIGHT / 2;
+
+  // Smoothly move boat toward target
+  boatY += (targetBoatY - boatY) * 0.08;
+
+  hullMesh.position.set(0, boatY, 0);
+  innerMesh.position.set(0, boatY + 0.05, 0);
+
+  // Cargo stacks on top of inner floor
+  const numCrates = Math.round(addedMass);
+  cargoMesh.visible = addedMass > 0.2;
+  const crateScale = Math.min(1, (addedMass / 5.0) + 0.3);
+  cargoMesh.scale.set(crateScale, crateScale, crateScale);
+  cargoMesh.position.set(0, boatY + HULL_HEIGHT * 0.1, 0);
+
+  // Arrow lengths
+  const sc = 0.0022;
+  const buoyLen = Math.max(physics.fb * sc, 0.5);
+  const wLen = Math.max(physics.weight * sc, 0.5);
+  arrowBuoy.scale.set(1, buoyLen, 1);
+  arrowBuoy.position.set(1.8, boatY + HULL_HEIGHT / 2 + 0.1, 0);
+  arrowWeight.scale.set(1, wLen, 1);
+  arrowWeight.position.set(-1.8, boatY - HULL_HEIGHT / 2 - wLen + 0.1, 0);
+
+  // Waterline marker follows boat's actual submerged level
+  waterlineMarker.position.set(0, WATER_LEVEL_Y, 0);
+
+  // Water surface subtle wave
+  wSurface.position.y = WATER_LEVEL_Y + Math.sin(time * 0.8) * 0.04;
+
+  // Update data panel
+  updateDataPanel(physics);
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+function updateDataPanel(p) {
+  document.getElementById('d-depth').textContent = p.actualDepth.toFixed(3) + ' m';
+  document.getElementById('d-buoy').textContent = p.fb.toFixed(2) + ' N';
+  document.getElementById('d-weight').textContent = p.weight.toFixed(2) + ' N';
+  const marginPct = Math.round(p.margin * 100);
+  const mEl = document.getElementById('d-margin');
+  mEl.textContent = (p.sinks ? '0' : marginPct) + '%';
+  mEl.className = 'data-value ' + (p.sinks ? 'negative' : marginPct < 15 ? 'warning' : 'positive');
+  const bar = document.getElementById('stab-bar');
+  const pct = p.sinks ? 0 : marginPct;
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 30 ? '#22c55e' : pct > 10 ? '#f59e0b' : '#ef4444';
+  const statusEl = document.getElementById('d-status');
+  if (p.sinks) { statusEl.textContent = 'SINKING!'; statusEl.style.color = '#ef4444'; }
+  else if (marginPct < 10) { statusEl.textContent = 'Danger!'; statusEl.style.color = '#f59e0b'; }
+  else { statusEl.textContent = 'Floating'; statusEl.style.color = '#22c55e'; }
+}
+
+// ── SLIDERS ───────────────────────────────────────────────────────────────────
+document.getElementById('sl-mass').addEventListener('input', function() {
+  addedMass = parseFloat(this.value);
+  document.getElementById('lbl-mass').textContent = addedMass.toFixed(1);
+});
+document.getElementById('sl-hullvol').addEventListener('input', function() {
+  hullVolLiters = parseFloat(this.value);
+  document.getElementById('lbl-hullvol').textContent = hullVolLiters.toFixed(1);
+});
+document.getElementById('sl-waterDens').addEventListener('input', function() {
+  waterDens = parseInt(this.value);
+  document.getElementById('lbl-waterDens').textContent = waterDens;
+});
+
+// ── PRESETS ───────────────────────────────────────────────────────────────────
+const PRESETS = {
+  empty: { addedMass: 0, hullVol: 5.0, waterDens: 1000, label: 'Empty Boat' },
+  loaded: { addedMass: 2.5, hullVol: 5.0, waterDens: 1000, label: 'Loaded Boat' },
+  almost: { addedMass: 4.5, hullVol: 5.0, waterDens: 1000, label: 'Almost Sinking' }
+};
+
+window.applyPreset = function(key) {
+  const p = PRESETS[key];
+  addedMass = p.addedMass; hullVolLiters = p.hullVol; waterDens = p.waterDens;
+  document.getElementById('sl-mass').value = p.addedMass;
+  document.getElementById('sl-hullvol').value = p.hullVol;
+  document.getElementById('sl-waterDens').value = p.waterDens;
+  document.getElementById('lbl-mass').textContent = p.addedMass.toFixed(1);
+  document.getElementById('lbl-hullvol').textContent = p.hullVol.toFixed(1);
+  document.getElementById('lbl-waterDens').textContent = p.waterDens;
+  showToast('Preset: ' + p.label);
+};
+
+// ── CONTROLS ──────────────────────────────────────────────────────────────────
+window.resetSim = function() {
+  addedMass = 0; hullVolLiters = 5.0; waterDens = 1000;
+  document.getElementById('sl-mass').value = 0;
+  document.getElementById('sl-hullvol').value = 5;
+  document.getElementById('sl-waterDens').value = 1000;
+  document.getElementById('lbl-mass').textContent = '0.0';
+  document.getElementById('lbl-hullvol').textContent = '5.0';
+  document.getElementById('lbl-waterDens').textContent = '1000';
+  boatVelY = 0;
+  showToast('Simulation reset');
+};
+
+window.setSpeed = function(s) {
+  speedFactor = s;
+  ['025','05','1','2','3'].forEach(k => document.getElementById('spd-'+k).classList.remove('active'));
+  const map = { 0.25:'025', 0.5:'05', 1:'1', 2:'2', 3:'3' };
+  if (map[s]) document.getElementById('spd-'+map[s]).classList.add('active');
+  showToast('Speed: ' + s + '×');
+};
+
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────────
+const quizAnswers = { 1: 'b', 2: 'a', 3: 'b' };
+const quizExplanations = {
+  1: { b: 'Exactly right! The boat sinks lower until the extra displaced water weight equals the added load. Equilibrium is restored when F_b = total weight.', wrong: 'Not quite. Adding mass increases the total weight, so the boat sinks lower to displace more water. It reaches a new equilibrium when F_b = new weight.' },
+  2: { a: 'Correct! Max buoyancy = ρ × V × g = 1000 × 0.008 × 10 = 80 N, which supports 8 kg total. Boat hull = 2 kg, so added mass = 8 − 2 = 6 kg.', wrong: 'Use F_b(max) = ρ·V·g = 1000 × 0.008 × 10 = 80 N → 8 kg total capacity. Subtract hull mass: 8 − 2 = 6 kg maximum cargo.' },
+  3: { b: 'Correct! In denser salt water, each cubic meter displaced weighs more, so you need less volume submerged to support the same weight. The boat rides higher.', wrong: 'Think about it: in denser water, less volume needs to be displaced to produce the same buoyant force. So the boat floats higher — the waterline depth decreases.' }
+};
+
+document.querySelectorAll('.quiz-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = parseInt(opt.dataset.q);
+    const val = opt.dataset.val;
+    const correct = quizAnswers[q];
+    const fb = document.getElementById('qf'+q);
+    document.querySelectorAll('[data-q="'+q+'"]').forEach(o => { o.classList.remove('correct','wrong'); o.style.pointerEvents='none'; });
+    opt.classList.add(val === correct ? 'correct' : 'wrong');
+    document.querySelector('[data-q="'+q+'"][data-val="'+correct+'"]').classList.add('correct');
+    if (val === correct) {
+      fb.className = 'quiz-feedback correct-fb';
+      fb.textContent = quizExplanations[q][correct];
+    } else {
+      fb.className = 'quiz-feedback wrong-fb';
+      fb.textContent = quizExplanations[q].wrong;
+    }
+    fb.style.display = 'block';
+  });
+});
+
+window.toggleQuiz = function() {
+  quizVisible = !quizVisible;
+  document.getElementById('quiz-body').style.display = quizVisible ? 'block' : 'none';
+  document.getElementById('quiz-chevron').textContent = quizVisible ? '▼' : '▲';
+  document.getElementById('quiz-panel').style.display = quizVisible ? 'block' : 'none';
+  document.getElementById('quiz-float-btn').style.display = quizVisible ? 'none' : 'block';
+};
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const tc = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 2000);
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); isPlaying = !isPlaying; showToast(isPlaying ? 'Playing' : 'Paused'); }
+  if (e.code === 'KeyR') window.resetSim();
+  if (e.key === '1') window.setSpeed(0.25);
+  if (e.key === '2') window.setSpeed(0.5);
+  if (e.key === '3') window.setSpeed(1);
+  if (e.key === '4') window.setSpeed(2);
+  if (e.key === '5') window.setSpeed(3);
+});
+
+// ── RESIZE ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+</script>
+
+<div style="display:none;text-align:center;font-size:0.7rem;color:#475569;padding:0.5rem;">
+  Physics is everywhere — keep looking! Generated by AetherViz Master for Scivra.
+</div>
+</body>
+</html>

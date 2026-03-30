@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resistance of a Wire — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --primary: #3B82F6; --primary-end: #0EA5E9;
+    --glass-bg: rgba(255,255,255,0.08); --glass-border: rgba(255,255,255,0.15);
+  }
+  #toast { position: fixed; top: 70px; right: 16px; z-index: 9999; pointer-events: none; }
+  .toast-item { background: rgba(59,130,246,0.95); color: #fff; padding: 10px 18px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 20px rgba(59,130,246,0.4); animation: toastIn 0.3s ease; }
+  @keyframes toastIn { from { opacity:0; transform: translateX(40px); } to { opacity:1; transform: translateX(0); } }
+  .glass { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); border-radius: 12px; }
+  .panel-card { background: rgba(22,78,99,0.6); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 12px; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9); cursor: pointer; }
+  .sidebar { width: 300px; min-width: 260px; overflow-y: auto; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); }
+  .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 2px; }
+  .btn-mat { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.15); cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.06); color: #cbd5e1; }
+  .btn-mat.active { background: linear-gradient(135deg, #3B82F6, #0EA5E9); border-color: #3B82F6; color: #fff; }
+  .btn-preset { padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; border: 1px solid rgba(59,130,246,0.3); cursor: pointer; background: rgba(59,130,246,0.1); color: #93c5fd; transition: all 0.18s; }
+  .btn-preset:hover { background: rgba(59,130,246,0.25); color: #fff; }
+  .btn-speed { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; background: rgba(255,255,255,0.06); color: #94a3b8; transition: all 0.15s; }
+  .btn-speed.active { background: linear-gradient(135deg, #3B82F6, #0EA5E9); color: #fff; border-color: #3B82F6; }
+  .data-val { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; color: #38bdf8; }
+  .quiz-opt { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); margin-bottom: 5px; font-size: 13px; transition: all 0.15s; }
+  .quiz-opt:hover { border-color: #3B82F6; background: rgba(59,130,246,0.1); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: #ef4444; }
+  #quiz-panel { position: fixed; bottom: 16px; right: 16px; width: 320px; z-index: 100; }
+  #quiz-fab { position: fixed; bottom: 16px; right: 16px; z-index: 101; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9); display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; box-shadow: 0 4px 16px rgba(59,130,246,0.5); }
+  .katex { font-size: 1em; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(59,130,246,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Resistance of a Wire</span>
+    <span class="text-xs text-slate-400 ml-3">R = ρL/A · AP Physics</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<!-- Sidebar -->
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+
+  <!-- Formulas -->
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Core Formulas</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Resistance depends on material resistivity ρ, length L, and cross-sectional area A.</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Temperature changes resistivity: α is the temperature coefficient.</div>
+    <div id="f3" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Ohm's Law: Drift speed v_d relates to current density J and carrier density n.</div>
+  </div>
+
+  <!-- Concept -->
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2">Concept</div>
+    <p class="text-xs text-slate-300 leading-relaxed">Resistance is a material's opposition to current flow. Doubling the length doubles resistance — electrons collide more often. Doubling the cross-section halves resistance — more paths available in parallel. Materials differ in resistivity by orders of magnitude: copper (~1.7×10⁻⁸ Ω·m) vs nichrome (~1.1×10⁻⁶ Ω·m), a 64× difference.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">Temperature matters: in metals, higher temperature → more lattice vibrations → more scattering → higher resistance. This is why nichrome heating elements glow — their high resistivity concentrates power dissipation.</p>
+  </div>
+
+  <!-- Knowledge cards -->
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-cyan-400 mb-1">Historical Fact</div>
+    <div class="text-xs text-slate-300">Georg Ohm (1827) published his law when most physicists believed electricity was too mysterious to quantify. He was dismissed; vindication came 16 years later via the Royal Society Copley Medal.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Common Misconception</div>
+    <div class="text-xs text-slate-300">Electrons don't actually move fast — drift speed in copper at 1A/mm² is only ~0.1 mm/s. The electric field propagates at ~c, not the electrons.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-emerald-400 mb-1">Why It Matters (AP Physics)</div>
+    <div class="text-xs text-slate-300">AP Physics 2 covers resistivity and temperature dependence. Understanding R = ρL/A connects directly to circuit analysis and power dissipation P = I²R.</div>
+  </div>
+
+  <!-- Keyboard shortcuts -->
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-slate-400 mb-1">Keyboard Shortcuts</div>
+    <div class="text-xs text-slate-500">Space: Play/Pause &nbsp;|&nbsp; R: Reset &nbsp;|&nbsp; 1-5: Speed</div>
+  </div>
+</aside>
+
+<!-- Main canvas area -->
+<div class="flex-1 flex flex-col overflow-hidden relative">
+  <div id="canvas-container" class="flex-1 relative">
+    <!-- Data overlay -->
+    <div id="data-overlay" class="absolute top-3 left-3 glass p-3 z-10" style="min-width:200px;">
+      <div class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Resistance R</span><span class="data-val" id="d-R">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Resistivity ρ</span><span class="data-val" id="d-rho">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Drift speed @1A</span><span class="data-val" id="d-vd">—</span></div>
+      <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">Power @1A</span><span class="data-val" id="d-P">—</span></div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="shrink-0 glass p-4" style="border-top:1px solid rgba(59,130,246,0.2);max-height:220px;overflow-y:auto;">
+    <div class="flex flex-wrap gap-4 mb-3">
+      <!-- Sliders -->
+      <div class="flex-1 min-w-48">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Length L</span><span class="text-blue-300 font-mono" id="lbl-L">1.0 m</span></label>
+        <input type="range" id="sl-L" min="0.1" max="5" step="0.1" value="1.0">
+      </div>
+      <div class="flex-1 min-w-48">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Diameter d</span><span class="text-blue-300 font-mono" id="lbl-d">1.0 mm</span></label>
+        <input type="range" id="sl-d" min="0.5" max="5" step="0.1" value="1.0">
+      </div>
+      <div class="flex-1 min-w-48">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Temperature T</span><span class="text-blue-300 font-mono" id="lbl-T">20 °C</span></label>
+        <input type="range" id="sl-T" min="20" max="500" step="5" value="20">
+      </div>
+    </div>
+
+    <!-- Material buttons -->
+    <div class="flex flex-wrap gap-2 mb-3">
+      <span class="text-xs text-slate-400 self-center">Material:</span>
+      <button class="btn-mat active" data-mat="copper" id="btn-copper">Copper</button>
+      <button class="btn-mat" data-mat="aluminum" id="btn-aluminum">Aluminum</button>
+      <button class="btn-mat" data-mat="iron" id="btn-iron">Iron</button>
+      <button class="btn-mat" data-mat="nichrome" id="btn-nichrome">Nichrome</button>
+    </div>
+
+    <!-- Presets + speed -->
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-xs text-slate-400">Presets:</span>
+      <button class="btn-preset" onclick="applyPreset('standard')">Copper Wire (standard)</button>
+      <button class="btn-preset" onclick="applyPreset('heating')">Nichrome Heating Element</button>
+      <button class="btn-preset" onclick="applyPreset('longthin')">Long Thin Wire</button>
+      <div class="ml-auto flex gap-1 items-center">
+        <span class="text-xs text-slate-400">Speed:</span>
+        <button class="btn-speed active" id="spd1" onclick="setSpeed(0.25)">0.25x</button>
+        <button class="btn-speed" id="spd2" onclick="setSpeed(0.5)">0.5x</button>
+        <button class="btn-speed" id="spd3" onclick="setSpeed(1)">1x</button>
+        <button class="btn-speed" id="spd4" onclick="setSpeed(2)">2x</button>
+        <button class="btn-speed" id="spd5" onclick="setSpeed(3)">3x</button>
+        <button class="btn-preset ml-2" id="btn-play" onclick="togglePlay()">⏸ Pause</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Quiz panel -->
+<div id="quiz-panel" class="glass p-4" style="max-height:400px;overflow-y:auto;">
+  <div class="flex justify-between items-center mb-3">
+    <span class="text-sm font-bold text-blue-400">Quiz (3 questions)</span>
+    <button onclick="hideQuiz()" class="text-slate-400 hover:text-white text-xs">✕ Hide</button>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+<div id="quiz-fab" onclick="showQuiz()">🎓</div>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<!-- About modal -->
+<div id="about-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.7);">
+  <div class="glass p-6 max-w-sm w-full mx-4">
+    <div class="font-bold text-blue-400 mb-2">About: Resistance of a Wire</div>
+    <p class="text-xs text-slate-300 mb-3">Visualizes R = ρL/A with animated electron flow. Adjust length, diameter, temperature, and material to see live resistance changes.</p>
+    <div class="text-xs text-slate-400 mb-3"><b>Shortcuts:</b> Space = Play/Pause | R = Reset | 1–5 = Speed</div>
+    <div class="text-xs text-slate-500">Generated by AetherViz Master v7.0</div>
+    <button onclick="document.getElementById('about-modal').classList.replace('flex','hidden').constructor===Array||document.getElementById('about-modal').classList.add('hidden')" class="btn-preset mt-4">Close</button>
+  </div>
+</div>
+
+<script>
+// ─── OrbitControls inline ───────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// ─── Material database ───────────────────────────────────────────────────────
+const MATERIALS = {
+  copper:   { rho0: 1.72e-8,  alpha: 3.9e-3,  color: 0xf97316, name: 'Copper',   label: '#f97316' },
+  aluminum: { rho0: 2.82e-8,  alpha: 3.9e-3,  color: 0xd1d5db, name: 'Aluminum', label: '#d1d5db' },
+  iron:     { rho0: 1.00e-7,  alpha: 5.0e-3,  color: 0x94a3b8, name: 'Iron',     label: '#94a3b8' },
+  nichrome: { rho0: 1.10e-6,  alpha: 4.0e-4,  color: 0xfbbf24, name: 'Nichrome', label: '#fbbf24' },
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let state = { L: 1.0, d: 1.0e-3, T: 20, mat: 'copper', playing: true, speed: 0.25 };
+let wireGroup, electronMeshes = [], endCapL, endCapR;
+let wireMesh;
+
+// ─── Three.js setup ──────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.Fog(0x0f172a, 30, 60);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 4, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 3; controls.maxDistance = 30;
+
+scene.add(new THREE.GridHelper(30, 30, 0x1e3a5f, 0x0f2a45));
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0); keyLight.position.set(5,10,7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5,5,-5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0,5,-10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── Wire + electrons ────────────────────────────────────────────────────────
+wireGroup = new THREE.Group();
+scene.add(wireGroup);
+
+function buildWire() {
+  wireGroup.clear();
+  electronMeshes = [];
+
+  const mat = MATERIALS[state.mat];
+  const L = state.L;
+  const r = (state.d / 2) * 100; // scale: 1mm → 0.1 unit radius → × 100 → display radius in 0.05–0.25 range
+  const dispR = Math.max(0.05, Math.min(0.5, r * 0.05));
+  const dispL = Math.max(1, Math.min(14, L * 2.8));
+
+  // Wire cylinder
+  const wireGeo = new THREE.CylinderGeometry(dispR, dispR, dispL, 32, 1);
+  const wireMat = new THREE.MeshStandardMaterial({
+    color: mat.color, metalness: 0.8, roughness: 0.2,
+    emissive: mat.color, emissiveIntensity: 0.08
+  });
+  wireMesh = new THREE.Mesh(wireGeo, wireMat);
+  wireMesh.rotation.z = Math.PI / 2;
+  wireMesh.castShadow = true;
+  wireGroup.add(wireMesh);
+
+  // End caps (terminals)
+  const capGeo = new THREE.CylinderGeometry(dispR * 1.5, dispR * 1.5, 0.15, 32);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.1 });
+  endCapL = new THREE.Mesh(capGeo, capMat); endCapL.rotation.z = Math.PI/2; endCapL.position.x = -dispL/2;
+  endCapR = new THREE.Mesh(capGeo, capMat); endCapR.rotation.z = Math.PI/2; endCapR.position.x = dispL/2;
+  wireGroup.add(endCapL, endCapR);
+
+  // Electrons
+  const R = computeR();
+  const numElectrons = 40;
+  const eDriftScale = computeDriftSpeed() * 1e4; // amplify for visual
+  const eSpeed = Math.max(0.3, Math.min(5.0, eDriftScale));
+
+  const eGeo = new THREE.SphereGeometry(dispR * 0.35, 8, 8);
+  for (let i = 0; i < numElectrons; i++) {
+    const eMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 1.5,
+      metalness: 0, roughness: 0.3
+    });
+    const e = new THREE.Mesh(eGeo, eMat);
+    const angle = Math.random() * Math.PI * 2;
+    const radOffset = Math.random() * dispR * 0.7;
+    e.position.set(
+      (Math.random() - 0.5) * dispL,
+      Math.cos(angle) * radOffset,
+      Math.sin(angle) * radOffset
+    );
+    e.userData = { speed: eSpeed * (0.7 + Math.random() * 0.6), dispL };
+    wireGroup.add(e);
+    electronMeshes.push(e);
+  }
+
+  // Label
+  updateDataPanel();
+}
+
+function computeR() {
+  const mat = MATERIALS[state.mat];
+  const rho = mat.rho0 * (1 + mat.alpha * (state.T - 20));
+  const A = Math.PI * (state.d / 2) ** 2;
+  return rho * state.L / A;
+}
+
+function computeRho() {
+  const mat = MATERIALS[state.mat];
+  return mat.rho0 * (1 + mat.alpha * (state.T - 20));
+}
+
+function computeDriftSpeed() {
+  // v_d = I / (n * A * e)  — copper n ≈ 8.5×10^28 /m^3, I=1A
+  const n = 8.5e28; // carrier density (approx for all metals in this demo)
+  const A = Math.PI * (state.d / 2) ** 2;
+  const e = 1.602e-19;
+  return 1.0 / (n * A * e); // at 1A
+}
+
+function updateDataPanel() {
+  const R = computeR();
+  const rho = computeRho();
+  const vd = computeDriftSpeed();
+  const P = 1.0 ** 2 * R; // P = I²R at I=1A
+
+  document.getElementById('d-R').textContent = R < 1 ? (R * 1000).toFixed(3) + ' mΩ' : R.toFixed(4) + ' Ω';
+  document.getElementById('d-rho').textContent = (rho * 1e8).toFixed(3) + ' ×10⁻⁸ Ω·m';
+  document.getElementById('d-vd').textContent = (vd * 1000).toFixed(4) + ' mm/s';
+  document.getElementById('d-P').textContent = P < 1 ? (P * 1000).toFixed(3) + ' mW' : P.toFixed(4) + ' W';
+}
+
+// ─── Animation ───────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (delta > 0.1) delta = 0.02;
+  if (state.playing) {
+    const dt = delta * state.speed;
+    for (const e of electronMeshes) {
+      e.position.x += e.userData.speed * dt;
+      const halfL = e.userData.dispL / 2;
+      if (e.position.x > halfL) e.position.x = -halfL;
+    }
+    // Color-shift wire by temperature (hotter → more orange-red)
+    if (wireMesh) {
+      const t = Math.min(1, (state.T - 20) / 480);
+      const c = new THREE.Color(MATERIALS[state.mat].color);
+      c.lerp(new THREE.Color(0xff2200), t * 0.6);
+      wireMesh.material.color.copy(c);
+      wireMesh.material.emissive.copy(c);
+      wireMesh.material.emissiveIntensity = 0.05 + t * 0.4;
+    }
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// ─── Sliders ─────────────────────────────────────────────────────────────────
+document.getElementById('sl-L').addEventListener('input', function() {
+  state.L = parseFloat(this.value);
+  document.getElementById('lbl-L').textContent = state.L.toFixed(1) + ' m';
+  buildWire(); updateDataPanel();
+});
+document.getElementById('sl-d').addEventListener('input', function() {
+  state.d = parseFloat(this.value) * 1e-3;
+  document.getElementById('lbl-d').textContent = (state.d * 1000).toFixed(1) + ' mm';
+  buildWire(); updateDataPanel();
+});
+document.getElementById('sl-T').addEventListener('input', function() {
+  state.T = parseFloat(this.value);
+  document.getElementById('lbl-T').textContent = state.T.toFixed(0) + ' °C';
+  updateDataPanel();
+});
+
+// ─── Material buttons ─────────────────────────────────────────────────────────
+document.querySelectorAll('.btn-mat').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.btn-mat').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    state.mat = this.dataset.mat;
+    buildWire(); updateDataPanel();
+    showToast('Material: ' + MATERIALS[state.mat].name);
+  });
+});
+
+// ─── Presets ─────────────────────────────────────────────────────────────────
+const PRESETS = {
+  standard: { L: 1.0, d: 1.0, T: 20, mat: 'copper', label: 'Copper Wire (standard)' },
+  heating:  { L: 0.5, d: 0.8, T: 300, mat: 'nichrome', label: 'Nichrome Heating Element' },
+  longthin: { L: 4.0, d: 0.5, T: 20, mat: 'iron', label: 'Long Thin Wire' },
+};
+
+function applyPreset(key) {
+  const p = PRESETS[key];
+  state.L = p.L; state.d = p.d * 1e-3; state.T = p.T; state.mat = p.mat;
+  document.getElementById('sl-L').value = p.L;
+  document.getElementById('sl-d').value = p.d;
+  document.getElementById('sl-T').value = p.T;
+  document.getElementById('lbl-L').textContent = p.L.toFixed(1) + ' m';
+  document.getElementById('lbl-d').textContent = p.d.toFixed(1) + ' mm';
+  document.getElementById('lbl-T').textContent = p.T.toFixed(0) + ' °C';
+  document.querySelectorAll('.btn-mat').forEach(b => b.classList.toggle('active', b.dataset.mat === p.mat));
+  buildWire(); updateDataPanel();
+  showToast('Preset: ' + p.label);
+}
+window.applyPreset = applyPreset;
+
+// ─── Play/Pause/Reset/Speed ───────────────────────────────────────────────────
+function togglePlay() {
+  state.playing = !state.playing;
+  document.getElementById('btn-play').textContent = state.playing ? '⏸ Pause' : '▶ Play';
+  showToast(state.playing ? 'Simulation playing' : 'Simulation paused');
+}
+function resetSim() {
+  state.T = 20; state.L = 1.0; state.d = 1e-3; state.mat = 'copper';
+  document.getElementById('sl-L').value = 1.0; document.getElementById('sl-d').value = 1.0; document.getElementById('sl-T').value = 20;
+  document.getElementById('lbl-L').textContent = '1.0 m'; document.getElementById('lbl-d').textContent = '1.0 mm'; document.getElementById('lbl-T').textContent = '20 °C';
+  document.querySelectorAll('.btn-mat').forEach(b => b.classList.toggle('active', b.dataset.mat === 'copper'));
+  buildWire(); updateDataPanel(); showToast('Simulation reset');
+}
+function setSpeed(s) {
+  state.speed = s;
+  ['spd1','spd2','spd3','spd4','spd5'].forEach((id,i) => {
+    document.getElementById(id).classList.toggle('active', [0.25,0.5,1,2,3][i] === s);
+  });
+  showToast('Speed: ' + s + 'x');
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() {
+  const m = document.getElementById('about-modal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+}
+window.togglePlay = togglePlay; window.resetSim = resetSim; window.setSpeed = setSpeed;
+window.toggleFullscreen = toggleFullscreen; window.showAbout = showAbout;
+
+document.getElementById('about-modal').addEventListener('click', function(e) {
+  if (e.target === this) { this.classList.add('hidden'); this.classList.remove('flex'); }
+});
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.key === '1') setSpeed(0.25);
+  if (e.key === '2') setSpeed(0.5);
+  if (e.key === '3') setSpeed(1);
+  if (e.key === '4') setSpeed(2);
+  if (e.key === '5') setSpeed(3);
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item'; el.textContent = msg; t.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+window.showToast = showToast;
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+const QUIZ = [
+  {
+    q: "If you double the length of a wire while keeping all else constant, what happens to its resistance?",
+    opts: ["Halves","Stays the same","Doubles","Quadruples"],
+    ans: 2,
+    fb: ["Incorrect. R = ρL/A — resistance is directly proportional to L, so doubling L doubles R.",
+         "Incorrect. R depends on L linearly — changing L changes R.",
+         "Correct! R = ρL/A — resistance is proportional to length. More length = more collisions for electrons.",
+         "Incorrect. Quadrupling would require doubling L twice (or halving the diameter)."]
+  },
+  {
+    q: "A student increases wire temperature from 20°C to 500°C. For copper (α = 3.9×10⁻³/°C), by approximately what factor does resistance increase?",
+    opts: ["About 1.2×","About 2.9×","About 10×","About 50×"],
+    ans: 1,
+    fb: ["Incorrect. ρ(T) = ρ₀(1 + αΔT). With ΔT=480°C and α=3.9×10⁻³: factor = 1 + 1.87 ≈ 2.87×.",
+         "Correct! ρ(T) = ρ₀(1 + αΔT). Factor = 1 + 3.9×10⁻³ × 480 ≈ 2.87× — nearly tripled!",
+         "Incorrect. The temperature coefficient α for copper is small (~0.004/°C), not large enough for 10×.",
+         "Incorrect. That would require α to be much larger, closer to nichrome's value but still too high."]
+  },
+  {
+    q: "Nichrome has ~64× higher resistivity than copper. If a nichrome wire and a copper wire have identical geometry and carry 1A, the nichrome wire will dissipate:",
+    opts: ["64× less power","The same power","64× more power","8× more power"],
+    ans: 2,
+    fb: ["Incorrect. P = I²R, and higher resistivity → higher R → higher power dissipation.",
+         "Incorrect. Same current but different resistance (R ∝ ρ) → different power.",
+         "Correct! P = I²R. Since R ∝ ρ and ρ_nichrome ≈ 64 × ρ_copper, the nichrome wire dissipates 64× more power.",
+         "Incorrect. Power scales with R directly (P = I²R), and R scales with ρ, so the factor is 64×, not 8×."]
+  }
+];
+
+function buildQuiz() {
+  const el = document.getElementById('quiz-content');
+  el.innerHTML = '';
+  QUIZ.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'mb-4';
+    div.innerHTML = `<div class="text-xs font-semibold text-slate-200 mb-2">Q${qi+1}: ${q.q}</div>`;
+    q.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-opt'; btn.id = `qo-${qi}-${oi}`;
+      btn.innerHTML = `<span class="text-blue-400 font-mono text-xs">${String.fromCharCode(65+oi)}</span><span>${opt}</span>`;
+      btn.addEventListener('click', () => checkAnswer(qi, oi));
+      div.appendChild(btn);
+    });
+    const fb = document.createElement('div');
+    fb.id = `qfb-${qi}`; fb.className = 'text-xs mt-2 hidden p-2 rounded-lg';
+    div.appendChild(fb);
+    el.appendChild(div);
+  });
+}
+
+function checkAnswer(qi, oi) {
+  const q = QUIZ[qi];
+  // Disable all options for this question
+  for (let i = 0; i < q.opts.length; i++) {
+    const el = document.getElementById(`qo-${qi}-${i}`);
+    el.style.pointerEvents = 'none';
+    if (i === q.ans) el.classList.add('correct');
+    else if (i === oi && oi !== q.ans) el.classList.add('wrong');
+  }
+  const fb = document.getElementById(`qfb-${qi}`);
+  fb.classList.remove('hidden');
+  if (oi === q.ans) {
+    fb.style.background = 'rgba(34,197,94,0.15)'; fb.style.color = '#4ade80';
+    fb.textContent = '✓ ' + q.fb[oi];
+  } else {
+    fb.style.background = 'rgba(239,68,68,0.1)'; fb.style.color = '#fca5a5';
+    fb.textContent = '✗ ' + q.fb[oi];
+  }
+}
+
+function hideQuiz() {
+  document.getElementById('quiz-panel').style.display = 'none';
+  const fab = document.getElementById('quiz-fab');
+  fab.style.display = 'flex';
+}
+function showQuiz() {
+  document.getElementById('quiz-panel').style.display = 'block';
+  document.getElementById('quiz-fab').style.display = 'none';
+}
+window.hideQuiz = hideQuiz; window.showQuiz = showQuiz;
+
+// ─── KaTeX formulas ───────────────────────────────────────────────────────────
+function renderFormulas() {
+  katex.render('R = \\dfrac{\\rho L}{A}', document.getElementById('f1'), {throwOnError:false,displayMode:true});
+  katex.render('\\rho(T) = \\rho_0\\bigl[1 + \\alpha(T - T_0)\\bigr]', document.getElementById('f2'), {throwOnError:false,displayMode:true});
+  katex.render('v_d = \\dfrac{I}{nAe}', document.getElementById('f3'), {throwOnError:false,displayMode:true});
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderFormulas();
+buildWire();
+buildQuiz();
+</script>
+<div style="display:none;text-align:center;font-size:11px;color:#475569;padding:4px;">
+  Keep experimenting — every material tells a different story. Generated by AetherViz Master v7.0.
+</div>
+</body>
+</html>
