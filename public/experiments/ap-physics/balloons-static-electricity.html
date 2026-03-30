@@ -1,838 +1,692 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Balloons and Static Electricity — NeonPhysics AP Physics 2</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
-    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(245,158,11,.07));border-bottom:1px solid rgba(251,146,60,.2)}
-    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
-    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
-    .subtitle{color:#94a3b8;font-size:.9rem}
-    .layout{display:grid;grid-template-columns:1fr 360px;gap:0;height:calc(100vh - 90px)}
-    .canvas-wrap{position:relative}
-    canvas#c{display:block;width:100%!important;height:100%!important}
-    .overlay{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.92);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:220px}
-    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
-    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
-    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
-    .orange{color:#fb923c} .red{color:#fca5a5} .blue{color:#60a5fa} .green{color:#86efac} .yellow{color:#fde68a} .purple{color:#c4b5fd}
-    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
-    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-    .param-row{margin-bottom:14px}
-    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
-    .param-name{font-size:12px;color:#94a3b8}
-    .param-val{font-size:12px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer;outline:none}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f97316;cursor:pointer}
-    input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f97316;border:none;cursor:pointer}
-    .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-    .toggle-label{font-size:12px;color:#94a3b8}
-    .toggle{position:relative;width:40px;height:22px;cursor:pointer}
-    .toggle input{opacity:0;width:0;height:0}
-    .toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:11px;transition:.2s}
-    .toggle-slider::before{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#64748b;transition:.2s}
-    .toggle input:checked+.toggle-slider{background:rgba(251,146,60,.3)}
-    .toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:#f97316}
-    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-    .btn{padding:8px 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
-    .btn-primary{background:#f97316;color:#fff}
-    .btn-primary:hover{background:#ea580c}
-    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
-    .btn-ghost:hover{background:rgba(255,255,255,.1)}
-    .btn-ghost.active{background:rgba(251,146,60,.15);color:#fb923c;border-color:rgba(251,146,60,.3)}
-    .formula-box{background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
-    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
-    .field-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
-    .legend-dot{width:10px;height:10px;border-radius:50%}
-    .quiz-section{padding:18px 20px}
-    .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
-    .quiz-q-title{font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:10px}
-    .quiz-option{display:block;padding:8px 12px;margin-bottom:6px;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:12px;color:#cbd5e1;transition:all .15s}
-    .quiz-option:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
-    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
-    .quiz-option.disabled{pointer-events:none;opacity:.7}
-    .quiz-explain{display:none;margin-top:8px;padding:10px 12px;background:rgba(59,130,246,.08);border-radius:6px;font-size:11px;color:#93c5fd;line-height:1.5}
-    .quiz-explain.show{display:block}
-    .info-label{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.9);border:1px solid rgba(251,146,60,.3);border-radius:6px;padding:6px 12px;font-size:12px;color:#fb923c;font-weight:600;pointer-events:none;white-space:nowrap}
-    @media(max-width:800px){
-      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
-      .sidebar{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Balloons & Static Electricity — AetherViz</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root { --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.13); }
+  #toast { position: fixed; top: 1rem; right: 1rem; z-index: 9999; pointer-events: none; }
+  .toast-item { background: rgba(59,130,246,0.92); color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; margin-bottom: 0.4rem; font-size: 0.85rem; animation: slideIn 0.25s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .glass { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.75rem; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); cursor: pointer; }
+  .btn { padding: 0.3rem 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass-bg); color: #cbd5e1; transition: all 0.15s; }
+  .btn:hover { background: rgba(59,130,246,0.25); border-color: #3B82F6; color: #fff; }
+  .btn.active { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border-color: #3B82F6; color: #fff; }
+  .data-val { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: #e2e8f0; }
+  .slider-label { font-size: 0.78rem; color: #94a3b8; margin-bottom: 2px; }
+  #sidebar { width: 300px; min-width: 260px; overflow-y: auto; padding: 0.75rem; background: rgba(15,23,42,0.95); border-right: 1px solid rgba(59,130,246,0.2); }
+  #sidebar::-webkit-scrollbar { width: 4px; } #sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 2px; }
+  #canvas-container { position: relative; flex: 1; }
+  .q-option { cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 0.35rem; border: 1px solid rgba(255,255,255,0.1); margin: 0.2rem 0; transition: background 0.15s; font-size: 0.78rem; }
+  .q-option:hover { background: rgba(59,130,246,0.2); }
+  .q-correct { background: rgba(34,197,94,0.25) !important; border-color: #22c55e !important; }
+  .q-wrong { background: rgba(239,68,68,0.22) !important; border-color: #ef4444 !important; }
+  #force-arrow { transition: height 0.2s; }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <span class="badge">AP PHYSICS 2</span>
-    <span class="badge badge-free">FREE</span>
+<div id="toast"></div>
+
+<!-- NAV -->
+<nav style="background:rgba(15,23,42,0.95);border-bottom:1px solid rgba(59,130,246,0.25);padding:0.5rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+  <div>
+    <span style="font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Balloons &amp; Static Electricity</span>
+    <span style="font-size:0.75rem;color:#64748b;margin-left:0.5rem;">Charge, Induction &amp; Coulomb Force</span>
   </div>
-  <h1>Balloons and Static Electricity</h1>
-  <p class="subtitle">Explore charge transfer by friction, electrostatic induction, and Coulomb's law with balloons</p>
+  <div style="display:flex;gap:0.5rem;">
+    <button class="btn" id="btn-reset">↺ Reset</button>
+    <button class="btn" id="btn-fullscreen">⛶ Fullscreen</button>
+    <button class="btn" id="btn-about">? About</button>
+  </div>
+</nav>
+
+<div style="display:flex;flex:1;overflow:hidden;">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div style="font-size:0.7rem;font-weight:600;color:#3B82F6;letter-spacing:.08em;margin-bottom:0.5rem;">CORE FORMULAS</div>
+    <div class="glass" style="padding:0.6rem;margin-bottom:0.5rem;">
+      <div id="f1"></div><div style="font-size:0.72rem;color:#94a3b8;margin-top:2px;">Coulomb's Law — k = 8.99×10⁹ N·m²/C²</div>
+    </div>
+    <div class="glass" style="padding:0.6rem;margin-bottom:0.5rem;">
+      <div id="f2"></div><div style="font-size:0.72rem;color:#94a3b8;margin-top:2px;">Charge induces opposite surface charge on conductor</div>
+    </div>
+    <div class="glass" style="padding:0.6rem;margin-bottom:0.75rem;">
+      <div id="f3"></div><div style="font-size:0.72rem;color:#94a3b8;margin-top:2px;">Electric field from point charge — determines force on wall</div>
+    </div>
+
+    <div style="font-size:0.7rem;font-weight:600;color:#3B82F6;letter-spacing:.08em;margin-bottom:0.4rem;">CONCEPT</div>
+    <div style="font-size:0.78rem;color:#cbd5e1;line-height:1.55;margin-bottom:0.75rem;">
+      When you rub a balloon against wool, electrons transfer from wool to balloon — balloon becomes <strong style="color:#ef4444;">negatively charged</strong>, wool becomes <strong style="color:#22c55e;">positively charged</strong>.<br/><br/>
+      Near a wall, the balloon's electric field <em>polarizes</em> nearby atoms — pushing electrons away, leaving a net positive surface charge. This induced charge attracts the balloon even though the wall is overall neutral.<br/><br/>
+      On humid days, water molecules in air conduct charge away. The balloon loses charge faster than you can accumulate it — that's why static electricity is weaker in summer.
+    </div>
+
+    <div style="font-size:0.7rem;font-weight:600;color:#3B82F6;letter-spacing:.08em;margin-bottom:0.4rem;">DID YOU KNOW</div>
+    <div class="glass" style="padding:0.6rem;margin-bottom:0.4rem;font-size:0.75rem;color:#cbd5e1;">
+      ⚡ Lightning is static electricity on a massive scale — charge separation in storm clouds reaches millions of volts.
+    </div>
+    <div class="glass" style="padding:0.6rem;margin-bottom:0.4rem;font-size:0.75rem;color:#cbd5e1;">
+      ⚠️ Misconception: balloons don't "pick up" positive charge from wool — they gain electrons (negative). The deficit of electrons makes wool positive.
+    </div>
+    <div class="glass" style="padding:0.6rem;margin-bottom:0.75rem;font-size:0.75rem;color:#cbd5e1;">
+      🔗 AP Connection: Coulomb's Law (Unit 10) and electric fields (Unit 10). Charge induction connects to capacitor physics.
+    </div>
+
+    <div style="font-size:0.7rem;font-weight:600;color:#3B82F6;letter-spacing:.08em;margin-bottom:0.4rem;">WHY IT MATTERS</div>
+    <ul style="font-size:0.75rem;color:#cbd5e1;padding-left:1rem;line-height:1.6;">
+      <li>Photocopiers use static charge to transfer toner to paper</li>
+      <li>Air purifiers use electrostatic precipitators to remove particles</li>
+      <li>ESD protection in electronics manufacturing (static kills chips)</li>
+    </ul>
+
+    <!-- Quiz -->
+    <div style="margin-top:0.75rem;border-top:1px solid rgba(59,130,246,0.2);padding-top:0.75rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+        <span style="font-size:0.72rem;font-weight:600;color:#3B82F6;">QUIZ</span>
+        <button class="btn" id="quiz-toggle" style="padding:0.1rem 0.4rem;font-size:0.7rem;">Hide</button>
+      </div>
+      <div id="quiz-body">
+        <div class="q-block" style="margin-bottom:0.6rem;">
+          <div style="color:#e2e8f0;margin-bottom:0.3rem;font-size:0.78rem;">1. When a balloon is rubbed on wool, what charge does it acquire?</div>
+          <div class="q-option" data-q="1" data-v="a">A) Positive — wool transfers protons to balloon</div>
+          <div class="q-option" data-q="1" data-v="b">B) Negative — wool's electrons transfer to balloon ✓</div>
+          <div class="q-option" data-q="1" data-v="c">C) No charge — charges cancel out</div>
+          <div class="q-option" data-q="1" data-v="d">D) Both positive and negative simultaneously</div>
+          <div id="fb1" style="font-size:0.72rem;margin-top:3px;color:#94a3b8;"></div>
+        </div>
+        <div class="q-block" style="margin-bottom:0.6rem;">
+          <div style="color:#e2e8f0;margin-bottom:0.3rem;font-size:0.78rem;">2. Why does a negatively charged balloon stick to a neutral wall?</div>
+          <div class="q-option" data-q="2" data-v="a">A) The wall becomes negatively charged too</div>
+          <div class="q-option" data-q="2" data-v="b">B) Induced dipoles create net positive surface charge near balloon ✓</div>
+          <div class="q-option" data-q="2" data-v="c">C) Gravity pulls the balloon against the wall</div>
+          <div class="q-option" data-q="2" data-v="d">D) The balloon loses its charge when touching the wall</div>
+          <div id="fb2" style="font-size:0.72rem;margin-top:3px;color:#94a3b8;"></div>
+        </div>
+        <div class="q-block">
+          <div style="color:#e2e8f0;margin-bottom:0.3rem;font-size:0.78rem;">3. Why does high humidity reduce static electricity effects?</div>
+          <div class="q-option" data-q="3" data-v="a">A) Water reflects electric field lines</div>
+          <div class="q-option" data-q="3" data-v="b">B) Humidity makes the balloon heavier</div>
+          <div class="q-option" data-q="3" data-v="c">C) Water molecules conduct charge away from surfaces ✓</div>
+          <div class="q-option" data-q="3" data-v="d">D) High humidity increases Coulomb's constant k</div>
+          <div id="fb3" style="font-size:0.72rem;margin-top:3px;color:#94a3b8;"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <div id="canvas-container">
+    <!-- Data panel -->
+    <div style="position:absolute;top:10px;left:10px;z-index:10;" class="glass">
+      <div style="padding:10px;min-width:200px;">
+        <div style="font-size:0.72rem;font-weight:600;color:#3B82F6;margin-bottom:6px;">LIVE DATA</div>
+        <table style="font-size:0.8rem;border-collapse:collapse;width:100%;">
+          <tr><td style="color:#94a3b8;padding-right:10px;">Balloon charge</td><td id="dp-q" class="data-val">5.0 μC</td></tr>
+          <tr><td style="color:#94a3b8;">Distance to wall</td><td id="dp-d" class="data-val">1.0 m</td></tr>
+          <tr><td style="color:#94a3b8;">Coulomb force</td><td id="dp-F" class="data-val">— N</td></tr>
+          <tr><td style="color:#94a3b8;">Induced σ</td><td id="dp-sigma" class="data-val">— μC/m²</td></tr>
+          <tr><td style="color:#94a3b8;">Humidity</td><td id="dp-h" class="data-val">20%</td></tr>
+          <tr><td style="color:#94a3b8;">Charge decay</td><td id="dp-decay" class="data-val">—</td></tr>
+          <tr><td style="color:#94a3b8;">Adhesion</td><td id="dp-adh" class="data-val">— mN</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Force indicator SVG -->
+    <div style="position:absolute;top:10px;right:10px;z-index:10;" class="glass">
+      <div style="padding:8px;min-width:170px;">
+        <div style="font-size:0.7rem;color:#3B82F6;margin-bottom:4px;font-weight:600;">Force on Balloon</div>
+        <svg width="155" height="120">
+          <!-- wall -->
+          <rect x="120" y="5" width="10" height="110" fill="rgba(71,85,105,0.6)" rx="2"/>
+          <text x="127" y="120" fill="#475569" font-size="8" text-anchor="middle">Wall</text>
+          <!-- balloon body -->
+          <ellipse id="vis-balloon" cx="50" cy="60" rx="22" ry="28" fill="#3B82F6" opacity="0.85"/>
+          <ellipse cx="50" cy="60" rx="22" ry="28" fill="none" stroke="#0EA5E9" stroke-width="1.5"/>
+          <!-- charge label -->
+          <text id="vis-charge-lbl" x="50" y="64" fill="white" font-size="10" text-anchor="middle" font-weight="bold">−−−</text>
+          <!-- force arrow -->
+          <line id="force-line" x1="72" y1="60" x2="110" y2="60" stroke="#22c55e" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+          <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <polygon points="0 0, 6 3, 0 6" fill="#22c55e"/>
+            </marker>
+          </defs>
+          <text id="force-label" x="91" y="52" fill="#22c55e" font-size="8" text-anchor="middle">F→</text>
+          <!-- induced dipoles on wall -->
+          <text x="122" y="25" fill="#ef4444" font-size="8">+</text>
+          <text x="122" y="40" fill="#ef4444" font-size="8">+</text>
+          <text x="122" y="55" fill="#ef4444" font-size="8">+</text>
+          <text x="122" y="70" fill="#ef4444" font-size="8">+</text>
+          <text x="122" y="85" fill="#ef4444" font-size="8">+</text>
+          <text x="122" y="100" fill="#ef4444" font-size="8">+</text>
+          <text x="117" y="25" fill="#3B82F6" font-size="8">−</text>
+          <text x="117" y="40" fill="#3B82F6" font-size="8">−</text>
+          <text x="117" y="55" fill="#3B82F6" font-size="8">−</text>
+          <text x="117" y="70" fill="#3B82F6" font-size="8">−</text>
+          <text x="117" y="85" fill="#3B82F6" font-size="8">−</text>
+          <text x="117" y="100" fill="#3B82F6" font-size="8">−</text>
+        </svg>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="layout">
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="c"></canvas>
-    <div class="overlay">
-      <div class="stat-row"><span class="stat-label">Balloon Charge</span><span class="stat-value blue" id="statBQ">-10 nC</span></div>
-      <div class="stat-row"><span class="stat-label">Sweater Charge</span><span class="stat-value red" id="statSQ">+10 nC</span></div>
-      <div class="stat-row"><span class="stat-label">Distance to Wall</span><span class="stat-value orange" id="statDist">15 cm</span></div>
-      <div class="stat-row"><span class="stat-label">Coulomb Force</span><span class="stat-value yellow" id="statForce">&mdash;</span></div>
-      <div class="stat-row"><span class="stat-label">Net Charge</span><span class="stat-value green" id="statNet">0 nC</span></div>
-      <div class="field-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>+ charge</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>&minus; charge</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>induced</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#22d3ee"></div>force</div>
-      </div>
-    </div>
-    <div class="info-label" id="infoLabel">Charge conservation: q_total = 0 nC</div>
+<!-- CONTROLS BAR -->
+<div style="background:rgba(15,23,42,0.95);border-top:1px solid rgba(59,130,246,0.2);padding:0.5rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;flex-shrink:0;">
+  <div style="display:flex;gap:0.3rem;align-items:center;">
+    <span style="font-size:0.72rem;color:#64748b;">Preset:</span>
+    <button class="btn" data-preset="strong">Strongly Charged</button>
+    <button class="btn" data-preset="two">Two Balloons (same sign)</button>
+    <button class="btn" data-preset="humid">Humid Day (leaks charge)</button>
   </div>
-
-  <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Parameters</div>
-      <div class="param-row">
-        <div class="param-label"><span class="param-name">Charge on Balloon (nC)</span><span class="param-val" id="vCharge">-10 nC</span></div>
-        <input type="range" id="sCharge" min="-20" max="0" value="-10" step="1">
-      </div>
-      <div class="param-row">
-        <div class="param-label"><span class="param-name">Distance from Wall (cm)</span><span class="param-val" id="vDist">15 cm</span></div>
-        <input type="range" id="sDist" min="1" max="30" value="15" step="1">
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Show Charge Particles</span>
-        <label class="toggle">
-          <input type="checkbox" id="toggleCharges" checked>
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-ghost" id="btnPreset1">Rub Balloon</button>
-        <button class="btn btn-ghost" id="btnPreset2">Two Balloons</button>
-        <button class="btn btn-ghost" id="btnPreset3">Neutral</button>
-        <button class="btn btn-primary" id="btnReset">Reset</button>
-      </div>
+  <div style="display:flex;gap:1rem;flex:1;flex-wrap:wrap;">
+    <div style="min-width:160px;">
+      <div class="slider-label">Balloon charge: <span id="sl-q-val">5.0</span> μC</div>
+      <input type="range" id="sl-q" min="-10" max="10" step="0.5" value="5"/>
     </div>
-
-    <div class="section">
-      <div class="section-title">Key Formulas</div>
-      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Coulomb's law &mdash; force between two point charges</div></div>
-      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Charge conservation &mdash; total charge is constant in an isolated system</div></div>
+    <div style="min-width:160px;">
+      <div class="slider-label">Distance to wall: <span id="sl-d-val">1.0</span> m</div>
+      <input type="range" id="sl-d" min="0.1" max="2" step="0.05" value="1.0"/>
     </div>
-
-    <div class="section">
-      <div class="section-title">Force vs Distance</div>
-      <div style="position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin-top:8px">
-        <canvas id="graphCanvas" width="320" height="180"></canvas>
-      </div>
+    <div style="min-width:160px;">
+      <div class="slider-label">Humidity: <span id="sl-h-val">20</span>%</div>
+      <input type="range" id="sl-h" min="0" max="100" step="1" value="20"/>
     </div>
+  </div>
+</div>
 
-    <div class="quiz-section">
-      <div class="section-title">Quick Quiz</div>
-      <div class="quiz-q" id="quiz1">
-        <div class="quiz-q-title">1. When you rub a balloon on a sweater, the balloon becomes negatively charged because:</div>
-        <div class="quiz-option" data-answer="a">A) Protons move from the sweater to the balloon</div>
-        <div class="quiz-option" data-answer="b" data-correct="true">B) Electrons transfer from the sweater to the balloon</div>
-        <div class="quiz-option" data-answer="c">C) The balloon creates new negative charges</div>
-        <div class="quiz-option" data-answer="d">D) The sweater destroys positive charges</div>
-        <div class="quiz-explain" id="explain1">Correct! Charge is not created or destroyed. Rubbing transfers electrons from the sweater to the balloon via the triboelectric effect, making the balloon negative and the sweater equally positive.</div>
-      </div>
-      <div class="quiz-q" id="quiz2">
-        <div class="quiz-q-title">2. A negatively charged balloon sticks to a neutral wall because:</div>
-        <div class="quiz-option" data-answer="a">A) The wall becomes negatively charged</div>
-        <div class="quiz-option" data-answer="b">B) Gravity pulls the balloon toward the wall</div>
-        <div class="quiz-option" data-answer="c" data-correct="true">C) The balloon induces a positive surface charge on the wall</div>
-        <div class="quiz-option" data-answer="d">D) The balloon and wall have equal and opposite charges</div>
-        <div class="quiz-explain" id="explain2">Correct! The negative balloon repels electrons in the wall's surface, inducing a net positive charge on the near side. This polarization creates an attractive Coulomb force, even though the wall is electrically neutral overall.</div>
-      </div>
-    </div>
+<!-- ABOUT MODAL -->
+<div id="about-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+  <div class="glass" style="max-width:400px;padding:1.5rem;">
+    <h3 style="color:#3B82F6;margin-bottom:0.75rem;">Balloons &amp; Static Electricity</h3>
+    <p style="font-size:0.82rem;color:#cbd5e1;line-height:1.6;">Interactive Coulomb force simulation. Demonstrates charge induction, electrostatic adhesion, and humidity effects on charge dissipation.</p>
+    <p style="font-size:0.78rem;color:#94a3b8;margin-top:0.5rem;"><strong>Shortcuts:</strong> R = Reset | 1/2/3 = Presets | Space = Animate balloon</p>
+    <button class="btn" id="close-about" style="margin-top:1rem;">Close</button>
+    <p style="font-size:0.68rem;color:#475569;margin-top:0.75rem;">Generated by AetherViz Master</p>
   </div>
 </div>
 
 <script>
-'use strict';
-try {
-// ─── State ───────────────────────────────────────────────────────────
-var balloonCharge_nC = -10;
-var wallDist_cm = 15;
-var showCharges = true;
-var mode = 'single'; // 'single' | 'two' | 'neutral'
-var rubAnimation = 0; // 0 = idle, >0 = rubbing progress
-var K = 8.99e9;
+// ============================================================
+// INLINE OrbitControls
+// ============================================================
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
 
-var $ = function(id) { return document.getElementById(id); };
-var wrap = $('canvasWrap');
-var canvas = $('c');
+// ============================================================
+// KaTeX
+// ============================================================
+katex.render("F = k\\frac{|q_1 q_2|}{r^2}, \\quad k = 8.99\\times10^9 \\text{ N·m}^2\\text{/C}^2", document.getElementById('f1'), {throwOnError:false});
+katex.render("\\sigma_{\\text{induced}} \\propto \\frac{q}{2\\pi\\epsilon_0 r^2}", document.getElementById('f2'), {throwOnError:false});
+katex.render("E = \\frac{kq}{r^2}", document.getElementById('f3'), {throwOnError:false});
 
-// ─── Three.js Setup ──────────────────────────────────────────────────
-var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+// ============================================================
+// Toast
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ============================================================
+// Physics constants & state
+// ============================================================
+const k_e = 8.99e9;
+let balloonCharge = 5e-6; // C
+let distToWall = 1.0; // m
+let humidity = 20; // %
+let showTwoBalloons = false;
+let simTime = 0;
+let isPlaying = true;
+
+// Charge decay due to humidity
+// Characteristic time constant: τ = τ0 / (humidity/100) where τ0 ~ 60s
+function chargeDecayRate(q, h) {
+  if (h < 10) return 0;
+  const tau = 60.0 / (h / 100.0);
+  return -q / tau;
+}
+
+// Coulomb force between balloon (charge q) and induced image charge
+// Image charge method: image charge = -q at distance d behind wall
+// F = k * q * (-q) / (2d)^2 = -k*q^2 / (4d^2)  (attractive)
+function coulombForce(q, d) {
+  // Image charge approximation
+  const imageQ = -q; // induced image charge
+  const dist = 2 * d; // distance between real and image charge
+  if (dist < 0.001) return 0;
+  return k_e * q * imageQ / (dist * dist); // negative = attractive
+}
+
+// Induced surface charge density (simplified)
+function inducedSigma(q, d) {
+  const eps0 = 8.854e-12;
+  return -q / (2 * Math.PI * eps0 * d * d); // C/m^2 (near-field approximation, order of magnitude)
+}
+
+// Adhesion force (how strongly balloon sticks)
+function adhesionForce(q, d, h) {
+  const F = Math.abs(coulombForce(q, d));
+  const decayFactor = Math.exp(-h / 100 * 2); // humidity reduces net charge
+  return F * decayFactor;
+}
+
+// ============================================================
+// Three.js scene
+// ============================================================
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 2, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
-var scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f172a);
-scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
 
-var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-camera.position.set(0, 4, 16);
-camera.lookAt(0, 0, 0);
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
 
-var controls = (typeof THREE.OrbitControls !== 'undefined')
-  ? new THREE.OrbitControls(camera, renderer.domElement) : null;
-if (controls) {
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.maxDistance = 40;
-  controls.minDistance = 5;
-}
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 2;
+controls.maxDistance = 50;
 
-// ─── Lighting ────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0x334466, 0.6));
-var dirLight = new THREE.DirectionalLight(0xaabbff, 0.9);
-dirLight.position.set(8, 12, 6);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(1024, 1024);
-scene.add(dirLight);
-scene.add(new THREE.PointLight(0xff6633, 0.3, 30));
+// Wall
+const wallGeo = new THREE.BoxGeometry(0.3, 8, 6);
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.6, metalness: 0.05 });
+const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+wallMesh.receiveShadow = true;
+scene.add(wallMesh);
 
-// ─── Grid Floor ──────────────────────────────────────────────────────
-var gridHelper = new THREE.GridHelper(30, 30, 0x1e3a5f, 0x0f2847);
-gridHelper.position.y = -4;
-scene.add(gridHelper);
-
-// ─── Materials ───────────────────────────────────────────────────────
-var balloonMat = new THREE.MeshPhongMaterial({ color: 0xe74c3c, shininess: 80, transparent: true, opacity: 0.85 });
-var balloonMat2 = new THREE.MeshPhongMaterial({ color: 0x3498db, shininess: 80, transparent: true, opacity: 0.85 });
-var sweaterMat = new THREE.MeshPhongMaterial({ color: 0x8b5cf6, shininess: 20 });
-var wallMat = new THREE.MeshPhongMaterial({ color: 0x475569, shininess: 10, transparent: true, opacity: 0.6 });
-var stringMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
-var posChargeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-var negChargeMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
-var inducedChargeMat = new THREE.MeshBasicMaterial({ color: 0xa78bfa });
-
-// ─── Balloon Geometry (Ellipsoid) ────────────────────────────────────
-var balloonGeo = new THREE.SphereGeometry(1, 32, 24);
-// Scale to ellipsoid
-balloonGeo.applyMatrix4(new THREE.Matrix4().makeScale(0.8, 1.1, 0.8));
-
-// Balloon knot (small cone at bottom)
-var knotGeo = new THREE.ConeGeometry(0.12, 0.3, 8);
-
-function createBalloon(mat) {
-  var group = new THREE.Group();
-  var body = new THREE.Mesh(balloonGeo, mat);
-  body.castShadow = true;
-  group.add(body);
-  var knot = new THREE.Mesh(knotGeo, mat);
-  knot.position.y = -1.15;
-  knot.rotation.x = Math.PI;
-  group.add(knot);
-  // String
-  var pts = [new THREE.Vector3(0, -1.3, 0), new THREE.Vector3(0, -3.2, 0)];
-  var stringGeo = new THREE.BufferGeometry().setFromPoints(pts);
-  group.add(new THREE.Line(stringGeo, stringMat));
-  return group;
-}
-
-var balloon1 = createBalloon(balloonMat);
-balloon1.position.set(-2, 1, 0);
+// Balloon 1
+const balloonGeo = new THREE.SphereGeometry(0.7, 24, 24);
+const balloonMat = new THREE.MeshPhysicalMaterial({
+  color: 0x3B82F6, roughness: 0.1, metalness: 0.0,
+  transparent: true, opacity: 0.88,
+  emissive: 0x1d4ed8, emissiveIntensity: 0.3
+});
+const balloon1 = new THREE.Mesh(balloonGeo, balloonMat);
+balloon1.castShadow = true;
 scene.add(balloon1);
 
-var balloon2 = createBalloon(balloonMat2);
-balloon2.position.set(2, 1, 0);
+// Balloon 2 (for two-balloon mode)
+const balloon2Mat = new THREE.MeshPhysicalMaterial({
+  color: 0xef4444, roughness: 0.1, metalness: 0.0,
+  transparent: true, opacity: 0.88,
+  emissive: 0x7f1d1d, emissiveIntensity: 0.3
+});
+const balloon2 = new THREE.Mesh(balloonGeo.clone(), balloon2Mat);
+balloon2.castShadow = true;
 balloon2.visible = false;
 scene.add(balloon2);
 
-// ─── Sweater ─────────────────────────────────────────────────────────
-var sweaterGroup = new THREE.Group();
-var sweaterBody = new THREE.Mesh(
-  new THREE.BoxGeometry(2.5, 3, 1.2),
-  sweaterMat
-);
-sweaterBody.castShadow = true;
-sweaterGroup.add(sweaterBody);
-// Sleeves
-var sleeveGeo = new THREE.BoxGeometry(1.2, 0.8, 0.8);
-var sleeveL = new THREE.Mesh(sleeveGeo, sweaterMat);
-sleeveL.position.set(-1.7, 0.5, 0);
-sleeveL.rotation.z = 0.3;
-sweaterGroup.add(sleeveL);
-var sleeveR = new THREE.Mesh(sleeveGeo, sweaterMat);
-sleeveR.position.set(1.7, 0.5, 0);
-sleeveR.rotation.z = -0.3;
-sweaterGroup.add(sleeveR);
-sweaterGroup.position.set(-6, 0, 0);
-scene.add(sweaterGroup);
+// Balloon string
+const stringMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
+const strGeom1 = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,-3,0)]);
+const string1 = new THREE.Line(strGeom1, stringMat);
+scene.add(string1);
+const strGeom2 = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,-3,0)]);
+const string2 = new THREE.Line(strGeom2, stringMat);
+string2.visible = false;
+scene.add(string2);
 
-// ─── Wall ────────────────────────────────────────────────────────────
-var wallGroup = new THREE.Group();
-var wallMesh = new THREE.Mesh(
-  new THREE.BoxGeometry(0.3, 10, 12),
-  wallMat
-);
-wallMesh.receiveShadow = true;
-wallGroup.add(wallMesh);
-// Wall edge lines
-var wallEdges = new THREE.LineSegments(
-  new THREE.EdgesGeometry(new THREE.BoxGeometry(0.3, 10, 12)),
-  new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.3 })
-);
-wallGroup.add(wallEdges);
-wallGroup.position.set(8, 1, 0);
-scene.add(wallGroup);
-
-// ─── Charge Particles ────────────────────────────────────────────────
-var chargeParticles = new THREE.Group();
-scene.add(chargeParticles);
-var chargeGeo = new THREE.SphereGeometry(0.08, 8, 6);
-
-function clearCharges() {
-  while (chargeParticles.children.length > 0) {
-    chargeParticles.remove(chargeParticles.children[0]);
-  }
+// Charge particles (floating around balloon)
+const chargePositions = [];
+const N_CHARGES = 30;
+for (let i = 0; i < N_CHARGES; i++) {
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.random() * Math.PI;
+  chargePositions.push({ theta, phi, r: 0.85 + Math.random() * 0.2 });
 }
 
-function distributeOnEllipsoid(count, scaleX, scaleY, scaleZ) {
-  var pts = [];
-  for (var i = 0; i < count; i++) {
-    var phi = Math.acos(1 - 2 * (i + 0.5) / count);
-    var theta = Math.PI * (1 + Math.sqrt(5)) * i;
-    pts.push(new THREE.Vector3(
-      scaleX * Math.sin(phi) * Math.cos(theta),
-      scaleY * Math.cos(phi),
-      scaleZ * Math.sin(phi) * Math.sin(theta)
-    ));
-  }
-  return pts;
+const chargeGeo = new THREE.SphereGeometry(0.05, 8, 8);
+const chargeMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 2 });
+const chargeParticles = [];
+for (let i = 0; i < N_CHARGES; i++) {
+  const m = new THREE.Mesh(chargeGeo, chargeMat.clone());
+  scene.add(m);
+  chargeParticles.push(m);
 }
 
-function updateCharges() {
-  clearCharges();
-  if (!showCharges) return;
-
-  var absCharge = Math.abs(balloonCharge_nC);
-  var numCharges = Math.max(1, Math.round(absCharge / 2));
-
-  if (mode === 'neutral') return;
-
-  // Negative charges on balloon 1
-  if (balloonCharge_nC < 0) {
-    var bPts = distributeOnEllipsoid(numCharges, 0.85, 1.15, 0.85);
-    bPts.forEach(function(p) {
-      var m = new THREE.Mesh(chargeGeo, negChargeMat);
-      m.position.copy(p).add(balloon1.position);
-      chargeParticles.add(m);
-    });
-  }
-
-  // Positive charges on sweater (equal and opposite)
-  if (balloonCharge_nC < 0) {
-    var sPts = distributeOnEllipsoid(numCharges, 1.2, 1.4, 0.6);
-    sPts.forEach(function(p) {
-      var m = new THREE.Mesh(chargeGeo, posChargeMat);
-      m.position.copy(p).add(sweaterGroup.position);
-      chargeParticles.add(m);
-    });
-  }
-
-  // Induced charges on wall (polarization)
-  if (balloonCharge_nC < 0 && wallDist_cm < 20) {
-    var inducedCount = Math.round(numCharges * (1 - wallDist_cm / 20));
-    if (inducedCount > 0) {
-      // Positive induced on near side of wall
-      for (var i = 0; i < inducedCount; i++) {
-        var y = -3 + 6 * (i + 0.5) / inducedCount;
-        var z = -3 + 6 * Math.random();
-        var mp = new THREE.Mesh(chargeGeo, inducedChargeMat);
-        mp.position.set(wallGroup.position.x - 0.25, y + 1, z);
-        mp.scale.setScalar(1.2);
-        chargeParticles.add(mp);
-      }
-      // Negative induced on far side
-      for (var j = 0; j < inducedCount; j++) {
-        var y2 = -3 + 6 * (j + 0.5) / inducedCount;
-        var z2 = -3 + 6 * Math.random();
-        var mn = new THREE.Mesh(chargeGeo, negChargeMat);
-        mn.position.set(wallGroup.position.x + 0.25, y2 + 1, z2);
-        mn.scale.setScalar(0.8);
-        chargeParticles.add(mn);
-      }
-    }
-  }
-
-  // Second balloon charges
-  if (mode === 'two' && balloonCharge_nC < 0) {
-    var b2Pts = distributeOnEllipsoid(numCharges, 0.85, 1.15, 0.85);
-    b2Pts.forEach(function(p) {
-      var m = new THREE.Mesh(chargeGeo, negChargeMat);
-      m.position.copy(p).add(balloon2.position);
-      chargeParticles.add(m);
-    });
-  }
+// Induced dipoles on wall (small +/- labels as sprites)
+// Represented as small colored spheres on wall surface
+const dipoleGroup = new THREE.Group();
+scene.add(dipoleGroup);
+const posMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 1.5 });
+const negMat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, emissive: 0x3B82F6, emissiveIntensity: 1.5 });
+const dipGeo = new THREE.SphereGeometry(0.07, 8, 8);
+const NUM_DIPOLES = 12;
+for (let i = 0; i < NUM_DIPOLES; i++) {
+  const yPos = -2 + (i / (NUM_DIPOLES-1)) * 4;
+  const pm = new THREE.Mesh(dipGeo, posMat);
+  const nm = new THREE.Mesh(dipGeo, negMat);
+  pm.position.set(0.2, yPos, 0);
+  nm.position.set(0.4, yPos, 0);
+  dipoleGroup.add(pm, nm);
 }
 
-// ─── Force Arrow ─────────────────────────────────────────────────────
-var arrowGroup = new THREE.Group();
-scene.add(arrowGroup);
-var arrowMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+// ============================================================
+// Update scene
+// ============================================================
+let currentQ = 5e-6;
 
-function updateArrow(from, dir, length) {
-  while (arrowGroup.children.length > 0) arrowGroup.remove(arrowGroup.children[0]);
-  if (length < 0.1) return;
-  var shaft = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.04, 0.04, length, 8),
-    arrowMat
-  );
-  shaft.position.copy(from);
-  shaft.position.addScaledVector(dir, length / 2);
-  shaft.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-  arrowGroup.add(shaft);
-  var head = new THREE.Mesh(
-    new THREE.ConeGeometry(0.12, 0.3, 8),
-    arrowMat
-  );
-  head.position.copy(from).addScaledVector(dir, length);
-  head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-  arrowGroup.add(head);
-}
-
-// ─── Spark Particles (rubbing effect) ────────────────────────────────
-var sparks = [];
-var sparkGeo = new THREE.SphereGeometry(0.04, 4, 4);
-var sparkMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
-
-function emitSparks() {
-  for (var i = 0; i < 5; i++) {
-    var s = new THREE.Mesh(sparkGeo, sparkMat);
-    s.position.set(
-      balloon1.position.x + (Math.random() - 0.5) * 2,
-      balloon1.position.y + (Math.random() - 0.5) * 2,
-      balloon1.position.z + (Math.random() - 0.5) * 2
-    );
-    s.userData.vel = new THREE.Vector3(
-      (Math.random() - 0.5) * 0.15,
-      Math.random() * 0.1,
-      (Math.random() - 0.5) * 0.15
-    );
-    s.userData.life = 1.0;
-    scene.add(s);
-    sparks.push(s);
+function updateScene(dt) {
+  if (isPlaying) {
+    // Charge decay
+    const dq = chargeDecayRate(currentQ, humidity) * dt;
+    currentQ += dq;
+    balloonCharge = currentQ;
   }
-}
 
-function updateSparks(dt) {
-  for (var i = sparks.length - 1; i >= 0; i--) {
-    var s = sparks[i];
-    s.userData.life -= dt * 2;
-    s.position.add(s.userData.vel);
-    s.material.opacity = Math.max(0, s.userData.life);
-    s.scale.setScalar(s.userData.life);
-    if (s.userData.life <= 0) {
-      scene.remove(s);
-      sparks.splice(i, 1);
-    }
-  }
-}
+  const sign = currentQ >= 0 ? 1 : -1;
+  const absQ = Math.abs(currentQ);
 
-// ─── Physics Computation ─────────────────────────────────────────────
-function computeForce() {
-  if (balloonCharge_nC === 0) return 0;
-  // Induced charge approximation: treat as image charge at distance 2d
-  var d_m = wallDist_cm / 100;
-  var q = balloonCharge_nC * 1e-9;
-  // Force between balloon and induced image charge
-  var F = K * q * q / (4 * d_m * d_m);
-  return Math.abs(F);
-}
+  // Balloon position based on distance to wall
+  const wallX = 3.5;
+  const balloon1X = wallX - distToWall - 0.7;
+  balloon1.position.set(balloon1X, 1.5, 0);
+  string1.geometry.setFromPoints([
+    new THREE.Vector3(balloon1X, 1.5 - 0.7, 0),
+    new THREE.Vector3(balloon1X + 0.3, -1.5, 0)
+  ]);
+  string1.geometry.needsUpdate = true;
 
-function computeRepulsionForce() {
-  // Between two identically charged balloons
-  if (mode !== 'two' || balloonCharge_nC === 0) return 0;
-  var q = balloonCharge_nC * 1e-9;
-  var dx = balloon2.position.x - balloon1.position.x;
-  var dz = balloon2.position.z - balloon1.position.z;
-  var dist = Math.sqrt(dx * dx + dz * dz);
-  if (dist < 0.01) dist = 0.01;
-  return K * q * q / (dist * dist);
-}
+  // Wall position
+  wallMesh.position.set(wallX, 1.5, 0);
+  dipoleGroup.position.set(wallX - 0.15, 1.5, 0);
 
-// ─── Update Scene ────────────────────────────────────────────────────
-function updateScene() {
-  var wallX = 8;
-  var d_m = wallDist_cm / 100;
-  var balloonTargetX = wallX - 0.15 - 0.8 - d_m * 30; // Scale for visibility
+  // Dipole visibility based on distance & charge
+  const dipoleAlpha = Math.min(1, absQ / 5e-6) * Math.max(0, 1 - distToWall / 2.5);
+  dipoleGroup.children.forEach((m, i) => {
+    m.material.emissiveIntensity = 1.5 * dipoleAlpha;
+    m.material.opacity = dipoleAlpha;
+  });
 
-  if (mode === 'single') {
-    balloon1.visible = true;
-    balloon2.visible = false;
-    balloon1.position.x += (balloonTargetX - balloon1.position.x) * 0.1;
-    sweaterGroup.visible = true;
-  } else if (mode === 'two') {
-    balloon1.visible = true;
+  // Two balloons mode
+  if (showTwoBalloons) {
     balloon2.visible = true;
-    sweaterGroup.visible = true;
-    // Two balloons repel each other
-    var repForce = computeRepulsionForce();
-    var spread = Math.min(4, 1 + repForce * 1e6);
-    balloon1.position.x += (-spread - balloon1.position.x) * 0.05;
-    balloon2.position.x += (spread - balloon2.position.x) * 0.05;
-    balloon1.position.y += (1 - balloon1.position.y) * 0.1;
-    balloon2.position.y += (1 - balloon2.position.y) * 0.1;
+    string2.visible = true;
+    // Two balloons repel, offset by some amount based on charge
+    const repelOffset = Math.min(3, absQ / 2e-6);
+    balloon2.position.set(balloon1X - 2, 1.5 + repelOffset * 0.5, 1);
+    string2.geometry.setFromPoints([
+      new THREE.Vector3(balloon2.position.x, balloon2.position.y - 0.7, balloon2.position.z),
+      new THREE.Vector3(balloon2.position.x, -1.5, 0)
+    ]);
+    string2.geometry.needsUpdate = true;
   } else {
-    balloon1.visible = true;
     balloon2.visible = false;
-    balloon1.position.x += (0 - balloon1.position.x) * 0.1;
-    sweaterGroup.visible = true;
+    string2.visible = false;
   }
 
-  // Update charges
-  updateCharges();
+  // Charge particles orbit
+  const chargeColor = sign >= 0 ? 0xef4444 : 0x3B82F6;
+  chargeParticles.forEach((p, i) => {
+    const cp = chargePositions[i];
+    cp.theta += 0.02 * (1 + i * 0.01);
+    const r = cp.r;
+    const x = r * Math.sin(cp.phi) * Math.cos(cp.theta);
+    const y = r * Math.cos(cp.phi);
+    const z = r * Math.sin(cp.phi) * Math.sin(cp.theta);
+    p.position.set(balloon1.position.x + x, balloon1.position.y + y, z);
+    p.visible = i < Math.round(N_CHARGES * Math.min(1, absQ / 10e-6));
+    p.material.color.setHex(chargeColor);
+    p.material.emissive.setHex(chargeColor);
+  });
 
-  // Force arrow (single mode: attraction to wall)
-  if (mode === 'single' && balloonCharge_nC < 0) {
-    var F = computeForce();
-    var arrowLen = Math.min(3, F * 1e7);
-    updateArrow(
-      new THREE.Vector3(balloon1.position.x + 0.9, balloon1.position.y, 0),
-      new THREE.Vector3(1, 0, 0),
-      arrowLen
-    );
-  } else if (mode === 'two' && balloonCharge_nC < 0) {
-    // Show repulsion arrows
-    var F2 = computeRepulsionForce();
-    var aLen = Math.min(2, F2 * 1e7);
-    while (arrowGroup.children.length > 0) arrowGroup.remove(arrowGroup.children[0]);
-    // Arrow on balloon1 pointing left
-    var shaft1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, aLen, 8), arrowMat);
-    shaft1.position.copy(balloon1.position).add(new THREE.Vector3(-aLen / 2 - 0.9, 0, 0));
-    shaft1.rotation.z = Math.PI / 2;
-    arrowGroup.add(shaft1);
-    var head1 = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 8), arrowMat);
-    head1.position.copy(balloon1.position).add(new THREE.Vector3(-aLen - 0.9, 0, 0));
-    head1.rotation.z = Math.PI / 2;
-    arrowGroup.add(head1);
-    // Arrow on balloon2 pointing right
-    var shaft2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, aLen, 8), arrowMat);
-    shaft2.position.copy(balloon2.position).add(new THREE.Vector3(aLen / 2 + 0.9, 0, 0));
-    shaft2.rotation.z = -Math.PI / 2;
-    arrowGroup.add(shaft2);
-    var head2 = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 8), arrowMat);
-    head2.position.copy(balloon2.position).add(new THREE.Vector3(aLen + 0.9, 0, 0));
-    head2.rotation.z = -Math.PI / 2;
-    arrowGroup.add(head2);
+  // Balloon color reflects charge sign
+  if (currentQ < 0) {
+    balloonMat.color.setHex(0x3B82F6);
+    balloonMat.emissive.setHex(0x1d4ed8);
+  } else if (currentQ > 0) {
+    balloonMat.color.setHex(0xef4444);
+    balloonMat.emissive.setHex(0x7f1d1d);
   } else {
-    while (arrowGroup.children.length > 0) arrowGroup.remove(arrowGroup.children[0]);
+    balloonMat.color.setHex(0x6b7280);
+    balloonMat.emissive.setHex(0x111827);
   }
 
-  // Stats
-  var F = computeForce();
-  $('statBQ').textContent = balloonCharge_nC + ' nC';
-  $('statSQ').textContent = (mode === 'neutral' ? '0' : (-balloonCharge_nC)) + ' nC';
-  $('statDist').textContent = wallDist_cm + ' cm';
-  var forceStr = F < 0.001 ? (F * 1e6).toFixed(2) + ' \u00B5N' : (F * 1e3).toFixed(3) + ' mN';
-  $('statForce').textContent = (mode === 'neutral' || balloonCharge_nC === 0) ? '\u2014' : forceStr;
-  var totalCharge = (mode === 'two') ? 2 * balloonCharge_nC + (-2 * balloonCharge_nC) : balloonCharge_nC + (-balloonCharge_nC);
-  $('statNet').textContent = '0 nC';
-  $('infoLabel').textContent = 'Charge conservation: q_total = 0 nC';
-}
-
-// ─── Rubbing Animation ──────────────────────────────────────────────
-var rubPhase = 0;
-var isRubbing = false;
-var rubDuration = 60; // frames
-
-function startRubAnimation() {
-  isRubbing = true;
-  rubPhase = 0;
-  balloonCharge_nC = 0;
-  $('sCharge').value = '0';
-  $('vCharge').textContent = '0 nC';
-  mode = 'single';
-  balloon2.visible = false;
-  balloon1.position.set(-4, 1, 0);
-}
-
-function updateRubAnimation() {
-  if (!isRubbing) return;
-  rubPhase++;
-  var t = rubPhase / rubDuration;
-
-  // Move balloon toward sweater and oscillate
-  var targetX = sweaterGroup.position.x + 2;
-  var oscillate = Math.sin(rubPhase * 0.5) * 0.3;
-  balloon1.position.x = targetX + oscillate;
-  balloon1.position.y = 1 + Math.sin(rubPhase * 0.3) * 0.2;
-
-  // Gradually increase charge
-  var newCharge = Math.round(-20 * t);
-  if (newCharge < -20) newCharge = -20;
-  balloonCharge_nC = newCharge;
-  $('sCharge').value = String(newCharge);
-  $('vCharge').textContent = newCharge + ' nC';
-
-  // Emit sparks during rubbing
-  if (rubPhase % 3 === 0) emitSparks();
-
-  if (rubPhase >= rubDuration) {
-    isRubbing = false;
-    balloonCharge_nC = -10;
-    $('sCharge').value = '-10';
-    $('vCharge').textContent = '-10 nC';
-    // Move balloon to wall proximity
-    wallDist_cm = 5;
-    $('sDist').value = '5';
-    $('vDist').textContent = '5 cm';
-  }
-}
-
-// ─── Graph ───────────────────────────────────────────────────────────
-var graphCtx = $('graphCanvas').getContext('2d');
-
-function drawGraph() {
-  var W = 320, H = 180;
-  graphCtx.clearRect(0, 0, W, H);
-  graphCtx.fillStyle = 'rgba(15,23,42,0.9)';
-  graphCtx.fillRect(0, 0, W, H);
-
-  // Axes
-  var padL = 45, padB = 30, padT = 15, padR = 15;
-  var gW = W - padL - padR, gH = H - padT - padB;
-
-  graphCtx.strokeStyle = 'rgba(255,255,255,0.15)';
-  graphCtx.lineWidth = 1;
-  graphCtx.beginPath();
-  graphCtx.moveTo(padL, padT);
-  graphCtx.lineTo(padL, padT + gH);
-  graphCtx.lineTo(padL + gW, padT + gH);
-  graphCtx.stroke();
-
-  // Labels
-  graphCtx.fillStyle = '#64748b';
-  graphCtx.font = '10px sans-serif';
-  graphCtx.textAlign = 'center';
-  graphCtx.fillText('Distance (cm)', padL + gW / 2, H - 4);
-  graphCtx.save();
-  graphCtx.translate(12, padT + gH / 2);
-  graphCtx.rotate(-Math.PI / 2);
-  graphCtx.fillText('Force (\u00B5N)', 0, 0);
-  graphCtx.restore();
-
-  // Compute F vs d curve
-  var q = balloonCharge_nC * 1e-9;
-  if (q === 0) return;
-
-  var maxF = 0;
-  var points = [];
-  for (var d = 1; d <= 30; d++) {
-    var dm = d / 100;
-    var F = Math.abs(K * q * q / (4 * dm * dm));
-    var FuN = F * 1e6;
-    points.push({ d: d, F: FuN });
-    if (FuN > maxF) maxF = FuN;
-  }
-  if (maxF === 0) maxF = 1;
-
-  // Grid lines
-  graphCtx.strokeStyle = 'rgba(255,255,255,0.05)';
-  for (var gi = 1; gi <= 4; gi++) {
-    var gy = padT + gH - (gi / 4) * gH;
-    graphCtx.beginPath();
-    graphCtx.moveTo(padL, gy);
-    graphCtx.lineTo(padL + gW, gy);
-    graphCtx.stroke();
-    graphCtx.fillStyle = '#475569';
-    graphCtx.textAlign = 'right';
-    graphCtx.fillText((maxF * gi / 4).toFixed(1), padL - 5, gy + 3);
+  // Humidity haze effect
+  if (humidity > 60) {
+    scene.fog = new THREE.Fog(0x0f172a, 10, 20 - humidity * 0.1);
+  } else {
+    scene.fog = null;
   }
 
-  // Tick labels on x
-  graphCtx.textAlign = 'center';
-  graphCtx.fillStyle = '#475569';
-  [1, 5, 10, 15, 20, 25, 30].forEach(function(v) {
-    var x = padL + ((v - 1) / 29) * gW;
-    graphCtx.fillText(v, x, padT + gH + 14);
-  });
-
-  // Curve
-  graphCtx.strokeStyle = '#fb923c';
-  graphCtx.lineWidth = 2;
-  graphCtx.beginPath();
-  points.forEach(function(p, i) {
-    var x = padL + ((p.d - 1) / 29) * gW;
-    var y = padT + gH - (p.F / maxF) * gH;
-    if (i === 0) graphCtx.moveTo(x, y);
-    else graphCtx.lineTo(x, y);
-  });
-  graphCtx.stroke();
-
-  // Current position marker
-  var cx = padL + ((wallDist_cm - 1) / 29) * gW;
-  var cF = Math.abs(K * q * q / (4 * (wallDist_cm / 100) * (wallDist_cm / 100))) * 1e6;
-  var cy = padT + gH - (cF / maxF) * gH;
-  graphCtx.beginPath();
-  graphCtx.arc(cx, cy, 5, 0, Math.PI * 2);
-  graphCtx.fillStyle = '#f97316';
-  graphCtx.fill();
-  graphCtx.strokeStyle = '#fff';
-  graphCtx.lineWidth = 1.5;
-  graphCtx.stroke();
+  updateDataPanel();
+  updateForceArrow();
 }
 
-// ─── KaTeX Formulas ──────────────────────────────────────────────────
-katex.render('F = k \\frac{q_1 q_2}{r^2}', $('f1'), { displayMode: true });
-katex.render('\\sum q_{\\text{before}} = \\sum q_{\\text{after}}', $('f2'), { displayMode: true });
+function updateDataPanel() {
+  const q_uC = (currentQ * 1e6).toFixed(2);
+  const F = coulombForce(currentQ, distToWall);
+  const sigma = inducedSigma(currentQ, distToWall);
+  const adh = adhesionForce(currentQ, distToWall, humidity);
+  const decayT = humidity > 10 ? (60.0 / (humidity / 100.0)).toFixed(0) + 's τ' : 'Stable';
 
-// ─── Event Handlers ──────────────────────────────────────────────────
-$('sCharge').addEventListener('input', function() {
-  balloonCharge_nC = parseInt(this.value);
-  $('vCharge').textContent = balloonCharge_nC + ' nC';
-});
-
-$('sDist').addEventListener('input', function() {
-  wallDist_cm = parseInt(this.value);
-  $('vDist').textContent = wallDist_cm + ' cm';
-});
-
-$('toggleCharges').addEventListener('change', function() {
-  showCharges = this.checked;
-  if (!showCharges) clearCharges();
-});
-
-$('btnPreset1').addEventListener('click', function() {
-  // Rub balloon animation
-  startRubAnimation();
-  setActivePreset(this);
-});
-
-$('btnPreset2').addEventListener('click', function() {
-  mode = 'two';
-  balloonCharge_nC = -10;
-  $('sCharge').value = '-10';
-  $('vCharge').textContent = '-10 nC';
-  wallDist_cm = 15;
-  $('sDist').value = '15';
-  $('vDist').textContent = '15 cm';
-  balloon1.position.set(-2, 1, 0);
-  balloon2.position.set(2, 1, 0);
-  balloon2.visible = true;
-  isRubbing = false;
-  setActivePreset(this);
-});
-
-$('btnPreset3').addEventListener('click', function() {
-  mode = 'neutral';
-  balloonCharge_nC = 0;
-  $('sCharge').value = '0';
-  $('vCharge').textContent = '0 nC';
-  wallDist_cm = 15;
-  $('sDist').value = '15';
-  $('vDist').textContent = '15 cm';
-  balloon1.position.set(0, 1, 0);
-  balloon2.visible = false;
-  isRubbing = false;
-  clearCharges();
-  setActivePreset(this);
-});
-
-$('btnReset').addEventListener('click', function() {
-  mode = 'single';
-  balloonCharge_nC = -10;
-  wallDist_cm = 15;
-  $('sCharge').value = '-10';
-  $('sDist').value = '15';
-  $('vCharge').textContent = '-10 nC';
-  $('vDist').textContent = '15 cm';
-  $('toggleCharges').checked = true;
-  showCharges = true;
-  isRubbing = false;
-  balloon1.position.set(-2, 1, 0);
-  balloon2.visible = false;
-  document.querySelectorAll('.btn-ghost').forEach(function(b) { b.classList.remove('active'); });
-});
-
-function setActivePreset(btn) {
-  document.querySelectorAll('.btn-ghost').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
+  document.getElementById('dp-q').textContent = q_uC + ' μC';
+  document.getElementById('dp-d').textContent = distToWall.toFixed(2) + ' m';
+  document.getElementById('dp-F').textContent = (F * 1000).toFixed(2) + ' mN';
+  document.getElementById('dp-sigma').textContent = (sigma * 1e6).toFixed(2) + ' μC/m²';
+  document.getElementById('dp-h').textContent = humidity.toFixed(0) + '%';
+  document.getElementById('dp-decay').textContent = decayT;
+  document.getElementById('dp-adh').textContent = (adh * 1000).toFixed(2) + ' mN';
 }
 
-// ─── Quiz Logic ──────────────────────────────────────────────────────
-document.querySelectorAll('.quiz-q').forEach(function(q) {
-  var options = q.querySelectorAll('.quiz-option');
-  var explain = q.querySelector('.quiz-explain');
-  options.forEach(function(opt) {
-    opt.addEventListener('click', function() {
-      if (opt.classList.contains('disabled')) return;
-      options.forEach(function(o) { o.classList.add('disabled'); });
-      if (opt.dataset.correct === 'true') {
-        opt.classList.add('correct');
-      } else {
-        opt.classList.add('wrong');
-        options.forEach(function(o) {
-          if (o.dataset.correct === 'true') o.classList.add('correct');
-        });
-      }
-      if (explain) explain.classList.add('show');
-    });
-  });
-});
-
-// ─── Resize Handler ──────────────────────────────────────────────────
-function onResize() {
-  var w = wrap.clientWidth, h = wrap.clientHeight;
-  if (w === 0 || h === 0) return;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-}
-window.addEventListener('resize', onResize);
-
-// ─── Animation Loop ─────────────────────────────────────────────────
-var clock = new THREE.Clock();
-
-function animate() {
-  requestAnimationFrame(animate);
-  var dt = clock.getDelta();
-
-  if (isRubbing) updateRubAnimation();
-  updateSparks(dt);
-  updateScene();
-  drawGraph();
-
-  // Gentle balloon bobbing
-  if (!isRubbing) {
-    balloon1.position.y = 1 + Math.sin(clock.elapsedTime * 1.2) * 0.15;
-    if (balloon2.visible) {
-      balloon2.position.y = 1 + Math.sin(clock.elapsedTime * 1.2 + 1) * 0.15;
-    }
+function updateForceArrow() {
+  const F = coulombForce(currentQ, distToWall);
+  const sign = F < 0 ? 'Attract' : 'Repel';
+  const maxLen = 40;
+  const len = Math.min(maxLen, Math.abs(F) * 1000 * 5);
+  const line = document.getElementById('force-line');
+  const lbl = document.getElementById('force-label');
+  const startX = 72;
+  if (F < 0) {
+    // Attractive: arrow points toward wall (right)
+    line.setAttribute('x1', startX); line.setAttribute('y1', '60');
+    line.setAttribute('x2', startX + len); line.setAttribute('y2', '60');
+    line.setAttribute('stroke', '#22c55e');
+    lbl.textContent = 'Attract →';
+    lbl.setAttribute('fill', '#22c55e');
+  } else if (F > 0) {
+    // Repulsive: arrow points away from wall (left)
+    line.setAttribute('x1', startX + len); line.setAttribute('y1', '60');
+    line.setAttribute('x2', startX); line.setAttribute('y2', '60');
+    line.setAttribute('stroke', '#ef4444');
+    lbl.textContent = '← Repel';
+    lbl.setAttribute('fill', '#ef4444');
+  } else {
+    line.setAttribute('x1', '72'); line.setAttribute('y1', '60');
+    line.setAttribute('x2', '72'); line.setAttribute('y2', '60');
+    lbl.textContent = 'F = 0';
   }
 
-  if (controls) controls.update();
+  const chargeLbl = document.getElementById('vis-charge-lbl');
+  if (currentQ < 0) chargeLbl.textContent = '−−−';
+  else if (currentQ > 0) chargeLbl.textContent = '+++';
+  else chargeLbl.textContent = '∅';
+}
+
+// ============================================================
+// Animation loop
+// ============================================================
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+  updateScene(delta);
   renderer.render(scene, camera);
-}
+});
 
-onResize();
-animate();
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
 
-} catch(e) {
-  console.error('NeonPhysics error:', e);
-  var errDiv = document.createElement('div');
-  errDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e293b;color:#fca5a5;padding:20px;border-radius:8px;font-size:14px;max-width:400px;text-align:center;z-index:9999';
-  errDiv.textContent = 'Failed to initialize 3D scene: ' + e.message;
-  document.body.appendChild(errDiv);
+// ============================================================
+// Sliders
+// ============================================================
+document.getElementById('sl-q').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('sl-q-val').textContent = v.toFixed(1);
+  currentQ = v * 1e-6;
+  balloonCharge = currentQ;
+});
+document.getElementById('sl-d').addEventListener('input', e => {
+  distToWall = parseFloat(e.target.value);
+  document.getElementById('sl-d-val').textContent = distToWall.toFixed(2);
+});
+document.getElementById('sl-h').addEventListener('input', e => {
+  humidity = parseFloat(e.target.value);
+  document.getElementById('sl-h-val').textContent = humidity.toFixed(0);
+});
+
+// ============================================================
+// Presets
+// ============================================================
+function applyPreset(name) {
+  if (name === 'strong') {
+    currentQ = 8e-6; distToWall = 0.3; humidity = 10; showTwoBalloons = false;
+    document.getElementById('sl-q').value = 8; document.getElementById('sl-q-val').textContent = '8.0';
+    document.getElementById('sl-d').value = 0.3; document.getElementById('sl-d-val').textContent = '0.30';
+    document.getElementById('sl-h').value = 10; document.getElementById('sl-h-val').textContent = '10';
+    showToast('Preset: Strongly Charged');
+  } else if (name === 'two') {
+    currentQ = 6e-6; distToWall = 1.5; humidity = 20; showTwoBalloons = true;
+    document.getElementById('sl-q').value = 6; document.getElementById('sl-q-val').textContent = '6.0';
+    document.getElementById('sl-d').value = 1.5; document.getElementById('sl-d-val').textContent = '1.50';
+    document.getElementById('sl-h').value = 20; document.getElementById('sl-h-val').textContent = '20';
+    showToast('Preset: Two Balloons (same sign) — watch repulsion!');
+  } else if (name === 'humid') {
+    currentQ = 5e-6; distToWall = 1.0; humidity = 85; showTwoBalloons = false;
+    document.getElementById('sl-q').value = 5; document.getElementById('sl-q-val').textContent = '5.0';
+    document.getElementById('sl-d').value = 1.0; document.getElementById('sl-d-val').textContent = '1.00';
+    document.getElementById('sl-h').value = 85; document.getElementById('sl-h-val').textContent = '85';
+    showToast('Preset: Humid Day — watch charge leak away!');
+  }
 }
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+});
+
+// ============================================================
+// Reset / Fullscreen / About
+// ============================================================
+document.getElementById('btn-reset').addEventListener('click', () => {
+  currentQ = 5e-6; distToWall = 1.0; humidity = 20; showTwoBalloons = false;
+  document.getElementById('sl-q').value = 5; document.getElementById('sl-q-val').textContent = '5.0';
+  document.getElementById('sl-d').value = 1.0; document.getElementById('sl-d-val').textContent = '1.00';
+  document.getElementById('sl-h').value = 20; document.getElementById('sl-h-val').textContent = '20';
+  showToast('Simulation reset');
+});
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+document.getElementById('btn-about').addEventListener('click', () => {
+  document.getElementById('about-modal').style.display = 'flex';
+});
+document.getElementById('close-about').addEventListener('click', () => {
+  document.getElementById('about-modal').style.display = 'none';
+});
+
+// ============================================================
+// Keyboard shortcuts
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); isPlaying = !isPlaying; showToast(isPlaying ? 'Playing' : 'Paused'); }
+  if (e.code === 'KeyR') document.getElementById('btn-reset').click();
+  if (e.key === '1') applyPreset('strong');
+  if (e.key === '2') applyPreset('two');
+  if (e.key === '3') applyPreset('humid');
+});
+
+// ============================================================
+// Quiz
+// ============================================================
+const CORRECT = { '1': 'b', '2': 'b', '3': 'c' };
+const FEEDBACK = {
+  '1': { b: '✅ Correct! Electrons (negative) transfer from wool to balloon. Balloon becomes negative; wool, losing electrons, becomes positive.', wrong: '❌ Not quite. Only electrons move in triboelectric charging — protons are locked in nuclei. Balloon gains electrons → becomes negative.' },
+  '2': { b: '✅ Correct! The balloon\'s field polarizes wall atoms — electrons repelled away, leaving net positive surface. Opposite charges attract.', wrong: '❌ Not quite. The wall stays neutral overall, but nearby atoms polarize. Net positive surface near balloon + negative balloon = attraction.' },
+  '3': { c: '✅ Correct! Water molecules are polar and slightly conductive. They provide a path for charge to leak off the balloon surface.', wrong: '❌ Not quite. Humidity doesn\'t reflect fields or add weight significantly. Water molecules are polar and conduct charge, draining the balloon.' }
+};
+document.querySelectorAll('.q-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.dataset.q;
+    const v = opt.dataset.v;
+    const fb = document.getElementById('fb' + q);
+    const correct = CORRECT[q];
+    const parent = opt.closest('.q-block');
+    parent.querySelectorAll('.q-option').forEach(o => { o.classList.remove('q-correct','q-wrong'); });
+    if (v === correct) {
+      opt.classList.add('q-correct');
+      fb.textContent = FEEDBACK[q][v];
+      fb.style.color = '#22c55e';
+    } else {
+      opt.classList.add('q-wrong');
+      fb.textContent = FEEDBACK[q]['wrong'];
+      fb.style.color = '#f87171';
+    }
+  });
+});
+document.getElementById('quiz-toggle').addEventListener('click', () => {
+  const body = document.getElementById('quiz-body');
+  const btn = document.getElementById('quiz-toggle');
+  if (body.style.display === 'none') { body.style.display = ''; btn.textContent = 'Hide'; }
+  else { body.style.display = 'none'; btn.textContent = 'Show'; }
+});
+
+// Init
+balloonCharge = currentQ;
+showToast('Try the presets! Watch charge decay on humid day.');
 </script>
+<!-- [未核实] Codex API unavailable (403). Science accuracy self-verified by Claude. -->
+<!-- Generated by AetherViz Master — Static electricity: proof that opposites really do attract! -->
 </body>
 </html>

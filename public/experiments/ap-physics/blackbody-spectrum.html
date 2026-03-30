@@ -1,753 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blackbody Spectrum — NeonPhysics AP Physics</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
-    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(234,179,8,.08),rgba(251,146,60,.06));border-bottom:1px solid rgba(234,179,8,.2);flex-shrink:0}
-    .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-    .badge{background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.35);color:#fde68a;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
-    .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
-    .layout{display:flex;flex:1;overflow:hidden}
-    .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-    .three-wrap{height:35%;position:relative;background:#080a12;border-bottom:1px solid rgba(255,255,255,.06)}
-    .three-wrap canvas{display:block;width:100%;height:100%}
-    .chart-wrap{flex:1;position:relative;background:#0b0e1a;padding:12px}
-    .chart-wrap canvas{display:block;width:100%;height:100%;border-radius:6px}
-    .overlay{position:absolute;top:12px;left:12px;background:rgba(8,9,15,.92);border:1px solid rgba(234,179,8,.2);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px);min-width:220px;z-index:10}
-    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px;align-items:center}
-    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
-    .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
-    .yellow{color:#fbbf24}.orange{color:#fb923c}.blue{color:#60a5fa}.green{color:#4ade80}.red{color:#f87171}.violet{color:#c084fc}.white{color:#f0f4ff}
-    .sidebar{width:300px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
-    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-    .param-row{margin-bottom:14px}
-    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
-    .param-name{font-size:11px;color:#94a3b8}
-    .param-val{font-size:11px;font-weight:700;color:#fbbf24;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(234,179,8,.2);border-radius:2px;cursor:pointer;outline:none}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#eab308;cursor:pointer;box-shadow:0 0 6px rgba(234,179,8,.6)}
-    .preset-btn{display:inline-block;padding:5px 12px;margin:0 4px 6px 0;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(234,179,8,.25);background:rgba(234,179,8,.08);color:#fde68a;transition:all .15s}
-    .preset-btn:hover{background:rgba(234,179,8,.18);border-color:rgba(234,179,8,.5)}
-    .preset-btn.active{background:rgba(234,179,8,.25);border-color:#eab308}
-    .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .toggle-label{font-size:11px;color:#94a3b8}
-    .toggle{position:relative;width:36px;height:20px;cursor:pointer}
-    .toggle input{display:none}
-    .toggle-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:10px;transition:.2s}
-    .toggle input:checked+.toggle-track{background:rgba(234,179,8,.5)}
-    .toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
-    .toggle input:checked~.toggle-knob{left:18px}
-    .formula-box{background:rgba(234,179,8,.04);border:1px solid rgba(234,179,8,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px;overflow-x:auto}
-    .formula-desc{font-size:10px;color:#475569;margin-top:3px}
-    .key-insight{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.2);border-radius:7px;padding:10px 12px;margin-top:8px}
-    .key-insight-title{font-size:10px;font-weight:700;color:#93c5fd;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-    .key-insight-text{font-size:10px;color:#64748b;line-height:1.6}
-    .compare-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-    .compare-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .compare-text{font-size:10px;color:#94a3b8}
-    .quiz-section{padding:16px 18px}
-    .quiz-q{font-size:11px;color:#cbd5e1;margin-bottom:8px;line-height:1.5}
-    .quiz-opt{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;border-radius:5px;font-size:10px;color:#94a3b8;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s}
-    .quiz-opt:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
-    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-opt.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5}
-    .quiz-feedback{font-size:10px;margin-top:4px;padding:6px 10px;border-radius:5px;line-height:1.5;display:none}
-    .quiz-feedback.show{display:block}
-    .quiz-feedback.ok{background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.2)}
-    .quiz-feedback.no{background:rgba(239,68,68,.08);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
-    .legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;color:#94a3b8}
-    .legend-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
-    .rj-label{color:#f87171;font-style:italic}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blackbody Radiation Spectrum — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f172a; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+#nav { background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0 1.5rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; backdrop-filter: blur(12px); }
+#nav h1 { font-size: 1.05rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.2s; }
+.nav-btn:hover { background: rgba(59,130,246,0.2); border-color: #3B82F6; color: #fff; }
+#main { display: flex; flex: 1; overflow: hidden; }
+#sidebar { width: 30%; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.9rem; }
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 2px; }
+.section-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0EA5E9; margin-bottom: 0.45rem; }
+.formula-block { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.22); border-radius: 8px; padding: 0.65rem 0.75rem; margin-bottom: 0.45rem; }
+.formula-label { font-size: 0.68rem; color: #64748b; margin-top: 0.35rem; }
+.concept-text p { font-size: 0.78rem; color: #cbd5e1; line-height: 1.65; margin-bottom: 0.45rem; }
+.kcard { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.65rem; margin-bottom: 0.45rem; }
+.kcard h4 { font-size: 0.72rem; font-weight: 600; color: #22d3ee; margin-bottom: 0.28rem; }
+.kcard p { font-size: 0.72rem; color: #94a3b8; line-height: 1.55; }
+.why-item { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.76rem; color: #cbd5e1; margin-bottom: 0.35rem; }
+.why-dot { width: 6px; height: 6px; border-radius: 50%; background: #3B82F6; flex-shrink: 0; margin-top: 0.35rem; }
+#canvas-area { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+#canvas-container { width: 100%; flex: 1; position: relative; }
+#svg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#data-panel { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.7rem 0.9rem; min-width: 190px; backdrop-filter: blur(8px); }
+#data-panel .dp-row { display: flex; justify-content: space-between; gap: 1.5rem; font-size: 0.75rem; margin-bottom: 0.2rem; }
+#data-panel .dp-label { color: #64748b; }
+#data-panel .dp-value { color: #e2e8f0; font-variant-numeric: tabular-nums; font-family: monospace; }
+#controls { background: rgba(15,23,42,0.92); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.75rem 1.2rem; flex-shrink: 0; backdrop-filter: blur(12px); }
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; margin-bottom: 0.55rem; }
+.slider-group { display: flex; align-items: center; gap: 0.55rem; }
+.slider-group label { font-size: 0.72rem; color: #94a3b8; white-space: nowrap; min-width: 90px; }
+input[type=range] { -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; width: 130px; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); cursor: pointer; }
+.sv { font-size: 0.72rem; color: #38bdf8; font-variant-numeric: tabular-nums; min-width: 65px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.ctrl-btn { padding: 0.3rem 0.85rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; border: 1px solid; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border-color: #3B82F6; color: #fff; }
+.btn-primary:hover { opacity: 0.85; }
+.btn-secondary { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); color: #cbd5e1; }
+.btn-secondary:hover { background: rgba(59,130,246,0.18); border-color: #3B82F6; color: #fff; }
+.preset-btn { padding: 0.25rem 0.65rem; border-radius: 5px; font-size: 0.7rem; cursor: pointer; border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.1); color: #93c5fd; transition: all 0.15s; }
+.preset-btn:hover { background: rgba(59,130,246,0.25); border-color: #60a5fa; color: #fff; }
+#quiz-panel { position: absolute; bottom: 0; right: 0; width: 340px; background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.25); border-left: 1px solid rgba(59,130,246,0.25); border-radius: 10px 0 0 0; padding: 0.85rem 1rem; overflow-y: auto; max-height: 55%; transition: transform 0.3s; backdrop-filter: blur(10px); z-index: 50; }
+#quiz-panel.hidden { transform: translateX(100%); }
+#quiz-toggle { position: absolute; bottom: 0; right: 0; background: rgba(59,130,246,0.25); border: 1px solid rgba(59,130,246,0.4); border-radius: 6px 0 0 0; padding: 0.25rem 0.7rem; font-size: 0.7rem; color: #93c5fd; cursor: pointer; z-index: 51; }
+.quiz-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0EA5E9; margin-bottom: 0.6rem; }
+.q-block { margin-bottom: 0.75rem; }
+.q-text { font-size: 0.76rem; color: #e2e8f0; margin-bottom: 0.4rem; line-height: 1.5; }
+.q-option { display: flex; align-items: flex-start; gap: 0.4rem; margin-bottom: 0.28rem; cursor: pointer; }
+.q-option input { margin-top: 2px; flex-shrink: 0; accent-color: #3B82F6; }
+.q-option label { font-size: 0.73rem; color: #cbd5e1; cursor: pointer; line-height: 1.4; }
+.q-check { padding: 0.25rem 0.75rem; border-radius: 5px; font-size: 0.72rem; cursor: pointer; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; margin-top: 0.3rem; }
+.q-feedback { font-size: 0.72rem; margin-top: 0.35rem; padding: 0.4rem 0.55rem; border-radius: 6px; line-height: 1.5; display: none; }
+.q-feedback.correct { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: #86efac; }
+.q-feedback.wrong { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+#toast { position: fixed; top: 60px; right: 16px; background: rgba(59,130,246,0.9); color: #fff; padding: 0.45rem 1rem; border-radius: 7px; font-size: 0.78rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000; }
+#about-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+#about-modal.open { display: flex; }
+#about-content { background: #1e293b; border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 90%; }
+#about-content h2 { font-size: 1rem; font-weight: 700; color: #0EA5E9; margin-bottom: 0.75rem; }
+#about-content p { font-size: 0.78rem; color: #94a3b8; line-height: 1.6; margin-bottom: 0.5rem; }
+#about-content .shortcut-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: #cbd5e1; margin-bottom: 0.25rem; }
+#about-content kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.68rem; font-family: monospace; }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <span class="badge">AP PHYSICS</span>
-    <span class="badge badge-free">FREE</span>
+
+<div id="nav">
+  <h1>Blackbody Radiation Spectrum / 黑体辐射光谱</h1>
+  <div class="btn-row">
+    <button class="nav-btn" id="btn-reset">Reset</button>
+    <button class="nav-btn" id="btn-fullscreen">Fullscreen</button>
+    <button class="nav-btn" id="btn-about">About</button>
   </div>
-  <h1>Blackbody Spectrum</h1>
-  <p class="subtitle">Planck distribution, Wien displacement law, and Stefan-Boltzmann law</p>
 </div>
 
-<div class="layout">
-  <div class="main-area">
-    <div class="three-wrap" id="threeWrap">
-      <div class="overlay" id="statsOverlay">
-        <div class="stat-row">
-          <span class="stat-label">Temperature</span>
-          <span class="stat-value yellow" id="statT">5778 K</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Peak Wavelength</span>
-          <span class="stat-value orange" id="statLambda">--</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Total Power</span>
-          <span class="stat-value blue" id="statPower">--</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Peak Color</span>
-          <span class="stat-value" id="statColor" style="display:flex;align-items:center;gap:6px"><span id="colorSwatch" style="width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,.2)"></span><span id="colorName">--</span></span>
-        </div>
+<div id="main">
+  <div id="sidebar">
+    <div>
+      <div class="section-title">Core Formulas</div>
+      <div class="formula-block">
+        <div id="f1"></div>
+        <div class="formula-label">Planck spectral radiance: energy emitted per unit area, per unit solid angle, per unit wavelength</div>
+      </div>
+      <div class="formula-block">
+        <div id="f2"></div>
+        <div class="formula-label">Wien's displacement law: peak wavelength shifts inversely with temperature</div>
+      </div>
+      <div class="formula-block">
+        <div id="f3"></div>
+        <div class="formula-label">Stefan-Boltzmann law: total power radiated per unit area scales as T⁴</div>
       </div>
     </div>
-    <div class="chart-wrap">
-      <canvas id="chartCanvas"></canvas>
+
+    <div class="concept-text">
+      <div class="section-title">Concept</div>
+      <p>A blackbody is a perfect absorber — and perfect emitter — of electromagnetic radiation. When matter is heated, its charged particles oscillate and radiate. Classical physics predicted infinite energy at short wavelengths (the "ultraviolet catastrophe"). Planck resolved this by hypothesizing that energy is exchanged in discrete quanta: E = hf.</p>
+      <p>This is the birth of quantum mechanics. Every hot object — a candle, the Sun, a distant star — radiates according to Planck's law. The peak of the spectrum tells us the object's temperature via Wien's law, which is exactly how astronomers measure stellar surface temperatures.</p>
+      <p>As temperature rises, the peak shifts to shorter (bluer) wavelengths, and total power explodes as T⁴. A star twice as hot emits 16× more power per unit area.</p>
+    </div>
+
+    <div>
+      <div class="section-title">Knowledge Cards</div>
+      <div class="kcard">
+        <h4>Historical Turning Point</h4>
+        <p>Planck introduced the quantum hypothesis on December 14, 1900 — often called the birthday of quantum physics. He initially considered it a mathematical trick, not physical reality.</p>
+      </div>
+      <div class="kcard">
+        <h4>Common Misconception</h4>
+        <p>Hotter objects don't just emit "more" of the same light — the entire spectrum shifts. A 3000 K star glows red-orange while a 10000 K star glows blue-white.</p>
+      </div>
+      <div class="kcard">
+        <h4>Advanced Connection</h4>
+        <p>The Cosmic Microwave Background (CMB) is a near-perfect blackbody spectrum at T ≈ 2.725 K — the thermal afterglow of the Big Bang, redshifted by cosmic expansion.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">Why It Matters</div>
+      <div class="why-item"><div class="why-dot"></div><span>Stellar spectroscopy: determining star temperatures and compositions from their spectra</span></div>
+      <div class="why-item"><div class="why-dot"></div><span>Thermal imaging cameras use the infrared blackbody peak (human body ~9.5 μm)</span></div>
+      <div class="why-item"><div class="why-dot"></div><span>AP Physics Modern: quantization of energy, photoelectric effect context</span></div>
     </div>
   </div>
 
-  <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Controls</div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Temperature</span>
-          <span class="param-val" id="tempVal">5778 K</span>
-        </div>
-        <input type="range" id="tempSlider" min="1000" max="10000" step="1" value="5778">
+  <div id="canvas-area">
+    <div id="canvas-container">
+      <svg id="svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div id="data-panel">
+      <div class="dp-row"><span class="dp-label">Temperature</span><span class="dp-value" id="dp-temp">5778 K</span></div>
+      <div class="dp-row"><span class="dp-label">λ_max</span><span class="dp-value" id="dp-lmax">501.6 nm</span></div>
+      <div class="dp-row"><span class="dp-label">Peak Intensity</span><span class="dp-value" id="dp-peak">—</span></div>
+      <div class="dp-row"><span class="dp-label">Total Power/m²</span><span class="dp-value" id="dp-power">—</span></div>
+      <div class="dp-row"><span class="dp-label">Color Region</span><span class="dp-value" id="dp-color">—</span></div>
+    </div>
+
+    <div id="quiz-panel">
+      <div class="quiz-title">Quick Check</div>
+      <div class="q-block">
+        <div class="q-text">1. You double the temperature of a blackbody. How does its total radiated power change?</div>
+        <div class="q-option"><input type="radio" name="q1" id="q1a" value="a"><label for="q1a">It doubles (×2)</label></div>
+        <div class="q-option"><input type="radio" name="q1" id="q1b" value="b"><label for="q1b">It quadruples (×4)</label></div>
+        <div class="q-option"><input type="radio" name="q1" id="q1c" value="c"><label for="q1c">It increases by 16× (×16)</label></div>
+        <div class="q-option"><input type="radio" name="q1" id="q1d" value="d"><label for="q1d">It increases by 8× (×8)</label></div>
+        <button class="q-check" id="q1-check">Check</button>
+        <div class="q-feedback" id="q1-fb"></div>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Show Color Glow</span>
-        <label class="toggle">
-          <input type="checkbox" id="showColor" checked>
-          <span class="toggle-track"></span>
-          <span class="toggle-knob"></span>
-        </label>
+      <div class="q-block">
+        <div class="q-text">2. Astronomers observe a star with peak emission at 290 nm (UV). Compared to the Sun (peak ~501 nm), this star's surface temperature is approximately:</div>
+        <div class="q-option"><input type="radio" name="q2" id="q2a" value="a"><label for="q2a">About half the Sun's temperature</label></div>
+        <div class="q-option"><input type="radio" name="q2" id="q2b" value="b"><label for="q2b">About the same as the Sun</label></div>
+        <div class="q-option"><input type="radio" name="q2" id="q2c" value="c"><label for="q2c">About twice the Sun's temperature</label></div>
+        <div class="q-option"><input type="radio" name="q2" id="q2d" value="d"><label for="q2d">About 10× hotter than the Sun</label></div>
+        <button class="q-check" id="q2-check">Check</button>
+        <div class="q-feedback" id="q2-fb"></div>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Rayleigh-Jeans Curve</span>
-        <label class="toggle">
-          <input type="checkbox" id="showRJ">
-          <span class="toggle-track"></span>
-          <span class="toggle-knob"></span>
-        </label>
+      <div class="q-block">
+        <div class="q-text">3. Classical physics predicted infinite energy at short wavelengths — the "ultraviolet catastrophe." What physical insight did Planck use to fix this?</div>
+        <div class="q-option"><input type="radio" name="q3" id="q3a" value="a"><label for="q3a">Energy is continuous but radiation travels in waves</label></div>
+        <div class="q-option"><input type="radio" name="q3" id="q3b" value="b"><label for="q3b">Energy is exchanged only in discrete packets (quanta) proportional to frequency</label></div>
+        <div class="q-option"><input type="radio" name="q3" id="q3c" value="c"><label for="q3c">High-frequency photons are absorbed before they escape</label></div>
+        <div class="q-option"><input type="radio" name="q3" id="q3d" value="d"><label for="q3d">Atoms cannot vibrate faster than a maximum frequency</label></div>
+        <button class="q-check" id="q3-check">Check</button>
+        <div class="q-feedback" id="q3-fb"></div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Presets</div>
-      <button class="preset-btn" data-temp="3000" id="preRed">Red Star (3000 K)</button>
-      <button class="preset-btn active" data-temp="5778" id="preSun">Sun (5778 K)</button>
-      <button class="preset-btn" data-temp="10000" id="preBlue">Blue Star (10000 K)</button>
-    </div>
+    <div id="quiz-toggle">Quiz ▲</div>
+  </div>
+</div>
 
-    <div class="section">
-      <div class="section-title">Comparison Curves</div>
-      <div class="compare-row"><div class="compare-swatch" style="background:#ef4444"></div><span class="compare-text">Red Star — 3000 K (always shown)</span></div>
-      <div class="compare-row"><div class="compare-swatch" style="background:#fbbf24"></div><span class="compare-text">Sun — 5778 K (always shown)</span></div>
-      <div class="compare-row"><div class="compare-swatch" style="background:#60a5fa"></div><span class="compare-text">Blue Star — 10000 K (always shown)</span></div>
-      <div class="compare-row"><div class="compare-swatch" style="background:#22d3ee"></div><span class="compare-text">Current Temperature (interactive)</span></div>
-
-      <div style="margin-top:8px">
-        <div class="legend-row"><div class="legend-line" style="background:#f87171;border:none;height:2px;border-top:2px dashed #f87171;background:none"></div><span class="rj-label">Rayleigh-Jeans (classical)</span></div>
-      </div>
+<div id="controls">
+  <div class="ctrl-row">
+    <div class="slider-group">
+      <label>Temperature (K)</label>
+      <input type="range" id="sl-temp" min="500" max="30000" step="100" value="5778">
+      <span class="sv" id="sv-temp">5778 K</span>
     </div>
-
-    <div class="section">
-      <div class="section-title">Formulas</div>
-      <div class="formula-box"><div id="formula1"></div><div class="formula-desc">Planck's spectral radiance</div></div>
-      <div class="formula-box"><div id="formula2"></div><div class="formula-desc">Wien displacement law (b = 2.898 x 10^-3 m K)</div></div>
-      <div class="formula-box"><div id="formula3"></div><div class="formula-desc">Stefan-Boltzmann law</div></div>
+    <div class="slider-group">
+      <label>λ Range (μm)</label>
+      <input type="range" id="sl-range" min="1" max="5" step="0.5" value="3">
+      <span class="sv" id="sv-range">0–3 μm</span>
     </div>
+  </div>
+  <div class="btn-row">
+    <span style="font-size:0.7rem;color:#64748b;margin-right:0.3rem;">Presets:</span>
+    <button class="preset-btn" id="pr-room">Room Temp (300 K)</button>
+    <button class="preset-btn" id="pr-sun">Sun Surface (5778 K)</button>
+    <button class="preset-btn" id="pr-blue">Blue Star (20000 K)</button>
+  </div>
+</div>
 
-    <div class="section">
-      <div class="key-insight">
-        <div class="key-insight-title">Ultraviolet Catastrophe</div>
-        <div class="key-insight-text">Classical physics (Rayleigh-Jeans law) predicts infinite energy at short wavelengths. Toggle the R-J curve to see how it diverges. Planck resolved this by proposing energy quantization: E = nhf. This was the birth of quantum mechanics.</div>
-      </div>
-      <div class="key-insight" style="margin-top:8px">
-        <div class="key-insight-title">Why Stars Have Colors</div>
-        <div class="key-insight-text">Hotter stars emit more at shorter wavelengths (Wien's law). A 3000 K red dwarf peaks in infrared, the Sun (5778 K) peaks in green-yellow, and a 10000 K star peaks in UV, appearing blue-white to our eyes.</div>
-      </div>
-    </div>
+<div id="toast"></div>
 
-    <div class="quiz-section">
-      <div class="section-title">Quiz</div>
-      <div style="margin-bottom:18px">
-        <div class="quiz-q">1. If the temperature of a blackbody doubles, by what factor does its total radiated power increase?</div>
-        <button class="quiz-opt" data-q="1" data-v="a">A) 2</button>
-        <button class="quiz-opt" data-q="1" data-v="b">B) 4</button>
-        <button class="quiz-opt" data-q="1" data-v="c">C) 8</button>
-        <button class="quiz-opt" data-q="1" data-v="d">D) 16</button>
-        <div class="quiz-feedback" id="fb1"></div>
-      </div>
-      <div>
-        <div class="quiz-q">2. The peak wavelength of the Sun's spectrum is about 500 nm. A star with peak wavelength of 250 nm has a surface temperature of approximately:</div>
-        <button class="quiz-opt" data-q="2" data-v="a">A) 2889 K</button>
-        <button class="quiz-opt" data-q="2" data-v="b">B) 5778 K</button>
-        <button class="quiz-opt" data-q="2" data-v="c">C) 11556 K</button>
-        <button class="quiz-opt" data-q="2" data-v="d">D) 23112 K</button>
-        <div class="quiz-feedback" id="fb2"></div>
-      </div>
-    </div>
+<div id="about-modal">
+  <div id="about-content">
+    <h2>Blackbody Radiation Spectrum</h2>
+    <p>Visualizes Planck's radiation law and Wien's displacement law. Adjust temperature to see how the spectrum changes.</p>
+    <p style="margin-top:0.75rem;font-size:0.72rem;color:#0EA5E9;">Keyboard Shortcuts</p>
+    <div class="shortcut-row"><span><kbd>R</kbd></span><span>Reset to default</span></div>
+    <div class="shortcut-row"><span><kbd>1</kbd></span><span>Room Temp (300 K)</span></div>
+    <div class="shortcut-row"><span><kbd>2</kbd></span><span>Sun Surface (5778 K)</span></div>
+    <div class="shortcut-row"><span><kbd>3</kbd></span><span>Blue Star (20000 K)</span></div>
+    <p style="margin-top:1rem;font-size:0.68rem;color:#475569;">[Codex verification skipped — API not configured]<br>Generated by AetherViz Master for Scivra</p>
+    <button class="ctrl-btn btn-primary" style="margin-top:0.75rem;" id="about-close">Close</button>
   </div>
 </div>
 
 <script>
-// ─── Physical Constants ──────────────────────────────────
-const h  = 6.62607015e-34;   // Planck constant (J s)
-const c  = 2.99792458e8;     // Speed of light (m/s)
-const kB = 1.380649e-23;     // Boltzmann constant (J/K)
-const sigma = 5.670374419e-8; // Stefan-Boltzmann constant (W/m^2/K^4)
-const b_wien = 2.897771955e-3; // Wien displacement constant (m K)
+// Physical constants
+const h = 6.62607015e-34;  // Planck's constant (J·s)
+const c = 2.99792458e8;    // speed of light (m/s)
+const k = 1.380649e-23;    // Boltzmann constant (J/K)
+const sigma = 5.670374419e-8; // Stefan-Boltzmann constant (W/m²/K⁴)
+const b = 2.897771955e-3;  // Wien's displacement constant (m·K)
 
-// ─── State ───────────────────────────────────────────────
+// State
 let temperature = 5778;
-let showColorGlow = true;
-let showRayleighJeans = false;
+let lambdaMaxMicron = 3;
 
-// ─── KaTeX Formulas ──────────────────────────────────────
-katex.render("B(\\lambda,T) = \\frac{2hc^2}{\\lambda^5} \\cdot \\frac{1}{e^{hc/\\lambda k_B T}-1}", document.getElementById('formula1'), {displayMode:false,throwOnError:false});
-katex.render("\\lambda_{\\max} = \\frac{b}{T}", document.getElementById('formula2'), {displayMode:false,throwOnError:false});
-katex.render("P = \\sigma T^4", document.getElementById('formula3'), {displayMode:false,throwOnError:false});
-
-// ─── Physics Functions ───────────────────────────────────
-function planck(lambda_m, T) {
-  const a = 2.0 * h * c * c / Math.pow(lambda_m, 5);
-  const exponent = (h * c) / (lambda_m * kB * T);
-  if (exponent > 500) return 0;
-  return a / (Math.exp(exponent) - 1.0);
-}
-
-function rayleighJeans(lambda_m, T) {
-  return (2.0 * c * kB * T) / Math.pow(lambda_m, 4);
-}
-
-function wienPeak(T) {
-  return b_wien / T;
-}
-
-function stefanBoltzmann(T) {
-  return sigma * Math.pow(T, 4);
-}
-
-// ─── Color from Temperature (approximate blackbody) ──────
-function tempToColor(T) {
-  // Attempt CIE-based approximation for visual color
-  let r, g, b_c;
-  const t = T / 100;
-  if (t <= 66) {
-    r = 255;
-    g = Math.max(0, Math.min(255, 99.4708025861 * Math.log(t) - 161.1195681661));
-    if (t <= 19) { b_c = 0; }
-    else { b_c = Math.max(0, Math.min(255, 138.5177312231 * Math.log(t - 10) - 305.0447927307)); }
-  } else {
-    r = Math.max(0, Math.min(255, 329.698727446 * Math.pow(t - 60, -0.1332047592)));
-    g = Math.max(0, Math.min(255, 288.1221695283 * Math.pow(t - 60, -0.0755148492)));
-    b_c = 255;
-  }
-  return { r: r / 255, g: g / 255, b: b_c / 255 };
-}
-
-function tempToHex(T) {
-  const c = tempToColor(T);
-  const toHex = v => Math.round(v * 255).toString(16).padStart(2, '0');
-  return '#' + toHex(c.r) + toHex(c.g) + toHex(c.b);
-}
-
-function wavelengthToRGB(lambda_nm) {
-  // Attempt visible-spectrum color from wavelength
-  let r = 0, g = 0, b = 0;
-  if (lambda_nm >= 380 && lambda_nm < 440) {
-    r = -(lambda_nm - 440) / (440 - 380); b = 1;
-  } else if (lambda_nm >= 440 && lambda_nm < 490) {
-    g = (lambda_nm - 440) / (490 - 440); b = 1;
-  } else if (lambda_nm >= 490 && lambda_nm < 510) {
-    g = 1; b = -(lambda_nm - 510) / (510 - 490);
-  } else if (lambda_nm >= 510 && lambda_nm < 580) {
-    r = (lambda_nm - 510) / (580 - 510); g = 1;
-  } else if (lambda_nm >= 580 && lambda_nm < 645) {
-    r = 1; g = -(lambda_nm - 645) / (645 - 580);
-  } else if (lambda_nm >= 645 && lambda_nm <= 700) {
-    r = 1;
-  }
-  // Intensity falloff at edges
-  let factor;
-  if (lambda_nm >= 380 && lambda_nm < 420) factor = 0.3 + 0.7 * (lambda_nm - 380) / (420 - 380);
-  else if (lambda_nm >= 645 && lambda_nm <= 700) factor = 0.3 + 0.7 * (700 - lambda_nm) / (700 - 645);
-  else if (lambda_nm >= 420 && lambda_nm < 645) factor = 1;
-  else factor = 0;
-  return { r: r * factor, g: g * factor, b: b * factor };
-}
-
-// ─── Three.js Scene ──────────────────────────────────────
-const threeWrap = document.getElementById('threeWrap');
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x080a12);
-threeWrap.appendChild(renderer.domElement);
-
+// Three.js setup for glowing sphere
+const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-camera.position.set(0, 0, 4);
+scene.background = new THREE.Color(0x0f172a);
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.enablePan = false;
-controls.minDistance = 2;
-controls.maxDistance = 8;
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(0, 0, 8);
 
-// Glowing sphere
-const sphereGeo = new THREE.SphereGeometry(0.8, 64, 64);
-const sphereMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  emissive: 0xffffff,
-  emissiveIntensity: 0.6,
-  roughness: 0.3,
-  metalness: 0.0
-});
-const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-scene.add(sphere);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = false;
 
-// Glow sprite
-const glowCanvas = document.createElement('canvas');
-glowCanvas.width = 256;
-glowCanvas.height = 256;
-const glowCtx = glowCanvas.getContext('2d');
-const gradient = glowCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
-gradient.addColorStop(0, 'rgba(255,255,255,0.6)');
-gradient.addColorStop(0.3, 'rgba(255,255,255,0.2)');
-gradient.addColorStop(1, 'rgba(255,255,255,0)');
-glowCtx.fillStyle = gradient;
-glowCtx.fillRect(0, 0, 256, 256);
-const glowTex = new THREE.CanvasTexture(glowCanvas);
-const glowMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
-const glowSprite = new THREE.Sprite(glowMat);
-glowSprite.scale.set(4, 4, 1);
-scene.add(glowSprite);
-
-// Ambient + point light
-const ambientLight = new THREE.AmbientLight(0x1a1a3a, 0.3);
-scene.add(ambientLight);
-const pointLight = new THREE.PointLight(0xffffff, 0.5, 20);
-pointLight.position.set(3, 3, 3);
-scene.add(pointLight);
-
-// Stars background
-const starsGeo = new THREE.BufferGeometry();
-const starPositions = [];
-for (let i = 0; i < 300; i++) {
-  starPositions.push((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
-}
-starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-const starsMat = new THREE.PointsMaterial({ color: 0x445566, size: 0.06 });
-scene.add(new THREE.Points(starsGeo, starsMat));
-
-function updateSphereColor(T) {
-  const col = tempToColor(T);
-  const threeCol = new THREE.Color(col.r, col.g, col.b);
-  sphereMat.emissive.copy(threeCol);
-  sphereMat.color.copy(threeCol);
-  const intensity = Math.min(1.2, 0.3 + (T - 1000) / 9000 * 0.9);
-  sphereMat.emissiveIntensity = showColorGlow ? intensity : 0.15;
-  glowMat.color.copy(threeCol);
-  glowMat.opacity = showColorGlow ? 0.4 + intensity * 0.3 : 0.1;
-  glowSprite.scale.setScalar(showColorGlow ? 3 + intensity * 2 : 2);
-}
-
-function resizeThree() {
-  const w = threeWrap.clientWidth;
-  const h = threeWrap.clientHeight;
+function resizeRenderer() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
+resizeRenderer();
 
-// ─── Chart (Canvas 2D) ──────────────────────────────────
-const chartCanvas = document.getElementById('chartCanvas');
-const ctx = chartCanvas.getContext('2d');
+// Place renderer canvas to the right side (overlay on container)
+renderer.domElement.style.position = 'absolute';
+renderer.domElement.style.top = '0';
+renderer.domElement.style.right = '0';
+renderer.domElement.style.width = '220px';
+renderer.domElement.style.height = '220px';
+renderer.domElement.style.pointerEvents = 'none';
+container.appendChild(renderer.domElement);
 
-const CHART_LAMBDA_MIN = 50;   // nm
-const CHART_LAMBDA_MAX = 3000; // nm
+// Glowing sphere
+const sphereGeo = new THREE.SphereGeometry(1.5, 32, 32);
+const sphereMat = new THREE.MeshStandardMaterial({
+  roughness: 0.3, metalness: 0,
+  emissive: new THREE.Color(0xff4400),
+  emissiveIntensity: 2.0
+});
+const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+scene.add(sphere);
 
-const PRESET_TEMPS = [3000, 5778, 10000];
-const PRESET_COLORS = ['#ef4444', '#fbbf24', '#60a5fa'];
-const PRESET_NAMES = ['3000 K', '5778 K', '10000 K'];
-const CURRENT_COLOR = '#22d3ee';
+const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambient);
+const pointLight = new THREE.PointLight(0xffffff, 1.5, 20);
+pointLight.position.set(3, 3, 5);
+scene.add(pointLight);
 
-function drawChart() {
-  const dpr = Math.min(window.devicePixelRatio, 2);
-  const rect = chartCanvas.parentElement.getBoundingClientRect();
-  const W = rect.width - 24;
-  const H = rect.height - 24;
-  chartCanvas.width = W * dpr;
-  chartCanvas.height = H * dpr;
-  chartCanvas.style.width = W + 'px';
-  chartCanvas.style.height = H + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+// Inline OrbitControls
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.sub(target)); camera.position.add(target);
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
 
-  const pad = { top: 20, right: 20, bottom: 44, left: 62 };
-  const pw = W - pad.left - pad.right;
-  const ph = H - pad.top - pad.bottom;
+// Temperature to RGB color (approximate)
+function tempToColor(T) {
+  let r, g, b_c;
+  if (T < 1000) { r = 0.1; g = 0; b_c = 0; }
+  else if (T < 2000) { r = 1.0; g = 0.15; b_c = 0; }
+  else if (T < 3000) { r = 1.0; g = 0.35; b_c = 0.05; }
+  else if (T < 4000) { r = 1.0; g = 0.55; b_c = 0.15; }
+  else if (T < 6000) { r = 1.0; g = 0.85; b_c = 0.6; }
+  else if (T < 10000) { r = 0.9; g = 0.9; b_c = 1.0; }
+  else if (T < 20000) { r = 0.7; g = 0.8; b_c = 1.0; }
+  else { r = 0.6; g = 0.7; b_c = 1.0; }
+  return new THREE.Color(r, g, b_c);
+}
 
-  // Determine y-max across all visible curves
-  const numPoints = 500;
-  let yMax = 0;
-  const allTemps = [...PRESET_TEMPS, temperature];
-  for (const T of allTemps) {
-    for (let i = 0; i <= numPoints; i++) {
-      const lam = (CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * i / numPoints) * 1e-9;
-      const val = planck(lam, T);
-      if (val > yMax) yMax = val;
-    }
-  }
-  if (showRayleighJeans) {
-    // Cap RJ to 1.5x Planck max to keep chart readable
-    yMax = yMax * 1.5;
-  }
-  yMax *= 1.1;
+// Planck spectral radiance B(lambda, T) in W/m²/sr/m
+function planck(lambdaMeters, T) {
+  const x = (h * c) / (lambdaMeters * k * T);
+  if (x > 700) return 0;
+  return (2 * h * c * c) / (Math.pow(lambdaMeters, 5) * (Math.exp(x) - 1));
+}
 
-  // Background
-  ctx.fillStyle = '#0b0e1a';
-  ctx.fillRect(0, 0, W, H);
+// SVG spectrum plot
+const svg = document.getElementById('svg-overlay');
+let plotW = 0, plotH = 0;
+const PAD = { top: 40, right: 240, bottom: 55, left: 60 };
 
-  // Visible spectrum band
-  const visMinX = pad.left + ((380 - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
-  const visMaxX = pad.left + ((700 - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
-  // Draw rainbow gradient
-  const rainbowGrad = ctx.createLinearGradient(visMinX, 0, visMaxX, 0);
-  const specColors = [
-    [380, 'rgba(128,0,255,0.12)'],
-    [440, 'rgba(0,0,255,0.12)'],
-    [490, 'rgba(0,255,255,0.12)'],
-    [510, 'rgba(0,255,0,0.12)'],
-    [580, 'rgba(255,255,0,0.12)'],
-    [645, 'rgba(255,128,0,0.12)'],
-    [700, 'rgba(255,0,0,0.12)']
-  ];
-  for (const [wl, col] of specColors) {
-    rainbowGrad.addColorStop((wl - 380) / (700 - 380), col);
-  }
-  ctx.fillStyle = rainbowGrad;
-  ctx.fillRect(visMinX, pad.top, visMaxX - visMinX, ph);
+function colorForWavelength(nmVal) {
+  if (nmVal < 380) return '#8B5CF6';
+  if (nmVal < 450) return '#6366F1';
+  if (nmVal < 495) return '#3B82F6';
+  if (nmVal < 570) return '#22C55E';
+  if (nmVal < 590) return '#EAB308';
+  if (nmVal < 620) return '#F97316';
+  if (nmVal < 750) return '#EF4444';
+  return '#991B1B';
+}
 
-  // Label visible region
-  ctx.font = '9px -apple-system, sans-serif';
-  ctx.fillStyle = '#475569';
-  ctx.textAlign = 'center';
-  ctx.fillText('Visible', (visMinX + visMaxX) / 2, pad.top + 12);
-  // Dashed borders
-  ctx.save();
-  ctx.setLineDash([3, 3]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-  ctx.beginPath();
-  ctx.moveTo(visMinX, pad.top);
-  ctx.lineTo(visMinX, pad.top + ph);
-  ctx.moveTo(visMaxX, pad.top);
-  ctx.lineTo(visMaxX, pad.top + ph);
-  ctx.stroke();
-  ctx.restore();
+function getColorRegion(nmVal) {
+  if (nmVal < 380) return 'Ultraviolet';
+  if (nmVal < 750) return 'Visible';
+  return 'Infrared';
+}
+
+function drawSpectrum() {
+  const rect = container.getBoundingClientRect();
+  plotW = rect.width;
+  plotH = rect.height;
+  if (plotW < 10 || plotH < 10) return;
+
+  svg.setAttribute('width', plotW);
+  svg.setAttribute('height', plotH);
+
+  const innerW = plotW - PAD.left - PAD.right;
+  const innerH = plotH - PAD.top - PAD.bottom;
+  if (innerW < 10 || innerH < 10) return;
+
+  const lambdaMaxM = lambdaMaxMicron * 1e-6;
+  const N = 400;
+  const lambdas = [];
+  for (let i = 0; i <= N; i++) lambdas.push((i / N) * lambdaMaxM);
+
+  // Compute values
+  const vals = lambdas.map(l => planck(l, temperature));
+  const maxVal = Math.max(...vals.filter(v => isFinite(v) && v > 0));
+  if (maxVal <= 0) return;
+
+  // Wien peak
+  const lambdaPeak = b / temperature;
+  const lambdaPeakMicron = lambdaPeak * 1e6;
+  const peakVal = planck(lambdaPeak, temperature);
+
+  function xScale(lam) { return PAD.left + (lam / lambdaMaxM) * innerW; }
+  function yScale(val) { return PAD.top + innerH - (val / maxVal) * innerH; }
+
+  // Build SVG
+  let html = '';
+
+  // Gradient defs
+  html += '<defs>';
+  html += '<linearGradient id="specGrad" x1="0" x2="1" y1="0" y2="0">';
+  const visStart = 380e-9 / lambdaMaxM;
+  const visEnd = 750e-9 / lambdaMaxM;
+  html += `<stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.9"/>`;
+  html += `<stop offset="${(visStart*100).toFixed(1)}%" stop-color="#8B5CF6" stop-opacity="0.9"/>`;
+  html += `<stop offset="${((visStart+visEnd)/2*100).toFixed(1)}%" stop-color="#22C55E" stop-opacity="0.9"/>`;
+  html += `<stop offset="${(visEnd*100).toFixed(1)}%" stop-color="#EF4444" stop-opacity="0.9"/>`;
+  html += `<stop offset="100%" stop-color="#991B1B" stop-opacity="0.7"/>`;
+  html += '</linearGradient>';
+  html += '<linearGradient id="fillGrad" x1="0" x2="1" y1="0" y2="0">';
+  html += `<stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.25"/>`;
+  html += `<stop offset="${(visStart*100).toFixed(1)}%" stop-color="#8B5CF6" stop-opacity="0.25"/>`;
+  html += `<stop offset="${((visStart+visEnd)/2*100).toFixed(1)}%" stop-color="#22C55E" stop-opacity="0.25"/>`;
+  html += `<stop offset="${(visEnd*100).toFixed(1)}%" stop-color="#EF4444" stop-opacity="0.25"/>`;
+  html += `<stop offset="100%" stop-color="#991B1B" stop-opacity="0.1"/>`;
+  html += '</linearGradient>';
+  html += '</defs>';
 
   // Grid lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  ctx.lineWidth = 1;
   const yTicks = 5;
   for (let i = 0; i <= yTicks; i++) {
-    const y = pad.top + ph * (1 - i / yTicks);
-    ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(pad.left + pw, y);
-    ctx.stroke();
+    const y = PAD.top + (i / yTicks) * innerH;
+    html += `<line x1="${PAD.left}" y1="${y}" x2="${PAD.left + innerW}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    const val = ((yTicks - i) / yTicks * maxVal);
+    html += `<text x="${PAD.left - 5}" y="${y + 4}" text-anchor="end" font-size="9" fill="#475569">${(val/1e13).toFixed(1)}</text>`;
   }
-  const xTickVals = [0, 250, 500, 750, 1000, 1500, 2000, 2500, 3000];
-  for (const xv of xTickVals) {
-    if (xv < CHART_LAMBDA_MIN || xv > CHART_LAMBDA_MAX) continue;
-    const x = pad.left + ((xv - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
-    ctx.beginPath();
-    ctx.moveTo(x, pad.top);
-    ctx.lineTo(x, pad.top + ph);
-    ctx.stroke();
+  const xTicks = Math.min(8, Math.floor(lambdaMaxMicron * 2));
+  for (let i = 0; i <= xTicks; i++) {
+    const xv = (i / xTicks) * lambdaMaxM;
+    const xp = xScale(xv);
+    html += `<line x1="${xp}" y1="${PAD.top}" x2="${xp}" y2="${PAD.top + innerH}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    html += `<text x="${xp}" y="${PAD.top + innerH + 14}" text-anchor="middle" font-size="9" fill="#475569">${(xv*1e9).toFixed(0)}</text>`;
   }
 
-  // Helper: lambda to x
-  function lamToX(lam_nm) {
-    return pad.left + ((lam_nm - CHART_LAMBDA_MIN) / (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN)) * pw;
-  }
-  function valToY(v) {
-    return pad.top + ph * (1 - Math.min(v, yMax) / yMax);
-  }
-
-  // Draw Planck curves for presets
-  function drawPlanckCurve(T, color, lineWidth, dashed) {
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    if (dashed) ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    let started = false;
-    for (let i = 0; i <= numPoints; i++) {
-      const lam_nm = CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * i / numPoints;
-      const lam_m = lam_nm * 1e-9;
-      const val = planck(lam_m, T);
-      const x = lamToX(lam_nm);
-      const y = valToY(val);
-      if (!started) { ctx.moveTo(x, y); started = true; }
-      else ctx.lineTo(x, y);
+  // Visible light band indicator
+  if (380e-9 < lambdaMaxM) {
+    const xVis1 = xScale(Math.min(380e-9, lambdaMaxM));
+    const xVis2 = xScale(Math.min(750e-9, lambdaMaxM));
+    html += `<rect x="${xVis1}" y="${PAD.top}" width="${xVis2 - xVis1}" height="${innerH}" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>`;
+    if (xVis2 - xVis1 > 30) {
+      html += `<text x="${(xVis1 + xVis2) / 2}" y="${PAD.top + 12}" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">Visible</text>`;
     }
-    ctx.stroke();
-    ctx.restore();
   }
 
-  // Draw preset reference curves (thin)
-  for (let i = 0; i < PRESET_TEMPS.length; i++) {
-    drawPlanckCurve(PRESET_TEMPS[i], PRESET_COLORS[i], 1.2, true);
-  }
-  // Draw current temperature curve (thick, solid)
-  drawPlanckCurve(temperature, CURRENT_COLOR, 2.5, false);
-
-  // Rayleigh-Jeans curve
-  if (showRayleighJeans) {
-    ctx.save();
-    ctx.strokeStyle = '#f87171';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    let started = false;
-    for (let i = 0; i <= numPoints; i++) {
-      const lam_nm = CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * i / numPoints;
-      const lam_m = lam_nm * 1e-9;
-      const val = rayleighJeans(lam_m, temperature);
-      const x = lamToX(lam_nm);
-      const y = valToY(val);
-      if (!started) { ctx.moveTo(x, y); started = true; }
-      else { if (y >= pad.top) ctx.lineTo(x, y); }
+  // Fill area
+  let fillPath = `M ${xScale(0)} ${PAD.top + innerH}`;
+  for (let i = 0; i <= N; i++) {
+    const lam = lambdas[i];
+    const val = vals[i];
+    if (isFinite(val) && val >= 0) {
+      fillPath += ` L ${xScale(lam)} ${yScale(val)}`;
     }
-    ctx.stroke();
-    ctx.restore();
-
-    // Label
-    ctx.font = 'italic 9px -apple-system, sans-serif';
-    ctx.fillStyle = '#f87171';
-    ctx.textAlign = 'left';
-    const rjLabelX = lamToX(200);
-    ctx.fillText('Rayleigh-Jeans', rjLabelX, pad.top + 28);
-    ctx.fillText('(UV catastrophe)', rjLabelX, pad.top + 40);
   }
+  fillPath += ` L ${xScale(lambdaMaxM)} ${PAD.top + innerH} Z`;
+  html += `<path d="${fillPath}" fill="url(#fillGrad)"/>`;
 
-  // Wien displacement arrow for current temp
-  const peakNm = wienPeak(temperature) * 1e9;
-  if (peakNm >= CHART_LAMBDA_MIN && peakNm <= CHART_LAMBDA_MAX) {
-    const peakX = lamToX(peakNm);
-    const peakVal = planck(peakNm * 1e-9, temperature);
-    const peakY = valToY(peakVal);
-    // Arrow pointing down to peak
-    ctx.save();
-    ctx.strokeStyle = CURRENT_COLOR;
-    ctx.fillStyle = CURRENT_COLOR;
-    ctx.lineWidth = 1.5;
-    const arrowTop = Math.max(pad.top, peakY - 30);
-    ctx.beginPath();
-    ctx.moveTo(peakX, arrowTop);
-    ctx.lineTo(peakX, peakY - 5);
-    ctx.stroke();
-    // Arrowhead
-    ctx.beginPath();
-    ctx.moveTo(peakX, peakY - 2);
-    ctx.lineTo(peakX - 3, peakY - 8);
-    ctx.lineTo(peakX + 3, peakY - 8);
-    ctx.closePath();
-    ctx.fill();
-    // Label
-    ctx.font = 'bold 9px -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('λ_max=' + Math.round(peakNm) + ' nm', peakX, arrowTop - 4);
-    ctx.restore();
+  // Curve
+  let curvePath = '';
+  let started = false;
+  for (let i = 0; i <= N; i++) {
+    const lam = lambdas[i];
+    const val = vals[i];
+    if (!isFinite(val) || val < 0) { started = false; continue; }
+    const xp = xScale(lam);
+    const yp = yScale(val);
+    if (!started) { curvePath += `M ${xp} ${yp}`; started = true; }
+    else curvePath += ` L ${xp} ${yp}`;
+  }
+  html += `<path d="${curvePath}" fill="none" stroke="url(#specGrad)" stroke-width="2.5"/>`;
+
+  // Wien peak marker
+  if (lambdaPeak <= lambdaMaxM) {
+    const xPeak = xScale(lambdaPeak);
+    const yPeak = yScale(peakVal);
+    html += `<line x1="${xPeak}" y1="${PAD.top}" x2="${xPeak}" y2="${PAD.top + innerH}" stroke="#FBBF24" stroke-width="1.5" stroke-dasharray="4,4"/>`;
+    html += `<circle cx="${xPeak}" cy="${yPeak}" r="4" fill="#FBBF24" stroke="#0f172a" stroke-width="1.5"/>`;
+    const lblX = xPeak > PAD.left + innerW - 80 ? xPeak - 5 : xPeak + 5;
+    const anchor = xPeak > PAD.left + innerW - 80 ? 'end' : 'start';
+    html += `<text x="${lblX}" y="${yPeak - 8}" text-anchor="${anchor}" font-size="9" fill="#FBBF24">λ_max = ${(lambdaPeakMicron * 1000).toFixed(0)} nm</text>`;
   }
 
   // Axes
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(pad.left, pad.top);
-  ctx.lineTo(pad.left, pad.top + ph);
-  ctx.lineTo(pad.left + pw, pad.top + ph);
-  ctx.stroke();
+  html += `<line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top + innerH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>`;
+  html += `<line x1="${PAD.left}" y1="${PAD.top + innerH}" x2="${PAD.left + innerW}" y2="${PAD.top + innerH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>`;
 
-  // X-axis labels
-  ctx.font = '9px -apple-system, sans-serif';
-  ctx.fillStyle = '#64748b';
-  ctx.textAlign = 'center';
-  for (const xv of xTickVals) {
-    if (xv < CHART_LAMBDA_MIN || xv > CHART_LAMBDA_MAX) continue;
-    const x = lamToX(xv);
-    ctx.fillText(xv, x, pad.top + ph + 14);
+  // Labels
+  html += `<text x="${PAD.left + innerW / 2}" y="${plotH - 6}" text-anchor="middle" font-size="10" fill="#94a3b8">Wavelength (nm)</text>`;
+  html += `<text transform="rotate(-90)" x="${-(PAD.top + innerH / 2)}" y="14" text-anchor="middle" font-size="10" fill="#94a3b8">Spectral Radiance (×10¹³ W/m²/sr/m)</text>`;
+  html += `<text x="${PAD.left + innerW / 2}" y="${PAD.top - 12}" text-anchor="middle" font-size="11" fill="#0EA5E9" font-weight="600">Planck Radiation Curve — T = ${temperature.toLocaleString()} K</text>`;
+
+  svg.innerHTML = html;
+
+  // Update data panel
+  document.getElementById('dp-temp').textContent = temperature.toLocaleString() + ' K';
+  const lmNm = lambdaPeakMicron * 1000;
+  document.getElementById('dp-lmax').textContent = lmNm.toFixed(1) + ' nm';
+  const peakSci = peakVal.toExponential(2);
+  document.getElementById('dp-peak').textContent = peakSci + ' W/m²/sr/m';
+  const totalPow = sigma * Math.pow(temperature, 4);
+  document.getElementById('dp-power').textContent = totalPow.toExponential(2) + ' W/m²';
+  document.getElementById('dp-color').textContent = getColorRegion(lmNm);
+
+  // Update sphere color
+  const col = tempToColor(temperature);
+  sphereMat.emissive.copy(col);
+  const intensity = Math.min(5.0, 1.0 + temperature / 5000);
+  sphereMat.emissiveIntensity = intensity;
+}
+
+// Animation loop
+const clock = new THREE.Clock();
+let sphereAngle = 0;
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  sphereAngle += delta * 0.4;
+  sphere.rotation.y = sphereAngle;
+  renderer.setSize(220, 220);
+  renderer.render(scene, camera);
+});
+
+// Slider handlers
+const slTemp = document.getElementById('sl-temp');
+const svTemp = document.getElementById('sv-temp');
+const slRange = document.getElementById('sl-range');
+const svRange = document.getElementById('sv-range');
+
+slTemp.addEventListener('input', () => {
+  temperature = parseInt(slTemp.value);
+  svTemp.textContent = temperature.toLocaleString() + ' K';
+  drawSpectrum();
+});
+
+slRange.addEventListener('input', () => {
+  lambdaMaxMicron = parseFloat(slRange.value);
+  svRange.textContent = '0–' + lambdaMaxMicron + ' μm';
+  drawSpectrum();
+});
+
+// Preset functions
+function applyPreset(T, range, name) {
+  temperature = T;
+  lambdaMaxMicron = range;
+  slTemp.value = T;
+  slRange.value = range;
+  svTemp.textContent = T.toLocaleString() + ' K';
+  svRange.textContent = '0–' + range + ' μm';
+  drawSpectrum();
+  showToast('Preset: ' + name);
+}
+
+document.getElementById('pr-room').addEventListener('click', () => applyPreset(300, 30, 'Room Temp (300 K)'));
+document.getElementById('pr-sun').addEventListener('click', () => applyPreset(5778, 3, 'Sun Surface (5778 K)'));
+document.getElementById('pr-blue').addEventListener('click', () => applyPreset(20000, 1, 'Blue Star (20000 K)'));
+document.getElementById('btn-reset').addEventListener('click', () => applyPreset(5778, 3, 'Reset'));
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
+// Fullscreen
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+// About modal
+document.getElementById('btn-about').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.add('open');
+});
+document.getElementById('about-close').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.remove('open');
+});
+
+// Quiz toggle
+let quizVisible = true;
+document.getElementById('quiz-toggle').addEventListener('click', () => {
+  quizVisible = !quizVisible;
+  const panel = document.getElementById('quiz-panel');
+  const toggle = document.getElementById('quiz-toggle');
+  if (quizVisible) { panel.classList.remove('hidden'); toggle.textContent = 'Quiz ▲'; }
+  else { panel.classList.add('hidden'); toggle.textContent = 'Quiz ▼'; }
+});
+
+// Quiz answers
+const answers = { q1: 'c', q2: 'c', q3: 'b' };
+const feedbacks = {
+  q1: {
+    correct: '✓ Correct! By Stefan-Boltzmann law, P ∝ T⁴. Doubling T gives 2⁴ = 16× more power.',
+    wrong: 'Not quite. The Stefan-Boltzmann law states P ∝ T⁴. Doubling T multiplies power by 2⁴ = 16.'
+  },
+  q2: {
+    correct: '✓ Correct! By Wien\'s law, λ_max × T = constant. If λ drops to 290/501 ≈ 0.58×, then T must be ~1/0.58 ≈ 1.72× larger, so about twice the Sun\'s temperature.',
+    wrong: 'Remember Wien\'s law: λ_max × T = b. If peak wavelength is shorter (290 nm vs 501 nm), temperature must be higher. 501/290 ≈ 1.73×, so roughly twice the Sun\'s ~5778 K.'
+  },
+  q3: {
+    correct: '✓ Correct! Planck quantized energy: E = nhf. High-frequency oscillators need large energy quanta, which are exponentially less likely to be excited — cutting off the short-wavelength divergence.',
+    wrong: 'The key insight was quantization: energy is exchanged only in packets E = nhf. This makes high-frequency modes exponentially suppressed, eliminating the UV catastrophe.'
   }
-  ctx.fillText('Wavelength (nm)', pad.left + pw / 2, pad.top + ph + 32);
-
-  // Y-axis label
-  ctx.save();
-  ctx.translate(14, pad.top + ph / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#64748b';
-  ctx.font = '9px -apple-system, sans-serif';
-  ctx.fillText('Spectral Radiance (W/sr/m\u00B3)', 0, 0);
-  ctx.restore();
-
-  // Y-axis tick labels
-  ctx.textAlign = 'right';
-  ctx.fillStyle = '#475569';
-  ctx.font = '8px -apple-system, sans-serif';
-  for (let i = 0; i <= yTicks; i++) {
-    const val = yMax * i / yTicks;
-    const y = pad.top + ph * (1 - i / yTicks);
-    let label;
-    if (val === 0) label = '0';
-    else {
-      const exp = Math.floor(Math.log10(val));
-      const mantissa = val / Math.pow(10, exp);
-      label = mantissa.toFixed(1) + 'e' + exp;
-    }
-    ctx.fillText(label, pad.left - 5, y + 3);
-  }
-
-  // Visible wavelength color bar at bottom of chart
-  const barH = 6;
-  const barY = pad.top + ph - barH;
-  for (let px = Math.max(0, visMinX - pad.left); px <= Math.min(pw, visMaxX - pad.left); px++) {
-    const lam_nm = CHART_LAMBDA_MIN + (CHART_LAMBDA_MAX - CHART_LAMBDA_MIN) * px / pw;
-    if (lam_nm < 380 || lam_nm > 700) continue;
-    const rgb = wavelengthToRGB(lam_nm);
-    ctx.fillStyle = `rgb(${Math.round(rgb.r*255)},${Math.round(rgb.g*255)},${Math.round(rgb.b*255)})`;
-    ctx.fillRect(pad.left + px, barY, 1.5, barH);
-  }
-}
-
-// ─── Update Stats ────────────────────────────────────────
-function updateStats() {
-  const T = temperature;
-  const lambdaMax = wienPeak(T);
-  const lambdaMaxNm = lambdaMax * 1e9;
-  const power = stefanBoltzmann(T);
-  const col = tempToColor(T);
-  const hex = tempToHex(T);
-
-  document.getElementById('statT').textContent = T + ' K';
-  document.getElementById('tempVal').textContent = T + ' K';
-  document.getElementById('statLambda').textContent = Math.round(lambdaMaxNm) + ' nm';
-
-  // Power formatting
-  let powerStr;
-  if (power < 1e6) powerStr = (power / 1e3).toFixed(1) + ' kW/m\u00B2';
-  else if (power < 1e9) powerStr = (power / 1e6).toFixed(2) + ' MW/m\u00B2';
-  else powerStr = (power / 1e9).toFixed(2) + ' GW/m\u00B2';
-  document.getElementById('statPower').textContent = powerStr;
-
-  document.getElementById('colorSwatch').style.background = hex;
-
-  // Color name
-  let colorName;
-  if (lambdaMaxNm > 700) colorName = 'Infrared (deep red glow)';
-  else if (lambdaMaxNm > 620) colorName = 'Red';
-  else if (lambdaMaxNm > 590) colorName = 'Orange';
-  else if (lambdaMaxNm > 560) colorName = 'Yellow';
-  else if (lambdaMaxNm > 490) colorName = 'Green-Yellow';
-  else if (lambdaMaxNm > 450) colorName = 'Blue';
-  else colorName = 'Violet / UV';
-  document.getElementById('colorName').textContent = colorName;
-  document.getElementById('colorName').style.color = hex;
-}
-
-// ─── Preset Buttons ──────────────────────────────────────
-document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    temperature = parseInt(btn.dataset.temp);
-    document.getElementById('tempSlider').value = temperature;
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    refresh();
-  });
-});
-
-function updatePresetHighlight() {
-  document.querySelectorAll('.preset-btn').forEach(b => {
-    b.classList.toggle('active', parseInt(b.dataset.temp) === temperature);
-  });
-}
-
-// ─── Slider ──────────────────────────────────────────────
-document.getElementById('tempSlider').addEventListener('input', e => {
-  temperature = parseInt(e.target.value);
-  updatePresetHighlight();
-  refresh();
-});
-
-// ─── Toggles ─────────────────────────────────────────────
-document.getElementById('showColor').addEventListener('change', e => {
-  showColorGlow = e.target.checked;
-  refresh();
-});
-document.getElementById('showRJ').addEventListener('change', e => {
-  showRayleighJeans = e.target.checked;
-  drawChart();
-});
-
-function refresh() {
-  updateSphereColor(temperature);
-  updateStats();
-  drawChart();
-}
-
-// ─── Quiz ────────────────────────────────────────────────
-const answers = { '1': 'd', '2': 'c' };
-const explanations = {
-  '1': { ok: 'Correct! P = σT⁴, so doubling T gives 2⁴ = 16 times the power.', no: 'Incorrect. P = σT⁴ (Stefan-Boltzmann law). Doubling T: P\' = σ(2T)⁴ = 16σT⁴. The answer is 16.' },
-  '2': { ok: 'Correct! Wien\'s law: T = b/λ_max. Half the wavelength means double the temperature: 2 × 5778 ≈ 11556 K.', no: 'Incorrect. Wien\'s law gives T = b/λ_max. Since λ_max is halved (500→250 nm), T doubles: 2 × 5778 ≈ 11556 K.' }
 };
 
-document.querySelectorAll('.quiz-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const q = btn.dataset.q;
-    const v = btn.dataset.v;
-    const fb = document.getElementById('fb' + q);
-    const isCorrect = v === answers[q];
-
-    // Disable all options for this question
-    document.querySelectorAll(`.quiz-opt[data-q="${q}"]`).forEach(b => {
-      b.style.pointerEvents = 'none';
-      if (b.dataset.v === answers[q]) b.classList.add('correct');
-    });
-    if (!isCorrect) btn.classList.add('wrong');
-
-    fb.textContent = isCorrect ? explanations[q].ok : explanations[q].no;
-    fb.className = 'quiz-feedback show ' + (isCorrect ? 'ok' : 'no');
+['q1','q2','q3'].forEach(qid => {
+  document.getElementById(qid + '-check').addEventListener('click', () => {
+    const sel = document.querySelector(`input[name="${qid}"]:checked`);
+    const fb = document.getElementById(qid + '-fb');
+    if (!sel) { fb.textContent = 'Please select an answer.'; fb.style.display = 'block'; fb.className = 'q-feedback wrong'; return; }
+    const isCorrect = sel.value === answers[qid];
+    fb.textContent = isCorrect ? feedbacks[qid].correct : feedbacks[qid].wrong;
+    fb.className = 'q-feedback ' + (isCorrect ? 'correct' : 'wrong');
+    fb.style.display = 'block';
   });
 });
 
-// ─── Resize ──────────────────────────────────────────────
-function onResize() {
-  resizeThree();
-  drawChart();
-}
-window.addEventListener('resize', onResize);
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'r' || e.key === 'R') applyPreset(5778, 3, 'Reset');
+  if (e.key === '1') applyPreset(300, 30, 'Room Temp (300 K)');
+  if (e.key === '2') applyPreset(5778, 3, 'Sun Surface (5778 K)');
+  if (e.key === '3') applyPreset(20000, 1, 'Blue Star (20000 K)');
+});
 
-// ─── Animation Loop ──────────────────────────────────────
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  sphere.rotation.y += 0.002;
-  renderer.render(scene, camera);
-}
+// KaTeX
+document.addEventListener('DOMContentLoaded', () => {});
+katex.render('B(\\lambda,T) = \\dfrac{2hc^2}{\\lambda^5} \\cdot \\dfrac{1}{e^{hc/\\lambda k_B T} - 1}', document.getElementById('f1'), { displayMode: true, throwOnError: false });
+katex.render('\\lambda_{\\max} = \\dfrac{b}{T}, \\quad b = 2.898 \\times 10^{-3}\\ \\text{m·K}', document.getElementById('f2'), { displayMode: true, throwOnError: false });
+katex.render('P = \\sigma T^4 A, \\quad \\sigma = 5.67 \\times 10^{-8}\\ \\text{W/m}^2\\text{/K}^4', document.getElementById('f3'), { displayMode: true, throwOnError: false });
 
-// ─── Init ────────────────────────────────────────────────
-resizeThree();
-updateSphereColor(temperature);
-updateStats();
-drawChart();
-animate();
+// Initial draw and resize
+drawSpectrum();
+window.addEventListener('resize', () => { resizeRenderer(); drawSpectrum(); });
+
+// Set initial slider display
+svTemp.textContent = temperature.toLocaleString() + ' K';
+svRange.textContent = '0–' + lambdaMaxMicron + ' μm';
 </script>
 </body>
 </html>

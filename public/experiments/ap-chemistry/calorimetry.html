@@ -1,377 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calorimetry — Scivra AP Chemistry</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      user-select: none;
-    }
-    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-    #ui {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; flex-direction: column; justify-content: space-between;
-      pointer-events: none; padding: 12px;
-    }
-    .panel {
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(16,185,129,0.25);
-      border-radius: 8px;
-      padding: 12px 14px;
-      pointer-events: all;
-      backdrop-filter: blur(10px);
-    }
-    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
-    .badge {
-      font-size: 0.6rem; background: rgba(16,185,129,0.18);
-      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
-      vertical-align: middle; margin-left: 6px;
-    }
-    .subtitle { font-size: 0.7rem; color: #94a3b8; }
-    button {
-      background: rgba(16,185,129,0.12);
-      border: 1px solid rgba(16,185,129,0.25);
-      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
-      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
-    }
-    button:hover { background: rgba(16,185,129,0.25); }
-    select {
-      background: rgba(16,185,129,0.12);
-      border: 1px solid rgba(16,185,129,0.25);
-      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
-    }
-    select option { background: #1e293b; color: #e2e8f0; }
-    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
-    .controls { display: flex; flex-direction: column; gap: 5px; min-width: 220px; }
-    .controls label { font-size: 0.65rem; color: #94a3b8; }
-    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
-    .data-row {
-      display: flex; justify-content: space-between; padding: 3px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
-    }
-    .big-val { font-size: 1.6rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; text-align: center; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calorimetry — AP Chemistry</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(245,158,11,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(245,158,11,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px; }
+  .panel-card { background:rgba(78,52,22,0.6);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#EF4444);cursor:pointer; }
+  .sidebar { width:300px;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(245,158,11,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.4);border-radius:2px;}
+  .btn-preset { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(245,158,11,0.3);cursor:pointer;background:rgba(245,158,11,0.1);color:#fcd34d;transition:all 0.18s; }
+  .btn-preset:hover { background:rgba(245,158,11,0.25);color:#fff; }
+  .btn-speed { padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;border-color:#F59E0B; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#fbbf24; }
+  .slider-row { display:flex;flex-direction:column;gap:4px; }
+  .slider-label { display:flex;justify-content:space-between;font-size:12px; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#F59E0B;background:rgba(245,158,11,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100; }
+</style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<div id="ui">
-  <div class="top-bar">
-    <div class="panel title-block">
-      <h1>Calorimetry <span class="badge">AP Chemistry</span></h1>
-      <p class="subtitle">q = mcΔT — mix solutions, measure heat transfer</p>
-    </div>
-    <div class="panel controls">
-      <label>Experiment Type:</label>
-      <select id="typeSelect">
-        <option value="0">Simple Mixing (hot + cold water)</option>
-        <option value="1">Acid-Base Neutralization</option>
-        <option value="2">Salt Dissolution</option>
-      </select>
-      <label>Mass A: <span class="data-val" id="massADisplay">50</span> g &nbsp; Temp A: <span class="data-val" id="tempADisplay">25</span> °C</label>
-      <input type="range" id="massASlider" min="10" max="200" value="50">
-      <input type="range" id="tempASlider" min="0" max="100" value="25">
-      <label>Mass B: <span class="data-val" id="massBDisplay">50</span> g &nbsp; Temp B: <span class="data-val" id="tempBDisplay">75</span> °C</label>
-      <input type="range" id="massBSlider" min="10" max="200" value="50">
-      <input type="range" id="tempBSlider" min="0" max="100" value="75">
-      <button id="mixBtn">Mix!</button> <button id="resetBtn">Reset</button>
-    </div>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(245,158,11,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F59E0B,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Calorimetry</span>
+    <span class="text-xs text-slate-400 ml-3">q = mcΔT · Heat Flow · AP Chemistry</span>
   </div>
-  <div class="bottom-bar">
-    <div class="panel" style="min-width:200px;">
-      <div class="panel-title">Measurements</div>
-      <div class="big-val" id="finalTempDisplay">—</div>
-      <div style="text-align:center;font-size:0.65rem;color:#94a3b8;">Final Temperature (°C)</div>
-      <div class="data-row"><span>ΔT (cold side)</span><span class="data-val" id="dtColdDisplay">—</span></div>
-      <div class="data-row"><span>ΔT (hot side)</span><span class="data-val" id="dtHotDisplay">—</span></div>
-      <div class="data-row"><span>q (heat transfer)</span><span class="data-val" id="qDisplay">—</span></div>
-      <div class="data-row"><span>ΔH (if rxn)</span><span class="data-val" id="dhDisplay">—</span></div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-3">Core Formulas</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Heat gained/lost by solution</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Heat of reaction is negative of solution heat</div>
+    <div id="f3" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Molar enthalpy from total heat and moles</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">Calculation Results</div>
+    <div id="calc-results" class="text-xs text-slate-300 space-y-1"></div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">Concept</div>
+    <p class="text-xs text-slate-300 leading-relaxed">A coffee-cup calorimeter measures heat exchange at constant pressure (qₚ = ΔH). Heat flows from the warmer to the cooler component until thermal equilibrium is reached. The temperature change of the solution reveals the heat of reaction.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">Exothermic reactions (ΔH &lt; 0) raise the solution temperature. Endothermic reactions (ΔH &gt; 0) lower it. The calorimeter is assumed to have negligible heat capacity.</p>
+  </div>
+
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-cyan-400 mb-1">AP Exam Tip</div>
+    <div class="text-xs text-slate-300">q_solution = mcΔT where ΔT = T_final - T_initial. q_rxn = -q_solution. Convert to molar enthalpy using moles of limiting reagent from the balanced equation.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">Calorimetry underpins food calorie labeling, industrial process heat management, and pharmaceuticals. Bomb calorimeters measure combustion ΔH at constant volume (qᵥ = ΔU).</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-slate-400 mb-1">Keyboard Shortcuts</div>
+    <div class="text-xs text-slate-500">Space: Animate | R: Reset | 1-3: Presets</div>
+  </div>
+</aside>
+
+<div class="flex-1 flex flex-col overflow-hidden relative">
+  <div id="canvas-container" class="flex-1 relative">
+
+    <div id="data-overlay" class="absolute top-3 left-3 glass p-3 z-10" style="min-width:230px;">
+      <div class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">T_initial</span><span class="data-val" id="d-Ti">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">T_final</span><span class="data-val" id="d-Tf">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">ΔT</span><span class="data-val" id="d-dT">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">q_solution</span><span class="data-val" id="d-qsol">—</span></div>
+      <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">ΔH_rxn</span><span class="data-val" id="d-dH">—</span></div>
     </div>
-    <div class="panel" style="max-width:380px;">
-      <div class="panel-title">Heat Equation</div>
-      <div id="formulaDisplay"></div>
+
+    <canvas id="three-canvas" class="w-full h-full block"></canvas>
+    <canvas id="temp-canvas" class="absolute bottom-3 right-3 z-10" width="220" height="130" style="border-radius:10px;background:rgba(15,23,42,0.85);border:1px solid rgba(245,158,11,0.3);"></canvas>
+  </div>
+
+  <div class="shrink-0 glass p-4 m-2 mt-0" style="background:rgba(15,23,42,0.85);">
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex gap-2">
+          <button onclick="loadPreset(0)" class="btn-preset">🧂 NaOH+HCl Neutralization</button>
+          <button onclick="loadPreset(1)" class="btn-preset">🔥 Combustion of Methane</button>
+          <button onclick="loadPreset(2)" class="btn-preset">🧊 Ice in Water (Fusion)</button>
+        </div>
+        <div class="flex gap-1">
+          <button class="btn-speed active" onclick="setSpeed(0.25,this)">0.25x</button>
+          <button class="btn-speed" onclick="setSpeed(1,this)">1x</button>
+          <button class="btn-speed" onclick="setSpeed(2,this)">2x</button>
+          <button class="btn-speed" onclick="setSpeed(3,this)">3x</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-3">
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">Mass (g)</span><span class="text-white font-bold" id="val-mass">100 g</span></div>
+          <input type="range" id="sl-mass" min="10" max="500" value="100" step="5" oninput="updateCalor()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">c (J/g·K)</span><span class="text-white font-bold" id="val-c">4.18</span></div>
+          <input type="range" id="sl-c" min="0.5" max="8" value="4.18" step="0.1" oninput="updateCalor()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">T_initial (°C)</span><span class="text-white font-bold" id="val-Ti">25.0°C</span></div>
+          <input type="range" id="sl-Ti" min="0" max="80" value="25" step="0.5" oninput="updateCalor()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span class="text-amber-300">ΔT (°C)</span><span class="text-white font-bold" id="val-dTsl">+5.0°C</span></div>
+          <input type="range" id="sl-dT" min="-30" max="30" value="5" step="0.5" oninput="updateCalor()">
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="togglePlay()" id="play-btn" class="btn-preset px-4">▶ Animate</button>
+        <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+        <button onclick="showQuiz()" class="btn-preset">? Quiz</button>
+      </div>
     </div>
   </div>
 </div>
+</div>
+
+<div id="quiz-panel" class="glass p-4 hidden">
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-sm font-bold text-amber-400">Quick Check</div>
+    <button onclick="document.getElementById('quiz-panel').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">×</button>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+<div id="toast"></div>
 
 <script>
-const C_WATER = 4.184; // J/(g·°C)
-
-// Reaction enthalpy additions (J per g of solution)
-const REACTION_DH = [0, 0.57, -0.35]; // mixing=0, acid-base exothermic, dissolution endothermic
-
-let typeIdx = 0, massA = 50, tempA = 25, massB = 50, tempB = 75;
-let mixing = false, mixProgress = 0, tempCurve = [], currentTemp = 0, finalTemp = 0;
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize);
-resize();
-
-function calcFinalTemp() {
-  const totalMass = massA + massB;
-  const baseTf = (massA * C_WATER * tempA + massB * C_WATER * tempB) / (totalMass * C_WATER);
-  const reactionDelta = REACTION_DH[typeIdx] * totalMass / (totalMass * C_WATER);
-  return baseTf + reactionDelta;
-}
-
-function startMix() {
-  finalTemp = calcFinalTemp();
-  mixing = true;
-  mixProgress = 0;
-  tempCurve = [];
-  currentTemp = Math.min(tempA, tempB);
-
-  const coldT = Math.min(tempA, tempB);
-  const hotT = Math.max(tempA, tempB);
-
-  document.getElementById('finalTempDisplay').textContent = finalTemp.toFixed(1);
-  document.getElementById('dtColdDisplay').textContent = (finalTemp - coldT).toFixed(1) + ' °C';
-  document.getElementById('dtHotDisplay').textContent = (finalTemp - hotT).toFixed(1) + ' °C';
-
-  const q = (massA + massB) * C_WATER * Math.abs(finalTemp - coldT);
-  document.getElementById('qDisplay').textContent = (q / 1000).toFixed(2) + ' kJ';
-
-  if (typeIdx > 0) {
-    const dh = REACTION_DH[typeIdx] * (massA + massB);
-    document.getElementById('dhDisplay').textContent = (dh / 1000).toFixed(2) + ' kJ';
-  } else {
-    document.getElementById('dhDisplay').textContent = 'N/A';
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
   }
-}
-
-function resetExperiment() {
-  mixing = false;
-  mixProgress = 0;
-  tempCurve = [];
-  document.getElementById('finalTempDisplay').textContent = '—';
-  document.getElementById('dtColdDisplay').textContent = '—';
-  document.getElementById('dtHotDisplay').textContent = '—';
-  document.getElementById('qDisplay').textContent = '—';
-  document.getElementById('dhDisplay').textContent = '—';
-}
-
-function tempToColor(t) {
-  // Blue (cold) → Green (warm) → Red (hot)
-  const ratio = Math.max(0, Math.min(1, t / 100));
-  if (ratio < 0.5) {
-    const r2 = ratio * 2;
-    return [Math.round(59 * (1-r2)), Math.round(130 + 55 * r2), Math.round(246 * (1-r2))];
-  } else {
-    const r2 = (ratio - 0.5) * 2;
-    return [Math.round(239 * r2), Math.round(185 * (1-r2) + 68 * r2), Math.round(129 * (1-r2))];
-  }
-}
-
-function drawThermometer(x, y, h, temp, label) {
-  const bulbR = 12;
-  const tubeW = 8;
-  const fillRatio = Math.max(0.05, Math.min(1, temp / 100));
-  const tc = tempToColor(temp);
-
-  // Tube
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.rect(x - tubeW/2, y - h, tubeW, h);
-  ctx.stroke();
-
-  // Fill
-  ctx.fillStyle = `rgb(${tc[0]},${tc[1]},${tc[2]})`;
-  const fillH = h * fillRatio;
-  ctx.fillRect(x - tubeW/2 + 1, y - fillH, tubeW - 2, fillH);
-
-  // Bulb
-  ctx.beginPath();
-  ctx.arc(x, y + bulbR/2, bulbR, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Labels
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '9px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(label, x, y + bulbR + 16);
-  ctx.fillStyle = `rgb(${tc[0]},${tc[1]},${tc[2]})`;
-  ctx.font = '12px JetBrains Mono, monospace';
-  ctx.fillText(temp.toFixed(1) + '°C', x, y - h - 8);
-}
-
-function animate() {
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
-
-  if (mixing) {
-    mixProgress = Math.min(1, mixProgress + 0.008);
-    // Exponential approach to final temp
-    const coldT = Math.min(tempA, tempB);
-    currentTemp = coldT + (finalTemp - coldT) * (1 - Math.exp(-mixProgress * 4));
-    tempCurve.push(currentTemp);
-    if (tempCurve.length > 300) tempCurve.shift();
-  }
-
-  // Draw calorimeter (center)
-  const cx = w * 0.38, cy = h * 0.42;
-  const calW = 120, calH = 150;
-
-  // Cup
-  ctx.strokeStyle = 'rgba(16,185,129,0.3)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(cx - calW/2, cy - calH/2);
-  ctx.lineTo(cx - calW/2 - 5, cy + calH/2);
-  ctx.lineTo(cx + calW/2 + 5, cy + calH/2);
-  ctx.lineTo(cx + calW/2, cy - calH/2);
-  ctx.stroke();
-
-  // Lid
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.beginPath();
-  ctx.moveTo(cx - calW/2 - 8, cy - calH/2);
-  ctx.lineTo(cx + calW/2 + 8, cy - calH/2);
-  ctx.stroke();
-
-  if (mixing) {
-    // Mixed solution
-    const tc = tempToColor(currentTemp);
-    ctx.fillStyle = `rgba(${tc[0]},${tc[1]},${tc[2]},0.3)`;
-    const fillH = calH * 0.75;
-    ctx.fillRect(cx - calW/2, cy + calH/2 - fillH, calW, fillH);
-
-    // Thermometer in cup
-    drawThermometer(cx, cy - 10, 80, currentTemp, 'Mixture');
-  } else {
-    // Two beakers before mixing
-    const tc1 = tempToColor(tempA);
-    const tc2 = tempToColor(tempB);
-
-    // Beaker A (left)
-    ctx.fillStyle = `rgba(${tc1[0]},${tc1[1]},${tc1[2]},0.3)`;
-    ctx.fillRect(cx - calW/2, cy + calH/2 - calH * 0.4, calW * 0.45, calH * 0.4);
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '10px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('A', cx - calW/4, cy + calH/2 + 14);
-
-    // Beaker B (right)
-    ctx.fillStyle = `rgba(${tc2[0]},${tc2[1]},${tc2[2]},0.3)`;
-    ctx.fillRect(cx + calW * 0.05, cy + calH/2 - calH * 0.4, calW * 0.45, calH * 0.4);
-    ctx.fillText('B', cx + calW/4, cy + calH/2 + 14);
-
-    drawThermometer(cx - 45, cy - 10, 60, tempA, 'Sol. A');
-    drawThermometer(cx + 45, cy - 10, 60, tempB, 'Sol. B');
-  }
-
-  // Temperature vs time graph (right side)
-  const gx = w * 0.6, gy = h * 0.18;
-  const gw = w * 0.32, gh = h * 0.55;
-
-  ctx.strokeStyle = 'rgba(16,185,129,0.2)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(gx, gy, gw, gh);
-
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '10px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Time (s)', gx + gw/2, gy + gh + 16);
-  ctx.save();
-  ctx.translate(gx - 14, gy + gh/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText('Temperature (°C)', 0, 0);
-  ctx.restore();
-
-  // Grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  for (let i = 1; i < 5; i++) {
-    ctx.beginPath();
-    ctx.moveTo(gx, gy + gh * i/5);
-    ctx.lineTo(gx + gw, gy + gh * i/5);
-    ctx.stroke();
-  }
-
-  // Temperature axis labels
-  ctx.fillStyle = '#64748b';
-  ctx.font = '9px JetBrains Mono, monospace';
-  ctx.textAlign = 'right';
-  for (let i = 0; i <= 5; i++) {
-    ctx.fillText((100 - i * 20) + '°', gx - 4, gy + gh * i/5 + 3);
-  }
-
-  // Plot curve
-  if (tempCurve.length > 1) {
-    ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    tempCurve.forEach((t, i) => {
-      const px = gx + (i / 300) * gw;
-      const py = gy + gh * (1 - t / 100);
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    });
-    ctx.stroke();
-
-    // Final temp reference line
-    if (mixing && mixProgress > 0.3) {
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(16,185,129,0.4)';
-      ctx.lineWidth = 1;
-      const fy = gy + gh * (1 - finalTemp / 100);
-      ctx.beginPath();
-      ctx.moveTo(gx, fy);
-      ctx.lineTo(gx + gw, fy);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#6ee7b7';
-      ctx.textAlign = 'left';
-      ctx.font = '9px JetBrains Mono, monospace';
-      ctx.fillText('T_f = ' + finalTemp.toFixed(1) + '°C', gx + gw + 4, fy + 3);
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0) {
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
     }
-  }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sd.theta*d; spherical.phi+=sd.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
 
-  requestAnimationFrame(animate);
+const PRESETS = [
+  { label:'NaOH+HCl Neutralization', mass:100, c:4.18, Ti:25, dT:6.7, moles:0.05, molM:40, type:'exo' },
+  { label:'Combustion of Methane', mass:200, c:4.18, Ti:20, dT:12.5, moles:0.01, molM:16, type:'exo' },
+  { label:'Ice in Water (Fusion)', mass:150, c:4.18, Ti:25, dT:-10.7, moles:0.03, molM:18, type:'endo' }
+];
+
+let scene, camera, renderer, controls;
+let fluidMesh, heatArrows = [], heatParticles = [];
+let playing = false, speed = 0.25, animT = 0;
+let tempHistory = [];
+let currentTi = 25, currentDT = 5;
+
+function loadPreset(idx) {
+  const p = PRESETS[idx];
+  document.getElementById('sl-mass').value = p.mass;
+  document.getElementById('sl-c').value = p.c;
+  document.getElementById('sl-Ti').value = p.Ti;
+  document.getElementById('sl-dT').value = p.dT;
+  tempHistory = [];
+  updateCalor();
+  toast('Loaded: ' + p.label);
 }
 
-// Controls
-document.getElementById('typeSelect').addEventListener('change', e => { typeIdx = +e.target.value; resetExperiment(); });
-document.getElementById('massASlider').addEventListener('input', e => {
-  massA = +e.target.value;
-  document.getElementById('massADisplay').textContent = massA;
-  resetExperiment();
-});
-document.getElementById('tempASlider').addEventListener('input', e => {
-  tempA = +e.target.value;
-  document.getElementById('tempADisplay').textContent = tempA;
-  resetExperiment();
-});
-document.getElementById('massBSlider').addEventListener('input', e => {
-  massB = +e.target.value;
-  document.getElementById('massBDisplay').textContent = massB;
-  resetExperiment();
-});
-document.getElementById('tempBSlider').addEventListener('input', e => {
-  tempB = +e.target.value;
-  document.getElementById('tempBDisplay').textContent = tempB;
-  resetExperiment();
-});
-document.getElementById('mixBtn').addEventListener('click', startMix);
-document.getElementById('resetBtn').addEventListener('click', resetExperiment);
+function updateCalor() {
+  const mass = parseFloat(document.getElementById('sl-mass').value);
+  const c = parseFloat(document.getElementById('sl-c').value);
+  const Ti = parseFloat(document.getElementById('sl-Ti').value);
+  const dT = parseFloat(document.getElementById('sl-dT').value);
+  const Tf = Ti + dT;
+  const qsol = mass * c * dT; // J
+  const qrxn = -qsol;
+  const moles = 0.05; // simplified
 
-try {
-  katex.render('q = mc\\Delta T', document.getElementById('formulaDisplay'), { displayMode: true });
-} catch(e) {}
+  document.getElementById('val-mass').textContent = mass + ' g';
+  document.getElementById('val-c').textContent = c.toFixed(2);
+  document.getElementById('val-Ti').textContent = Ti.toFixed(1) + '°C';
+  document.getElementById('val-dTsl').textContent = (dT >= 0 ? '+' : '') + dT.toFixed(1) + '°C';
 
-animate();
+  document.getElementById('d-Ti').textContent = Ti.toFixed(1) + ' °C';
+  document.getElementById('d-Tf').textContent = Tf.toFixed(1) + ' °C';
+  document.getElementById('d-dT').textContent = (dT >= 0 ? '+' : '') + dT.toFixed(1) + ' °C';
+  document.getElementById('d-qsol').textContent = (qsol/1000).toFixed(3) + ' kJ';
+  document.getElementById('d-dH').textContent = (qrxn / 1000 / moles).toFixed(1) + ' kJ/mol';
+
+  currentTi = Ti; currentDT = dT;
+
+  const results = document.getElementById('calc-results');
+  results.innerHTML = `
+    <div>1. q_sol = ${mass}×${c.toFixed(2)}×${dT.toFixed(1)} = <b>${(qsol/1000).toFixed(3)} kJ</b></div>
+    <div>2. q_rxn = -q_sol = <b>${(-qsol/1000).toFixed(3)} kJ</b></div>
+    <div>3. ΔH = q_rxn / n = <b>${(qrxn/1000/moles).toFixed(1)} kJ/mol</b></div>
+    <div style="color:${dT>0?'#ef4444':'#38bdf8'}">${dT>0?'⬆ Exothermic reaction (ΔH < 0)':'⬇ Endothermic reaction (ΔH > 0)'}</div>
+  `;
+
+  if (fluidMesh) {
+    const pct = (Tf - 0) / 100;
+    const r = Math.round(pct * 255);
+    const b = Math.round((1-pct) * 255);
+    fluidMesh.material.color.setRGB(r/255, 0.2, b/255);
+    fluidMesh.material.emissive.setRGB(r/512, 0.1, b/512);
+  }
+
+  tempHistory.push(Tf);
+  if (tempHistory.length > 50) tempHistory.shift();
+  drawTempGraph();
+}
+
+function drawTempGraph() {
+  const cvs = document.getElementById('temp-canvas');
+  const ctx = cvs.getContext('2d');
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  ctx.strokeStyle='rgba(245,158,11,0.3)';
+  ctx.strokeRect(20,10,cvs.width-30,cvs.height-25);
+  ctx.fillStyle='#94a3b8'; ctx.font='9px Inter';
+  ctx.fillText('T(°C)',2,20); ctx.fillText('Time →',70,cvs.height-3);
+
+  const Ti = currentTi;
+  const Tf = Ti + currentDT;
+  const pts = [];
+  for (let i = 0; i < 60; i++) {
+    const t2 = i / 60;
+    let T;
+    if (i < 20) T = Ti + (Math.random()-0.5)*0.1;
+    else T = Ti + (Tf-Ti) * Math.min((i-20)/10, 1) + (Math.random()-0.5)*0.1;
+    pts.push(T);
+  }
+
+  const allT = pts;
+  const minT = Math.min(...allT) - 2;
+  const maxT = Math.max(...allT) + 2;
+  const w = cvs.width-30, h = cvs.height-25;
+
+  ctx.beginPath(); ctx.strokeStyle='#F59E0B'; ctx.lineWidth=2;
+  pts.forEach((T, i) => {
+    const x = 20 + (i/(pts.length-1))*w;
+    const y = 10 + ((maxT-T)/(maxT-minT))*h;
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Highlight final T
+  ctx.fillStyle='#EF4444'; ctx.beginPath();
+  ctx.arc(20+w, 10+((maxT-Tf)/(maxT-minT))*h, 4, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='9px Inter';
+  ctx.fillText('Tf='+Tf.toFixed(1)+'°C', cvs.width-70, 10+((maxT-Tf)/(maxT-minT))*h+12);
+}
+
+function initThree() {
+  const canvas = document.getElementById('three-canvas');
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0x0f172a, 1);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(0, 5, 16);
+  controls = new THREE.OrbitControls(camera, canvas);
+  controls.minDistance = 4; controls.maxDistance = 30;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const d1 = new THREE.DirectionalLight(0xfff5e0, 1.2); d1.position.set(5,10,8); scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0xF59E0B, 0.5); d2.position.set(-8,3,-5); scene.add(d2);
+  const d3 = new THREE.DirectionalLight(0x3b82f6, 0.3); d3.position.set(0,-5,5); scene.add(d3);
+
+  // Coffee cup shape
+  const cupPts = [];
+  for (let i=0;i<8;i++) cupPts.push(new THREE.Vector2(1.4+i*0.05, i*0.6-2.5));
+  const cupGeo = new THREE.LatheGeometry(cupPts, 24);
+  const cupMat = new THREE.MeshStandardMaterial({color:0xf5f5f0,roughness:0.8,metalness:0.0});
+  scene.add(new THREE.Mesh(cupGeo, cupMat));
+
+  // Fluid
+  fluidMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.35,1.35,2.5,24),
+    new THREE.MeshStandardMaterial({color:0x3b82f6,transparent:true,opacity:0.7,emissive:0x1e3a5f,emissiveIntensity:0.2})
+  );
+  fluidMesh.position.y = -0.5;
+  scene.add(fluidMesh);
+
+  // Heat arrows
+  const arrowMat = new THREE.MeshStandardMaterial({color:0xEF4444,emissive:0xEF4444,emissiveIntensity:0.4});
+  for (let i=0;i<6;i++) {
+    const angle = i * Math.PI/3;
+    const arrow = new THREE.Group();
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.8,6), arrowMat);
+    shaft.rotation.z = Math.PI/2;
+    arrow.add(shaft);
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.12,0.25,6), arrowMat);
+    head.rotation.z = -Math.PI/2; head.position.x = 0.6;
+    arrow.add(head);
+    arrow.position.set(Math.cos(angle)*0.5, 0, Math.sin(angle)*0.5);
+    arrow.rotation.y = -angle;
+    scene.add(arrow); heatArrows.push(arrow);
+  }
+
+  // Heat particles
+  for (let i = 0; i < 15; i++) {
+    const p = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 8, 6),
+      new THREE.MeshStandardMaterial({color:0xF59E0B,emissive:0xF59E0B,emissiveIntensity:0.5,transparent:true,opacity:0.7})
+    );
+    const angle = Math.random() * Math.PI * 2;
+    const r = 0.5 + Math.random() * 0.8;
+    p.position.set(Math.cos(angle)*r, (Math.random()-0.5)*2, Math.sin(angle)*r);
+    p.userData.vel = new THREE.Vector3(
+      (Math.random()-0.5)*0.04, (Math.random()-0.5)*0.04, (Math.random()-0.5)*0.04
+    );
+    scene.add(p); heatParticles.push(p);
+  }
+
+  window.addEventListener('resize', onResize);
+  onResize();
+  renderer.setAnimationLoop(animate);
+}
+
+let t = 0;
+function animate() {
+  t += 0.01 * speed;
+  if (playing) {
+    animT += 0.02 * speed;
+    const isExo = currentDT > 0;
+    heatArrows.forEach((a, i) => {
+      const dir = isExo ? 1 : -1;
+      a.position.y = Math.sin(animT + i * 1.0) * 0.3 * dir;
+      a.scale.setScalar(0.8 + Math.sin(animT*2 + i)*0.2);
+    });
+    heatParticles.forEach((p, i) => {
+      p.position.add(p.userData.vel);
+      if (Math.abs(p.position.x) > 1.3) p.userData.vel.x *= -1;
+      if (Math.abs(p.position.y) > 1.2) p.userData.vel.y *= -1;
+      if (Math.abs(p.position.z) > 1.3) p.userData.vel.z *= -1;
+      p.material.opacity = 0.3 + Math.sin(animT * 3 + i) * 0.3;
+    });
+  }
+  if (fluidMesh) {
+    fluidMesh.rotation.y = t * 0.2;
+    fluidMesh.scale.y = 1 + Math.sin(t) * 0.01;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  const c = document.getElementById('canvas-container');
+  const w = c.clientWidth, h = c.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('play-btn').textContent = playing ? '⏸ Pause' : '▶ Animate';
+}
+function setSpeed(s, btn) {
+  speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function resetSim() {
+  playing = false; animT = 0;
+  document.getElementById('play-btn').textContent = '▶ Animate';
+  loadPreset(0);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() { toast('Calorimetry — AP Chemistry v7.0'); }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  const d = document.createElement('div'); d.className='toast-item'; d.textContent=msg; t.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+
+const QUESTIONS = [
+  { q:'100 g water, c=4.18 J/g·K, ΔT=+5°C. q_solution = ?', opts:['20.9 J','209 J','2090 J','2.09 kJ'], ans:2 },
+  { q:'q_rxn = -q_solution. If q_solution = +3.5 kJ, then q_rxn = ?', opts:['+3.5 kJ','-3.5 kJ','0','+7.0 kJ'], ans:1 },
+  { q:'An endothermic reaction in a calorimeter will cause the solution temperature to:', opts:['Increase','Decrease','Stay the same','First increase then decrease'], ans:1 }
+];
+let qIdx=0;
+function showQuiz() { document.getElementById('quiz-panel').classList.remove('hidden'); renderQ(); }
+function renderQ() {
+  const q=QUESTIONS[qIdx%QUESTIONS.length];
+  document.getElementById('quiz-content').innerHTML=`<p class="text-sm text-white mb-3">${q.q}</p>`+q.opts.map((o,i)=>`<div class="quiz-opt" onclick="answerQ(${i},${q.ans},this)">${o}</div>`).join('');
+}
+function answerQ(i,ans,el) {
+  el.classList.add(i===ans?'correct':'wrong');
+  toast(i===ans?'✓ Correct!':'✗ Try again!');
+  setTimeout(()=>{ qIdx++; renderQ(); },1400);
+}
+
+function renderFormulas() {
+  katex.render('q = mc\\Delta T', document.getElementById('f1'), {throwOnError:false,displayMode:true});
+  katex.render('q_{\\text{rxn}} = -q_{\\text{solution}}', document.getElementById('f2'), {throwOnError:false,displayMode:true});
+  katex.render('\\Delta H = \\dfrac{q_{\\text{rxn}}}{n}', document.getElementById('f3'), {throwOnError:false,displayMode:true});
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key===' ') { e.preventDefault(); togglePlay(); }
+  if (e.key==='r'||e.key==='R') resetSim();
+  if (e.key==='1') loadPreset(0);
+  if (e.key==='2') loadPreset(1);
+  if (e.key==='3') loadPreset(2);
+  if (e.key==='q'||e.key==='Q') showQuiz();
+});
+
+renderFormulas();
+initThree();
+loadPreset(0);
+
+// ── Extended calorimetry reference ──────────────────────────────────────────
+// Specific heat capacities (c) at 25°C:
+// Water (l):          4.184 J/(g·K)  — highest of common substances, climate regulator
+// Ethanol (l):        2.44  J/(g·K)
+// Aluminum (s):       0.900 J/(g·K)
+// Iron/Steel (s):     0.449 J/(g·K)
+// Copper (s):         0.385 J/(g·K)
+// Gold (s):           0.129 J/(g·K)  — lowest of common metals
+
+// Standard enthalpies of combustion (ΔH°comb, kJ/mol) at 25°C:
+// CH₄(g) → CO₂(g) + 2H₂O(l):  ΔH = -890.3 kJ/mol
+// C₃H₈(g) propane:              ΔH = -2220.0 kJ/mol
+// C₈H₁₈(l) octane:              ΔH = -5471.5 kJ/mol
+// C(s) graphite:                 ΔH = -393.5 kJ/mol
+// H₂(g):                         ΔH = -285.8 kJ/mol
+
+// Enthalpy of fusion (melting) at 0°C: ΔH_fus(H₂O) = +6.02 kJ/mol = +334 J/g
+// Enthalpy of vaporization at 100°C: ΔH_vap(H₂O) = +40.7 kJ/mol = +2260 J/g
+
+// Bomb calorimeter vs. coffee-cup calorimeter:
+// Coffee-cup: constant pressure (qₚ = ΔH); open to atmosphere; solution reactions
+// Bomb: constant volume (qᵥ = ΔU); combustion reactions; q_rxn = -Ccal × ΔT
+
+// ── Additional quiz questions ────────────────────────────────────────────────
+const EXTRA_CALQ = [
+  { q: 'Which substance has the highest specific heat capacity?', opts:['Copper (0.385)','Aluminum (0.900)','Water (4.184)','Iron (0.449)'], ans:2 },
+  { q: 'A bomb calorimeter measures heat at constant:', opts:['Pressure','Volume','Temperature','Mass'], ans:1 },
+  { q: 'If 50g water absorbs 2092J, what is ΔT? (c=4.184J/g·K)', opts:['5.0°C','10.0°C','20.0°C','1.0°C'], ans:1 }
+];
+QUESTIONS.push(...EXTRA_CALQ);
+
+// ── Resize observer ──────────────────────────────────────────────────────────
+const resizeObserverCal = new ResizeObserver(() => onResize());
+resizeObserverCal.observe(document.getElementById('canvas-container'));
+
+// ── Unit conversion helpers ──────────────────────────────────────────────────
+// 1 cal = 4.184 J      1 kcal = 4184 J = 4.184 kJ
+// 1 food Calorie (Cal) = 1 kcal = 4184 J
+// 1 BTU = 1055 J (British thermal unit)
+// Temperature: K = °C + 273.15    °F = (9/5)°C + 32
 </script>
 </body>
 </html>

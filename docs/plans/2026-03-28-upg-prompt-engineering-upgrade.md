@@ -14,7 +14,7 @@ updated: 2026-03-28T07:35:00Z
 
 ### 1.1 发现方式
 
-将 AetherViz SKILL.md（skill 商店版）生成的单摆实验 HTML 与 Scivra 产品内的 `pendulum-lab.html`（手写）做 A/B 对比，发现 AI 生成的实验在**教学深度**和**交互丰富度**上与手写版存在系统性差距。根因：system prompt 的结构性缺陷，影响所有 111+ 实验的 UPG 生成质量。
+将 AetherViz SKILL.md（skill 商店版）生成的单摆实验 HTML 与 Scivra 产品内的 `pendulum-lab.html`（手写）做 A/B 对比，发现 AI 生成的实验在**教学深度**和**交互丰富度**上与手写版存在系统性差距。根因：system prompt 的结构性缺陷，影响所有 175 个实验的 UPG 生成质量。
 
 ### 1.2 核心矛盾
 

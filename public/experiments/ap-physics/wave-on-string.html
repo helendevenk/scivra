@@ -1,833 +1,565 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wave on a String — NeonPhysics AP Physics 1</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
-    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(168,85,247,.08));border-bottom:1px solid rgba(56,189,248,.2)}
-    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
-    .badge{background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.4);color:#7dd3fc;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
-    .subtitle{color:#94a3b8;font-size:.9rem}
-    .layout{display:grid;grid-template-columns:1fr 360px;gap:0;height:calc(100vh - 90px)}
-    .canvas-wrap{position:relative}
-    canvas{display:block;width:100%!important;height:100%!important}
-    .overlay{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.88);border:1px solid rgba(56,189,248,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(12px);min-width:230px}
-    .stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
-    .stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
-    .stat-value{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
-    .cyan{color:#22d3ee} .violet{color:#c084fc} .green{color:#4ade80} .pink{color:#f472b6} .amber{color:#fbbf24}
-    .sidebar{background:rgba(15,23,42,.95);border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
-    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-    .mode-row{display:flex;gap:8px;margin-bottom:14px}
-    .mode-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:10px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
-    .mode-btn.active{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.5);color:#7dd3fc}
-    .param-row{margin-bottom:14px}
-    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
-    .param-name{font-size:12px;color:#94a3b8}
-    .param-val{font-size:12px;font-weight:600;color:#22d3ee;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(56,189,248,.2);border-radius:2px;cursor:pointer}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#38bdf8;cursor:pointer}
-    .btn-row{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
-    .btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
-    .btn-primary{background:#0ea5e9;color:#fff}
-    .btn-primary:hover{background:#0284c7}
-    .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
-    .btn-ghost:hover{background:rgba(255,255,255,.1)}
-    .btn-accent{background:rgba(168,85,247,.2);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
-    .btn-accent:hover{background:rgba(168,85,247,.3)}
-    .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-    .toggle-label{font-size:12px;color:#94a3b8}
-    .toggle{position:relative;width:40px;height:22px;background:rgba(255,255,255,.1);border-radius:11px;cursor:pointer;transition:background .2s}
-    .toggle.on{background:rgba(56,189,248,.4)}
-    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#e2e8f0;transition:transform .2s}
-    .toggle.on::after{transform:translateX(18px)}
-    .formula-box{background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
-    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
-    .preset-btn{display:block;width:100%;padding:9px 12px;margin-bottom:8px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#cbd5e1;font-size:12px;cursor:pointer;text-align:left;transition:all .15s}
-    .preset-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#e0f2fe}
-    .preset-btn .preset-name{font-weight:600;color:#7dd3fc;margin-bottom:2px}
-    .preset-btn .preset-desc{font-size:10px;color:#64748b}
-    .quiz-box{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
-    .quiz-q{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
-    .quiz-opt{display:block;width:100%;padding:7px 10px;margin-bottom:5px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;text-align:left;transition:all .15s}
-    .quiz-opt:hover{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2)}
-    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-opt.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
-    .quiz-feedback{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:5px;display:none}
-    .quiz-feedback.show{display:block}
-    .quiz-feedback.correct{background:rgba(34,197,94,.1);color:#86efac}
-    .quiz-feedback.wrong{background:rgba(239,68,68,.1);color:#fca5a5}
-    .legend-row{display:flex;gap:12px;margin-top:8px}
-    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
-    .legend-dot{width:10px;height:6px;border-radius:3px}
-    @media(max-width:900px){
-      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wave on a String — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: Inter, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --primary: #3B82F6; --primary-end: #0EA5E9;
+    --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.13);
+  }
+  .glass { background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(12px); border-radius: 12px; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); border: none; color: #fff; cursor: pointer; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #cbd5e1; cursor: pointer; border-radius: 8px; padding: 6px 12px; font-size: 12px; transition: background 0.2s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+  .btn-ghost.active { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); color: #fff; border-color: transparent; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #38bdf8); cursor: pointer; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
+  .sidebar { width: 300px; min-width: 300px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+  #canvas-container { flex: 1; position: relative; }
+  .data-overlay { position: absolute; top: 12px; left: 12px; padding: 12px 16px; min-width: 200px; font-size: 13px; line-height: 1.8; font-variant-numeric: tabular-nums; }
+  .energy-overlay { position: absolute; top: 12px; right: 12px; padding: 12px 16px; min-width: 200px; font-size: 12px; }
+  .energy-bar-track { background: rgba(255,255,255,0.1); border-radius: 4px; height: 10px; margin: 3px 0 8px; overflow: hidden; }
+  .energy-bar-fill { height: 100%; border-radius: 4px; transition: width 0.1s; }
+  #toast { position: fixed; top: 60px; right: 16px; z-index: 9999; pointer-events: none; }
+  .toast-msg { background: rgba(30,41,59,0.95); border: 1px solid rgba(59,130,246,0.4); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .quiz-section { padding: 12px; font-size: 13px; }
+  .quiz-option { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; margin: 4px 0; cursor: pointer; transition: background 0.15s; }
+  .quiz-option:hover { background: rgba(255,255,255,0.1); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-option.incorrect { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+  .quiz-feedback { margin-top: 6px; font-size: 12px; line-height: 1.5; padding: 6px 10px; border-radius: 6px; }
+  .katex { font-size: 1em; }
+  .speed-btn { padding: 4px 8px; font-size: 11px; border-radius: 5px; }
+  nav { height: 50px; min-height: 50px; background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.25); display: flex; align-items: center; padding: 0 16px; gap: 10px; z-index: 100; }
+  .main-row { flex: 1; display: flex; overflow: hidden; }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <span class="badge">AP PHYSICS 1</span>
-    <span class="badge badge-free">FREE</span>
-  </div>
-  <h1>Wave on a String</h1>
-  <p class="subtitle">Transverse waves, amplitude, frequency, wavelength, wave speed, standing waves, and reflection</p>
-</div>
-
-<div class="layout">
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="c"></canvas>
-    <div class="overlay">
-      <div class="stat-row"><span class="stat-label">Wave Speed v</span><span class="stat-value cyan" id="statV">--</span></div>
-      <div class="stat-row"><span class="stat-label">Wavelength &lambda;</span><span class="stat-value violet" id="statLambda">--</span></div>
-      <div class="stat-row"><span class="stat-label">Frequency f</span><span class="stat-value pink" id="statFreq">--</span></div>
-      <div class="stat-row"><span class="stat-label">Linear Density &mu;</span><span class="stat-value amber" id="statMu">--</span></div>
-      <div class="stat-row"><span class="stat-label">Harmonic Mode</span><span class="stat-value green" id="statHarmonic">--</span></div>
-      <div class="legend-row">
-        <div class="legend-item"><div class="legend-dot" style="background:#22d3ee"></div>string</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>envelope</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>node</div>
-      </div>
-    </div>
-  </div>
-
+<nav>
+  <span style="font-size:18px;font-weight:700;background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Wave on a String</span>
+  <span style="font-size:11px;color:#94a3b8;margin-left:4px;">AP Physics — Mechanical Waves</span>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="resetSim()">Reset</button>
+  <button class="btn-ghost" id="fullscreenBtn" onclick="toggleFullscreen()">Fullscreen</button>
+  <button class="btn-ghost" onclick="document.getElementById('aboutModal').style.display='flex'">About</button>
+</nav>
+<div class="main-row">
   <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Wave Mode</div>
-      <div class="mode-row">
-        <div class="mode-btn active" id="modeCont" onclick="setWaveMode('continuous')">Continuous</div>
-        <div class="mode-btn" id="modePulse" onclick="setWaveMode('pulse')">Single Pulse</div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Core Formulas</div>
+      <div id="formulas" style="font-size:13px;line-height:2"></div>
+    </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Concept</div>
+      <div style="font-size:12px;color:#cbd5e1;line-height:1.7">
+        A wave on a string transfers energy through coupled oscillators. Each mass point is pulled toward equilibrium by tension from its neighbors — like a chain of tiny pendulums.
       </div>
-
-      <div class="section-title">Boundary Condition</div>
-      <div class="toggle-row">
-        <span class="toggle-label">Fixed End</span>
-        <div class="toggle" id="boundaryToggle" onclick="toggleBoundary()"></div>
-        <span class="toggle-label">Free End</span>
+      <div style="margin-top:10px;font-size:12px;color:#cbd5e1;line-height:1.7">
+        Wave speed depends only on tension T and linear mass density μ. Doubling tension increases speed by √2 — not double. This surprises most students.
       </div>
-
-      <div class="section-title">Parameters</div>
-      <div class="param-row">
-        <div class="param-label"><span class="param-name">Frequency</span><span class="param-val" id="vFreq">2.00 Hz</span></div>
-        <input type="range" id="sFreq" min="0.5" max="5" value="2" step="0.1">
-      </div>
-      <div class="param-row">
-        <div class="param-label"><span class="param-name">Amplitude</span><span class="param-val" id="vAmp">2.00 cm</span></div>
-        <input type="range" id="sAmp" min="0.5" max="5" value="2" step="0.1">
-      </div>
-      <div class="param-row">
-        <div class="param-label"><span class="param-name">Tension</span><span class="param-val" id="vTens">10.0 N</span></div>
-        <input type="range" id="sTens" min="1" max="20" value="10" step="0.5">
-      </div>
-      <div class="param-row">
-        <div class="param-label"><span class="param-name">Damping</span><span class="param-val" id="vDamp">0.00</span></div>
-        <input type="range" id="sDamp" min="0" max="1" value="0" step="0.02">
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">Pause</button>
-        <button class="btn btn-ghost" onclick="resetSim()">Reset</button>
-        <button class="btn btn-accent" onclick="randomize()">Random</button>
+      <div style="margin-top:10px;font-size:12px;color:#cbd5e1;line-height:1.7">
+        Standing waves form when the string length is a half-integer multiple of the wavelength. Nodes are fixed points; antinodes vibrate with maximum amplitude.
       </div>
     </div>
-
-    <div class="section">
-      <div class="section-title">Presets</div>
-      <button class="preset-btn" onclick="applyPreset('standing')">
-        <div class="preset-name">Standing Waves</div>
-        <div class="preset-desc">Both ends fixed, frequency matched to fundamental</div>
-      </button>
-      <button class="preset-btn" onclick="applyPreset('freeEnd')">
-        <div class="preset-name">Free End Reflection</div>
-        <div class="preset-desc">One end free, observe reflected pulse</div>
-      </button>
-      <button class="preset-btn" onclick="applyPreset('singlePulse')">
-        <div class="preset-name">Single Pulse</div>
-        <div class="preset-desc">Watch a single pulse travel and reflect</div>
-      </button>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Key Formulas</div>
-      <div class="formula-box"><div id="f1"></div><div class="formula-desc">Wave speed from frequency and wavelength</div></div>
-      <div class="formula-box"><div id="f2"></div><div class="formula-desc">Wave speed from tension and linear density</div></div>
-      <div class="formula-box"><div id="f3"></div><div class="formula-desc">Standing wave harmonics (fixed-fixed)</div></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">AP Practice</div>
-      <div class="quiz-box" id="quiz1">
-        <div class="quiz-q">1. A string with tension 80 N and linear density 0.05 kg/m carries a wave. What is the wave speed?</div>
-        <button class="quiz-opt" onclick="checkQuiz(1,'a',this)">A) 20 m/s</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,'b',this)">B) 40 m/s</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,'c',this)">C) 1600 m/s</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,'d',this)">D) 4 m/s</button>
-        <div class="quiz-feedback" id="fb1"></div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Key Facts</div>
+      <div class="glass" style="padding:8px 10px;margin-bottom:6px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">Standing Waves:</strong> Nodes occur at multiples of λ/2 from a fixed end. The 1st harmonic has exactly one antinode.
       </div>
-      <div class="quiz-box" id="quiz2">
-        <div class="quiz-q">2. A 2.0 m string fixed at both ends vibrates in its 3rd harmonic at 150 Hz. What is the wave speed on the string?</div>
-        <button class="quiz-opt" onclick="checkQuiz(2,'a',this)">A) 75 m/s</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,'b',this)">B) 100 m/s</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,'c',this)">C) 200 m/s</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,'d',this)">D) 300 m/s</button>
-        <div class="quiz-feedback" id="fb2"></div>
+      <div class="glass" style="padding:8px 10px;margin-bottom:6px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">Common Misconception:</strong> Wave speed ≠ particle speed. The string particles oscillate transversely; the wave pattern moves horizontally.
+      </div>
+      <div class="glass" style="padding:8px 10px;font-size:12px;color:#cbd5e1;border-color:rgba(59,130,246,0.25)">
+        <strong style="color:#60a5fa">AP Connection:</strong> AP Physics 1 Unit 10 — Mechanical Waves. Know v=√(T/μ), standing wave conditions, and energy proportional to A².
       </div>
     </div>
+    <div class="glass" style="padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Why It Matters</div>
+      <ul style="font-size:12px;color:#cbd5e1;line-height:1.8;padding-left:14px">
+        <li>Guitar/violin strings — tuning by changing tension</li>
+        <li>Seismic S-waves travel through Earth's mantle</li>
+        <li>Resonance in bridges (Tacoma Narrows collapse, 1940)</li>
+      </ul>
+    </div>
+    <div class="glass quiz-section">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Quiz</div>
+      <div id="quizContainer"></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div id="canvas-container" style="flex:1;position:relative">
+      <div class="glass data-overlay" id="dataOverlay"></div>
+      <div class="glass energy-overlay" id="energyOverlay"></div>
+    </div>
+    <div class="glass" style="margin:8px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="btn-primary" id="playBtn" onclick="togglePlay()">Pause</button>
+        <button class="btn-ghost" onclick="resetSim()">Reset</button>
+        <span style="font-size:11px;color:#64748b;margin:0 4px">Speed:</span>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(0.25)">0.25×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(0.5)">0.5×</button>
+        <button class="btn-ghost speed-btn active" id="spd1" onclick="setSpeed(1)">1×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(2)">2×</button>
+        <button class="btn-ghost speed-btn" onclick="setSpeed(3)">3×</button>
+        <span style="font-size:11px;color:#64748b;margin:0 6px">Preset:</span>
+        <button class="btn-ghost" onclick="applyPreset('traveling')">Traveling Wave</button>
+        <button class="btn-ghost" onclick="applyPreset('standing')">Standing Wave (1st)</button>
+        <button class="btn-ghost" onclick="applyPreset('highTension')">High Tension</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px 20px">
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Frequency: <span id="freqVal">1.0</span> Hz</label>
+          <input type="range" id="freqSlider" min="0.1" max="3" step="0.05" value="1.0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Amplitude: <span id="ampVal">0.8</span> m</label>
+          <input type="range" id="ampSlider" min="0.1" max="2" step="0.05" value="0.8">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Tension: <span id="tensionVal">80</span> N</label>
+          <input type="range" id="tensionSlider" min="10" max="200" step="5" value="80">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8">Damping: <span id="dampingVal">0.01</span></label>
+          <input type="range" id="dampingSlider" min="0" max="0.1" step="0.002" value="0.01">
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#475569">Space: play/pause · R: reset · 1-5: speed · Drag: orbit · Scroll: zoom</div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div class="glass" style="padding:24px;max-width:420px;width:90%">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:10px;color:#60a5fa">Wave on a String</h3>
+    <p style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:12px">Velocity Verlet integration for N coupled mass-spring oscillators. Adaptive sub-stepping for numerical stability.</p>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:12px"><strong>Shortcuts:</strong> Space (play/pause) · R (reset) · 1–5 (speed)</p>
+    <button class="btn-primary" onclick="document.getElementById('aboutModal').style.display='none'">Close</button>
   </div>
 </div>
 
 <script>
-"use strict";
-try {
+// ── Inline OrbitControls ──────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
 
-// ─── State ──────────────────────────────────────────────────────
-var frequency = 2.0;
-var amplitude = 2.0;
-var tension = 10.0;
-var damping = 0.0;
-var linearDensity = 0.01;
-var waveMode = 'continuous';
-var freeEnd = false;
-var running = true;
-var simTime = 0;
+// ── Physics & Scene ───────────────────────────────────────────────────────────
+const N = 80;         // number of mass points
+const L = 10.0;       // string length (m)
+const mu = 0.05;      // linear mass density (kg/m)
+const dx = L / (N - 1);
+const segMass = mu * dx;
 
-// String physics
-var STRING_LENGTH = 12;
-var NUM_SEGMENTS = 200;
-var segLen = STRING_LENGTH / NUM_SEGMENTS;
+let freq = 1.0, amp = 0.8, tension = 80, damping = 0.01;
+let speedFactor = 1.0;
+let playing = true;
+let simTime = 0;
 
-// Wave simulation arrays
-var yPos = new Float64Array(NUM_SEGMENTS + 1);
-var yVel = new Float64Array(NUM_SEGMENTS + 1);
-var yPrev = new Float64Array(NUM_SEGMENTS + 1);
+// State arrays
+let pos = new Float64Array(N);
+let vel = new Float64Array(N);
+let acc = new Float64Array(N);
 
-// Pulse state
-var pulseSent = false;
-var pulsePhase = 0;
-
-// ─── Computed values ────────────────────────────────────────────
-function waveSpeed() {
-  return Math.sqrt(tension / linearDensity);
+function computeAccel(p, v) {
+  const a = new Float64Array(N);
+  for (let i = 1; i < N - 1; i++) {
+    const fLeft  = tension * (p[i-1] - p[i]) / dx;
+    const fRight = tension * (p[i+1] - p[i]) / dx;
+    a[i] = (fLeft + fRight) / segMass - damping * v[i];
+  }
+  // fixed right end
+  a[0] = 0;
+  a[N-1] = 0;
+  return a;
 }
 
-function wavelength() {
-  return waveSpeed() / frequency;
+function verletStep(dt) {
+  // half-step velocity
+  const aOld = computeAccel(pos, vel);
+  const velHalf = new Float64Array(N);
+  for (let i = 0; i < N; i++) velHalf[i] = vel[i] + 0.5 * aOld[i] * dt;
+  // update position
+  for (let i = 1; i < N - 1; i++) pos[i] += velHalf[i] * dt;
+  // new acceleration
+  const aNew = computeAccel(pos, velHalf);
+  // full-step velocity
+  for (let i = 0; i < N; i++) vel[i] = velHalf[i] + 0.5 * aNew[i] * dt;
 }
 
-function fundamentalFreq() {
-  return waveSpeed() / (2 * STRING_LENGTH);
+function driveLeftEnd() {
+  pos[0] = amp * Math.sin(2 * Math.PI * freq * simTime);
+  vel[0] = amp * 2 * Math.PI * freq * Math.cos(2 * Math.PI * freq * simTime);
 }
 
-function harmonicNumber() {
-  var fn = fundamentalFreq();
-  if (fn < 0.001) return 0;
-  var n = Math.round(frequency / fn);
-  var ratio = frequency / fn;
-  if (Math.abs(ratio - n) < 0.15 && n >= 1) return n;
-  return 0;
+function physicsUpdate(dt) {
+  const maxSubDt = 0.0005;
+  const steps = Math.ceil(dt / maxSubDt);
+  const subDt = dt / steps;
+  for (let s = 0; s < steps; s++) {
+    driveLeftEnd();
+    verletStep(subDt);
+  }
 }
 
-// ─── Three.js Setup ─────────────────────────────────────────────
-var wrap = document.getElementById('canvasWrap');
-var canvas = document.getElementById('c');
-var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+function initString() {
+  for (let i = 0; i < N; i++) { pos[i] = 0; vel[i] = 0; }
+}
+
+// ── Three.js Setup ────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 4, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
-var scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f172a);
-scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
-
-var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-camera.position.set(0, 6, 14);
-camera.lookAt(0, 0, 0);
-
-var controls = (typeof THREE.OrbitControls !== 'undefined')
-  ? new THREE.OrbitControls(camera, renderer.domElement) : null;
-if (controls) {
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 5;
-  controls.maxDistance = 40;
-  controls.target.set(0, 0, 0);
-}
-
-// ─── Lights (4 lights) ─────────────────────────────────────────
-var ambientLight = new THREE.AmbientLight(0x334466, 0.6);
-scene.add(ambientLight);
-
-var dirLight = new THREE.DirectionalLight(0xaaccff, 0.9);
-dirLight.position.set(8, 15, 10);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(1024, 1024);
-scene.add(dirLight);
-
-var pointLight1 = new THREE.PointLight(0x38bdf8, 2, 25);
-pointLight1.position.set(-6, 4, 3);
-scene.add(pointLight1);
-
-var pointLight2 = new THREE.PointLight(0xa855f7, 1.5, 20);
-pointLight2.position.set(6, 3, -2);
-scene.add(pointLight2);
-
-// ─── Ground plane ───────────────────────────────────────────────
-var groundGeo = new THREE.PlaneGeometry(40, 40);
-var groundMat = new THREE.MeshStandardMaterial({
-  color: 0x0c1525,
-  roughness: 0.9,
-  metalness: 0.1
-});
-var ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -3;
-ground.receiveShadow = true;
-scene.add(ground);
-
-// Grid helper
-var gridHelper = new THREE.GridHelper(30, 30, 0x1e3a5f, 0x162033);
-gridHelper.position.y = -2.99;
-scene.add(gridHelper);
-
-// ─── String (sphere chain) ──────────────────────────────────────
-var stringGroup = new THREE.Group();
-scene.add(stringGroup);
-
-var sphereGeo = new THREE.SphereGeometry(0.08, 12, 8);
-var sphereMat = new THREE.MeshStandardMaterial({
-  color: 0x22d3ee,
-  emissive: 0x0891b2,
-  emissiveIntensity: 0.4,
-  roughness: 0.3,
-  metalness: 0.6
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
 });
 
-var spheres = [];
-for (var i = 0; i <= NUM_SEGMENTS; i++) {
-  var sphere = new THREE.Mesh(sphereGeo, sphereMat.clone());
-  var xp = -STRING_LENGTH / 2 + i * segLen;
-  sphere.position.set(xp, 0, 0);
-  sphere.castShadow = true;
-  stringGroup.add(sphere);
-  spheres.push(sphere);
-}
+// Grid
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
 
-// Connecting lines
-var linePositions = new Float32Array((NUM_SEGMENTS + 1) * 3);
-var lineGeo = new THREE.BufferGeometry();
-lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-var lineMat = new THREE.LineBasicMaterial({ color: 0x22d3ee, linewidth: 2, transparent: true, opacity: 0.6 });
-var stringLine = new THREE.Line(lineGeo, lineMat);
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// OrbitControls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 2;
+controls.maxDistance = 50;
+
+// String geometry
+const stringGeom = new THREE.BufferGeometry();
+const positions = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) {
+  positions[i*3]   = (i / (N-1)) * L - L/2;
+  positions[i*3+1] = 0;
+  positions[i*3+2] = 0;
+}
+stringGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const stringMat = new THREE.LineBasicMaterial({ color: 0x60a5fa, linewidth: 2 });
+const stringLine = new THREE.Line(stringGeom, stringMat);
 scene.add(stringLine);
 
-// ─── Envelope lines (for standing waves) ────────────────────────
-var envPositionsUp = new Float32Array((NUM_SEGMENTS + 1) * 3);
-var envPositionsDn = new Float32Array((NUM_SEGMENTS + 1) * 3);
-var envGeoUp = new THREE.BufferGeometry();
-envGeoUp.setAttribute('position', new THREE.BufferAttribute(envPositionsUp, 3));
-var envGeoDn = new THREE.BufferGeometry();
-envGeoDn.setAttribute('position', new THREE.BufferAttribute(envPositionsDn, 3));
-var envMat = new THREE.LineDashedMaterial({ color: 0xc084fc, dashSize: 0.2, gapSize: 0.1, transparent: true, opacity: 0.5 });
-var envLineUp = new THREE.Line(envGeoUp, envMat.clone());
-var envLineDn = new THREE.Line(envGeoDn, envMat.clone());
-envLineUp.visible = false;
-envLineDn.visible = false;
-scene.add(envLineUp, envLineDn);
-
-// ─── Node markers (standing wave) ──────────────────────────────
-var nodeMarkers = [];
-var nodeGeo = new THREE.SphereGeometry(0.18, 16, 12);
-var nodeMat = new THREE.MeshStandardMaterial({
-  color: 0xfbbf24,
-  emissive: 0xf59e0b,
-  emissiveIntensity: 0.8,
-  roughness: 0.2,
-  metalness: 0.5
+// Tube for 3D rope effect
+const tubePath = new THREE.CatmullRomCurve3(
+  Array.from({length: N}, (_, i) => new THREE.Vector3((i/(N-1))*L - L/2, 0, 0))
+);
+const tubeGeom = new THREE.TubeGeometry(tubePath, N*2, 0.08, 8, false);
+const tubeMat = new THREE.MeshStandardMaterial({
+  color: 0x3b82f6, roughness: 0.4, metalness: 0.1,
+  emissive: 0x1e3a5f, emissiveIntensity: 0.3
 });
-for (var mi = 0; mi < 20; mi++) {
-  var marker = new THREE.Mesh(nodeGeo, nodeMat);
-  marker.visible = false;
-  scene.add(marker);
-  nodeMarkers.push(marker);
+const tubeMesh = new THREE.Mesh(tubeGeom, tubeMat);
+scene.add(tubeMesh);
+stringLine.visible = false;
+
+// End markers
+const endGeo = new THREE.SphereGeometry(0.15, 16, 16);
+const endMatL = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x14532d, emissiveIntensity: 0.5 });
+const endMatR = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x7f1d1d, emissiveIntensity: 0.5 });
+const leftEnd = new THREE.Mesh(endGeo, endMatL);
+const rightEnd = new THREE.Mesh(endGeo, endMatR);
+leftEnd.position.x = -L/2; rightEnd.position.x = L/2;
+scene.add(leftEnd, rightEnd);
+
+// Node/antinode markers (small spheres along string)
+const nodeMarkers = [];
+for (let i = 0; i < 6; i++) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 1.0 })
+  );
+  m.visible = false;
+  scene.add(m);
+  nodeMarkers.push(m);
 }
 
-// Node glow (point lights at nodes)
-var nodeGlows = [];
-for (var gi = 0; gi < 20; gi++) {
-  var glow = new THREE.PointLight(0xfbbf24, 0, 3);
-  scene.add(glow);
-  nodeGlows.push(glow);
+// Tube update function
+function updateTube() {
+  scene.remove(tubeMesh);
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    pts.push(new THREE.Vector3((i/(N-1))*L - L/2, pos[i], 0));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const newGeom = new THREE.TubeGeometry(curve, Math.min(N*2, 240), 0.06, 8, false);
+  tubeMesh.geometry.dispose();
+  tubeMesh.geometry = newGeom;
+  scene.add(tubeMesh);
 }
 
-// ─── Measurement overlay lines ──────────────────────────────────
-// Wavelength measurement line
-var wlLineMat = new THREE.LineBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.7 });
-var wlLineGeo = new THREE.BufferGeometry();
-var wlPositions = new Float32Array(6);
-wlLineGeo.setAttribute('position', new THREE.BufferAttribute(wlPositions, 3));
-var wlLine = new THREE.Line(wlLineGeo, wlLineMat);
-scene.add(wlLine);
-
-// Amplitude measurement line
-var ampLineMat = new THREE.LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.7 });
-var ampLineGeo = new THREE.BufferGeometry();
-var ampPositions = new Float32Array(6);
-ampLineGeo.setAttribute('position', new THREE.BufferAttribute(ampPositions, 3));
-var ampLine = new THREE.Line(ampLineGeo, ampLineMat);
-scene.add(ampLine);
-
-// Wavelength label sprite
-function makeTextSprite(text, color) {
-  var cnv = document.createElement('canvas');
-  cnv.width = 256;
-  cnv.height = 64;
-  var ctx = cnv.getContext('2d');
-  ctx.font = 'bold 28px -apple-system, sans-serif';
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.fillText(text, 128, 40);
-  var tex = new THREE.CanvasTexture(cnv);
-  var mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
-  var sprite = new THREE.Sprite(mat);
-  sprite.scale.set(2, 0.5, 1);
-  return sprite;
+// ── Energy ────────────────────────────────────────────────────────────────────
+function computeEnergy() {
+  let KE = 0, PE = 0;
+  for (let i = 0; i < N; i++) {
+    KE += 0.5 * segMass * vel[i] * vel[i];
+  }
+  for (let i = 0; i < N - 1; i++) {
+    const dy = pos[i+1] - pos[i];
+    PE += 0.5 * tension * dy * dy / dx;
+  }
+  return { KE, PE };
 }
 
-var wlLabel = makeTextSprite('', '#c084fc');
-scene.add(wlLabel);
-var ampLabel = makeTextSprite('', '#f472b6');
-scene.add(ampLabel);
-
-// ─── Fixed end posts ────────────────────────────────────────────
-var postGeo = new THREE.CylinderGeometry(0.12, 0.15, 2.5, 8);
-var postMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.7 });
-var postLeft = new THREE.Mesh(postGeo, postMat);
-postLeft.position.set(-STRING_LENGTH / 2, -0.25, 0);
-postLeft.castShadow = true;
-scene.add(postLeft);
-
-var postRight = new THREE.Mesh(postGeo, postMat.clone());
-postRight.position.set(STRING_LENGTH / 2, -0.25, 0);
-postRight.castShadow = true;
-scene.add(postRight);
-
-// Right end indicator (ring for free end)
-var ringGeo = new THREE.TorusGeometry(0.3, 0.06, 12, 24);
-var ringMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, emissive: 0x22c55e, emissiveIntensity: 0.5 });
-var freeRing = new THREE.Mesh(ringGeo, ringMat);
-freeRing.position.set(STRING_LENGTH / 2, 0, 0);
-freeRing.rotation.y = Math.PI / 2;
-freeRing.visible = false;
-scene.add(freeRing);
-
-// ─── Wave Simulation (finite difference) ────────────────────────
-function resetWave() {
-  yPos.fill(0);
-  yVel.fill(0);
-  yPrev.fill(0);
-  pulseSent = false;
-  pulsePhase = 0;
-  simTime = 0;
+// ── UI Update ─────────────────────────────────────────────────────────────────
+function updateDataOverlay() {
+  const v = Math.sqrt(tension / mu);
+  const lambda = v / freq;
+  const T = 1 / freq;
+  document.getElementById('dataOverlay').innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Live Data</div>
+    <div style="color:#60a5fa">Wave Speed: <strong>${v.toFixed(2)} m/s</strong></div>
+    <div style="color:#34d399">Wavelength λ: <strong>${lambda.toFixed(2)} m</strong></div>
+    <div style="color:#f8fafc">Frequency f: <strong>${freq.toFixed(2)} Hz</strong></div>
+    <div style="color:#f8fafc">Period T: <strong>${T.toFixed(3)} s</strong></div>
+    <div style="color:#fbbf24">Tension T: <strong>${tension.toFixed(0)} N</strong></div>
+    <div style="color:#94a3b8">μ = ${mu} kg/m · sim t: ${simTime.toFixed(1)}s</div>
+  `;
 }
 
-function stepWave(dt) {
-  var v = waveSpeed();
-  var c = v * dt / segLen;
-
-  // CFL stability: limit courant number
-  if (c > 0.9) c = 0.9;
-  var c2 = c * c;
-  var dampFactor = 1.0 - damping * dt * 4;
-  if (dampFactor < 0) dampFactor = 0;
-
-  // Drive left end
-  var driveAmp = amplitude * 0.5;
-  if (waveMode === 'continuous') {
-    yPos[0] = driveAmp * Math.sin(2 * Math.PI * frequency * simTime);
-  } else {
-    // Single pulse
-    if (!pulseSent) {
-      pulsePhase += dt * frequency * 2 * Math.PI;
-      if (pulsePhase < 2 * Math.PI) {
-        yPos[0] = driveAmp * Math.sin(pulsePhase) * Math.exp(-pulsePhase * 0.15);
-      } else {
-        yPos[0] = 0;
-        pulseSent = true;
-      }
-    } else {
-      yPos[0] = 0;
-    }
-  }
-
-  // Finite difference wave equation
-  var yNew = new Float64Array(NUM_SEGMENTS + 1);
-  for (var i = 1; i < NUM_SEGMENTS; i++) {
-    yNew[i] = 2 * yPos[i] - yPrev[i] + c2 * (yPos[i + 1] - 2 * yPos[i] + yPos[i - 1]);
-    yNew[i] *= dampFactor;
-  }
-
-  // Boundary conditions at right end
-  if (freeEnd) {
-    // Free end: dy/dx = 0 at right boundary
-    yNew[NUM_SEGMENTS] = yNew[NUM_SEGMENTS - 1];
-  } else {
-    // Fixed end: y = 0
-    yNew[NUM_SEGMENTS] = 0;
-  }
-
-  // Left end is driven
-  yNew[0] = yPos[0];
-
-  // Swap
-  for (var j = 0; j <= NUM_SEGMENTS; j++) {
-    yPrev[j] = yPos[j];
-    yPos[j] = yNew[j];
-  }
+function updateEnergyOverlay() {
+  const { KE, PE } = computeEnergy();
+  const total = KE + PE + 0.001;
+  const kePct = Math.min(100, (KE / total) * 100);
+  const pePct = Math.min(100, (PE / total) * 100);
+  document.getElementById('energyOverlay').innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Energy</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#60a5fa"><span>KE</span><span>${KE.toFixed(3)} J</span></div>
+    <div class="energy-bar-track"><div class="energy-bar-fill" style="width:${kePct}%;background:#3b82f6"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#f87171"><span>PE</span><span>${PE.toFixed(3)} J</span></div>
+    <div class="energy-bar-track"><div class="energy-bar-fill" style="width:${pePct}%;background:#ef4444"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#4ade80;margin-top:2px"><span>Total E</span><span>${(KE+PE).toFixed(3)} J</span></div>
+  `;
 }
 
-// ─── Update 3D visuals ─────────────────────────────────────────
-function updateVisuals() {
-  var hn = harmonicNumber();
-  var isStanding = (hn > 0 && waveMode === 'continuous' && !freeEnd && damping < 0.05);
-
-  // Update spheres and line
-  for (var i = 0; i <= NUM_SEGMENTS; i++) {
-    var xp = -STRING_LENGTH / 2 + i * segLen;
-    var yp = yPos[i];
-    spheres[i].position.set(xp, yp, 0);
-
-    // Color by displacement
-    var norm = Math.abs(yp) / (amplitude * 0.5 + 0.01);
-    norm = Math.min(norm, 1);
-    var mat = spheres[i].material;
-    mat.emissiveIntensity = 0.3 + norm * 0.7;
-
-    linePositions[i * 3] = xp;
-    linePositions[i * 3 + 1] = yp;
-    linePositions[i * 3 + 2] = 0;
-  }
-  lineGeo.attributes.position.needsUpdate = true;
-
-  // Envelope for standing waves
-  if (isStanding) {
-    envLineUp.visible = true;
-    envLineDn.visible = true;
-    for (var ei = 0; ei <= NUM_SEGMENTS; ei++) {
-      var xpe = -STRING_LENGTH / 2 + ei * segLen;
-      var envY = amplitude * 0.5 * Math.abs(Math.sin(hn * Math.PI * ei / NUM_SEGMENTS));
-      envPositionsUp[ei * 3] = xpe;
-      envPositionsUp[ei * 3 + 1] = envY;
-      envPositionsUp[ei * 3 + 2] = 0.01;
-      envPositionsDn[ei * 3] = xpe;
-      envPositionsDn[ei * 3 + 1] = -envY;
-      envPositionsDn[ei * 3 + 2] = 0.01;
-    }
-    envGeoUp.attributes.position.needsUpdate = true;
-    envGeoDn.attributes.position.needsUpdate = true;
-    envLineUp.computeLineDistances();
-    envLineDn.computeLineDistances();
-  } else {
-    envLineUp.visible = false;
-    envLineDn.visible = false;
-  }
-
-  // Node markers for standing waves
-  var nodesShown = 0;
-  if (isStanding) {
-    for (var ni = 0; ni <= hn; ni++) {
-      var nodeX = -STRING_LENGTH / 2 + ni * (STRING_LENGTH / hn);
-      if (ni < nodeMarkers.length) {
-        nodeMarkers[ni].position.set(nodeX, 0, 0);
-        nodeMarkers[ni].visible = true;
-        nodeGlows[ni].position.set(nodeX, 0.3, 0);
-        nodeGlows[ni].intensity = 1.5 + Math.sin(simTime * 3) * 0.5;
-        nodesShown++;
-      }
-    }
-  }
-  for (var hi = nodesShown; hi < nodeMarkers.length; hi++) {
-    nodeMarkers[hi].visible = false;
-    nodeGlows[hi].intensity = 0;
-  }
-
-  // Measurement lines
-  var lam = wavelength();
-  if (lam < STRING_LENGTH && waveMode === 'continuous') {
-    var startX = -STRING_LENGTH / 2;
-    var endX = startX + lam;
-    var mY = amplitude * 0.5 + 1.2;
-    wlPositions[0] = startX; wlPositions[1] = mY; wlPositions[2] = 0;
-    wlPositions[3] = endX; wlPositions[4] = mY; wlPositions[5] = 0;
-    wlLineGeo.attributes.position.needsUpdate = true;
-    wlLine.visible = true;
-    wlLabel.position.set((startX + endX) / 2, mY + 0.5, 0);
-    updateSpriteText(wlLabel, '\u03BB = ' + lam.toFixed(2) + ' m', '#c084fc');
-    wlLabel.visible = true;
-  } else {
-    wlLine.visible = false;
-    wlLabel.visible = false;
-  }
-
-  // Amplitude line
-  var ampMeasureX = -STRING_LENGTH / 2 + 1;
-  ampPositions[0] = ampMeasureX; ampPositions[1] = 0; ampPositions[2] = 0.05;
-  ampPositions[3] = ampMeasureX; ampPositions[4] = amplitude * 0.5; ampPositions[5] = 0.05;
-  ampLineGeo.attributes.position.needsUpdate = true;
-  ampLine.visible = (waveMode === 'continuous');
-  ampLabel.position.set(ampMeasureX - 0.8, amplitude * 0.25, 0.05);
-  updateSpriteText(ampLabel, 'A = ' + amplitude.toFixed(1) + ' cm', '#f472b6');
-  ampLabel.visible = (waveMode === 'continuous');
-
-  // Free end ring
-  if (freeEnd) {
-    freeRing.visible = true;
-    freeRing.position.y = yPos[NUM_SEGMENTS];
-    postRight.material.color.setHex(0x334155);
-    postRight.material.emissive = new THREE.Color(0x000000);
-  } else {
-    freeRing.visible = false;
-    postRight.material.color.setHex(0x475569);
-  }
-
-  // Update stats
-  var v = waveSpeed();
-  var lam2 = wavelength();
-  document.getElementById('statV').textContent = v.toFixed(2) + ' m/s';
-  document.getElementById('statLambda').textContent = lam2.toFixed(2) + ' m';
-  document.getElementById('statFreq').textContent = frequency.toFixed(2) + ' Hz';
-  document.getElementById('statMu').textContent = (linearDensity * 1000).toFixed(1) + ' g/m';
-  var hn2 = harmonicNumber();
-  document.getElementById('statHarmonic').textContent = hn2 > 0 ? ('n = ' + hn2) : '--';
-}
-
-function updateSpriteText(sprite, text, color) {
-  var cnv = document.createElement('canvas');
-  cnv.width = 256;
-  cnv.height = 64;
-  var ctx = cnv.getContext('2d');
-  ctx.font = 'bold 24px -apple-system, sans-serif';
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.fillText(text, 128, 40);
-  if (sprite.material.map) sprite.material.map.dispose();
-  sprite.material.map = new THREE.CanvasTexture(cnv);
-  sprite.material.needsUpdate = true;
-}
-
-// ─── Render Loop ────────────────────────────────────────────────
-var clock = new THREE.Clock();
-
-function onResize() {
-  var w = wrap.clientWidth;
-  var h = wrap.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-}
-window.addEventListener('resize', onResize);
-
-function animate() {
-  var dt = Math.min(clock.getDelta(), 0.033);
-  if (running) {
-    simTime += dt;
-    // Sub-step for stability
-    var subSteps = 8;
-    var subDt = dt / subSteps;
-    for (var s = 0; s < subSteps; s++) {
-      stepWave(subDt);
-    }
-  }
-  updateVisuals();
-  if (controls) controls.update();
-  renderer.render(scene, camera);
-}
-
-renderer.setAnimationLoop(animate);
-onResize();
-
-// ─── UI Controls ────────────────────────────────────────────────
-var sFreq = document.getElementById('sFreq');
-var sAmp = document.getElementById('sAmp');
-var sTens = document.getElementById('sTens');
-var sDamp = document.getElementById('sDamp');
-
-sFreq.addEventListener('input', function() {
-  frequency = parseFloat(this.value);
-  document.getElementById('vFreq').textContent = frequency.toFixed(2) + ' Hz';
+// ── Sliders ───────────────────────────────────────────────────────────────────
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = parseFloat(this.value);
+  document.getElementById('freqVal').textContent = freq.toFixed(2);
 });
-sAmp.addEventListener('input', function() {
-  amplitude = parseFloat(this.value);
-  document.getElementById('vAmp').textContent = amplitude.toFixed(2) + ' cm';
+document.getElementById('ampSlider').addEventListener('input', function() {
+  amp = parseFloat(this.value);
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
 });
-sTens.addEventListener('input', function() {
+document.getElementById('tensionSlider').addEventListener('input', function() {
   tension = parseFloat(this.value);
-  document.getElementById('vTens').textContent = tension.toFixed(1) + ' N';
+  document.getElementById('tensionVal').textContent = tension.toFixed(0);
 });
-sDamp.addEventListener('input', function() {
+document.getElementById('dampingSlider').addEventListener('input', function() {
   damping = parseFloat(this.value);
-  document.getElementById('vDamp').textContent = damping.toFixed(2);
+  document.getElementById('dampingVal').textContent = damping.toFixed(3);
 });
 
-function setWaveMode(mode) {
-  waveMode = mode;
-  document.getElementById('modeCont').classList.toggle('active', mode === 'continuous');
-  document.getElementById('modePulse').classList.toggle('active', mode === 'pulse');
-  if (mode === 'pulse') {
-    pulseSent = false;
-    pulsePhase = 0;
-  }
-  resetWave();
-}
-
-function toggleBoundary() {
-  freeEnd = !freeEnd;
-  document.getElementById('boundaryToggle').classList.toggle('on', freeEnd);
-  resetWave();
-}
-
-function togglePlay() {
-  running = !running;
-  document.getElementById('btnPlay').textContent = running ? 'Pause' : 'Play';
-}
-
-function resetSim() {
-  resetWave();
-  running = true;
-  document.getElementById('btnPlay').textContent = 'Pause';
-}
-
-function randomize() {
-  frequency = 0.5 + Math.random() * 4.5;
-  amplitude = 0.5 + Math.random() * 4.5;
-  tension = 1 + Math.random() * 19;
-  damping = Math.random() * 0.5;
-  sFreq.value = frequency;
-  sAmp.value = amplitude;
-  sTens.value = tension;
-  sDamp.value = damping;
-  document.getElementById('vFreq').textContent = frequency.toFixed(2) + ' Hz';
-  document.getElementById('vAmp').textContent = amplitude.toFixed(2) + ' cm';
-  document.getElementById('vTens').textContent = tension.toFixed(1) + ' N';
-  document.getElementById('vDamp').textContent = damping.toFixed(2);
-  resetWave();
-}
-
-function applyPreset(name) {
-  resetWave();
-  if (name === 'standing') {
-    freeEnd = false;
-    document.getElementById('boundaryToggle').classList.remove('on');
-    waveMode = 'continuous';
-    document.getElementById('modeCont').classList.add('active');
-    document.getElementById('modePulse').classList.remove('active');
-    tension = 10;
-    damping = 0;
-    linearDensity = 0.01;
-    var fn = Math.sqrt(tension / linearDensity) / (2 * STRING_LENGTH);
-    frequency = fn;
-    amplitude = 3.0;
-    updateSliders();
-  } else if (name === 'freeEnd') {
-    freeEnd = true;
-    document.getElementById('boundaryToggle').classList.add('on');
-    waveMode = 'continuous';
-    document.getElementById('modeCont').classList.add('active');
-    document.getElementById('modePulse').classList.remove('active');
-    frequency = 1.5;
-    amplitude = 3.0;
-    tension = 10;
-    damping = 0.1;
-    updateSliders();
-  } else if (name === 'singlePulse') {
-    freeEnd = false;
-    document.getElementById('boundaryToggle').classList.remove('on');
-    waveMode = 'pulse';
-    document.getElementById('modeCont').classList.remove('active');
-    document.getElementById('modePulse').classList.add('active');
-    frequency = 2.0;
-    amplitude = 4.0;
-    tension = 15;
-    damping = 0.02;
-    pulseSent = false;
-    pulsePhase = 0;
-    updateSliders();
-  }
-  running = true;
-  document.getElementById('btnPlay').textContent = 'Pause';
-}
-
-function updateSliders() {
-  sFreq.value = frequency;
-  sAmp.value = amplitude;
-  sTens.value = tension;
-  sDamp.value = damping;
-  document.getElementById('vFreq').textContent = frequency.toFixed(2) + ' Hz';
-  document.getElementById('vAmp').textContent = amplitude.toFixed(2) + ' cm';
-  document.getElementById('vTens').textContent = tension.toFixed(1) + ' N';
-  document.getElementById('vDamp').textContent = damping.toFixed(2);
-}
-
-// ─── Quiz ───────────────────────────────────────────────────────
-var quizAnswered = { 1: false, 2: false };
-var quizCorrect = { 1: 'b', 2: 'c' };
-var quizExplanations = {
-  1: 'v = sqrt(T/mu) = sqrt(80/0.05) = sqrt(1600) = 40 m/s',
-  2: 'f_3 = 3v/(2L), so v = f_3 * 2L / 3 = 150 * 2 * 2.0 / 3 = 200 m/s'
+// ── Controls ──────────────────────────────────────────────────────────────────
+window.togglePlay = function() {
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? 'Pause' : 'Play';
+  showToast(playing ? 'Simulation running' : 'Simulation paused');
 };
 
-function checkQuiz(qNum, answer, btn) {
-  if (quizAnswered[qNum]) return;
-  quizAnswered[qNum] = true;
-  var fb = document.getElementById('fb' + qNum);
-  var isCorrect = (answer === quizCorrect[qNum]);
-  btn.classList.add(isCorrect ? 'correct' : 'wrong');
-  if (!isCorrect) {
-    var parent = btn.parentElement;
-    var opts = parent.querySelectorAll('.quiz-opt');
-    opts.forEach(function(o) {
-      if (o.textContent.charAt(0).toLowerCase() === quizCorrect[qNum]) {
-        o.classList.add('correct');
-      }
+window.resetSim = function() {
+  initString();
+  simTime = 0;
+  showToast('Simulation reset');
+};
+
+window.setSpeed = function(s) {
+  speedFactor = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  showToast(`Speed: ${s}×`);
+};
+
+window.applyPreset = function(name) {
+  const presets = {
+    traveling: { freq: 1.0, amp: 0.8, tension: 80, damping: 0.01 },
+    standing:  { freq: 1.57, amp: 1.0, tension: 100, damping: 0.001 },
+    highTension: { freq: 2.0, amp: 0.5, tension: 180, damping: 0.005 }
+  };
+  const p = presets[name];
+  if (!p) return;
+  freq = p.freq; amp = p.amp; tension = p.tension; damping = p.damping;
+  document.getElementById('freqSlider').value = freq;
+  document.getElementById('ampSlider').value = amp;
+  document.getElementById('tensionSlider').value = tension;
+  document.getElementById('dampingSlider').value = damping;
+  document.getElementById('freqVal').textContent = freq.toFixed(2);
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+  document.getElementById('tensionVal').textContent = tension.toFixed(0);
+  document.getElementById('dampingVal').textContent = damping.toFixed(3);
+  initString(); simTime = 0;
+  const labels = { traveling: 'Traveling Wave', standing: 'Standing Wave (1st Harmonic)', highTension: 'High Tension' };
+  showToast(`Preset: ${labels[name]}`);
+};
+
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+  else { document.exitFullscreen(); }
+};
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const div = document.createElement('div');
+  div.className = 'toast-msg';
+  div.textContent = msg;
+  document.getElementById('toast').appendChild(div);
+  setTimeout(() => div.remove(), 2200);
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  const speedMap = { Digit1: 0.25, Digit2: 0.5, Digit3: 1, Digit4: 2, Digit5: 3 };
+  if (speedMap[e.code]) { speedFactor = speedMap[e.code]; showToast(`Speed: ${speedMap[e.code]}×`); }
+});
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "If tension quadruples while μ stays constant, wave speed:",
+    opts: ["Doubles", "Quadruples", "Stays the same", "Halves"],
+    ans: 0,
+    feedback: ["Correct! v = √(T/μ), so 4T → v becomes √4 = 2× faster.", "Not quite — speed scales as √T, not T.", "Speed does change with tension.", "Speed increases when tension increases."]
+  },
+  {
+    q: "In a standing wave on a fixed string, where is kinetic energy maximum?",
+    opts: ["At the nodes", "At the antinodes", "Uniformly distributed", "At the driven end"],
+    ans: 1,
+    feedback: ["Nodes are stationary — no KE there.", "Correct! Antinodes have maximum transverse velocity, hence maximum KE.", "KE is not uniform in a standing wave.", "The driven end has fixed motion, not necessarily max KE."]
+  },
+  {
+    q: "Increasing the driving frequency (at fixed tension) will:",
+    opts: ["Increase wave speed", "Decrease wavelength", "Increase amplitude", "Decrease frequency of oscillation"],
+    ans: 1,
+    feedback: ["Wave speed v = √(T/μ) is independent of frequency.", "Correct! λ = v/f. With v fixed, higher f means shorter λ.", "Amplitude depends on driving, not wave speed-frequency relation.", "Frequency is what you are changing — it increases."]
+  }
+];
+
+function buildQuiz() {
+  const c = document.getElementById('quizContainer');
+  c.innerHTML = '';
+  quizData.forEach((qd, qi) => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '14px';
+    div.innerHTML = `<div style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:6px">Q${qi+1}. ${qd.q}</div>`;
+    qd.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        if (div.querySelector('.quiz-feedback')) return;
+        div.querySelectorAll('.quiz-option').forEach(b => b.style.pointerEvents = 'none');
+        btn.classList.add(oi === qd.ans ? 'correct' : 'incorrect');
+        if (oi === qd.ans) div.querySelectorAll('.quiz-option')[qd.ans].classList.add('correct');
+        const fb = document.createElement('div');
+        fb.className = 'quiz-feedback';
+        fb.style.background = oi === qd.ans ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+        fb.style.color = oi === qd.ans ? '#4ade80' : '#fca5a5';
+        fb.textContent = (oi === qd.ans ? '✓ ' : '✗ ') + qd.feedback[oi];
+        div.appendChild(fb);
+      });
+      div.appendChild(btn);
     });
+    c.appendChild(div);
+  });
+}
+
+// ── KaTeX Formulas ────────────────────────────────────────────────────────────
+document.getElementById('formulas').innerHTML = `
+  <div>$$v = \\sqrt{\\frac{T}{\\mu}}$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Wave speed from tension T and linear density μ</div>
+  <div>$$\\lambda = \\frac{v}{f}$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Wavelength from wave speed and frequency</div>
+  <div>$$L = \\frac{n\\lambda}{2}, \\; n=1,2,3\\ldots$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 8px">Standing wave condition (fixed-fixed string)</div>
+  <div>$$E \\propto A^2 f^2$$</div>
+  <div style="font-size:11px;color:#94a3b8;margin:-6px 0 4px">Wave energy proportional to square of amplitude</div>
+`;
+renderMathInElement(document.getElementById('formulas'), { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] });
+
+// ── Animation Loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let frameCount = 0;
+
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  if (delta > 0.1) delta = 0.02;
+
+  if (playing) {
+    const physDt = delta * speedFactor;
+    simTime += physDt;
+    physicsUpdate(physDt);
+    updateTube();
+    leftEnd.position.y = pos[0];
+    rightEnd.position.y = pos[N-1];
   }
-  fb.textContent = (isCorrect ? 'Correct! ' : 'Incorrect. ') + quizExplanations[qNum];
-  fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
-}
 
-// ─── KaTeX Formulas ─────────────────────────────────────────────
-function renderFormulas() {
-  try {
-    katex.render('v = f \\lambda', document.getElementById('f1'), { displayMode: true, throwOnError: false });
-    katex.render('v = \\sqrt{\\dfrac{T}{\\mu}}', document.getElementById('f2'), { displayMode: true, throwOnError: false });
-    katex.render('f_n = \\dfrac{n v}{2 L}, \\quad n = 1, 2, 3, \\ldots', document.getElementById('f3'), { displayMode: true, throwOnError: false });
-  } catch (e) {
-    // KaTeX not loaded, ignore
+  controls.update();
+  frameCount++;
+  if (frameCount % 3 === 0) {
+    updateDataOverlay();
+    updateEnergyOverlay();
   }
-}
 
-if (typeof katex !== 'undefined') {
-  renderFormulas();
-} else {
-  window.addEventListener('load', renderFormulas);
-}
+  renderer.render(scene, camera);
+});
 
-} catch (err) {
-  console.error('Wave on a String initialization error:', err);
-  var errDiv = document.createElement('div');
-  errDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e293b;color:#f87171;padding:24px;border-radius:12px;border:1px solid #ef4444;font-size:14px;max-width:400px;text-align:center;z-index:9999';
-  errDiv.textContent = 'Failed to initialize: ' + err.message;
-  document.body.appendChild(errDiv);
-}
+// Init
+initString();
+buildQuiz();
+showToast('Wave on a String loaded — try the presets!');
 </script>
+<div style="display:none;text-align:center;font-size:11px;color:#475569;padding:4px">Explore waves with curiosity. Generated by AetherViz Master for you.</div>
 </body>
 </html>

@@ -1,327 +1,562 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Beer's Law Lab — Scivra AP Chemistry</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      user-select: none;
-    }
-    .data-val, .readout { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-    #ui {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; flex-direction: column; justify-content: space-between;
-      pointer-events: none; padding: 12px;
-    }
-    .panel {
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(16,185,129,0.25);
-      border-radius: 8px;
-      padding: 12px 14px;
-      pointer-events: all;
-      backdrop-filter: blur(10px);
-    }
-    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
-    .badge {
-      font-size: 0.6rem; background: rgba(16,185,129,0.18);
-      color: #6ee7b7; padding: 2px 7px; border-radius: 10px;
-      vertical-align: middle; margin-left: 6px;
-    }
-    .subtitle { font-size: 0.7rem; color: #94a3b8; }
-    button {
-      background: rgba(16,185,129,0.12);
-      border: 1px solid rgba(16,185,129,0.25);
-      color: #6ee7b7; padding: 5px 10px; border-radius: 5px;
-      cursor: pointer; font-size: 0.72rem; transition: all 0.2s;
-    }
-    button:hover { background: rgba(16,185,129,0.25); }
-    select {
-      background: rgba(16,185,129,0.12);
-      border: 1px solid rgba(16,185,129,0.25);
-      color: #6ee7b7; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem;
-    }
-    select option { background: #1e293b; color: #e2e8f0; }
-    input[type=range] { accent-color: #10b981; height: 4px; width: 100%; }
-    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
-    .controls label { font-size: 0.68rem; color: #94a3b8; }
-    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
-    .data-row {
-      display: flex; justify-content: space-between; padding: 3px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
-    }
-    .big-val { font-size: 1.8rem; font-weight: 700; color: #6ee7b7; font-family: 'JetBrains Mono', monospace; text-align: center; }
-    .formula-panel { max-width: 380px; }
-    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Beer's Law Lab — AP Chemistry</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#f8fafc;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+  .glass{background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.13)}
+  .btn-preset{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;transition:all 0.2s}
+  .btn-preset:hover,.btn-preset.active{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;border-color:transparent}
+  input[type=range]{width:100%;accent-color:#F59E0B;cursor:pointer}
+  .data-val{font-variant-numeric:tabular-nums;font-size:13px;color:#e2e8f0}
+  #toast{position:fixed;top:64px;right:16px;z-index:999;pointer-events:none}
+  .toast-item{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;margin-bottom:6px;animation:slideIn 0.3s ease}
+  @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
+  .katex-block{margin:6px 0;font-size:12px}
+  .quiz-option{padding:8px 12px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin:4px 0;font-size:12px;transition:all 0.2s}
+  .quiz-option:hover{background:rgba(245,158,11,0.2);border-color:#F59E0B}
+  .quiz-option.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;color:#86efac}
+  .quiz-option.wrong{background:rgba(239,68,68,0.2);border-color:#ef4444;color:#fca5a5}
+  .info-card{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:12px;color:#fde68a}
+  #graph-canvas{background:rgba(15,23,42,0.8);border:1px solid rgba(245,158,11,0.3);border-radius:8px}
+</style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<div id="ui">
-  <div class="top-bar">
-    <div class="panel title-block">
-      <h1>Beer's Law Lab <span class="badge">AP Chemistry</span></h1>
-      <p class="subtitle">Absorbance = ε × b × c — adjust concentration and path length</p>
-    </div>
-    <div class="panel controls">
-      <label>Solution:</label>
-      <select id="solutionSelect">
-        <option value="0">CuSO₄ (blue)</option>
-        <option value="1">KMnO₄ (purple)</option>
-        <option value="2">CoCl₂ (pink)</option>
-      </select>
-      <label>Concentration: <span class="data-val" id="concDisplay">0.10</span> mol/L</label>
-      <input type="range" id="concSlider" min="0" max="100" value="10">
-      <label>Path Length: <span class="data-val" id="pathDisplay">1.0</span> cm</label>
-      <input type="range" id="pathSlider" min="1" max="10" value="2">
-      <label>Wavelength: <span class="data-val" id="waveDisplay">520</span> nm</label>
-      <input type="range" id="waveSlider" min="400" max="700" value="520">
-    </div>
+<nav class="glass flex items-center justify-between px-4 py-2 z-50" style="border-bottom:1px solid rgba(245,158,11,0.3)">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#F59E0B,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Beer's Law Lab</span>
+    <span class="text-xs text-slate-400 ml-2">Spectrophotometry: A = εlc</span>
   </div>
-  <div class="bottom-bar">
-    <div class="panel" style="min-width:180px;">
-      <div class="panel-title">Measurements</div>
-      <div class="big-val" id="absDisplay">0.000</div>
-      <div style="text-align:center;font-size:0.65rem;color:#94a3b8;">Absorbance (A)</div>
-      <div class="data-row"><span>Transmittance</span><span class="data-val" id="transDisplay">100.0%</span></div>
-      <div class="data-row"><span>ε (molar abs.)</span><span class="data-val" id="epsDisplay">—</span></div>
-    </div>
-    <div class="panel formula-panel">
-      <div class="panel-title">Beer-Lambert Law</div>
-      <div id="formulaDisplay"></div>
+  <div class="flex gap-2">
+    <button onclick="resetSim()" class="btn-preset text-xs">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset text-xs">⛶ Fullscreen</button>
+    <button onclick="document.getElementById('about-modal').classList.remove('hidden')" class="btn-preset text-xs">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <aside class="glass sidebar-scroll" style="width:300px;min-width:260px;border-right:1px solid rgba(245,158,11,0.2);padding:14px">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-3">Core Formulas</h3>
+    <div class="katex-block" id="f1"></div>
+    <p class="text-xs text-slate-400 mb-2">Beer-Lambert Law: Absorbance = ε × l × c</p>
+    <div class="katex-block" id="f2"></div>
+    <p class="text-xs text-slate-400 mb-2">Transmittance and absorbance relationship</p>
+    <div class="katex-block" id="f3"></div>
+    <p class="text-xs text-slate-400 mb-3">Percent transmittance from I/I₀</p>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-3">Concept</h3>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">Beer's Law states that absorbance A is directly proportional to the concentration c of the absorbing species and the path length l of light through the sample: A = εlc. The molar absorptivity ε (epsilon) is a constant specific to the substance and wavelength.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">In a spectrophotometer, a light source emits a specific wavelength, which passes through a cuvette containing the solution. A detector on the other side measures how much light got through (transmittance T = I/I₀). Absorbance A = -log(T) = -log(I/I₀).</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-3">A Beer's Law plot (A vs c) is a straight line through the origin. The slope = ε × l. This calibration curve lets you determine unknown concentrations from measured absorbance values — a cornerstone of quantitative analytical chemistry.</p>
+
+    <div class="info-card"><b>Common ε Values</b><br>CuSO₄ at 620 nm: ε ≈ 12 L/(mol·cm)<br>KMnO₄ at 520 nm: ε ≈ 2350 L/(mol·cm)<br>K₂Cr₂O₇ at 350 nm: ε ≈ 1500 L/(mol·cm)<br>High ε → very sensitive to small concentrations</div>
+    <div class="info-card"><b>Beer's Law Limits</b><br>Linear only at low concentrations (typically < 0.01 M). At high c: intermolecular interactions change ε. Stray light, polychromatic light also cause deviations.</div>
+    <div class="info-card"><b>AP Chem Connection</b><br>Unit 1 & labs: spectroscopy to identify unknowns, determine concentration, follow reaction rates. The A vs c calibration curve is a classic AP lab experiment.</div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-3">A vs c Plot</h3>
+    <canvas id="graph-canvas" width="260" height="120"></canvas>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2 mt-3">Quiz</h3>
+    <div id="quiz-container"></div>
+  </aside>
+
+  <div id="canvas-container" class="flex-1 relative">
+    <canvas id="mainCanvas"></canvas>
+    <div id="data-overlay" class="absolute top-3 left-3 glass rounded-xl px-4 py-3" style="min-width:220px">
+      <div class="text-xs text-amber-400 font-bold uppercase mb-2">Spectrophotometer</div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Solution</span><span class="data-val" id="d-sol">CuSO₄</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Conc. c (M)</span><span class="data-val" id="d-c">0.050</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Path l (cm)</span><span class="data-val" id="d-l">1.0</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">ε (L/mol·cm)</span><span class="data-val" id="d-eps">12</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Absorbance A</span><span class="data-val" id="d-A">0.600</span></div>
+      <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Transmit. T</span><span class="data-val" id="d-T">25.1%</span></div>
+      <div class="flex justify-between"><span class="text-xs text-slate-400">I/I₀</span><span class="data-val" id="d-ratio">0.251</span></div>
     </div>
   </div>
 </div>
 
+<div class="glass border-t px-4 py-3" style="border-top:1px solid rgba(245,158,11,0.2)">
+  <div class="flex flex-wrap gap-4 items-end">
+    <div class="flex-1 min-w-36">
+      <label class="text-xs text-slate-400">Concentration c (M): <span id="lbl-c">0.050</span></label>
+      <input type="range" id="sl-c" min="1" max="200" value="50" oninput="onCChange(this.value)"/>
+    </div>
+    <div class="flex-1 min-w-36">
+      <label class="text-xs text-slate-400">Path length l (cm): <span id="lbl-l">1.0</span></label>
+      <input type="range" id="sl-l" min="1" max="50" value="10" oninput="onLChange(this.value)"/>
+    </div>
+    <div class="flex-1 min-w-36">
+      <label class="text-xs text-slate-400">Molar absorptivity ε: <span id="lbl-eps">12</span></label>
+      <input type="range" id="sl-eps" min="1" max="500" value="12" oninput="onEpsChange(this.value)"/>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="applyPreset('CuSO4')" class="btn-preset">CuSO₄ (blue)</button>
+      <button onclick="applyPreset('KMnO4')" class="btn-preset">KMnO₄ (purple)</button>
+      <button onclick="applyPreset('K2Cr2O7')" class="btn-preset">K₂Cr₂O₇ (orange)</button>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="togglePlay()" id="btn-play" class="btn-preset">⏸ Pause</button>
+      <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="about-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+  <div class="glass rounded-2xl p-6 max-w-md mx-4">
+    <h2 class="text-lg font-bold text-amber-400 mb-3">About: Beer's Law Lab</h2>
+    <p class="text-sm text-slate-300 mb-3">3D spectrophotometer showing light beam passing through a cuvette. Beam intensity drops with concentration. The Beer's Law plot (A vs c) updates in real time showing the linear relationship.</p>
+    <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="btn-preset">Close</button>
+  </div>
+</div>
+
 <script>
-const SOLUTIONS = [
-  { name: 'CuSO₄', color: [0, 100, 200], peakWl: 635, epsilon: 5.0 },
-  { name: 'KMnO₄', color: [140, 0, 160], peakWl: 525, epsilon: 18.5 },
-  { name: 'CoCl₂', color: [200, 50, 100], peakWl: 510, epsilon: 4.8 }
-];
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 60; this.enabled = true;
+  var scope = this, state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled || state!==0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) { if (!scope.enabled) return; e.preventDefault(); scale *= (e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rotateStart.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      rotateEnd.set(e.touches[0].clientX,e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd,rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta-=rotateDelta.x; sphericalDelta.phi-=rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var offset=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sphericalDelta.theta*d; spherical.phi+=sphericalDelta.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sphericalDelta.theta*=(1-d);sphericalDelta.phi*=(1-d);}else sphericalDelta.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(offset.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
 
-let sol = 0, conc = 0.1, pathLen = 1.0, wavelength = 520;
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const graphPoints = [];
+const container=document.getElementById('canvas-container');
+const canvas=document.getElementById('mainCanvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth,container.clientHeight);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0f172a);
+const camera=new THREE.PerspectiveCamera(50,container.clientWidth/container.clientHeight,0.1,200);
+camera.position.set(0,8,20);
+const controls=new THREE.OrbitControls(camera,canvas);
+scene.add(new THREE.AmbientLight(0xffffff,0.5));
+const dirLight=new THREE.DirectionalLight(0xffd700,1.0);
+dirLight.position.set(5,10,8);scene.add(dirLight);
+const fillLight=new THREE.DirectionalLight(0x3b82f6,0.3);
+fillLight.position.set(-5,-5,-5);scene.add(fillLight);
 
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize);
-resize();
+let playing=true, speedMult=1.0;
+let conc=0.050, pathL=1.0, epsilon=12, solutionName='CuSO₄', solutionColor=0x2563eb;
+let spectroGroup=new THREE.Group(), beamMesh, cuvetteMesh, detectorMesh, lightBeamMesh;
+let beamParticles=[], time=0;
+scene.add(spectroGroup);
 
-function getEpsilonAtWl(s, wl) {
-  const peak = SOLUTIONS[s].peakWl;
-  const eps = SOLUTIONS[s].epsilon;
-  const dist = Math.abs(wl - peak);
-  return eps * Math.exp(-(dist * dist) / (2 * 50 * 50));
+const graphCanvas=document.getElementById('graph-canvas');
+const gCtx=graphCanvas.getContext('2d');
+
+const PRESETS={
+  CuSO4:{name:'CuSO₄',color:0x2563eb,epsilon:12,maxC:0.2},
+  KMnO4:{name:'KMnO₄',color:0x7c3aed,epsilon:2350,maxC:0.001},
+  K2Cr2O7:{name:'K₂Cr₂O₇',color:0xf97316,epsilon:1500,maxC:0.005}
+};
+
+function calcAbsorbance(c,l,eps){return eps*l*c;}
+function calcTransmittance(A){return Math.pow(10,-A);}
+
+function buildSpectrophotometer(){
+  while(spectroGroup.children.length) spectroGroup.remove(spectroGroup.children[0]);
+  beamParticles=[];
+
+  // Light source box
+  const srcGeo=new THREE.BoxGeometry(2,2,2.5);
+  const srcMat=new THREE.MeshPhongMaterial({color:0xfbbf24,emissive:0x92400e,shininess:80});
+  const src=new THREE.Mesh(srcGeo,srcMat);
+  src.position.set(-10,0,0);
+  spectroGroup.add(src);
+
+  // Monochromator (prism-like)
+  const prismGeo=new THREE.ConeGeometry(1.2,2.0,3);
+  const prismMat=new THREE.MeshPhongMaterial({color:0x0ea5e9,transparent:true,opacity:0.8});
+  const prism=new THREE.Mesh(prismGeo,prismMat);
+  prism.position.set(-6,0,0);prism.rotation.z=Math.PI/2;
+  spectroGroup.add(prism);
+
+  // Cuvette holder
+  const holderGeo=new THREE.BoxGeometry(2,3,3);
+  const holderMat=new THREE.MeshPhongMaterial({color:0x334155,shininess:60});
+  const holder=new THREE.Mesh(holderGeo,holderMat);
+  holder.position.set(0,0,0);
+  spectroGroup.add(holder);
+
+  // Cuvette (solution)
+  const A=calcAbsorbance(conc,pathL,epsilon);
+  const T=calcTransmittance(A);
+  const col=new THREE.Color(solutionColor);
+  col.multiplyScalar(0.5+T*0.5);
+  const cuvetteGeo=new THREE.BoxGeometry(1.4,2.8,2.8);
+  const cuvetteMat=new THREE.MeshPhongMaterial({color:solutionColor,transparent:true,opacity:0.3+conc*2,shininess:100});
+  cuvetteMesh=new THREE.Mesh(cuvetteGeo,cuvetteMat);
+  cuvetteMesh.position.set(0,0,0);
+  spectroGroup.add(cuvetteMesh);
+
+  // Detector box
+  const detGeo=new THREE.BoxGeometry(2,2,2.5);
+  const detMat=new THREE.MeshPhongMaterial({color:0x22c55e,emissive:0x064e3b,shininess:80});
+  const det=new THREE.Mesh(detGeo,detMat);
+  det.position.set(10,0,0);
+  detectorMesh=det;
+  spectroGroup.add(det);
+
+  // Labels as small boxes
+  const labelGeo=new THREE.PlaneGeometry(2.5,0.8);
+  const labelMat=new THREE.MeshBasicMaterial({color:0xfbbf24,side:THREE.DoubleSide});
+  const label1=new THREE.Mesh(labelGeo,labelMat);
+  label1.position.set(-10,2,0);spectroGroup.add(label1);
+
+  // Beam between source and cuvette
+  const A_val=calcAbsorbance(conc,pathL,epsilon);
+  const T_val=calcTransmittance(A_val);
+
+  // Incoming beam (full intensity)
+  const beamInGeo=new THREE.CylinderGeometry(0.2,0.2,7,12);
+  const beamInMat=new THREE.MeshBasicMaterial({color:0xfbbf24,transparent:true,opacity:0.7});
+  const beamIn=new THREE.Mesh(beamInGeo,beamInMat);
+  beamIn.rotation.z=Math.PI/2;beamIn.position.set(-4.5,0,0);
+  spectroGroup.add(beamIn);
+
+  // Outgoing beam (attenuated)
+  const beamOutGeo=new THREE.CylinderGeometry(0.2,0.2,7,12);
+  const beamOutMat=new THREE.MeshBasicMaterial({color:solutionColor,transparent:true,opacity:T_val*0.9});
+  const beamOut=new THREE.Mesh(beamOutGeo,beamOutMat);
+  beamOut.rotation.z=Math.PI/2;beamOut.position.set(5.5,0,0);
+  spectroGroup.add(beamOut);
+  lightBeamMesh=beamOut;
+
+  // Beam photon particles
+  for(let i=0;i<20;i++){
+    const geo=new THREE.SphereGeometry(0.1,6,6);
+    const mat=new THREE.MeshBasicMaterial({color:i<10?0xfbbf24:solutionColor,transparent:true,opacity:0.8});
+    const m=new THREE.Mesh(geo,mat);
+    spectroGroup.add(m);
+    const isIn=i<10;
+    beamParticles.push({mesh:m,t:Math.random(),side:isIn,speed:0.02});
+  }
+
+  updateGraph();
+  updateOverlay();
 }
 
-function wavelengthToColor(wl) {
-  let r = 0, g = 0, b = 0;
-  if (wl >= 380 && wl < 440) { r = -(wl-440)/(440-380); b = 1; }
-  else if (wl >= 440 && wl < 490) { g = (wl-440)/(490-440); b = 1; }
-  else if (wl >= 490 && wl < 510) { g = 1; b = -(wl-510)/(510-490); }
-  else if (wl >= 510 && wl < 580) { r = (wl-510)/(580-510); g = 1; }
-  else if (wl >= 580 && wl < 645) { r = 1; g = -(wl-645)/(645-580); }
-  else if (wl >= 645 && wl <= 780) { r = 1; }
-  return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+function updateBeamAttenuation(){
+  const A=calcAbsorbance(conc,pathL,epsilon);
+  const T=calcTransmittance(A);
+  if(lightBeamMesh){
+    lightBeamMesh.material.opacity=Math.max(0.05,T*0.9);
+    lightBeamMesh.material.color.setHex(solutionColor);
+  }
+  if(cuvetteMesh){
+    cuvetteMesh.material.opacity=Math.min(0.95,0.15+conc*3);
+  }
+  // Detector glow based on T
+  if(detectorMesh){
+    const intensity=0.05+T*0.5;
+    detectorMesh.material.emissiveIntensity=intensity;
+  }
+  updateOverlay();
+  updateGraph();
 }
 
-function update() {
-  const eps = getEpsilonAtWl(sol, wavelength);
-  const A = eps * pathLen * conc;
-  const T = Math.pow(10, -A);
-
-  document.getElementById('absDisplay').textContent = A.toFixed(3);
-  document.getElementById('transDisplay').textContent = (T * 100).toFixed(1) + '%';
-  document.getElementById('epsDisplay').textContent = eps.toFixed(2);
-
-  draw(A, T);
+function updateOverlay(){
+  const A=calcAbsorbance(conc,pathL,epsilon);
+  const T=calcTransmittance(A);
+  document.getElementById('d-sol').textContent=solutionName;
+  document.getElementById('d-c').textContent=conc.toFixed(4);
+  document.getElementById('d-l').textContent=pathL.toFixed(1);
+  document.getElementById('d-eps').textContent=epsilon;
+  document.getElementById('d-A').textContent=A.toFixed(4);
+  document.getElementById('d-T').textContent=(T*100).toFixed(1)+'%';
+  document.getElementById('d-ratio').textContent=T.toFixed(4);
 }
 
-function draw(A, T) {
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
+function updateGraph(){
+  gCtx.clearRect(0,0,260,120);
+  gCtx.fillStyle='rgba(15,23,42,0.6)';
+  gCtx.fillRect(0,0,260,120);
 
-  // Cuvette
-  const cx = w * 0.45, cy = h * 0.45;
-  const cuW = 60 + pathLen * 20, cuH = 120;
+  const padding={l:35,r:10,t:10,b:30};
+  const w=260-padding.l-padding.r, h=120-padding.t-padding.b;
 
-  // Solution color based on concentration
-  const sc = SOLUTIONS[sol].color;
-  const alpha = Math.min(conc * 2, 0.95);
-  ctx.fillStyle = `rgba(${sc[0]},${sc[1]},${sc[2]},${alpha})`;
-  ctx.strokeStyle = 'rgba(16,185,129,0.3)';
-  ctx.lineWidth = 2;
-
-  // Cuvette outline
-  ctx.beginPath();
-  ctx.rect(cx - cuW/2, cy - cuH/2, cuW, cuH);
-  ctx.fill();
-  ctx.stroke();
-
-  // Glass edges
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(cx - cuW/2 - 4, cy - cuH/2 - 4);
-  ctx.lineTo(cx - cuW/2 - 4, cy + cuH/2 + 4);
-  ctx.moveTo(cx + cuW/2 + 4, cy - cuH/2 - 4);
-  ctx.lineTo(cx + cuW/2 + 4, cy + cuH/2 + 4);
-  ctx.stroke();
-
-  // Light beam (incoming)
-  const beamColor = wavelengthToColor(wavelength);
-  ctx.strokeStyle = `rgba(${beamColor[0]},${beamColor[1]},${beamColor[2]},0.8)`;
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.moveTo(cx - cuW/2 - 100, cy);
-  ctx.lineTo(cx - cuW/2, cy);
-  ctx.stroke();
-
-  // Light beam (outgoing, attenuated)
-  ctx.strokeStyle = `rgba(${beamColor[0]},${beamColor[1]},${beamColor[2]},${T * 0.8})`;
-  ctx.lineWidth = 8 * T;
-  ctx.beginPath();
-  ctx.moveTo(cx + cuW/2, cy);
-  ctx.lineTo(cx + cuW/2 + 100, cy);
-  ctx.stroke();
+  // Axes
+  gCtx.strokeStyle='rgba(255,255,255,0.3)';
+  gCtx.lineWidth=1;
+  gCtx.beginPath();
+  gCtx.moveTo(padding.l,padding.t);gCtx.lineTo(padding.l,padding.t+h);gCtx.lineTo(padding.l+w,padding.t+h);gCtx.stroke();
 
   // Labels
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '11px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('I₀', cx - cuW/2 - 50, cy - 15);
-  ctx.fillText('I', cx + cuW/2 + 50, cy - 15);
-  ctx.fillText(`b = ${pathLen.toFixed(1)} cm`, cx, cy + cuH/2 + 20);
-  ctx.fillText(`c = ${conc.toFixed(2)} M`, cx, cy - cuH/2 - 10);
-
-  // Detector
-  ctx.fillStyle = 'rgba(16,185,129,0.15)';
-  ctx.strokeStyle = 'rgba(16,185,129,0.3)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.rect(cx + cuW/2 + 95, cy - 20, 30, 40);
-  ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '9px Segoe UI, sans-serif';
-  ctx.fillText('detector', cx + cuW/2 + 110, cy + 35);
-
-  // Graph: A vs c (bottom right area)
-  const gx = w * 0.68, gy = h * 0.25;
-  const gw = w * 0.25, gh = h * 0.35;
-
-  ctx.strokeStyle = 'rgba(16,185,129,0.2)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(gx, gy, gw, gh);
-
-  // Axes labels
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '10px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Concentration (mol/L)', gx + gw/2, gy + gh + 16);
-  ctx.save();
-  ctx.translate(gx - 14, gy + gh/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText('Absorbance', 0, 0);
-  ctx.restore();
-
-  // Grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  for (let i = 1; i < 5; i++) {
-    ctx.beginPath();
-    ctx.moveTo(gx, gy + gh * i/5);
-    ctx.lineTo(gx + gw, gy + gh * i/5);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(gx + gw * i/5, gy);
-    ctx.lineTo(gx + gw * i/5, gy + gh);
-    ctx.stroke();
-  }
+  gCtx.fillStyle='#94a3b8';gCtx.font='10px sans-serif';
+  gCtx.fillText('A',2,padding.t+5);
+  gCtx.fillText('c (M)',padding.l+w/2-10,120-4);
 
   // Beer's Law line
-  const eps = getEpsilonAtWl(sol, wavelength);
-  ctx.strokeStyle = '#10b981';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  const maxC = 1.0, maxA = 3.0;
-  for (let c = 0; c <= maxC; c += 0.01) {
-    const a = eps * pathLen * c;
-    const px = gx + (c / maxC) * gw;
-    const py = gy + gh - (Math.min(a, maxA) / maxA) * gh;
-    c === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  const maxC=conc*2+0.001;
+  const maxA=epsilon*pathL*maxC;
+  gCtx.beginPath();
+  gCtx.strokeStyle='#F59E0B';gCtx.lineWidth=2;
+  for(let i=0;i<=100;i++){
+    const c2=i/100*maxC;
+    const A2=epsilon*pathL*c2;
+    const px=padding.l+i/100*w;
+    const py=padding.t+h-Math.min(A2/maxA,1)*h;
+    if(i===0) gCtx.moveTo(px,py); else gCtx.lineTo(px,py);
   }
-  ctx.stroke();
+  gCtx.stroke();
 
   // Current point
-  const cpx = gx + (conc / maxC) * gw;
-  const cpy = gy + gh - (Math.min(A, maxA) / maxA) * gh;
-  ctx.beginPath();
-  ctx.arc(cpx, cpy, 5, 0, Math.PI * 2);
-  ctx.fillStyle = '#6ee7b7';
-  ctx.fill();
+  const A=calcAbsorbance(conc,pathL,epsilon);
+  const cx=padding.l+w;
+  const cy=padding.t+h-Math.min(A/maxA,1)*h;
+  gCtx.beginPath();
+  gCtx.arc(cx,cy,4,0,Math.PI*2);
+  gCtx.fillStyle='#ef4444';gCtx.fill();
 
-  // Axis values
-  ctx.fillStyle = '#64748b';
-  ctx.font = '9px JetBrains Mono, monospace';
-  ctx.textAlign = 'right';
-  for (let i = 0; i <= 5; i++) {
-    ctx.fillText((maxA * i/5).toFixed(1), gx - 3, gy + gh - gh * i/5 + 3);
-  }
-  ctx.textAlign = 'center';
-  for (let i = 0; i <= 5; i++) {
-    ctx.fillText((maxC * i/5).toFixed(1), gx + gw * i/5, gy + gh + 10);
-  }
+  // Slope label
+  gCtx.fillStyle='#fbbf24';gCtx.font='9px monospace';
+  gCtx.fillText('slope=ε×l='+( epsilon*pathL).toFixed(0),padding.l+5,padding.t+12);
 }
 
-document.getElementById('solutionSelect').addEventListener('change', e => { sol = parseInt(e.target.value); update(); });
-document.getElementById('concSlider').addEventListener('input', e => {
-  conc = parseInt(e.target.value) / 100;
-  document.getElementById('concDisplay').textContent = conc.toFixed(2);
-  update();
-});
-document.getElementById('pathSlider').addEventListener('input', e => {
-  pathLen = parseInt(e.target.value) * 0.5;
-  document.getElementById('pathDisplay').textContent = pathLen.toFixed(1);
-  update();
-});
-document.getElementById('waveSlider').addEventListener('input', e => {
-  wavelength = parseInt(e.target.value);
-  document.getElementById('waveDisplay').textContent = wavelength;
-  update();
-});
-
-function renderFormulas() {
-  const el = document.getElementById('formulaDisplay');
-  el.innerHTML = '';
-  const formulas = [
-    { tex: 'A = \\varepsilon \\cdot b \\cdot c', desc: 'ε = molar absorptivity, b = path length, c = concentration' },
-    { tex: 'T = 10^{-A} = \\frac{I}{I_0}', desc: 'Transmittance: fraction of light passing through' }
-  ];
-  formulas.forEach(f => {
-    const div = document.createElement('div');
-    try { katex.render(f.tex, div, { displayMode: true, throwOnError: false }); }
-    catch { div.textContent = f.tex; }
-    el.appendChild(div);
-    const desc = document.createElement('div');
-    desc.className = 'formula-desc'; desc.textContent = f.desc;
-    el.appendChild(desc);
-  });
+function onCChange(v){
+  conc=parseInt(v)/1000;
+  document.getElementById('lbl-c').textContent=conc.toFixed(3);
+  updateBeamAttenuation();
 }
 
-renderFormulas();
-update();
+function onLChange(v){
+  pathL=parseInt(v)/10;
+  document.getElementById('lbl-l').textContent=pathL.toFixed(1);
+  updateBeamAttenuation();
+}
+
+function onEpsChange(v){
+  epsilon=parseInt(v)*5;
+  document.getElementById('lbl-eps').textContent=epsilon;
+  updateBeamAttenuation();
+}
+
+function applyPreset(key){
+  const p=PRESETS[key];
+  solutionName=p.name; solutionColor=p.color; epsilon=p.epsilon;
+  conc=p.maxC*0.5; pathL=1.0;
+  document.getElementById('sl-c').value=Math.round(conc*1000);
+  document.getElementById('sl-l').value=10;
+  document.getElementById('sl-eps').value=Math.round(epsilon/5);
+  document.getElementById('lbl-c').textContent=conc.toFixed(4);
+  document.getElementById('lbl-l').textContent='1.0';
+  document.getElementById('lbl-eps').textContent=epsilon;
+  buildSpectrophotometer();
+  const A=calcAbsorbance(conc,pathL,epsilon);
+  showToast(p.name+': A='+A.toFixed(3)+', T='+(calcTransmittance(A)*100).toFixed(1)+'%');
+}
+
+function togglePlay(){playing=!playing;document.getElementById('btn-play').textContent=playing?'⏸ Pause':'▶ Play';}
+function resetSim(){playing=true;conc=0.05;pathL=1.0;epsilon=12;solutionName='CuSO₄';solutionColor=0x2563eb;document.getElementById('sl-c').value=50;document.getElementById('sl-l').value=10;document.getElementById('sl-eps').value=12;document.getElementById('lbl-c').textContent='0.050';document.getElementById('lbl-l').textContent='1.0';document.getElementById('lbl-eps').textContent='12';document.getElementById('btn-play').textContent='⏸ Pause';buildSpectrophotometer();showToast('Reset');}
+function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function showToast(msg){const d=document.createElement('div');d.className='toast-item';d.textContent=msg;document.getElementById('toast').appendChild(d);setTimeout(()=>d.remove(),2000);}
+
+window.addEventListener('load',()=>{
+  katex.render('A = \\varepsilon l c', document.getElementById('f1'),{displayMode:true});
+  katex.render('A = -\\log_{10}(T) = -\\log_{10}\\left(\\dfrac{I}{I_0}\\right)', document.getElementById('f2'),{displayMode:true});
+  katex.render('%T = \\dfrac{I}{I_0} \\times 100', document.getElementById('f3'),{displayMode:true});
+});
+
+const quizData=[
+  {q:'A CuSO₄ solution has A = 0.600, l = 1.0 cm, ε = 12 L/mol·cm. Concentration?',opts:['0.020 M','0.050 M','0.120 M','0.600 M'],ans:1,exp:'A=εlc → c = A/(ε×l) = 0.600/(12×1.0) = 0.050 M. This is the basic Beer\'s Law calculation.'},
+  {q:'If you double the path length, absorbance will:',opts:['Stay the same','Halve','Double','Quadruple'],ans:2,exp:'A = εlc: A is directly proportional to l. Doubling l doubles A (all else constant). This is why longer cuvettes detect lower concentrations.'},
+  {q:'A solution has T = 10%. What is the absorbance?',opts:['0.10','0.90','1.0','10'],ans:2,exp:'A = -log(T) = -log(0.10) = -(-1) = 1.0. T=10% means only 10% of light gets through; absorbance = 1.0 is fairly high.'}
+];
+let quizAnswered=[false,false,false];
+function renderQuiz(){const c=document.getElementById('quiz-container');c.innerHTML=quizData.map((q,qi)=>`<div class="mb-3"><p class="text-xs text-slate-300 mb-1 font-semibold">Q${qi+1}: ${q.q}</p>${q.opts.map((o,oi)=>`<div class="quiz-option" id="qo-${qi}-${oi}" onclick="answerQuiz(${qi},${oi})">${o}</div>`).join('')}<div id="qe-${qi}" class="text-xs text-slate-400 mt-1 hidden">${q.exp}</div></div>`).join('');}
+function answerQuiz(qi,oi){if(quizAnswered[qi])return;quizAnswered[qi]=true;document.getElementById(`qo-${qi}-${oi}`).classList.add(oi===quizData[qi].ans?'correct':'wrong');if(oi!==quizData[qi].ans)document.getElementById(`qo-${qi}-${quizData[qi].ans}`).classList.add('correct');document.getElementById(`qe-${qi}`).classList.remove('hidden');}
+renderQuiz();
+
+renderer.setAnimationLoop(()=>{
+  if(playing){
+    time+=0.016*speedMult;
+    const A=calcAbsorbance(conc,pathL,epsilon);
+    const T=calcTransmittance(A);
+    beamParticles.forEach((p,i)=>{
+      p.t=(p.t+p.speed*speedMult)%1;
+      if(p.side){
+        // Incoming photons: -10 to -0.8 (left side)
+        p.mesh.position.set(-10+p.t*9.2,0,0);
+        p.mesh.material.opacity=0.8;
+      } else {
+        // Outgoing photons: 0.8 to 10 (right side), attenuated
+        p.mesh.position.set(0.8+p.t*9.2,0,0);
+        p.mesh.material.opacity=T*0.9;
+      }
+    });
+    // Pulse detector
+    if(detectorMesh){
+      detectorMesh.material.emissive=new THREE.Color(0x22c55e);
+      detectorMesh.material.emissiveIntensity=(0.1+T*0.4)*(0.9+0.1*Math.sin(time*5));
+    }
+  }
+  controls.update();
+  renderer.render(scene,camera);
+});
+
+window.addEventListener('resize',()=>{const w=container.clientWidth,h=container.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);});
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='KeyR')resetSim();
+});
+
+buildSpectrophotometer();
+
+// Extended Beer's Law utilities
+
+// Standard curve generation for calibration
+function generateCalibrationCurve(concentrations, epsilon_val, l_val) {
+  return concentrations.map(c => ({
+    concentration: c,
+    absorbance: epsilon_val * l_val * c,
+    transmittance: Math.pow(10, -(epsilon_val * l_val * c)) * 100
+  }));
+}
+
+// Unknown concentration from measured absorbance
+function unknownConcentration(A_measured, epsilon_val, l_val) {
+  return A_measured / (epsilon_val * l_val);
+}
+
+// Standard additions method for complex matrices
+function standardAdditions(A_sample, A_spike, C_spike, V_spike, V_sample) {
+  // Extrapolation to x-intercept
+  const slope = A_spike / C_spike;
+  const C_unknown = A_sample / slope;
+  return C_unknown.toFixed(6);
+}
+
+// Multi-component Beer's Law (two absorbing species at two wavelengths)
+function twoComponentAnalysis(A1, A2, eps_1_lambda1, eps_1_lambda2, eps_2_lambda1, eps_2_lambda2, l_val) {
+  // Solve system: A1 = eps_1λ1 * l * C1 + eps_2λ1 * l * C2
+  //               A2 = eps_1λ2 * l * C1 + eps_2λ2 * l * C2
+  const det = eps_1_lambda1 * eps_2_lambda2 - eps_2_lambda1 * eps_1_lambda2;
+  if (det === 0) return null;
+  const C1 = (A1 * eps_2_lambda2 - A2 * eps_2_lambda1) / (det * l_val);
+  const C2 = (eps_1_lambda1 * A2 - eps_1_lambda2 * A1) / (det * l_val);
+  return { C1: C1.toFixed(6), C2: C2.toFixed(6) };
+}
+
+// Percent transmittance conversion
+function transmittanceToAbsorbance(T_percent) {
+  return -Math.log10(T_percent / 100);
+}
+
+function absorbanceToTransmittance(A) {
+  return Math.pow(10, -A) * 100;
+}
+
+// Limit of detection (LOD) and quantification (LOQ)
+function calcLOD(blank_std_dev, slope) {
+  return 3 * blank_std_dev / slope;
+}
+function calcLOQ(blank_std_dev, slope) {
+  return 10 * blank_std_dev / slope;
+}
+
+// Stray light effect on Beer's Law linearity
+function straylightAbsorbance(A_true, stray_fraction) {
+  const T_true = Math.pow(10, -A_true);
+  const T_apparent = (T_true + stray_fraction) / (1 + stray_fraction);
+  return -Math.log10(T_apparent);
+}
+
+// Spectrophotometer calibration check (blank subtraction)
+function blankSubtraction(A_sample, A_blank) {
+  return A_sample - A_blank;
+}
+
+// Molar absorptivity from experimental data
+function calcMolarAbsorptivity(A, l_cm, c_mol_per_L) {
+  return (A / (l_cm * c_mol_per_L)).toFixed(1);
+}
+
+// Isosbestic point: wavelength where two species have equal absorptivity
+// Used to verify conservation of material in equilibrium or kinetic studies
+function findIsosbesticPoint(species1_spectrum, species2_spectrum) {
+  for (let i = 0; i < species1_spectrum.length; i++) {
+    if (Math.abs(species1_spectrum[i] - species2_spectrum[i]) < 0.01) {
+      return i; // wavelength index
+    }
+  }
+  return -1; // no isosbestic point found
+}
+
+// Keyboard shortcut extensions
+window.addEventListener('keydown', e => {
+  if (e.code === 'Digit1') applyPreset('CuSO4');
+  if (e.code === 'Digit2') applyPreset('KMnO4');
+  if (e.code === 'Digit3') applyPreset('K2Cr2O7');
+  if (e.code === 'Digit4') {
+    const A = calcAbsorbance(conc, pathL, epsilon);
+    const T = calcTransmittance(A);
+    showToast(`A=${A.toFixed(3)}, T=${(T*100).toFixed(1)}%, c_unknown from A=0.5: ${unknownConcentration(0.5, epsilon, pathL).toFixed(5)} M`);
+  }
+  if (e.code === 'Digit5') {
+    // Show calibration curve points
+    const curve = generateCalibrationCurve([0.01, 0.02, 0.05, 0.1, 0.2], epsilon, pathL);
+    showToast('Cal curve: c=0.1M → A=' + curve[3].absorbance.toFixed(3));
+  }
+});
+
+// Reaction rate monitoring via absorbance (kinetics application)
+function trackReactionRate(absorbances, times) {
+  if (absorbances.length < 2) return null;
+  const dA = absorbances[absorbances.length-1] - absorbances[0];
+  const dt = times[times.length-1] - times[0];
+  return dA / dt; // rate of absorbance change
+}
 </script>
 </body>
 </html>

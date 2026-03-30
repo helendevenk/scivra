@@ -1,760 +1,804 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Solar System — NeonPhysics AP Physics C</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden}
-    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(251,146,60,.10),rgba(234,179,8,.06));border-bottom:1px solid rgba(251,146,60,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .header-left{display:flex;align-items:center;gap:12px}
-    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff}
-    .fps-display{font-size:11px;color:#64748b;font-variant-numeric:tabular-nums}
-    .main-layout{display:flex;height:calc(100vh - 52px)}
-    .left-panel{width:320px;min-width:320px;background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
-    .canvas-wrap{flex:1;position:relative;background:#0f172a}
-    canvas{display:block;width:100%!important;height:100%!important}
-    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-    .formula-box{background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.12);border-radius:8px;padding:10px 14px;margin-bottom:8px}
-    .formula-desc{font-size:10px;color:#64748b;margin-top:4px;line-height:1.4}
-    .slider-group{margin-bottom:10px}
-    .slider-label{display:flex;justify-content:space-between;margin-bottom:4px}
-    .slider-name{font-size:11px;color:#94a3b8}
-    .slider-val{font-size:11px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fb923c;cursor:pointer}
-    .btn{padding:7px 14px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-    .btn-play{background:#22c55e;color:#fff}
-    .btn-play:hover{background:#16a34a}
-    .btn-pause{background:#ef4444;color:#fff}
-    .btn-pause:hover{background:#dc2626}
-    .btn-reset{background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.12)}
-    .btn-reset:hover{background:rgba(255,255,255,.12)}
-    .btn-preset{background:rgba(251,146,60,.12);color:#fdba74;border:1px solid rgba(251,146,60,.25)}
-    .btn-preset:hover{background:rgba(251,146,60,.2)}
-    .btn-preset.active{background:rgba(251,146,60,.3);border-color:#fb923c}
-    .preset-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
-    .controls-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-    .body-config{background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid #666}
-    .body-config-title{font-size:11px;font-weight:700;margin-bottom:8px}
-    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .metric-card{background:rgba(255,255,255,.03);border-radius:6px;padding:7px 10px}
-    .metric-title{font-size:9px;color:#475569;text-transform:uppercase;margin-bottom:3px}
-    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
-    .val-orange{color:#fb923c}.val-sky{color:#38bdf8}.val-violet{color:#a78bfa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-rose{color:#fb7185}
-    .quiz-section{margin-top:4px}
-    .quiz-q{background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;margin-bottom:8px}
-    .quiz-q-title{font-size:11px;font-weight:600;color:#e2e8f0;margin-bottom:8px}
-    .quiz-option{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:#cbd5e1;font-size:11px;cursor:pointer;transition:all .15s}
-    .quiz-option:hover{background:rgba(255,255,255,.08)}
-    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
-    .quiz-explanation{font-size:10px;color:#64748b;margin-top:6px;display:none;line-height:1.4}
-    .overlay-metrics{position:absolute;top:12px;left:12px;background:rgba(15,23,42,.85);border:1px solid rgba(251,146,60,.2);border-radius:8px;padding:10px 14px;backdrop-filter:blur(6px);pointer-events:none}
-    .overlay-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-    .overlay-row:last-child{margin-bottom:0}
-    .overlay-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .overlay-text{font-size:11px;font-variant-numeric:tabular-nums}
-    .bottom-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);padding:12px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .speed-group{display:flex;align-items:center;gap:8px}
-    .speed-group .slider-name{font-size:11px;color:#94a3b8;white-space:nowrap}
-    .speed-group input[type=range]{width:120px}
-    .toggle-label{font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:6px;cursor:pointer}
-    .toggle-label input{accent-color:#fb923c}
-    @media(max-width:900px){
-      .main-layout{flex-direction:column}
-      .left-panel{width:100%;min-width:0;max-height:40vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
-      .canvas-wrap{min-height:50vh}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Solar System — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.5); border-radius: 3px; }
+  .glass { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(12px); }
+  .glass-panel { background: rgba(22,78,99,0.7); border: 1px solid rgba(20,184,166,0.25); backdrop-filter: blur(12px); }
+  .physics-text { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #canvas-container { position: relative; flex: 1; overflow: hidden; }
+  .data-overlay { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 12px 16px; min-width: 220px; font-variant-numeric: tabular-nums; }
+  .data-row { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; margin: 3px 0; }
+  .data-label { color: #94a3b8; } .data-value { color: #60a5fa; font-weight: 600; }
+  .sidebar { width: 300px; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; display: flex; flex-direction: column; transition: width 0.3s; }
+  .sidebar.collapsed { width: 0; overflow: hidden; }
+  .formula-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+  .knowledge-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+  .control-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 12px 16px; }
+  .slider-group { display: flex; flex-direction: column; gap: 4px; }
+  .slider-label { font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9); cursor: pointer; }
+  .btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; font-weight: 500; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6, #0EA5E9); color: white; }
+  .btn-primary:hover { background: linear-gradient(135deg, #60a5fa, #38bdf8); }
+  .btn-ghost { background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.15); }
+  .btn-preset { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); padding: 5px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .btn-preset:hover, .btn-preset.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; }
+  .speed-btn { padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: #94a3b8; transition: all 0.2s; }
+  .speed-btn.active { background: rgba(59,130,246,0.3); border-color: #3B82F6; color: #60a5fa; }
+  .body-indicator { display: flex; align-items: center; gap-6px; margin: 2px 0; font-size: 11px; }
+  .body-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  #toast { position: fixed; top: 60px; right: 16px; z-index: 1000; pointer-events: none; }
+  .toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .quiz-panel { position: absolute; bottom: 12px; right: 12px; width: 320px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 14px; max-height: 420px; overflow-y: auto; }
+  .quiz-option { padding: 7px 10px; margin: 4px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 13px; transition: all 0.2s; background: rgba(255,255,255,0.04); }
+  .quiz-option:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-option.incorrect { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+  .quiz-feedback { font-size: 12px; margin-top: 6px; padding: 6px 8px; border-radius: 6px; }
+  .quiz-toggle { position: absolute; bottom: 12px; right: 12px; z-index: 10; }
+  .collision-flash { animation: flash 0.5s ease; }
+  @keyframes flash { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-left">
-    <span class="badge">AP PHYSICS C</span>
-    <span class="badge badge-free">FREE</span>
-    <h1>My Solar System</h1>
+
+<!-- Navbar -->
+<nav class="glass flex items-center justify-between px-4 py-2.5 border-b" style="border-color:rgba(59,130,246,0.2); background:rgba(15,23,42,0.85);">
+  <div>
+    <span class="text-lg font-bold physics-text">My Solar System</span>
+    <span class="text-sm text-slate-400 ml-2">N体引力模拟</span>
   </div>
-  <span class="fps-display" id="fpsDisplay">60 FPS</span>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost text-xs" id="toggleSidebar">☰ Panel</button>
+    <button class="btn btn-ghost text-xs" id="btnReset">↺ Reset</button>
+    <button class="btn btn-ghost text-xs" id="btnFullscreen">⛶ Full</button>
+    <button class="btn btn-ghost text-xs" id="btnAbout">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="p-4">
+      <h3 class="text-sm font-semibold text-blue-400 mb-3 uppercase tracking-wider">Core Formulas</h3>
+      <div class="formula-card">
+        <div id="f1"></div>
+        <p class="text-xs text-slate-400 mt-1">Gravitational force between each pair of bodies</p>
+      </div>
+      <div class="formula-card">
+        <div id="f2"></div>
+        <p class="text-xs text-slate-400 mt-1">Total mechanical energy — conserved in closed system</p>
+      </div>
+      <div class="formula-card">
+        <div id="f3"></div>
+        <p class="text-xs text-slate-400 mt-1">Total angular momentum — conserved if no external torques</p>
+      </div>
+      <div class="formula-card">
+        <div id="f4"></div>
+        <p class="text-xs text-slate-400 mt-1">N-body acceleration: sum over all other bodies</p>
+      </div>
+
+      <h3 class="text-sm font-semibold text-blue-400 mt-4 mb-2 uppercase tracking-wider">Concept</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2">In a system with more than 2 bodies, exact analytical solutions generally don't exist — this is the famous "three-body problem." Orbits can be stable, quasi-periodic, or chaotically unpredictable.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2">Total energy and angular momentum are conserved exactly (within numerical precision). If you see them drifting, that's integration error — a signal to use smaller time steps.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-3">The center of mass moves at constant velocity (or stays fixed if initial CM momentum = 0). This is why our solar system's barycenter stays near the Sun even as planets orbit.</p>
+
+      <h3 class="text-sm font-semibold text-blue-400 mb-2 uppercase tracking-wider">Knowledge Cards</h3>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-blue-300">Historical Fact</p>
+        <p class="text-xs text-slate-300 mt-1">Poincaré proved in 1890 that the 3-body problem is generally non-integrable. His work founded the modern field of chaos theory — small perturbations produce exponentially diverging trajectories.</p>
+      </div>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-amber-300">Common Misconception</p>
+        <p class="text-xs text-slate-300 mt-1">More bodies doesn't always mean instability. Trojan asteroids at Jupiter's L4/L5 Lagrange points have been stable for billions of years despite being in a 3-body system.</p>
+      </div>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-emerald-300">Advanced Connection</p>
+        <p class="text-xs text-slate-300 mt-1">The "figure-8" three-body orbit (discovered 1993, proved stable 2000) shows three equal masses chasing each other in a stable figure-8. These exotic solutions exist but require extremely precise initial conditions.</p>
+      </div>
+
+      <h3 class="text-sm font-semibold text-blue-400 mt-4 mb-2 uppercase tracking-wider">Why It Matters</h3>
+      <ul class="text-xs text-slate-300 space-y-1.5">
+        <li>• Galaxy formation simulations use N-body solvers with billions of particles</li>
+        <li>• Planetary stability over billions of years requires numerical integration</li>
+        <li>• AP Physics: conservation laws are the deep pattern under complex motion</li>
+        <li>• Gravitational wave detectors need N-body predictions for signal templates</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main canvas -->
+  <div id="canvas-container" class="flex-1 relative">
+    <div class="data-overlay" id="dataOverlay">
+      <div class="text-xs font-semibold text-blue-400 mb-2">System Data</div>
+      <div class="data-row"><span class="data-label">Total Energy</span><span class="data-value" id="dEnergy">—</span></div>
+      <div class="data-row"><span class="data-label">ΔE (drift)</span><span class="data-value" id="dDrift">—</span></div>
+      <div class="data-row"><span class="data-label">Angular Mom.</span><span class="data-value" id="dL">—</span></div>
+      <div class="data-row"><span class="data-label">COM x,z</span><span class="data-value" id="dCOM">—</span></div>
+      <div class="data-row"><span class="data-label">Step Count</span><span class="data-value" id="dSteps">—</span></div>
+      <div class="data-row"><span class="data-label">Bodies</span><span class="data-value" id="dBodies">—</span></div>
+      <div class="mt-2 pt-2 border-t border-white/10">
+        <div class="text-xs text-slate-400 mb-1">Body Positions</div>
+        <div id="bodyList"></div>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="quiz-panel" id="quizPanel">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-semibold text-blue-400">Quick Quiz</span>
+        <button class="text-slate-400 hover:text-white text-xs" id="closeQuiz">✕ Hide</button>
+      </div>
+      <div id="quizContainer"></div>
+    </div>
+    <button class="quiz-toggle btn btn-primary text-xs hidden" id="showQuiz">Quiz</button>
+  </div>
 </div>
 
-<div class="main-layout">
-  <div class="left-panel">
-    <div class="section">
-      <div class="section-title">Newton's Law of Gravitation</div>
-      <div class="formula-box" id="formulaGrav"></div>
-      <div class="formula-desc">Every mass attracts every other mass. The force is proportional to the product of the two masses and inversely proportional to the square of the distance between their centers.</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Newton's Second Law</div>
-      <div class="formula-box" id="formulaN2"></div>
-      <div class="formula-desc">The net gravitational force on each body determines its acceleration. With multiple bodies, forces from all other bodies are summed vectorially.</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Presets</div>
-      <div class="preset-row">
-        <button class="btn btn-preset active" onclick="loadPreset('sunEarth')">Sun-Earth</button>
-        <button class="btn btn-preset" onclick="loadPreset('sunEarthMoon')">Sun-Earth-Moon</button>
-        <button class="btn btn-preset" onclick="loadPreset('figureEight')">Figure Eight</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Simulation Controls</div>
-      <div class="controls-row">
-        <button class="btn btn-play" id="btnPlayPause" onclick="togglePlay()">&#9654; Play</button>
-        <button class="btn btn-reset" onclick="resetSim()">Reset</button>
+<!-- Control Panel -->
+<div class="control-panel">
+  <div class="flex items-start gap-4 flex-wrap">
+    <div class="flex-1 min-w-40">
+      <div class="slider-group mb-2">
+        <div class="slider-label"><span>Body 1 Mass (M☉)</span><span id="m1Val" class="text-yellow-400">1.0</span></div>
+        <input type="range" id="sliderM1" min="0.1" max="10" step="0.1" value="1.0" style="accent-color:#fbbf24">
       </div>
       <div class="slider-group">
-        <div class="slider-label">
-          <span class="slider-name">Body Count</span>
-          <span class="slider-val" id="valBodyCount">2</span>
-        </div>
-        <input type="range" min="2" max="4" step="1" value="2" id="sliderBodyCount" oninput="onBodyCountChange(this.value)">
+        <div class="slider-label"><span>Body 2 Mass (M☉)</span><span id="m2Val" class="text-blue-400">0.001</span></div>
+        <input type="range" id="sliderM2" min="0.001" max="10" step="0.001" value="0.001">
       </div>
     </div>
-
-    <div class="section" id="bodyConfigSection">
-      <!-- Body config sliders injected here -->
-    </div>
-
-    <div class="section">
-      <div class="section-title">Live Metrics</div>
-      <div class="metric-grid">
-        <div class="metric-card">
-          <div class="metric-title">Total Energy</div>
-          <div class="metric-val val-orange" id="metricEnergy">0.00</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Time Elapsed</div>
-          <div class="metric-val val-sky" id="metricTime">0.0 s</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Mergers</div>
-          <div class="metric-val val-rose" id="metricMergers">0</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Bodies Active</div>
-          <div class="metric-val val-green" id="metricBodies">2</div>
-        </div>
+    <div class="flex-1 min-w-40">
+      <div class="slider-group mb-2">
+        <div class="slider-label"><span>Body 3 Mass (M☉)</span><span id="m3Val" class="text-emerald-400">0.0</span></div>
+        <input type="range" id="sliderM3" min="0" max="10" step="0.001" value="0">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Speed Multiplier</span><span id="spdMulVal" class="text-blue-400">1.0×</span></div>
+        <input type="range" id="sliderSpdMul" min="0.3" max="2.0" step="0.05" value="1.0">
       </div>
     </div>
-
-    <div class="section quiz-section">
-      <div class="section-title">Knowledge Check</div>
-      <div class="quiz-q">
-        <div class="quiz-q-title">Q1: In a two-body Sun-Earth system, if the Earth's mass were doubled while keeping its orbit radius the same, what happens to the gravitational force on it?</div>
-        <button class="quiz-option" onclick="checkQuiz(this,'q1',false)">A) Force stays the same</button>
-        <button class="quiz-option" onclick="checkQuiz(this,'q1',true)">B) Force doubles</button>
-        <button class="quiz-option" onclick="checkQuiz(this,'q1',false)">C) Force quadruples</button>
-        <button class="quiz-option" onclick="checkQuiz(this,'q1',false)">D) Force halves</button>
-        <div class="quiz-explanation" id="q1exp">Correct! F = Gm&#8321;m&#8322;/r&#178;. Doubling m&#8322; doubles the force, since the equation is linear in each mass.</div>
+    <div class="flex-1 min-w-40">
+      <div class="text-xs text-slate-400 mb-1">Sim Speed</div>
+      <div class="flex gap-1 flex-wrap mb-2">
+        <button class="speed-btn" data-speed="0.25">0.25x</button>
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="3">3x</button>
       </div>
-      <div class="quiz-q">
-        <div class="quiz-q-title">Q2: The "Figure Eight" orbit is an example of which type of problem in classical mechanics?</div>
-        <button class="quiz-option" onclick="checkQuiz(this,'q2',false)">A) Two-body problem</button>
-        <button class="quiz-option" onclick="checkQuiz(this,'q2',false)">B) Central force problem</button>
-        <button class="quiz-option" onclick="checkQuiz(this,'q2',true)">C) Three-body problem with a special periodic solution</button>
-        <button class="quiz-option" onclick="checkQuiz(this,'q2',false)">D) Kepler orbit</button>
-        <div class="quiz-explanation" id="q2exp">Correct! The Figure Eight is a remarkable periodic solution to the three-body problem discovered by Moore (1993) and proven by Chenciner &amp; Montgomery (2000). Three equal masses chase each other along a single figure-8 shaped curve.</div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <div class="text-xs text-slate-400 mb-1">Presets</div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn-preset active" data-preset="sunearth">Sun + Earth</button>
+        <button class="btn-preset" data-preset="binary">Binary Star</button>
+        <button class="btn-preset" data-preset="threebody">Unstable 3-Body</button>
       </div>
+    </div>
+    <div class="flex flex-col gap-2 justify-end">
+      <button class="btn btn-primary" id="btnPlay">⏸ Pause</button>
+      <button class="btn btn-ghost text-xs" id="btnClearTrail">Clear Trails</button>
     </div>
   </div>
+</div>
 
-  <div class="canvas-wrap" id="canvasWrap">
-    <div class="overlay-metrics" id="overlayMetrics"></div>
-    <div class="bottom-bar">
-      <div class="speed-group">
-        <span class="slider-name">Speed</span>
-        <input type="range" min="0.1" max="5" step="0.1" value="1" id="sliderSpeed">
-        <span class="slider-val" id="valSpeed">1.0x</span>
-      </div>
-      <label class="toggle-label"><input type="checkbox" id="chkTrails" checked> Trails</label>
-      <label class="toggle-label"><input type="checkbox" id="chkArrows" checked> Force Arrows</label>
-      <label class="toggle-label"><input type="checkbox" id="chkStarfield"> Starfield</label>
+<div id="toast"></div>
+
+<div id="aboutModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur flex items-center justify-center z-50">
+  <div class="glass-panel rounded-xl p-6 max-w-md w-full mx-4">
+    <h3 class="text-lg font-bold text-blue-400 mb-3">My Solar System</h3>
+    <p class="text-sm text-slate-300 mb-4">N-body gravitational simulation with Velocity Verlet integration. Build stable systems or watch chaos unfold.</p>
+    <div class="text-xs text-slate-400 mb-4">
+      <div class="font-semibold text-slate-300 mb-1">Keyboard Shortcuts:</div>
+      <div>Space — Play/Pause | R — Reset | C — Clear Trails</div>
+      <div>1-5 — Speed | Q/W/E — Presets</div>
     </div>
+    <button class="btn btn-primary w-full" id="closeAbout">Close</button>
   </div>
 </div>
 
 <script>
-// ============================================================
-// KaTeX formulas
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-  katex.render('F = \\frac{G\\,m_1\\,m_2}{r^2}', document.getElementById('formulaGrav'), {displayMode:true});
-  katex.render('\\vec{F}_{\\text{net}} = m\\,\\vec{a}', document.getElementById('formulaN2'), {displayMode:true});
-});
+// ─── Simulation units: AU, solar masses, years ────────────────────────────────
+// G = 4π² AU³/(M_sun·yr²)
+const G_SIM = 4 * Math.PI * Math.PI;
+const SOFTENING = 0.15; // AU — prevents singularity on close approach
 
-// ============================================================
-// Quiz
-// ============================================================
-function checkQuiz(btn, qid, correct) {
-  var parent = btn.parentElement;
-  var opts = parent.querySelectorAll('.quiz-option');
-  opts.forEach(function(o){ o.disabled = true; o.style.pointerEvents = 'none'; });
-  btn.classList.add(correct ? 'correct' : 'wrong');
-  if (correct) {
-    document.getElementById(qid + 'exp').style.display = 'block';
-  } else {
-    opts.forEach(function(o) {
-      if (o.getAttribute('onclick') && o.getAttribute('onclick').indexOf('true') > -1) o.classList.add('correct');
-    });
-    document.getElementById(qid + 'exp').style.display = 'block';
-  }
-}
+// ─── Inline OrbitControls ─────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
 
-// ============================================================
-// Constants & State
-// ============================================================
-var G = 500;
-var SOFTENING = 0.5;
-var TRAIL_LEN = 600;
-var MERGE_DIST = 1.2;
-var DT_BASE = 0.002;
+// ─── Body colors ───────────────────────────────────────────────────────────────
+const BODY_COLORS = [0xffd700, 0x3B82F6, 0x22C55E, 0xF59E0B];
+const BODY_NAMES  = ['Body 1', 'Body 2', 'Body 3', 'Body 4'];
 
-var BODY_COLORS = [0xfbbf24, 0x38bdf8, 0x34d399, 0xf472b6];
-var BODY_COLOR_HEX = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6'];
-var BODY_NAMES = ['Body A (Star)', 'Body B', 'Body C', 'Body D'];
+// ─── Simulation state ─────────────────────────────────────────────────────────
+let bodies = []; // {x, y, vx, vy, mass, active}
+let speedFactor = 1.0;
+let isPlaying = true;
+let stepCount = 0;
+let E0 = null;
+let spdMul = 1.0;
 
-var playing = false;
-var simTime = 0;
-var mergerCount = 0;
-var bodies = [];
-var bodyCount = 2;
+const MAX_TRAIL = 600;
+const trails = []; // per body: Float32Array + head + count
 
-// ============================================================
-// Presets
-// ============================================================
-var PRESETS = {
-  sunEarth: {
-    count: 2,
+// ─── Preset configurations ────────────────────────────────────────────────────
+const presets = {
+  sunearth: {
+    label: 'Sun + Earth',
     bodies: [
-      { mass: 200, px: 0,  py: 0, vx: 0, vy: 0 },
-      { mass: 1,   px: 12, py: 0, vx: 0, vy: 2.9 }
+      { x: 0,   y: 0,   vx: 0,    vy: 0,    mass: 1.0,   active: true },
+      { x: 1.0, y: 0,   vx: 0,    vy: 6.283, mass: 3e-6,  active: true },
+      { x: 0,   y: 0,   vx: 0,    vy: 0,    mass: 0,     active: false }
     ]
   },
-  sunEarthMoon: {
-    count: 3,
+  binary: {
+    label: 'Binary Star System',
     bodies: [
-      { mass: 200, px: 0,   py: 0,  vx: 0, vy: 0 },
-      { mass: 5,   px: 12,  py: 0,  vx: 0, vy: 2.9 },
-      { mass: 0.1, px: 13.5, py: 0, vx: 0, vy: 3.8 }
+      { x: -2,  y: 0,   vx: 0,    vy: -3.14, mass: 1.0,  active: true },
+      { x: 2,   y: 0,   vx: 0,    vy:  3.14, mass: 1.0,  active: true },
+      { x: 0,   y: 0,   vx: 0,    vy: 0,     mass: 0,    active: false }
     ]
   },
-  figureEight: {
-    count: 3,
+  threebody: {
+    label: 'Unstable 3-Body',
     bodies: [
-      { mass: 10, px: -4.87,  py: 0, vx: 0, vy: -5.09 },
-      { mass: 10, px: 4.87,   py: 0, vx: 0, vy: -5.09 },
-      { mass: 10, px: 0,      py: 0, vx: 0, vy: 10.18 }
+      { x: 0,    y: 4,    vx: 1.5,  vy: 0,    mass: 1.0,  active: true },
+      { x: -3.5, y: -2,   vx: -0.8, vy: -1.2, mass: 1.0,  active: true },
+      { x: 3.5,  y: -2,   vx: -0.7, vy:  1.2, mass: 1.0,  active: true }
     ]
   }
 };
 
-var currentPreset = 'sunEarth';
+let currentPreset = 'sunearth';
+let m1 = 1.0, m2 = 3e-6, m3 = 0.0;
 
-// ============================================================
-// Three.js Setup
-// ============================================================
-var scene, camera, renderer, controls;
-var bodyMeshes = [], trailLines = [], trailGeoms = [], trailPositions = [];
-var arrowHelpers = [];
-var starfieldObj = null;
-
-function initThree() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f172a);
-
-  camera = new THREE.PerspectiveCamera(55, 1, 0.1, 2000);
-  camera.position.set(0, 25, 35);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  var wrap = document.getElementById('canvasWrap');
-  wrap.insertBefore(renderer.domElement, wrap.firstChild);
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 5;
-  controls.maxDistance = 200;
-
-  // Ambient + point light
-  scene.add(new THREE.AmbientLight(0x334466, 0.6));
-  var pLight = new THREE.PointLight(0xfbbf24, 1.5, 200);
-  pLight.position.set(0, 0, 0);
-  scene.add(pLight);
-
-  // Grid helper
-  var grid = new THREE.GridHelper(80, 40, 0x1e293b, 0x1e293b);
-  grid.position.y = -0.5;
-  scene.add(grid);
-
-  onResize();
-  window.addEventListener('resize', onResize);
-}
-
-function onResize() {
-  var wrap = document.getElementById('canvasWrap');
-  var w = wrap.clientWidth;
-  var h = wrap.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-}
-
-// ============================================================
-// Starfield
-// ============================================================
-function createStarfield() {
-  if (starfieldObj) return;
-  var count = 2000;
-  var geo = new THREE.BufferGeometry();
-  var pos = new Float32Array(count * 3);
-  for (var i = 0; i < count; i++) {
-    pos[i*3]   = (Math.random() - 0.5) * 600;
-    pos[i*3+1] = (Math.random() - 0.5) * 600;
-    pos[i*3+2] = (Math.random() - 0.5) * 600;
+function initBodies(key) {
+  const preset = presets[key];
+  bodies = preset.bodies.map((b, i) => ({
+    x: b.x, y: b.y,
+    vx: b.vx * spdMul, vy: b.vy * spdMul,
+    mass: b.mass, active: b.active,
+    color: BODY_COLORS[i], name: BODY_NAMES[i]
+  }));
+  stepCount = 0; E0 = null;
+  // Apply slider masses to bodies 1,2,3
+  if (bodies[0]) bodies[0].mass = m1;
+  if (bodies[1]) bodies[1].mass = m2;
+  if (bodies[2]) bodies[2].mass = m3; bodies[2] && (bodies[2].active = m3 > 0.001);
+  // Rescale velocities for binary based on actual masses
+  if (key === 'binary') {
+    const d = 4; // separation = 4 AU (2 + 2)
+    const vOrbital = Math.sqrt(G_SIM * m1 / (2 * d));
+    bodies[0].vy = -vOrbital * spdMul;
+    bodies[1].vy =  vOrbital * spdMul;
   }
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  var mat = new THREE.PointsMaterial({ color: 0xaabbcc, size: 0.3, sizeAttenuation: true });
-  starfieldObj = new THREE.Points(geo, mat);
-  scene.add(starfieldObj);
+  // Recenter: move CM to origin with zero momentum
+  recenterCOM();
+  resetTrails();
+  computeE0();
 }
 
-function removeStarfield() {
-  if (!starfieldObj) return;
-  scene.remove(starfieldObj);
-  starfieldObj.geometry.dispose();
-  starfieldObj.material.dispose();
-  starfieldObj = null;
+function recenterCOM() {
+  let totalM = 0, comX = 0, comY = 0, comVx = 0, comVy = 0;
+  for (const b of bodies) {
+    if (!b.active || b.mass <= 0) continue;
+    totalM += b.mass;
+    comX  += b.mass * b.x;
+    comY  += b.mass * b.y;
+    comVx += b.mass * b.vx;
+    comVy += b.mass * b.vy;
+  }
+  if (totalM === 0) return;
+  comX /= totalM; comY /= totalM; comVx /= totalM; comVy /= totalM;
+  for (const b of bodies) {
+    if (!b.active) continue;
+    b.x -= comX; b.y -= comY;
+    b.vx -= comVx; b.vy -= comVy;
+  }
 }
 
-// ============================================================
-// Body Meshes & Trails
-// ============================================================
-function clearBodies() {
-  bodyMeshes.forEach(function(m) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); });
-  bodyMeshes = [];
-  trailLines.forEach(function(l) { scene.remove(l); l.geometry.dispose(); l.material.dispose(); });
-  trailLines = [];
-  trailGeoms = [];
-  trailPositions = [];
-  arrowHelpers.forEach(function(a) { scene.remove(a); });
-  arrowHelpers = [];
+function resetTrails() {
+  trails.length = 0;
+  for (let i = 0; i < bodies.length; i++) {
+    trails.push({ buf: new Float32Array(MAX_TRAIL * 3), head: 0, count: 0 });
+  }
 }
 
-function bodyRadius(mass) {
-  return Math.max(0.3, Math.pow(mass, 1/3) * 0.25);
+function computeE0() {
+  E0 = totalEnergy();
 }
 
-function createBodyMeshes() {
-  clearBodies();
-  for (var i = 0; i < bodies.length; i++) {
-    var b = bodies[i];
-    var r = bodyRadius(b.mass);
-    var geo = new THREE.SphereGeometry(r, 32, 24);
-    var color = new THREE.Color(BODY_COLORS[i % BODY_COLORS.length]);
-    var mat;
-    if (i === 0 && b.mass > 50) {
-      // Star: emissive glow
-      mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
-    } else {
-      mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.2 });
+// ─── N-body forces ─────────────────────────────────────────────────────────────
+function computeAccelerations(bs) {
+  const ax = new Array(bs.length).fill(0);
+  const ay = new Array(bs.length).fill(0);
+  for (let i = 0; i < bs.length; i++) {
+    if (!bs[i].active || bs[i].mass <= 0) continue;
+    for (let j = i + 1; j < bs.length; j++) {
+      if (!bs[j].active || bs[j].mass <= 0) continue;
+      const dx = bs[j].x - bs[i].x;
+      const dy = bs[j].y - bs[i].y;
+      const r2 = dx * dx + dy * dy + SOFTENING * SOFTENING;
+      const r = Math.sqrt(r2);
+      const r3 = r2 * r;
+      const fij = G_SIM / r3;
+      ax[i] += fij * bs[j].mass * dx;
+      ay[i] += fij * bs[j].mass * dy;
+      ax[j] -= fij * bs[i].mass * dx;
+      ay[j] -= fij * bs[i].mass * dy;
     }
-    var mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(b.px, 0, b.py);
+  }
+  return { ax, ay };
+}
+
+function verletStep(dt) {
+  const { ax: ax1, ay: ay1 } = computeAccelerations(bodies);
+  // Half-step velocities and full-step positions
+  const vxH = bodies.map((b, i) => b.vx + 0.5 * ax1[i] * dt);
+  const vyH = bodies.map((b, i) => b.vy + 0.5 * ay1[i] * dt);
+  for (let i = 0; i < bodies.length; i++) {
+    bodies[i].x += vxH[i] * dt;
+    bodies[i].y += vyH[i] * dt;
+  }
+  // Recompute accelerations at new positions
+  const { ax: ax2, ay: ay2 } = computeAccelerations(bodies);
+  for (let i = 0; i < bodies.length; i++) {
+    bodies[i].vx = vxH[i] + 0.5 * ax2[i] * dt;
+    bodies[i].vy = vyH[i] + 0.5 * ay2[i] * dt;
+  }
+}
+
+function physicsUpdate(dt) {
+  if (dt > 0.1) dt = 0.02;
+  const maxSubStep = 0.0003;
+  const steps = Math.ceil(dt / maxSubStep);
+  const subDt = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    verletStep(subDt);
+    stepCount++;
+  }
+}
+
+// ─── Conserved quantities ─────────────────────────────────────────────────────
+function totalEnergy() {
+  let KE = 0, PE = 0;
+  for (const b of bodies) {
+    if (!b.active || b.mass <= 0) continue;
+    KE += 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy);
+  }
+  for (let i = 0; i < bodies.length; i++) {
+    if (!bodies[i].active || bodies[i].mass <= 0) continue;
+    for (let j = i + 1; j < bodies.length; j++) {
+      if (!bodies[j].active || bodies[j].mass <= 0) continue;
+      const dx = bodies[j].x - bodies[i].x;
+      const dy = bodies[j].y - bodies[i].y;
+      const r = Math.sqrt(dx * dx + dy * dy);
+      PE -= G_SIM * bodies[i].mass * bodies[j].mass / r;
+    }
+  }
+  return KE + PE;
+}
+
+function totalAngularMomentum() {
+  let L = 0;
+  for (const b of bodies) {
+    if (!b.active || b.mass <= 0) continue;
+    L += b.mass * (b.x * b.vy - b.y * b.vx);
+  }
+  return L;
+}
+
+function centerOfMass() {
+  let totalM = 0, comX = 0, comY = 0;
+  for (const b of bodies) {
+    if (!b.active || b.mass <= 0) continue;
+    totalM += b.mass; comX += b.mass * b.x; comY += b.mass * b.y;
+  }
+  if (totalM === 0) return { x: 0, y: 0 };
+  return { x: comX / totalM, y: comY / totalM };
+}
+
+// ─── Three.js ─────────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 2000);
+camera.position.set(0, 14, 22);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 3; controls.maxDistance = 80;
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, ambient);
+
+const gridHelper = new THREE.GridHelper(40, 40, 0x1e3a5f, 0x0f2840);
+scene.add(gridHelper);
+
+// COM marker
+const comGeo = new THREE.SphereGeometry(0.12, 8, 8);
+const comMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.5 });
+const comMesh = new THREE.Mesh(comGeo, comMat);
+scene.add(comMesh);
+
+// Build body meshes and trail lines
+const bodyMeshes = [];
+const trailLines = [];
+
+function buildBodyMeshes() {
+  // Remove old
+  for (const m of bodyMeshes) scene.remove(m);
+  bodyMeshes.length = 0;
+  for (const l of trailLines) scene.remove(l);
+  trailLines.length = 0;
+
+  for (let i = 0; i < bodies.length; i++) {
+    const b = bodies[i];
+    const size = b.active ? Math.max(0.15, 0.35 * Math.cbrt(b.mass)) : 0;
+    const geo = new THREE.SphereGeometry(size, 24, 24);
+    const mat = new THREE.MeshStandardMaterial({
+      color: b.color,
+      emissive: new THREE.Color(b.color).multiplyScalar(0.4),
+      emissiveIntensity: 0.5,
+      roughness: 0.4, metalness: 0.2
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.visible = b.active;
     scene.add(mesh);
     bodyMeshes.push(mesh);
 
     // Trail
-    var maxPts = TRAIL_LEN;
-    var tPos = new Float32Array(maxPts * 3);
-    for (var j = 0; j < maxPts; j++) {
-      tPos[j*3] = b.px; tPos[j*3+1] = 0; tPos[j*3+2] = b.py;
+    const trailBuf = new THREE.BufferAttribute(new Float32Array(MAX_TRAIL * 3), 3);
+    const trailGeo = new THREE.BufferGeometry();
+    trailGeo.setAttribute('position', trailBuf);
+    trailGeo.setDrawRange(0, 0);
+    const trailMat = new THREE.LineBasicMaterial({
+      color: b.color, transparent: true,
+      opacity: b.active ? 0.5 : 0
+    });
+    const line = new THREE.Line(trailGeo, trailMat);
+    line.visible = b.active;
+    scene.add(line);
+    trailLines.push(line);
+  }
+}
+
+let frameCount = 0;
+
+function updateTrails() {
+  for (let i = 0; i < bodies.length; i++) {
+    const b = bodies[i];
+    if (!b.active) continue;
+    const t = trails[i];
+    const idx = t.head * 3;
+    t.buf[idx] = b.x; t.buf[idx + 1] = 0; t.buf[idx + 2] = b.y;
+    t.head = (t.head + 1) % MAX_TRAIL;
+    if (t.count < MAX_TRAIL) t.count++;
+
+    const line = trailLines[i];
+    const attr = line.geometry.attributes.position;
+    let w = 0;
+    for (let k = 0; k < t.count; k++) {
+      const r = ((t.head - t.count + k + MAX_TRAIL) % MAX_TRAIL) * 3;
+      attr.array[w++] = t.buf[r];
+      attr.array[w++] = t.buf[r + 1];
+      attr.array[w++] = t.buf[r + 2];
     }
-    var tGeo = new THREE.BufferGeometry();
-    tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
-    tGeo.setDrawRange(0, 0);
-    var tMat = new THREE.LineBasicMaterial({ color: BODY_COLORS[i % BODY_COLORS.length], transparent: true, opacity: 0.5 });
-    var tLine = new THREE.Line(tGeo, tMat);
-    scene.add(tLine);
-    trailLines.push(tLine);
-    trailGeoms.push(tGeo);
-    trailPositions.push({ data: tPos, head: 0, count: 0 });
+    attr.needsUpdate = true;
+    line.geometry.setDrawRange(0, t.count);
   }
 }
 
-function updateTrail(idx, x, z) {
-  var tp = trailPositions[idx];
-  if (!tp) return;
-  var h = tp.head;
-  tp.data[h*3] = x;
-  tp.data[h*3+1] = 0;
-  tp.data[h*3+2] = z;
-  tp.head = (h + 1) % TRAIL_LEN;
-  if (tp.count < TRAIL_LEN) tp.count++;
+// ─── Data panel ────────────────────────────────────────────────────────────────
+function updateDataPanel() {
+  const E = totalEnergy();
+  const L = totalAngularMomentum();
+  const com = centerOfMass();
+  const drift = E0 !== null ? ((E - E0) / (Math.abs(E0) || 1) * 100) : 0;
+  const activeBodies = bodies.filter(b => b.active && b.mass > 0).length;
 
-  // Rebuild draw order for continuous line
-  var geo = trailGeoms[idx];
-  var attr = geo.getAttribute('position');
-  var arr = attr.array;
-  var start = (tp.head - tp.count + TRAIL_LEN) % TRAIL_LEN;
-  for (var i = 0; i < tp.count; i++) {
-    var si = ((start + i) % TRAIL_LEN) * 3;
-    arr[i*3] = tp.data[si];
-    arr[i*3+1] = tp.data[si+1];
-    arr[i*3+2] = tp.data[si+2];
-  }
-  attr.needsUpdate = true;
-  geo.setDrawRange(0, tp.count);
-}
+  document.getElementById('dEnergy').textContent = E.toFixed(4);
+  document.getElementById('dDrift').textContent = drift.toFixed(4) + '%';
+  document.getElementById('dL').textContent = L.toFixed(4);
+  document.getElementById('dCOM').textContent = com.x.toFixed(3) + ', ' + com.y.toFixed(3);
+  document.getElementById('dSteps').textContent = stepCount.toLocaleString();
+  document.getElementById('dBodies').textContent = activeBodies;
 
-// ============================================================
-// Force Arrows
-// ============================================================
-function updateArrows() {
-  arrowHelpers.forEach(function(a) { scene.remove(a); });
-  arrowHelpers = [];
-  if (!document.getElementById('chkArrows').checked) return;
-
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    var fx = 0, fz = 0;
-    for (var j = 0; j < bodies.length; j++) {
-      if (i === j || bodies[j].merged) continue;
-      var dx = bodies[j].px - bodies[i].px;
-      var dz = bodies[j].py - bodies[i].py;
-      var dist2 = dx*dx + dz*dz + SOFTENING*SOFTENING;
-      var dist = Math.sqrt(dist2);
-      var f = G * bodies[i].mass * bodies[j].mass / dist2;
-      fx += f * dx / dist;
-      fz += f * dz / dist;
-    }
-    var fmag = Math.sqrt(fx*fx + fz*fz);
-    if (fmag < 0.01) continue;
-    var dir = new THREE.Vector3(fx/fmag, 0, fz/fmag);
-    var len = Math.min(Math.log(fmag + 1) * 2, 8);
-    var arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(bodies[i].px, 0, bodies[i].py), len, BODY_COLORS[i % BODY_COLORS.length], len*0.2, len*0.1);
-    scene.add(arrow);
-    arrowHelpers.push(arrow);
-  }
-}
-
-// ============================================================
-// Physics — Velocity Verlet
-// ============================================================
-function computeAccelerations() {
-  for (var i = 0; i < bodies.length; i++) {
-    bodies[i].ax = 0;
-    bodies[i].ay = 0;
-  }
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    for (var j = i + 1; j < bodies.length; j++) {
-      if (bodies[j].merged) continue;
-      var dx = bodies[j].px - bodies[i].px;
-      var dy = bodies[j].py - bodies[i].py;
-      var dist2 = dx*dx + dy*dy + SOFTENING*SOFTENING;
-      var dist = Math.sqrt(dist2);
-      var fOverDist = G / (dist2 * dist);
-
-      bodies[i].ax += fOverDist * bodies[j].mass * dx;
-      bodies[i].ay += fOverDist * bodies[j].mass * dy;
-      bodies[j].ax -= fOverDist * bodies[i].mass * dx;
-      bodies[j].ay -= fOverDist * bodies[i].mass * dy;
-    }
-  }
-}
-
-function stepPhysics(dt) {
-  // Velocity Verlet
-  computeAccelerations();
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    bodies[i].px += bodies[i].vx * dt + 0.5 * bodies[i].ax * dt * dt;
-    bodies[i].py += bodies[i].vy * dt + 0.5 * bodies[i].ay * dt * dt;
-    bodies[i].vx += 0.5 * bodies[i].ax * dt;
-    bodies[i].vy += 0.5 * bodies[i].ay * dt;
-  }
-  var oldAx = bodies.map(function(b) { return b.ax; });
-  var oldAy = bodies.map(function(b) { return b.ay; });
-  computeAccelerations();
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    bodies[i].vx += 0.5 * bodies[i].ax * dt;
-    bodies[i].vy += 0.5 * bodies[i].ay * dt;
-  }
-
-  // Collision detection & merge
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    for (var j = i + 1; j < bodies.length; j++) {
-      if (bodies[j].merged) continue;
-      var dx = bodies[j].px - bodies[i].px;
-      var dy = bodies[j].py - bodies[i].py;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      var ri = bodyRadius(bodies[i].mass);
-      var rj = bodyRadius(bodies[j].mass);
-      if (dist < (ri + rj) * MERGE_DIST) {
-        // Merge j into i (conserve momentum)
-        var totalM = bodies[i].mass + bodies[j].mass;
-        bodies[i].vx = (bodies[i].mass * bodies[i].vx + bodies[j].mass * bodies[j].vx) / totalM;
-        bodies[i].vy = (bodies[i].mass * bodies[i].vy + bodies[j].mass * bodies[j].vy) / totalM;
-        bodies[i].px = (bodies[i].mass * bodies[i].px + bodies[j].mass * bodies[j].px) / totalM;
-        bodies[i].py = (bodies[i].mass * bodies[i].py + bodies[j].mass * bodies[j].py) / totalM;
-        bodies[i].mass = totalM;
-        bodies[j].merged = true;
-        mergerCount++;
-        // Update mesh size
-        var newR = bodyRadius(totalM);
-        bodyMeshes[i].geometry.dispose();
-        bodyMeshes[i].geometry = new THREE.SphereGeometry(newR, 32, 24);
-        // Hide merged body
-        bodyMeshes[j].visible = false;
-        trailLines[j].visible = false;
-      }
-    }
-  }
-}
-
-function totalEnergy() {
-  var ke = 0, pe = 0;
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    var v2 = bodies[i].vx * bodies[i].vx + bodies[i].vy * bodies[i].vy;
-    ke += 0.5 * bodies[i].mass * v2;
-    for (var j = i + 1; j < bodies.length; j++) {
-      if (bodies[j].merged) continue;
-      var dx = bodies[j].px - bodies[i].px;
-      var dy = bodies[j].py - bodies[i].py;
-      var dist = Math.sqrt(dx*dx + dy*dy + SOFTENING*SOFTENING);
-      pe -= G * bodies[i].mass * bodies[j].mass / dist;
-    }
-  }
-  return ke + pe;
-}
-
-// ============================================================
-// UI — Body Config Sliders
-// ============================================================
-function buildBodyConfigs() {
-  var container = document.getElementById('bodyConfigSection');
-  container.innerHTML = '<div class="section-title">Body Configuration</div>';
-  for (var i = 0; i < bodyCount; i++) {
-    var b = bodies[i] || { mass: 1, px: 0, py: 0, vx: 0, vy: 0 };
-    var borderColor = BODY_COLOR_HEX[i % BODY_COLOR_HEX.length];
-    var massMax = i === 0 ? 500 : 100;
-    var massVal = b.mass;
-    var html = '<div class="body-config" style="border-left-color:' + borderColor + '">';
-    html += '<div class="body-config-title" style="color:' + borderColor + '">' + BODY_NAMES[i] + '</div>';
-    html += '<div class="slider-group"><div class="slider-label"><span class="slider-name">Mass</span><span class="slider-val" id="valMass' + i + '">' + massVal.toFixed(1) + '</span></div>';
-    html += '<input type="range" min="0.1" max="' + massMax + '" step="0.1" value="' + massVal + '" data-body="' + i + '" data-prop="mass" onchange="onBodySlider(this)" oninput="onBodySlider(this)"></div>';
-    html += '<div class="slider-group"><div class="slider-label"><span class="slider-name">Position X</span><span class="slider-val" id="valPx' + i + '">' + b.px.toFixed(1) + '</span></div>';
-    html += '<input type="range" min="-30" max="30" step="0.1" value="' + b.px + '" data-body="' + i + '" data-prop="px" onchange="onBodySlider(this)" oninput="onBodySlider(this)"></div>';
-    html += '<div class="slider-group"><div class="slider-label"><span class="slider-name">Velocity Y</span><span class="slider-val" id="valVy' + i + '">' + b.vy.toFixed(1) + '</span></div>';
-    html += '<input type="range" min="-15" max="15" step="0.1" value="' + b.vy + '" data-body="' + i + '" data-prop="vy" onchange="onBodySlider(this)" oninput="onBodySlider(this)"></div>';
-    html += '</div>';
-    container.innerHTML += html;
-  }
-}
-
-function onBodySlider(el) {
-  var idx = parseInt(el.getAttribute('data-body'));
-  var prop = el.getAttribute('data-prop');
-  var val = parseFloat(el.value);
-  if (!bodies[idx]) return;
-
-  if (prop === 'mass') {
-    bodies[idx].mass = val;
-    document.getElementById('valMass' + idx).textContent = val.toFixed(1);
-    if (!playing) {
-      var r = bodyRadius(val);
-      bodyMeshes[idx].geometry.dispose();
-      bodyMeshes[idx].geometry = new THREE.SphereGeometry(r, 32, 24);
-    }
-  } else if (prop === 'px') {
-    bodies[idx].px = val;
-    document.getElementById('valPx' + idx).textContent = val.toFixed(1);
-    if (!playing) bodyMeshes[idx].position.set(val, 0, bodies[idx].py);
-  } else if (prop === 'vy') {
-    bodies[idx].vy = val;
-    document.getElementById('valVy' + idx).textContent = val.toFixed(1);
-  }
-}
-
-function onBodyCountChange(val) {
-  val = parseInt(val);
-  document.getElementById('valBodyCount').textContent = val;
-  bodyCount = val;
-  // Adjust bodies array
-  while (bodies.length < val) {
-    var idx = bodies.length;
-    var angle = (idx / val) * Math.PI * 2;
-    bodies.push({ mass: 1, px: Math.cos(angle)*10, py: Math.sin(angle)*10, vx: -Math.sin(angle)*2.5, vy: Math.cos(angle)*2.5, ax: 0, ay: 0, merged: false });
-  }
-  while (bodies.length > val) {
-    bodies.pop();
-  }
-  buildBodyConfigs();
-  createBodyMeshes();
-  simTime = 0;
-  mergerCount = 0;
-  updateOverlay();
-}
-
-// ============================================================
-// Presets
-// ============================================================
-function loadPreset(name) {
-  currentPreset = name;
-  document.querySelectorAll('.btn-preset').forEach(function(b) { b.classList.remove('active'); });
-  var caller = document.querySelector('[onclick*="' + name + '"]');
-  if (caller) caller.classList.add('active');
-
-  var p = PRESETS[name];
-  bodyCount = p.count;
-  document.getElementById('sliderBodyCount').value = p.count;
-  document.getElementById('valBodyCount').textContent = p.count;
-
-  bodies = [];
-  for (var i = 0; i < p.bodies.length; i++) {
-    var bd = p.bodies[i];
-    bodies.push({ mass: bd.mass, px: bd.px, py: bd.py, vx: bd.vx, vy: bd.vy, ax: 0, ay: 0, merged: false });
-  }
-
-  buildBodyConfigs();
-  createBodyMeshes();
-  simTime = 0;
-  mergerCount = 0;
-  playing = false;
-  updatePlayBtn();
-  updateOverlay();
-}
-
-// ============================================================
-// Play/Pause/Reset
-// ============================================================
-function togglePlay() {
-  playing = !playing;
-  updatePlayBtn();
-}
-
-function updatePlayBtn() {
-  var btn = document.getElementById('btnPlayPause');
-  if (playing) {
-    btn.innerHTML = '&#10074;&#10074; Pause';
-    btn.className = 'btn btn-pause';
-  } else {
-    btn.innerHTML = '&#9654; Play';
-    btn.className = 'btn btn-play';
-  }
-}
-
-function resetSim() {
-  playing = false;
-  updatePlayBtn();
-  loadPreset(currentPreset);
-}
-
-// ============================================================
-// Overlay
-// ============================================================
-function updateOverlay() {
-  var el = document.getElementById('overlayMetrics');
-  var html = '';
-  for (var i = 0; i < bodies.length; i++) {
-    if (bodies[i].merged) continue;
-    html += '<div class="overlay-row">';
-    html += '<div class="overlay-dot" style="background:' + BODY_COLOR_HEX[i] + '"></div>';
-    html += '<span class="overlay-text" style="color:' + BODY_COLOR_HEX[i] + '">' + BODY_NAMES[i] + ' m=' + bodies[i].mass.toFixed(1) + '</span>';
-    html += '</div>';
-  }
-  el.innerHTML = html;
-
-  // Side panel metrics
-  var activeCount = bodies.filter(function(b) { return !b.merged; }).length;
-  document.getElementById('metricEnergy').textContent = totalEnergy().toFixed(1);
-  document.getElementById('metricTime').textContent = simTime.toFixed(1) + ' s';
-  document.getElementById('metricMergers').textContent = mergerCount;
-  document.getElementById('metricBodies').textContent = activeCount;
-}
-
-// ============================================================
-// Animation Loop
-// ============================================================
-var frameTimes = [];
-var trailCounter = 0;
-
-function animate() {
-  requestAnimationFrame(animate);
-
-  var now = performance.now();
-  frameTimes.push(now);
-  while (frameTimes.length > 0 && frameTimes[0] < now - 1000) frameTimes.shift();
-  document.getElementById('fpsDisplay').textContent = frameTimes.length + ' FPS';
-
-  var speed = parseFloat(document.getElementById('sliderSpeed').value);
-  document.getElementById('valSpeed').textContent = speed.toFixed(1) + 'x';
-
-  if (playing) {
-    var substeps = Math.max(1, Math.round(speed * 4));
-    var dt = DT_BASE * speed / substeps;
-    for (var s = 0; s < substeps; s++) {
-      stepPhysics(dt);
-    }
-    simTime += DT_BASE * speed;
-
-    // Update mesh positions and trails
-    trailCounter++;
-    for (var i = 0; i < bodies.length; i++) {
-      if (bodies[i].merged) continue;
-      bodyMeshes[i].position.set(bodies[i].px, 0, bodies[i].py);
-      if (document.getElementById('chkTrails').checked && trailCounter % 2 === 0) {
-        updateTrail(i, bodies[i].px, bodies[i].py);
-      }
-    }
-
-    // Force arrows every 4 frames
-    if (trailCounter % 4 === 0) updateArrows();
-
-    // Metrics
-    if (trailCounter % 10 === 0) updateOverlay();
-  }
-
-  // Show/hide trails
-  var showTrails = document.getElementById('chkTrails').checked;
-  trailLines.forEach(function(l) {
-    if (l.visible !== false) l.material.visible = showTrails;
+  // Body list
+  const bl = document.getElementById('bodyList');
+  bl.innerHTML = '';
+  bodies.forEach((b, i) => {
+    if (!b.active || b.mass <= 0) return;
+    const row = document.createElement('div');
+    row.className = 'body-indicator flex items-center gap-1 mb-0.5';
+    const dot = document.createElement('div');
+    dot.className = 'body-dot';
+    dot.style.background = '#' + b.color.toString(16).padStart(6, '0');
+    const txt = document.createElement('span');
+    txt.className = 'text-xs text-slate-300';
+    txt.textContent = b.name + ': (' + b.x.toFixed(2) + ', ' + b.y.toFixed(2) + ')';
+    row.appendChild(dot); row.appendChild(txt);
+    bl.appendChild(row);
   });
-
-  // Starfield toggle
-  if (document.getElementById('chkStarfield').checked) {
-    createStarfield();
-  } else {
-    removeStarfield();
-  }
-
-  controls.update();
-  renderer.render(scene, camera);
 }
 
-// ============================================================
-// Init
-// ============================================================
-initThree();
-loadPreset('sunEarth');
-animate();
+// ─── Animation loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+
+  if (isPlaying) {
+    const simDt = delta * speedFactor * 0.04;
+    physicsUpdate(simDt);
+
+    if (frameCount % 2 === 0) updateTrails();
+    frameCount++;
+
+    for (let i = 0; i < bodies.length; i++) {
+      const b = bodies[i];
+      if (bodyMeshes[i]) {
+        bodyMeshes[i].position.set(b.x, 0, b.y);
+        bodyMeshes[i].visible = b.active && b.mass > 0;
+      }
+    }
+
+    const com = centerOfMass();
+    comMesh.position.set(com.x, 0.1, com.y);
+
+    if (frameCount % 5 === 0) updateDataPanel();
+  }
+
+  renderer.render(scene, camera);
+});
+
+// ─── Resize ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── Toast ──────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ─── Full reset ────────────────────────────────────────────────────────────────
+function fullReset() {
+  initBodies(currentPreset);
+  buildBodyMeshes();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  showToast('Simulation reset');
+}
+
+// ─── Preset application ────────────────────────────────────────────────────────
+function applyPreset(key) {
+  currentPreset = key;
+  const p = presets[key];
+  // Set masses from preset
+  m1 = p.bodies[0].mass;
+  m2 = p.bodies[1].mass;
+  m3 = p.bodies[2] ? p.bodies[2].mass : 0;
+  document.getElementById('sliderM1').value = m1;
+  document.getElementById('sliderM2').value = m2;
+  document.getElementById('sliderM3').value = m3;
+  document.getElementById('m1Val').textContent = m1.toFixed(1);
+  document.getElementById('m2Val').textContent = m2 < 0.01 ? m2.toExponential(1) : m2.toFixed(3);
+  document.getElementById('m3Val').textContent = m3.toFixed(3);
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-preset="' + key + '"]').classList.add('active');
+  fullReset();
+  showToast('Preset: ' + p.label);
+}
+
+// ─── UI wiring ─────────────────────────────────────────────────────────────────
+document.getElementById('sliderM1').addEventListener('input', function() {
+  m1 = parseFloat(this.value);
+  document.getElementById('m1Val').textContent = m1.toFixed(1);
+  fullReset();
+});
+document.getElementById('sliderM2').addEventListener('input', function() {
+  m2 = parseFloat(this.value);
+  document.getElementById('m2Val').textContent = m2 < 0.01 ? m2.toExponential(1) : m2.toFixed(3);
+  fullReset();
+});
+document.getElementById('sliderM3').addEventListener('input', function() {
+  m3 = parseFloat(this.value);
+  document.getElementById('m3Val').textContent = m3.toFixed(3);
+  fullReset();
+});
+document.getElementById('sliderSpdMul').addEventListener('input', function() {
+  spdMul = parseFloat(this.value);
+  document.getElementById('spdMulVal').textContent = spdMul.toFixed(2) + '×';
+  fullReset();
+});
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    speedFactor = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + this.dataset.speed + 'x');
+  });
+});
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', function() { applyPreset(this.dataset.preset); });
+});
+
+document.getElementById('btnPlay').addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  this.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+  showToast(isPlaying ? 'Playing' : 'Paused');
+});
+
+document.getElementById('btnReset').addEventListener('click', fullReset);
+
+document.getElementById('btnClearTrail').addEventListener('click', function() {
+  resetTrails();
+  for (const l of trailLines) l.geometry.setDrawRange(0, 0);
+  showToast('Trails cleared');
+});
+
+document.getElementById('toggleSidebar').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.getElementById('btnAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.remove('hidden');
+});
+document.getElementById('closeAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.add('hidden');
+});
+
+document.getElementById('closeQuiz').addEventListener('click', function() {
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('showQuiz').classList.remove('hidden');
+});
+document.getElementById('showQuiz').addEventListener('click', function() {
+  document.getElementById('quizPanel').classList.remove('hidden');
+  this.classList.add('hidden');
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btnPlay').click(); }
+  if (e.code === 'KeyR') fullReset();
+  if (e.code === 'KeyC') document.getElementById('btnClearTrail').click();
+  if (e.code === 'Digit1') document.querySelector('[data-speed="0.25"]').click();
+  if (e.code === 'Digit2') document.querySelector('[data-speed="0.5"]').click();
+  if (e.code === 'Digit3') document.querySelector('[data-speed="1"]').click();
+  if (e.code === 'Digit4') document.querySelector('[data-speed="2"]').click();
+  if (e.code === 'Digit5') document.querySelector('[data-speed="3"]').click();
+  if (e.code === 'KeyQ') applyPreset('sunearth');
+  if (e.code === 'KeyW') applyPreset('binary');
+  if (e.code === 'KeyE') applyPreset('threebody');
+});
+
+// ─── Quiz ──────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "In a gravitational N-body system with no external forces, which quantity is NOT necessarily conserved?",
+    opts: ['Total linear momentum', 'Total angular momentum', 'Total mechanical energy', 'Each body\'s individual orbital energy'],
+    correct: 3,
+    explanation: "Linear momentum, angular momentum, and total mechanical energy are all conserved in an isolated N-body system. However, each body's individual energy changes as it exchanges energy with others through gravitational interactions.",
+    praise: "Exactly right! Individual orbital energies are not conserved — they exchange between bodies. Only the system totals are conserved."
+  },
+  {
+    q: "You add a third body with tiny mass to a stable two-body orbit. The system is most likely to remain stable if the third body starts at:",
+    opts: ['Very close to one of the two massive bodies', 'Between the two massive bodies', 'Far from both bodies at a Lagrange point (L4/L5)', 'On the opposite side of one body from the other'],
+    correct: 2,
+    explanation: "Lagrange L4/L5 points are the stable ones (if mass ratio > ~25:1). Close approaches create strong perturbations. Between two massive bodies is the unstable L1 point. Far-away Lagrange points (L4/L5) are the classical stable solution.",
+    praise: "Correct! Jupiter's Trojan asteroids live at L4/L5. These equilateral triangle configurations are stable when the massive body dominates the mass ratio."
+  },
+  {
+    q: "In the binary star simulation, if you double both star masses while keeping positions the same, the orbital period will:",
+    opts: ['Double', 'Stay the same', 'Be halved', 'Be reduced by √2'],
+    correct: 2,
+    explanation: "For a binary with equal masses m, the period T = 2π√(d³/2GM) ∝ 1/√M. Doubling M multiplies T by 1/√2, which halves it. The gravitational force (and thus centripetal acceleration) is stronger, requiring faster orbits.",
+    praise: "Right! T ∝ 1/√M in the symmetric binary case. More mass means stronger gravity, so the stars must orbit faster to maintain the same separation."
+  }
+];
+
+function buildQuiz() {
+  const cont = document.getElementById('quizContainer');
+  cont.innerHTML = '';
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'mb-4';
+    div.innerHTML = `<p class="text-xs font-semibold text-slate-200 mb-2">Q${qi+1}: ${q.q}</p>`;
+    q.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', function() {
+        if (div.dataset.answered) return;
+        div.dataset.answered = '1';
+        div.querySelectorAll('.quiz-option').forEach((b, i) => {
+          if (i === q.correct) b.classList.add('correct');
+          else if (i === oi && oi !== q.correct) b.classList.add('incorrect');
+        });
+        const fb = document.createElement('div');
+        fb.className = 'quiz-feedback ' + (oi === q.correct ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300');
+        fb.textContent = oi === q.correct ? q.praise : '💡 ' + q.explanation;
+        div.appendChild(fb);
+      });
+      div.appendChild(btn);
+    });
+    cont.appendChild(div);
+  });
+}
+
+// ─── KaTeX ─────────────────────────────────────────────────────────────────────
+function renderFormulas() {
+  katex.render('F_{ij} = \\dfrac{Gm_i m_j}{r_{ij}^2}', document.getElementById('f1'), { displayMode: true, throwOnError: false });
+  katex.render('E = \\sum_i \\tfrac{1}{2}m_i v_i^2 - \\sum_{i<j} \\dfrac{Gm_i m_j}{r_{ij}}', document.getElementById('f2'), { displayMode: true, throwOnError: false });
+  katex.render('L = \\sum_i m_i (\\vec{r}_i \\times \\vec{v}_i)', document.getElementById('f3'), { displayMode: true, throwOnError: false });
+  katex.render('\\vec{a}_i = \\sum_{j \\neq i} \\dfrac{Gm_j}{r_{ij}^3}(\\vec{r}_j - \\vec{r}_i)', document.getElementById('f4'), { displayMode: true, throwOnError: false });
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+renderFormulas();
+buildQuiz();
+// Set slider values from default preset
+document.getElementById('m1Val').textContent = m1.toFixed(1);
+document.getElementById('m2Val').textContent = m2.toExponential(1);
+document.getElementById('m3Val').textContent = m3.toFixed(3);
+applyPreset('sunearth');
+showToast('My Solar System — build your own gravity show!');
 </script>
+<div style="display:none">Generated by AetherViz Master — the universe is yours to build.</div>
 </body>
 </html>

@@ -1,359 +1,621 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soil Formation — Scivra Earth Science</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      user-select: none;
-    }
-    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-    canvas { position: absolute; top: 0; left: 0; }
-    #ui {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; flex-direction: column; justify-content: space-between;
-      pointer-events: none; padding: 12px;
-    }
-    .panel {
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(249,115,22,0.25);
-      border-radius: 8px;
-      padding: 12px 14px;
-      pointer-events: all;
-      backdrop-filter: blur(10px);
-    }
-    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
-    .badge {
-      font-size: 0.6rem; background: rgba(249,115,22,0.18);
-      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
-      vertical-align: middle; margin-left: 6px;
-    }
-    .subtitle { font-size: 0.7rem; color: #94a3b8; }
-    .ctrl-row { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #94a3b8; margin: 4px 0; }
-    .ctrl-row label { min-width: 90px; }
-    .ctrl-row input[type=range] { width: 100px; accent-color: #f97316; }
-    .ctrl-row .data-val { color: #fed7aa; min-width: 60px; text-align: right; }
-    .info-row { font-size: 0.68rem; color: #94a3b8; margin: 3px 0; }
-    .info-row .data-val { color: #fed7aa; }
-    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
-    .formula-panel { max-width: 380px; }
-    .formula-desc { font-size: 0.62rem; color: #94a3b8; margin-bottom: 6px; }
-    .horizon-info { font-size: 0.62rem; color: #94a3b8; padding: 4px; border-radius: 4px; margin-top: 4px; }
-    .horizon-info.active { background: rgba(249,115,22,0.1); color: #e2e8f0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soil Formation | Earth Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  #navbar { background: linear-gradient(135deg, #F97316 0%, #EAB308 100%); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #sidebar { width: 30%; overflow-y: auto; background: #1e293b; padding: 14px; flex-shrink: 0; }
+  #canvas-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  #threeCanvas { display: block; flex: 1; min-height: 0; }
+  #controls { background: rgba(15,23,42,0.97); padding: 10px 14px; flex-shrink: 0; border-top: 1px solid #334155; }
+  #data-overlay { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.78); padding: 10px 14px; border-radius: 8px; font-size: 12px; min-width: 200px; border: 1px solid #334155; pointer-events: none; z-index: 10; line-height: 1.8; }
+  #toast { position: fixed; top: 20px; right: 20px; background: #F97316; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; z-index: 9999; display: none; box-shadow: 0 4px 16px rgba(249,115,22,0.5); }
+  .slider-label { font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+  .preset-btn { background: #334155; border: none; color: #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: background 0.2s; white-space: nowrap; }
+  .preset-btn:hover, .preset-btn.active { background: #F97316; color: white; }
+  .speed-btn { background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .speed-btn.active { background: #F97316; border-color: #F97316; color: white; }
+  .quiz-option { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; cursor: pointer; font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .quiz-option:hover { color: #e2e8f0; }
+  .formula-box { background: #0f172a; border-radius: 6px; padding: 8px 10px; margin: 6px 0; overflow-x: auto; }
+  h3 { color: #F97316; font-size: 13px; margin: 10px 0 5px; font-weight: 600; }
+  .section { border-left: 3px solid #F97316; padding-left: 10px; margin: 10px 0; }
+  input[type=range] { accent-color: #F97316; width: 100%; }
+  .ctrl-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .ctrl-col { flex: 1; min-width: 120px; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  .prop-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+  .prop-key { color: #F97316; font-weight: 500; }
+</style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<div id="ui">
-  <div class="top-bar">
-    <div class="panel">
-      <h1>Soil Formation <span class="badge">Earth Science</span></h1>
-      <p class="subtitle">Soil profile cross-section — five factors of pedogenesis</p>
+<div id="toast"></div>
+<div id="navbar">
+  <div>
+    <div style="font-weight:700;font-size:18px;color:white;">Soil Formation</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.85);">Horizon Layers · Weathering · CLORPT Factors &middot; Earth Science</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="resetScene()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Reset</button>
+    <button onclick="toggleFullscreen()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Fullscreen</button>
+  </div>
+</div>
+<div id="main">
+  <div id="sidebar">
+    <div class="section">
+      <h3>Learning Objectives</h3>
+      <ul style="font-size:12px;color:#94a3b8;padding-left:14px;line-height:2.0;">
+        <li>Identify and describe soil horizon layers (O/A/B/C/R)</li>
+        <li>Explain physical and chemical weathering processes</li>
+        <li>Understand the role of organic matter in soil formation</li>
+        <li>Analyze factors controlling soil formation (CLORPT)</li>
+        <li>Compare soil types across different climates</li>
+        <li>Evaluate human impacts on soil health</li>
+        <li>Connect soil formation to nutrient cycling</li>
+      </ul>
     </div>
-    <div class="panel">
-      <div class="ctrl-row">
-        <label>Weathering Rate</label>
-        <input type="range" id="weathering" min="0.01" max="2" value="0.5" step="0.01">
-        <span class="data-val" id="w-val">0.50 mm/yr</span>
+    <div class="section">
+      <h3>Key Formulas</h3>
+      <div style="font-size:11px;color:#64748b;margin-bottom:3px;">Soil formation factors (Jenny, 1941):</div>
+      <div class="formula-box" id="f1"></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:3px;">Weathering rate:</div>
+      <div class="formula-box" id="f2"></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:3px;">Organic matter accumulation:</div>
+      <div class="formula-box" id="f3"></div>
+    </div>
+    <div class="section">
+      <h3>Soil Horizons (Soil Profile)</h3>
+      <div style="font-size:12px;color:#94a3b8;line-height:2.1;">
+        <b style="color:#F97316;">O Horizon</b> — Organic: undecomposed litter and humus<br>
+        <b style="color:#F97316;">A Horizon</b> — Topsoil: dark, humus-rich, most fertile<br>
+        <b style="color:#F97316;">E Horizon</b> — Eluviation: leached layer, pale colored<br>
+        <b style="color:#F97316;">B Horizon</b> — Subsoil: accumulation of clay and minerals<br>
+        <b style="color:#F97316;">C Horizon</b> — Regolith: weathered parent material<br>
+        <b style="color:#F97316;">R Horizon</b> — Bedrock: unweathered parent rock
       </div>
-      <div class="ctrl-row">
-        <label>Precipitation</label>
-        <input type="range" id="precip" min="10" max="300" value="80" step="10">
-        <span class="data-val" id="p-val">80 cm/yr</span>
+    </div>
+    <div class="section">
+      <h3>CLORPT Factors</h3>
+      <div style="font-size:12px;color:#94a3b8;line-height:2.0;">
+        <b style="color:#fbbf24;">C</b>limate — temperature &amp; precipitation drive weathering rate<br>
+        <b style="color:#fbbf24;">O</b>rganisms — plants, animals, microbes add organic matter<br>
+        <b style="color:#fbbf24;">L</b>ithology — parent rock mineralogy controls soil chemistry<br>
+        <b style="color:#fbbf24;">O</b>rography — slope affects drainage and erosion<br>
+        <b style="color:#fbbf24;">P</b>arent material — source rock composition<br>
+        <b style="color:#fbbf24;">T</b>ime — older soils are more developed (thousands of years)
       </div>
-      <div class="ctrl-row">
-        <label>Bio Activity</label>
-        <input type="range" id="bio" min="0" max="100" value="50" step="5">
-        <span class="data-val" id="b-val">50%</span>
-      </div>
-      <div class="ctrl-row">
-        <label>Time</label>
-        <input type="range" id="time" min="0.1" max="100" value="10" step="0.1">
-        <span class="data-val" id="t-val">10.0 kyr</span>
+    </div>
+    <div class="section">
+      <h3>Weathering Types</h3>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.75;">
+        <b style="color:#fbbf24;">Physical</b>: freeze-thaw cycles, abrasion, exfoliation — breaks rock into smaller pieces without chemical change. <b style="color:#fbbf24;">Chemical</b>: hydrolysis, oxidation, carbonation, dissolution — changes mineral composition. <b style="color:#fbbf24;">Biological</b>: root wedging, burrowing animals, lichens — both physical and chemical action.
+      </p>
+    </div>
+    <div id="quiz-panel" style="margin-top:14px;">
+      <h3 style="cursor:pointer;" onclick="toggleQuiz()">Quiz <span id="quiz-arrow">&#9660;</span></h3>
+      <div id="quiz-content">
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">1. Which horizon contains the most organic matter and is most fertile?</p>
+          <label class="quiz-option"><input type="radio" name="q1" value="a"> <span>C Horizon (weathered parent material)</span></label>
+          <label class="quiz-option"><input type="radio" name="q1" value="b"> <span>A Horizon (topsoil with humus)</span></label>
+          <label class="quiz-option"><input type="radio" name="q1" value="c"> <span>B Horizon (subsoil clay)</span></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">2. What does CLORPT stand for in Jenny's soil equation?</p>
+          <label class="quiz-option"><input type="radio" name="q2" value="a"> <span>Climate, lithology, organisms, relief, parent material, time</span></label>
+          <label class="quiz-option"><input type="radio" name="q2" value="b"> <span>Carbon, limestone, oxygen, rock, phosphorus, temperature</span></label>
+          <label class="quiz-option"><input type="radio" name="q2" value="c"> <span>Clay, loam, organic, rock, pH, texture</span></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">3. Freeze-thaw cycles that crack rocks are an example of:</p>
+          <label class="quiz-option"><input type="radio" name="q3" value="a"> <span>Chemical weathering by hydrolysis</span></label>
+          <label class="quiz-option"><input type="radio" name="q3" value="b"> <span>Biological weathering by root wedging</span></label>
+          <label class="quiz-option"><input type="radio" name="q3" value="c"> <span>Physical (mechanical) weathering</span></label>
+        </div>
+        <button onclick="checkQuiz({q1:'b',q2:'a',q3:'c'})" style="background:linear-gradient(135deg,#F97316,#EAB308);border:none;color:white;padding:8px 20px;border-radius:6px;cursor:pointer;width:100%;font-size:13px;font-weight:600;">Check Answers</button>
+        <div id="quiz-result" style="margin-top:10px;font-size:13px;text-align:center;min-height:22px;padding:4px;"></div>
       </div>
     </div>
   </div>
-  <div class="bottom-bar">
-    <div class="panel" style="flex:1; max-width:300px;">
-      <div class="panel-title">Profile Data</div>
-      <div class="info-row">Total Depth: <span class="data-val" id="depth-val">— cm</span></div>
-      <div class="info-row">Organic %: <span class="data-val" id="organic-val">—</span></div>
-      <div class="info-row">Maturity: <span class="data-val" id="maturity-val">—</span></div>
-      <div id="horizon-detail" class="horizon-info">Click a horizon layer for details</div>
+  <div id="canvas-area">
+    <canvas id="threeCanvas"></canvas>
+    <div id="data-overlay">
+      <div style="color:#F97316;font-weight:700;font-size:13px;margin-bottom:7px;">Soil Profile Data</div>
+      <div class="prop-row"><span class="prop-key">Active Layer</span><span id="ov-layer" style="color:#fbbf24;font-weight:600;">O Horizon</span></div>
+      <div class="prop-row"><span class="prop-key">Depth</span><span id="ov-depth" style="color:#fbbf24;">0 cm</span></div>
+      <div class="prop-row"><span class="prop-key">Organic %</span><span id="ov-organic" style="color:#fbbf24;">85%</span></div>
+      <div class="prop-row"><span class="prop-key">pH</span><span id="ov-ph" style="color:#fbbf24;">6.5</span></div>
+      <div class="prop-row"><span class="prop-key">Formation Yrs</span><span id="ov-years" style="color:#fbbf24;">0</span></div>
+      <div class="prop-row" style="border-bottom:none;"><span class="prop-key">Time</span><span id="ov-time" style="color:#fbbf24;">0s</span></div>
     </div>
-    <div class="panel formula-panel">
-      <div class="panel-title">Soil Science</div>
-      <div id="formula1"></div>
-      <div class="formula-desc">Jenny's equation — soil is a function of five state factors.</div>
-      <div id="formula2" style="margin-top:6px;"></div>
-      <div class="formula-desc">Soil depth grows with the square root of time × weathering rate.</div>
+    <div id="controls">
+      <div class="ctrl-row">
+        <div class="ctrl-col">
+          <div class="slider-label">Climate Moisture: <span id="moist-val">50</span>%</div>
+          <input type="range" id="moistSlider" min="0" max="100" step="5" value="50" oninput="updateMoisture(this.value)">
+        </div>
+        <div class="ctrl-col">
+          <div class="slider-label">Formation Time: <span id="ftime-val">1000</span> yrs</div>
+          <input type="range" id="ftimeSlider" min="100" max="10000" step="100" value="1000" oninput="updateFTime(this.value)">
+        </div>
+        <div>
+          <div class="slider-label" style="margin-bottom:4px;">Soil Types</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="preset-btn active" id="btn-forest" onclick="setSoilType('forest',this)">Temperate Forest</button>
+            <button class="preset-btn" id="btn-desert" onclick="setSoilType('desert',this)">Desert Aridisol</button>
+            <button class="preset-btn" id="btn-prairie" onclick="setSoilType('prairie',this)">Prairie Mollisol</button>
+          </div>
+        </div>
+<div>
+          <div class="slider-label" style="margin-bottom:4px;">Simulation Speed</div>
+          <div style="display:flex;gap:4px;">
+            <button class="speed-btn" onclick="setSpeed(0.25,this)">0.25x</button>
+            <button class="speed-btn" onclick="setSpeed(0.5,this)">0.5x</button>
+            <button class="speed-btn active" onclick="setSpeed(1,this)">1x</button>
+            <button class="speed-btn" onclick="setSpeed(2,this)">2x</button>
+            <button class="speed-btn" onclick="setSpeed(3,this)">3x</button>
+          </div>
+        </div>
+<div style="display:flex;gap:6px;align-items:flex-end;">
+          <button onclick="togglePlay()" id="playBtn" style="background:#F97316;border:none;color:white;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Pause</button>
+          <button onclick="resetScene()" style="background:#334155;border:none;color:white;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Reset</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 <script>
-/* ── Canvas ── */
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
-resize();
-addEventListener('resize', resize);
-
-/* ── Horizon Data ── */
-const HORIZONS = [
-  { id: 'O', name: 'O — Organic', color: '#3d2b1f', desc: 'Decomposing plant litter, leaf mold, humus. Dark and organic-rich.' },
-  { id: 'A', name: 'A — Topsoil', color: '#5c3d2e', desc: 'Mineral soil mixed with humus. Rich, dark, most biological activity. Zone of eluviation (leaching).' },
-  { id: 'B', name: 'B — Subsoil', color: '#8b6914', desc: 'Zone of illuviation — accumulated clay, iron oxides, carbonates washed down from above. Often reddish or yellowish.' },
-  { id: 'C', name: 'C — Parent Material', color: '#a0a0a0', desc: 'Partially weathered bedrock fragments. Retains characteristics of original rock.' },
-  { id: 'R', name: 'R — Bedrock', color: '#6b7280', desc: 'Unweathered solid rock. The ultimate parent material that weathers into soil over millennia.' }
-];
-
-/* ── Controls ── */
-const wSlider = document.getElementById('weathering');
-const pSlider = document.getElementById('precip');
-const bSlider = document.getElementById('bio');
-const tSlider = document.getElementById('time');
-const wVal = document.getElementById('w-val');
-const pVal = document.getElementById('p-val');
-const bVal = document.getElementById('b-val');
-const tVal = document.getElementById('t-val');
-const depthEl = document.getElementById('depth-val');
-const organicEl = document.getElementById('organic-val');
-const maturityEl = document.getElementById('maturity-val');
-const detailEl = document.getElementById('horizon-detail');
-
-wSlider.oninput = () => wVal.textContent = parseFloat(wSlider.value).toFixed(2) + ' mm/yr';
-pSlider.oninput = () => pVal.textContent = pSlider.value + ' cm/yr';
-bSlider.oninput = () => bVal.textContent = bSlider.value + '%';
-tSlider.oninput = () => tVal.textContent = parseFloat(tSlider.value).toFixed(1) + ' kyr';
-
-/* ── Soil Model ── */
-function computeProfile() {
-  const w = parseFloat(wSlider.value);
-  const p = parseFloat(pSlider.value);
-  const b = parseFloat(bSlider.value);
-  const t = parseFloat(tSlider.value);
-
-  // Total depth (cm): sqrt(time_yr * weathering_mm/yr) scaled
-  const timeYr = t * 1000;
-  const rawDepth = Math.sqrt(timeYr * w) * 2;
-  const precipFactor = 0.5 + (p / 300) * 1;
-  const totalDepth = Math.min(rawDepth * precipFactor, 500);
-
-  // Horizon thicknesses (proportional)
-  const maturity = Math.min(1, t / 50); // 0-1 maturity scale
-  const bioFrac = b / 100;
-
-  const oThick = Math.min(totalDepth * 0.04 * (1 + bioFrac), 15);
-  const aThick = Math.min(totalDepth * 0.15 * (0.5 + bioFrac * 0.5) * (0.5 + maturity * 0.5), 60);
-  const bThick = Math.min(totalDepth * 0.25 * (0.3 + precipFactor * 0.7), 100);
-  const cThick = Math.max(totalDepth * 0.3, 20);
-  const rThick = 200; // bedrock extends indefinitely
-
-  const organic = Math.min(bioFrac * maturity * 12, 10);
-  const matLabel = maturity < 0.2 ? 'Immature' : maturity < 0.5 ? 'Developing' : maturity < 0.8 ? 'Mature' : 'Highly Mature';
-
-  depthEl.textContent = totalDepth.toFixed(0) + ' cm';
-  organicEl.textContent = organic.toFixed(1) + '%';
-  maturityEl.textContent = matLabel;
-
-  return { totalDepth, layers: [oThick, aThick, bThick, cThick, rThick], maturity, organic };
-}
-
-/* ── Drawing ── */
-let selectedHorizon = -1;
-
-function drawProfile() {
-  const profile = computeProfile();
-  const { layers, maturity } = profile;
-
-  // Profile area
-  const px = canvas.width * 0.2;
-  const pw = canvas.width * 0.6;
-  const py = canvas.height * 0.1;
-  const ph = canvas.height * 0.78;
-
-  // Total layer thickness for scaling
-  const totalThick = layers.reduce((a, b) => a + b, 0);
-
-  // Sky area above profile
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, py);
-  skyGrad.addColorStop(0, '#1e3a5f');
-  skyGrad.addColorStop(1, '#2d4a6f');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(px, 0, pw, py);
-
-  // Surface grass/vegetation
-  const bioFrac = parseFloat(bSlider.value) / 100;
-  if (bioFrac > 0.1) {
-    ctx.fillStyle = `rgba(34,197,94,${bioFrac * 0.4})`;
-    for (let gx = px; gx < px + pw; gx += 4) {
-      const gh = 3 + Math.random() * bioFrac * 12;
-      ctx.fillRect(gx, py - gh, 2, gh);
+// =============================================
+// INLINE OrbitControls
+// =============================================
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this;
+  var STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2 };
+  var state = STATE.NONE;
+  var spherical = new THREE.Spherical();
+  var sphericalDelta = new THREE.Spherical();
+  var scale = 1;
+  var target = new THREE.Vector3();
+  var rotateStart = new THREE.Vector2();
+  var rotateEnd = new THREE.Vector2();
+  var rotateDelta = new THREE.Vector2();
+  function getZoomScale() { return Math.pow(0.95, 1); }
+  function rotateLeft(angle) { sphericalDelta.theta -= angle; }
+  function rotateUp(angle) { sphericalDelta.phi -= angle; }
+  var onMouseDown = function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = STATE.ROTATE; rotateStart.set(e.clientX, e.clientY); }
+  };
+  var onMouseMove = function(e) {
+    if (!scope.enabled || state === STATE.NONE) return;
+    if (state === STATE.ROTATE) {
+      rotateEnd.set(e.clientX, e.clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.01);
+      rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y);
+      rotateStart.copy(rotateEnd);
     }
-  }
-
-  // Draw horizons
-  let cy = py;
-  layers.forEach((thick, i) => {
-    const h = (thick / totalThick) * ph;
-    const hz = HORIZONS[i];
-
-    // Base color
-    ctx.fillStyle = hz.color;
-    ctx.fillRect(px, cy, pw, h);
-
-    // Texture patterns
-    if (i === 0) {
-      // O horizon: organic debris
-      ctx.fillStyle = 'rgba(255,255,255,0.04)';
-      for (let j = 0; j < 20 * bioFrac; j++) {
-        ctx.fillRect(px + Math.random() * pw, cy + Math.random() * h, Math.random() * 8 + 2, 1);
-      }
-    } else if (i === 1) {
-      // A horizon: dark humus specks
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
-      for (let j = 0; j < 30; j++) {
-        ctx.beginPath();
-        ctx.arc(px + Math.random() * pw, cy + Math.random() * h, Math.random() * 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else if (i === 2) {
-      // B horizon: mineral streaks
-      ctx.fillStyle = 'rgba(249,115,22,0.08)';
-      for (let j = 0; j < 15; j++) {
-        const sx = px + Math.random() * pw;
-        ctx.beginPath();
-        ctx.moveTo(sx, cy + Math.random() * h * 0.3);
-        ctx.lineTo(sx + (Math.random() - 0.5) * 20, cy + h * 0.5 + Math.random() * h * 0.5);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = 'rgba(249,115,22,0.1)';
-        ctx.stroke();
-      }
-    } else if (i === 3) {
-      // C horizon: rock fragments
-      ctx.fillStyle = 'rgba(255,255,255,0.06)';
-      for (let j = 0; j < 12; j++) {
-        const rx = px + Math.random() * pw;
-        const ry = cy + Math.random() * h;
-        const rw = 5 + Math.random() * 15;
-        const rh = 3 + Math.random() * 8;
-        ctx.fillRect(rx, ry, rw, rh);
-      }
+  };
+  var onMouseUp = function() { state = STATE.NONE; };
+  var onWheel = function(e) {
+    if (!scope.enabled) return;
+    if (e.deltaY < 0) scale /= getZoomScale(); else scale *= getZoomScale();
+    e.preventDefault();
+  };
+  var onTouchStart = function(e) {
+    if (e.touches.length === 1) { state = STATE.ROTATE; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); }
+  };
+  var onTouchMove = function(e) {
+    if (e.touches.length === 1 && state === STATE.ROTATE) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.01);
+      rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y);
+      rotateStart.copy(rotateEnd);
+    }
+    e.preventDefault();
+  };
+  domElement.addEventListener('mousedown', onMouseDown);
+  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('mouseup', onMouseUp);
+  domElement.addEventListener('wheel', onWheel, { passive: false });
+  domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+  domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+  domElement.addEventListener('touchend', onMouseUp);
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var quatInverse = quat.clone().invert();
+    var position = camera.position;
+    offset.copy(position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi += sphericalDelta.phi * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius *= scale;
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+    if (scope.enableDamping) {
+      sphericalDelta.theta *= (1 - scope.dampingFactor);
+      sphericalDelta.phi *= (1 - scope.dampingFactor);
     } else {
-      // R horizon: bedrock cracks
-      ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-      ctx.lineWidth = 1;
-      for (let j = 0; j < 8; j++) {
-        ctx.beginPath();
-        const sx = px + Math.random() * pw;
-        ctx.moveTo(sx, cy);
-        ctx.lineTo(sx + (Math.random() - 0.5) * 30, cy + h);
-        ctx.stroke();
-      }
+      sphericalDelta.set(0,0,0);
     }
+    scale = 1;
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    position.copy(target).add(offset);
+    camera.lookAt(target);
+  };
+  this.dispose = function() {
+    domElement.removeEventListener('mousedown', onMouseDown);
+    domElement.removeEventListener('mousemove', onMouseMove);
+    domElement.removeEventListener('mouseup', onMouseUp);
+    domElement.removeEventListener('wheel', onWheel);
+  };
+};
 
-    // Horizon divider
-    ctx.strokeStyle = 'rgba(249,115,22,0.15)';
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(px, cy); ctx.lineTo(px + pw, cy);
-    ctx.stroke();
-    ctx.setLineDash([]);
+// =============================================
+// SCENE INITIALIZATION
+// =============================================
+var canvas = document.getElementById('threeCanvas');
+var canvasArea = document.getElementById('canvas-area');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
+camera.position.set(0, 4, 12);
+var controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 2; controls.maxDistance = 60;
+var keyLight = new THREE.DirectionalLight(0xfff5e0, 1.0);
+keyLight.position.set(5, 8, 5); keyLight.castShadow = true; scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0xc0d8ff, 0.4);
+fillLight.position.set(-5, 3, -3); scene.add(fillLight);
+var backLight = new THREE.DirectionalLight(0xffd080, 0.3);
+backLight.position.set(0, -5, -8); scene.add(backLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+window._isPlaying = true;
+window._speedMult = 1.0;
+var _time = 0;
 
-    // Label
-    const isSelected = i === selectedHorizon;
-    ctx.fillStyle = isSelected ? '#f97316' : 'rgba(249,115,22,0.6)';
-    ctx.font = (isSelected ? 'bold ' : '') + '11px system-ui';
-    ctx.textAlign = 'left';
-    ctx.fillText(hz.name, px + 8, cy + Math.min(h / 2 + 4, h - 4));
+// =============================================
+// UTILITY FUNCTIONS
+// =============================================
 
-    // Depth markers
-    if (i < 4) {
-      const depthCm = layers.slice(0, i + 1).reduce((a, b) => a + b, 0);
-      ctx.fillStyle = '#64748b';
-      ctx.font = '9px JetBrains Mono, monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(depthCm.toFixed(0) + ' cm', px - 6, cy + h);
-    }
-
-    cy += h;
-  });
-
-  // Border
-  ctx.strokeStyle = 'rgba(249,115,22,0.25)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(px, py, pw, ph);
-
-  // Precipitation animation (rain drops)
-  const precip = parseFloat(pSlider.value);
-  if (precip > 30) {
-    ctx.strokeStyle = `rgba(96,165,250,${Math.min(precip / 300, 0.5)})`;
-    ctx.lineWidth = 1;
-    const time = Date.now() / 1000;
-    for (let r = 0; r < precip / 10; r++) {
-      const rx = px + ((r * 37 + time * 50) % pw);
-      const ry = ((r * 71 + time * 120) % py);
-      ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx - 1, ry + 6);
-      ctx.stroke();
-    }
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.style.display = 'none'; }, 2200);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function toggleQuiz() {
+  var c = document.getElementById('quiz-content');
+  var a = document.getElementById('quiz-arrow');
+  var hidden = c.style.display === 'none';
+  c.style.display = hidden ? 'block' : 'none';
+  a.textContent = hidden ? '\u25bc' : '\u25b6';
+}
+function setSpeed(s, btn) {
+  window._speedMult = s;
+  document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+function checkQuiz(answers) {
+  var score = 0;
+  var total = Object.keys(answers).length;
+  for (var q in answers) {
+    var sel = document.querySelector('input[name="' + q + '"]:checked');
+    if (sel && sel.value === answers[q]) score++;
   }
-
-  // Depth scale
-  ctx.fillStyle = '#64748b';
-  ctx.font = '9px system-ui';
-  ctx.textAlign = 'center';
-  ctx.fillText('← Depth (cm)', px - 30, py - 6);
+  var r = document.getElementById('quiz-result');
+  var pct = score / total;
+  var msg = pct === 1 ? 'Perfect! Outstanding work!' : pct >= 0.67 ? 'Great effort! Review missed concepts.' : 'Keep studying — you\'re learning!';
+  r.textContent = 'Score: ' + score + '/' + total + ' \u2014 ' + msg;
+  r.style.color = pct === 1 ? '#22c55e' : pct >= 0.67 ? '#fbbf24' : '#ef4444';
+}
+function togglePlay() {
+  window._isPlaying = !window._isPlaying;
+  var b = document.getElementById('playBtn');
+  b.textContent = window._isPlaying ? 'Pause' : 'Play';
+  b.style.background = window._isPlaying ? '#F97316' : '#22c55e';
 }
 
-/* ── Click Detection ── */
-canvas.addEventListener('click', (e) => {
-  const px = canvas.width * 0.2;
-  const pw = canvas.width * 0.6;
-  const py = canvas.height * 0.1;
-  const ph = canvas.height * 0.78;
+// =============================================
+// RESIZE
+// =============================================
 
-  if (e.clientX < px || e.clientX > px + pw || e.clientY < py || e.clientY > py + ph) return;
+function resize() {
+  var w = canvasArea.clientWidth;
+  var ctrlH = document.getElementById('controls').offsetHeight || 80;
+  var h = Math.max(canvasArea.clientHeight - ctrlH, 200);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 100);
 
-  const profile = computeProfile();
-  const totalThick = profile.layers.reduce((a, b) => a + b, 0);
-  let cy = py;
-  for (let i = 0; i < profile.layers.length; i++) {
-    const h = (profile.layers[i] / totalThick) * ph;
-    if (e.clientY >= cy && e.clientY < cy + h) {
-      selectedHorizon = i;
-      detailEl.className = 'horizon-info active';
-      detailEl.innerHTML = `<strong>${HORIZONS[i].name}</strong><br>${HORIZONS[i].desc}`;
-      return;
-    }
-    cy += h;
-  }
+// =============================================
+// KEYBOARD SHORTCUTS
+// =============================================
+
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); showToast(window._isPlaying ? 'Playing' : 'Paused'); }
+  if (e.code === 'KeyR') { resetScene(); }
 });
 
-/* ── KaTeX ── */
-katex.render("S = f(Cl, O, R, P, T)", document.getElementById('formula1'), { displayMode: false, throwOnError: false });
-katex.render("\\text{Depth} \\propto \\sqrt{t \\times w}", document.getElementById('formula2'), { displayMode: false, throwOnError: false });
+// =============================================
+// MAIN SIMULATION CODE
+// =============================================
 
-/* ── Animation Loop ── */
-function animate() {
-  requestAnimationFrame(animate);
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawProfile();
+// Soil horizon visualization
+var soilGroup = new THREE.Group();
+scene.add(soilGroup);
+camera.position.set(0, 2, 14);
+
+// Horizon data: [name, color, depth(y), height, organic%, ph, description]
+var horizonData = [
+  { name: 'O Horizon', color: 0x3d2a0a, y: 2.8, h: 0.5, organic: 85, ph: 6.5, desc: 'Organic litter & humus' },
+  { name: 'A Horizon', color: 0x5c3a1a, y: 2.0, h: 1.0, organic: 45, ph: 6.8, desc: 'Topsoil: humus-rich' },
+  { name: 'E Horizon', color: 0xd4c4a0, y: 1.0, h: 0.8, organic: 8, ph: 5.5, desc: 'Eluviation: leached' },
+  { name: 'B Horizon', color: 0x8b5e2a, y: 0.0, h: 1.2, organic: 5, ph: 6.2, desc: 'Subsoil: clay accumulation' },
+  { name: 'C Horizon', color: 0xa08060, y: -1.5, h: 1.2, organic: 1, ph: 7.0, desc: 'Weathered parent material' },
+  { name: 'R Horizon', color: 0x707070, y: -2.9, h: 1.2, organic: 0, ph: 7.5, desc: 'Bedrock (unweathered)' }
+];
+
+var layers = [];
+var formationTime = 1000;
+var moisture = 50;
+
+function buildSoilProfile() {
+  while (soilGroup.children.length > 0) {
+    var c = soilGroup.children[0];
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+    soilGroup.remove(c);
+  }
+  layers = [];
+  horizonData.forEach(function(h, i) {
+    var mat = new THREE.MeshPhongMaterial({ color: h.color, shininess: 20 });
+    var mesh = new THREE.Mesh(new THREE.BoxGeometry(8, h.h, 4), mat);
+    mesh.position.y = h.y;
+    mesh.userData.horizonIndex = i;
+    soilGroup.add(mesh);
+    layers.push(mesh);
+    // Layer label via edge highlight
+    var edges = new THREE.EdgesGeometry(mesh.geometry);
+    var line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.5 }));
+    line.position.copy(mesh.position);
+    soilGroup.add(line);
+  });
+
+  // Plant roots in A horizon
+  var rootMat = new THREE.MeshPhongMaterial({ color: 0x4a2, shininess: 30 });
+  for (var i = 0; i < 8; i++) {
+    var rootGeo = new THREE.CylinderGeometry(0.02, 0.01, 1.5 + Math.random() * 1.5, 5);
+    var root = new THREE.Mesh(rootGeo, rootMat);
+    root.position.set((Math.random() - 0.5) * 7, 1.5 - Math.random() * 1.5, (Math.random() - 0.5) * 3);
+    root.rotation.z = (Math.random() - 0.5) * 0.8;
+    soilGroup.add(root);
+  }
+
+  // Ground plants
+  for (var j = 0; j < 12; j++) {
+    var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 5),
+      new THREE.MeshPhongMaterial({ color: 0x2d8a2d }));
+    stem.position.set((Math.random() - 0.5) * 7, 3.4, (Math.random() - 0.5) * 3);
+    soilGroup.add(stem);
+    var leaf = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 6),
+      new THREE.MeshPhongMaterial({ color: 0x3aaa3a }));
+    leaf.position.set(stem.position.x, 3.9, stem.position.z);
+    soilGroup.add(leaf);
+  }
+
+  // Earthworm (cylinder)
+  var wormMat = new THREE.MeshPhongMaterial({ color: 0xc87040 });
+  for (var w = 0; w < 3; w++) {
+    for (var seg = 0; seg < 5; seg++) {
+      var ws = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), wormMat);
+      ws.position.set(-2 + w * 1.8, 1.6 - seg * 0.08, 0.5 * w - 0.5);
+      soilGroup.add(ws);
+    }
+  }
 }
-animate();
+
+// Color presets for soil types
+var soilPresets = {
+  forest: { layers: [0x2d1a06, 0x4a2e10, 0xd4c4a0, 0x7a4a1a, 0x9a7a55, 0x707070], moisture: 65, label: 'Temperate Forest' },
+  desert: { layers: [0xc8aa70, 0xd4b870, 0xe0cca0, 0xb89060, 0xc0a070, 0x909090], moisture: 15, label: 'Desert Aridisol' },
+  prairie: { layers: [0x1a0f06, 0x3a2210, 0x8a7030, 0x6a4820, 0x9a7a55, 0x707070], moisture: 45, label: 'Prairie Mollisol' }
+};
+
+function setSoilType(type, btn) {
+  var p = soilPresets[type];
+  if (!p) return;
+  p.layers.forEach(function(c, i) { if (horizonData[i]) horizonData[i].color = c; });
+  moisture = p.moisture;
+  document.getElementById('moistSlider').value = moisture;
+  document.getElementById('moist-val').textContent = moisture;
+  buildSoilProfile();
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  showToast(p.label + ' soil profile loaded');
+}
+
+function updateMoisture(v) {
+  moisture = parseFloat(v);
+  document.getElementById('moist-val').textContent = v;
+  // Adjust organic layer thickness visually
+  if (layers[0]) {
+    var scale = 0.5 + moisture * 0.01;
+    layers[0].scale.y = scale;
+  }
+}
+
+function updateFTime(v) {
+  formationTime = parseFloat(v);
+  document.getElementById('ftime-val').textContent = v;
+  document.getElementById('ov-years').textContent = parseInt(v).toLocaleString();
+}
+
+function resetScene() {
+  window._isPlaying = true; window._speedMult = 1.0; _time = 0;
+  moisture = 50; formationTime = 1000;
+  document.getElementById('moistSlider').value = 50;
+  document.getElementById('ftimeSlider').value = 1000;
+  document.getElementById('moist-val').textContent = '50';
+  document.getElementById('ftime-val').textContent = '1000';
+  document.getElementById('playBtn').textContent = 'Pause';
+  document.getElementById('playBtn').style.background = '#F97316';
+  document.querySelectorAll('.speed-btn').forEach(function(b,i){ b.classList.toggle('active',i===2); });
+  camera.position.set(0, 2, 14); controls.update();
+  setSoilType('forest', document.getElementById('btn-forest'));
+  showToast('Scene reset to Forest soil');
+}
+
+katex.render('S = f(Cl, O, R, P, T, \\ldots)', document.getElementById('f1'), { throwOnError: false });
+katex.render('\\text{Rate} \\propto e^{-E_a/RT} \\cdot [H_2O]', document.getElementById('f2'), { throwOnError: false });
+katex.render('\\frac{d[OM]}{dt} = I - k \\cdot [OM]', document.getElementById('f3'), { throwOnError: false });
+
+buildSoilProfile();
+var activeLayerIdx = 0;
+var cycleTimer = 0;
+
+renderer.setAnimationLoop(function() {
+  if (window._isPlaying) {
+    _time += 0.016 * window._speedMult;
+    cycleTimer += 0.016 * window._speedMult;
+
+    // Cycle through active horizon every 3 seconds
+    var layerCycleTime = 3.0;
+    if (cycleTimer > layerCycleTime) {
+      cycleTimer = 0;
+      activeLayerIdx = (activeLayerIdx + 1) % horizonData.length;
+    }
+
+    // Highlight active layer with slight glow
+    layers.forEach(function(l, i) {
+      if (l.material) {
+        var isActive = (i === activeLayerIdx);
+        l.material.emissive = isActive ? new THREE.Color(0x1a0e00) : new THREE.Color(0x000000);
+      }
+    });
+
+    var h = horizonData[activeLayerIdx];
+    if (h) {
+      document.getElementById('ov-layer').textContent = h.name;
+      document.getElementById('ov-depth').textContent = (activeLayerIdx * 30) + ' cm';
+      document.getElementById('ov-organic').textContent = h.organic + '%';
+      document.getElementById('ov-ph').textContent = h.ph;
+      document.getElementById('ov-years').textContent = (formationTime * (activeLayerIdx + 1) / 6).toFixed(0) + ' yrs';
+    }
+    document.getElementById('ov-time').textContent = Math.floor(_time) + 's';
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// ─── Extended Soil Science Reference Data ─────────────────────────────────
+
+// USDA Soil taxonomy orders and characteristics
+const SOIL_ORDERS = [
+  { order:'Entisols',   pct:12.8, desc:'Very young soils with minimal horizon development. Found on recent deposits (flood plains, dunes, landslides). No diagnostic horizons.', examples:'River deltas, sand dunes, fresh lava flows' },
+  { order:'Inceptisols',pct:15.4, desc:'Young soils showing beginning of horizon development. More developed than Entisols but lacking diagnostic B horizons. Wide climatic range.', examples:'Mountain slopes, tundra margins, recent river terraces' },
+  { order:'Aridisols',  pct:12.0, desc:'Desert soils with minimal organic matter. Often accumulate calcium carbonate (calcic horizon) or gypsum. Driest 1/3 of Earth.', examples:'Sahara, Mojave, Arabian deserts' },
+  { order:'Mollisols',  pct:7.0,  desc:'Grassland soils with thick, dark, humus-rich A horizon (mollic epipedon). Highest agricultural value. Great Plains of North America.', examples:'Chernozem, Kastanozem, Pampas soils' },
+  { order:'Alfisols',   pct:9.7,  desc:'Forest soils with clay accumulation in B horizon (argillic horizon). Moderate to high fertility. Temperate humid regions.', examples:'Temperate deciduous forest soils, Mediterranean' },
+  { order:'Ultisols',   pct:8.1,  desc:'Highly weathered forest soils, depleted of bases, strongly acidic. Humid subtropical and tropical forests.', examples:'Southeastern US, humid tropics' },
+  { order:'Spodosols',  pct:2.6,  desc:'Podzols — boreal forest soils with leached sandy A horizon and dark illuvial spodic B horizon rich in organic matter + Al/Fe oxides.', examples:'Boreal forests of Canada, Russia, Scandinavia' },
+  { order:'Oxisols',    pct:7.6,  desc:'Highly weathered tropical soils (laterites/ferralsols). Iron/aluminum oxide rich (red-orange), low CEC, low fertility despite lush forest.', examples:'Amazon Basin, Congo, tropical Africa' },
+  { order:'Vertisols',  pct:2.4,  desc:'Shrink-swell soils with high clay content (smectite). Self-mulching, form deep cracks when dry, heave when wet. Difficult to farm.', examples:'Blackcotton soils, India; Texas Blackland Prairie' },
+  { order:'Histosols',  pct:1.2,  desc:'Organic soils (peat/muck) with >20% organic matter. Form in waterlogged conditions where decomposition is slower than production.', examples:'Bogs, fens, peatlands; Netherlands, Ireland' },
+  { order:'Gelisols',   pct:8.7,  desc:'Permafrost soils with frozen layer within 100 cm depth. Carbon-rich — contain ~50% of global soil carbon. Threatened by warming.', examples:'Arctic tundra, high-altitude tundra' },
+  { order:'Andisols',   pct:0.7,  desc:'Volcanic soils derived from ash (tephra). Very high water-holding capacity, highly fertile. Found near active volcanoes.', examples:'Hawaii, Japan, Andes, Iceland' },
+];
+
+// Soil texture class boundaries (USDA triangle vertices)
+const TEXTURE_CLASSES = [
+  { name:'Sand',          sand:[85,100], silt:[0,15],   clay:[0,10]  },
+  { name:'Loamy Sand',    sand:[70,90],  silt:[0,30],   clay:[0,15]  },
+  { name:'Sandy Loam',    sand:[43,85],  silt:[0,50],   clay:[0,20]  },
+  { name:'Loam',          sand:[23,52],  silt:[28,50],  clay:[7,27]  },
+  { name:'Silt Loam',     sand:[0,50],   silt:[50,88],  clay:[0,27]  },
+  { name:'Silt',          sand:[0,20],   silt:[80,100], clay:[0,12]  },
+  { name:'Sandy Clay Loam',sand:[45,80], silt:[0,28],   clay:[20,35] },
+  { name:'Clay Loam',     sand:[20,45],  silt:[15,53],  clay:[27,40] },
+  { name:'Silty Clay Loam',sand:[0,20],  silt:[40,73],  clay:[27,40] },
+  { name:'Sandy Clay',    sand:[45,65],  silt:[0,20],   clay:[35,55] },
+  { name:'Silty Clay',    sand:[0,20],   silt:[40,60],  clay:[40,60] },
+  { name:'Clay',          sand:[0,45],   silt:[0,40],   clay:[40,100]},
+];
+
+// Five soil-forming factors (Jenny's clorpt model)
+const JENNY_FACTORS = {
+  climate: {
+    symbol: 'cl',
+    description: 'Temperature and precipitation control weathering rate, organic matter accumulation, leaching intensity, and pedogenic processes. Most influential factor over large geographic areas.',
+    examples: 'Tropical humid → Oxisols (deep, intensely weathered); Arctic → Gelisols (permafrost)'
+  },
+  organisms: {
+    symbol: 'o',
+    description: 'Plants provide organic matter (humus, root channels); animals mix horizons (bioturbation); microbes decompose OM and weather minerals. Earthworms process tons of soil per hectare per year.',
+    examples: 'Grasslands → thick mollic A horizon (Mollisols); conifer forests → acidic podzolization (Spodosols)'
+  },
+  relief: {
+    symbol: 'r',
+    description: 'Topographic position controls drainage (well-drained slopes vs waterlogged hollows), erosion vs deposition, solar radiation, and microclimate.',
+    examples: 'Slopes: shallow Entisols (erosion); toe-slopes: deep Mollisols (deposition); wetlands: Histosols'
+  },
+  parentMaterial: {
+    symbol: 'p',
+    description: 'The rock or sediment from which soil forms determines initial mineralogy, texture, and chemical composition. Granite → sandy, acidic; limestone → calcium-rich, neutral; basalt → clay-rich, fertile.',
+    examples: 'Limestone → Inceptisols/Mollisols with high pH; volcanic ash → fertile Andisols; granite → acidic, sandy Spodosols'
+  },
+  time: {
+    symbol: 't',
+    description: 'Soil development is cumulative: older surfaces have more differentiated horizons. ~1 cm/100 years in temperate regions; faster in tropics. All other factors equal, older soils are more developed.',
+    examples: '< 100 yr: Entisols; 100–1000 yr: Inceptisols; 1000–10000 yr: Mollisols/Alfisols; >100,000 yr: Ultisols/Oxisols'
+  }
+};
+
+// Compute soil texture from sand/silt/clay percentages
+function getSoilTextureClass(sandPct, siltPct, clayPct) {
+  if (clayPct >= 40 && siltPct < 40 && sandPct < 45) return 'Clay';
+  if (clayPct >= 40 && siltPct >= 40) return 'Silty Clay';
+  if (clayPct >= 35 && sandPct >= 45) return 'Sandy Clay';
+  if (clayPct >= 27 && siltPct >= 40) return 'Silty Clay Loam';
+  if (clayPct >= 27 && sandPct < 20) return 'Clay Loam';
+  if (clayPct >= 20 && sandPct >= 45) return 'Sandy Clay Loam';
+  if (siltPct >= 80 && clayPct < 12) return 'Silt';
+  if (siltPct >= 50 && clayPct < 27) return 'Silt Loam';
+  if (sandPct >= 85 && siltPct + 1.5 * clayPct < 15) return 'Sand';
+  if (sandPct >= 70 && sandPct < 90 && clayPct < 15) return 'Loamy Sand';
+  if (sandPct >= 43 && clayPct < 20 && siltPct < 50) return 'Sandy Loam';
+  if (sandPct >= 23 && sandPct < 52 && clayPct >= 7 && clayPct < 27) return 'Loam';
+  return 'Loam'; // default
+}
 </script>
 </body>
 </html>

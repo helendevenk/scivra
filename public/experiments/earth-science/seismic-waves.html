@@ -1,347 +1,523 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seismic Waves — Scivra Earth Science</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      user-select: none;
-    }
-    .data-val { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-    #ui {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; flex-direction: column; justify-content: space-between;
-      pointer-events: none; padding: 12px;
-    }
-    .panel {
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(249,115,22,0.25);
-      border-radius: 8px;
-      padding: 12px 14px;
-      pointer-events: all;
-      backdrop-filter: blur(10px);
-    }
-    .top-bar { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-    .bottom-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    h1 { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
-    .badge {
-      font-size: 0.6rem; background: rgba(249,115,22,0.18);
-      color: #fed7aa; padding: 2px 7px; border-radius: 10px;
-      vertical-align: middle; margin-left: 6px;
-    }
-    .subtitle { font-size: 0.7rem; color: #94a3b8; }
-    input[type=range] { accent-color: #f97316; height: 4px; width: 100%; }
-    .controls { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
-    .controls label { font-size: 0.68rem; color: #94a3b8; }
-    .panel-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
-    .data-row {
-      display: flex; justify-content: space-between; padding: 3px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem;
-    }
-    .btn {
-      background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.4);
-      color: #fed7aa; padding: 6px 14px; border-radius: 6px; cursor: pointer;
-      font-size: 0.75rem; font-weight: 600; margin-top: 4px;
-    }
-    .btn:hover { background: rgba(249,115,22,0.25); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seismic Waves — Earth Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  body{margin:0;background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;overflow:hidden}
+  #canvas-container{position:relative}
+  .glass{background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);border:1px solid rgba(249,115,22,0.2)}
+  .data-overlay{position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.65);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:10px 14px;font-size:11px;min-width:170px;pointer-events:none}
+  .dr{display:flex;justify-content:space-between;gap:12px;margin:3px 0}
+  .dl{color:#94a3b8}.dv{color:#F97316;font-weight:700}
+  .toast{position:fixed;top:72px;right:16px;background:rgba(249,115,22,0.92);color:white;padding:9px 15px;border-radius:8px;font-size:13px;z-index:9999;transform:translateX(130%);transition:transform 0.3s}
+  .toast.show{transform:translateX(0)}
+  .preset-btn{background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.35);color:#F97316;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;transition:all 0.2s}
+  .preset-btn:hover,.preset-btn.active{background:rgba(249,115,22,0.35)}
+  .speed-btn{background:rgba(30,41,59,0.8);border:1px solid rgba(71,85,105,0.5);color:#94a3b8;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px}
+  .speed-btn.active{border-color:#F97316;color:#F97316}
+  .ctrl-btn{background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);color:#F97316;padding:5px 13px;border-radius:6px;cursor:pointer;font-size:12px;transition:all 0.2s}
+  .ctrl-btn:hover{background:rgba(249,115,22,0.3)}
+  .qopt{background:rgba(30,41,59,0.6);border:1px solid rgba(71,85,105,0.4);border-radius:6px;padding:7px 11px;cursor:pointer;font-size:11px;margin:3px 0;transition:all 0.2s}
+  .qopt:hover{border-color:#F97316}
+  .qopt.correct{border-color:#22c55e;background:rgba(34,197,94,0.15)}
+  .qopt.wrong{border-color:#ef4444;background:rgba(239,68,68,0.15)}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;align-items:center;justify-content:center}
+  .modal.show{display:flex}
+  #seismograph{background:rgba(0,0,0,0.5);border:1px solid rgba(249,115,22,0.3);border-radius:6px}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#F97316;border-radius:2px}
+</style>
 </head>
-<body>
-<canvas id="canvas"></canvas>
-<div id="ui">
-  <div class="top-bar">
-    <div class="panel title-block">
-      <h1>Seismic Waves <span class="badge">Earth Science</span></h1>
-      <p class="subtitle">P-waves, S-waves, and surface waves from an earthquake epicenter</p>
+<body class="flex flex-col h-screen">
+
+<nav class="flex items-center justify-between px-4 py-2 glass border-b border-orange-500/30 z-50 flex-shrink-0">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#F97316,#EAB308)">
+      <span class="text-white text-sm font-bold">ES</span>
     </div>
-    <div class="panel controls">
-      <label>Speed Factor: <span class="data-val" id="speedDisplay">1.0</span>×</label>
-      <input type="range" id="speedSlider" min="0.5" max="3" value="1" step="0.1">
-      <label>Frequency: <span class="data-val" id="freqDisplay">2.0</span> Hz</label>
-      <input type="range" id="freqSlider" min="0.5" max="5" value="2" step="0.5">
-      <label>Amplitude: <span class="data-val" id="ampDisplay">30</span></label>
-      <input type="range" id="ampSlider" min="10" max="60" value="30" step="5">
-      <button class="btn" id="quakeBtn">⚡ Trigger Quake</button>
+    <span class="font-bold text-orange-400 text-sm">Seismic Waves</span>
+    <span class="text-slate-400 text-xs hidden md:inline">— P-waves, S-waves & Earth Layers</span>
+  </div>
+  <div class="flex gap-2">
+    <button class="ctrl-btn" id="btn-reset">Reset</button>
+    <button class="ctrl-btn" id="btn-fullscreen">Fullscreen</button>
+    <button class="ctrl-btn" id="btn-about">About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <div class="w-[30%] overflow-y-auto p-3 flex flex-col gap-3 border-r border-orange-500/20" style="background:rgba(15,23,42,0.5)">
+
+    <div class="glass rounded-lg p-3">
+      <h3 class="text-orange-400 font-semibold text-sm mb-2">Wave Equations</h3>
+      <div id="f1" class="text-xs text-slate-300 mb-2"></div>
+      <div id="f2" class="text-xs text-slate-300 mb-2"></div>
+      <div id="f3" class="text-xs text-slate-300"></div>
+    </div>
+
+    <div class="glass rounded-lg p-3">
+      <h3 class="text-orange-400 font-semibold text-sm mb-2">Seismic Wave Types</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2"><span class="text-orange-400 font-medium">P-waves (Primary)</span> are compressional body waves — particles move parallel to wave propagation. They travel through all Earth layers (solid + liquid) at 5–8 km/s in crust, reaching seismographs first.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2"><span class="text-yellow-400 font-medium">S-waves (Secondary)</span> are shear body waves — particles move perpendicular to propagation. They travel only through solid material at 3–5 km/s, and are blocked by Earth's liquid outer core.</p>
+      <p class="text-xs text-slate-300 leading-relaxed">The S-wave shadow zone (103°–142° from epicenter) proved Earth has a liquid outer core. P-wave velocity changes at layer boundaries produce refraction, bending wave paths like light through glass.</p>
+    </div>
+
+    <div class="glass rounded-lg p-3">
+      <div class="text-xs font-semibold text-yellow-400 mb-1">Earth Layer Velocities</div>
+      <div class="text-xs text-slate-300 space-y-1">
+        <div class="flex justify-between"><span>Crust</span><span class="text-orange-400">P: 5–7 km/s</span></div>
+        <div class="flex justify-between"><span>Mantle</span><span class="text-orange-400">P: 8–13 km/s</span></div>
+        <div class="flex justify-between"><span>Outer Core (liquid)</span><span class="text-orange-400">P: 8–10 km/s</span></div>
+        <div class="flex justify-between"><span>Inner Core (solid)</span><span class="text-orange-400">P: 11–12 km/s</span></div>
+      </div>
+    </div>
+    <div class="glass rounded-lg p-3">
+      <div class="text-xs font-semibold text-yellow-400 mb-1">Shadow Zones</div>
+      <div class="text-xs text-slate-300">P-wave shadow: 103°–142° (refraction by liquid core). S-wave shadow: &gt;103° (S-waves cannot travel through liquid outer core). These gaps in seismograph readings worldwide reveal Earth's internal structure.</div>
+    </div>
+    <div class="glass rounded-lg p-3">
+      <div class="text-xs font-semibold text-yellow-400 mb-1">Earthquake Location</div>
+      <div class="text-xs text-slate-300">The P-S wave arrival time difference (t_S − t_P) determines distance to epicenter. With 3+ seismograph stations, triangulation pinpoints the epicenter. Each 1 second difference ≈ ~8 km distance.</div>
+    </div>
+
+    <div class="glass rounded-lg p-3 border-l-2 border-orange-500">
+      <h3 class="text-orange-400 font-semibold text-sm mb-1">Why It Matters — NGSS ESS2.A</h3>
+      <p class="text-xs text-slate-300 leading-relaxed">Seismology reveals Earth's internal structure without drilling. Wave velocity anomalies map mantle convection, subduction zones, and hotspots. Understanding seismic waves is critical for earthquake engineering and tsunami warning systems.</p>
+    </div>
+
+    <div class="glass rounded-lg p-3">
+      <h3 class="text-orange-400 font-semibold text-sm mb-2">Quick Quiz</h3>
+      <div class="mb-3">
+        <div class="text-xs text-slate-200 mb-1 font-medium">1. Why can't S-waves travel through the outer core?</div>
+        <div class="qopt" data-q="1" data-c="false">The outer core is too hot</div>
+        <div class="qopt" data-q="1" data-c="true">The outer core is liquid — shear waves need solid material</div>
+        <div class="qopt" data-q="1" data-c="false">S-waves are absorbed by iron</div>
+        <div id="fb1" class="text-xs mt-1 hidden"></div>
+      </div>
+      <div class="mb-3">
+        <div class="text-xs text-slate-200 mb-1 font-medium">2. Which wave type arrives at seismographs FIRST?</div>
+        <div class="qopt" data-q="2" data-c="true">P-waves (faster compressional waves)</div>
+        <div class="qopt" data-q="2" data-c="false">S-waves (shear waves)</div>
+        <div class="qopt" data-q="2" data-c="false">Surface waves (Love and Rayleigh)</div>
+        <div id="fb2" class="text-xs mt-1 hidden"></div>
+      </div>
+      <div>
+        <div class="text-xs text-slate-200 mb-1 font-medium">3. What does the S-wave shadow zone prove?</div>
+        <div class="qopt" data-q="3" data-c="false">Earth's crust is 70 km thick</div>
+        <div class="qopt" data-q="3" data-c="false">The mantle blocks shear waves</div>
+        <div class="qopt" data-q="3" data-c="true">Earth has a liquid outer core</div>
+        <div id="fb3" class="text-xs mt-1 hidden"></div>
+      </div>
     </div>
   </div>
-  <div class="bottom-bar">
-    <div class="panel" style="min-width:200px;">
-      <div class="panel-title">Wave Speeds (crustal rock)</div>
-      <div class="data-row"><span style="color:#38bdf8">● P-wave</span><span class="data-val" id="pSpeedDisplay">6.0 km/s</span></div>
-      <div class="data-row"><span style="color:#4ade80">● S-wave</span><span class="data-val" id="sSpeedDisplay">3.5 km/s</span></div>
-      <div class="data-row"><span style="color:#f87171">● Surface</span><span class="data-val" id="surfSpeedDisplay">2.5 km/s</span></div>
-      <div class="data-row"><span>S-P interval</span><span class="data-val" id="spInterval">—</span></div>
-      <div class="data-row"><span>Time elapsed</span><span class="data-val" id="timeDisplay">0.0 s</span></div>
+
+  <div class="flex-1 flex flex-col">
+    <div id="canvas-container" class="flex-1 relative">
+      <canvas id="main-canvas"></canvas>
+      <div class="data-overlay">
+        <div style="color:#F97316;font-weight:700;font-size:12px;margin-bottom:6px">LIVE DATA</div>
+        <div class="dr"><span class="dl">Depth</span><span class="dv" id="d-depth">10 km</span></div>
+        <div class="dr"><span class="dl">P-wave Vel.</span><span class="dv" id="d-pvel">6.0 km/s</span></div>
+        <div class="dr"><span class="dl">S-wave Vel.</span><span class="dv" id="d-svel">3.5 km/s</span></div>
+        <div class="dr"><span class="dl">P-S Delay</span><span class="dv" id="d-delay">0 s</span></div>
+        <div class="dr"><span class="dl">Wave Front</span><span class="dv" id="d-radius">0 km</span></div>
+        <div class="dr"><span class="dl">Magnitude</span><span class="dv" id="d-mag">7.2 Mw</span></div>
+      </div>
+      <!-- Seismograph -->
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:340px">
+        <div class="text-xs text-slate-400 mb-1 text-center">Seismograph Trace</div>
+        <canvas id="seismograph" width="340" height="70"></canvas>
+      </div>
     </div>
-    <div class="panel" style="max-width:380px;">
-      <div class="panel-title">Seismograph</div>
-      <canvas id="seismo" width="300" height="100" style="width:100%;background:rgba(0,0,0,0.3);border-radius:4px;"></canvas>
+
+    <div class="glass border-t border-orange-500/20 p-3 flex-shrink-0">
+      <div class="flex flex-wrap gap-3 items-center">
+        <div class="flex gap-2 flex-wrap">
+          <button class="preset-btn active" data-preset="shallow">Shallow EQ (10km)</button>
+          <button class="preset-btn" data-preset="deep">Deep EQ (600km)</button>
+          <button class="preset-btn" data-preset="megathrust">Megathrust (subduction)</button>
+        </div>
+        <div class="w-px h-6 bg-slate-600 hidden md:block"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Depth</span>
+          <input type="range" id="sl-depth" min="5" max="700" value="10" class="w-20 accent-orange-500">
+          <span class="text-xs text-orange-400" id="sl-depth-val">10 km</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Magnitude</span>
+          <input type="range" id="sl-mag" min="40" max="95" value="72" class="w-20 accent-orange-500">
+          <span class="text-xs text-orange-400" id="sl-mag-val">7.2 Mw</span>
+        </div>
+        <div class="w-px h-6 bg-slate-600 hidden md:block"></div>
+        <div class="flex gap-2">
+          <button class="ctrl-btn" id="btn-play">▶ Play</button>
+          <button class="ctrl-btn" id="btn-pause">⏸ Pause</button>
+        </div>
+        <div class="flex gap-1">
+          <button class="speed-btn" data-speed="0.25">0.25x</button>
+          <button class="speed-btn" data-speed="0.5">0.5x</button>
+          <button class="speed-btn active" data-speed="1">1x</button>
+          <button class="speed-btn" data-speed="2">2x</button>
+          <button class="speed-btn" data-speed="3">3x</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal-about">
+  <div class="glass rounded-xl p-6 max-w-md w-full mx-4">
+    <h2 class="text-orange-400 font-bold text-lg mb-3">About — Seismic Waves</h2>
+    <p class="text-sm text-slate-300 mb-4">Visualize P-waves and S-waves propagating through Earth's layers. The cross-section shows wave refraction at boundaries and the S-wave shadow zone. Includes live seismograph trace.</p>
+    <div class="text-xs text-slate-400 space-y-1 mb-4">
+      <div><kbd class="bg-slate-700 px-1 rounded">Space</kbd> Play/Pause</div>
+      <div><kbd class="bg-slate-700 px-1 rounded">R</kbd> Reset</div>
+      <div><kbd class="bg-slate-700 px-1 rounded">1-5</kbd> Speed</div>
+    </div>
+    <button class="ctrl-btn" onclick="document.getElementById('modal-about').classList.remove('show')">Close</button>
+  </div>
+</div>
+
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const seismoCanvas = document.getElementById('seismo');
-const seismoCtx = seismoCanvas.getContext('2d');
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; },{passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){re.set(e.touches[0].clientX,e.touches[0].clientY);rd.subVectors(re,rs).multiplyScalar(0.005);sd.theta-=rd.x;sd.phi-=rd.y;rs.copy(re);}
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
 
-let speedFactor = 1, freq = 2, amp = 30;
-let quakeTime = -1;
-let time = 0;
+const canvas = document.getElementById('main-canvas');
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 
-// Seismograph trace history
-let seismoData = new Array(300).fill(0);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
 
-// Base speeds (km/s) — scaled for visualization
-const BASE_P = 6.0, BASE_S = 3.5, BASE_SURF = 2.5;
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
+camera.position.set(0, 0, 12);
+
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 5; controls.maxDistance = 20;
+
+// Lighting
+const dl1 = new THREE.DirectionalLight(0xffffff, 1.0);
+dl1.position.set(5,10,7); dl1.castShadow=true; scene.add(dl1);
+const dl2 = new THREE.DirectionalLight(0x8899ff, 0.4);
+dl2.position.set(-5,5,-5); scene.add(dl2);
+const dl3 = new THREE.DirectionalLight(0xffffff, 0.3);
+dl3.position.set(0,5,-10); scene.add(dl3);
+scene.add(new THREE.AmbientLight(0x334155, 0.5));
+
+// Earth cross-section (half sphere)
+const R = 5;
+function addLayer(r, color, opacity=0.85) {
+  const geo = new THREE.SphereGeometry(r, 64, 64, 0, Math.PI);
+  const mat = new THREE.MeshPhongMaterial({color, transparent:true, opacity, side:THREE.DoubleSide});
+  const m = new THREE.Mesh(geo, mat);
+  scene.add(m); return m;
+}
+// Inner core
+addLayer(R*0.19, 0xffd700, 0.95);
+// Outer core
+addLayer(R*0.35, 0xff6600, 0.75);
+// Lower mantle
+addLayer(R*0.55, 0xcc4400, 0.65);
+// Upper mantle
+addLayer(R*0.82, 0x8b4513, 0.6);
+// Crust
+addLayer(R*0.98, 0x556b2f, 0.55);
+// Ocean
+addLayer(R, 0x1e6491, 0.4);
+
+// Cut face (disk to show cross section)
+const discGeo = new THREE.CircleGeometry(R, 64);
+const discMat = new THREE.MeshPhongMaterial({color:0x1e2030, side:THREE.DoubleSide, transparent:true, opacity:0.8});
+scene.add(new THREE.Mesh(discGeo, discMat));
+
+// Layer boundary rings
+[[R*0.19, 0xffd700],[R*0.35, 0xff6600],[R*0.55, 0xcc4400],[R*0.82, 0x8b4513],[R*0.98, 0x556b2f]].forEach(([r,c])=>{
+  const geo = new THREE.RingGeometry(r-0.01, r+0.02, 64);
+  const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:c, side:THREE.DoubleSide}));
+  scene.add(m);
+});
+
+// Layer labels (3D text via sprites)
+function addLabel(text, pos, color='#F97316') {
+  const canvas2 = document.createElement('canvas');
+  canvas2.width=180; canvas2.height=36;
+  const ctx = canvas2.getContext('2d');
+  ctx.fillStyle=color; ctx.font='bold 14px Arial';
+  ctx.fillText(text, 4, 24);
+  const tex = new THREE.CanvasTexture(canvas2);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true}));
+  sprite.position.copy(pos); sprite.scale.set(1.5, 0.4, 1);
+  scene.add(sprite);
+}
+addLabel('Inner Core', new THREE.Vector3(0.5, 0, 0), '#ffd700');
+addLabel('Outer Core', new THREE.Vector3(1.5, 0.3, 0), '#ff8800');
+addLabel('Lower Mantle', new THREE.Vector3(2.3, 0.8, 0), '#cc6633');
+addLabel('Upper Mantle', new THREE.Vector3(3.3, 1.5, 0), '#aa7744');
+addLabel('Crust', new THREE.Vector3(4.3, 2.2, 0), '#88aa55');
+
+// Earthquake epicenter
+let eqDepth = 10;
+let eqPos = new THREE.Vector3(0, R - eqDepth/1000*R, 0);
+const epicenterGeo = new THREE.SphereGeometry(0.12, 16, 16);
+const epicenterMesh = new THREE.Mesh(epicenterGeo, new THREE.MeshPhongMaterial({color:0xff0000, emissive:0xff0000, emissiveIntensity:0.8}));
+epicenterMesh.position.copy(eqPos);
+scene.add(epicenterMesh);
+
+// Wave rings
+const waveRings = [];
+function createWaveRing(type) {
+  const geo = new THREE.TorusGeometry(0.01, 0.04, 8, 64);
+  const color = type==='P' ? 0xF97316 : 0x60a5fa;
+  const mat = new THREE.MeshPhongMaterial({color, transparent:true, opacity:0.8, emissive:color, emissiveIntensity:0.3});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(eqPos);
+  scene.add(mesh);
+  return {mesh, radius:0.01, speed:type==='P'?0.06:0.04, type, mat, alive:true};
+}
+
+// Refracted ray lines
+const refractLines = [];
+function addRefractLine(from, to, color) {
+  const geo = new THREE.BufferGeometry().setFromPoints([from.clone(), to.clone()]);
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color, linewidth:1.5, transparent:true, opacity:0.6}));
+  scene.add(line); refractLines.push(line);
+  return line;
+}
+
+// Stars
+const sv = [];
+for(let i=0;i<1500;i++){const t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=400;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
+const starG = new THREE.BufferGeometry();
+starG.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
+scene.add(new THREE.Points(starG,new THREE.PointsMaterial({color:0xffffff,size:0.6})));
+
+// Seismograph canvas
+const seisCanvas = document.getElementById('seismograph');
+const seisCtx = seisCanvas.getContext('2d');
+const seisData = new Array(340).fill(35);
+let seisPhase = 'quiet'; let seisAmplitude = 0; let seisX = 0;
+
+function updateSeismograph(pArrived, sArrived, mag) {
+  const amplitude = pArrived ? (sArrived ? mag*3 : mag*1.2) : 0.5;
+  seisAmplitude = amplitude;
+  seisData.shift();
+  const noise = (Math.random()-0.5)*amplitude;
+  seisData.push(35 + noise + (pArrived ? Math.sin(seisX*0.3)*(sArrived?amplitude:amplitude*0.4) : 0));
+  seisX += 0.15;
+
+  seisCtx.clearRect(0,0,340,70);
+  seisCtx.strokeStyle='#F97316'; seisCtx.lineWidth=1.5;
+  seisCtx.beginPath();
+  seisData.forEach((y,x)=>{x===0?seisCtx.moveTo(x,y):seisCtx.lineTo(x,y);});
+  seisCtx.stroke();
+  if(pArrived) {
+    seisCtx.strokeStyle='#22c55e'; seisCtx.lineWidth=1;
+    seisCtx.setLineDash([3,3]);
+    seisCtx.beginPath(); seisCtx.moveTo(pMarkerX,0); seisCtx.lineTo(pMarkerX,70); seisCtx.stroke();
+    seisCtx.fillStyle='#22c55e'; seisCtx.font='10px Arial'; seisCtx.fillText('P',pMarkerX+2,12);
+    seisCtx.setLineDash([]);
+  }
+  if(sArrived) {
+    seisCtx.strokeStyle='#60a5fa'; seisCtx.lineWidth=1;
+    seisCtx.setLineDash([3,3]);
+    seisCtx.beginPath(); seisCtx.moveTo(sMarkerX,0); seisCtx.lineTo(sMarkerX,70); seisCtx.stroke();
+    seisCtx.fillStyle='#60a5fa'; seisCtx.font='10px Arial'; seisCtx.fillText('S',sMarkerX+2,12);
+    seisCtx.setLineDash([]);
+  }
+}
+let pMarkerX=120, sMarkerX=200;
+
+// State
+let playing=true, speedMult=1, time=0;
+let earthquakeDepth=10, magnitude=7.2;
+let pWaveRadius=0, sWaveRadius=0;
+let pArrived=false, sArrived=false;
+
+function resetWaves() {
+  waveRings.forEach(w=>scene.remove(w.mesh));
+  waveRings.length=0;
+  refractLines.forEach(l=>scene.remove(l));
+  refractLines.length=0;
+  pWaveRadius=0; sWaveRadius=0;
+  pArrived=false; sArrived=false;
+  time=0;
+  seisData.fill(35);
+  pMarkerX=120; sMarkerX=200;
+}
+
+function triggerEQ() {
+  resetWaves();
+  playing=true;
+  showToast('Earthquake triggered!');
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
 
 function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const w=container.clientWidth, h=container.clientHeight;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
 }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize', resize); resize();
 
-function triggerQuake() {
-  quakeTime = time;
-  seismoData = new Array(300).fill(0);
-}
+let frameCount = 0;
+renderer.setAnimationLoop(() => {
+  frameCount++;
+  if(playing) {
+    time += 0.016 * speedMult;
 
-document.getElementById('quakeBtn').addEventListener('click', triggerQuake);
+    // Spawn P wave every 1.5s
+    if(frameCount % Math.round(90/speedMult) === 0 && waveRings.length < 12) {
+      waveRings.push(createWaveRing('P'));
+      setTimeout(()=>waveRings.push(createWaveRing('S')), 800/speedMult);
+    }
 
-function animate() {
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
-  time += 1 / 60;
+    // Expand wave rings
+    waveRings.forEach(w => {
+      if(!w.alive) return;
+      w.radius += w.speed * speedMult;
+      w.mesh.geometry.dispose();
+      w.mesh.geometry = new THREE.TorusGeometry(w.radius, 0.03, 8, 64);
+      w.mat.opacity = Math.max(0, 0.8 - w.radius/12);
+      if(w.radius > R+1) { scene.remove(w.mesh); w.alive=false; }
+    });
 
-  const epicenterX = w * 0.15;
-  const epicenterY = h * 0.5;
+    // P wave propagation data
+    pWaveRadius += 0.06 * speedMult;
+    sWaveRadius += 0.04 * speedMult;
+    if(pWaveRadius > 4) pArrived = true;
+    if(sWaveRadius > 4) sArrived = true;
 
-  // Earth cross-section background
-  const earthGrad = ctx.createRadialGradient(epicenterX, epicenterY, 0, epicenterX, epicenterY, w);
-  earthGrad.addColorStop(0, '#1e293b');
-  earthGrad.addColorStop(0.5, '#0f172a');
-  earthGrad.addColorStop(1, '#0f172a');
-  ctx.fillStyle = earthGrad;
-  ctx.fillRect(0, 0, w, h);
+    document.getElementById('d-radius').textContent = Math.min(R*1000, Math.floor(pWaveRadius*1000))+' km';
+    const pVel = pWaveRadius > R*0.82 ? 11.5 : pWaveRadius > R*0.35 ? 10.5 : pWaveRadius > R*0.19 ? 9 : 6;
+    const sVel = sWaveRadius > R*0.82 ? 7 : sWaveRadius > R*0.35 ? 0 : 3.5;
+    document.getElementById('d-pvel').textContent = pVel.toFixed(1)+' km/s';
+    document.getElementById('d-svel').textContent = sWaveRadius > R*0.35 ? 'N/A (liquid)' : sVel.toFixed(1)+' km/s';
+    document.getElementById('d-delay').textContent = (Math.max(0, sWaveRadius - pWaveRadius)*100).toFixed(1)+' s';
 
-  // Grid lines for reference
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < w; i += 50) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+    updateSeismograph(pArrived, sArrived, magnitude/10);
   }
-  for (let i = 0; i < h; i += 50) {
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
-  }
-
-  // Surface line
-  ctx.strokeStyle = 'rgba(249,115,22,0.3)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, h * 0.3);
-  ctx.lineTo(w, h * 0.3);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(249,115,22,0.4)';
-  ctx.font = '10px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('Surface', 8, h * 0.3 - 6);
-
-  // Epicenter marker
-  ctx.fillStyle = '#f97316';
-  ctx.beginPath();
-  ctx.arc(epicenterX, epicenterY, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(249,115,22,0.3)';
-  ctx.beginPath();
-  ctx.arc(epicenterX, epicenterY, 12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#fed7aa';
-  ctx.font = '10px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Epicenter', epicenterX, epicenterY + 24);
-
-  // Seismograph station
-  const stationX = w * 0.85, stationY = h * 0.3;
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '10px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('▼ Station', stationX, stationY - 8);
-
-  // Draw waves if quake triggered
-  if (quakeTime >= 0) {
-    const elapsed = time - quakeTime;
-    const pxPerSec = w * 0.08; // pixels per second for visualization
-
-    // P-wave (compressional) — fastest
-    const pRadius = elapsed * BASE_P * speedFactor * pxPerSec;
-    if (pRadius > 0 && pRadius < w * 1.5) {
-      drawWaveRing(epicenterX, epicenterY, pRadius, [56, 189, 248], elapsed, 'P');
-    }
-
-    // S-wave (shear) — medium
-    const sRadius = elapsed * BASE_S * speedFactor * pxPerSec;
-    if (sRadius > 0 && sRadius < w * 1.5) {
-      drawWaveRing(epicenterX, epicenterY, sRadius, [74, 222, 128], elapsed, 'S');
-    }
-
-    // Surface wave — slowest, only along surface
-    const surfRadius = elapsed * BASE_SURF * speedFactor * pxPerSec;
-    if (surfRadius > 0 && surfRadius < w * 1.5) {
-      drawSurfaceWave(epicenterX, h * 0.3, surfRadius, elapsed);
-    }
-
-    // Seismograph recording
-    const dist = Math.hypot(stationX - epicenterX, stationY - epicenterY);
-    const pArrival = dist / (BASE_P * speedFactor * pxPerSec);
-    const sArrival = dist / (BASE_S * speedFactor * pxPerSec);
-    const surfArrival = dist / (BASE_SURF * speedFactor * pxPerSec);
-
-    let seismoVal = 0;
-    if (elapsed > pArrival) {
-      const t = elapsed - pArrival;
-      seismoVal += amp * 0.5 * Math.sin(freq * Math.PI * 2 * t) * Math.exp(-t * 1.5);
-    }
-    if (elapsed > sArrival) {
-      const t = elapsed - sArrival;
-      seismoVal += amp * 0.8 * Math.sin(freq * 0.7 * Math.PI * 2 * t) * Math.exp(-t * 1.0);
-    }
-    if (elapsed > surfArrival) {
-      const t = elapsed - surfArrival;
-      seismoVal += amp * 1.0 * Math.sin(freq * 0.4 * Math.PI * 2 * t) * Math.exp(-t * 0.5);
-    }
-
-    seismoData.push(seismoVal);
-    if (seismoData.length > 300) seismoData.shift();
-
-    // Update displays
-    document.getElementById('timeDisplay').textContent = elapsed.toFixed(1) + ' s';
-    if (elapsed > sArrival && elapsed > pArrival) {
-      document.getElementById('spInterval').textContent = (sArrival - pArrival).toFixed(2) + ' s';
-    }
-  }
-
-  // Update speed displays
-  document.getElementById('pSpeedDisplay').textContent = (BASE_P * speedFactor).toFixed(1) + ' km/s';
-  document.getElementById('sSpeedDisplay').textContent = (BASE_S * speedFactor).toFixed(1) + ' km/s';
-  document.getElementById('surfSpeedDisplay').textContent = (BASE_SURF * speedFactor).toFixed(1) + ' km/s';
-
-  // Draw seismograph
-  drawSeismograph();
-
-  // Wave type legend at bottom-left of canvas
-  const ly = h - 30;
-  ctx.font = '10px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillStyle = 'rgba(56,189,248,0.8)';
-  ctx.fillText('● P-wave (compressional)', 12, ly);
-  ctx.fillStyle = 'rgba(74,222,128,0.8)';
-  ctx.fillText('● S-wave (shear)', 180, ly);
-  ctx.fillStyle = 'rgba(248,113,113,0.8)';
-  ctx.fillText('● Surface wave', 310, ly);
-
-  requestAnimationFrame(animate);
-}
-
-function drawWaveRing(cx, cy, radius, color, elapsed, label) {
-  const [r, g, b] = color;
-  const alpha = Math.max(0.05, 0.6 * Math.exp(-elapsed * 0.3));
-
-  // Multiple concentric rings for wave packet
-  for (let i = 0; i < 3; i++) {
-    const rr = radius - i * 15;
-    if (rr <= 0) continue;
-    const a = alpha * (1 - i * 0.3);
-    ctx.strokeStyle = `rgba(${r},${g},${b},${a})`;
-    ctx.lineWidth = 2 - i * 0.5;
-    ctx.beginPath();
-    ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // Label on wave front
-  ctx.fillStyle = `rgba(${r},${g},${b},${alpha + 0.2})`;
-  ctx.font = 'bold 11px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(label, cx + radius * 0.7, cy - radius * 0.7 - 5);
-}
-
-function drawSurfaceWave(startX, surfY, radius, elapsed) {
-  const alpha = Math.max(0.05, 0.6 * Math.exp(-elapsed * 0.2));
-  const endX = startX + radius;
-
-  ctx.strokeStyle = `rgba(248,113,113,${alpha})`;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-
-  for (let x = startX; x <= Math.min(endX, canvas.width); x += 2) {
-    const dist = x - startX;
-    const envelope = Math.exp(-(endX - x) * 0.01) * Math.exp(-dist * 0.002);
-    const y = surfY + amp * envelope * Math.sin(freq * 0.4 * dist * 0.05);
-    if (x === startX) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-}
-
-function drawSeismograph() {
-  const sw = seismoCanvas.width, sh = seismoCanvas.height;
-  seismoCtx.clearRect(0, 0, sw, sh);
-
-  // Grid
-  seismoCtx.strokeStyle = 'rgba(255,255,255,0.05)';
-  seismoCtx.lineWidth = 1;
-  seismoCtx.beginPath();
-  seismoCtx.moveTo(0, sh / 2);
-  seismoCtx.lineTo(sw, sh / 2);
-  seismoCtx.stroke();
-
-  // Trace
-  seismoCtx.strokeStyle = '#f97316';
-  seismoCtx.lineWidth = 1;
-  seismoCtx.beginPath();
-  for (let i = 0; i < seismoData.length; i++) {
-    const x = (i / seismoData.length) * sw;
-    const y = sh / 2 - seismoData[i] * (sh / (amp * 4));
-    if (i === 0) seismoCtx.moveTo(x, y);
-    else seismoCtx.lineTo(x, y);
-  }
-  seismoCtx.stroke();
-}
-
-// Controls
-document.getElementById('speedSlider').addEventListener('input', e => {
-  speedFactor = +e.target.value;
-  document.getElementById('speedDisplay').textContent = speedFactor.toFixed(1);
-});
-document.getElementById('freqSlider').addEventListener('input', e => {
-  freq = +e.target.value;
-  document.getElementById('freqDisplay').textContent = freq.toFixed(1);
-});
-document.getElementById('ampSlider').addEventListener('input', e => {
-  amp = +e.target.value;
-  document.getElementById('ampDisplay').textContent = amp;
+  controls.update();
+  renderer.render(scene, camera);
 });
 
-try {
-  katex.render('v_P = \\sqrt{\\frac{K + \\frac{4}{3}\\mu}{\\rho}}', document.getElementById('formulaDisplay') || document.createElement('div'), { displayMode: true });
-} catch(e) {}
+// Presets
+const presets = {
+  shallow: {depth:10, mag:7.2},
+  deep: {depth:600, mag:6.8},
+  megathrust: {depth:25, mag:9.1}
+};
+function applyPreset(name) {
+  const cfg = presets[name];
+  earthquakeDepth = cfg.depth;
+  magnitude = cfg.mag;
+  document.getElementById('sl-depth').value = cfg.depth;
+  document.getElementById('sl-depth-val').textContent = cfg.depth+' km';
+  document.getElementById('d-depth').textContent = cfg.depth+' km';
+  document.getElementById('sl-mag').value = Math.round(cfg.mag*10);
+  document.getElementById('sl-mag-val').textContent = cfg.mag.toFixed(1)+' Mw';
+  document.getElementById('d-mag').textContent = cfg.mag.toFixed(1)+' Mw';
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.preset===name));
+  resetWaves();
+  showToast('Preset: '+name);
+}
 
-// Auto-trigger first quake after 1 second
-setTimeout(triggerQuake, 1000);
-
-animate();
+document.getElementById('btn-play').onclick=()=>{playing=true;showToast('Playing');};
+document.getElementById('btn-pause').onclick=()=>{playing=false;showToast('Paused');};
+document.getElementById('btn-reset').onclick=()=>{resetWaves();playing=false;showToast('Reset');};
+document.getElementById('btn-fullscreen').onclick=()=>document.documentElement.requestFullscreen?.();
+document.getElementById('btn-about').onclick=()=>document.getElementById('modal-about').classList.add('show');
+document.querySelectorAll('.preset-btn').forEach(b=>b.onclick=()=>applyPreset(b.dataset.preset));
+document.querySelectorAll('.speed-btn').forEach(b=>{
+  b.onclick=()=>{speedMult=parseFloat(b.dataset.speed);document.querySelectorAll('.speed-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');showToast('Speed: '+b.dataset.speed+'x');};
+});
+document.getElementById('sl-depth').oninput=function(){
+  earthquakeDepth=parseInt(this.value);
+  document.getElementById('sl-depth-val').textContent=earthquakeDepth+' km';
+  document.getElementById('d-depth').textContent=earthquakeDepth+' km';
+};
+document.getElementById('sl-mag').oninput=function(){
+  magnitude=parseInt(this.value)/10;
+  document.getElementById('sl-mag-val').textContent=magnitude.toFixed(1)+' Mw';
+  document.getElementById('d-mag').textContent=magnitude.toFixed(1)+' Mw';
+};
+document.querySelectorAll('.qopt').forEach(opt=>{
+  opt.onclick=function(){
+    const q=this.dataset.q; const correct=this.dataset.c==='true';
+    document.querySelectorAll('[data-q="'+q+'"]').forEach(o=>{o.style.pointerEvents='none';if(o.dataset.c==='true')o.classList.add('correct');});
+    if(!correct)this.classList.add('wrong');
+    const fb=document.getElementById('fb'+q);
+    fb.classList.remove('hidden'); fb.style.color=correct?'#22c55e':'#ef4444';
+    const msgs={1:[' Shear waves require molecular bonds to transmit transverse motion — impossible in liquids.',' Liquids cannot transmit shear forces, blocking S-waves.'],'2':[' P-waves travel at 5–8 km/s vs S-waves at 3–5 km/s, arriving minutes earlier.',' P-waves are compressional and faster — they arrive first at every seismograph.'],'3':[' The S-wave shadow zone (103°–142°) could only form if the outer core is liquid.',' Only a liquid layer can block shear waves, revealing the outer core state.']};
+    fb.textContent=(correct?'✓ Correct!':'✗ Not quite.')+msgs[q][correct?0:1];
+  };
+});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();playing=!playing;showToast(playing?'Playing':'Paused');}
+  if(e.code==='KeyR')document.getElementById('btn-reset').click();
+  if(e.key==='1')document.querySelector('[data-speed="0.25"]').click();
+  if(e.key==='2')document.querySelector('[data-speed="0.5"]').click();
+  if(e.key==='3')document.querySelector('[data-speed="1"]').click();
+  if(e.key==='4')document.querySelector('[data-speed="2"]').click();
+  if(e.key==='5')document.querySelector('[data-speed="3"]').click();
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  katex.render('v_P=\\sqrt{\\frac{K+\\frac{4}{3}G}{\\rho}}\\quad(\\text{compressional})',document.getElementById('f1'),{throwOnError:false});
+  katex.render('v_S=\\sqrt{\\frac{G}{\\rho}}\\quad(\\text{shear, G}=0\\text{ in liquid})',document.getElementById('f2'),{throwOnError:false});
+  katex.render('\\Delta t=t_S-t_P=d\\left(\\frac{1}{v_S}-\\frac{1}{v_P}\\right)',document.getElementById('f3'),{throwOnError:false});
+});
+applyPreset('shallow');
+showToast('Watch P and S waves propagate');
 </script>
 </body>
 </html>

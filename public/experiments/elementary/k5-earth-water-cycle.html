@@ -1,533 +1,611 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Cycle - Interactive Experiment</title>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-    <script src="/lib/orbit-controls.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            color: #e0e0e0;
-            overflow-x: hidden;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        #canvas-container {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            min-height: 600px;
-        }
-        .controls-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .control-group {
-            margin-bottom: 25px;
-        }
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #b0b0b0;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-        .control-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        .control-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
-            cursor: pointer;
-        }
-        .value-display {
-            display: inline-block;
-            float: right;
-            color: #00c6ff;
-            font-weight: 600;
-        }
-        .formula-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .formula-section h2 {
-            color: #00c6ff;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        .formula-item {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border-left: 3px solid #00c6ff;
-        }
-        .knowledge-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .knowledge-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-        .knowledge-card:hover {
-            transform: translateY(-5px);
-            border-color: #00c6ff;
-        }
-        .knowledge-card h3 {
-            color: #00c6ff;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-        .knowledge-card p {
-            color: #b0b0b0;
-            line-height: 1.6;
-            font-size: 0.95em;
-        }
-        .quiz-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .quiz-section h2 {
-            color: #00c6ff;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-        .quiz-question {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-        .quiz-question h4 {
-            color: #e0e0e0;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        .quiz-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .quiz-option {
-            padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .quiz-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #00c6ff;
-        }
-        .quiz-option.correct {
-            background: rgba(76, 175, 80, 0.2);
-            border-color: #4caf50;
-        }
-        .quiz-option.incorrect {
-            background: rgba(244, 67, 54, 0.2);
-            border-color: #f44336;
-        }
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            .knowledge-cards {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Cycle | K5 Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#030712;color:#f1f5f9;overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+.navbar{background:linear-gradient(135deg,#EAB308 0%,#84CC16 100%);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.navbar h1{font-size:1.1rem;font-weight:700;color:#000;}
+.navbar p{font-size:0.7rem;color:#1a1a1a;}
+.main-area{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:280px;background:#0f172a;overflow-y:auto;padding:12px;flex-shrink:0;border-right:1px solid #1e293b;}
+.sidebar h3{font-size:0.75rem;font-weight:700;color:#EAB308;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;margin-top:10px;}
+.sidebar p{font-size:0.72rem;color:#94a3b8;line-height:1.5;margin-bottom:6px;}
+.obj-item{display:flex;gap:6px;margin-bottom:4px;font-size:0.7rem;color:#cbd5e1;align-items:flex-start;}
+.formula-box{background:#1e293b;border-radius:6px;padding:8px;margin:6px 0;text-align:center;overflow-x:auto;}
+.canvas-container{flex:1;position:relative;}
+#threeCanvas{width:100%;height:100%;display:block;}
+.data-overlay{position:absolute;top:12px;left:12px;background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid #334155;border-radius:8px;padding:10px 14px;font-size:0.7rem;font-variant-numeric:tabular-nums;min-width:190px;}
+.data-row{display:flex;justify-content:space-between;gap:16px;padding:2px 0;border-bottom:1px solid #1e293b;}
+.data-row:last-child{border-bottom:none;}
+.data-label{color:#64748b;}
+.data-value{color:#EAB308;font-weight:600;}
+.controls-panel{background:#0f172a;border-top:1px solid #1e293b;padding:10px 16px;flex-shrink:0;}
+.controls-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.slider-group{display:flex;flex-direction:column;gap:2px;min-width:160px;}
+.slider-group label{font-size:0.68rem;color:#94a3b8;display:flex;justify-content:space-between;}
+.slider-group input[type=range]{width:100%;accent-color:#EAB308;}
+.preset-btn{background:#1e293b;border:1px solid #334155;color:#cbd5e1;padding:4px 10px;border-radius:6px;font-size:0.7rem;cursor:pointer;transition:all 0.2s;}
+.preset-btn:hover,.preset-btn.active{background:#EAB308;color:#000;border-color:#EAB308;}
+.speed-btn{background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:3px 8px;border-radius:4px;font-size:0.68rem;cursor:pointer;}
+.speed-btn.active{background:#84CC16;color:#000;border-color:#84CC16;}
+.ctrl-btn{background:#1e293b;border:1px solid #334155;color:#cbd5e1;padding:4px 12px;border-radius:6px;font-size:0.72rem;cursor:pointer;}
+.ctrl-btn:hover{background:#334155;}
+.quiz-panel{background:#0f172a;border-top:1px solid #1e293b;padding:10px 16px;flex-shrink:0;}
+.quiz-toggle{cursor:pointer;color:#EAB308;font-size:0.75rem;font-weight:700;user-select:none;}
+.quiz-content{display:none;margin-top:8px;}
+.quiz-content.open{display:block;}
+.quiz-q{font-size:0.72rem;color:#e2e8f0;margin-bottom:4px;font-weight:600;}
+.quiz-options label{display:block;font-size:0.7rem;color:#94a3b8;margin:2px 0;cursor:pointer;}
+.check-btn{background:linear-gradient(135deg,#EAB308,#84CC16);color:#000;border:none;padding:4px 14px;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer;margin-top:6px;}
+.quiz-feedback{font-size:0.7rem;margin-top:4px;padding:3px 8px;border-radius:4px;}
+.feedback-correct{background:#14532d;color:#86efac;}
+.feedback-wrong{background:#450a0a;color:#fca5a5;}
+.toast{position:fixed;top:16px;right:16px;background:#1e293b;border:1px solid #EAB308;color:#f1f5f9;padding:10px 16px;border-radius:8px;font-size:0.75rem;z-index:9999;transform:translateX(120%);transition:transform 0.3s ease;max-width:240px;}
+.toast.show{transform:translateX(0);}
+.kcard{background:#1e293b;border-left:3px solid #EAB308;border-radius:4px;padding:6px 10px;margin:5px 0;font-size:0.7rem;color:#cbd5e1;}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Water Cycle</h1>
-        <p class="subtitle">Watch how water moves through Earth's systems</p>
+<div class="navbar">
+  <div><h1>💧 The Water Cycle</h1><p>K5 Earth Science — Grades 2-5 | Ages 7-11</p></div>
+  <div style="display:flex;gap:8px;">
+    <button class="ctrl-btn" id="btnReset">Reset</button>
+    <button class="ctrl-btn" id="btnFullscreen">⛶ Fullscreen</button>
+  </div>
+</div>
 
-        <div class="main-content">
-            <div id="canvas-container"></div>
+<div class="main-area">
+  <div class="sidebar">
+    <h3>Learning Objectives</h3>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Identify the four stages of the water cycle</span></div>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Explain how heat causes evaporation</span></div>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Describe condensation and cloud formation</span></div>
+    <div class="obj-item"><span style="color:#EAB308;flex-shrink:0">●</span><span>Trace water's path from ocean to cloud to rain</span></div>
 
-            <div class="controls-panel">
-                <h3 style="color: #00c6ff; margin-bottom: 20px;">Controls</h3>
+    <h3>Key Formulas</h3>
+    <div class="formula-box" id="formula1"></div>
+    <div class="formula-box" id="formula2"></div>
 
-                <div class="control-group">
-                    <label>
-                        Temperature (°C)
-                        <span class="value-display" id="temp-value">25</span>
-                    </label>
-                    <input type="range" id="temperature" min="0" max="40" value="25" step="1">
-                </div>
+    <h3>The Four Stages</h3>
+    <div class="kcard">☀️ <strong>Evaporation</strong> — Heat from the Sun turns liquid water into water vapor that rises into the air.</div>
+    <div class="kcard">☁️ <strong>Condensation</strong> — Water vapor cools high in the sky and turns back into tiny droplets, forming clouds.</div>
+    <div class="kcard">🌧️ <strong>Precipitation</strong> — Water falls back to Earth as rain, snow, sleet, or hail.</div>
+    <div class="kcard">🏞️ <strong>Collection/Runoff</strong> — Water collects in oceans, lakes, rivers, and underground, starting the cycle again.</div>
 
-                <div class="control-group">
-                    <label>
-                        Evaporation Rate
-                        <span class="value-display" id="evap-value">1.0x</span>
-                    </label>
-                    <input type="range" id="evaporation" min="0.1" max="3.0" value="1.0" step="0.1">
-                </div>
+    <h3>Fun Facts</h3>
+    <p>The same water molecules have been cycling through Earth's system for billions of years. The water you drink might have been in a dinosaur!</p>
+    <p>About 97% of Earth's water is in the oceans. Only 3% is fresh water, and most of that is frozen in glaciers.</p>
 
-                <div class="control-group">
-                    <label>
-                        Precipitation Rate
-                        <span class="value-display" id="precip-value">1.0x</span>
-                    </label>
-                    <input type="range" id="precipitation" min="0.1" max="3.0" value="1.0" step="0.1">
-                </div>
+    <h3>Why It Matters</h3>
+    <p>The water cycle is essential for life. It distributes fresh water around the planet, regulates temperature, and shapes landscapes through erosion and deposition.</p>
+  </div>
 
-                <div class="control-group">
-                    <label>
-                        Wind Speed
-                        <span class="value-display" id="wind-value">1.0x</span>
-                    </label>
-                    <input type="range" id="wind-speed" min="0.1" max="3.0" value="1.0" step="0.1">
-                </div>
-
-                <div style="margin-top: 30px; padding: 15px; background: rgba(0, 198, 255, 0.1); border-radius: 8px; border-left: 3px solid #00c6ff;">
-                    <div style="font-size: 0.9em; color: #b0b0b0; margin-bottom: 5px;">Current Phase:</div>
-                    <div id="phase-display" style="font-size: 1.3em; color: #00c6ff; font-weight: 600;">Evaporation</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="formula-section">
-            <h2>Key Formulas</h2>
-            <div class="formula-item">
-                <strong>Evaporation Energy:</strong> $Q = m \times L_v$
-                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">where $m$ is mass, $L_v$ is latent heat of vaporization (2260 kJ/kg)</p>
-            </div>
-            <div class="formula-item">
-                <strong>Water Balance:</strong> $P = E + R + \Delta S$
-                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">Precipitation = Evaporation + Runoff + Storage change</p>
-            </div>
-        </div>
-
-        <div class="knowledge-cards">
-            <div class="knowledge-card">
-                <h3>☀️ Evaporation</h3>
-                <p>The sun heats water in oceans, lakes, and rivers. Water changes from liquid to water vapor (gas) and rises into the air.</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>☁️ Condensation</h3>
-                <p>Water vapor cools as it rises and changes back into tiny water droplets, forming clouds. This is why clouds float in the sky!</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>🌧️ Precipitation</h3>
-                <p>When water droplets in clouds get too heavy, they fall as rain, snow, sleet, or hail. This returns water to Earth's surface.</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>🏔️ Collection</h3>
-                <p>Water collects in oceans, lakes, rivers, and underground. Some soaks into the ground (infiltration) and some flows over land (runoff).</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>🔄 Continuous Cycle</h3>
-                <p>The water cycle never stops! The same water has been cycling through Earth for billions of years. Water you drink today might have been in a dinosaur!</p>
-            </div>
-        </div>
-
-        <div class="quiz-section">
-            <h2>Test Your Knowledge</h2>
-
-            <div class="quiz-question">
-                <h4>1. What provides the energy that drives the water cycle?</h4>
-                <div class="quiz-options">
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Wind</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, true)">B) The Sun</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) Gravity</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Plants</div>
-                </div>
-            </div>
-
-            <div class="quiz-question">
-                <h4>2. What is the process called when water vapor turns into liquid water?</h4>
-                <div class="quiz-options">
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Evaporation</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, true)">B) Condensation</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) Precipitation</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Collection</div>
-                </div>
-            </div>
-        </div>
+  <div class="canvas-container">
+    <canvas id="threeCanvas"></canvas>
+    <div class="data-overlay">
+      <div style="font-size:0.65rem;color:#EAB308;font-weight:700;margin-bottom:4px;">LIVE DATA</div>
+      <div class="data-row"><span class="data-label">Temperature</span><span class="data-value" id="dTemp">25°C</span></div>
+      <div class="data-row"><span class="data-label">Evap. Rate</span><span class="data-value" id="dEvap">Medium</span></div>
+      <div class="data-row"><span class="data-label">Cloud Height</span><span class="data-value" id="dCloud">2.0 km</span></div>
+      <div class="data-row"><span class="data-label">Rain Rate</span><span class="data-value" id="dRain">0 mm/h</span></div>
+      <div class="data-row"><span class="data-label">Stage</span><span class="data-value" id="dStage">Evaporation</span></div>
     </div>
+  </div>
+</div>
 
-    <script>
-        // Scene setup
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0f172a);
+<div class="controls-panel">
+  <div class="controls-row">
+    <div class="slider-group">
+      <label>Temperature <span id="lblTemp">25°C</span></label>
+      <input type="range" id="sliderTemp" min="0" max="50" step="1" value="25">
+    </div>
+    <div class="slider-group">
+      <label>Precipitation Rate <span id="lblRain">50%</span></label>
+      <input type="range" id="sliderRain" min="0" max="100" step="1" value="50">
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:0.68rem;color:#64748b;">Presets:</span>
+      <button class="preset-btn" id="presetTropical">Tropical Rain</button>
+      <button class="preset-btn" id="presetDesert">Desert Dry</button>
+      <button class="preset-btn" id="presetStorm">Seasonal Storm</button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center;">
+      <span style="font-size:0.68rem;color:#64748b;">Speed:</span>
+      <button class="speed-btn" data-speed="0.25">0.25x</button>
+      <button class="speed-btn" data-speed="0.5">0.5x</button>
+      <button class="speed-btn active" data-speed="1">1x</button>
+      <button class="speed-btn" data-speed="2">2x</button>
+      <button class="speed-btn" data-speed="3">3x</button>
+    </div>
+    <button class="ctrl-btn" id="btnPlayPause">⏸ Pause</button>
+  </div>
+</div>
 
-        const camera = new THREE.PerspectiveCamera(
-            60,
-            container.clientWidth / container.clientHeight,
-            0.1,
-            1000
-        );
-        camera.position.set(0, 8, 20);
+<div class="quiz-panel">
+  <div class="quiz-toggle" id="quizToggle">▶ Quiz — Test Your Knowledge</div>
+  <div class="quiz-content" id="quizContent">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px;">
+      <div>
+        <div class="quiz-q">Q1: What powers the water cycle?</div>
+        <div class="quiz-options">
+          <label><input type="radio" name="q1" value="a"> The Moon's gravity</label>
+          <label><input type="radio" name="q1" value="b"> Energy from the Sun</label>
+          <label><input type="radio" name="q1" value="c"> Wind only</label>
+        </div>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+      <div>
+        <div class="quiz-q">Q2: Condensation forms when water vapor…</div>
+        <div class="quiz-options">
+          <label><input type="radio" name="q2" value="a"> Heats up and expands</label>
+          <label><input type="radio" name="q2" value="b"> Cools and turns back to liquid</label>
+          <label><input type="radio" name="q2" value="c"> Falls as rain</label>
+        </div>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+      <div>
+        <div class="quiz-q">Q3: Which stage comes after condensation?</div>
+        <div class="quiz-options">
+          <label><input type="radio" name="q3" value="a"> Evaporation</label>
+          <label><input type="radio" name="q3" value="b"> Collection</label>
+          <label><input type="radio" name="q3" value="c"> Precipitation</label>
+        </div>
+        <div class="quiz-feedback" id="fb3"></div>
+      </div>
+    </div>
+    <button class="check-btn" id="checkAnswers">Check Answers</button>
+  </div>
+</div>
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
+<div class="toast" id="toast"></div>
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 100; this.enabled = true;
+  var scope = this, STATE = { NONE: -1, ROTATE: 0 }, state = STATE.NONE;
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical(), scale = 1;
+  var target = new THREE.Vector3(), rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var onMouseDown = function(e) { if (!scope.enabled) return; state = STATE.ROTATE; rotateStart.set(e.clientX, e.clientY); };
+  var onMouseMove = function(e) { if (!scope.enabled || state === STATE.NONE) return; rotateEnd.set(e.clientX, e.clientY); rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005); sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y; rotateStart.copy(rotateEnd); };
+  var onMouseUp = function() { state = STATE.NONE; };
+  var onWheel = function(e) { if (!scope.enabled) return; scale *= (e.deltaY > 0) ? 1.1 : 0.9; e.preventDefault(); };
+  var onTouchStart = function(e) { if (e.touches.length === 1) { state = STATE.ROTATE; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); } };
+  var onTouchMove = function(e) { if (e.touches.length === 1 && state === STATE.ROTATE) { rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY); rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005); sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y; rotateStart.copy(rotateEnd); } e.preventDefault(); };
+  domElement.addEventListener('mousedown', onMouseDown);
+  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('mouseup', onMouseUp);
+  domElement.addEventListener('wheel', onWheel, { passive: false });
+  domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+  domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+  domElement.addEventListener('touchend', onMouseUp);
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0, 1, 0));
+    var quatInverse = quat.clone().invert();
+    offset.copy(camera.position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    if (scope.enableDamping) { spherical.theta += sphericalDelta.theta * scope.dampingFactor; spherical.phi += sphericalDelta.phi * scope.dampingFactor; sphericalDelta.theta *= (1 - scope.dampingFactor); sphericalDelta.phi *= (1 - scope.dampingFactor); } else { spherical.theta += sphericalDelta.theta; spherical.phi += sphericalDelta.phi; sphericalDelta.set(0, 0, 0); }
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    scale = 1;
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+  };
+  this.dispose = function() { domElement.removeEventListener('mousedown', onMouseDown); domElement.removeEventListener('mousemove', onMouseMove); domElement.removeEventListener('mouseup', onMouseUp); domElement.removeEventListener('wheel', onWheel); domElement.removeEventListener('touchstart', onTouchStart); domElement.removeEventListener('touchmove', onTouchMove); domElement.removeEventListener('touchend', onMouseUp); };
+};
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0x00c6ff, 1, 100);
-        pointLight.position.set(10, 10, 10);
-        scene.add(pointLight);
+var canvas = document.getElementById('threeCanvas');
+var container = canvas.parentElement;
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.setSize(container.clientWidth, container.clientHeight);
 
-        // Sun
-        const sunGeometry = new THREE.SphereGeometry(1.5, 32, 32);
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        sun.position.set(-12, 12, 0);
-        scene.add(sun);
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.Fog(0x0f172a, 40, 80);
 
-        // Ocean
-        const oceanGeometry = new THREE.PlaneGeometry(15, 10);
-        const oceanMaterial = new THREE.MeshPhongMaterial({ color: 0x0072ff, side: THREE.DoubleSide });
-        const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
-        ocean.rotation.x = -Math.PI / 2;
-        ocean.position.set(-5, -3, 0);
-        scene.add(ocean);
+var camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(0, 8, 22);
+camera.lookAt(0, 2, 0);
 
-        // Mountain
-        const mountainGeometry = new THREE.ConeGeometry(3, 6, 4);
-        const mountainMaterial = new THREE.MeshPhongMaterial({ color: 0x8b7355 });
-        const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
-        mountain.position.set(5, 0, 0);
-        scene.add(mountain);
+var controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 8;
+controls.maxDistance = 50;
+controls.target.set(0, 2, 0);
 
-        // Water particles
-        let waterParticles = [];
-        let temperature = 25;
-        let evaporationRate = 1.0;
-        let precipitationRate = 1.0;
-        let windSpeed = 1.0;
+// Three-point lighting
+var keyLight = new THREE.DirectionalLight(0xffeecc, 1.0);
+keyLight.position.set(5, 10, 7);
+keyLight.castShadow = true;
+scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0x6699ff, 0.4);
+fillLight.position.set(-5, 5, -5);
+scene.add(fillLight);
+var backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+scene.add(backLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-        function createWaterParticles(count) {
-            waterParticles.forEach(p => scene.remove(p.mesh));
-            waterParticles = [];
+// Sun
+var sunGeo = new THREE.SphereGeometry(2, 32, 32);
+var sunMesh = new THREE.Mesh(sunGeo, new THREE.MeshBasicMaterial({ color: 0xffdd44 }));
+sunMesh.position.set(18, 14, -10);
+scene.add(sunMesh);
 
-            const geometry = new THREE.SphereGeometry(0.1, 8, 8);
-            const material = new THREE.MeshPhongMaterial({
-                color: 0x00c6ff,
-                transparent: true,
-                opacity: 0.7
-            });
+// Ground / Ocean
+var groundGeo = new THREE.PlaneGeometry(30, 20);
+var groundMat = new THREE.MeshPhongMaterial({ color: 0x1a66cc, shininess: 80 });
+var ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -2;
+ground.receiveShadow = true;
+scene.add(ground);
 
-            for (let i = 0; i < count; i++) {
-                const mesh = new THREE.Mesh(geometry, material.clone());
-                mesh.position.set(
-                    -5 + Math.random() * 10,
-                    -3,
-                    -5 + Math.random() * 10
-                );
-                scene.add(mesh);
+// Land
+var landGeo = new THREE.BoxGeometry(10, 0.5, 8);
+var landMat = new THREE.MeshPhongMaterial({ color: 0x4a7c2f });
+var landMesh = new THREE.Mesh(landGeo, landMat);
+landMesh.position.set(-6, -1.75, 0);
+landMesh.receiveShadow = true;
+scene.add(landMesh);
 
-                waterParticles.push({
-                    mesh: mesh,
-                    phase: 'ocean',
-                    velocity: new THREE.Vector3(0, 0, 0)
-                });
-            }
-        }
+// Mountain
+var mtGeo = new THREE.ConeGeometry(3, 5, 12);
+var mtMat = new THREE.MeshPhongMaterial({ color: 0x5a4a3a });
+var mountain = new THREE.Mesh(mtGeo, mtMat);
+mountain.position.set(-8, 0.75, -2);
+mountain.castShadow = true;
+scene.add(mountain);
 
-        createWaterParticles(50);
+// Mountain snow cap
+var snowGeo = new THREE.ConeGeometry(1.2, 2, 12);
+var snowMesh = new THREE.Mesh(snowGeo, new THREE.MeshPhongMaterial({ color: 0xeeeeff }));
+snowMesh.position.set(-8, 2.8, -2);
+scene.add(snowMesh);
 
-        function updateWaterCycle() {
-            waterParticles.forEach(particle => {
-                if (particle.phase === 'ocean') {
-                    // Evaporation
-                    if (Math.random() < 0.01 * evaporationRate) {
-                        particle.phase = 'vapor';
-                        particle.velocity.y = 0.05 * evaporationRate;
-                    }
-                } else if (particle.phase === 'vapor') {
-                    // Rising and condensation
-                    particle.mesh.position.y += particle.velocity.y;
-                    particle.mesh.position.x += (Math.random() - 0.5) * 0.1 * windSpeed;
+// Cloud group
+var clouds = [];
+function makeClouds(count, height) {
+  var grp = new THREE.Group();
+  for (var i = 0; i < count; i++) {
+    var r = 0.8 + Math.random() * 0.6;
+    var cg = new THREE.SphereGeometry(r, 16, 16);
+    var cm = new THREE.MeshPhongMaterial({ color: 0xddddee, transparent: true, opacity: 0.85 });
+    var c = new THREE.Mesh(cg, cm);
+    c.position.set((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 1.5);
+    grp.add(c);
+  }
+  grp.position.set(0, height, 0);
+  return grp;
+}
+for (var ci = 0; ci < 4; ci++) {
+  var cl = makeClouds(5, 7 + ci * 0.5);
+  cl.position.x = (ci - 1.5) * 5;
+  scene.add(cl);
+  clouds.push(cl);
+}
 
-                    if (particle.mesh.position.y > 8) {
-                        particle.phase = 'cloud';
-                        particle.velocity.y = 0;
-                        particle.mesh.material.opacity = 0.9;
-                    }
-                } else if (particle.phase === 'cloud') {
-                    // Precipitation
-                    particle.mesh.position.x += (Math.random() - 0.5) * 0.05 * windSpeed;
+// Water droplet particles (evaporation rising)
+var evapParticles = [];
+var EVAP_COUNT = 80;
+for (var ei = 0; ei < EVAP_COUNT; ei++) {
+  var eg = new THREE.SphereGeometry(0.06, 8, 8);
+  var em = new THREE.MeshBasicMaterial({ color: 0x66aaff, transparent: true, opacity: 0.7 });
+  var ep = new THREE.Mesh(eg, em);
+  ep.position.set((Math.random() - 0.5) * 14, -2 + Math.random() * 9, (Math.random() - 0.5) * 6);
+  ep.userData.speed = 0.015 + Math.random() * 0.02;
+  ep.userData.initY = ep.position.y;
+  ep.userData.xOff = (Math.random() - 0.5) * 0.005;
+  ep.userData.phase = Math.random() * Math.PI * 2;
+  scene.add(ep);
+  evapParticles.push(ep);
+}
 
-                    if (Math.random() < 0.005 * precipitationRate) {
-                        particle.phase = 'rain';
-                        particle.velocity.y = -0.1 * precipitationRate;
-                    }
-                } else if (particle.phase === 'rain') {
-                    // Falling
-                    particle.mesh.position.y += particle.velocity.y;
+// Rain particles
+var rainParticles = [];
+var RAIN_COUNT = 100;
+for (var ri = 0; ri < RAIN_COUNT; ri++) {
+  var rg = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 4);
+  var rm = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.6 });
+  var rp = new THREE.Mesh(rg, rm);
+  rp.position.set((Math.random() - 0.5) * 14, -2 + Math.random() * 11, (Math.random() - 0.5) * 6);
+  rp.userData.speed = 0.1 + Math.random() * 0.1;
+  scene.add(rp);
+  rainParticles.push(rp);
+}
 
-                    if (particle.mesh.position.y < -3) {
-                        particle.phase = 'ocean';
-                        particle.mesh.position.y = -3;
-                        particle.mesh.position.x = -5 + Math.random() * 10;
-                        particle.mesh.position.z = -5 + Math.random() * 10;
-                        particle.velocity.y = 0;
-                        particle.mesh.material.opacity = 0.7;
-                    }
-                }
-            });
+// State
+var temperature = 25;
+var rainRate = 50;
+var isPlaying = true;
+var speedMult = 1.0;
+var time = 0;
+var stageNames = ['Evaporation', 'Condensation', 'Precipitation', 'Collection'];
 
-            // Update phase display
-            const phases = waterParticles.map(p => p.phase);
-            const vaporCount = phases.filter(p => p === 'vapor').length;
-            const cloudCount = phases.filter(p => p === 'cloud').length;
-            const rainCount = phases.filter(p => p === 'rain').length;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
 
-            let dominantPhase = 'Evaporation';
-            if (cloudCount > vaporCount && cloudCount > rainCount) {
-                dominantPhase = 'Condensation';
-            } else if (rainCount > vaporCount && rainCount > cloudCount) {
-                dominantPhase = 'Precipitation';
-            }
+renderer.setAnimationLoop(function() {
+  if (isPlaying) time += 0.01 * speedMult;
 
-            document.getElementById('phase-display').textContent = dominantPhase;
-        }
+  var evapRate = temperature / 50.0;
+  var rainOn = rainRate > 30;
+  var stage = stageNames[Math.floor(time / 2) % 4];
 
-        // Controls
-        document.getElementById('temperature').addEventListener('input', (e) => {
-            temperature = parseFloat(e.target.value);
-            document.getElementById('temp-value').textContent = temperature;
-        });
+  // Evaporation particles
+  evapParticles.forEach(function(p) {
+    if (evapRate > 0.2) {
+      p.position.y += p.userData.speed * evapRate * speedMult;
+      p.position.x += Math.sin(time * 2 + p.userData.phase) * 0.005;
+      if (p.position.y > 9) {
+        p.position.y = -1.8;
+        p.position.x = (Math.random() - 0.5) * 14;
+      }
+      p.material.opacity = 0.7 * evapRate;
+    } else {
+      p.material.opacity = 0;
+    }
+  });
 
-        document.getElementById('evaporation').addEventListener('input', (e) => {
-            evaporationRate = parseFloat(e.target.value);
-            document.getElementById('evap-value').textContent = evaporationRate.toFixed(1) + 'x';
-        });
+  // Rain particles
+  rainParticles.forEach(function(p) {
+    if (rainOn) {
+      p.position.y -= p.userData.speed * (rainRate / 50) * speedMult;
+      if (p.position.y < -2) {
+        p.position.y = 7 + Math.random() * 2;
+        p.position.x = (Math.random() - 0.5) * 14;
+      }
+      p.material.opacity = 0.5 * (rainRate / 100);
+    } else {
+      p.material.opacity = 0;
+    }
+  });
 
-        document.getElementById('precipitation').addEventListener('input', (e) => {
-            precipitationRate = parseFloat(e.target.value);
-            document.getElementById('precip-value').textContent = precipitationRate.toFixed(1) + 'x';
-        });
+  // Cloud movement
+  clouds.forEach(function(c, i) {
+    c.position.x += 0.008 * speedMult * (i % 2 === 0 ? 1 : -1);
+    if (c.position.x > 15) c.position.x = -15;
+    if (c.position.x < -15) c.position.x = 15;
+    // Cloud darkens with rain
+    c.children.forEach(function(ch) {
+      var darkness = rainOn ? 0.5 + (rainRate / 200) : 0.88;
+      ch.material.opacity = darkness;
+      var grayVal = rainOn ? Math.round(0.5 * 255) : 0xdd;
+      ch.material.color.setRGB(grayVal / 255, grayVal / 255, (rainOn ? 0.9 : 1.1) * grayVal / 255);
+    });
+  });
 
-        document.getElementById('wind-speed').addEventListener('input', (e) => {
-            windSpeed = parseFloat(e.target.value);
-            document.getElementById('wind-value').textContent = windSpeed.toFixed(1) + 'x';
-        });
+  // Ocean wave shimmer
+  ground.material.color.setHSL(0.6, 0.7, 0.2 + 0.05 * Math.sin(time * 2));
 
-        // Quiz
-        function checkAnswer(element, isCorrect) {
-            const options = element.parentElement.children;
-            for (let option of options) {
-                option.style.pointerEvents = 'none';
-            }
+  // Data display
+  document.getElementById('dTemp').textContent = temperature + '°C';
+  document.getElementById('dEvap').textContent = evapRate < 0.3 ? 'Low' : evapRate < 0.6 ? 'Medium' : 'High';
+  document.getElementById('dCloud').textContent = (2 + temperature * 0.05).toFixed(1) + ' km';
+  document.getElementById('dRain').textContent = rainOn ? Math.round(rainRate * 0.3) + ' mm/h' : '0 mm/h';
+  document.getElementById('dStage').textContent = stage;
 
-            if (isCorrect) {
-                element.classList.add('correct');
-            } else {
-                element.classList.add('incorrect');
-                for (let option of options) {
-                    if (option.textContent.includes('B)')) {
-                        option.classList.add('correct');
-                    }
-                }
-            }
-        }
+  controls.update();
+  renderer.render(scene, camera);
+});
 
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            updateWaterCycle();
+document.getElementById('sliderTemp').addEventListener('input', function() {
+  temperature = parseInt(this.value);
+  document.getElementById('lblTemp').textContent = temperature + '°C';
+});
 
-            // Animate ocean waves
-            ocean.position.y = -3 + Math.sin(Date.now() * 0.001) * 0.1;
+document.getElementById('sliderRain').addEventListener('input', function() {
+  rainRate = parseInt(this.value);
+  document.getElementById('lblRain').textContent = rainRate + '%';
+});
 
-            controls.update();
-            renderer.render(scene, camera);
-        }
+document.getElementById('presetTropical').addEventListener('click', function() {
+  temperature = 35; rainRate = 85;
+  document.getElementById('sliderTemp').value = 35;
+  document.getElementById('sliderRain').value = 85;
+  document.getElementById('lblTemp').textContent = '35°C';
+  document.getElementById('lblRain').textContent = '85%';
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  showToast('Preset: Tropical Rain — Hot and very wet!');
+});
+document.getElementById('presetDesert').addEventListener('click', function() {
+  temperature = 45; rainRate = 5;
+  document.getElementById('sliderTemp').value = 45;
+  document.getElementById('sliderRain').value = 5;
+  document.getElementById('lblTemp').textContent = '45°C';
+  document.getElementById('lblRain').textContent = '5%';
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  showToast('Preset: Desert Dry — Extreme evaporation, almost no rain');
+});
+document.getElementById('presetStorm').addEventListener('click', function() {
+  temperature = 20; rainRate = 95;
+  document.getElementById('sliderTemp').value = 20;
+  document.getElementById('sliderRain').value = 95;
+  document.getElementById('lblTemp').textContent = '20°C';
+  document.getElementById('lblRain').textContent = '95%';
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  showToast('Preset: Seasonal Storm — Heavy precipitation!');
+});
 
-        // Handle resize
-        window.addEventListener('resize', () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        });
+document.querySelectorAll('.speed-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    speedMult = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+    this.classList.add('active');
+  });
+});
 
-        // Render formulas
-        document.addEventListener('DOMContentLoaded', () => {
-            renderMathInElement(document.body, {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false}
-                ]
-            });
-        });
+document.getElementById('btnPlayPause').addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  this.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+});
 
-        animate();
-    </script>
+document.getElementById('btnReset').addEventListener('click', function() {
+  temperature = 25; rainRate = 50; isPlaying = true; speedMult = 1; time = 0;
+  document.getElementById('sliderTemp').value = 25; document.getElementById('lblTemp').textContent = '25°C';
+  document.getElementById('sliderRain').value = 50; document.getElementById('lblRain').textContent = '50%';
+  document.getElementById('btnPlayPause').textContent = '⏸ Pause';
+  document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.speed-btn[data-speed="1"]').classList.add('active');
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  camera.position.set(0, 8, 22); camera.lookAt(0, 2, 0);
+  showToast('Scene reset');
+});
+
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); isPlaying = !isPlaying; document.getElementById('btnPlayPause').textContent = isPlaying ? '⏸ Pause' : '▶ Play'; }
+  if (e.code === 'KeyR') document.getElementById('btnReset').click();
+});
+
+window.addEventListener('resize', function() {
+  var w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+document.getElementById('quizToggle').addEventListener('click', function() {
+  document.getElementById('quizContent').classList.toggle('open');
+  this.textContent = document.getElementById('quizContent').classList.contains('open') ? '▼ Quiz — Test Your Knowledge' : '▶ Quiz — Test Your Knowledge';
+});
+
+document.getElementById('checkAnswers').addEventListener('click', function() {
+  var answers = { q1: 'b', q2: 'b', q3: 'c' };
+  var score = 0;
+  ['q1','q2','q3'].forEach(function(q, i) {
+    var sel = document.querySelector('input[name="' + q + '"]:checked');
+    var fb = document.getElementById('fb' + (i + 1));
+    if (!sel) { fb.textContent = 'Please select an answer.'; fb.className = 'quiz-feedback feedback-wrong'; return; }
+    if (sel.value === answers[q]) { fb.textContent = '✓ Correct!'; fb.className = 'quiz-feedback feedback-correct'; score++; }
+    else { fb.textContent = '✗ Not quite!'; fb.className = 'quiz-feedback feedback-wrong'; }
+  });
+  if (score === 3) showToast('🌟 Perfect! You know the water cycle!');
+  else showToast(score + '/3 correct — keep learning!');
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  katex.render('H_2O_{(l)} \\xrightarrow{\\text{heat}} H_2O_{(g)}', document.getElementById('formula1'), { throwOnError: false, displayMode: true });
+  katex.render('E = m \\cdot L_v \\quad (L_v \\approx 2260 \\text{ J/g})', document.getElementById('formula2'), { throwOnError: false, displayMode: true });
+});
+
+// Additional scene elements: river and groundwater system
+var riverGeo = new THREE.PlaneGeometry(8, 1.5);
+var riverMat = new THREE.MeshPhongMaterial({ color: 0x2244bb, shininess: 80, transparent: true, opacity: 0.7 });
+var river = new THREE.Mesh(riverGeo, riverMat);
+river.rotation.x = -Math.PI / 2;
+river.position.set(-4, -1.95, 1);
+scene.add(river);
+
+// Underground water layer
+var groundWaterGeo = new THREE.BoxGeometry(10, 0.3, 4);
+var groundWaterMat = new THREE.MeshPhongMaterial({ color: 0x1133aa, transparent: true, opacity: 0.4 });
+var groundWater = new THREE.Mesh(groundWaterGeo, groundWaterMat);
+groundWater.position.set(-6, -2.5, 0);
+scene.add(groundWater);
+
+// Sun rays (visible light beams)
+for (var sri = 0; sri < 6; sri++) {
+  var srGeo = new THREE.CylinderGeometry(0.02, 0.05, 12, 4);
+  var srMat = new THREE.MeshBasicMaterial({ color: 0xffee44, transparent: true, opacity: 0.12 });
+  var srMesh = new THREE.Mesh(srGeo, srMat);
+  var srAngle = (sri / 6) * Math.PI * 0.4 - Math.PI * 0.2 + 0.3;
+  srMesh.position.set(18 + Math.cos(srAngle) * 3, 14 - Math.sin(srAngle) * 3, -10);
+  srMesh.rotation.z = srAngle - Math.PI / 2;
+  scene.add(srMesh);
+}
+
+// Water cycle stage display panel
+var stagePanel = document.createElement('div');
+stagePanel.style.cssText = 'position:absolute;bottom:10px;right:10px;background:rgba(15,23,42,0.85);border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:0.68rem;color:#94a3b8;min-width:200px;';
+stagePanel.innerHTML = '<div style="color:#EAB308;font-weight:700;margin-bottom:3px;">WATER CYCLE STAGES</div>' +
+  '<div style="display:grid;grid-template-columns:1fr 1fr;">'+
+  '<div id="stageEvap" style="padding:2px 4px;border-radius:3px;">☀️ Evaporation</div>'+
+  '<div id="stageCond" style="padding:2px 4px;border-radius:3px;">☁️ Condensation</div>'+
+  '<div id="stagePrec" style="padding:2px 4px;border-radius:3px;">🌧️ Precipitation</div>'+
+  '<div id="stageColl" style="padding:2px 4px;border-radius:3px;">🌊 Collection</div>'+
+  '</div>';
+document.querySelector('.canvas-container').appendChild(stagePanel);
+
+// Animate stage highlights
+var stageTimer = 0;
+setInterval(function() {
+  if (!isPlaying) return;
+  stageTimer = (stageTimer + 1) % 4;
+  var ids = ['stageEvap','stageCond','stagePrec','stageColl'];
+  ids.forEach(function(id, i) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = i === stageTimer ? 'rgba(234,179,8,0.2)' : 'transparent';
+    el.style.color = i === stageTimer ? '#EAB308' : '#94a3b8';
+  });
+}, 2000);
+
+// Transpiration from land trees
+var transpirationParticles = [];
+for (var tpi = 0; tpi < 15; tpi++) {
+  var tpg = new THREE.SphereGeometry(0.04, 4, 4);
+  var tpm = new THREE.MeshBasicMaterial({ color: 0x88ddff, transparent: true, opacity: 0 });
+  var tpp = new THREE.Mesh(tpg, tpm);
+  tpp.position.set(-6 + Math.random() * 2, -1 + Math.random() * 3, (Math.random() - 0.5) * 3);
+  tpp.userData.speed = 0.01 + Math.random() * 0.015;
+  tpp.userData.phase = Math.random() * Math.PI * 2;
+  scene.add(tpp);
+  transpirationParticles.push(tpp);
+}
+
+// Update transpiration in ticker
+setInterval(function() {
+  var evapRate2 = temperature / 50.0;
+  transpirationParticles.forEach(function(p) {
+    if (evapRate2 > 0.3) {
+      p.position.y += p.userData.speed;
+      if (p.position.y > 7) { p.position.y = -1; }
+      p.material.opacity = 0.4 * evapRate2;
+    } else { p.material.opacity = 0; }
+  });
+  // River shimmer
+  river.material.color.setHSL(0.6, 0.7, 0.2 + 0.04 * Math.sin(time * 3));
+  // Groundwater level by rain
+  var gwLevel = 0.1 + (rainRate / 100) * 0.4;
+  groundWater.material.opacity = gwLevel;
+}, 50);
+
+// Keyboard shortcut: T = tropical preset
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'KeyT') {
+    document.getElementById('presetTropical').click();
+  }
+  if (e.code === 'KeyD') {
+    document.getElementById('presetDesert').click();
+  }
+});
+</script>
 </body>
 </html>

@@ -3,504 +3,635 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Single-Slit Diffraction | Scivra</title>
+<title>Single Slit Diffraction — AetherViz</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0f172a; color: #e6edf3; font-family: 'Courier New', monospace; display: flex; height: 100vh; overflow: hidden; }
-
-  #panel {
-    width: 280px; min-width: 280px; background: #161b22; border-right: 1px solid #30363d;
-    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; z-index: 10;
-  }
-  #panel h2 { font-size: 14px; color: #58a6ff; letter-spacing: 1px; text-transform: uppercase; }
-  #panel h3 { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
-
-  .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
-  .ctrl-row { display: flex; flex-direction: column; gap: 4px; }
-  .ctrl-label { font-size: 11px; color: #8b949e; display: flex; justify-content: space-between; }
-  .ctrl-label span { color: #e6edf3; }
-  input[type=range] {
-    width: 100%; height: 4px; appearance: none; background: #30363d; border-radius: 2px; outline: none; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #58a6ff; cursor: pointer;
-  }
-
-  .pro-tag {
-    display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: bold;
-    background: #1f3d2e; color: #3fb950; border: 1px solid #238636; margin-left: 4px; vertical-align: middle;
-  }
-
-  .data-block { background: #0f172a; border: 1px solid #30363d; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
-  .data-row { display: flex; justify-content: space-between; font-size: 11px; }
-  .data-label { color: #8b949e; }
-  .data-val { color: #58a6ff; font-weight: bold; }
-
-  .formula-box { background: #0f172a; border: 1px solid #21262d; border-radius: 6px; padding: 10px; font-size: 10px; color: #6e7681; line-height: 1.6; }
-  .formula-box .f { color: #a5d6ff; font-style: italic; }
-
-  .wavelength-swatch { width: 100%; height: 6px; border-radius: 3px; margin-top: 4px; background: linear-gradient(to right, #8b00ff, #0000ff, #00ffff, #00ff00, #ffff00, #ff7f00, #ff0000); }
-
-  #fps { font-size: 10px; color: #484f58; text-align: right; margin-top: auto; }
-  #canvas-container { flex: 1; position: relative; overflow: hidden; min-height: 500px; }
-  #canvas-container canvas { display: block; width: 100%; height: 100%; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #1e293b; } ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 2px; }
+  .glass { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(12px); }
+  .glass-panel { background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.25); backdrop-filter: blur(16px); }
+  .btn-primary { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; cursor: pointer; transition: all 0.2s; }
+  .btn-primary:hover { background: linear-gradient(135deg,#60A5FA,#38BDF8); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(59,130,246,0.4); }
+  .btn-secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+  .slider-track { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2); outline: none; cursor: pointer; }
+  .slider-track::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+  .preset-btn { font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93C5FD; }
+  .preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; color: #fff; }
+  .quiz-opt { padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; font-size: 13px; }
+  .quiz-opt:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.5); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22C55E; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.2); border-color: #EF4444; }
+  #toast { position: fixed; top: 70px; right: 20px; z-index: 9999; pointer-events: none; }
+  .toast-msg { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.5); border-radius: 8px; padding: 10px 16px; margin-bottom: 8px; font-size: 13px; color: #93C5FD; animation: slideIn 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .katex { font-size: 0.95em; }
+  #left-panel { overflow-y: auto; max-height: calc(100vh - 56px); }
+  #intensity-svg { position: absolute; top: 0; right: 0; width: 220px; height: 100%; pointer-events: none; }
+  #data-overlay { position: absolute; top: 12px; left: 12px; min-width: 200px; }
 </style>
 </head>
 <body>
-<div id="panel">
-  <div>
-    <h2>Single-Slit Diffraction</h2>
-    <h3>Fraunhofer Diffraction Pattern</h3>
-  </div>
 
-  <div class="ctrl-group">
-    <div class="ctrl-row">
-      <div class="ctrl-label">Slit Width a <span id="lbl-a">5.0 μm</span></div>
-      <input type="range" id="sl-a" min="0.5" max="20" value="5" step="0.1">
-    </div>
-    <div class="ctrl-row">
-      <div class="ctrl-label">Wavelength λ <span id="lbl-wl">550 nm</span></div>
-      <input type="range" id="sl-wl" min="380" max="780" value="550" step="5">
-      <div class="wavelength-swatch"></div>
-    </div>
-    <div class="ctrl-row">
-      <div class="ctrl-label">Screen Distance L <span id="lbl-dist">2.0 m</span></div>
-      <input type="range" id="sl-dist" min="0.5" max="5" value="2" step="0.1">
-      <div style="font-size:9px; color:#3fb950; margin-top:2px;">PRO feature (unlocked)</div>
+<!-- NAV -->
+<nav class="glass-panel flex items-center justify-between px-4 h-14 fixed top-0 left-0 right-0 z-50">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-bold">λ</div>
+    <div>
+      <div class="text-sm font-semibold text-white">Single Slit Diffraction</div>
+      <div class="text-xs text-slate-400">Huygens-Fresnel Principle · Wave Optics · AP Physics</div>
     </div>
   </div>
+  <div class="flex items-center gap-2">
+    <button class="btn-secondary text-xs px-3 py-1.5 rounded-lg text-slate-300" onclick="resetSim()">Reset</button>
+    <button class="btn-secondary text-xs px-3 py-1.5 rounded-lg text-slate-300" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="btn-secondary text-xs px-3 py-1.5 rounded-lg text-slate-300" onclick="document.getElementById('about-modal').classList.remove('hidden')">About</button>
+  </div>
+</nav>
 
-  <div class="data-block">
-    <div class="data-row"><span class="data-label">Central Max Width</span><span class="data-val" id="d-cmw">— mm</span></div>
-    <div class="data-row"><span class="data-label">1st Dark Fringe</span><span class="data-val" id="d-1df">± — mm</span></div>
-    <div class="data-row"><span class="data-label">λ/a ratio</span><span class="data-val" id="d-ratio">—</span></div>
-    <div class="data-row"><span class="data-label">Fringe spacing Δy</span><span class="data-val" id="d-fsp">— mm</span></div>
+<!-- LAYOUT -->
+<div class="flex pt-14 h-screen">
+  <!-- LEFT PANEL -->
+  <div id="left-panel" class="glass-panel w-72 flex-shrink-0 p-4 space-y-4 border-r border-blue-900/30">
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Core Formulas</div>
+      <div class="glass rounded-lg p-3 space-y-2">
+        <div id="f1" class="text-center py-1"></div>
+        <div class="text-xs text-slate-400 text-center">Intensity pattern (Fraunhofer diffraction)</div>
+        <div id="f2" class="text-center py-1 mt-2"></div>
+        <div class="text-xs text-slate-400 text-center">α parameter definition</div>
+        <div id="f3" class="text-center py-1 mt-2"></div>
+        <div class="text-xs text-slate-400 text-center">First minimum condition</div>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Concept</div>
+      <div class="text-sm text-slate-300 leading-relaxed space-y-2">
+        <p>When light passes through a slit comparable in width to its wavelength, it spreads out—this is <span class="text-blue-300 font-medium">diffraction</span>. Each infinitesimal point in the slit acts as its own wave source (Huygens-Fresnel principle), and these wavelets interfere with each other on the screen.</p>
+        <p>The result is a bright central maximum flanked by weaker secondary maxima, with dark minima (zeros) at precise angles. Narrowing the slit makes the central peak <em>wider</em>—the classic wave-optics surprise.</p>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Key Insights</div>
+      <div class="space-y-2">
+        <div class="glass rounded-lg p-2.5 text-xs text-slate-300">
+          <span class="text-amber-400 font-semibold">Common Misconception:</span> Narrower slit → narrower pattern. Wrong! Smaller a → larger α → wider central max.
+        </div>
+        <div class="glass rounded-lg p-2.5 text-xs text-slate-300">
+          <span class="text-blue-400 font-semibold">Historical Note:</span> Augustin-Jean Fresnel unified Huygens' construction with Young's interference in 1818, founding wave optics.
+        </div>
+        <div class="glass rounded-lg p-2.5 text-xs text-slate-300">
+          <span class="text-emerald-400 font-semibold">AP Connection:</span> Single-slit minima at a·sinθ = mλ (m≠0); double-slit fringes occur between them.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Why It Matters</div>
+      <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+        <li>X-ray crystallography uses diffraction to determine atomic structure</li>
+        <li>Optical instruments: diffraction sets the resolution limit</li>
+        <li>Radio telescopes: slit-like aperture diffraction governs angular resolution</li>
+      </ul>
+    </div>
   </div>
 
-  <div class="formula-box">
-    <div class="f">a·sin θ = mλ  (dark fringes)</div>
-    <div class="f">Δy ≈ λL/a</div>
-    <div style="margin-top:4px">I(θ) = I₀[sin(β/2)/(β/2)]²</div>
-    <div style="color:#484f58">β = 2πa·sin(θ)/λ</div>
+  <!-- MAIN CANVAS -->
+  <div class="flex-1 relative" id="canvas-container">
+    <!-- Data overlay -->
+    <div id="data-overlay" class="glass-panel rounded-xl p-3 text-xs z-10" style="font-variant-numeric: tabular-nums; min-width:190px;">
+      <div class="text-blue-400 font-semibold mb-2">Live Data</div>
+      <div class="space-y-1">
+        <div class="flex justify-between"><span class="text-slate-400">Slit width a</span><span id="d-a" class="text-white">0.50 mm</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Wavelength λ</span><span id="d-lam" class="text-white">550 nm</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Screen dist L</span><span id="d-L" class="text-white">1.00 m</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">1st min angle</span><span id="d-theta1" class="text-white">0.063°</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Central max W</span><span id="d-cw" class="text-white">2.20 mm</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">I(θ) / I₀</span><span id="d-Itheta" class="text-white">1.000</span></div>
+      </div>
+    </div>
+
+    <!-- Intensity SVG on right -->
+    <svg id="intensity-svg" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
-  <div id="fps">FPS: —</div>
+  <!-- RIGHT QUIZ PANEL -->
+  <div class="glass-panel w-72 flex-shrink-0 border-l border-blue-900/30 flex flex-col">
+    <div class="p-3 border-b border-blue-900/30 flex items-center justify-between">
+      <span class="text-sm font-semibold text-white">Quiz</span>
+      <button class="btn-secondary text-xs px-2 py-1 rounded" onclick="toggleQuiz()">Hide</button>
+    </div>
+    <div id="quiz-panel" class="p-3 overflow-y-auto flex-1">
+      <div id="q-container" class="space-y-4 text-sm"></div>
+    </div>
+  </div>
 </div>
 
-<div id="canvas-container">
-  <!-- renderer creates its own canvas -->
+<!-- BOTTOM CONTROLS -->
+<div class="glass-panel fixed bottom-0 left-0 right-0 p-3 border-t border-blue-900/30 z-40">
+  <div class="flex items-center gap-6 flex-wrap">
+    <div class="flex items-center gap-3">
+      <button class="btn-primary text-xs px-4 py-2 rounded-lg" onclick="togglePlay()">
+        <span id="play-label">Pause</span>
+      </button>
+      <button class="btn-secondary text-xs px-3 py-2 rounded-lg text-slate-300" onclick="resetSim()">Reset</button>
+    </div>
+    <div class="flex gap-2">
+      <button class="preset-btn" onclick="applyPreset('narrow')">Narrow Slit (λ≈a)</button>
+      <button class="preset-btn" onclick="applyPreset('wide')">Wide Slit (λ&lt;&lt;a)</button>
+      <button class="preset-btn" onclick="applyPreset('red')">Red Light (700nm)</button>
+    </div>
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 w-28">Slit width a (mm)</label>
+        <input type="range" id="sl-a" class="slider-track w-28" min="0.1" max="2" step="0.05" value="0.5">
+        <span id="v-a" class="text-xs text-blue-300 w-10">0.50</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 w-28">Wavelength λ (nm)</label>
+        <input type="range" id="sl-lam" class="slider-track w-28" min="400" max="700" step="5" value="550">
+        <span id="v-lam" class="text-xs text-blue-300 w-10">550</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 w-28">Screen dist L (m)</label>
+        <input type="range" id="sl-L" class="slider-track w-28" min="0.5" max="3" step="0.1" value="1.0">
+        <span id="v-L" class="text-xs text-blue-300 w-10">1.0</span>
+      </div>
+    </div>
+    <div class="text-xs text-slate-500 ml-auto">Space: pause · R: reset · 1-5: speed</div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<!-- ABOUT MODAL -->
+<div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="glass-panel rounded-2xl p-6 max-w-sm w-full mx-4">
+    <h3 class="text-lg font-bold text-white mb-3">Single Slit Diffraction</h3>
+    <p class="text-sm text-slate-300 mb-4">Fraunhofer (far-field) diffraction through a single aperture. Uses exact sinc² intensity formula from wave optics.</p>
+    <div class="text-xs text-slate-400 space-y-1 mb-4">
+      <div><span class="text-blue-400">Space</span> — Play / Pause</div>
+      <div><span class="text-blue-400">R</span> — Reset simulation</div>
+      <div><span class="text-blue-400">1–3</span> — Load presets</div>
+    </div>
+    <button class="btn-primary text-sm px-4 py-2 rounded-lg w-full" onclick="document.getElementById('about-modal').classList.add('hidden')">Close</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
 <script>
-(function() {
-  'use strict';
+// ===== INLINE OrbitControls =====
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
 
-  let renderer, scene, camera;
-  let barrierMesh, slitLineMesh, screenMesh, screenTexture, screenCanvas, screenCtx;
-  let laserBeams = [];
-  let diffRayLines = [];
-  let lastFpsTime = performance.now(), frameCount = 0;
-  let lastTime = performance.now();
-  let animTime = 0;
+// ===== PHYSICS PARAMS =====
+var params = { a: 0.5e-3, lambda: 550e-9, L: 1.0, theta: 0.0 };
+var playing = true;
+var wavePhase = 0;
 
-  // World layout (orthographic 2D side view)
-  // x: -12 (left) to +12 (right)
-  // y: -6 to +6
-  const WORLD_W = 24, WORLD_H = 12;
-  const LASER_X = -10;
-  const BARRIER_X = -2;
-  const SCREEN_X = 9;
+// ===== THREE.JS SETUP =====
+var container = document.getElementById('canvas-container');
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 4, 14);
+var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
-  let slitWidth = 5;    // μm
-  let wavelength = 550; // nm
-  let screenDist = 2;   // m
+// Lights
+var keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+var fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+var backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+var ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
 
-  const container = document.getElementById('canvas-container');
+// Grid
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
 
-  function wavelengthToRGB(wl) {
-    let r, g, b;
-    if (wl >= 380 && wl < 440) { r = -(wl - 440) / 60; g = 0; b = 1; }
-    else if (wl >= 440 && wl < 490) { r = 0; g = (wl - 440) / 50; b = 1; }
-    else if (wl >= 490 && wl < 510) { r = 0; g = 1; b = -(wl - 510) / 20; }
-    else if (wl >= 510 && wl < 580) { r = (wl - 510) / 70; g = 1; b = 0; }
-    else if (wl >= 580 && wl < 645) { r = 1; g = -(wl - 645) / 65; b = 0; }
-    else if (wl >= 645 && wl <= 780) { r = 1; g = 0; b = 0; }
-    else { r = 0; g = 0; b = 0; }
-    // Intensity factor at edges
-    let factor = 1;
-    if (wl < 420) factor = 0.3 + 0.7 * (wl - 380) / 40;
-    else if (wl > 700) factor = 0.3 + 0.7 * (780 - wl) / 80;
-    return { r: Math.round(r * factor * 255), g: Math.round(g * factor * 255), b: Math.round(b * factor * 255) };
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 3;
+controls.maxDistance = 30;
+
+// ===== SCENE OBJECTS =====
+// Barrier (slit)
+var barrierGroup = new THREE.Group();
+scene.add(barrierGroup);
+
+// Screen
+var screenMesh;
+function buildScreen() {
+  if (screenMesh) scene.remove(screenMesh);
+  var sg = new THREE.PlaneGeometry(6, 5, 120, 1);
+  var smMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide, roughness: 0.8 });
+  screenMesh = new THREE.Mesh(sg, smMat);
+  screenMesh.position.set(0, 2.5, -5);
+  screenMesh.receiveShadow = true;
+  scene.add(screenMesh);
+}
+buildScreen();
+
+// Barrier mesh
+var barrierTop, barrierBot;
+function buildBarrier() {
+  if (barrierTop) { barrierGroup.remove(barrierTop); barrierGroup.remove(barrierBot); }
+  var slitH_3d = Math.max(0.05, params.a / 0.0005 * 0.25);
+  var barMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.4 });
+  var topH = (2.5 - slitH_3d / 2);
+  var botH = topH;
+  barrierTop = new THREE.Mesh(new THREE.BoxGeometry(0.15, topH, 0.3), barMat);
+  barrierTop.position.set(0, 2.5 + slitH_3d / 2 + topH / 2, 0);
+  barrierBot = new THREE.Mesh(new THREE.BoxGeometry(0.15, botH, 0.3), barMat);
+  barrierBot.position.set(0, 2.5 - slitH_3d / 2 - botH / 2, 0);
+  barrierTop.castShadow = true;
+  barrierBot.castShadow = true;
+  barrierGroup.add(barrierTop);
+  barrierGroup.add(barrierBot);
+}
+buildBarrier();
+
+// Wave rays (Huygens sources visualization)
+var rayGroup = new THREE.Group();
+scene.add(rayGroup);
+
+function wavelengthToColor(nm) {
+  var r, g, b;
+  if (nm < 450) { r = 0.5; g = 0; b = 1.0; }
+  else if (nm < 495) { r = 0; g = 0; b = 1.0; }
+  else if (nm < 530) { r = 0; g = 1.0; b = 0.5; }
+  else if (nm < 590) { r = 0; g = 1.0; b = 0; }
+  else if (nm < 625) { r = 1.0; g = 0.6; b = 0; }
+  else { r = 1.0; g = 0; b = 0; }
+  return new THREE.Color(r, g, b);
+}
+
+var waveMeshes = [];
+function buildWaves() {
+  waveMeshes.forEach(function(m){ rayGroup.remove(m); });
+  waveMeshes = [];
+  var numSources = 9;
+  var col = wavelengthToColor(params.lambda * 1e9);
+  var slitH_3d = Math.max(0.05, params.a / 0.0005 * 0.25);
+  for (var i = 0; i < numSources; i++) {
+    var yOff = -slitH_3d / 2 + (i / (numSources - 1)) * slitH_3d;
+    var geo = new THREE.CylinderGeometry(0.012, 0.012, 5.0, 6);
+    var mat = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 1.5, transparent: true, opacity: 0.5 });
+    var m = new THREE.Mesh(geo, mat);
+    m.rotation.x = Math.PI / 2;
+    m.position.set(0, 2.5 + yOff, -2.5);
+    waveMeshes.push(m);
+    rayGroup.add(m);
   }
+}
+buildWaves();
 
-  function buildDiffractionPattern() {
-    const W = 512, H = 512;
-    if (!screenCanvas) {
-      screenCanvas = document.createElement('canvas');
-      screenCanvas.width = W; screenCanvas.height = H;
-      screenCtx = screenCanvas.getContext('2d');
+// Incoming wave planes
+var incPlanes = [];
+function buildIncWaves() {
+  incPlanes.forEach(function(m){ scene.remove(m); });
+  incPlanes = [];
+  var col = wavelengthToColor(params.lambda * 1e9);
+  for (var k = 0; k < 5; k++) {
+    var pg = new THREE.PlaneGeometry(2, 5);
+    var pm = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 1.0, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+    var mesh = new THREE.Mesh(pg, pm);
+    mesh.position.set(0, 2.5, 3 - k * 1.2);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.userData.baseZ = 3 - k * 1.2;
+    incPlanes.push(mesh);
+    scene.add(mesh);
+  }
+}
+buildIncWaves();
+
+// Diffraction pattern on screen (texture-based)
+var patternCanvas = document.createElement('canvas');
+patternCanvas.width = 512; patternCanvas.height = 256;
+var patternCtx = patternCanvas.getContext('2d');
+var patternTex = new THREE.CanvasTexture(patternCanvas);
+var patternMat = new THREE.MeshBasicMaterial({ map: patternTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+var patternMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.8, 4.8), patternMat);
+patternMesh.position.set(0, 2.5, -4.95);
+scene.add(patternMesh);
+
+function sinc(x) {
+  if (Math.abs(x) < 1e-10) return 1.0;
+  return Math.sin(x) / x;
+}
+
+function computeIntensity(theta_rad) {
+  var alpha = Math.PI * params.a * Math.sin(theta_rad) / params.lambda;
+  var s = sinc(alpha);
+  return s * s;
+}
+
+function updatePatternTexture() {
+  var W = patternCanvas.width, H = patternCanvas.height;
+  patternCtx.clearRect(0, 0, W, H);
+  var col = wavelengthToColor(params.lambda * 1e9);
+  var r = Math.round(col.r * 255), g = Math.round(col.g * 255), b = Math.round(col.b * 255);
+  var imageData = patternCtx.createImageData(W, H);
+  var maxAngle = 0.05;
+  for (var px = 0; px < W; px++) {
+    var theta = ((px / W) - 0.5) * 2 * maxAngle;
+    var I = computeIntensity(theta);
+    for (var py = 0; py < H; py++) {
+      var idx = (py * W + px) * 4;
+      imageData.data[idx] = r;
+      imageData.data[idx+1] = g;
+      imageData.data[idx+2] = b;
+      imageData.data[idx+3] = Math.min(255, Math.round(I * 220));
     }
-
-    screenCtx.fillStyle = '#0f172a';
-    screenCtx.fillRect(0, 0, W, H);
-
-    const rgb = wavelengthToRGB(wavelength);
-    const a_m = slitWidth * 1e-6;   // meters
-    const lam_m = wavelength * 1e-9; // meters
-
-    // Screen height in physical units (world y range maps to screen height)
-    // World screen height ≈ WORLD_H in world units = 12
-    // Physical screen height: let's say 0.1 m per world unit
-    const physPerWorld = 0.05; // 0.05 m per world unit → 0.6m screen height
-    const screenHeightPhys = WORLD_H * physPerWorld;
-
-    for (let py = 0; py < H; py++) {
-      const yNorm = (py / H - 0.5); // -0.5 to 0.5
-      const y_phys = yNorm * screenHeightPhys;
-      const sinTheta = y_phys / Math.sqrt(y_phys * y_phys + screenDist * screenDist);
-
-      let intensity;
-      const beta = Math.PI * a_m * sinTheta / lam_m;
-      if (Math.abs(beta) < 1e-10) {
-        intensity = 1;
-      } else {
-        const sinc = Math.sin(beta) / beta;
-        intensity = sinc * sinc;
-      }
-
-      // Draw horizontal line
-      const alpha = Math.pow(intensity, 0.7);
-      screenCtx.fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
-      screenCtx.fillRect(0, py, W, 1);
-    }
-
-    if (!screenTexture) {
-      screenTexture = new THREE.CanvasTexture(screenCanvas);
-    } else {
-      screenTexture.needsUpdate = true;
-    }
   }
+  patternCtx.putImageData(imageData, 0, 0);
+  patternTex.needsUpdate = true;
+}
 
-  function init() {
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x0f172a);
-    container.appendChild(renderer.domElement);
-
-    scene = new THREE.Scene();
-
-    const aspect = container.clientWidth / container.clientHeight;
-    const h2 = WORLD_H / 2;
-    camera = new THREE.OrthographicCamera(-h2 * aspect, h2 * aspect, h2, -h2, 0.1, 100);
-    camera.position.z = 10;
-
-    buildScene();
-    resize();
-    window.addEventListener('resize', resize);
+// ===== SVG INTENSITY GRAPH =====
+function updateIntensitySVG() {
+  var svg = document.getElementById('intensity-svg');
+  var W = 200, H = svg.clientHeight || 400;
+  var margin = { top: 40, bottom: 40, left: 24, right: 10 };
+  var plotH = H - margin.top - margin.bottom;
+  var plotW = W - margin.left - margin.right;
+  var numPts = 300;
+  var maxAngle = 0.05;
+  var col = wavelengthToColor(params.lambda * 1e9);
+  var hexCol = '#' + col.getHexString();
+  var pts = [];
+  for (var i = 0; i < numPts; i++) {
+    var theta = ((i / (numPts-1)) - 0.5) * 2 * maxAngle;
+    var I = computeIntensity(theta);
+    var x = margin.left + I * plotW;
+    var y = margin.top + (i / (numPts-1)) * plotH;
+    pts.push(x + ',' + y);
   }
+  var polyline = '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + hexCol + '" stroke-width="2" stroke-linejoin="round"/>';
+  var axes = '<line x1="' + margin.left + '" y1="' + margin.top + '" x2="' + margin.left + '" y2="' + (H-margin.bottom) + '" stroke="#475569" stroke-width="1"/>';
+  axes += '<text x="' + (margin.left-2) + '" y="' + (H/2) + '" fill="#94A3B8" font-size="9" text-anchor="middle" transform="rotate(-90,' + (margin.left-12) + ',' + (H/2) + ')">angle →</text>';
+  axes += '<text x="' + (margin.left + plotW/2) + '" y="' + (margin.top-10) + '" fill="#94A3B8" font-size="9" text-anchor="middle">I(θ)/I₀</text>';
+  axes += '<line x1="' + margin.left + '" y1="' + (margin.top + plotH/2) + '" x2="' + (margin.left + plotW) + '" y2="' + (margin.top + plotH/2) + '" stroke="#3B82F640" stroke-width="1" stroke-dasharray="3,3"/>';
+  svg.innerHTML = '<rect width="' + W + '" height="' + H + '" fill="rgba(15,23,42,0.7)" rx="8"/>' + axes + polyline;
+}
 
-  function buildScene() {
-    buildDiffractionPattern();
+// ===== DATA PANEL =====
+function updateData() {
+  var a = params.a, lam = params.lambda, L = params.L;
+  var theta1_rad = Math.asin(lam / a);
+  var theta1_deg = theta1_rad * 180 / Math.PI;
+  var centralW = 2 * L * Math.tan(theta1_rad) * 1000;
+  document.getElementById('d-a').textContent = (a * 1000).toFixed(2) + ' mm';
+  document.getElementById('d-lam').textContent = (lam * 1e9).toFixed(0) + ' nm';
+  document.getElementById('d-L').textContent = L.toFixed(2) + ' m';
+  document.getElementById('d-theta1').textContent = theta1_deg.toFixed(3) + '°';
+  document.getElementById('d-cw').textContent = centralW.toFixed(2) + ' mm';
+  document.getElementById('d-Itheta').textContent = computeIntensity(0).toFixed(3);
+}
 
-    // Laser source: glowing dot
-    const laserGeo = new THREE.CircleGeometry(0.25, 16);
-    const rgb = wavelengthToRGB(wavelength);
-    const laserColor = new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255);
-    const laserMat = new THREE.MeshBasicMaterial({ color: laserColor });
-    const laserMesh = new THREE.Mesh(laserGeo, laserMat);
-    laserMesh.position.set(LASER_X, 0, 0);
-    laserMesh.name = 'laser';
-    scene.add(laserMesh);
-
-    // Laser glow
-    const glowGeo = new THREE.CircleGeometry(0.5, 16);
-    const glowMat = new THREE.MeshBasicMaterial({ color: laserColor, transparent: true, opacity: 0.3 });
-    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-    glowMesh.position.set(LASER_X, 0, -0.01);
-    glowMesh.name = 'laserGlow';
-    scene.add(glowMesh);
-
-    // Laser label
-    // (will be drawn in 2D overlay)
-
-    // Barrier: two gray rects with gap (slit)
-    rebuildBarrier();
-
-    // Screen: colored by diffraction pattern
-    const screenH = WORLD_H * 0.9;
-    const screenGeo = new THREE.PlaneGeometry(0.3, screenH);
-    const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture });
-    screenMesh = new THREE.Mesh(screenGeo, screenMat);
-    screenMesh.position.set(SCREEN_X, 0, 0);
-    scene.add(screenMesh);
-
-    // Screen frame
-    const frameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.35, screenH + 0.1, 0.1));
-    const frameMat = new THREE.LineBasicMaterial({ color: 0x30363d });
-    const frameMesh = new THREE.LineSegments(frameGeo, frameMat);
-    frameMesh.position.set(SCREEN_X, 0, 0);
-    scene.add(frameMesh);
-
-    // Incident beam (left of barrier)
-    updateBeams();
-  }
-
-  function rebuildBarrier() {
-    ['barrier_top', 'barrier_bot', 'slit_line'].forEach(name => {
-      const obj = scene.getObjectByName(name);
-      if (obj) { scene.remove(obj); if (obj.geometry) obj.geometry.dispose(); }
+// ===== ANIMATION =====
+var clock = new THREE.Clock();
+renderer.setAnimationLoop(function() {
+  var delta = Math.min(clock.getDelta(), 0.05);
+  if (playing) {
+    wavePhase += delta * 1.8;
+    // Animate incoming wave planes
+    incPlanes.forEach(function(mesh) {
+      var z = ((mesh.userData.baseZ - wavePhase * 2.5) % 6 + 6) % 6 - 3;
+      mesh.position.z = z;
+      mesh.material.opacity = z > -0.5 ? 0.18 : 0.05;
     });
-
-    const worldSlitH = (slitWidth / 1000) * 2; // very tiny slit, visual representation
-    const visSlitH = Math.max(0.05, Math.min(1.5, worldSlitH * 300));
-    const barrierH = (WORLD_H / 2 - visSlitH / 2);
-
-    const mat = new THREE.MeshBasicMaterial({ color: 0x484f58 });
-
-    const topGeo = new THREE.PlaneGeometry(0.4, barrierH);
-    const topMesh = new THREE.Mesh(topGeo, mat);
-    topMesh.position.set(BARRIER_X, WORLD_H / 4 + visSlitH / 4, 0);
-    topMesh.name = 'barrier_top';
-    scene.add(topMesh);
-
-    const botGeo = new THREE.PlaneGeometry(0.4, barrierH);
-    const botMesh = new THREE.Mesh(botGeo, mat.clone());
-    botMesh.position.set(BARRIER_X, -(WORLD_H / 4 + visSlitH / 4), 0);
-    botMesh.name = 'barrier_bot';
-    scene.add(botMesh);
-
-    // Slit bright line
-    const slitGeo = new THREE.PlaneGeometry(0.08, visSlitH);
-    const rgb = wavelengthToRGB(wavelength);
-    const slitMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255) });
-    const slitLine = new THREE.Mesh(slitGeo, slitMat);
-    slitLine.position.set(BARRIER_X, 0, 0.01);
-    slitLine.name = 'slit_line';
-    scene.add(slitLine);
-  }
-
-  function updateBeams() {
-    // Remove old beams/rays
-    ['beam_in', ...Array.from({length: 20}, (_, i) => 'dray_' + i)].forEach(name => {
-      const obj = scene.getObjectByName(name);
-      if (obj) scene.remove(obj);
+    // Pulse waveMeshes
+    waveMeshes.forEach(function(m, i) {
+      m.material.emissiveIntensity = 1.0 + 0.7 * Math.sin(wavePhase * 3 + i * 0.5);
     });
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
 
-    const rgb = wavelengthToRGB(wavelength);
-    const beamColor = new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255);
+// ===== SLIDER EVENTS =====
+document.getElementById('sl-a').addEventListener('input', function() {
+  params.a = parseFloat(this.value) * 1e-3;
+  document.getElementById('v-a').textContent = parseFloat(this.value).toFixed(2);
+  onParamsChange();
+});
+document.getElementById('sl-lam').addEventListener('input', function() {
+  params.lambda = parseFloat(this.value) * 1e-9;
+  document.getElementById('v-lam').textContent = this.value;
+  onParamsChange();
+});
+document.getElementById('sl-L').addEventListener('input', function() {
+  params.L = parseFloat(this.value);
+  document.getElementById('v-L').textContent = parseFloat(this.value).toFixed(1);
+  onParamsChange();
+});
 
-    // Incoming beam
-    const pts = [
-      new THREE.Vector3(LASER_X + 0.3, 0, 0),
-      new THREE.Vector3(BARRIER_X - 0.2, 0, 0)
-    ];
-    const beamGeo = new THREE.BufferGeometry().setFromPoints(pts);
-    const beamMat = new THREE.LineBasicMaterial({ color: beamColor, opacity: 0.8, transparent: true });
-    const beamLine = new THREE.Line(beamGeo, beamMat);
-    beamLine.name = 'beam_in';
-    scene.add(beamLine);
+function onParamsChange() {
+  buildBarrier();
+  buildWaves();
+  buildIncWaves();
+  updatePatternTexture();
+  updateIntensitySVG();
+  updateData();
+}
 
-    // Diffracted rays: from slit to screen at various angles
-    const a_m = slitWidth * 1e-6;
-    const lam_m = wavelength * 1e-9;
-    const screenHeightPhys = WORLD_H * 0.05;
-    const numRays = 9;
+// ===== PRESETS =====
+function applyPreset(name) {
+  if (name === 'narrow') {
+    params.a = 0.55e-3; params.lambda = 550e-9; params.L = 1.0;
+    document.getElementById('sl-a').value = 0.55;
+    document.getElementById('sl-lam').value = 550;
+    document.getElementById('sl-L').value = 1.0;
+    document.getElementById('v-a').textContent = '0.55';
+    document.getElementById('v-lam').textContent = '550';
+    document.getElementById('v-L').textContent = '1.0';
+    showToast('Preset: Narrow Slit (λ ≈ a)');
+  } else if (name === 'wide') {
+    params.a = 2.0e-3; params.lambda = 550e-9; params.L = 1.5;
+    document.getElementById('sl-a').value = 2.0;
+    document.getElementById('sl-lam').value = 550;
+    document.getElementById('sl-L').value = 1.5;
+    document.getElementById('v-a').textContent = '2.00';
+    document.getElementById('v-lam').textContent = '550';
+    document.getElementById('v-L').textContent = '1.5';
+    showToast('Preset: Wide Slit (λ << a)');
+  } else if (name === 'red') {
+    params.a = 0.8e-3; params.lambda = 700e-9; params.L = 1.0;
+    document.getElementById('sl-a').value = 0.8;
+    document.getElementById('sl-lam').value = 700;
+    document.getElementById('sl-L').value = 1.0;
+    document.getElementById('v-a').textContent = '0.80';
+    document.getElementById('v-lam').textContent = '700';
+    document.getElementById('v-L').textContent = '1.0';
+    showToast('Preset: Red Light (700 nm)');
+  }
+  onParamsChange();
+}
 
-    for (let i = 0; i < numRays; i++) {
-      const yNorm = (i / (numRays - 1) - 0.5);
-      const y_phys = yNorm * screenHeightPhys;
-      const sinTheta = y_phys / Math.sqrt(y_phys * y_phys + screenDist * screenDist);
-      const beta = Math.PI * a_m * sinTheta / lam_m;
-      let intensity = 1;
-      if (Math.abs(beta) > 1e-10) {
-        const sinc = Math.sin(beta) / beta;
-        intensity = sinc * sinc;
-      }
+function resetSim() {
+  params.a = 0.5e-3; params.lambda = 550e-9; params.L = 1.0;
+  document.getElementById('sl-a').value = 0.5;
+  document.getElementById('sl-lam').value = 550;
+  document.getElementById('sl-L').value = 1.0;
+  document.getElementById('v-a').textContent = '0.50';
+  document.getElementById('v-lam').textContent = '550';
+  document.getElementById('v-L').textContent = '1.0';
+  wavePhase = 0;
+  onParamsChange();
+  showToast('Simulation reset');
+}
 
-      if (intensity < 0.05) continue;
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('play-label').textContent = playing ? 'Pause' : 'Play';
+  showToast(playing ? 'Playing' : 'Paused');
+}
 
-      const screenY = yNorm * WORLD_H * 0.9;
-      const rayPts = [
-        new THREE.Vector3(BARRIER_X, 0, 0),
-        new THREE.Vector3(SCREEN_X, screenY, 0)
-      ];
-      const rayGeo = new THREE.BufferGeometry().setFromPoints(rayPts);
-      const rayMat = new THREE.LineBasicMaterial({
-        color: beamColor,
-        transparent: true,
-        opacity: intensity * 0.35
+function toggleQuiz() {
+  var p = document.getElementById('quiz-panel');
+  p.classList.toggle('hidden');
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+  else { document.exitFullscreen(); }
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  var d = document.createElement('div');
+  d.className = 'toast-msg';
+  d.textContent = msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(function() { d.remove(); }, 2200);
+}
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.code === 'Digit1') applyPreset('narrow');
+  if (e.code === 'Digit2') applyPreset('wide');
+  if (e.code === 'Digit3') applyPreset('red');
+});
+
+// ===== RESIZE =====
+window.addEventListener('resize', function() {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  updateIntensitySVG();
+});
+
+// ===== QUIZ =====
+var quizData = [
+  {
+    q: "If you halve the slit width (a → a/2) while keeping λ and L constant, what happens to the width of the central diffraction maximum?",
+    opts: ["It also halves", "It stays the same", "It doubles", "It quadruples"],
+    ans: 2,
+    ok: "Correct! The first minimum is at sinθ = λ/a. Halving a doubles sinθ, so the central maximum width 2Lλ/a doubles.",
+    no: "Not quite. The first minima occur at sinθ = ±λ/a. Halving a doubles this angle, so the central peak becomes twice as wide. Narrower slit → wider pattern."
+  },
+  {
+    q: "A student observes that the diffraction minima disappear when they widen the slit far beyond the wavelength. Why?",
+    opts: ["Interference no longer occurs between wavelets", "The screen is too far away", "The light becomes polarized", "Energy is absorbed by the wider slit"],
+    ans: 0,
+    ok: "Exactly! When a >> λ, the path-length difference between extreme wavelets (a·sinθ ≈ aθ) needed to produce a minimum requires a very small angle where geometric optics dominates. The diffraction pattern compresses to a sharp geometric shadow.",
+    no: "Think about what happens as a grows much larger than λ. The parameter α = πa·sinθ/λ becomes large even for tiny angles, pushing all minima so close together that the pattern looks like a sharp geometric shadow. Interference still occurs, but the diffraction envelope collapses."
+  },
+  {
+    q: "Two slits produce the same diffraction envelope as a single slit with width a. What determines whether you see a double-slit fringe pattern inside that envelope?",
+    opts: ["The wavelength λ must be shorter than a", "The slit separation d must be greater than a", "The screen distance must be very large", "The intensity I₀ must be high enough"],
+    ans: 1,
+    ok: "Right! The overall intensity is the single-slit diffraction envelope I₀(sinα/α)² modulated by the double-slit interference factor cos²(πd·sinθ/λ). You need d > a to see multiple fringes within the envelope.",
+    no: "In double-slit experiments, the interference fringes (from slit separation d) appear inside the single-slit diffraction envelope (from slit width a). If d > a, multiple bright fringes fit inside the central envelope — that's the condition for seeing fringes."
+  }
+];
+
+function buildQuiz() {
+  var c = document.getElementById('q-container');
+  c.innerHTML = '';
+  quizData.forEach(function(q, qi) {
+    var div = document.createElement('div');
+    div.className = 'glass rounded-xl p-3';
+    div.innerHTML = '<p class="text-xs text-slate-300 mb-2 font-medium">Q' + (qi+1) + ': ' + q.q + '</p>';
+    var optsDiv = document.createElement('div');
+    q.opts.forEach(function(opt, oi) {
+      var btn = document.createElement('div');
+      btn.className = 'quiz-opt';
+      btn.textContent = opt;
+      btn.addEventListener('click', function() {
+        if (div.dataset.answered) return;
+        div.dataset.answered = '1';
+        var feedback = document.createElement('div');
+        feedback.className = 'text-xs mt-2 p-2 rounded-lg leading-relaxed';
+        if (oi === q.ans) {
+          btn.classList.add('correct');
+          feedback.style.background = 'rgba(34,197,94,0.1)';
+          feedback.style.color = '#86EFAC';
+          feedback.textContent = '✓ ' + q.ok;
+        } else {
+          btn.classList.add('wrong');
+          optsDiv.children[q.ans].classList.add('correct');
+          feedback.style.background = 'rgba(239,68,68,0.1)';
+          feedback.style.color = '#FCA5A5';
+          feedback.textContent = '✗ ' + q.no;
+        }
+        div.appendChild(feedback);
       });
-      const rayLine = new THREE.Line(rayGeo, rayMat);
-      rayLine.name = 'dray_' + i;
-      scene.add(rayLine);
-    }
-  }
-
-  function updateLaserColor() {
-    const rgb = wavelengthToRGB(wavelength);
-    const col = new THREE.Color(rgb.r / 255, rgb.g / 255, rgb.b / 255);
-
-    const laser = scene.getObjectByName('laser');
-    if (laser) laser.material.color.copy(col);
-    const laserGlow = scene.getObjectByName('laserGlow');
-    if (laserGlow) { laserGlow.material.color.copy(col); }
-    const slitLine = scene.getObjectByName('slit_line');
-    if (slitLine) slitLine.material.color.copy(col);
-  }
-
-  function updateScreenTexture() {
-    buildDiffractionPattern();
-    if (screenMesh) screenMesh.material.map = screenTexture;
-  }
-
-  function calcData() {
-    const a_m = slitWidth * 1e-6;
-    const lam_m = wavelength * 1e-9;
-    const L = screenDist;
-
-    const firstDark_m = lam_m * L / a_m;
-    const centralMaxWidth_m = 2 * firstDark_m;
-    const fringeSpacing_m = lam_m * L / a_m;
-
-    document.getElementById('d-cmw').textContent = (centralMaxWidth_m * 1000).toFixed(2) + ' mm';
-    document.getElementById('d-1df').textContent = '± ' + (firstDark_m * 1000).toFixed(2) + ' mm';
-    document.getElementById('d-ratio').textContent = (lam_m / a_m * 1000).toFixed(4);
-    document.getElementById('d-fsp').textContent = (fringeSpacing_m * 1000).toFixed(2) + ' mm';
-  }
-
-  function resize() {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    renderer.setSize(w, h);
-    const aspect = w / h;
-    const h2 = WORLD_H / 2;
-    camera.left = -h2 * aspect;
-    camera.right = h2 * aspect;
-    camera.top = h2;
-    camera.bottom = -h2;
-    camera.updateProjectionMatrix();
-  }
-
-  // 2D overlay labels
-  let labelCanvas2 = null;
-  function drawLabels() {
-    if (!labelCanvas2) {
-      labelCanvas2 = document.createElement('canvas');
-      labelCanvas2.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
-      container.appendChild(labelCanvas2);
-    }
-    const w = container.clientWidth, h = container.clientHeight;
-    labelCanvas2.width = w; labelCanvas2.height = h;
-    const ctx = labelCanvas2.getContext('2d');
-    ctx.clearRect(0, 0, w, h);
-
-    const aspect = w / h;
-    const camH = WORLD_H;
-    const camW = camH * aspect;
-
-    function ws(wx, wy) {
-      return { x: (wx / camW + 0.5) * w, y: (0.5 - wy / camH) * h };
-    }
-
-    ctx.font = '11px Courier New';
-    ctx.textAlign = 'center';
-
-    // Laser label
-    const lp = ws(LASER_X, 2.5);
-    ctx.fillStyle = '#e6edf3';
-    ctx.fillText('LASER', lp.x, lp.y);
-    const rgb = wavelengthToRGB(wavelength);
-    ctx.fillStyle = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
-    ctx.fillText(wavelength + ' nm', lp.x, lp.y + 14);
-
-    // Barrier label
-    const bp = ws(BARRIER_X, WORLD_H / 2 - 0.5);
-    ctx.fillStyle = '#8b949e';
-    ctx.fillText('SLIT', bp.x, bp.y - 10);
-    ctx.fillStyle = '#e6edf3';
-    ctx.fillText(slitWidth.toFixed(1) + ' μm', bp.x, bp.y + 2);
-
-    // Screen label
-    const sp = ws(SCREEN_X, WORLD_H / 2 - 0.5);
-    ctx.fillStyle = '#8b949e';
-    ctx.fillText('SCREEN', sp.x, sp.y - 10);
-    ctx.fillStyle = '#e6edf3';
-    ctx.fillText('L = ' + screenDist.toFixed(1) + ' m', sp.x, sp.y + 2);
-
-    // Dark fringe markers on screen
-    const a_m = slitWidth * 1e-6;
-    const lam_m = wavelength * 1e-9;
-    const firstDark_m = lam_m * screenDist / a_m;
-    const physH = WORLD_H * 0.05;
-    const firstDarkWorld = (firstDark_m / physH) * WORLD_H * 0.9 * 0.5;
-
-    if (firstDarkWorld < WORLD_H * 0.45) {
-      [firstDarkWorld, -firstDarkWorld].forEach(yw => {
-        const dp = ws(SCREEN_X + 0.5, yw);
-        ctx.fillStyle = '#484f58';
-        ctx.font = '9px Courier New';
-        ctx.textAlign = 'left';
-        ctx.fillText('m=1', dp.x, dp.y + 3);
-      });
-    }
-  }
-
-  function animate(now) {
-    requestAnimationFrame(animate);
-    const dt = Math.min((now - lastTime) / 1000, 0.05);
-    lastTime = now; animTime += dt;
-
-    frameCount++;
-    if (now - lastFpsTime >= 1000) {
-      document.getElementById('fps').textContent = 'FPS: ' + frameCount;
-      frameCount = 0; lastFpsTime = now;
-    }
-
-    // Animate laser glow pulsing
-    const laserGlow = scene.getObjectByName('laserGlow');
-    if (laserGlow) {
-      laserGlow.material.opacity = 0.2 + 0.15 * Math.sin(animTime * 4);
-    }
-
-    calcData();
-    drawLabels();
-
-    try { renderer.render(scene, camera); } catch(e) { console.warn(e); }
-  }
-
-  // Controls
-  document.getElementById('sl-a').addEventListener('input', function() {
-    slitWidth = +this.value;
-    document.getElementById('lbl-a').textContent = slitWidth.toFixed(1) + ' μm';
-    rebuildBarrier();
-    updateBeams();
-    updateScreenTexture();
+      optsDiv.appendChild(btn);
+    });
+    div.appendChild(optsDiv);
+    c.appendChild(div);
   });
+}
 
-  document.getElementById('sl-wl').addEventListener('input', function() {
-    wavelength = +this.value;
-    document.getElementById('lbl-wl').textContent = wavelength + ' nm';
-    updateLaserColor();
-    updateBeams();
-    updateScreenTexture();
-  });
+// ===== KaTeX FORMULAS =====
+function renderFormulas() {
+  katex.render("I(\\theta) = I_0 \\left(\\frac{\\sin\\alpha}{\\alpha}\\right)^2", document.getElementById('f1'), { displayMode: true, throwOnError: false });
+  katex.render("\\alpha = \\frac{\\pi a \\sin\\theta}{\\lambda}", document.getElementById('f2'), { displayMode: true, throwOnError: false });
+  katex.render("a \\sin\\theta = m\\lambda,\\; m = \\pm1, \\pm2, \\ldots", document.getElementById('f3'), { displayMode: true, throwOnError: false });
+}
 
-  document.getElementById('sl-dist').addEventListener('input', function() {
-    screenDist = +this.value;
-    document.getElementById('lbl-dist').textContent = screenDist.toFixed(1) + ' m';
-    updateBeams();
-    updateScreenTexture();
-  });
-
-  try {
-    init();
-    animate(performance.now());
-  } catch(e) {
-    console.error('Init failed:', e);
-    document.body.innerHTML += '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f85149;font-size:14px;background:#161b22;padding:20px;border-radius:8px;border:1px solid #f85149;">Error: ' + e.message + '</div>';
-  }
-})();
+// ===== INIT =====
+renderFormulas();
+buildQuiz();
+updatePatternTexture();
+updateIntensitySVG();
+updateData();
+showToast('Welcome! Adjust sliders to explore diffraction.');
 </script>
+<!-- Generated by AetherViz Master 7.0 — Keep exploring, the universe is made of waves. -->
 </body>
 </html>

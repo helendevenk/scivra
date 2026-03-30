@@ -1,723 +1,553 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>磁力 - 交互式科学实验</title>
-
-    <!-- Three.js -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-    <script src="/lib/orbit-controls.js"></script>
-
-    <!-- KaTeX -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            color: #e0e0e0;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        #canvas-container {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            min-height: 600px;
-        }
-
-        .controls-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .controls-panel h3 {
-            color: #3B82F6;
-            margin-bottom: 20px;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-        }
-
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #b0b0b0;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-
-        .value-display {
-            float: right;
-            color: #3B82F6;
-            font-weight: 600;
-        }
-
-        .control-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .control-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
-            cursor: pointer;
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .formula-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .formula-section h2 {
-            color: #3B82F6;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-
-        .formula-item {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border-left: 3px solid #3B82F6;
-        }
-
-        .formula-item p {
-            margin-top: 8px;
-            color: #888;
-            font-size: 0.9em;
-        }
-
-        .knowledge-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .knowledge-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .knowledge-card:hover {
-            transform: translateY(-5px);
-            border-color: #3B82F6;
-        }
-
-        .knowledge-card h3 {
-            color: #3B82F6;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-
-        .knowledge-card p {
-            color: #b0b0b0;
-            line-height: 1.6;
-            font-size: 0.95em;
-        }
-
-        .quiz-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .quiz-section h2 {
-            color: #3B82F6;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-
-        .quiz-question {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-
-        .quiz-question h4 {
-            color: #e0e0e0;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .quiz-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .quiz-option {
-            padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .quiz-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #3B82F6;
-        }
-
-        .quiz-option.correct {
-            background: rgba(76, 175, 80, 0.2);
-            border-color: #4caf50;
-        }
-
-        .quiz-option.incorrect {
-            background: rgba(244, 67, 54, 0.2);
-            border-color: #f44336;
-        }
-
-        .quiz-feedback {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .feedback-correct {
-            color: #4caf50;
-        }
-
-        .feedback-incorrect {
-            color: #f44336;
-        }
-    </style>
-    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnetism — K5 Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(234,179,8,0.95);color:#000;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(234,179,8,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px; }
+  .panel-card { background:rgba(78,63,0,0.6);border:1px solid rgba(234,179,8,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#EAB308,#84CC16);cursor:pointer; }
+  .sidebar { width:30%;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(234,179,8,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(234,179,8,0.4);border-radius:2px;}
+  .btn-preset { padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid rgba(234,179,8,0.4);cursor:pointer;background:rgba(234,179,8,0.15);color:#FDE047;transition:all 0.18s; }
+  .btn-preset:hover { background:rgba(234,179,8,0.3);color:#fff; }
+  .btn-speed { padding:5px 11px;border-radius:6px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#EAB308,#84CC16);color:#000;border-color:#EAB308; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:15px;font-weight:800;color:#FDE047; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:6px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#EAB308;background:rgba(234,179,8,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100; }
+  #quiz-fab { position:fixed;bottom:16px;right:16px;z-index:101;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#EAB308,#84CC16);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:22px;box-shadow:0 4px 16px rgba(234,179,8,0.5); }
+</style>
 </head>
 <body>
-    
-    <div class="container">
-        <h1>🧲 磁力</h1>
-        <p class="subtitle">探索磁场和磁力线的奥秘</p>
 
-        <div class="main-content">
-            <div id="canvas-container"></div>
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(234,179,8,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#EAB308,#84CC16);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Magnetism</span>
+    <span class="text-xs text-slate-400 ml-3">Poles · Field Lines · Electromagnets · K5 Science</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
 
-            <div class="controls-panel">
-                <h3>控制面板</h3>
-                
-        <div class="control-group">
-            <label>
-                磁场强度
-                <span class="value-display" id="magnetic-strength-value">5</span>
-            </label>
-            <input type="range" id="magnetic-strength"
-                   min="0"
-                   max="10"
-                   value="5"
-                   step="0.5">
-        </div>
-        
+<div class="flex flex-1 overflow-hidden">
 
-        <div class="control-group">
-            <label>
-                铁屑数量
-                <span class="value-display" id="particle-count-value">800</span>
-            </label>
-            <input type="range" id="particle-count"
-                   min="200"
-                   max="1500"
-                   value="800"
-                   step="100">
-        </div>
-        
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-3">Key Ideas</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-2">Opposite poles attract (N-S), same poles repel (N-N or S-S). The closer the magnets, the stronger the force!</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Magnetic field strength decreases quickly with distance from the magnet.</div>
+  </div>
 
-        <div class="control-group">
-            <label>
-                旋转速度
-                <span class="value-display" id="rotation-speed-value">0.5</span>
-            </label>
-            <input type="range" id="rotation-speed"
-                   min="0"
-                   max="3"
-                   value="0.5"
-                   step="0.1">
-        </div>
-        
-            </div>
-        </div>
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-2">What's Happening?</div>
+    <p class="text-sm text-slate-300 leading-relaxed">Every magnet has a <strong class="text-red-400">North pole</strong> and a <strong class="text-blue-400">South pole</strong>. The magnetic field flows from North to South (you can see it with iron filings!).</p>
+    <p class="text-sm text-slate-300 leading-relaxed mt-2">An <strong class="text-green-300">electromagnet</strong> is made by running electricity through a coil of wire. More current = stronger magnet. You can turn it on and off!</p>
+    <p class="text-sm text-slate-300 leading-relaxed mt-2">A <strong class="text-yellow-300">compass needle</strong> always points to Earth's magnetic North Pole.</p>
+  </div>
 
-        
-    <div class="formula-section">
-        <h2>关键公式</h2>
-        
-        <div class="formula-item">
-            <strong>磁场力:</strong> $F = qvB\sin\theta$
-            <p>其中 F 是磁场力，q 是电荷量，v 是速度，B 是磁场强度，θ 是速度与磁场的夹角</p>
-        </div>
-        
-        <div class="formula-item">
-            <strong>磁场强度:</strong> $B = \frac{\mu_0 I}{2\pi r}$
-            <p>其中 B 是磁场强度，μ₀ 是真空磁导率，I 是电流，r 是距离</p>
-        </div>
-        
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-lime-400 mb-1">Fun Fact</div>
+    <div class="text-xs text-slate-300">The Earth itself is a giant magnet! Its iron core creates a magnetic field that protects us from harmful solar wind and guides compass needles.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Remember</div>
+    <div class="text-xs text-slate-300">You can never make a magnet with just one pole. If you cut a magnet in half, you get TWO smaller magnets, each with its own N and S pole!</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-lime-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">Magnets are in electric motors, speakers, MRI machines, credit cards, and hard drives. Electromagnets are used in junkyards to pick up cars!</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-slate-400 mb-1">Keyboard Shortcuts</div>
+    <div class="text-xs text-slate-500">Space: Play/Pause | R: Reset | 1-5: Speed</div>
+  </div>
+</aside>
+
+<div class="flex-1 flex flex-col overflow-hidden relative">
+  <div id="canvas-container" class="flex-1 relative">
+    <div id="data-overlay" class="absolute top-3 left-3 glass p-3 z-10" style="min-width:230px;">
+      <div class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-2">Live Data</div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Mode</span><span class="data-val" id="d-mode">Bar Magnet</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Strength</span><span class="data-val" id="d-str">—</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Pole Config</span><span class="data-val" id="d-poles">N — S</span></div>
+      <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Force Type</span><span class="data-val" id="d-force">—</span></div>
+      <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">Distance</span><span class="data-val" id="d-dist">—</span></div>
     </div>
-    
-        
-    <div class="knowledge-cards">
-        
-        <div class="knowledge-card">
-            <h3>🧲 什么是磁力？</h3>
-            <p>磁力是磁铁或磁场对铁磁性物质产生的吸引力或排斥力。磁铁有两个磁极：北极（N）和南极（S）。</p>
-        </div>
-        
-        <div class="knowledge-card">
-            <h3>🔄 磁力线</h3>
-            <p>磁力线是用来描述磁场方向和强度的假想曲线。磁力线从北极出发，进入南极，在磁铁内部从南极回到北极。</p>
-        </div>
-        
-        <div class="knowledge-card">
-            <h3>⚡ 同极相斥，异极相吸</h3>
-            <p>两个磁铁的同名磁极（N-N 或 S-S）会相互排斥，异名磁极（N-S）会相互吸引。这是磁力的基本规律。</p>
-        </div>
-        
-        <div class="knowledge-card">
-            <h3>🌍 地球磁场</h3>
-            <p>地球本身就是一个巨大的磁铁，有南北两个磁极。指南针的指针就是利用地球磁场来指示方向的。</p>
-        </div>
-        
-        <div class="knowledge-card">
-            <h3>🔬 磁性材料</h3>
-            <p>铁、钴、镍等金属具有磁性，可以被磁铁吸引。这些材料被称为铁磁性材料。</p>
-        </div>
-        
+  </div>
+
+  <div class="shrink-0 glass p-4" style="border-top:1px solid rgba(234,179,8,0.2);max-height:230px;overflow-y:auto;">
+    <div class="flex flex-wrap gap-4 mb-3">
+      <div class="flex-1 min-w-40">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Magnet Strength</span><span class="text-yellow-300 font-mono font-bold" id="lbl-str">5</span></label>
+        <input type="range" id="sl-str" min="1" max="10" step="0.5" value="5">
+      </div>
+      <div class="flex-1 min-w-40">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Second Magnet Pos</span><span class="text-yellow-300 font-mono font-bold" id="lbl-pos">5 units</span></label>
+        <input type="range" id="sl-pos" min="2" max="12" step="0.5" value="5">
+      </div>
+      <div class="flex-1 min-w-40">
+        <label class="text-xs text-slate-400 flex justify-between mb-1"><span>Current (for electromagnet)</span><span class="text-yellow-300 font-mono font-bold" id="lbl-curr">3 A</span></label>
+        <input type="range" id="sl-curr" min="0" max="10" step="0.5" value="3">
+      </div>
     </div>
-    
-        
-    <div class="quiz-section">
-        <h2>测试你的知识</h2>
-        
-        <div class="quiz-question">
-            <h4>1. 磁铁有几个磁极？</h4>
-            <div class="quiz-options">
-                
-                <div class="quiz-option" onclick="checkAnswer(this, false, '磁铁有两个磁极：北极（N）和南极（S）。无论磁铁被切成多小，每一块都有两个磁极。')">
-                    1个
-                </div>
-                
-                <div class="quiz-option" onclick="checkAnswer(this, true, '磁铁有两个磁极：北极（N）和南极（S）。无论磁铁被切成多小，每一块都有两个磁极。')">
-                    2个
-                </div>
-                
-                <div class="quiz-option" onclick="checkAnswer(this, false, '磁铁有两个磁极：北极（N）和南极（S）。无论磁铁被切成多小，每一块都有两个磁极。')">
-                    3个
-                </div>
-                
-                <div class="quiz-option" onclick="checkAnswer(this, false, '磁铁有两个磁极：北极（N）和南极（S）。无论磁铁被切成多小，每一块都有两个磁极。')">
-                    4个
-                </div>
-                
-            </div>
-            <div class="quiz-feedback"></div>
-        </div>
-        
-        <div class="quiz-question">
-            <h4>2. 两个磁铁的北极靠近时会发生什么？</h4>
-            <div class="quiz-options">
-                
-                <div class="quiz-option" onclick="checkAnswer(this, false, '同名磁极（N-N 或 S-S）会相互排斥，异名磁极（N-S）会相互吸引。')">
-                    相互吸引
-                </div>
-                
-                <div class="quiz-option" onclick="checkAnswer(this, true, '同名磁极（N-N 或 S-S）会相互排斥，异名磁极（N-S）会相互吸引。')">
-                    相互排斥
-                </div>
-                
-                <div class="quiz-option" onclick="checkAnswer(this, false, '同名磁极（N-N 或 S-S）会相互排斥，异名磁极（N-S）会相互吸引。')">
-                    没有反应
-                </div>
-                
-                <div class="quiz-option" onclick="checkAnswer(this, false, '同名磁极（N-N 或 S-S）会相互排斥，异名磁极（N-S）会相互吸引。')">
-                    产生电流
-                </div>
-                
-            </div>
-            <div class="quiz-feedback"></div>
-        </div>
-        
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-xs text-slate-400">Presets:</span>
+      <button class="btn-preset" onclick="applyPreset('bar')">🧲 Bar Magnet Field Lines</button>
+      <button class="btn-preset" onclick="applyPreset('electro')">⚡ Electromagnet (coil)</button>
+      <button class="btn-preset" onclick="applyPreset('compass')">🧭 Compass Navigation</button>
+      <div class="ml-auto flex gap-1 items-center">
+        <span class="text-xs text-slate-400">Speed:</span>
+        <button class="btn-speed" id="spd1" onclick="setSpeed(0.25)">0.25x</button>
+        <button class="btn-speed" id="spd2" onclick="setSpeed(0.5)">0.5x</button>
+        <button class="btn-speed active" id="spd3" onclick="setSpeed(1)">1x</button>
+        <button class="btn-speed" id="spd4" onclick="setSpeed(2)">2x</button>
+        <button class="btn-speed" id="spd5" onclick="setSpeed(3)">3x</button>
+        <button class="btn-preset ml-2" id="btn-play" onclick="togglePlay()">⏸ Pause</button>
+      </div>
     </div>
+  </div>
+</div>
+</div>
 
-    <script>
-    function checkAnswer(element, isCorrect, explanation) {
-        const options = element.parentElement.children;
-        const feedback = element.parentElement.nextElementSibling;
+<div id="quiz-panel" class="glass p-4" style="max-height:420px;overflow-y:auto;">
+  <div class="flex justify-between items-center mb-3">
+    <span class="text-sm font-bold text-yellow-400">Quiz Time! (3 questions)</span>
+    <button onclick="hideQuiz()" class="text-slate-400 hover:text-white text-xs">✕ Hide</button>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+<div id="quiz-fab" onclick="showQuiz()">🎓</div>
+<div id="toast"></div>
 
-        // 禁用所有选项
-        for (let option of options) {
-            option.style.pointerEvents = 'none';
-        }
+<div id="about-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.7);">
+  <div class="glass p-6 max-w-sm w-full mx-4">
+    <div class="font-bold text-yellow-400 mb-2">About: Magnetism</div>
+    <p class="text-xs text-slate-300 mb-3">Explore bar magnets, electromagnetic fields, and compass navigation. See how magnetic field lines show the invisible force around magnets!</p>
+    <button onclick="document.getElementById('about-modal').style.display='none'" class="btn-preset w-full">Close</button>
+  </div>
+</div>
 
-        if (isCorrect) {
-            element.classList.add('correct');
-            feedback.innerHTML = '<div class="feedback-correct">✅ 正确！' + (explanation ? ' ' + explanation : '') + '</div>';
-        } else {
-            element.classList.add('incorrect');
-            feedback.innerHTML = '<div class="feedback-incorrect">❌ 不正确。' + (explanation ? ' ' + explanation : '') + '</div>';
-        }
-
-        feedback.style.display = 'block';
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
     }
-    </script>
-    
-    </div>
-    
-
-    <script>
-        
-// === 场景初始化 ===
-const container = document.getElementById('canvas-container');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f172a);
-
-// 相机
-const camera = new THREE.PerspectiveCamera(
-    60,
-    container.clientWidth / container.clientHeight,
-    0.1,
-    1000
-);
-camera.position.set(0, 5, 15);
-
-// 渲染器
-const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: false
-});
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-container.appendChild(renderer.domElement);
-
-// 控制器
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.minDistance = 5;
-controls.maxDistance = 50;
-
-
-
-// === 三点光照系统 ===
-
-// 主光源（Key Light）- 主要照明
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
-keyLight.position.set(5, 10, 7);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.width = 2048;
-keyLight.shadow.mapSize.height = 2048;
-keyLight.shadow.camera.near = 0.5;
-keyLight.shadow.camera.far = 50;
-keyLight.shadow.camera.left = -10;
-keyLight.shadow.camera.right = 10;
-keyLight.shadow.camera.top = 10;
-keyLight.shadow.camera.bottom = -10;
-scene.add(keyLight);
-
-// 补光（Fill Light）- 填充阴影
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-fillLight.position.set(-5, 5, -5);
-scene.add(fillLight);
-
-// 背光（Back Light）- 轮廓光
-const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
-backLight.position.set(0, 5, -10);
-scene.add(backLight);
-
-// 环境光 - 基础照明
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-scene.add(ambientLight);
-
-
-
-// === PBR 材质系统 ===
-
-// 材质预设
-const materialPresets = {
-    metal: {
-        metalness: 0.8,
-        roughness: 0.2,
-        envMapIntensity: 1.0
-    },
-    plastic: {
-        metalness: 0.0,
-        roughness: 0.5,
-        envMapIntensity: 0.5
-    },
-    glass: {
-        metalness: 0.0,
-        roughness: 0.1,
-        transparent: true,
-        opacity: 0.3,
-        envMapIntensity: 1.0,
-        transmission: 0.9
-    },
-    rubber: {
-        metalness: 0.0,
-        roughness: 0.9,
-        envMapIntensity: 0.3
-    },
-    water: {
-        metalness: 0.0,
-        roughness: 0.0,
-        transparent: true,
-        opacity: 0.8,
-        envMapIntensity: 1.0
-    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    spherical.theta+=sd.theta*d; spherical.phi+=sd.phi*d;
+    spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));
+    spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
 };
 
-// 创建材质函数
-function createMaterial(preset, color) {
-    const config = materialPresets[preset] || materialPresets.plastic;
-    return new THREE.MeshStandardMaterial({
-        color: color,
-        ...config
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+camera.position.set(0, 10, 22);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirL = new THREE.DirectionalLight(0xffffff, 0.8);
+dirL.position.set(10, 20, 10);
+scene.add(dirL);
+const fillL = new THREE.DirectionalLight(0x84CC16, 0.3);
+fillL.position.set(-10, 5, -5);
+scene.add(fillL);
+
+let magnetStrength = 5, secondPos = 5, current = 3;
+let mode = 'bar';
+let simRunning = true, simSpeed = 1, time = 0, lastT = 0;
+
+// Magnet group
+const magnetGroup = new THREE.Group();
+scene.add(magnetGroup);
+
+function buildBarMagnet() {
+  while (magnetGroup.children.length > 0) magnetGroup.remove(magnetGroup.children[0]);
+
+  // Main magnet body - North (red)
+  const northHalf = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 1.2, 1.2),
+    new THREE.MeshPhongMaterial({ color: 0xEF4444 })
+  );
+  northHalf.position.set(1.5, 0, 0);
+  magnetGroup.add(northHalf);
+
+  // South (blue)
+  const southHalf = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 1.2, 1.2),
+    new THREE.MeshPhongMaterial({ color: 0x3B82F6 })
+  );
+  southHalf.position.set(-1.5, 0, 0);
+  magnetGroup.add(southHalf);
+
+  // N label sphere
+  const labelN = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 16, 16),
+    new THREE.MeshPhongMaterial({ color: 0xFF6B6B, emissive: 0x660000 })
+  );
+  labelN.position.set(3.2, 0, 0);
+  magnetGroup.add(labelN);
+
+  // S label sphere
+  const labelS = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 16, 16),
+    new THREE.MeshPhongMaterial({ color: 0x60A5FA, emissive: 0x001166 })
+  );
+  labelS.position.set(-3.2, 0, 0);
+  magnetGroup.add(labelS);
+}
+
+// Field lines
+const fieldLineGroup = new THREE.Group();
+scene.add(fieldLineGroup);
+
+function buildFieldLines() {
+  while (fieldLineGroup.children.length > 0) fieldLineGroup.remove(fieldLineGroup.children[0]);
+
+  const numLines = 12;
+  for (let i = 0; i < numLines; i++) {
+    const angle = (i / numLines) * Math.PI * 2;
+    const points = [];
+    const r = 0.8;
+    const startX = 3.2 + Math.cos(angle) * r * 0.3;
+    const startY = Math.sin(angle) * r;
+    const endX = -3.2 - Math.cos(angle) * r * 0.3;
+    const endY = Math.sin(angle) * r;
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      const x = startX + (endX - startX) * t;
+      const y = startY + (endY - startY) * t;
+      const bulge = magnetStrength * 0.3 * Math.sin(t * Math.PI) * (1 + Math.abs(Math.cos(angle)) * 0.5);
+      const bx = x;
+      const by = y + (i < numLines/2 ? 1 : -1) * bulge * Math.sin(Math.cos(angle) * Math.PI * 0.5);
+      const bz = Math.sin(angle) * bulge * 0.5;
+      points.push(new THREE.Vector3(bx, by, bz));
+    }
+
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const t_progress = i / numLines;
+    const lineColor = new THREE.Color().setHSL(0.15 + t_progress * 0.1, 0.8, 0.6);
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: 0.7 }));
+    fieldLineGroup.add(line);
+  }
+}
+
+// Second magnet
+const magnet2 = new THREE.Group();
+scene.add(magnet2);
+function buildSecondMagnet() {
+  while (magnet2.children.length > 0) magnet2.remove(magnet2.children[0]);
+  if (mode !== 'bar') return;
+  const n2 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), new THREE.MeshPhongMaterial({ color: 0x22c55e }));
+  n2.position.x = 1;
+  magnet2.add(n2);
+  const s2 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), new THREE.MeshPhongMaterial({ color: 0xA855F7 }));
+  s2.position.x = -1;
+  magnet2.add(s2);
+}
+
+// Electromagnet coil
+const coilGroup = new THREE.Group();
+scene.add(coilGroup);
+function buildCoil() {
+  while (coilGroup.children.length > 0) coilGroup.remove(coilGroup.children[0]);
+  if (mode !== 'electro') return;
+
+  // Coil rings
+  for (let i = 0; i < 10; i++) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.5, 0.12, 8, 24),
+      new THREE.MeshPhongMaterial({ color: 0xD97706 })
+    );
+    ring.position.y = (i - 4.5) * 0.5;
+    ring.rotation.x = Math.PI / 2;
+    coilGroup.add(ring);
+  }
+  // Iron core
+  const core = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 6, 16),
+    new THREE.MeshPhongMaterial({ color: 0x6B7280 })
+  );
+  coilGroup.add(core);
+}
+
+// Compass needles
+const compassGroup = new THREE.Group();
+scene.add(compassGroup);
+function buildCompass() {
+  while (compassGroup.children.length > 0) compassGroup.remove(compassGroup.children[0]);
+  if (mode !== 'compass') return;
+
+  // Compass rose base
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.5, 1.5, 0.15, 32),
+    new THREE.MeshPhongMaterial({ color: 0x1e293b })
+  );
+  base.position.set(0, -1, 0);
+  compassGroup.add(base);
+
+  // Needle - North (red)
+  const needleN = new THREE.Mesh(
+    new THREE.ConeGeometry(0.2, 1.2, 8),
+    new THREE.MeshPhongMaterial({ color: 0xEF4444 })
+  );
+  needleN.position.y = 0.6;
+  needleN.name = 'needleN';
+  compassGroup.add(needleN);
+
+  // Needle - South (white)
+  const needleS = new THREE.Mesh(
+    new THREE.ConeGeometry(0.2, 1.2, 8),
+    new THREE.MeshPhongMaterial({ color: 0xF8FAFC })
+  );
+  needleS.position.y = -0.6;
+  needleS.rotation.z = Math.PI;
+  needleS.name = 'needleS';
+  compassGroup.add(needleS);
+
+  // Earth representation
+  const earth = new THREE.Mesh(
+    new THREE.SphereGeometry(3, 32, 32),
+    new THREE.MeshPhongMaterial({ color: 0x1d4ed8, transparent: true, opacity: 0.3 })
+  );
+  earth.position.set(0, -8, -5);
+  compassGroup.add(earth);
+}
+
+buildBarMagnet();
+buildFieldLines();
+buildSecondMagnet();
+
+function updateData() {
+  const dist = secondPos;
+  const forceType = mode === 'bar' ? (Math.random() > 0.5 ? 'Attract' : 'Repel') : 'EM Field';
+  document.getElementById('d-mode').textContent = mode === 'bar' ? 'Bar Magnet' : mode === 'electro' ? 'Electromagnet' : 'Compass';
+  document.getElementById('d-str').textContent = magnetStrength.toFixed(1) + ' units';
+  document.getElementById('d-poles').textContent = 'N ←→ S';
+  document.getElementById('d-force').textContent = forceType;
+  document.getElementById('d-dist').textContent = dist.toFixed(1) + ' units';
+}
+
+document.getElementById('sl-str').addEventListener('input', function() {
+  magnetStrength = parseFloat(this.value);
+  document.getElementById('lbl-str').textContent = magnetStrength;
+  buildFieldLines();
+  updateData();
+});
+document.getElementById('sl-pos').addEventListener('input', function() {
+  secondPos = parseFloat(this.value);
+  document.getElementById('lbl-pos').textContent = secondPos + ' units';
+  updateData();
+});
+document.getElementById('sl-curr').addEventListener('input', function() {
+  current = parseFloat(this.value);
+  document.getElementById('lbl-curr').textContent = current + ' A';
+  updateData();
+});
+
+function applyPreset(name) {
+  mode = name === 'bar' ? 'bar' : name === 'electro' ? 'electro' : 'compass';
+  magnetStrength = name === 'bar' ? 5 : name === 'electro' ? 7 : 3;
+  current = name === 'electro' ? 8 : 3;
+  document.getElementById('sl-str').value = magnetStrength;
+  document.getElementById('sl-curr').value = current;
+  document.getElementById('lbl-str').textContent = magnetStrength;
+  document.getElementById('lbl-curr').textContent = current + ' A';
+
+  magnetGroup.visible = mode === 'bar';
+  magnet2.visible = mode === 'bar';
+  fieldLineGroup.visible = mode === 'bar';
+  coilGroup.visible = mode === 'electro';
+  compassGroup.visible = mode === 'compass';
+
+  if (mode === 'electro') buildCoil();
+  if (mode === 'compass') buildCompass();
+  if (mode === 'bar') buildFieldLines();
+
+  showToast('Preset: ' + name);
+  updateData();
+}
+
+function resetSim() {
+  time = 0;
+  applyPreset('bar');
+  showToast('Reset!');
+}
+function togglePlay() {
+  simRunning = !simRunning;
+  document.getElementById('btn-play').textContent = simRunning ? '⏸ Pause' : '▶ Play';
+}
+function setSpeed(s) {
+  simSpeed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  const map = { 0.25:'spd1', 0.5:'spd2', 1:'spd3', 2:'spd4', 3:'spd5' };
+  document.getElementById(map[s]).classList.add('active');
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() { document.getElementById('about-modal').style.display='flex'; }
+function showToast(msg) {
+  const el = document.createElement('div'); el.className='toast-item'; el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(),2800);
+}
+
+const quizData = [
+  { q: "What happens when you put two North poles together?", opts: ["They attract", "They repel (push apart)", "Nothing happens", "They merge into one magnet"], ans: 1 },
+  { q: "What does an electromagnet need to work?", opts: ["Just a metal rod", "Electricity flowing through a coil of wire", "Two bar magnets", "A compass"], ans: 1 },
+  { q: "In which direction do magnetic field lines flow?", opts: ["South to North", "North to South", "In circles only", "They don't move"], ans: 1 },
+];
+let quizAnswered = [false,false,false];
+function renderQuiz() {
+  const cont = document.getElementById('quiz-content'); cont.innerHTML='';
+  quizData.forEach((q,qi) => {
+    const div = document.createElement('div'); div.className='mb-4';
+    div.innerHTML=`<div class="text-sm font-semibold text-slate-200 mb-2">${qi+1}. ${q.q}</div>`;
+    q.opts.forEach((opt,oi) => {
+      const btn = document.createElement('div'); btn.className='quiz-opt'; btn.textContent=opt;
+      if (!quizAnswered[qi]) btn.onclick = () => {
+        quizAnswered[qi]=true;
+        btn.parentElement.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
+        if(oi!==q.ans) btn.classList.add('wrong');
+        showToast(oi===q.ans?'✅ Correct!':'❌ Try again!');
+      };
+      div.appendChild(btn);
     });
+    cont.appendChild(div);
+  });
 }
+function showQuiz() { document.getElementById('quiz-panel').style.display='block'; document.getElementById('quiz-fab').style.display='none'; renderQuiz(); }
+function hideQuiz() { document.getElementById('quiz-panel').style.display='none'; document.getElementById('quiz-fab').style.display='flex'; }
+renderQuiz();
 
-// Simple environment (RoomEnvironment not available in r134 CDN build)
-scene.environment = null;
+katex.render('F \\propto \\frac{m_1 \\cdot m_2}{r^2}', document.getElementById('f1'), { throwOnError:false, displayMode:true });
+katex.render('B \\propto \\frac{\\mu_0 \\cdot I}{r}', document.getElementById('f2'), { throwOnError:false, displayMode:true });
 
+magnet2.position.x = secondPos;
 
+renderer.setAnimationLoop(function(timestamp) {
+  const elapsed = (timestamp - lastT)/1000;
+  lastT = timestamp;
+  const dt = Math.min(elapsed, 0.05) * simSpeed;
+  if (simRunning) time += dt;
 
-// === 基础粒子系统 ===
-
-function createParticleSystem(config) {
-    const {
-        count = 1000,
-        size = 0.1,
-        color = 0x00c6ff,
-        spread = 10
-    } = config;
-
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const velocities = new Float32Array(count * 3);
-
-    for (let i = 0; i < count * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * spread;
-        positions[i + 1] = (Math.random() - 0.5) * spread;
-        positions[i + 2] = (Math.random() - 0.5) * spread;
-
-        velocities[i] = (Math.random() - 0.5) * 0.1;
-        velocities[i + 1] = (Math.random() - 0.5) * 0.1;
-        velocities[i + 2] = (Math.random() - 0.5) * 0.1;
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
-
-    const material = new THREE.PointsMaterial({
-        size: size,
-        color: color,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
+  if (mode === 'bar') {
+    magnet2.position.x = secondPos;
+    // Pulsing field lines
+    fieldLineGroup.children.forEach((line, i) => {
+      line.material.opacity = 0.5 + 0.3 * Math.sin(time * 1.5 + i * 0.3);
     });
+    // Magnet attraction animation
+    const targetPos = secondPos;
+    const attraction = magnetStrength / (targetPos * targetPos) * 0.1;
+    magnet2.position.x = secondPos - attraction * Math.sin(time * 2) * 0.3;
+  }
 
-    const particles = new THREE.Points(geometry, material);
-    scene.add(particles);
+  if (mode === 'electro') {
+    // Coil rings pulse with current
+    coilGroup.children.forEach((ring, i) => {
+      if (ring.geometry.type === 'TorusGeometry') {
+        ring.material.emissive = new THREE.Color(0, current * 0.02, 0);
+        ring.scale.setScalar(1 + current * 0.01 * Math.sin(time * 3 + i * 0.2));
+      }
+    });
+  }
 
-    return {
-        mesh: particles,
-        update: function() {
-            const positions = particles.geometry.attributes.position.array;
-            const velocities = particles.geometry.attributes.velocity.array;
-
-            for (let i = 0; i < positions.length; i += 3) {
-                positions[i] += velocities[i];
-                positions[i + 1] += velocities[i + 1];
-                positions[i + 2] += velocities[i + 2];
-
-                // 边界检查
-                if (Math.abs(positions[i]) > spread / 2) velocities[i] *= -1;
-                if (Math.abs(positions[i + 1]) > spread / 2) velocities[i + 1] *= -1;
-                if (Math.abs(positions[i + 2]) > spread / 2) velocities[i + 2] *= -1;
-            }
-
-            particles.geometry.attributes.position.needsUpdate = true;
-        }
-    };
-}
-
-
-// === 创建物体 ===
-
-// magnet
-const geometry1 = new THREE.CylinderGeometry(1, 1, 2, 32);
-const material1 = createMaterial('metal', 0xe24a4a);
-const object1 = new THREE.Mesh(geometry1, material1);
-object1.position.set(0, 0, 0);
-object1.rotation.set(0, 0, 1.57);
-object1.scale.set(1, 3, 1);
-object1.castShadow = true;
-scene.add(object1);
-
-// ground
-const geometry2 = new THREE.PlaneGeometry(10, 10);
-const material2 = createMaterial('plastic', 0x1a1a2e);
-const object2 = new THREE.Mesh(geometry2, material2);
-object2.position.set(0, -2, 0);
-object2.rotation.set(-1.57, 0, 0);
-object2.scale.set(30, 30, 1);
-object2.receiveShadow = true;
-scene.add(object2);
-
-// 粒子系统 3
-const particleSystem3 = createParticleSystem({
-    count: 800,
-    size: 0.03,
-    color: 0x00c6ff,
-    spread: 8
-});
-
-
-// === 控制面板逻辑 ===
-
-document.getElementById('magnetic-strength').addEventListener('input', (e) => {
-    const value = parseFloat(e.target.value);
-    document.getElementById('magnetic-strength-value').textContent = value.toFixed(1);
-});
-
-document.getElementById('particle-count').addEventListener('input', (e) => {
-    const value = parseFloat(e.target.value);
-    document.getElementById('particle-count-value').textContent = value.toFixed(1);
-});
-
-document.getElementById('rotation-speed').addEventListener('input', (e) => {
-    const value = parseFloat(e.target.value);
-    document.getElementById('rotation-speed-value').textContent = value.toFixed(1);
-});
-
-
-
-    // === 动画循环 ===
-    function animate() {
-        requestAnimationFrame(animate);
-
-        const rotSpeed = parseFloat(document.getElementById('rotation-speed').value); object1.rotation.y += rotSpeed * 0.01; particleSystem3.update();
-
-        controls.update();
-        renderer.render(scene, camera);
+  if (mode === 'compass') {
+    // Needle spins slowly toward north
+    const needleN = compassGroup.getObjectByName('needleN');
+    if (needleN) {
+      compassGroup.rotation.y += (0 - compassGroup.rotation.y) * 0.02;
+      compassGroup.rotation.y = Math.sin(time * 0.3) * 0.2;
     }
+  }
 
-    animate();
-    
-
-
-// === 性能优化工具 ===
-
-// 设备检测
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
-
-// 根据设备调整质量
-if (isLowEnd) {
-    renderer.setPixelRatio(1);
-    renderer.shadowMap.enabled = false;
-} else {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-}
-
-// FPS 监控
-let lastTime = performance.now();
-let frames = 0;
-let fps = 60;
-
-function updateFPS() {
-    frames++;
-    const currentTime = performance.now();
-    if (currentTime >= lastTime + 1000) {
-        fps = Math.round((frames * 1000) / (currentTime - lastTime));
-        frames = 0;
-        lastTime = currentTime;
-    }
-}
-
-// 响应式处理
-window.addEventListener('resize', () => {
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
+  controls.update();
+  renderer.render(scene, camera);
 });
 
-    </script>
+function onResize() {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+document.addEventListener('keydown', e => {
+  if (e.code==='Space'){e.preventDefault();togglePlay();}
+  if (e.code==='KeyR') resetSim();
+  if (e.code==='Digit1') setSpeed(0.25);
+  if (e.code==='Digit2') setSpeed(0.5);
+  if (e.code==='Digit3') setSpeed(1);
+  if (e.code==='Digit4') setSpeed(2);
+  if (e.code==='Digit5') setSpeed(3);
+});
+
+updateData();
+showToast('🧲 Explore magnets and their invisible forces!');
+</script>
 </body>
 </html>

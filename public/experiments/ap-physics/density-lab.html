@@ -1,753 +1,776 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Density Lab — NeonPhysics AP Physics</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow-x:hidden}
-    .header{padding:20px 28px;background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(59,130,246,.08));border-bottom:1px solid rgba(6,182,212,.2)}
-    .header-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
-    .badge{background:rgba(6,182,212,.2);border:1px solid rgba(6,182,212,.4);color:#67e8f9;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.7rem;font-weight:700;color:#f0f4ff}
-    .subtitle{color:#94a3b8;font-size:.9rem}
-    .layout{display:grid;grid-template-columns:1fr 340px;gap:0;height:calc(100vh - 100px)}
-    .canvas-wrap{position:relative;background:#060e1a}
-    canvas{display:block;width:100%!important;height:100%!important}
-    .overlay{position:absolute;top:16px;left:16px;background:rgba(7,9,20,.88);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:14px 18px;backdrop-filter:blur(8px);min-width:260px}
-    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-    .metric-card{background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px}
-    .metric-title{font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
-    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
-    .val-cyan{color:#22d3ee}.val-blue{color:#60a5fa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-purple{color:#a78bfa}
-    .float-indicator{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;margin-top:6px}
-    .fi-float{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#86efac}
-    .fi-sink{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171}
-    .fi-neutral{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);color:#67e8f9}
-    .sidebar{background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto}
-    .section{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-    .param-row{margin-bottom:14px}
-    .param-label{display:flex;justify-content:space-between;margin-bottom:6px}
-    .param-name{font-size:12px;color:#94a3b8}
-    .param-val{font-size:12px;font-weight:600;color:#22d3ee;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(6,182,212,.2);border-radius:2px;cursor:pointer}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#06b6d4;cursor:pointer}
-    .preset-btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.1);color:#67e8f9;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-    .preset-btn:hover{background:rgba(6,182,212,.25);border-color:rgba(6,182,212,.5)}
-    .preset-btn.active{background:rgba(6,182,212,.3);border-color:#06b6d4;color:#fff}
-    .formula-box{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:8px;padding:10px 14px;margin-bottom:8px}
-    .formula-desc{font-size:10px;color:#64748b;margin-top:4px}
-    .density-bars{display:flex;gap:12px;align-items:flex-end;height:120px;padding:12px;background:rgba(255,255,255,.03);border-radius:8px;margin-top:8px}
-    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
-    .bar-fill{width:36px;border-radius:4px 4px 0 0;transition:height .4s ease;min-height:4px}
-    .bar-label{font-size:10px;color:#64748b;margin-top:6px;text-align:center}
-    .bar-value{font-size:11px;font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums}
-    .quiz-section{padding:18px 20px}
-    .quiz-q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-bottom:12px}
-    .quiz-q p{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
-    .quiz-opt{display:block;width:100%;text-align:left;padding:7px 10px;margin-bottom:4px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;transition:all .15s}
-    .quiz-opt:hover{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:#67e8f9}
-    .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-opt.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171}
-    .quiz-opt:disabled{cursor:default;opacity:.7}
-    .quiz-feedback{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:5px;display:none}
-    .quiz-feedback.show{display:block}
-    .quiz-feedback.correct-fb{background:rgba(34,197,94,.1);color:#86efac}
-    .quiz-feedback.wrong-fb{background:rgba(239,68,68,.08);color:#f87171}
-    .shape-toggle{display:flex;gap:8px;margin-bottom:14px}
-    .shape-btn{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
-    .shape-btn.active{background:rgba(6,182,212,.2);border-color:rgba(6,182,212,.5);color:#67e8f9}
-    @media(max-width:768px){
-      .layout{grid-template-columns:1fr;grid-template-rows:50vh 1fr}
-      .sidebar{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
-      .overlay{min-width:200px;padding:10px 14px}
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Density Lab — Archimedes & Buoyancy</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#f8fafc;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+  .glass{background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.13)}
+  .btn-speed{padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#cbd5e1;transition:all 0.2s}
+  .btn-speed.active{background:linear-gradient(135deg,#3B82F6,#0EA5E9);color:#fff;border-color:transparent}
+  .btn-preset{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;transition:all 0.2s}
+  .btn-preset:hover,.btn-preset.active{background:linear-gradient(135deg,#3B82F6,#0EA5E9);color:#fff;border-color:transparent}
+  .slider-wrap label{font-size:12px;color:#94a3b8}
+  input[type=range]{width:100%;accent-color:#3B82F6;cursor:pointer}
+  .data-val{font-variant-numeric:tabular-nums;font-size:13px;color:#e2e8f0}
+  #toast{position:fixed;top:64px;right:16px;z-index:999;pointer-events:none}
+  .toast-item{background:linear-gradient(135deg,#3B82F6,#0EA5E9);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;margin-bottom:6px;animation:slideIn 0.3s ease;box-shadow:0 4px 12px rgba(59,130,246,0.4)}
+  @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
+  .katex-block{margin:6px 0;font-size:13px}
+  .quiz-option{padding:8px 12px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin:4px 0;font-size:13px;transition:all 0.2s}
+  .quiz-option:hover{background:rgba(59,130,246,0.2);border-color:#3B82F6}
+  .quiz-option.correct{background:rgba(34,197,94,0.2);border-color:#22c55e;color:#86efac}
+  .quiz-option.wrong{background:rgba(239,68,68,0.2);border-color:#ef4444;color:#fca5a5}
+  #canvas-container{position:relative;flex:1;overflow:hidden}
+  .info-card{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:12px;color:#bfdbfe}
+  .float-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:4px 12px;border-radius:20px;font-size:14px;font-weight:bold;pointer-events:none;z-index:5}
+  #svg-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <span class="badge">AP PHYSICS</span>
-    <span class="badge badge-free">FREE</span>
+
+<!-- NAV -->
+<nav class="glass flex items-center justify-between px-4 py-2 z-50" style="border-bottom:1px solid rgba(59,130,246,0.3)">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Density Lab</span>
+    <span class="text-xs text-slate-400 ml-2">Archimedes Principle · Buoyancy</span>
   </div>
-  <h1>Density Lab</h1>
-  <p class="subtitle">Density, mass, volume, buoyancy, and sink-or-float</p>
+  <div class="flex gap-2">
+    <button onclick="resetSim()" class="btn-preset text-xs">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset text-xs">⛶ Fullscreen</button>
+    <button onclick="document.getElementById('about-modal').classList.remove('hidden')" class="btn-preset text-xs">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- SIDEBAR -->
+  <aside class="glass sidebar-scroll" style="width:300px;min-width:260px;border-right:1px solid rgba(59,130,246,0.2);padding:14px">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Core Formulas</h3>
+    <div class="katex-block" id="f1"></div>
+    <p class="text-xs text-slate-400 mb-2">Density is mass per unit volume — the single most important property for floating/sinking</p>
+    <div class="katex-block" id="f2"></div>
+    <p class="text-xs text-slate-400 mb-2">Archimedes: buoyant force equals weight of displaced fluid</p>
+    <div class="katex-block" id="f3"></div>
+    <p class="text-xs text-slate-400 mb-3">Object floats when ρ_obj ≤ ρ_fluid; fraction submerged = ρ_obj / ρ_fluid</p>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 mt-4">Concept</h3>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">Density tells you how much mass is packed into a given volume. An object floats if it is less dense than the fluid — buoyancy is the upward force of the displaced fluid. The key insight is that an object only needs to displace fluid equal to its own weight, not its volume.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-2">When an object is fully submerged, buoyant force = ρ_fluid × V_obj × g. If this exceeds the object's weight (ρ_obj × V_obj × g), the net force is upward and it floats. If not, it sinks. The ratio ρ_obj/ρ_fluid tells you exactly how much is submerged.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mb-3">The displacement method (Archimedes) lets you measure density indirectly: weigh an object in air, then in fluid. The weight difference equals the buoyant force = ρ_fluid × V_displaced × g. Solve for V, then ρ = m/V.</p>
+
+    <div class="info-card"><b>🔬 Archimedes' Eureka</b><br>Archimedes discovered buoyancy (~250 BCE) when he stepped into a bath and noticed the water level rise. He realised displaced volume equals object volume — a way to measure irregular shapes.</div>
+    <div class="info-card"><b>⚠️ Common Misconception</b><br>Steel ships float not because steel is light, but because the hollow hull displaces a huge volume — the average density of ship + air is less than water.</div>
+    <div class="info-card"><b>🔗 AP Connection</b><br>AP Physics 1 & 2: Archimedes principle, hydrostatics, pressure. AP Chemistry: density in solution stoichiometry and colligative properties.</div>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 mt-4">Why It Matters</h3>
+    <ul class="text-xs text-slate-300 leading-relaxed space-y-1">
+      <li>• Ship and submarine design: control buoyancy by adjusting ballast water</li>
+      <li>• Medical: blood density measurement diagnoses anemia and dehydration</li>
+      <li>• Geology: less dense continental crust floats on denser mantle (isostasy)</li>
+    </ul>
+
+    <!-- QUIZ -->
+    <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 mt-5">Quiz</h3>
+    <div id="quiz-container"></div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="flex flex-col flex-1 overflow-hidden">
+    <div id="canvas-container">
+      <svg id="svg-overlay"></svg>
+      <!-- Data overlay -->
+      <div class="glass absolute top-3 left-3 p-3 rounded-xl" style="min-width:210px;z-index:10">
+        <div class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider">Live Data</div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Object mass</span><span class="data-val" id="d-mass">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Object volume</span><span class="data-val" id="d-vol">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Object density ρ_obj</span><span class="data-val" id="d-rho-obj">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Fluid density ρ_fl</span><span class="data-val" id="d-rho-fl">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Status</span><span class="data-val font-bold" id="d-status">—</span></div>
+        <div class="flex justify-between gap-4 mb-1"><span class="text-xs text-slate-400">Fraction submerged</span><span class="data-val" id="d-frac">—</span></div>
+        <div class="flex justify-between gap-4"><span class="text-xs text-slate-400">Buoyant force</span><span class="data-val" id="d-fb">—</span></div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="glass p-3" style="border-top:1px solid rgba(59,130,246,0.2)">
+      <div class="flex flex-wrap gap-4 items-start">
+        <!-- Sliders -->
+        <div class="flex flex-col gap-2" style="min-width:220px">
+          <div class="slider-wrap">
+            <label class="flex justify-between"><span>Object mass (g)</span><span class="text-blue-300 font-mono" id="lbl-mass">100</span></label>
+            <input type="range" id="sl-mass" min="10" max="500" step="5" value="100"/>
+          </div>
+          <div class="slider-wrap">
+            <label class="flex justify-between"><span>Object volume (cm³)</span><span class="text-blue-300 font-mono" id="lbl-vol">100</span></label>
+            <input type="range" id="sl-vol" min="5" max="500" step="5" value="100"/>
+          </div>
+          <div class="slider-wrap">
+            <label class="flex justify-between"><span>Fluid density (kg/m³)</span><span class="text-blue-300 font-mono" id="lbl-rho-fl">1000</span></label>
+            <input type="range" id="sl-rho-fl" min="800" max="13600" step="50" value="1000"/>
+          </div>
+        </div>
+
+        <!-- Presets -->
+        <div class="flex flex-col gap-1">
+          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Presets</span>
+          <div class="flex gap-2 flex-wrap">
+            <button class="btn-preset" onclick="applyPreset('ice')">Ice in Water</button>
+            <button class="btn-preset" onclick="applyPreset('iron')">Iron in Mercury</button>
+            <button class="btn-preset" onclick="applyPreset('wood')">Wood in Oil</button>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col gap-1">
+          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Controls</span>
+          <div class="flex gap-2 items-center">
+            <button id="btn-play" onclick="togglePlay()" class="btn-preset px-4">⏸ Pause</button>
+            <button onclick="resetSim()" class="btn-preset px-3">↺</button>
+          </div>
+          <div class="flex gap-1 mt-1">
+            <span class="text-xs text-slate-400 mr-1">Speed:</span>
+            <button class="btn-speed" data-s="0.25" onclick="setSpeed(0.25)">0.25x</button>
+            <button class="btn-speed" data-s="0.5" onclick="setSpeed(0.5)">0.5x</button>
+            <button class="btn-speed active" data-s="1" onclick="setSpeed(1)">1x</button>
+            <button class="btn-speed" data-s="2" onclick="setSpeed(2)">2x</button>
+            <button class="btn-speed" data-s="3" onclick="setSpeed(3)">3x</button>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 self-end">
+          Space: pause | R: reset | 1-5: speed
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="layout">
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="c"></canvas>
-    <div class="overlay">
-      <div class="metric-grid">
-        <div class="metric-card">
-          <div class="metric-title">Object Density</div>
-          <div class="metric-val val-cyan" id="objDensityDisplay">1.00 kg/L</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Fluid Density</div>
-          <div class="metric-val val-blue" id="fluidDensityDisplay">1.00 kg/L</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Buoyant Force</div>
-          <div class="metric-val val-green" id="buoyancyDisplay">0.00 N</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Weight</div>
-          <div class="metric-val val-amber" id="weightDisplay">0.00 N</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Net Force</div>
-          <div class="metric-val val-purple" id="netForceDisplay">0.00 N</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Submerged</div>
-          <div class="metric-val val-red" id="submergedDisplay">0%</div>
-        </div>
-      </div>
-      <div class="float-indicator fi-neutral" id="floatIndicator">
-        NEUTRAL BUOYANCY
-      </div>
-    </div>
-  </div>
+<div id="toast"></div>
 
-  <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Object Shape</div>
-      <div class="shape-toggle">
-        <div class="shape-btn active" id="shapeSphere" onclick="setShape('sphere')">Sphere</div>
-        <div class="shape-btn" id="shapeCube" onclick="setShape('cube')">Cube</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Parameters</div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Object Mass (m)</span>
-          <span class="param-val" id="massVal">1.00 kg</span>
-        </div>
-        <input type="range" id="massSlider" min="0.1" max="20" step="0.1" value="1">
-      </div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Object Volume (V)</span>
-          <span class="param-val" id="volumeVal">1.00 L</span>
-        </div>
-        <input type="range" id="volumeSlider" min="0.1" max="10" step="0.1" value="1">
-      </div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Fluid Density (ρ_fluid)</span>
-          <span class="param-val" id="fluidVal">1.00 kg/L</span>
-        </div>
-        <input type="range" id="fluidSlider" min="0.5" max="13.6" step="0.1" value="1">
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Presets</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        <button class="preset-btn" onclick="applyPreset('wood')">Wood in Water</button>
-        <button class="preset-btn" onclick="applyPreset('steel')">Steel in Water</button>
-        <button class="preset-btn" onclick="applyPreset('gold')">Gold in Mercury</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Density Comparison</div>
-      <div class="density-bars">
-        <div class="bar-col">
-          <div class="bar-value val-cyan" id="barObjVal">1.00</div>
-          <div class="bar-fill" id="barObj" style="height:40%;background:linear-gradient(to top,#06b6d4,#22d3ee)"></div>
-          <div class="bar-label">Object</div>
-        </div>
-        <div class="bar-col">
-          <div class="bar-value val-blue" id="barFluidVal">1.00</div>
-          <div class="bar-fill" id="barFluid" style="height:40%;background:linear-gradient(to top,#3b82f6,#60a5fa)"></div>
-          <div class="bar-label">Fluid</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Key Formulas</div>
-      <div class="formula-box">
-        <div id="f1"></div>
-        <div class="formula-desc">Density = Mass / Volume</div>
-      </div>
-      <div class="formula-box">
-        <div id="f2"></div>
-        <div class="formula-desc">Buoyant force (Archimedes' principle)</div>
-      </div>
-    </div>
-
-    <div class="quiz-section">
-      <div class="section-title">Quiz</div>
-      <div class="quiz-q" id="q1">
-        <p>Q1: A solid cube of iron (density 7.87 kg/L) is placed in mercury (density 13.6 kg/L). What happens?</p>
-        <button class="quiz-opt" onclick="checkQuiz(1,this,'A')">A) It sinks to the bottom</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,this,'B')">B) It floats partially submerged</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,this,'C')">C) It floats completely on the surface</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,this,'D')">D) It dissolves</button>
-        <div class="quiz-feedback" id="fb1"></div>
-      </div>
-      <div class="quiz-q" id="q2">
-        <p>Q2: An object has mass 4 kg and volume 5 L. What is its density, and will it float in water?</p>
-        <button class="quiz-opt" onclick="checkQuiz(2,this,'A')">A) 0.8 kg/L — it sinks</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,this,'B')">B) 1.25 kg/L — it floats</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,this,'C')">C) 0.8 kg/L — it floats</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,this,'D')">D) 20 kg/L — it sinks</button>
-        <div class="quiz-feedback" id="fb2"></div>
-      </div>
-    </div>
+<!-- About Modal -->
+<div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.7)">
+  <div class="glass rounded-2xl p-6 max-w-md w-full mx-4">
+    <h2 class="text-lg font-bold text-blue-400 mb-3">About This Simulation</h2>
+    <p class="text-sm text-slate-300 mb-3">An object is dropped into a fluid container. The simulation uses Velocity Verlet integration to model the object's motion under gravity + buoyancy + damping. Watch the object find its equilibrium position.</p>
+    <p class="text-sm text-slate-400 mb-4"><b>Keyboard shortcuts:</b><br>Space — Play/Pause | R — Reset | 1-5 — Speed</p>
+    <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="btn-preset w-full">Close</button>
   </div>
 </div>
 
 <script>
-'use strict';
+// ── OrbitControls inline ──────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.sub(target)); camera.position.add(target);
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
 
-try {
-  // ── State ───────────────────────────────────────────────────────────────────
-  var state = {
-    mass: 1, volume: 1, fluidDensity: 1,
-    shape: 'sphere',
-    g: 9.81
-  };
+// ── Physics Constants ────────────────────────────────────────────
+const G = 9.81; // m/s²
 
-  // ── DOM refs ────────────────────────────────────────────────────────────────
-  var massSlider = document.getElementById('massSlider');
-  var volumeSlider = document.getElementById('volumeSlider');
-  var fluidSlider = document.getElementById('fluidSlider');
+// Parameters (SI internally)
+let mass_g = 100;     // grams
+let vol_cm3 = 100;    // cm³
+let rho_fl = 1000;    // kg/m³
 
-  // ── Three.js Setup ──────────────────────────────────────────────────────────
-  var canvas = document.getElementById('c');
-  var wrap = document.getElementById('canvasWrap');
-  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x0f172a, 1);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Derived
+function getRhoObj() { return (mass_g * 1e-3) / (vol_cm3 * 1e-6); } // kg/m³
+function getObjMass() { return mass_g * 1e-3; } // kg
+function getObjVol() { return vol_cm3 * 1e-6; } // m³
 
-  var scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0f172a, 30, 60);
+// Display scaling
+const FLUID_HEIGHT = 6;   // display units for fluid height
+const FLUID_BOTTOM = -3;  // display y position of fluid bottom
+const FLUID_TOP = FLUID_BOTTOM + FLUID_HEIGHT; // = 3
+const CONTAINER_HALF = 3; // display units half-width
 
-  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
-  camera.position.set(6, 5, 10);
-  camera.lookAt(0, 0, 0);
+// Convert object volume to display size
+function getDisplaySize() {
+  const V = vol_cm3 * 1e-6; // m³
+  const side = Math.cbrt(V) * 100; // cube root, scale to display units
+  return Math.min(2.0, Math.max(0.3, side));
+}
 
-  // OrbitControls
-  var controls = (typeof THREE.OrbitControls !== 'undefined')
-    ? new THREE.OrbitControls(camera, renderer.domElement)
-    : null;
-  if (controls) {
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.minDistance = 5;
-    controls.maxDistance = 30;
-    controls.target.set(0, 0, 0);
-  }
+// Physics state: y position of object center (display units)
+let objY, objVel;
+let playing = true, speedFactor = 1;
 
-  // ── Lighting (4 lights) ─────────────────────────────────────────────────────
-  var ambientLight = new THREE.AmbientLight(0x334466, 1.2);
-  scene.add(ambientLight);
+function resetSim() {
+  objY = FLUID_TOP + 2; // start above fluid
+  objVel = 0;
+  showToast('Simulation reset');
+  updateDataPanel();
+}
 
-  var dirLight = new THREE.DirectionalLight(0xeef4ff, 2.0);
-  dirLight.position.set(6, 10, 8);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.set(1024, 1024);
-  scene.add(dirLight);
+// Fraction of object submerged in fluid (0 to 1)
+function getFractionSubmerged() {
+  const size = getDisplaySize();
+  const halfH = size / 2;
+  const topObj = objY + halfH;
+  const botObj = objY - halfH;
+  if (topObj <= FLUID_BOTTOM) return 1; // fully below but clamped
+  if (botObj >= FLUID_TOP) return 0;    // fully above fluid
+  const submergedH = FLUID_TOP - botObj;
+  return Math.min(1, Math.max(0, submergedH / size));
+}
 
-  var fillLight = new THREE.DirectionalLight(0x6ee7f9, 0.6);
-  fillLight.position.set(-6, 4, -4);
-  scene.add(fillLight);
+function getAcceleration(y) {
+  const size = getDisplaySize();
+  const m = getObjMass();
+  const V = getObjVol();
+  const frac = getFractionSubmergedAt(y, size);
 
-  var pointLight = new THREE.PointLight(0x22d3ee, 0.8, 20);
-  pointLight.position.set(0, 8, 0);
-  scene.add(pointLight);
+  // Buoyant force (SI)
+  const V_disp = V * frac; // m³ displaced
+  const F_b = rho_fl * V_disp * G; // N (upward)
+  const W = m * G;                   // N (downward)
+  const F_net = F_b - W;             // N
 
-  // ── Tank ────────────────────────────────────────────────────────────────────
-  var TANK_W = 5, TANK_H = 6, TANK_D = 4;
-  var TANK_BOTTOM_Y = -3;
-  var FLUID_BASE_Y = 2.0;  // water level without object
+  // Damping to simulate viscous drag
+  const C_drag = 5.0 * m;
+  const a = F_net / m - C_drag * objVel;
 
-  var tankMat = new THREE.MeshPhysicalMaterial({
-    color: 0x1e3a5f,
-    transparent: true,
-    opacity: 0.12,
-    side: THREE.DoubleSide,
-    roughness: 0.1,
-    transmission: 0.6
-  });
+  // Floor constraint
+  if (y - size / 2 <= FLUID_BOTTOM && a < 0) return 0;
+  return a; // m/s² but display units are coupled...
+}
 
-  // Tank walls
-  var tankWalls = [
-    { pos: [-TANK_W / 2, TANK_BOTTOM_Y + TANK_H / 2, 0], size: [0.08, TANK_H, TANK_D] },
-    { pos: [TANK_W / 2, TANK_BOTTOM_Y + TANK_H / 2, 0], size: [0.08, TANK_H, TANK_D] },
-    { pos: [0, TANK_BOTTOM_Y, 0], size: [TANK_W, 0.08, TANK_D] },
-    { pos: [0, TANK_BOTTOM_Y + TANK_H / 2, -TANK_D / 2], size: [TANK_W, TANK_H, 0.08] },
-    { pos: [0, TANK_BOTTOM_Y + TANK_H / 2, TANK_D / 2], size: [TANK_W, TANK_H, 0.08] }
-  ];
-  tankWalls.forEach(function (w) {
-    var geo = new THREE.BoxGeometry(w.size[0], w.size[1], w.size[2]);
-    var mesh = new THREE.Mesh(geo, tankMat);
-    mesh.position.set(w.pos[0], w.pos[1], w.pos[2]);
-    scene.add(mesh);
-  });
+function getFractionSubmergedAt(y, size) {
+  const halfH = size / 2;
+  const topObj = y + halfH;
+  const botObj = y - halfH;
+  if (topObj <= FLUID_BOTTOM) return 1;
+  if (botObj >= FLUID_TOP) return 0;
+  const submergedH = FLUID_TOP - botObj;
+  return Math.min(1, Math.max(0, submergedH / size));
+}
 
-  // Tank edge lines
-  var edgeMat = new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.3 });
-  var edgePoints = [
-    [[-TANK_W / 2, TANK_BOTTOM_Y, -TANK_D / 2], [-TANK_W / 2, TANK_BOTTOM_Y + TANK_H, -TANK_D / 2]],
-    [[TANK_W / 2, TANK_BOTTOM_Y, -TANK_D / 2], [TANK_W / 2, TANK_BOTTOM_Y + TANK_H, -TANK_D / 2]],
-    [[-TANK_W / 2, TANK_BOTTOM_Y, TANK_D / 2], [-TANK_W / 2, TANK_BOTTOM_Y + TANK_H, TANK_D / 2]],
-    [[TANK_W / 2, TANK_BOTTOM_Y, TANK_D / 2], [TANK_W / 2, TANK_BOTTOM_Y + TANK_H, TANK_D / 2]]
-  ];
-  edgePoints.forEach(function (ep) {
-    var geo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(ep[0][0], ep[0][1], ep[0][2]),
-      new THREE.Vector3(ep[1][0], ep[1][1], ep[1][2])
-    ]);
-    scene.add(new THREE.Line(geo, edgeMat));
-  });
+function verletStep(dt) {
+  const a1 = getAcceleration(objY);
+  const vHalf = objVel + 0.5 * a1 * dt;
+  let newY = objY + vHalf * dt;
 
-  // ── Fluid ───────────────────────────────────────────────────────────────────
-  var fluidGeo = new THREE.BoxGeometry(TANK_W - 0.1, FLUID_BASE_Y - TANK_BOTTOM_Y, TANK_D - 0.1);
-  var fluidMat = new THREE.MeshPhysicalMaterial({
-    color: 0x0ea5e9,
-    transparent: true,
-    opacity: 0.35,
-    roughness: 0.1,
-    transmission: 0.3,
+  const size = getDisplaySize();
+  // Floor constraint
+  const minY = FLUID_BOTTOM + size / 2;
+  if (newY < minY) { newY = minY; }
+
+  // Ceiling: sky limit
+  const maxY = FLUID_TOP + 4;
+  if (newY > maxY) { newY = maxY; }
+
+  const a2 = getAcceleration(newY);
+  let newVel = vHalf + 0.5 * a2 * dt;
+
+  // Clamp at floor
+  if (newY <= minY && newVel < 0) newVel = 0;
+
+  objY = newY;
+  objVel = newVel;
+}
+
+function physicsUpdate(dt) {
+  const eff_dt = Math.min(dt * speedFactor, 0.05);
+  const maxSub = 0.002;
+  const steps = Math.ceil(eff_dt / maxSub);
+  const subDt = eff_dt / steps;
+  for (let i = 0; i < steps; i++) verletStep(subDt);
+}
+
+// ── Three.js ──────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 500);
+camera.position.set(0, 2, 18);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 40;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+// Grid
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+// Fluid container (glass box)
+function makeContainerWalls() {
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: 0x38bdf8, transparent: true, opacity: 0.12,
+    roughness: 0, metalness: 0,
     side: THREE.DoubleSide
   });
-  var fluidMesh = new THREE.Mesh(fluidGeo, fluidMat);
-  fluidMesh.position.set(0, TANK_BOTTOM_Y + (FLUID_BASE_Y - TANK_BOTTOM_Y) / 2, 0);
-  scene.add(fluidMesh);
+  const W = CONTAINER_HALF * 2, H = FLUID_HEIGHT, D = CONTAINER_HALF * 2;
+  const walls = new THREE.Group();
+  // Back wall
+  walls.add(Object.assign(new THREE.Mesh(new THREE.PlaneGeometry(W, H), mat), { position: new THREE.Vector3(0, FLUID_BOTTOM + H/2, -CONTAINER_HALF) }));
+  // Front wall
+  walls.add(Object.assign(new THREE.Mesh(new THREE.PlaneGeometry(W, H), mat), { position: new THREE.Vector3(0, FLUID_BOTTOM + H/2, CONTAINER_HALF) }));
+  // Left wall
+  const lm = new THREE.Mesh(new THREE.PlaneGeometry(D, H), mat);
+  lm.rotation.y = Math.PI/2; lm.position.set(-CONTAINER_HALF, FLUID_BOTTOM + H/2, 0);
+  walls.add(lm);
+  // Right wall
+  const rm = new THREE.Mesh(new THREE.PlaneGeometry(D, H), mat);
+  rm.rotation.y = Math.PI/2; rm.position.set(CONTAINER_HALF, FLUID_BOTTOM + H/2, 0);
+  walls.add(rm);
+  // Bottom
+  walls.add(Object.assign(new THREE.Mesh(new THREE.PlaneGeometry(W, D), mat), {
+    position: new THREE.Vector3(0, FLUID_BOTTOM, 0),
+    rotation: new THREE.Euler(-Math.PI/2, 0, 0)
+  }));
+  return walls;
+}
+scene.add(makeContainerWalls());
 
-  // Water surface plane (ripple visual)
-  var surfaceGeo = new THREE.PlaneGeometry(TANK_W - 0.12, TANK_D - 0.12, 32, 32);
-  var surfaceMat = new THREE.MeshPhysicalMaterial({
-    color: 0x38bdf8,
-    transparent: true,
-    opacity: 0.25,
-    roughness: 0.0,
-    metalness: 0.1,
-    side: THREE.DoubleSide
-  });
-  var surfaceMesh = new THREE.Mesh(surfaceGeo, surfaceMat);
-  surfaceMesh.rotation.x = -Math.PI / 2;
-  surfaceMesh.position.set(0, FLUID_BASE_Y, 0);
-  scene.add(surfaceMesh);
+// Fluid mesh
+const fluidGeo = new THREE.BoxGeometry(CONTAINER_HALF * 2 - 0.05, FLUID_HEIGHT, CONTAINER_HALF * 2 - 0.05);
+const fluidMat = new THREE.MeshPhysicalMaterial({
+  color: 0x0ea5e9, transparent: true, opacity: 0.35,
+  roughness: 0.1, metalness: 0
+});
+const fluidMesh = new THREE.Mesh(fluidGeo, fluidMat);
+fluidMesh.position.set(0, FLUID_BOTTOM + FLUID_HEIGHT / 2, 0);
+scene.add(fluidMesh);
 
-  // ── Object ──────────────────────────────────────────────────────────────────
-  var objMat = new THREE.MeshPhysicalMaterial({
-    color: 0xfbbf24,
-    roughness: 0.3,
-    metalness: 0.2,
-    clearcoat: 0.4
-  });
+// Object mesh (cube)
+let objSize = 1;
+let objGeo = new THREE.BoxGeometry(objSize, objSize, objSize);
+const objMat = new THREE.MeshStandardMaterial({
+  color: 0xfbbf24, metalness: 0.3, roughness: 0.4,
+  emissive: 0x92400e, emissiveIntensity: 0.2
+});
+const objMesh = new THREE.Mesh(objGeo, objMat);
+objMesh.castShadow = true;
+scene.add(objMesh);
 
-  var sphereGeo = new THREE.SphereGeometry(0.5, 32, 32);
-  var cubeGeo = new THREE.BoxGeometry(1, 1, 1);
-  var objMesh = new THREE.Mesh(sphereGeo, objMat);
-  objMesh.castShadow = true;
-  objMesh.position.set(0, FLUID_BASE_Y, 0);
-  scene.add(objMesh);
+// Waterline indicator
+const wlGeo = new THREE.PlaneGeometry(CONTAINER_HALF * 2, 0.05);
+const wlMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0ea5e9, emissiveIntensity: 0.8 });
+const waterline = new THREE.Mesh(wlGeo, wlMat);
+waterline.rotation.x = -Math.PI / 2;
+waterline.position.set(0, FLUID_TOP, 0);
+scene.add(waterline);
 
-  // ── Force Arrows ────────────────────────────────────────────────────────────
-  var arrowGroup = new THREE.Group();
-  scene.add(arrowGroup);
+// Fluid level line (dynamic, shows displaced water level)
+const fluidLevelGeo = new THREE.PlaneGeometry(CONTAINER_HALF * 2, 0.03);
+const fluidLevelMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x16a34a, emissiveIntensity: 1 });
+const fluidLevel = new THREE.Mesh(fluidLevelGeo, fluidLevelMat);
+fluidLevel.rotation.x = -Math.PI / 2;
+scene.add(fluidLevel);
 
-  function createArrow(color, dir) {
-    var arrowLen = 1;
-    var headLen = 0.25;
-    var headW = 0.12;
-    var arrow = new THREE.ArrowHelper(
-      dir, new THREE.Vector3(0, 0, 0), arrowLen, color, headLen, headW
-    );
-    arrowGroup.add(arrow);
-    return arrow;
-  }
+// Buoyancy force arrow (cylinder + cone)
+function makeArrow(color) {
+  const group = new THREE.Group();
+  const shaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.06, 1, 8),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6 })
+  );
+  const head = new THREE.Mesh(
+    new THREE.ConeGeometry(0.15, 0.35, 8),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6 })
+  );
+  shaft.position.y = 0.5;
+  head.position.y = 1.175;
+  group.add(shaft, head);
+  return group;
+}
+const buoyArrow = makeArrow(0x22c55e); // green = buoyancy up
+const gravArrow = makeArrow(0xef4444);  // red = gravity down
+gravArrow.rotation.z = Math.PI;
+scene.add(buoyArrow, gravArrow);
 
-  var buoyancyArrow = createArrow(0x34d399, new THREE.Vector3(0, 1, 0));
-  var gravityArrow = createArrow(0x3b82f6, new THREE.Vector3(0, -1, 0));
+// SVG overlay
+const svgEl = document.getElementById('svg-overlay');
 
-  // ── Grid floor ──────────────────────────────────────────────────────────────
-  var gridHelper = new THREE.GridHelper(20, 20, 0x1e293b, 0x0f172a);
-  gridHelper.position.y = TANK_BOTTOM_Y - 0.5;
-  scene.add(gridHelper);
-
-  // ── Physics Computation ─────────────────────────────────────────────────────
-  var currentObjY = FLUID_BASE_Y + 2;
-  var targetObjY = currentObjY;
-  var currentWaterY = FLUID_BASE_Y;
-  var physicsResult = {};
-
-  function computePhysics() {
-    var m = state.mass;
-    var V = state.volume;         // liters
-    var rhoFluid = state.fluidDensity; // kg/L
-    var g = state.g;
-
-    var rhoObj = m / V;           // kg/L
-    var V_m3 = V / 1000;         // convert L to m^3
-    var rhoFluid_si = rhoFluid * 1000; // kg/m^3
-    var weight = m * g;
-
-    var submergedFraction;
-    var floatState;
-
-    if (rhoObj < rhoFluid) {
-      // Floats: submerged fraction = rhoObj / rhoFluid
-      submergedFraction = rhoObj / rhoFluid;
-      floatState = 'float';
-    } else if (Math.abs(rhoObj - rhoFluid) < 0.001) {
-      submergedFraction = 1.0;
-      floatState = 'neutral';
-    } else {
-      submergedFraction = 1.0;
-      floatState = 'sink';
-    }
-
-    var V_submerged_m3 = submergedFraction * V_m3;
-    var buoyantForce = rhoFluid_si * V_submerged_m3 * g;
-    var netForce = buoyantForce - weight;
-
-    // Water level rise from displaced volume
-    var tankArea = (TANK_W - 0.1) * (TANK_D - 0.1); // approx area in scene units
-    // Scale: 1L = 0.001 m^3, but in scene units we scale up for visibility
-    var displacedSceneVol = V_submerged_m3 * 500; // visual scaling
-    var waterRise = displacedSceneVol / tankArea;
-
-    physicsResult = {
-      rhoObj: rhoObj,
-      rhoFluid: rhoFluid,
-      weight: weight,
-      buoyantForce: buoyantForce,
-      netForce: netForce,
-      submergedFraction: submergedFraction,
-      floatState: floatState,
-      waterRise: waterRise
-    };
-
-    return physicsResult;
-  }
-
-  // ── Object sizing & positioning ─────────────────────────────────────────────
-  function getObjectRadius() {
-    // Visual radius based on volume (sphere: V = 4/3 pi r^3)
-    // Scale so 1L -> radius ~0.5, 10L -> radius ~1.1
-    return Math.pow((3 * state.volume) / (4 * Math.PI), 1 / 3) * 1.5 + 0.2;
-  }
-
-  function getObjectHalfHeight() {
-    if (state.shape === 'sphere') {
-      return getObjectRadius();
-    } else {
-      // Cube side length from volume
-      var side = Math.pow(state.volume, 1 / 3) * 0.9 + 0.3;
-      return side / 2;
-    }
-  }
-
-  function updateObjectGeometry() {
+function updateObjectMesh() {
+  const newSize = getDisplaySize();
+  if (Math.abs(newSize - objSize) > 0.01) {
+    objSize = newSize;
     scene.remove(objMesh);
-    if (state.shape === 'sphere') {
-      var r = getObjectRadius();
-      objMesh = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 32), objMat);
-    } else {
-      var side = Math.pow(state.volume, 1 / 3) * 0.9 + 0.3;
-      objMesh = new THREE.Mesh(new THREE.BoxGeometry(side, side, side), objMat);
-    }
-    objMesh.castShadow = true;
+    objMesh.geometry.dispose();
+    objMesh.geometry = new THREE.BoxGeometry(objSize, objSize, objSize);
     scene.add(objMesh);
   }
 
-  function computeTargetY(p) {
-    var halfH = getObjectHalfHeight();
-    var waterY = FLUID_BASE_Y + p.waterRise;
+  objMesh.position.set(0, objY, 0);
 
-    if (p.floatState === 'float') {
-      // Float: bottom of object at waterY - submergedFraction * diameter
-      var submergedDepth = p.submergedFraction * halfH * 2;
-      return waterY - submergedDepth + halfH;
-    } else if (p.floatState === 'neutral') {
-      // Neutral: center at water midpoint
-      return (TANK_BOTTOM_Y + waterY) / 2;
-    } else {
-      // Sink: rest on bottom
-      return TANK_BOTTOM_Y + 0.04 + halfH;
-    }
+  // Color by status
+  const rhoObj = getRhoObj();
+  if (rhoObj < rho_fl * 0.95) {
+    objMat.color.setHex(0xfbbf24); // yellow - floats
+    objMat.emissive.setHex(0x92400e);
+  } else if (rhoObj > rho_fl * 1.05) {
+    objMat.color.setHex(0xf87171); // red - sinks
+    objMat.emissive.setHex(0x7f1d1d);
+  } else {
+    objMat.color.setHex(0x34d399); // green - neutral buoyancy
+    objMat.emissive.setHex(0x064e3b);
   }
 
-  // ── UI Updates ──────────────────────────────────────────────────────────────
-  function updateUI(p) {
-    document.getElementById('objDensityDisplay').textContent = p.rhoObj.toFixed(2) + ' kg/L';
-    document.getElementById('fluidDensityDisplay').textContent = p.rhoFluid.toFixed(2) + ' kg/L';
-    document.getElementById('buoyancyDisplay').textContent = p.buoyantForce.toFixed(2) + ' N';
-    document.getElementById('weightDisplay').textContent = p.weight.toFixed(2) + ' N';
-    document.getElementById('netForceDisplay').textContent = (p.netForce >= 0 ? '+' : '') + p.netForce.toFixed(2) + ' N';
-    document.getElementById('submergedDisplay').textContent = (p.submergedFraction * 100).toFixed(1) + '%';
+  // Arrows
+  const frac = getFractionSubmerged();
+  const V = getObjVol();
+  const m = getObjMass();
+  const F_b = rho_fl * V * frac * G;
+  const W = m * G;
 
-    document.getElementById('massVal').textContent = state.mass.toFixed(2) + ' kg';
-    document.getElementById('volumeVal').textContent = state.volume.toFixed(2) + ' L';
-    document.getElementById('fluidVal').textContent = state.fluidDensity.toFixed(2) + ' kg/L';
+  const arrowScale = Math.min(3, Math.max(0.1, F_b / W));
+  const gravScale = 1.0;
 
-    // Float indicator
-    var indicator = document.getElementById('floatIndicator');
-    if (p.floatState === 'float') {
-      indicator.className = 'float-indicator fi-float';
-      indicator.textContent = 'FLOATING — \u03C1_obj < \u03C1_fluid';
-    } else if (p.floatState === 'neutral') {
-      indicator.className = 'float-indicator fi-neutral';
-      indicator.textContent = 'NEUTRAL BUOYANCY — \u03C1_obj = \u03C1_fluid';
-    } else {
-      indicator.className = 'float-indicator fi-sink';
-      indicator.textContent = 'SINKING — \u03C1_obj > \u03C1_fluid';
-    }
+  buoyArrow.position.set(0.8, objY, 0);
+  buoyArrow.scale.set(1, arrowScale * 1.5, 1);
 
-    // Density bar chart
-    var maxDensity = Math.max(p.rhoObj, p.rhoFluid, 1);
-    var objH = Math.min((p.rhoObj / maxDensity) * 80, 95);
-    var fluidH = Math.min((p.rhoFluid / maxDensity) * 80, 95);
-    document.getElementById('barObj').style.height = objH + '%';
-    document.getElementById('barFluid').style.height = fluidH + '%';
-    document.getElementById('barObjVal').textContent = p.rhoObj.toFixed(2);
-    document.getElementById('barFluidVal').textContent = p.rhoFluid.toFixed(2);
+  gravArrow.position.set(-0.8, objY + objSize / 2, 0);
+  gravArrow.scale.set(1, gravScale * 1.5, 1);
 
-    // Color the object by density relative to fluid
-    if (p.floatState === 'float') {
-      objMat.color.setHex(0xfbbf24); // gold
-    } else if (p.floatState === 'neutral') {
-      objMat.color.setHex(0x22d3ee); // cyan
-    } else {
-      objMat.color.setHex(0xf87171); // red
-    }
-
-    // Fluid color by density
-    if (state.fluidDensity > 10) {
-      fluidMat.color.setHex(0x94a3b8); // silvery for mercury
-      fluidMat.opacity = 0.7;
-      surfaceMat.color.setHex(0x94a3b8);
-    } else if (state.fluidDensity > 2) {
-      fluidMat.color.setHex(0x6366f1); // purple-ish for heavy fluids
-      fluidMat.opacity = 0.45;
-      surfaceMat.color.setHex(0x818cf8);
-    } else {
-      fluidMat.color.setHex(0x0ea5e9);
-      fluidMat.opacity = 0.35;
-      surfaceMat.color.setHex(0x38bdf8);
-    }
-  }
-
-  // ── Force arrow update ──────────────────────────────────────────────────────
-  function updateArrows(p) {
-    var objPos = objMesh.position;
-    var halfH = getObjectHalfHeight();
-
-    // Scale arrows: max length ~3 units for visual clarity
-    var maxForce = Math.max(p.weight, p.buoyantForce, 0.01);
-    var scale = 2.5 / maxForce;
-
-    var bLen = Math.max(p.buoyantForce * scale, 0.1);
-    var gLen = Math.max(p.weight * scale, 0.1);
-
-    arrowGroup.remove(buoyancyArrow);
-    arrowGroup.remove(gravityArrow);
-
-    buoyancyArrow = new THREE.ArrowHelper(
-      new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(objPos.x + 0.6, objPos.y - halfH * 0.3, objPos.z),
-      bLen, 0x34d399, bLen * 0.2, 0.12
-    );
-
-    gravityArrow = new THREE.ArrowHelper(
-      new THREE.Vector3(0, -1, 0),
-      new THREE.Vector3(objPos.x - 0.6, objPos.y + halfH * 0.3, objPos.z),
-      gLen, 0x3b82f6, gLen * 0.2, 0.12
-    );
-
-    arrowGroup.add(buoyancyArrow);
-    arrowGroup.add(gravityArrow);
-  }
-
-  // ── Water surface ripple ────────────────────────────────────────────────────
-  function updateSurfaceRipple(time) {
-    var posAttr = surfaceGeo.attributes.position;
-    var count = posAttr.count;
-    for (var i = 0; i < count; i++) {
-      var x = posAttr.getX(i);
-      var z = posAttr.getY(i); // plane is rotated, so Y in geometry = Z in world
-      var wave = Math.sin(x * 2.0 + time * 1.5) * 0.03
-        + Math.sin(z * 3.0 + time * 2.0) * 0.02
-        + Math.sin((x + z) * 1.5 + time * 1.0) * 0.015;
-      posAttr.setZ(i, wave);
-    }
-    posAttr.needsUpdate = true;
-  }
-
-  // ── Resize ──────────────────────────────────────────────────────────────────
-  function onResize() {
-    var w = wrap.clientWidth;
-    var h = wrap.clientHeight;
-    if (w === 0 || h === 0) return;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  }
-  window.addEventListener('resize', onResize);
-
-  // ── Slider events ───────────────────────────────────────────────────────────
-  massSlider.addEventListener('input', function () {
-    state.mass = parseFloat(this.value);
-    onParamsChange();
-  });
-  volumeSlider.addEventListener('input', function () {
-    state.volume = parseFloat(this.value);
-    updateObjectGeometry();
-    onParamsChange();
-  });
-  fluidSlider.addEventListener('input', function () {
-    state.fluidDensity = parseFloat(this.value);
-    onParamsChange();
-  });
-
-  function onParamsChange() {
-    var p = computePhysics();
-    targetObjY = computeTargetY(p);
-    currentWaterY = FLUID_BASE_Y + p.waterRise;
-    updateUI(p);
-  }
-
-  // ── Shape toggle ────────────────────────────────────────────────────────────
-  window.setShape = function (s) {
-    state.shape = s;
-    document.getElementById('shapeSphere').className = 'shape-btn' + (s === 'sphere' ? ' active' : '');
-    document.getElementById('shapeCube').className = 'shape-btn' + (s === 'cube' ? ' active' : '');
-    updateObjectGeometry();
-    onParamsChange();
-  };
-
-  // ── Presets ─────────────────────────────────────────────────────────────────
-  window.applyPreset = function (name) {
-    if (name === 'wood') {
-      state.mass = 0.6;
-      state.volume = 1.0;
-      state.fluidDensity = 1.0;
-    } else if (name === 'steel') {
-      state.mass = 7.8;
-      state.volume = 1.0;
-      state.fluidDensity = 1.0;
-    } else if (name === 'gold') {
-      state.mass = 19.3;
-      state.volume = 1.0;
-      state.fluidDensity = 13.6;
-    }
-    massSlider.value = state.mass;
-    volumeSlider.value = state.volume;
-    fluidSlider.value = state.fluidDensity;
-    updateObjectGeometry();
-    onParamsChange();
-  };
-
-  // ── Quiz ────────────────────────────────────────────────────────────────────
-  var quizAnswers = { 1: 'B', 2: 'C' };
-  var quizExplanations = {
-    1: 'Iron (7.87 kg/L) is less dense than mercury (13.6 kg/L), so it floats partially submerged — about 58% below the surface.',
-    2: 'Density = 4 kg / 5 L = 0.8 kg/L. Since 0.8 < 1.0 (water), the object floats.'
-  };
-
-  window.checkQuiz = function (qNum, btn, answer) {
-    var container = document.getElementById('q' + qNum);
-    var buttons = container.querySelectorAll('.quiz-opt');
-    var fb = document.getElementById('fb' + qNum);
-    var isCorrect = answer === quizAnswers[qNum];
-
-    buttons.forEach(function (b) { b.disabled = true; });
-    btn.className = 'quiz-opt ' + (isCorrect ? 'correct' : 'wrong');
-
-    if (!isCorrect) {
-      buttons.forEach(function (b) {
-        if (b.textContent.charAt(0) === quizAnswers[qNum]) {
-          b.className = 'quiz-opt correct';
-        }
-      });
-    }
-
-    fb.textContent = isCorrect
-      ? 'Correct! ' + quizExplanations[qNum]
-      : 'Incorrect. ' + quizExplanations[qNum];
-    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
-  };
-
-  // ── KaTeX formulas ──────────────────────────────────────────────────────────
-  try {
-    katex.render('\\rho = \\dfrac{m}{V}', document.getElementById('f1'), { displayMode: true, throwOnError: false });
-    katex.render('F_b = \\rho_{\\text{fluid}} \\cdot V_{\\text{submerged}} \\cdot g', document.getElementById('f2'), { displayMode: true, throwOnError: false });
-  } catch (e) {
-    console.warn('KaTeX render error:', e);
-  }
-
-  // ── Animation Loop ──────────────────────────────────────────────────────────
-  var clock = new THREE.Clock();
-
-  function animate() {
-    var dt = clock.getDelta();
-    var elapsed = clock.getElapsedTime();
-
-    // Smooth object position
-    currentObjY += (targetObjY - currentObjY) * Math.min(dt * 3, 1);
-    objMesh.position.y = currentObjY;
-
-    // Slight bob for floating objects
-    if (physicsResult.floatState === 'float') {
-      objMesh.position.y += Math.sin(elapsed * 1.5) * 0.04;
-    }
-
-    // Update fluid mesh to match water level
-    var waterH = currentWaterY - TANK_BOTTOM_Y;
-    fluidMesh.scale.y = waterH / (FLUID_BASE_Y - TANK_BOTTOM_Y);
-    fluidMesh.position.y = TANK_BOTTOM_Y + waterH / 2;
-
-    // Surface mesh follows water level
-    surfaceMesh.position.y = currentWaterY;
-    updateSurfaceRipple(elapsed);
-
-    // Update arrows
-    updateArrows(physicsResult);
-
-    // Rotate object slowly
-    objMesh.rotation.y += dt * 0.3;
-
-    if (controls) controls.update();
-    renderer.render(scene, camera);
-  }
-
-  renderer.setAnimationLoop(animate);
-
-  // ── Initial state ───────────────────────────────────────────────────────────
-  onResize();
-  updateObjectGeometry();
-  onParamsChange();
-  // Set initial target and snap
-  var initP = computePhysics();
-  currentObjY = computeTargetY(initP);
-  targetObjY = currentObjY;
-
-} catch (err) {
-  console.error('Density Lab initialization error:', err);
-  var errDiv = document.createElement('div');
-  errDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e1e2e;color:#f87171;padding:24px;border-radius:12px;border:1px solid #f8717140;font-size:14px;max-width:500px;text-align:center;z-index:9999';
-  errDiv.textContent = 'Failed to initialize 3D scene: ' + err.message;
-  document.body.appendChild(errDiv);
+  // Dynamic fluid level (Archimedes: displaced volume raises level)
+  const containerArea = (CONTAINER_HALF * 2) * (CONTAINER_HALF * 2); // display units²
+  const V_disp_display = V * frac * 1e6 * 0.1; // rough visual scaling
+  const levelRise = V_disp_display / containerArea;
+  fluidLevel.position.set(0, FLUID_TOP + levelRise, 0);
 }
+
+function drawSVGInfo() {
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+  svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svgEl.innerHTML = '';
+
+  const rhoObj = getRhoObj();
+  const rhoFl = rho_fl;
+  const frac = getFractionSubmerged();
+  const isFloating = objY + getDisplaySize()/2 >= FLUID_TOP - 0.1;
+  const isSinking = objY - getDisplaySize()/2 <= FLUID_BOTTOM + 0.05;
+
+  // Draw density comparison bar in bottom-right
+  const ox = W - 220, oy = H - 160;
+  const cw = 200, ch = 130;
+
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('x', ox - 10); bg.setAttribute('y', oy - 20);
+  bg.setAttribute('width', cw + 20); bg.setAttribute('height', ch + 30);
+  bg.setAttribute('rx', '8'); bg.setAttribute('fill', 'rgba(15,23,42,0.85)');
+  bg.setAttribute('stroke', 'rgba(59,130,246,0.3)');
+  svgEl.appendChild(bg);
+
+  const title = document.createElementNS('http://www.w3.org/2000/svg','text');
+  title.setAttribute('x', ox + cw/2); title.setAttribute('y', oy - 5);
+  title.setAttribute('text-anchor', 'middle'); title.setAttribute('fill', '#93c5fd'); title.setAttribute('font-size', '10');
+  title.textContent = 'Density Comparison';
+  svgEl.appendChild(title);
+
+  const maxDensity = Math.max(rhoObj, rhoFl) * 1.2;
+  const barH = 24;
+
+  // Object density bar
+  const objBarW = (rhoObj / maxDensity) * cw;
+  const objBar = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  objBar.setAttribute('x', ox); objBar.setAttribute('y', oy + 10);
+  objBar.setAttribute('width', objBarW.toFixed(1)); objBar.setAttribute('height', barH);
+  objBar.setAttribute('rx', '4');
+  objBar.setAttribute('fill', rhoObj < rhoFl ? '#fbbf24' : '#ef4444');
+  svgEl.appendChild(objBar);
+
+  const objLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  objLbl.setAttribute('x', ox + Math.min(objBarW + 4, cw - 60)); objLbl.setAttribute('y', oy + 27);
+  objLbl.setAttribute('fill', '#f8fafc'); objLbl.setAttribute('font-size', '9');
+  objLbl.textContent = `ρ_obj: ${rhoObj.toFixed(0)} kg/m³`;
+  svgEl.appendChild(objLbl);
+
+  // Fluid density bar
+  const flBarW = (rhoFl / maxDensity) * cw;
+  const flBar = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  flBar.setAttribute('x', ox); flBar.setAttribute('y', oy + 44);
+  flBar.setAttribute('width', flBarW.toFixed(1)); flBar.setAttribute('height', barH);
+  flBar.setAttribute('rx', '4'); flBar.setAttribute('fill', '#0ea5e9');
+  svgEl.appendChild(flBar);
+
+  const flLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  flLbl.setAttribute('x', ox + Math.min(flBarW + 4, cw - 60)); flLbl.setAttribute('y', oy + 61);
+  flLbl.setAttribute('fill', '#f8fafc'); flLbl.setAttribute('font-size', '9');
+  flLbl.textContent = `ρ_fl: ${rhoFl.toFixed(0)} kg/m³`;
+  svgEl.appendChild(flLbl);
+
+  // Fraction submerged bar
+  const fracBarW = frac * cw;
+  const fracBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  fracBg.setAttribute('x', ox); fracBg.setAttribute('y', oy + 78);
+  fracBg.setAttribute('width', cw); fracBg.setAttribute('height', 14);
+  fracBg.setAttribute('rx', '4'); fracBg.setAttribute('fill', 'rgba(255,255,255,0.1)');
+  svgEl.appendChild(fracBg);
+
+  const fracFill = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  fracFill.setAttribute('x', ox); fracFill.setAttribute('y', oy + 78);
+  fracFill.setAttribute('width', Math.max(0, fracBarW).toFixed(1)); fracFill.setAttribute('height', 14);
+  fracFill.setAttribute('rx', '4'); fracFill.setAttribute('fill', '#22c55e');
+  svgEl.appendChild(fracFill);
+
+  const fracLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  fracLbl.setAttribute('x', ox + cw / 2); fracLbl.setAttribute('y', oy + 89);
+  fracLbl.setAttribute('text-anchor', 'middle'); fracLbl.setAttribute('fill', '#f8fafc'); fracLbl.setAttribute('font-size', '9');
+  fracLbl.textContent = `Submerged: ${(frac * 100).toFixed(1)}%`;
+  svgEl.appendChild(fracLbl);
+
+  // Status text
+  const statusTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  statusTxt.setAttribute('x', ox + cw / 2); statusTxt.setAttribute('y', oy + 112);
+  statusTxt.setAttribute('text-anchor', 'middle'); statusTxt.setAttribute('font-size', '11'); statusTxt.setAttribute('font-weight', 'bold');
+  if (rhoObj < rho_fl) {
+    statusTxt.setAttribute('fill', '#fbbf24');
+    statusTxt.textContent = 'FLOATS ↑ (ρ_obj < ρ_fl)';
+  } else if (rhoObj > rho_fl) {
+    statusTxt.setAttribute('fill', '#f87171');
+    statusTxt.textContent = 'SINKS ↓ (ρ_obj > ρ_fl)';
+  } else {
+    statusTxt.setAttribute('fill', '#34d399');
+    statusTxt.textContent = 'NEUTRAL (ρ_obj = ρ_fl)';
+  }
+  svgEl.appendChild(statusTxt);
+}
+
+// ── Data Panel ────────────────────────────────────────────────────
+function updateDataPanel() {
+  const rhoObj = getRhoObj();
+  const m = getObjMass();
+  const V = getObjVol();
+  const frac = getFractionSubmerged();
+  const V_disp = V * frac;
+  const F_b = rho_fl * V_disp * G;
+
+  document.getElementById('d-mass').textContent = mass_g.toFixed(0) + ' g';
+  document.getElementById('d-vol').textContent = vol_cm3.toFixed(0) + ' cm³';
+  document.getElementById('d-rho-obj').textContent = rhoObj.toFixed(1) + ' kg/m³';
+  document.getElementById('d-rho-fl').textContent = rho_fl.toFixed(0) + ' kg/m³';
+  document.getElementById('d-frac').textContent = (frac * 100).toFixed(1) + '%';
+  document.getElementById('d-fb').textContent = F_b.toFixed(3) + ' N';
+
+  const statusEl = document.getElementById('d-status');
+  if (rhoObj < rho_fl) {
+    statusEl.textContent = 'FLOATS ↑';
+    statusEl.style.color = '#fbbf24';
+  } else if (rhoObj > rho_fl) {
+    statusEl.textContent = 'SINKS ↓';
+    statusEl.style.color = '#f87171';
+  } else {
+    statusEl.textContent = 'NEUTRAL ~';
+    statusEl.style.color = '#34d399';
+  }
+}
+
+// ── Presets ───────────────────────────────────────────────────────
+// Ice: ρ = 917 kg/m³, Water: 1000 kg/m³
+// Iron: ρ = 7874 kg/m³, Mercury: 13534 kg/m³
+// Wood (oak): ρ = 700 kg/m³, Oil: 880 kg/m³
+const presets = {
+  ice: { mass: 91.7, vol: 100, rhoFl: 1000, label: 'Ice in Water' },
+  iron: { mass: 78.7, vol: 10, rhoFl: 13534, label: 'Iron in Mercury' },
+  wood: { mass: 70, vol: 100, rhoFl: 880, label: 'Wood in Oil' }
+};
+
+window.applyPreset = function(key) {
+  const p = presets[key];
+  mass_g = p.mass; vol_cm3 = p.vol; rho_fl = p.rhoFl;
+  document.getElementById('sl-mass').value = mass_g;
+  document.getElementById('sl-vol').value = vol_cm3;
+  document.getElementById('sl-rho-fl').value = rho_fl;
+  document.getElementById('lbl-mass').textContent = mass_g.toFixed(1);
+  document.getElementById('lbl-vol').textContent = vol_cm3.toFixed(0);
+  document.getElementById('lbl-rho-fl').textContent = rho_fl.toFixed(0);
+  resetSim();
+  showToast('Preset: ' + p.label);
+};
+
+// ── Sliders ───────────────────────────────────────────────────────
+document.getElementById('sl-mass').addEventListener('input', function() {
+  mass_g = parseFloat(this.value);
+  document.getElementById('lbl-mass').textContent = mass_g.toFixed(0);
+  resetSim();
+});
+document.getElementById('sl-vol').addEventListener('input', function() {
+  vol_cm3 = parseFloat(this.value);
+  document.getElementById('lbl-vol').textContent = vol_cm3.toFixed(0);
+  resetSim();
+});
+document.getElementById('sl-rho-fl').addEventListener('input', function() {
+  rho_fl = parseFloat(this.value);
+  document.getElementById('lbl-rho-fl').textContent = rho_fl.toFixed(0);
+  // Update fluid color
+  updateFluidColor();
+});
+
+function updateFluidColor() {
+  // Visual cue: color by density
+  if (rho_fl > 5000) {
+    fluidMat.color.setHex(0xb0b0b0); // mercury-like
+    fluidMat.opacity = 0.5;
+  } else if (rho_fl < 900) {
+    fluidMat.color.setHex(0xd97706); // oil-like amber
+    fluidMat.opacity = 0.4;
+  } else {
+    fluidMat.color.setHex(0x0ea5e9); // water blue
+    fluidMat.opacity = 0.35;
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+window.togglePlay = function() {
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '⏸ Pause' : '▶ Play';
+  showToast(playing ? 'Resumed' : 'Paused');
+};
+
+window.setSpeed = function(s) {
+  speedFactor = s;
+  document.querySelectorAll('.btn-speed').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.s) === s);
+  });
+  showToast('Speed: ' + s + 'x');
+};
+
+window.resetSim = resetSim;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.key === '1') setSpeed(0.25);
+  if (e.key === '2') setSpeed(0.5);
+  if (e.key === '3') setSpeed(1);
+  if (e.key === '4') setSpeed(2);
+  if (e.key === '5') setSpeed(3);
+});
+
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ── KaTeX ─────────────────────────────────────────────────────────
+katex.render('\\rho = \\dfrac{m}{V}', document.getElementById('f1'), { throwOnError: false });
+katex.render('F_b = \\rho_{fl}\\, V_{disp}\\, g', document.getElementById('f2'), { throwOnError: false });
+katex.render('\\text{fraction submerged} = \\dfrac{\\rho_{obj}}{\\rho_{fl}}', document.getElementById('f3'), { throwOnError: false });
+
+// ── Quiz ──────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: 'An ice cube (ρ = 917 kg/m³) floats in water (ρ = 1000 kg/m³). What fraction of the ice is submerged?',
+    opts: ['91.7%', '8.3%', '50%', '100%'],
+    ans: 0,
+    feedback: ['Correct! Fraction submerged = ρ_obj/ρ_fluid = 917/1000 = 91.7%. This is why icebergs are mostly below the surface.', 'Only 8.3% would be above water — the submerged fraction is 1 − 8.3% = 91.7%.', '50% would only apply if ρ_ice = ρ_water/2 ≈ 500 kg/m³.', '100% submerged means sinking, which requires ρ_obj > ρ_fluid.']
+  },
+  {
+    q: 'You push a floating object deeper into water. What happens to the net upward force?',
+    opts: ['Decreases', 'Stays the same', 'Increases', 'Becomes zero'],
+    ans: 2,
+    feedback: ['Net force decreases only if the object was already more than fully submerged (which isn\'t physically possible for an initially floating object).', 'The net force changes because more volume is displaced.', 'Correct! Pushing it deeper submerges more volume → more displaced fluid → larger buoyant force → stronger net upward restoring force. This is why floating is a stable equilibrium.', 'The net force becomes zero only at the equilibrium floating position.']
+  },
+  {
+    q: 'A steel block sinks in water but floats in mercury (ρ = 13,534 kg/m³). Steel\'s density is about 7,874 kg/m³. Why does it float in mercury?',
+    opts: ['Steel becomes lighter in mercury', 'Mercury\'s density exceeds steel\'s density', 'Mercury is magnetic so it repels steel', 'Mercury is viscous so it supports steel'],
+    ans: 1,
+    feedback: ['Mass doesn\'t change — weight is constant. Buoyancy is about displaced fluid weight, not the object\'s weight.', 'Correct! ρ_mercury ≈ 13,534 kg/m³ > ρ_steel ≈ 7,874 kg/m³. The buoyant force from mercury can exceed steel\'s weight, so the net force is upward.', 'Magnetism plays no role in Archimedes buoyancy.', 'Viscosity affects motion speed, not whether something floats — that\'s determined by density comparison only.']
+  }
+];
+
+const quizContainer = document.getElementById('quiz-container');
+quizData.forEach((q, qi) => {
+  const div = document.createElement('div');
+  div.className = 'mb-4';
+  div.innerHTML = `<p class="text-xs text-slate-300 mb-2 font-medium">Q${qi+1}: ${q.q}</p>`;
+  q.opts.forEach((opt, oi) => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => {
+      if (div.dataset.answered) return;
+      div.dataset.answered = '1';
+      div.querySelectorAll('.quiz-option').forEach((b, bi) => {
+        b.classList.add(bi === q.ans ? 'correct' : 'wrong');
+      });
+      btn.classList.add(oi === q.ans ? 'correct' : 'wrong');
+      const fb = document.createElement('p');
+      fb.className = 'text-xs mt-2 ' + (oi === q.ans ? 'text-green-300' : 'text-red-300');
+      fb.textContent = (oi === q.ans ? '✓ ' : '✗ ') + q.feedback[oi];
+      div.appendChild(fb);
+    });
+    div.appendChild(btn);
+  });
+  quizContainer.appendChild(div);
+});
+
+// ── Main Loop ─────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+resetSim();
+
+renderer.setAnimationLoop(() => {
+  let delta = clock.getDelta();
+  if (delta > 0.1) delta = 0.02;
+
+  controls.update();
+
+  if (playing) {
+    physicsUpdate(delta);
+    updateObjectMesh();
+    updateDataPanel();
+    drawSVGInfo();
+  }
+
+  renderer.render(scene, camera);
+});
 </script>
+<!-- Generated by AetherViz Master v7.0 — Density governs everything from ships to icebergs! -->
 </body>
 </html>

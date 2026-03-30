@@ -1,264 +1,658 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neuron & Action Potential — NeonPhysics AP Biology</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#0a0e1a;color:#e8e6df;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh}
-    #canvas{position:absolute;top:0;left:0;width:100%;height:100%}
-    #ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
-    .panel{background:rgba(10,14,26,0.85);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:14px;pointer-events:all;backdrop-filter:blur(8px)}
-    .top-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-    .title-block h1{font-size:1.1rem;color:#67e8f9;font-weight:700;margin-bottom:2px}
-    .title-block p{font-size:0.72rem;color:#94a3b8;max-width:280px}
-    .controls{display:flex;flex-direction:column;gap:8px;min-width:220px}
-    .slider-row{display:flex;flex-direction:column;gap:3px}
-    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
-    .slider-row input[type=range]{width:100%;accent-color:#06b6d4;height:4px}
-    .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-    button{background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.4);color:#67e8f9;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;transition:all 0.2s}
-    button:hover{background:rgba(6,182,212,0.3)}
-    button.active{background:rgba(6,182,212,0.4);border-color:#06b6d4}
-    .bottom-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
-    .data-panel{min-width:170px}
-    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-    .data-val{color:#22d3ee;font-weight:600;font-family:monospace}
-    .oscilloscope{flex:1;max-width:420px}
-    canvas#osc-canvas{width:100%;border-radius:4px;background:rgba(0,0,0,0.5);display:block}
-    .formula-panel{max-width:320px}
-    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
-    .vm-meter{width:100%;height:12px;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;margin-top:6px}
-    .vm-fill{height:100%;border-radius:6px;transition:width 0.1s,background 0.1s}
-    .badge{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:3px;margin-left:4px;background:rgba(6,182,212,0.3);color:#67e8f9}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neuron Action Potential — AP Biology</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(16,185,129,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(16,185,129,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;padding:12px; }
+  .panel-card { background:rgba(6,78,59,0.6);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);cursor:pointer; }
+  .sidebar { width:30%;min-width:260px;max-width:360px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(16,185,129,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(16,185,129,0.4);border-radius:2px;}
+  .btn { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(16,185,129,0.3);cursor:pointer;background:rgba(16,185,129,0.1);color:#6ee7b7;transition:all 0.18s; }
+  .btn:hover,.btn.active { background:rgba(16,185,129,0.3);color:#fff;border-color:#10B981; }
+  .btn-speed { padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#10B981,#22D3EE);color:#fff;border-color:#10B981; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#34d399; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#10B981;background:rgba(16,185,129,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100;display:none; }
+  #quiz-fab { position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(16,185,129,0.5); }
+  #info-overlay { position:absolute;top:12px;left:12px;background:rgba(6,78,59,0.85);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;pointer-events:none;min-width:210px; }
+  #canvas-wrap { position:relative;flex:1;overflow:hidden; }
+  canvas { display:block; }
+  #ap-svg { position:absolute;bottom:8px;left:50%;transform:translateX(-50%);pointer-events:none; }
+  #phase-label { position:absolute;top:12px;right:12px;background:rgba(15,23,42,0.8);border:1px solid rgba(16,185,129,0.4);border-radius:8px;padding:8px 14px;pointer-events:none;text-align:center; }
+</style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<div id="ui">
-  <div class="top-bar">
-    <div class="panel title-block">
-      <h1>Neuron Action Potential <span class="badge">AP Bio</span></h1>
-      <p>Voltage-gated Na⁺/K⁺ channels, depolarization, and propagation</p>
-    </div>
-    <div class="panel controls">
-      <div class="slider-row">
-        <label>Stimulus Strength <span id="stim-val">25</span> mV</label>
-        <input type="range" id="stim-slider" min="5" max="60" step="5" value="25">
-      </div>
-      <div class="slider-row">
-        <label>Na⁺ Extracellular <span id="na-val">145</span> mM</label>
-        <input type="range" id="na-slider" min="50" max="200" step="5" value="145">
-      </div>
-      <div class="slider-row">
-        <label>Myelination <span id="myel-val">80</span>%</label>
-        <input type="range" id="myel-slider" min="0" max="100" step="10" value="80">
-      </div>
-      <div class="btn-row">
-        <button id="btn-stimulate">⚡ Stimulate</button>
-        <button id="btn-reset">↺ Reset</button>
-        <button id="btn-ttx">🔴 TTX Block</button>
-      </div>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(16,185,129,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#10B981,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Neuron Action Potential</span>
+    <span class="text-xs text-slate-400 ml-3">Na⁺/K⁺ Channels · AP Biology</span>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button onclick="resetSim()" class="btn">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">Core Equations</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Nernst equation: equilibrium potential for ion X across membrane.</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">Goldman equation: resting potential from all permeable ions (PK≫PNa at rest).</div>
+    <div id="f3" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Na⁺/K⁺ ATPase: 3 Na⁺ out, 2 K⁺ in per ATP — restores gradients.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Action Potential Phases</div>
+    <div class="text-xs text-slate-300 mb-1"><span class="text-slate-400 font-bold">① Resting (-70 mV):</span> K⁺ leak channels open; Na⁺/K⁺ pump maintains gradient.</div>
+    <div class="text-xs text-slate-300 mb-1"><span class="text-yellow-300 font-bold">② Threshold (-55 mV):</span> Sufficient depolarization opens voltage-gated Na⁺ channels.</div>
+    <div class="text-xs text-slate-300 mb-1"><span class="text-red-400 font-bold">③ Depolarization (+40 mV):</span> Na⁺ rushes in; membrane becomes positive.</div>
+    <div class="text-xs text-slate-300 mb-1"><span class="text-orange-400 font-bold">④ Repolarization:</span> Na⁺ channels inactivate; K⁺ channels open fully.</div>
+    <div class="text-xs text-slate-300 mb-1"><span class="text-blue-400 font-bold">⑤ Hyperpolarization (-80 mV):</span> K⁺ overshoot; membrane briefly more negative than rest.</div>
+    <div class="text-xs text-slate-300"><span class="text-emerald-400 font-bold">⑥ Refractory Period:</span> Na⁺ channels inactivated — absolute refractory. Then relative refractory as K⁺ channels close.</div>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-cyan-400 mb-1">Ion Concentrations</div>
+    <div class="text-xs text-slate-300 grid grid-cols-3 gap-1">
+      <span class="text-slate-400">Ion</span><span class="text-slate-400">Inside</span><span class="text-slate-400">Outside</span>
+      <span class="text-yellow-300">Na⁺</span><span>12 mM</span><span>145 mM</span>
+      <span class="text-emerald-300">K⁺</span><span>155 mM</span><span>4 mM</span>
+      <span class="text-blue-300">Cl⁻</span><span>4 mM</span><span>120 mM</span>
     </div>
   </div>
-  <div class="bottom-bar">
-    <div class="panel data-panel">
-      <div style="font-size:0.72rem;color:#67e8f9;margin-bottom:6px;font-weight:600">Membrane State</div>
-      <div class="data-row">Vm (mV) <span class="data-val" id="d-vm">-70</span></div>
-      <div class="data-row">Phase <span class="data-val" id="d-phase">Resting</span></div>
-      <div class="data-row">Na⁺ channels <span class="data-val" id="d-na-ch">Closed</span></div>
-      <div class="data-row">K⁺ channels <span class="data-val" id="d-k-ch">Closed</span></div>
-      <div class="data-row">AP fired <span class="data-val" id="d-ap-count">0</span></div>
-      <div class="data-row">Conduction v <span class="data-val" id="d-cv">0</span> m/s</div>
-      <div style="font-size:0.65rem;color:#64748b;margin-top:4px">Membrane Potential</div>
-      <div class="vm-meter"><div class="vm-fill" id="vm-fill" style="width:30%;background:#22d3ee"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:#475569"><span>-90</span><span>0</span><span>+50</span></div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-amber-400 mb-1">Common Misconception</div>
+    <div class="text-xs text-slate-300">The action potential is NOT a flow of electricity — it is a propagating wave of ion channel openings. Individual ions move just nanometers. Conduction speed (up to 120 m/s in myelinated axons) reflects how fast the wave propagates, not how fast ions move.</div>
+  </div>
+
+  <div class="glass">
+    <div class="text-xs font-bold text-emerald-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">Local anesthetics (lidocaine) block voltage-gated Na⁺ channels — preventing action potential propagation. Multiple sclerosis destroys myelin, slowing saltatory conduction. Tetrodotoxin (puffer fish) specifically blocks Na⁺ channels with picomolar affinity.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold text-emerald-400 mb-2">Presets</div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn active" id="p0" onclick="applyPreset(0)">Single Action Potential</button>
+      <button class="btn" id="p1" onclick="applyPreset(1)">Rapid Firing (Tetanus)</button>
+      <button class="btn" id="p2" onclick="applyPreset(2)">Inhibitory (GABA, no AP)</button>
     </div>
-    <div class="panel oscilloscope">
-      <div style="font-size:0.72rem;color:#67e8f9;margin-bottom:4px;font-weight:600">Oscilloscope — Vm vs Time</div>
-      <canvas id="osc-canvas" width="400" height="90"></canvas>
+  </div>
+</aside>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="info-overlay">
+    <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Membrane State</div>
+    <div class="text-xs text-slate-300">Voltage: <span class="data-val" id="d-vm">-70</span> mV</div>
+    <div class="text-xs text-slate-300">Phase: <span class="data-val" id="d-phase" style="color:#34d399;">Resting</span></div>
+    <div class="text-xs text-slate-300">Na⁺ channels: <span class="data-val" id="d-na">Closed</span></div>
+    <div class="text-xs text-slate-300">K⁺ channels: <span class="data-val" id="d-k">Leak only</span></div>
+    <div class="text-xs text-slate-300">AP Count: <span class="data-val" id="d-apcount">0</span></div>
+    <div class="text-xs text-slate-300">Pump Active: <span class="data-val" id="d-pump">Yes</span></div>
+  </div>
+  <div id="phase-label">
+    <div class="text-xs text-slate-400">Current Phase</div>
+    <div id="pl-text" class="text-sm font-bold text-emerald-400">Resting (-70 mV)</div>
+  </div>
+  <svg id="ap-svg" width="360" height="120"></svg>
+</div>
+</div>
+
+<div class="shrink-0 px-4 py-3" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(12px);border-top:1px solid rgba(16,185,129,0.2);">
+  <div class="flex items-center gap-6 flex-wrap">
+    <div class="flex gap-2">
+      <button onclick="togglePlay()" id="btn-play" class="btn" style="min-width:70px;">⏸ Pause</button>
+      <button onclick="triggerAP()" class="btn" style="background:rgba(239,68,68,0.2);border-color:#ef4444;color:#fca5a5;">⚡ Stimulate</button>
+      <button onclick="resetSim()" class="btn">↺ Reset</button>
     </div>
-    <div class="panel formula-panel">
-      <div style="font-size:0.72rem;color:#67e8f9;margin-bottom:6px;font-weight:600">Nernst / HH Equations</div>
-      <div class="katex-wrap" id="f1"></div>
-      <div class="katex-wrap" id="f2"></div>
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      Speed:
+      <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+      <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+      <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+      <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+    </div>
+    <div class="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
+      <div class="flex flex-col gap-1" style="min-width:140px;">
+        <label class="text-xs text-slate-400">Stimulus Strength: <span id="lbl-stim" class="text-emerald-400 font-bold">15 mV</span></label>
+        <input type="range" id="sl-stim" min="5" max="30" step="1" value="15" oninput="onStimChange()">
+      </div>
+      <div class="flex flex-col gap-1" style="min-width:140px;">
+        <label class="text-xs text-slate-400">Firing Rate: <span id="lbl-rate" class="text-emerald-400 font-bold">1 Hz</span></label>
+        <input type="range" id="sl-rate" min="1" max="8" step="1" value="1" oninput="onRateChange()">
+      </div>
+      <div class="flex flex-col gap-1" style="min-width:140px;">
+        <label class="text-xs text-slate-400">Myelin: <span id="lbl-myelin" class="text-emerald-400 font-bold">Normal</span></label>
+        <input type="range" id="sl-myelin" min="0" max="2" step="1" value="2" oninput="onMyelinChange()">
+      </div>
     </div>
   </div>
 </div>
 
+<div id="quiz-fab" onclick="toggleQuiz()" title="Quiz">🧠</div>
+<div id="quiz-panel" class="glass p-4">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-sm font-bold text-emerald-400">Prediction Questions</span>
+    <button onclick="toggleQuiz()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <div id="q-container"></div>
+</div>
+
+<div id="toast"></div>
+
 <script>
-const W=innerWidth,H=innerHeight;
-const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
-renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x060810);
-const camera=new THREE.PerspectiveCamera(50,W/H,0.1,200);camera.position.set(0,4,20);camera.lookAt(0,0,0);
-let controls;if(THREE.OrbitControls){controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;}
-scene.add(new THREE.AmbientLight(0x112233,0.8));
-const dl=new THREE.DirectionalLight(0x0099cc,1.2);dl.position.set(5,10,8);scene.add(dl);
-scene.add(new THREE.PointLight(0x06b6d4,2,40));
-
-// Axon geometry
-const AXON_LENGTH=20;
-const axonGeo=new THREE.CylinderGeometry(0.4,0.4,AXON_LENGTH,16);
-const axonMat=new THREE.MeshStandardMaterial({color:0x0e7490,roughness:0.3,metalness:0.3,emissive:0x0e4a5a,emissiveIntensity:0.2});
-const axon=new THREE.Mesh(axonGeo,axonMat);
-axon.rotation.z=Math.PI/2;scene.add(axon);
-
-// Nodes of Ranvier
-const nodeGroup=new THREE.Group();scene.add(nodeGroup);
-const NUM_NODES=6;
-let myelin=[];
-for(let i=0;i<NUM_NODES;i++){
-  const x=-AXON_LENGTH/2+(i+0.5)*(AXON_LENGTH/NUM_NODES);
-  const nGeo=new THREE.CylinderGeometry(0.42,0.42,0.15,12);
-  const nMat=new THREE.MeshStandardMaterial({color:0x164e63,roughness:0.4});
-  const node=new THREE.Mesh(nGeo,nMat);node.rotation.z=Math.PI/2;node.position.x=x;
-  nodeGroup.add(node);
-  // Myelin segment
-  const mGeo=new THREE.CylinderGeometry(0.5,0.5,AXON_LENGTH/NUM_NODES*0.8,12);
-  const mMat=new THREE.MeshStandardMaterial({color:0x1e3a5f,transparent:true,opacity:0.5});
-  const ms=new THREE.Mesh(mGeo,mMat);ms.rotation.z=Math.PI/2;ms.position.x=x-AXON_LENGTH/NUM_NODES*0.45;
-  scene.add(ms);myelin.push(ms);
-}
-
-// Ion channel sprites along axon
-const chanGroup=new THREE.Group();scene.add(chanGroup);
-const NUM_CHAN=20;
-let channels=[];
-for(let i=0;i<NUM_CHAN;i++){
-  const x=-AXON_LENGTH/2+(i/(NUM_CHAN-1))*AXON_LENGTH;
-  const angle=Math.random()*Math.PI*2;const r=0.45;
-  const geo=new THREE.SphereGeometry(0.08,6,6);
-  const mat=new THREE.MeshStandardMaterial({color:0x0ea5e9,emissive:0x0ea5e9,emissiveIntensity:0.3});
-  const m=new THREE.Mesh(geo,mat);
-  m.position.set(x,Math.cos(angle)*r,Math.sin(angle)*r);
-  chanGroup.add(m);channels.push({mesh:m,x,isNa:Math.random()<0.5,open:false});
-}
-
-// Action potential propagation state
-let apState={
-  vm:-70,
-  phase:'resting',
-  firing:false,
-  apProgress:-1,
-  apCount:0,
-  ttxBlocked:false,
-  stim:25,
-  naConc:145,
-  myelination:80,
-  time:0
-};
-const THRESHOLD=-55;
-const AP_DURATION=3.0;
-const vmHistory=[];
-
-function computeConduction(){
-  return apState.myelination>50?(apState.myelination/100)*120:2;
-}
-
-function fireAP(){
-  if(apState.ttxBlocked)return;
-  if(apState.stim+apState.vm<THRESHOLD)return;
-  apState.firing=true;apState.apProgress=0;apState.apCount++;
-}
-
-function updateAP(dt){
-  if(!apState.firing)return;
-  apState.apProgress+=dt/AP_DURATION;
-  const t=apState.apProgress;
-  if(t<0.15){apState.vm=-70+(110*t/0.15);apState.phase='Depolarization';}
-  else if(t<0.3){apState.vm=40-(140*(t-0.15)/0.15);apState.phase='Repolarization';}
-  else if(t<0.45){apState.vm=-100+(10*(t-0.3)/0.15);apState.phase='Hyperpolarization';}
-  else{apState.vm=-70;apState.phase='Resting';if(t>=1){apState.firing=false;apState.apProgress=-1;}}
-
-  // Update channel colors along axon
-  const propFrac=apState.apProgress*(apState.myelination>50?1:0.5);
-  channels.forEach(ch=>{
-    const frac=(ch.x+AXON_LENGTH/2)/AXON_LENGTH;
-    const dist=Math.abs(frac-propFrac);
-    if(dist<0.08){
-      ch.open=true;
-      ch.mesh.material.color.setHex(ch.isNa?0xef4444:0x22c55e);
-      ch.mesh.material.emissive.setHex(ch.isNa?0xef4444:0x22c55e);
-      ch.mesh.material.emissiveIntensity=0.8;
-      ch.mesh.scale.setScalar(1.5);
-    }else if(dist<0.15){
-      ch.mesh.scale.setScalar(1);ch.mesh.material.color.setHex(0x0ea5e9);ch.mesh.material.emissiveIntensity=0.3;ch.open=false;
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = 0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', function() { state = -1; document.removeEventListener('mousemove', onMouseMove); });
+  });
+  function onMouseMove(e) {
+    if (!scope.enabled || state !== 0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) { if (!scope.enabled) return; e.preventDefault(); scale *= (e.deltaY > 0) ? 1.1 : 0.9; }, { passive: false });
+  domElement.addEventListener('touchstart', function(e) { if (e.touches.length===1) { state=0; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); } });
+  domElement.addEventListener('touchmove', function(e) {
+    if (e.touches.length===1 && state===0) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+      rotateStart.copy(rotateEnd);
     }
+  });
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var qi = quat.clone().invert();
+    offset.copy(camera.position).sub(target).applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi += sphericalDelta.phi * (scope.enableDamping ? scope.dampingFactor : 1);
+    spherical.phi = Math.max(0.1, Math.min(Math.PI-0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    if (scope.enableDamping) { sphericalDelta.theta *= (1-scope.dampingFactor); sphericalDelta.phi *= (1-scope.dampingFactor); }
+    else sphericalDelta.set(0,0,0);
+    scale = 1;
+    camera.position.copy(target).add(offset.setFromSpherical(spherical).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose = function() {};
+};
+
+// Scene setup
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x0f172a);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+camera.position.set(0, 4, 20);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.minDistance = 5; controls.maxDistance = 35;
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const dl1 = new THREE.DirectionalLight(0x10B981, 1.0); dl1.position.set(8, 15, 8); scene.add(dl1);
+const dl2 = new THREE.DirectionalLight(0x22D3EE, 0.5); dl2.position.set(-8, 5, -10); scene.add(dl2);
+const pl = new THREE.PointLight(0xffffff, 0.4, 60); pl.position.set(0, 12, 0); scene.add(pl);
+
+// --- Neuron Geometry ---
+// Axon cylinder
+const axonGeo = new THREE.CylinderGeometry(0.7, 0.7, 22, 24);
+const axonMat = new THREE.MeshPhongMaterial({color:0x064e3b, transparent:true, opacity:0.6, side:THREE.DoubleSide});
+const axonMesh = new THREE.Mesh(axonGeo, axonMat);
+axonMesh.rotation.z = Math.PI/2;
+scene.add(axonMesh);
+
+// Myelin sheaths (rings along axon)
+const myelinMeshes = [];
+for (let i = -5; i <= 5; i += 2) {
+  const geo = new THREE.TorusGeometry(0.82, 0.18, 10, 28);
+  const mat = new THREE.MeshPhongMaterial({color:0xfef9c3, shininess:60, transparent:true, opacity:0.85});
+  const m = new THREE.Mesh(geo, mat);
+  m.rotation.y = Math.PI/2;
+  m.position.x = i * 1.8;
+  scene.add(m);
+  myelinMeshes.push(m);
+}
+
+// Node of Ranvier (gaps between myelin)
+const nodeMarkers = [];
+for (let i = -5; i < 5; i += 2) {
+  const geo = new THREE.RingGeometry(0.71, 0.85, 20);
+  const mat = new THREE.MeshBasicMaterial({color:0x10B981, side:THREE.DoubleSide, transparent:true, opacity:0.5});
+  const m = new THREE.Mesh(geo, mat);
+  m.rotation.y = Math.PI/2;
+  m.position.x = (i+1)*1.8;
+  scene.add(m);
+  nodeMarkers.push(m);
+}
+
+// Ion particles (Na+ = yellow spheres, K+ = green spheres)
+const naParticles = [], kParticles = [], pumpMeshes = [];
+const naMat = new THREE.MeshPhongMaterial({color:0xfbbf24, shininess:100, emissive:0xfbbf24, emissiveIntensity:0.1});
+const kMat = new THREE.MeshPhongMaterial({color:0x34d399, shininess:100, emissive:0x34d399, emissiveIntensity:0.1});
+
+for (let i=0; i<40; i++) {
+  const g = new THREE.SphereGeometry(0.15, 8, 8);
+  const m = new THREE.Mesh(g, naMat.clone());
+  const side = Math.random() > 0.5 ? 1 : -1;
+  m.position.set((Math.random()-0.5)*20, side*(0.9+Math.random()*0.8), (Math.random()-0.5)*1.5);
+  m.userData = {type:'na', side, baseY: m.position.y, vx:(Math.random()-0.5)*0.02, phase:'outside'};
+  scene.add(m);
+  naParticles.push(m);
+}
+for (let i=0; i<40; i++) {
+  const g = new THREE.SphereGeometry(0.15, 8, 8);
+  const m = new THREE.Mesh(g, kMat.clone());
+  const side = Math.random() > 0.3 ? -1 : 1; // mostly inside
+  m.position.set((Math.random()-0.5)*20, side*(0.9+Math.random()*0.8), (Math.random()-0.5)*1.5);
+  m.userData = {type:'k', side, baseY: m.position.y, vx:(Math.random()-0.5)*0.02, phase:'inside'};
+  scene.add(m);
+  kParticles.push(m);
+}
+
+// Na/K pump models (small star shapes)
+for (let i=-4; i<=4; i+=4) {
+  const g = new THREE.DodecahedronGeometry(0.3);
+  const mat = new THREE.MeshPhongMaterial({color:0xa78bfa, shininess:80, emissive:0x7c3aed, emissiveIntensity:0.3});
+  const m = new THREE.Mesh(g, mat);
+  m.position.set(i, 0, 0);
+  scene.add(m);
+  pumpMeshes.push(m);
+}
+
+// Membrane plane
+const memGeo = new THREE.PlaneGeometry(22, 0.12);
+const memMat = new THREE.MeshPhongMaterial({color:0x10B981, transparent:true, opacity:0.4, side:THREE.DoubleSide});
+const memMesh = new THREE.Mesh(memGeo, memMat);
+memMesh.rotation.x = Math.PI/2;
+scene.add(memMesh);
+
+// --- Action Potential Model ---
+let apState = {
+  Vm: -70, phase:'resting',
+  t: 0, apCount: 0,
+  apTriggered: false, apT: 0,
+  naOpen: false, kOpen: false,
+  mode: 'single', // single | tetanus | inhibitory
+  stimStrength: 15, firingRate: 1, myelinLevel: 2,
+  playing: true, speed: 1.0,
+  autoStimT: 0, autoStimInterval: 60
+};
+
+const apHistory = []; // rolling history for trace
+const AP_TRACE_LEN = 200;
+
+// AP waveform phases (in time units)
+const AP_PHASES = {
+  resting: { duration: 999, Vm: -70 },
+  threshold: { duration: 5, Vm: -55 },
+  depolarize: { duration: 8, Vm: 40 },
+  repolarize: { duration: 12, Vm: -70 },
+  hyperpolarize: { duration: 10, Vm: -80 },
+  refractory: { duration: 18, Vm: -70 }
+};
+
+function vmForPhase(phase, tInPhase) {
+  if (phase === 'resting') return -70;
+  if (phase === 'threshold') return THREE.MathUtils.lerp(-70, -55, tInPhase/AP_PHASES.threshold.duration);
+  if (phase === 'depolarize') return THREE.MathUtils.lerp(-55, 40, Math.pow(tInPhase/AP_PHASES.depolarize.duration, 0.7));
+  if (phase === 'repolarize') return THREE.MathUtils.lerp(40, -70, tInPhase/AP_PHASES.repolarize.duration);
+  if (phase === 'hyperpolarize') return THREE.MathUtils.lerp(-70, -80, Math.sin(tInPhase/AP_PHASES.hyperpolarize.duration*Math.PI));
+  if (phase === 'refractory') return THREE.MathUtils.lerp(-80, -70, tInPhase/AP_PHASES.refractory.duration);
+  return -70;
+}
+
+let currentPhase = 'resting', phaseT = 0;
+
+function triggerAP() {
+  if (apState.mode === 'inhibitory') { toast('GABA hyperpolarizes the cell — stimulus blocked!'); return; }
+  if (currentPhase === 'refractory' || currentPhase === 'depolarize') { toast('Absolute refractory period — cannot fire!'); return; }
+  if (apState.stimStrength < 12) { toast('Stimulus below threshold — no action potential'); return; }
+  currentPhase = 'threshold'; phaseT = 0;
+  toast('Stimulus applied — threshold reached!');
+}
+
+function updateAP(dt) {
+  const phaseDur = AP_PHASES[currentPhase] ? AP_PHASES[currentPhase].duration : 999;
+  phaseT += dt * 60 * apState.speed;
+
+  apState.Vm = vmForPhase(currentPhase, phaseT);
+
+  if (currentPhase === 'threshold' && phaseT >= phaseDur) {
+    currentPhase = 'depolarize'; phaseT = 0;
+  } else if (currentPhase === 'depolarize' && phaseT >= phaseDur) {
+    currentPhase = 'repolarize'; phaseT = 0;
+    apState.apCount++;
+  } else if (currentPhase === 'repolarize' && phaseT >= phaseDur) {
+    currentPhase = 'hyperpolarize'; phaseT = 0;
+  } else if (currentPhase === 'hyperpolarize' && phaseT >= phaseDur) {
+    currentPhase = 'refractory'; phaseT = 0;
+  } else if (currentPhase === 'refractory' && phaseT >= phaseDur) {
+    currentPhase = 'resting'; phaseT = 0;
+  }
+
+  // Auto-fire for tetanus
+  if (apState.mode === 'tetanus' && currentPhase === 'resting') {
+    apState.autoStimT += dt;
+    if (apState.autoStimT > 1.0/apState.firingRate) {
+      apState.autoStimT = 0;
+      currentPhase = 'threshold'; phaseT = 0;
+    }
+  }
+
+  // history
+  apHistory.push(apState.Vm);
+  if (apHistory.length > AP_TRACE_LEN) apHistory.shift();
+}
+
+function getPhaseColor(phase) {
+  return {resting:'#34d399',threshold:'#fbbf24',depolarize:'#ef4444',repolarize:'#f97316',hyperpolarize:'#60a5fa',refractory:'#a78bfa'}[phase] || '#34d399';
+}
+function getPhaseLabel(phase) {
+  return {resting:'Resting (-70 mV)',threshold:'Threshold (-55 mV)',depolarize:'Depolarization (+40 mV)',repolarize:'Repolarization',hyperpolarize:'Hyperpolarization (-80 mV)',refractory:'Refractory Period'}[phase] || 'Resting';
+}
+
+function updateIons(dt) {
+  const phase = currentPhase;
+  const isDepol = phase === 'depolarize';
+  const isRepol = phase === 'repolarize';
+  const isHyper = phase === 'hyperpolarize' || phase === 'refractory';
+
+  // Color axon by voltage
+  const t01 = (apState.Vm + 80) / 130; // -80 to +40 mapped to 0-1
+  const r = Math.round(t01 * 230);
+  const g = Math.round((1-t01)*180);
+  axonMat.color.setRGB(r/255, g/255, 0.15);
+
+  // Na+ particle behavior
+  naParticles.forEach(p => {
+    p.position.x += p.userData.vx * apState.speed * 60 * dt;
+    if (p.position.x > 11) p.userData.vx = -Math.abs(p.userData.vx);
+    if (p.position.x < -11) p.userData.vx = Math.abs(p.userData.vx);
+
+    if (isDepol) {
+      // Na+ rushes in (from outside +y to inside -y)
+      const target = -0.95 - Math.random()*0.8;
+      p.position.y += (target - p.position.y) * 0.05 * apState.speed;
+      p.material.emissiveIntensity = 0.6;
+    } else if (isHyper) {
+      // Na/K pump pushes Na+ back out
+      const target = 0.95 + Math.random()*0.8;
+      p.position.y += (target - p.position.y) * 0.02 * apState.speed;
+      p.material.emissiveIntensity = 0.1;
+    } else {
+      p.position.y += (p.userData.baseY - p.position.y) * 0.01;
+      p.material.emissiveIntensity = 0.1;
+    }
+  });
+
+  // K+ behavior
+  kParticles.forEach(p => {
+    p.position.x += p.userData.vx * apState.speed * 60 * dt;
+    if (p.position.x > 11) p.userData.vx = -Math.abs(p.userData.vx);
+    if (p.position.x < -11) p.userData.vx = Math.abs(p.userData.vx);
+
+    if (isRepol || isHyper) {
+      // K+ rushes out
+      const target = 0.95 + Math.random()*0.8;
+      p.position.y += (target - p.position.y) * 0.04 * apState.speed;
+      p.material.emissiveIntensity = 0.5;
+    } else if (isHyper) {
+      const target = 0.95 + Math.random()*0.8;
+      p.position.y += (target - p.position.y) * 0.02 * apState.speed;
+    } else {
+      p.position.y += (p.userData.baseY - p.position.y) * 0.01;
+      p.material.emissiveIntensity = 0.1;
+    }
+  });
+
+  // Pumps spin during refractory
+  pumpMeshes.forEach(p => {
+    const activePhases = ['refractory','resting'];
+    if (activePhases.includes(phase)) {
+      p.rotation.x += 0.04 * apState.speed;
+      p.rotation.y += 0.06 * apState.speed;
+      p.material.emissiveIntensity = 0.5;
+    } else {
+      p.material.emissiveIntensity = 0.1;
+    }
+  });
+
+  // Node of Ranvier glow during depolarization
+  nodeMarkers.forEach((n,i) => {
+    if (isDepol) {
+      const pulse = 0.5 + 0.5*Math.sin(phaseT*0.3 - i*0.8);
+      n.material.opacity = pulse;
+      n.material.color.setHex(0xef4444);
+    } else {
+      n.material.opacity = 0.3;
+      n.material.color.setHex(0x10B981);
+    }
+  });
+
+  // Myelin opacity based on myelin level
+  myelinMeshes.forEach(m => {
+    m.material.opacity = apState.myelinLevel === 0 ? 0.1 : apState.myelinLevel === 1 ? 0.45 : 0.85;
   });
 }
 
-function updateUI(){
-  const vm=apState.vm;
-  document.getElementById('d-vm').textContent=Math.round(vm);
-  document.getElementById('d-phase').textContent=apState.phase;
-  document.getElementById('d-na-ch').textContent=apState.phase==='Depolarization'?'Open':'Closed';
-  document.getElementById('d-k-ch').textContent=apState.phase==='Repolarization'||apState.phase==='Hyperpolarization'?'Open':'Closed';
-  document.getElementById('d-ap-count').textContent=apState.apCount;
-  document.getElementById('d-cv').textContent=computeConduction().toFixed(0);
+function drawAPTrace() {
+  const svg = document.getElementById('ap-svg');
+  const W=360, H=120, pad=30;
+  if (apHistory.length < 2) return;
+  let pts = '';
+  apHistory.forEach((vm, i) => {
+    const x = pad + (i/(AP_TRACE_LEN-1))*(W-2*pad);
+    const y = H - pad - ((vm+80)/130)*(H-2*pad);
+    pts += (i===0?'M':'L') + x.toFixed(1)+','+y.toFixed(1);
+  });
+  // Reference lines
+  const restY = H - pad - ((-70+80)/130)*(H-2*pad);
+  const threshY = H - pad - ((-55+80)/130)*(H-2*pad);
 
-  // Vm meter
-  const frac=(vm+90)/140;
-  const pct=Math.max(0,Math.min(100,frac*100));
-  const col=vm>-55?'#ef4444':vm>-65?'#f59e0b':'#22d3ee';
-  document.getElementById('vm-fill').style.width=pct+'%';
-  document.getElementById('vm-fill').style.background=col;
+  svg.innerHTML = `
+    <rect x="0" y="0" width="${W}" height="${H}" fill="rgba(6,78,59,0.75)" rx="8"/>
+    <line x1="${pad}" y1="${restY}" x2="${W-pad}" y2="${restY}" stroke="#334155" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="${pad}" y1="${threshY}" x2="${W-pad}" y2="${threshY}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" opacity="0.7"/>
+    <text x="${pad+2}" y="${restY-3}" fill="#475569" font-size="9">-70mV</text>
+    <text x="${pad+2}" y="${threshY-3}" fill="#fbbf24" font-size="9">-55mV (threshold)</text>
+    <path d="${pts}" fill="none" stroke="#10B981" stroke-width="2"/>
+    <text x="${pad+2}" y="${H-2}" fill="#94a3b8" font-size="9">Time →</text>
+    <text x="${pad-8}" y="${pad+2}" fill="#94a3b8" font-size="9">mV</text>
+  `;
 }
 
-function drawOscilloscope(){
-  vmHistory.push(apState.vm);if(vmHistory.length>300)vmHistory.shift();
-  const canvas=document.getElementById('osc-canvas');
-  const ctx=canvas.getContext('2d');const cw=canvas.width,ch=canvas.height;
-  ctx.clearRect(0,0,cw,ch);ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,cw,ch);
-  // Grid
-  ctx.strokeStyle='rgba(6,182,212,0.1)';ctx.lineWidth=0.5;
-  for(let y=0;y<ch;y+=ch/5){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cw,y);ctx.stroke();}
-  // Threshold line
-  const tY=ch/2-(THRESHOLD+70)/(140)*ch;
-  ctx.strokeStyle='rgba(239,68,68,0.4)';ctx.setLineDash([4,4]);ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(0,tY);ctx.lineTo(cw,tY);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='#ef4444';ctx.font='9px monospace';ctx.fillText('threshold',2,tY-2);
-  // Vm trace
-  ctx.strokeStyle='#22d3ee';ctx.lineWidth=1.5;ctx.beginPath();
-  vmHistory.forEach((v,i)=>{
-    const x=i/vmHistory.length*cw;const y=ch/2-(v+70)/(140)*ch;
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  });ctx.stroke();
-  ctx.fillStyle='#94a3b8';ctx.font='9px sans-serif';ctx.fillText('Vm',2,12);ctx.fillText('Time →',cw-50,ch-4);
+function updateUI() {
+  const phase = currentPhase;
+  const color = getPhaseColor(phase);
+  document.getElementById('d-vm').textContent = apState.Vm.toFixed(0);
+  document.getElementById('d-vm').style.color = color;
+  document.getElementById('d-phase').textContent = phase;
+  document.getElementById('d-phase').style.color = color;
+  document.getElementById('d-na').textContent = phase==='depolarize'?'Open (rush in)':phase==='refractory'?'Inactivated':'Closed';
+  document.getElementById('d-k').textContent = (phase==='repolarize'||phase==='hyperpolarize')?'Open (rush out)':'Leak only';
+  document.getElementById('d-apcount').textContent = apState.apCount;
+  document.getElementById('d-pump').textContent = (phase==='refractory'||phase==='resting')?'Active':'Resting';
+  document.getElementById('pl-text').textContent = getPhaseLabel(phase);
+  document.getElementById('pl-text').style.color = color;
+  drawAPTrace();
 }
 
-// Controls
-document.getElementById('stim-slider').addEventListener('input',e=>{apState.stim=parseInt(e.target.value);document.getElementById('stim-val').textContent=apState.stim;});
-document.getElementById('na-slider').addEventListener('input',e=>{apState.naConc=parseInt(e.target.value);document.getElementById('na-val').textContent=apState.naConc;});
-document.getElementById('myel-slider').addEventListener('input',e=>{apState.myelination=parseInt(e.target.value);document.getElementById('myel-val').textContent=apState.myelination;myelin.forEach(m=>m.material.opacity=apState.myelination/100*0.7);});
-document.getElementById('btn-stimulate').addEventListener('click',()=>{if(!apState.firing)fireAP();});
-document.getElementById('btn-reset').addEventListener('click',()=>{apState.vm=-70;apState.firing=false;apState.apProgress=-1;apState.phase='resting';vmHistory.length=0;channels.forEach(ch=>{ch.mesh.material.color.setHex(0x0ea5e9);ch.mesh.scale.setScalar(1);});});
-document.getElementById('btn-ttx').addEventListener('click',()=>{apState.ttxBlocked=!apState.ttxBlocked;document.getElementById('btn-ttx').classList.toggle('active',apState.ttxBlocked);document.getElementById('btn-ttx').textContent=apState.ttxBlocked?'🔴 TTX Active':'🔴 TTX Block';});
+let playing = true, speed = 1.0;
 
-katex.render('E_{Na}=\\frac{RT}{zF}\\ln\\frac{[Na^+]_o}{[Na^+]_i}\\approx+60\\,\\text{mV}',document.getElementById('f1'),{throwOnError:false});
-katex.render('V_m^{rest}\\approx-70\\,\\text{mV},\\;V_{threshold}\\approx-55\\,\\text{mV},\\;V_{peak}\\approx+40\\,\\text{mV}',document.getElementById('f2'),{throwOnError:false});
+renderer.setAnimationLoop(function(dt) {
+  const d = 0.016;
+  if (playing) {
+    updateAP(d);
+    updateIons(d);
+    updateUI();
+    apState.t += d * speed;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
 
-const grid=new THREE.GridHelper(40,20,0x0a1a2a,0x0a1a2a);grid.position.y=-3;scene.add(grid);
-
-let clock=new THREE.Clock();
-function animate(){
-  requestAnimationFrame(animate);
-  const dt=clock.getDelta();apState.time+=dt;
-  updateAP(dt);updateUI();drawOscilloscope();
-  // Pulsing glow on axon when depolarized
-  const glowIntensity=apState.vm>-55?Math.max(0,(apState.vm+70)/110):0;
-  axonMat.emissiveIntensity=0.2+glowIntensity*0.8;
-  axonMat.emissive.setHex(apState.vm>-55?0x880000:0x0e4a5a);
-  if(controls)controls.update();
-  renderer.render(scene,camera);
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '⏸ Pause' : '▶ Play';
 }
-animate();
-window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+function setSpeed(s) {
+  speed = s; apState.speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function onStimChange() {
+  apState.stimStrength = parseInt(document.getElementById('sl-stim').value);
+  document.getElementById('lbl-stim').textContent = apState.stimStrength + ' mV';
+}
+function onRateChange() {
+  apState.firingRate = parseInt(document.getElementById('sl-rate').value);
+  document.getElementById('lbl-rate').textContent = apState.firingRate + ' Hz';
+}
+function onMyelinChange() {
+  apState.myelinLevel = parseInt(document.getElementById('sl-myelin').value);
+  document.getElementById('lbl-myelin').textContent = ['Demyelinated','Partial','Normal'][apState.myelinLevel];
+}
+function applyPreset(n) {
+  document.querySelectorAll('[id^=p]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p'+n).classList.add('active');
+  if (n===0) {
+    apState.mode='single'; apState.firingRate=1; apState.stimStrength=15; apState.myelinLevel=2;
+    document.getElementById('sl-rate').value=1; document.getElementById('lbl-rate').textContent='1 Hz';
+    document.getElementById('sl-stim').value=15; document.getElementById('lbl-stim').textContent='15 mV';
+    document.getElementById('sl-myelin').value=2; document.getElementById('lbl-myelin').textContent='Normal';
+    toast('Single Action Potential — click Stimulate to fire');
+  } else if (n===1) {
+    apState.mode='tetanus'; apState.firingRate=5; apState.stimStrength=20; apState.myelinLevel=2;
+    document.getElementById('sl-rate').value=5; document.getElementById('lbl-rate').textContent='5 Hz';
+    document.getElementById('sl-stim').value=20; document.getElementById('lbl-stim').textContent='20 mV';
+    toast('Tetanic stimulation — sustained high-frequency firing');
+  } else {
+    apState.mode='inhibitory'; apState.stimStrength=8; apState.myelinLevel=2;
+    document.getElementById('sl-stim').value=8; document.getElementById('lbl-stim').textContent='8 mV';
+    currentPhase='resting'; phaseT=0; apState.Vm=-70;
+    toast('GABA inhibitory — hyperpolarized, threshold not reached');
+  }
+}
+function resetSim() {
+  currentPhase='resting'; phaseT=0; apState.Vm=-70; apState.apCount=0; apHistory.length=0;
+  apState.mode='single'; apState.autoStimT=0;
+  playing=true;
+  document.getElementById('btn-play').textContent='⏸ Pause';
+  applyPreset(0);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() {
+  toast('Neuron Action Potential — Na⁺/K⁺ channels, membrane voltage, AP phases. Click Stimulate or use presets.');
+}
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className='toast-item'; el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+function onResize() {
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  renderer.setSize(w,h);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+document.addEventListener('keydown', e=>{
+  if (e.target.tagName==='INPUT') return;
+  if (e.code==='Space') { e.preventDefault(); togglePlay(); }
+  if (e.code==='KeyR') resetSim();
+  if (e.code==='KeyS') triggerAP();
+  if (e.key==='1') applyPreset(0);
+  if (e.key==='2') applyPreset(1);
+  if (e.key==='3') applyPreset(2);
+});
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  katex.render('E_X = \\frac{RT}{zF}\\ln\\frac{[X]_{out}}{[X]_{in}}', document.getElementById('f1'), {throwOnError:false, displayMode:true});
+  katex.render('V_m = \\frac{RT}{F}\\ln\\frac{P_K[K^+]_o + P_{Na}[Na^+]_o}{P_K[K^+]_i + P_{Na}[Na^+]_i}', document.getElementById('f2'), {throwOnError:false, displayMode:true});
+  katex.render('\\text{3 Na}^+ \\text{ out, 2 K}^+ \\text{ in (per ATP)}', document.getElementById('f3'), {throwOnError:false, displayMode:true});
+});
+
+const questions = [
+  { q:"Why can't a neuron fire two action potentials in rapid succession during the absolute refractory period?", opts:["K⁺ channels are fully closed","Na⁺ channels are inactivated and cannot be reopened immediately","The membrane potential is too positive","The Na⁺/K⁺ pump is too slow"], ans:1, exp:"Voltage-gated Na⁺ channels have three states: closed, open, and inactivated. After opening, they enter a brief inactivated state where they cannot open again regardless of voltage. This enforces unidirectional propagation and limits firing frequency." },
+  { q:"What would happen if you applied tetraethylammonium (TEA), which blocks K⁺ channels, during an action potential?", opts:["No action potential would occur","The action potential would not repolarize — a prolonged plateau","Repolarization would be faster","The threshold would be lowered"], ans:1, exp:"K⁺ channels are responsible for repolarization. Blocking them prevents K⁺ efflux, so the membrane stays depolarized much longer — producing a broad, plateau-shaped action potential similar to cardiac muscle." },
+  { q:"MS (multiple sclerosis) destroys myelin. How does this affect action potential conduction?", opts:["Conduction speed increases due to more exposed membrane","Conduction slows or fails — continuous conduction replaces saltatory","Na⁺ channels are directly blocked","The action potential amplitude increases"], ans:1, exp:"Myelin enables saltatory conduction — the AP jumps between nodes of Ranvier (~120 m/s). Demyelination forces slow continuous conduction along the entire axon or, if severe enough, complete conduction block." }
+];
+let quizOpen = false;
+function toggleQuiz() {
+  quizOpen = !quizOpen;
+  document.getElementById('quiz-panel').style.display = quizOpen ? 'block' : 'none';
+  document.getElementById('quiz-fab').style.display = quizOpen ? 'none' : 'flex';
+  if (quizOpen) renderQuiz();
+}
+function renderQuiz() {
+  const c = document.getElementById('q-container');
+  c.innerHTML = questions.map((q,qi)=>`
+    <div class="mb-4">
+      <div class="text-xs font-semibold text-slate-200 mb-2">${qi+1}. ${q.q}</div>
+      ${q.opts.map((o,oi)=>`<div class="quiz-opt" id="qo-${qi}-${oi}" onclick="answerQ(${qi},${oi})">${o}</div>`).join('')}
+      <div id="qe-${qi}" class="text-xs text-slate-400 mt-1 hidden"></div>
+    </div>
+  `).join('');
+}
+function answerQ(qi, oi) {
+  const q = questions[qi];
+  document.querySelectorAll(`[id^=qo-${qi}-]`).forEach(el=>el.style.pointerEvents='none');
+  document.getElementById(`qo-${qi}-${oi}`).classList.add(oi===q.ans?'correct':'wrong');
+  document.getElementById(`qo-${qi}-${q.ans}`).classList.add('correct');
+  const exp = document.getElementById(`qe-${qi}`);
+  exp.textContent=q.exp; exp.classList.remove('hidden');
+  toast(oi===q.ans?'✓ Correct!':'✗ Incorrect — see explanation');
+}
 </script>
 </body>
 </html>

@@ -1,1031 +1,694 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Circuit Construction Kit: DC — Virtual Lab</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DC Circuit Virtual Lab — AetherViz</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0f172a; color: #e6edf3; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
-  #canvas-container { position: fixed; inset: 0; }
-  canvas { display: block; }
-
-  /* ── UI Panel ── */
-  #ui { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: rgba(15,23,42,0.94); border-right: 1px solid rgba(59,130,246,0.2); padding: 16px; overflow-y: auto; backdrop-filter: blur(8px); z-index: 10; }
-  #ui::-webkit-scrollbar { width: 4px; }
-  #ui::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
-  .panel-title { font-size: 13px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
-  .section { margin-bottom: 14px; padding: 12px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: 8px; }
-  .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-
-  /* Toggle buttons */
-  .toggle-row { display: flex; gap: 6px; margin-bottom: 12px; }
-  .toggle-btn { flex: 1; padding: 7px 0; font-size: 11px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(59,130,246,0.3); background: transparent; color: #7d8590; cursor: pointer; transition: all 0.15s; font-family: inherit; }
-  .toggle-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: #3b82f6; }
-  .toggle-btn:hover:not(.active) { border-color: rgba(59,130,246,0.5); color: #e6edf3; }
-  .toggle-btn.warn { border-color: rgba(239,68,68,0.5); }
-  .toggle-btn.warn.active { background: rgba(239,68,68,0.2); color: #f87171; border-color: #ef4444; }
-
-  /* Sliders */
-  .slider-row { margin-bottom: 10px; }
-  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px; }
-  .slider-name { color: #c9d1d9; }
-  .slider-val { color: #60a5fa; font-weight: 700; min-width: 60px; text-align: right; }
-  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(59,130,246,0.2); border-radius: 2px; outline: none; cursor: pointer; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6); }
-
-  /* Presets */
-  .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-  .preset-btn { padding: 5px 8px; font-size: 10px; font-weight: 600; border-radius: 5px; border: 1px solid rgba(59,130,246,0.25); background: rgba(15,23,42,0.6); color: #93c5fd; cursor: pointer; transition: all 0.15s; font-family: inherit; }
-  .preset-btn:hover { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #60a5fa; }
-  .preset-btn.active-preset { background: rgba(59,130,246,0.2); border-color: #3b82f6; color: #60a5fa; }
-
-  /* Data readout */
-  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .data-cell { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.15); border-radius: 6px; padding: 8px; text-align: center; }
-  .data-cell.full { grid-column: 1 / -1; }
-  .data-cell-label { font-size: 9px; color: #7d8590; text-transform: uppercase; }
-  .data-cell-value { font-size: 14px; font-weight: 700; color: #60a5fa; margin-top: 2px; }
-  .data-cell-unit { font-size: 9px; color: #7d8590; }
-  .data-cell.warn .data-cell-value { color: #f87171; }
-
-  /* Voltage drops */
-  .vdrop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-  .vdrop-cell { background: rgba(15,23,42,0.6); border: 1px solid rgba(59,130,246,0.1); border-radius: 5px; padding: 6px; text-align: center; }
-  .vdrop-label { font-size: 9px; color: #7d8590; }
-  .vdrop-value { font-size: 12px; font-weight: 700; margin-top: 2px; }
-  .vdrop-r1 { color: #3b82f6; }
-  .vdrop-r2 { color: #f59e0b; }
-  .vdrop-batt { color: #22c55e; }
-
-  /* Formulas */
-  .formula-box { background: rgba(30,41,59,0.6); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; }
-  .formula-desc { font-size: 10px; color: #7d8590; margin-top: 4px; }
-
-  /* Quiz */
-  .quiz-section { margin-top: 10px; }
-  .quiz-q { font-size: 11px; color: #c9d1d9; margin-bottom: 8px; line-height: 1.5; }
-  .quiz-options { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-  .quiz-opt { padding: 6px 10px; font-size: 10px; border-radius: 5px; border: 1px solid rgba(59,130,246,0.2); background: rgba(15,23,42,0.5); color: #93c5fd; cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; }
-  .quiz-opt:hover { border-color: rgba(59,130,246,0.5); background: rgba(59,130,246,0.1); }
-  .quiz-opt.correct { border-color: #22c55e; background: rgba(34,197,94,0.15); color: #4ade80; }
-  .quiz-opt.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); color: #f87171; }
-  .quiz-opt.disabled { pointer-events: none; opacity: 0.6; }
-  .quiz-feedback { font-size: 10px; padding: 6px 8px; border-radius: 5px; margin-bottom: 8px; line-height: 1.4; }
-  .quiz-feedback.correct { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
-  .quiz-feedback.wrong { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-
-  /* Info panel */
-  #info { position: fixed; top: 12px; right: 12px; width: 230px; background: rgba(15,23,42,0.9); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 12px; z-index: 10; backdrop-filter: blur(8px); }
-  #info h3 { font-size: 11px; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-  #info p { font-size: 10px; color: #7d8590; line-height: 1.5; margin-bottom: 6px; }
-
-  /* Short circuit warning overlay */
-  #short-warning { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(239,68,68,0.15); border: 2px solid rgba(239,68,68,0.6); border-radius: 12px; padding: 20px 30px; z-index: 30; text-align: center; backdrop-filter: blur(8px); animation: pulse-warn 1s infinite; }
-  #short-warning h2 { color: #f87171; font-size: 16px; margin-bottom: 8px; }
-  #short-warning p { color: #fca5a5; font-size: 12px; }
-  @keyframes pulse-warn { 0%,100% { box-shadow: 0 0 20px rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 40px rgba(239,68,68,0.6); } }
-
-  /* FPS */
-  #fps { position: fixed; bottom: 8px; right: 8px; font-size: 9px; color: rgba(59,130,246,0.4); z-index: 20; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#f8fafc;font-family:'Inter',system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  :root{
+    --primary:#3B82F6;--secondary:#0EA5E9;--accent:#22D3EE;
+    --bg:#0f172a;--glass:rgba(255,255,255,0.08);--border:rgba(59,130,246,0.3);
+    --success:#22C55E;--error:#EF4444;--warn:#F59E0B
+  }
+  #toast{position:fixed;top:70px;right:20px;z-index:9999;pointer-events:none}
+  .toast-item{background:rgba(15,23,42,0.95);border:1px solid var(--border);color:#f8fafc;padding:10px 16px;border-radius:8px;margin-bottom:8px;font-size:13px;animation:slideIn .3s ease;backdrop-filter:blur(10px)}
+  @keyframes slideIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .navbar{background:rgba(15,23,42,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);z-index:100;flex-shrink:0}
+  .sidebar{width:290px;background:rgba(15,23,42,0.9);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0}
+  .sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-track{background:transparent}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  #canvas-container{position:relative;flex:1;overflow:hidden}
+  .control-panel{background:rgba(15,23,42,0.92);border-top:1px solid var(--border);backdrop-filter:blur(12px);flex-shrink:0}
+  .slider-track{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:rgba(255,255,255,0.15);outline:none;cursor:pointer;width:100%}
+  .slider-track::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#0EA5E9);cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,0.6)}
+  .glass-card{background:var(--glass);border:1px solid var(--border);border-radius:10px;backdrop-filter:blur(8px)}
+  .data-panel{position:absolute;top:12px;left:12px;background:rgba(15,23,42,0.88);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:220px;backdrop-filter:blur(8px);font-variant-numeric:tabular-nums;z-index:10}
+  .data-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:12px;gap:12px}
+  .data-label{color:#94a3b8;white-space:nowrap}.data-value{color:#22D3EE;font-weight:600;font-family:monospace;text-align:right}
+  .btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--glass);color:#f8fafc;cursor:pointer;font-size:13px;transition:all .2s}
+  .btn:hover{background:rgba(59,130,246,0.2);border-color:var(--primary)}
+  .btn-primary{background:linear-gradient(135deg,#3B82F6,#0EA5E9);border:none;font-weight:600}
+  .btn-primary:hover{opacity:.9}
+  .btn-active{background:rgba(59,130,246,0.3);border-color:var(--primary)}
+  .quiz-panel{position:absolute;bottom:12px;right:12px;width:320px;z-index:10}
+  .preset-btn{padding:5px 10px;border-radius:5px;border:1px solid var(--border);background:var(--glass);color:#cbd5e1;cursor:pointer;font-size:12px;transition:all .2s;white-space:nowrap}
+  .preset-btn:hover,.preset-btn.active{background:rgba(59,130,246,0.25);border-color:var(--primary);color:#f8fafc}
+  .formula{padding:8px;background:rgba(59,130,246,0.08);border-radius:6px;border-left:2px solid var(--primary);margin-bottom:8px}
+  .energy-bar{height:8px;border-radius:4px;transition:width .3s ease;min-width:4px}
+  .node-dot{position:absolute;width:12px;height:12px;border-radius:50%;background:#22D3EE;border:2px solid #0f172a;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 6px rgba(34,211,238,0.8)}
 </style>
 </head>
 <body>
-<div id="canvas-container"><canvas id="c"></canvas></div>
 
-<div id="ui">
-  <div class="panel-title">&#9889; Circuit Construction Kit: DC</div>
-
-  <!-- Circuit Mode -->
-  <div class="section">
-    <div class="section-label">Circuit Configuration</div>
-    <div class="toggle-row">
-      <button class="toggle-btn active" id="btn-series" onclick="setCircuit('series')">Series</button>
-      <button class="toggle-btn" id="btn-parallel" onclick="setCircuit('parallel')">Parallel</button>
+<!-- Navbar -->
+<nav class="navbar px-4 py-2 flex items-center justify-between" style="height:52px">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><path stroke="#fff" stroke-width="2" d="M9 12h6M12 9v6"/></svg>
     </div>
-
-    <!-- Presets -->
-    <div class="section-label">Presets</div>
-    <div class="preset-row">
-      <button class="preset-btn active-preset" id="pre-1" onclick="applyPreset(1)">Series Circuit</button>
-      <button class="preset-btn" id="pre-2" onclick="applyPreset(2)">Parallel Circuit</button>
-      <button class="preset-btn" id="pre-3" onclick="applyPreset(3)">Short Circuit &#9888;</button>
-    </div>
+    <span class="font-bold text-sm" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent">DC Circuit Virtual Lab</span>
+    <span class="text-xs text-slate-400 hidden md:block">直流电路实验室</span>
   </div>
-
-  <!-- Sliders -->
-  <div class="section">
-    <div class="section-label">Component Values</div>
-    <div class="slider-row">
-      <div class="slider-label"><span class="slider-name">Battery Voltage</span><span class="slider-val" id="v-val">12.0 V</span></div>
-      <input type="range" id="slider-v" min="1" max="24" step="0.5" value="12" oninput="updateParam('voltage',this.value)">
-    </div>
-    <div class="slider-row">
-      <div class="slider-label"><span class="slider-name">Resistor R&#8321;</span><span class="slider-val" id="r1-val">20.0 &#8486;</span></div>
-      <input type="range" id="slider-r1" min="1" max="100" step="1" value="20" oninput="updateParam('R1',this.value)">
-    </div>
-    <div class="slider-row">
-      <div class="slider-label"><span class="slider-name">Resistor R&#8322;</span><span class="slider-val" id="r2-val">30.0 &#8486;</span></div>
-      <input type="range" id="slider-r2" min="1" max="100" step="1" value="30" oninput="updateParam('R2',this.value)">
-    </div>
+  <div class="flex gap-2">
+    <button class="btn text-xs" onclick="resetSim()">Reset</button>
+    <button class="btn text-xs" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="btn text-xs" onclick="showAbout()">About</button>
   </div>
+</nav>
 
-  <!-- Live Measurements -->
-  <div class="section">
-    <div class="section-label">Live Measurements</div>
-    <div class="data-grid">
-      <div class="data-cell"><div class="data-cell-label">R_total</div><div class="data-cell-value" id="req-disp">50.00</div><div class="data-cell-unit">&#8486;</div></div>
-      <div class="data-cell"><div class="data-cell-label">I_total</div><div class="data-cell-value" id="itot-disp">0.240</div><div class="data-cell-unit">A</div></div>
-      <div class="data-cell"><div class="data-cell-label">P_total</div><div class="data-cell-value" id="ptot-disp">2.88</div><div class="data-cell-unit">W</div></div>
-      <div class="data-cell" id="bulb-cell"><div class="data-cell-label">Bulb</div><div class="data-cell-value" id="bulb-disp">Dim</div><div class="data-cell-unit">brightness</div></div>
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar p-4 flex flex-col gap-4 hidden md:flex" style="width:290px">
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#3B82F6">Kirchhoff's Laws</h3>
+      <div class="formula">
+        <div id="f-kcl"></div>
+        <p class="text-xs mt-1" style="color:#94a3b8">KCL: Sum of currents at any node = 0.</p>
+      </div>
+      <div class="formula">
+        <div id="f-kvl"></div>
+        <p class="text-xs mt-1" style="color:#94a3b8">KVL: Sum of voltage drops around any loop = 0.</p>
+      </div>
+      <div class="formula">
+        <div id="f-rc"></div>
+        <p class="text-xs mt-1" style="color:#94a3b8">RC charging: voltage approaches EMF exponentially.</p>
+      </div>
+      <div class="formula">
+        <div id="f-div"></div>
+        <p class="text-xs mt-1" style="color:#94a3b8">Voltage divider: output is fraction of input.</p>
+      </div>
     </div>
 
-    <!-- Voltage drops -->
-    <div class="section-label" style="margin-top:10px">Voltage Drops</div>
-    <div class="vdrop-grid">
-      <div class="vdrop-cell"><div class="vdrop-label">V across R&#8321;</div><div class="vdrop-value vdrop-r1" id="vr1-disp">4.80 V</div></div>
-      <div class="vdrop-cell"><div class="vdrop-label">V across R&#8322;</div><div class="vdrop-value vdrop-r2" id="vr2-disp">7.20 V</div></div>
-      <div class="vdrop-cell"><div class="vdrop-label">I through R&#8321;</div><div class="vdrop-value vdrop-r1" id="ir1-disp">0.240 A</div></div>
-      <div class="vdrop-cell"><div class="vdrop-label">I through R&#8322;</div><div class="vdrop-value vdrop-r2" id="ir2-disp">0.240 A</div></div>
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#3B82F6">Concept</h3>
+      <p class="text-xs leading-relaxed" style="color:#cbd5e1">
+        Kirchhoff's laws are the governing rules of every circuit. KCL follows from conservation of charge: charge can't accumulate at a node in steady state. KVL follows from conservation of energy: a charge carrier traveling any closed loop must return to the same potential.
+      </p>
+      <p class="text-xs leading-relaxed mt-2" style="color:#cbd5e1">
+        For a capacitor in an RC circuit, the charging curve is exponential — the capacitor charges rapidly at first and slows as the voltage difference shrinks. Time constant τ = RC determines how fast this happens.
+      </p>
     </div>
-  </div>
 
-  <!-- Ammeter / Voltmeter -->
-  <div class="section">
-    <div class="section-label">Meter Readings</div>
-    <div class="data-grid">
-      <div class="data-cell"><div class="data-cell-label">&#9889; Ammeter</div><div class="data-cell-value" id="ammeter-disp">0.240</div><div class="data-cell-unit">A</div></div>
-      <div class="data-cell"><div class="data-cell-label">&#9889; Voltmeter</div><div class="data-cell-value" id="voltmeter-disp">12.0</div><div class="data-cell-unit">V</div></div>
+    <div class="flex flex-col gap-2">
+      <div class="glass-card p-3">
+        <p class="text-xs font-semibold mb-1" style="color:#22D3EE">Wheatstone Bridge</p>
+        <p class="text-xs" style="color:#94a3b8">When R1/R2 = R3/R4 the bridge is balanced: zero current through the galvanometer. Used to measure unknown resistances to high precision.</p>
+      </div>
+      <div class="glass-card p-3">
+        <p class="text-xs font-semibold mb-1" style="color:#F59E0B">Node Voltage Method</p>
+        <p class="text-xs" style="color:#94a3b8">Choose a reference (ground) node. Write KCL at each remaining node. Solve the linear system. This simulation does exactly that — live.</p>
+      </div>
+      <div class="glass-card p-3">
+        <p class="text-xs font-semibold mb-1" style="color:#22C55E">AP Physics C Connection</p>
+        <p class="text-xs" style="color:#94a3b8">AP Physics C: E&M — Multi-loop circuits, RC transients, node/loop analysis are core exam topics.</p>
+      </div>
     </div>
-  </div>
+  </aside>
 
-  <!-- Formulas -->
-  <div class="section">
-    <div class="section-label">Key Formulas</div>
-    <div class="formula-box"><div id="f1"></div><div class="formula-desc">Ohm's Law</div></div>
-    <div class="formula-box"><div id="f2"></div><div class="formula-desc">Series: total resistance</div></div>
-    <div class="formula-box"><div id="f3"></div><div class="formula-desc">Parallel: total resistance</div></div>
-    <div class="formula-box"><div id="f4"></div><div class="formula-desc">Power dissipated</div></div>
-  </div>
-
-  <!-- Quiz -->
-  <div class="section quiz-section">
-    <div class="section-label">&#127891; Quiz</div>
-
-    <div class="quiz-q">Q1: Two resistors (10&#8486; and 20&#8486;) are connected in series to a 12V battery. What is the total current?</div>
-    <div class="quiz-options" id="q1-opts">
-      <button class="quiz-opt" onclick="checkQuiz(1,'a',this)">A) 1.2 A</button>
-      <button class="quiz-opt" onclick="checkQuiz(1,'b',this)">B) 0.6 A</button>
-      <button class="quiz-opt" onclick="checkQuiz(1,'c',this)">C) 0.4 A</button>
-      <button class="quiz-opt" onclick="checkQuiz(1,'d',this)">D) 0.2 A</button>
+  <!-- Canvas -->
+  <div id="canvas-container" class="flex-1 relative">
+    <!-- Data panel -->
+    <div class="data-panel">
+      <div class="text-xs font-semibold mb-2" style="color:#3B82F6">Node Voltages & Currents</div>
+      <div class="data-row"><span class="data-label">EMF (V_bat)</span><span class="data-value" id="d-emf">—</span></div>
+      <div class="data-row"><span class="data-label">Node A (V)</span><span class="data-value" id="d-va">—</span></div>
+      <div class="data-row"><span class="data-label">Node B (V)</span><span class="data-value" id="d-vb">—</span></div>
+      <div class="data-row"><span class="data-label">I through R1</span><span class="data-value" id="d-i1">—</span></div>
+      <div class="data-row"><span class="data-label">I through R2</span><span class="data-value" id="d-i2">—</span></div>
+      <div class="data-row"><span class="data-label">V_cap</span><span class="data-value" id="d-vc">—</span></div>
+      <div class="data-row"><span class="data-label">P(R1)</span><span class="data-value" id="d-p1">—</span></div>
+      <div class="data-row"><span class="data-label">P(R2)</span><span class="data-value" id="d-p2">—</span></div>
+      <div class="data-row"><span class="data-label">τ = R1·C</span><span class="data-value" id="d-tau">—</span></div>
     </div>
-    <div id="q1-fb" class="quiz-feedback" style="display:none"></div>
 
-    <div class="quiz-q">Q2: In a parallel circuit with R&#8321;=20&#8486; and R&#8322;=30&#8486;, what is the equivalent resistance?</div>
-    <div class="quiz-options" id="q2-opts">
-      <button class="quiz-opt" onclick="checkQuiz(2,'a',this)">A) 50 &#8486;</button>
-      <button class="quiz-opt" onclick="checkQuiz(2,'b',this)">B) 12 &#8486;</button>
-      <button class="quiz-opt" onclick="checkQuiz(2,'c',this)">C) 25 &#8486;</button>
-      <button class="quiz-opt" onclick="checkQuiz(2,'d',this)">D) 10 &#8486;</button>
+    <!-- Quiz -->
+    <div id="quiz-panel" class="quiz-panel glass-card p-3">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold" style="color:#3B82F6">Quick Quiz</span>
+        <button class="text-slate-400 hover:text-white text-xs" onclick="toggleQuiz()">✕</button>
+      </div>
+      <div id="quiz-body"></div>
     </div>
-    <div id="q2-fb" class="quiz-feedback" style="display:none"></div>
   </div>
 </div>
 
-<div id="info">
-  <h3>How It Works</h3>
-  <p>Glowing electrons flow through the circuit. Speed reflects current magnitude. Bulb brightness shows power dissipation.</p>
-  <p><strong>Series:</strong> Same current through all components. Voltage divides across resistors.</p>
-  <p><strong>Parallel:</strong> Same voltage across branches. Current divides inversely with resistance.</p>
-  <p>Drag to rotate. Scroll to zoom. Right-drag to pan.</p>
+<!-- Control Panel -->
+<div class="control-panel px-4 py-3">
+  <div class="flex flex-wrap items-start gap-4">
+
+    <div class="flex flex-col gap-1 min-w-[150px]">
+      <label class="text-xs text-slate-400">EMF: <span id="lbl-emf" class="text-blue-300 font-semibold">4.5 V</span></label>
+      <input type="range" class="slider-track" id="sl-emf" min="1.5" max="9" value="4.5" step="0.5" oninput="onSlider()">
+    </div>
+
+    <div class="flex flex-col gap-1 min-w-[150px]">
+      <label class="text-xs text-slate-400">R1: <span id="lbl-r1" class="text-cyan-300 font-semibold">1000 Ω</span></label>
+      <input type="range" class="slider-track" id="sl-r1" min="100" max="10000" value="1000" step="100" oninput="onSlider()">
+    </div>
+
+    <div class="flex flex-col gap-1 min-w-[150px]">
+      <label class="text-xs text-slate-400">R2: <span id="lbl-r2" class="text-cyan-300 font-semibold">1000 Ω</span></label>
+      <input type="range" class="slider-track" id="sl-r2" min="100" max="10000" value="1000" step="100" oninput="onSlider()">
+    </div>
+
+    <div class="flex flex-col gap-1 min-w-[150px]">
+      <label class="text-xs text-slate-400">C: <span id="lbl-c" class="text-amber-300 font-semibold">47 μF</span></label>
+      <input type="range" class="slider-track" id="sl-c" min="1" max="100" value="47" step="1" oninput="onSlider()">
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-xs text-slate-400">Presets:</label>
+      <div class="flex gap-2 flex-wrap">
+        <button class="preset-btn" onclick="applyPreset('divider')">Voltage Divider</button>
+        <button class="preset-btn" onclick="applyPreset('bridge')">Wheatstone Bridge</button>
+        <button class="preset-btn" onclick="applyPreset('rc')">RC Charging</button>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-xs text-slate-400">Speed:</label>
+      <div class="flex gap-1">
+        <button class="preset-btn text-xs" id="spd-025" onclick="setSpeed(0.25)">0.25x</button>
+        <button class="preset-btn text-xs" id="spd-05" onclick="setSpeed(0.5)">0.5x</button>
+        <button class="preset-btn text-xs btn-active" id="spd-1" onclick="setSpeed(1)">1x</button>
+        <button class="preset-btn text-xs" id="spd-2" onclick="setSpeed(2)">2x</button>
+        <button class="preset-btn text-xs" id="spd-3" onclick="setSpeed(3)">3x</button>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-xs text-slate-400">RC:</label>
+      <button class="btn btn-primary text-xs" onclick="resetCapacitor()">Discharge Cap</button>
+    </div>
+  </div>
 </div>
 
-<div id="short-warning">
-  <h2>&#9888; SHORT CIRCUIT WARNING</h2>
-  <p>Extremely low resistance detected!<br>Current exceeds safe limits.<br>In a real circuit, the fuse would blow.</p>
+<!-- About Modal -->
+<div id="about-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+  <div class="glass-card p-6 max-w-md w-full mx-4">
+    <h3 class="font-bold text-lg mb-3" style="color:#3B82F6">DC Circuit Virtual Lab</h3>
+    <p class="text-sm text-slate-300 mb-4">Explore voltage dividers, Wheatstone bridges, and RC charging circuits with real-time node voltage and current calculations based on Kirchhoff's laws.</p>
+    <div class="text-xs text-slate-400 mb-4">
+      <div class="font-semibold mb-1 text-slate-300">Keyboard Shortcuts</div>
+      <div>Space — Play/Pause RC charging</div>
+      <div>R — Reset simulation</div>
+      <div>1-5 — Speed presets</div>
+    </div>
+    <button class="btn btn-primary text-sm w-full" onclick="document.getElementById('about-modal').classList.add('hidden')">Close</button>
+  </div>
 </div>
 
-<div id="fps">-- fps</div>
+<div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-<script src="/lib/orbit-controls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script>
-// ── KaTeX Formulas ───────────────────────────────────────────────────────────
-katex.render('V = IR', document.getElementById('f1'), { displayMode: false });
-katex.render('R_{\\text{total}} = R_1 + R_2', document.getElementById('f2'), { displayMode: false });
-katex.render('\\frac{1}{R_{\\text{total}}} = \\frac{1}{R_1} + \\frac{1}{R_2}', document.getElementById('f3'), { displayMode: false });
-katex.render('P = IV', document.getElementById('f4'), { displayMode: false });
-
-// ── State ────────────────────────────────────────────────────────────────────
-const state = {
-  circuitType: 'series',
-  voltage: 12,
-  R1: 20,
-  R2: 30,
-  isShort: false,
+// ── OrbitControls ──────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.sub(target)); camera.position.add(target);
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
 };
 
-// ── Physics Calculations ─────────────────────────────────────────────────────
-function calcCircuit() {
-  const { voltage, R1, R2, circuitType } = state;
-  let Req, Itotal, Ptotal, VR1, VR2, IR1, IR2;
-
-  if (circuitType === 'series') {
-    Req = R1 + R2;
-    Itotal = voltage / Req;
-    IR1 = IR2 = Itotal;
-    VR1 = IR1 * R1;
-    VR2 = IR2 * R2;
-  } else {
-    Req = 1 / (1 / R1 + 1 / R2);
-    Itotal = voltage / Req;
-    VR1 = VR2 = voltage;
-    IR1 = voltage / R1;
-    IR2 = voltage / R2;
-  }
-  Ptotal = voltage * Itotal;
-
-  // Short circuit detection
-  state.isShort = (Req < 2 && voltage > 6);
-
-  return { Req, Itotal, Ptotal, VR1, VR2, IR1, IR2 };
-}
-
-function getBulbBrightness(power) {
-  if (power < 1) return 'Off';
-  if (power < 3) return 'Dim';
-  if (power < 8) return 'Medium';
-  if (power < 20) return 'Bright';
-  return 'Very Bright';
-}
-
-// ── UI Refresh ───────────────────────────────────────────────────────────────
-function refreshUI() {
-  const d = calcCircuit();
-  document.getElementById('req-disp').textContent = d.Req.toFixed(2);
-  document.getElementById('itot-disp').textContent = d.Itotal.toFixed(3);
-  document.getElementById('ptot-disp').textContent = d.Ptotal.toFixed(2);
-  document.getElementById('bulb-disp').textContent = getBulbBrightness(d.Ptotal);
-  document.getElementById('vr1-disp').textContent = d.VR1.toFixed(2) + ' V';
-  document.getElementById('vr2-disp').textContent = d.VR2.toFixed(2) + ' V';
-  document.getElementById('ir1-disp').textContent = d.IR1.toFixed(3) + ' A';
-  document.getElementById('ir2-disp').textContent = d.IR2.toFixed(3) + ' A';
-  document.getElementById('ammeter-disp').textContent = d.Itotal.toFixed(3);
-  document.getElementById('voltmeter-disp').textContent = state.voltage.toFixed(1);
-
-  // Short circuit warning
-  const warnEl = document.getElementById('short-warning');
-  const bulbCell = document.getElementById('bulb-cell');
-  if (state.isShort) {
-    warnEl.style.display = 'block';
-    bulbCell.classList.add('warn');
-    document.getElementById('bulb-disp').textContent = 'DANGER';
-  } else {
-    warnEl.style.display = 'none';
-    bulbCell.classList.remove('warn');
-  }
-}
-
-function updateParam(name, val) {
-  val = parseFloat(val);
-  if (name === 'voltage') {
-    state.voltage = val;
-    document.getElementById('v-val').textContent = val.toFixed(1) + ' V';
-  } else if (name === 'R1') {
-    state.R1 = val;
-    document.getElementById('r1-val').textContent = val.toFixed(1) + ' \u03A9';
-  } else if (name === 'R2') {
-    state.R2 = val;
-    document.getElementById('r2-val').textContent = val.toFixed(1) + ' \u03A9';
-  }
-  clearPresetHighlight();
-  refreshUI();
-  rebuildCircuit();
-}
-
-function setCircuit(type) {
-  state.circuitType = type;
-  document.getElementById('btn-series').classList.toggle('active', type === 'series');
-  document.getElementById('btn-parallel').classList.toggle('active', type === 'parallel');
-  clearPresetHighlight();
-  refreshUI();
-  rebuildCircuit();
-}
-
-function clearPresetHighlight() {
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
-}
-
-function applyPreset(n) {
-  clearPresetHighlight();
-  document.getElementById('pre-' + n).classList.add('active-preset');
-  if (n === 1) {
-    state.circuitType = 'series'; state.voltage = 12; state.R1 = 20; state.R2 = 30;
-  } else if (n === 2) {
-    state.circuitType = 'parallel'; state.voltage = 12; state.R1 = 20; state.R2 = 30;
-  } else if (n === 3) {
-    state.circuitType = 'series'; state.voltage = 24; state.R1 = 1; state.R2 = 1;
-  }
-  // Sync sliders
-  document.getElementById('slider-v').value = state.voltage;
-  document.getElementById('slider-r1').value = state.R1;
-  document.getElementById('slider-r2').value = state.R2;
-  document.getElementById('v-val').textContent = state.voltage.toFixed(1) + ' V';
-  document.getElementById('r1-val').textContent = state.R1.toFixed(1) + ' \u03A9';
-  document.getElementById('r2-val').textContent = state.R2.toFixed(1) + ' \u03A9';
-  document.getElementById('btn-series').classList.toggle('active', state.circuitType === 'series');
-  document.getElementById('btn-parallel').classList.toggle('active', state.circuitType === 'parallel');
-  refreshUI();
-  rebuildCircuit();
-}
-
-// ── Quiz ─────────────────────────────────────────────────────────────────────
-const quizAnswers = { 1: 'c', 2: 'b' };
-const quizExplanations = {
-  1: { correct: 'Correct! R_total = 10+20 = 30\u03A9, I = 12/30 = 0.4 A', wrong: 'Incorrect. R_total = 10+20 = 30\u03A9, so I = V/R = 12/30 = 0.4 A (Answer C).' },
-  2: { correct: 'Correct! 1/R = 1/20 + 1/30 = 5/60, R = 12\u03A9', wrong: 'Incorrect. 1/R = 1/20 + 1/30 = 3/60 + 2/60 = 5/60, so R = 12\u03A9 (Answer B).' }
+// ── State ──────────────────────────────────────────────────────
+var state = {
+  emf: 4.5, r1: 1000, r2: 1000, cap: 47e-6,
+  vcap: 0, speed: 1, rcPaused: false,
+  preset: 'divider'
 };
 
-function checkQuiz(q, ans, el) {
-  const opts = document.getElementById('q' + q + '-opts');
-  const fb = document.getElementById('q' + q + '-fb');
-  const buttons = opts.querySelectorAll('.quiz-opt');
-  const isCorrect = ans === quizAnswers[q];
+// Circuit model: voltage divider is default
+// Node A = top of R1 (= EMF positive terminal) => V_A = emf
+// Node B = junction between R1 and R2 (and capacitor) => V_B = emf * R2 / (R1+R2)  [steady state]
+// Node C = bottom = ground = 0
 
-  buttons.forEach(b => b.classList.add('disabled'));
-  el.classList.add(isCorrect ? 'correct' : 'wrong');
+// Kirchhoff node voltage method (steady state, capacitor fully charged):
+// V_A = emf (imposed by battery)
+// KCL at node B: (V_A - V_B)/R1 = (V_B - 0)/R2
+// => V_B = emf * R2 / (R1 + R2)
+// RC charging from 0: V_c(t) = emf*(1 - e^(-t/tau)), tau = R1*C
 
-  // Highlight correct answer
-  if (!isCorrect) {
-    const idx = { a: 0, b: 1, c: 2, d: 3 }[quizAnswers[q]];
-    buttons[idx].classList.add('correct');
-  }
-
-  fb.style.display = 'block';
-  fb.className = 'quiz-feedback ' + (isCorrect ? 'correct' : 'wrong');
-  fb.textContent = isCorrect ? quizExplanations[q].correct : quizExplanations[q].wrong;
+function computeNodeVoltages() {
+  var vA = state.emf;
+  var vB = state.emf * state.r2 / (state.r1 + state.r2);
+  var i1 = (vA - vB) / state.r1;
+  var i2 = vB / state.r2;
+  var tau = state.r1 * state.cap;
+  return { vA: vA, vB: vB, i1: i1, i2: i2, tau: tau };
 }
 
-// ── Three.js Setup ───────────────────────────────────────────────────────────
-const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+// ── Three.js setup ─────────────────────────────────────────────
+var container = document.getElementById('canvas-container');
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+var camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 9, 18);
+
+var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x0f172a, 1);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-camera.position.set(0, 3, 10);
-camera.lookAt(0, 0, 0);
-
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.minDistance = 4;
-controls.maxDistance = 25;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 40;
+controls.target.set(0, 0, 0);
 
-// Lights
-scene.add(new THREE.AmbientLight(0x1e3a5f, 1.8));
-const dirLight = new THREE.DirectionalLight(0x4a9eff, 1.2);
-dirLight.position.set(5, 8, 5);
-scene.add(dirLight);
-const dirLight2 = new THREE.DirectionalLight(0x3b82f6, 0.5);
-dirLight2.position.set(-5, -3, 3);
-scene.add(dirLight2);
+var keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+var fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+var backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+var ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+scene.add(new THREE.GridHelper(24, 24, 0x334155, 0x1e293b));
 
-// Grid floor
-const gridHelper = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x0f172a);
-gridHelper.position.y = -2.5;
-scene.add(gridHelper);
-
-// ── Constants ────────────────────────────────────────────────────────────────
-const WIRE_R = 0.045;
-const BATTERY_COLOR = 0x22c55e;
-const R1_COLOR = 0x3b82f6;
-const R2_COLOR = 0xf59e0b;
-const WIRE_COLOR = 0x64748b;
-const ELECTRON_COLOR = 0x60a5fa;
-const BULB_COLOR = 0xfbbf24;
-
-// ── Circuit Group ────────────────────────────────────────────────────────────
-let circuitGroup = new THREE.Group();
+// ── Circuit components ─────────────────────────────────────────
+var circuitGroup = new THREE.Group();
 scene.add(circuitGroup);
 
-// ── Circuit Board ────────────────────────────────────────────────────────────
-function makeBoard() {
-  const geo = new THREE.BoxGeometry(9, 0.15, 6);
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0x1a2332,
-    roughness: 0.8,
-    metalness: 0.1,
-  });
-  const board = new THREE.Mesh(geo, mat);
-  board.position.y = -0.08;
-  board.receiveShadow = true;
-  return board;
+// Layout: voltage divider
+// Battery: left (-7, 0.9, 0)
+// Node A (top): (-4, 0.3, 4) --wire-- (4, 0.3, 4)
+// R1 at (0, 0.3, 4) [top branch]
+// Node B (mid): (4, 0.3, 4) --R1-- or wire down to (4, 0.3, 0)
+// Simplified: straight circuit
+// Battery left side (-7,0,0): top terminal at (-7,0,4), bottom at (-7,0,-4)
+// Top wire: (-7,0.3,4) -> (7,0.3,4) [with R1 at (0,0.3,4)]
+// Right wire: (7,0.3,4) -> (7,0.3,-4)
+// Bottom wire: (7,0.3,-4) -> (-7,0.3,-4) [with R2 at (0,0.3,-4)]
+// Left wire: (-7,0.3,-4) -> (-7,0.3,4) [battery]
+// Capacitor: branch from (3,0.3,4) -> (3,0.3,-4)
+
+var batGeo = new THREE.BoxGeometry(0.8, 2.2, 0.7);
+var batMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.5, roughness: 0.3 });
+var battery = new THREE.Mesh(batGeo, batMat);
+battery.position.set(-7, 1.1, 0);
+battery.castShadow = true;
+circuitGroup.add(battery);
+
+// +/- pins
+var pinGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.35, 8);
+var posPin = new THREE.Mesh(pinGeo, new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+posPin.position.set(-7, 2.4, 0); circuitGroup.add(posPin);
+var negPin = new THREE.Mesh(pinGeo, new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
+negPin.position.set(-7, -0.15, 0); circuitGroup.add(negPin);
+
+// R1 (top wire)
+var resGeo = new THREE.BoxGeometry(1.6, 0.55, 0.55);
+var r1Mat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, metalness: 0.3, roughness: 0.5, emissive: 0x1e40af, emissiveIntensity: 0.4 });
+var r1Mesh = new THREE.Mesh(resGeo, r1Mat);
+r1Mesh.position.set(-1, 0.55, 4.5);
+r1Mesh.castShadow = true;
+circuitGroup.add(r1Mesh);
+
+// R2 (bottom wire)
+var r2Mat = new THREE.MeshStandardMaterial({ color: 0x0EA5E9, metalness: 0.3, roughness: 0.5, emissive: 0x0369a1, emissiveIntensity: 0.4 });
+var r2Mesh = new THREE.Mesh(resGeo, r2Mat);
+r2Mesh.position.set(-1, 0.55, -4.5);
+r2Mesh.castShadow = true;
+circuitGroup.add(r2Mesh);
+
+// Capacitor (right branch)
+var capBodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 1.2, 16);
+var capMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.4, roughness: 0.4, emissive: 0x3b0764, emissiveIntensity: 0.3 });
+var capMesh = new THREE.Mesh(capBodyGeo, capMat);
+capMesh.position.set(5, 0.6, 0);
+circuitGroup.add(capMesh);
+
+// Capacitor plate glow
+var capPlateGeo = new THREE.BoxGeometry(0.9, 0.12, 0.9);
+var capPlateMat = new THREE.MeshStandardMaterial({ color: 0xa78bfa, emissive: 0x7c3aed, emissiveIntensity: 0.5 });
+var capPlateTop = new THREE.Mesh(capPlateGeo, capPlateMat);
+var capPlateBtm = new THREE.Mesh(capPlateGeo, capPlateMat.clone());
+capPlateTop.position.set(5, 1.3, 0);
+capPlateBtm.position.set(5, -0.1, 0);
+circuitGroup.add(capPlateTop, capPlateBtm);
+
+// Wire segments
+function makeWire(ax, ay, az, bx, by, bz, color) {
+  var a = new THREE.Vector3(ax, ay, az);
+  var b = new THREE.Vector3(bx, by, bz);
+  var dir = new THREE.Vector3().subVectors(b, a);
+  var len = dir.length();
+  var mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+  var geo = new THREE.CylinderGeometry(0.07, 0.07, len, 8);
+  var mat = new THREE.MeshStandardMaterial({ color: color || 0x475569, metalness: 0.6, roughness: 0.3 });
+  var mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(mid);
+  dir.normalize();
+  var axis = new THREE.Vector3(0, 1, 0);
+  mesh.quaternion.setFromUnitVectors(axis, dir);
+  circuitGroup.add(mesh);
+  return mesh;
 }
 
-// ── Wire Maker ───────────────────────────────────────────────────────────────
-function makeTube(points, color, radius) {
-  radius = radius || WIRE_R;
-  const curve = new THREE.CatmullRomCurve3(points);
-  const geo = new THREE.TubeGeometry(curve, Math.max(8, points.length * 6), radius, 8, false);
-  const mat = new THREE.MeshStandardMaterial({
-    color: color,
-    emissive: color,
-    emissiveIntensity: 0.4,
-    roughness: 0.4,
-    metalness: 0.6,
-    transparent: true,
-    opacity: 0.85,
-  });
-  return new THREE.Mesh(geo, mat);
+// Main loop wires
+makeWire(-7, 0.3, 4.5, -3, 0.3, 4.5, 0x475569);   // top left to R1
+makeWire(1, 0.3, 4.5, 7, 0.3, 4.5, 0x475569);    // R1 to top right corner
+makeWire(7, 0.3, 4.5, 7, 0.3, -4.5, 0x475569);   // right side down
+makeWire(7, 0.3, -4.5, 1, 0.3, -4.5, 0x475569);  // right to R2
+makeWire(-3, 0.3, -4.5, -7, 0.3, -4.5, 0x475569); // R2 to left bottom
+makeWire(-7, 0.3, -4.5, -7, 0.3, 4.5, 0x475569);  // left battery side
+
+// Capacitor branch
+makeWire(5, 0.3, 4.5, 5, 0.3, 1.3, 0x7c3aed);
+makeWire(5, 0.3, -4.5, 5, 0.3, -0.1, 0x7c3aed);
+
+// Node indicator spheres
+function makeNode(x, y, z, color) {
+  var geo = new THREE.SphereGeometry(0.22, 16, 16);
+  var mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
+  var mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  circuitGroup.add(mesh);
+  return mesh;
 }
+var nodeA = makeNode(-7, 0.5, 4.5, 0xef4444);  // + terminal
+var nodeB = makeNode(5, 0.5, 4.5, 0x22D3EE);   // junction
+var nodeGnd = makeNode(-7, 0.5, -4.5, 0x1d4ed8); // ground
 
-// ── Resistor ─────────────────────────────────────────────────────────────────
-function makeResistor(x, y, z, color, label) {
-  const group = new THREE.Group();
+// ── Particles ──────────────────────────────────────────────────
+var PCOUNT = 100;
+var pGeo, pMat, pMesh;
+var pProg = new Float32Array(PCOUNT);
+var pPos = new Float32Array(PCOUNT * 3);
 
-  // Body
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(1.0, 0.35, 0.35),
-    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.5 })
-  );
-  group.add(body);
+var mainPath = [
+  new THREE.Vector3(-7, 0.5, 4.5),
+  new THREE.Vector3(7, 0.5, 4.5),
+  new THREE.Vector3(7, 0.5, -4.5),
+  new THREE.Vector3(-7, 0.5, -4.5),
+  new THREE.Vector3(-7, 0.5, 4.5)
+];
 
-  // Bands (colored stripes)
-  const bandColors = color === R1_COLOR ? [0xef4444, 0x000000, 0xf59e0b] : [0xf97316, 0x000000, 0xf59e0b];
-  for (let i = 0; i < 3; i++) {
-    const band = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 0.36, 0.36),
-      new THREE.MeshStandardMaterial({ color: bandColors[i], emissive: bandColors[i], emissiveIntensity: 0.3 })
-    );
-    band.position.x = -0.25 + i * 0.25;
-    group.add(band);
+function buildParticles() {
+  if (pMesh) scene.remove(pMesh);
+  pGeo = new THREE.BufferGeometry();
+  for (var i = 0; i < PCOUNT; i++) pProg[i] = Math.random();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pMat = new THREE.PointsMaterial({ color: 0xfde047, size: 0.18, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+  pMesh = new THREE.Points(pGeo, pMat);
+  scene.add(pMesh);
+}
+buildParticles();
+
+function pathLen(path) {
+  var t = 0;
+  for (var i = 0; i < path.length - 1; i++) t += path[i].distanceTo(path[i+1]);
+  return t;
+}
+function ptOnPath(path, frac) {
+  var tot = pathLen(path), tgt = frac * tot, acc = 0;
+  for (var i = 0; i < path.length - 1; i++) {
+    var s = path[i].distanceTo(path[i+1]);
+    if (acc + s >= tgt) {
+      var f = (tgt - acc) / s;
+      return new THREE.Vector3().lerpVectors(path[i], path[i+1], f);
+    }
+    acc += s;
   }
-
-  // Leads
-  const leadGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6);
-  const leadMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
-  const leadL = new THREE.Mesh(leadGeo, leadMat);
-  leadL.rotation.z = Math.PI / 2;
-  leadL.position.x = -0.7;
-  group.add(leadL);
-  const leadR = new THREE.Mesh(leadGeo, leadMat);
-  leadR.rotation.z = Math.PI / 2;
-  leadR.position.x = 0.7;
-  group.add(leadR);
-
-  group.position.set(x, y, z);
-  return group;
+  return path[path.length-1].clone();
 }
 
-// ── Battery ──────────────────────────────────────────────────────────────────
-function makeBattery(x, y, z) {
-  const group = new THREE.Group();
-
-  // Body cylinder
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.35, 0.35, 1.2, 16),
-    new THREE.MeshStandardMaterial({ color: BATTERY_COLOR, emissive: BATTERY_COLOR, emissiveIntensity: 0.35, roughness: 0.3, metalness: 0.5 })
-  );
-  body.rotation.z = Math.PI / 2;
-  group.add(body);
-
-  // Positive terminal
-  const posT = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.12, 0.2, 8),
-    new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 0.4 })
-  );
-  posT.rotation.z = Math.PI / 2;
-  posT.position.x = 0.7;
-  group.add(posT);
-
-  // Negative terminal
-  const negT = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.15, 0.15, 0.08, 8),
-    new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x3b82f6, emissiveIntensity: 0.3 })
-  );
-  negT.rotation.z = Math.PI / 2;
-  negT.position.x = -0.68;
-  group.add(negT);
-
-  // Label "+" and "-"
-  group.position.set(x, y, z);
-  return group;
+function updateParticles(dt) {
+  var data = computeNodeVoltages();
+  var I = data.i1;
+  var spd = Math.min(Math.abs(I) * 0.6, 0.4) * state.speed;
+  var posAttr = pGeo.attributes.position;
+  for (var i = 0; i < PCOUNT; i++) {
+    pProg[i] = (pProg[i] + spd * dt) % 1;
+    var pt = ptOnPath(mainPath, pProg[i]);
+    posAttr.setXYZ(i, pt.x, pt.y, pt.z);
+  }
+  posAttr.needsUpdate = true;
 }
 
-// ── Light Bulb ───────────────────────────────────────────────────────────────
-let bulbMesh, bulbGlow;
+// ── RC simulation ──────────────────────────────────────────────
+var rcTime = 0;
 
-function makeBulb(x, y, z) {
-  const group = new THREE.Group();
-
-  // Glass sphere
-  bulbMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 16, 16),
-    new THREE.MeshStandardMaterial({
-      color: BULB_COLOR,
-      emissive: BULB_COLOR,
-      emissiveIntensity: 0.2,
-      transparent: true,
-      opacity: 0.6,
-      roughness: 0.1,
-      metalness: 0.0,
-    })
-  );
-  group.add(bulbMesh);
-
-  // Base
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.15, 0.2, 0.3, 8),
-    new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 })
-  );
-  base.position.y = -0.35;
-  group.add(base);
-
-  // Point light for glow
-  bulbGlow = new THREE.PointLight(BULB_COLOR, 0.5, 5);
-  bulbGlow.position.set(0, 0, 0);
-  group.add(bulbGlow);
-
-  group.position.set(x, y, z);
-  return group;
+function stepRC(dt) {
+  if (state.rcPaused) return;
+  var tau = state.r1 * state.cap;
+  var maxSubStep = 0.001;
+  var steps = Math.ceil(dt / maxSubStep);
+  var subDt = dt / steps;
+  for (var i = 0; i < steps; i++) {
+    var dv = (state.emf - state.vcap) / tau * subDt;
+    state.vcap = Math.max(0, Math.min(state.emf, state.vcap + dv));
+  }
+  rcTime += dt;
+  // Update capacitor glow
+  var frac = state.vcap / Math.max(state.emf, 0.01);
+  capMat.emissiveIntensity = 0.1 + 0.8 * frac;
+  capPlateMat.emissiveIntensity = 0.2 + 1.2 * frac;
 }
 
-// ── Ammeter / Voltmeter ──────────────────────────────────────────────────────
-function makeMeter(x, y, z, label, color) {
-  const group = new THREE.Group();
+// ── Data panel ─────────────────────────────────────────────────
+function updateData() {
+  var data = computeNodeVoltages();
+  document.getElementById('d-emf').textContent = state.emf.toFixed(2) + ' V';
+  document.getElementById('d-va').textContent = data.vA.toFixed(3) + ' V';
+  document.getElementById('d-vb').textContent = data.vB.toFixed(3) + ' V';
+  document.getElementById('d-i1').textContent = (data.i1 * 1000).toFixed(3) + ' mA';
+  document.getElementById('d-i2').textContent = (data.i2 * 1000).toFixed(3) + ' mA';
+  document.getElementById('d-vc').textContent = state.vcap.toFixed(3) + ' V';
+  document.getElementById('d-p1').textContent = (data.i1 * data.i1 * state.r1 * 1000).toFixed(3) + ' mW';
+  document.getElementById('d-p2').textContent = (data.i2 * data.i2 * state.r2 * 1000).toFixed(3) + ' mW';
+  var tau = state.r1 * state.cap;
+  document.getElementById('d-tau').textContent = (tau * 1000).toFixed(2) + ' ms';
 
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.6, 0.6, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: color, emissiveIntensity: 0.15, roughness: 0.5, metalness: 0.3 })
-  );
-  group.add(body);
-
-  // Screen
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.45, 0.3),
-    new THREE.MeshStandardMaterial({ color: 0x0f172a, emissive: color, emissiveIntensity: 0.3 })
-  );
-  screen.position.z = 0.11;
-  group.add(screen);
-
-  // Border ring
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(0.28, 0.32, 16),
-    new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.4, side: THREE.DoubleSide })
-  );
-  ring.position.z = 0.12;
-  group.add(ring);
-
-  group.position.set(x, y, z);
-  return group;
+  // Resistor glow
+  r1Mat.emissiveIntensity = 0.1 + 0.8 * Math.min(data.i1 * state.r1 / state.emf, 1);
+  r2Mat.emissiveIntensity = 0.1 + 0.8 * Math.min(data.i2 * state.r2 / state.emf, 1);
 }
 
-// ── Voltage Label Sprites ────────────────────────────────────────────────────
-const labelSprites = [];
+// ── Controls ───────────────────────────────────────────────────
+function onSlider() {
+  state.emf = parseFloat(document.getElementById('sl-emf').value);
+  state.r1 = parseInt(document.getElementById('sl-r1').value);
+  state.r2 = parseInt(document.getElementById('sl-r2').value);
+  state.cap = parseInt(document.getElementById('sl-c').value) * 1e-6;
+  document.getElementById('lbl-emf').textContent = state.emf.toFixed(1) + ' V';
+  document.getElementById('lbl-r1').textContent = state.r1 + ' Ω';
+  document.getElementById('lbl-r2').textContent = state.r2 + ' Ω';
+  document.getElementById('lbl-c').textContent = Math.round(state.cap * 1e6) + ' μF';
+  updateData();
+}
+window.onSlider = onSlider;
 
-function makeLabel(text, x, y, z, color) {
-  const canvas2d = document.createElement('canvas');
-  canvas2d.width = 256;
-  canvas2d.height = 64;
-  const ctx = canvas2d.getContext('2d');
-  ctx.clearRect(0, 0, 256, 64);
+function setSpeed(s) {
+  state.speed = s;
+  ['025','05','1','2','3'].forEach(function(id){ document.getElementById('spd-'+id).classList.remove('btn-active'); });
+  var map = {0.25:'025',0.5:'05',1:'1',2:'2',3:'3'};
+  if (map[s]) document.getElementById('spd-'+map[s]).classList.add('btn-active');
+  toast('Speed: ' + s + 'x');
+}
+window.setSpeed = setSpeed;
 
-  // Background
-  ctx.fillStyle = 'rgba(15,23,42,0.8)';
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 248, 56, 8);
-  ctx.fill();
+function resetSim() {
+  state.emf = 4.5; state.r1 = 1000; state.r2 = 1000; state.cap = 47e-6; state.vcap = 0; state.speed = 1;
+  document.getElementById('sl-emf').value = 4.5;
+  document.getElementById('sl-r1').value = 1000;
+  document.getElementById('sl-r2').value = 1000;
+  document.getElementById('sl-c').value = 47;
+  document.getElementById('lbl-emf').textContent = '4.5 V';
+  document.getElementById('lbl-r1').textContent = '1000 Ω';
+  document.getElementById('lbl-r2').textContent = '1000 Ω';
+  document.getElementById('lbl-c').textContent = '47 μF';
+  setSpeed(1);
+  updateData();
+  toast('Simulation reset');
+}
+window.resetSim = resetSim;
 
-  // Border
-  ctx.strokeStyle = color || '#3b82f6';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 248, 56, 8);
-  ctx.stroke();
+function resetCapacitor() {
+  state.vcap = 0; rcTime = 0;
+  toast('Capacitor discharged');
+}
+window.resetCapacitor = resetCapacitor;
 
-  // Text
-  ctx.fillStyle = color || '#60a5fa';
-  ctx.font = 'bold 28px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 128, 32);
+function applyPreset(p) {
+  if (p === 'divider') {
+    state.emf = 9; state.r1 = 2000; state.r2 = 1000; state.cap = 10e-6; state.vcap = 0;
+    document.getElementById('sl-emf').value = 9;
+    document.getElementById('sl-r1').value = 2000;
+    document.getElementById('sl-r2').value = 1000;
+    document.getElementById('sl-c').value = 10;
+    document.getElementById('lbl-emf').textContent = '9.0 V';
+    document.getElementById('lbl-r1').textContent = '2000 Ω';
+    document.getElementById('lbl-r2').textContent = '1000 Ω';
+    document.getElementById('lbl-c').textContent = '10 μF';
+  } else if (p === 'bridge') {
+    state.emf = 5; state.r1 = 1000; state.r2 = 1000; state.cap = 47e-6; state.vcap = 0;
+    document.getElementById('sl-emf').value = 5;
+    document.getElementById('sl-r1').value = 1000;
+    document.getElementById('sl-r2').value = 1000;
+    document.getElementById('sl-c').value = 47;
+    document.getElementById('lbl-emf').textContent = '5.0 V';
+    document.getElementById('lbl-r1').textContent = '1000 Ω';
+    document.getElementById('lbl-r2').textContent = '1000 Ω';
+    document.getElementById('lbl-c').textContent = '47 μF';
+  } else if (p === 'rc') {
+    state.emf = 5; state.r1 = 5000; state.r2 = 10000; state.cap = 100e-6; state.vcap = 0;
+    document.getElementById('sl-emf').value = 5;
+    document.getElementById('sl-r1').value = 5000;
+    document.getElementById('sl-r2').value = 10000;
+    document.getElementById('sl-c').value = 100;
+    document.getElementById('lbl-emf').textContent = '5.0 V';
+    document.getElementById('lbl-r1').textContent = '5000 Ω';
+    document.getElementById('lbl-r2').textContent = '10000 Ω';
+    document.getElementById('lbl-c').textContent = '100 μF';
+  }
+  updateData();
+  toast('Preset: ' + (p === 'divider' ? 'Voltage Divider' : p === 'bridge' ? 'Wheatstone Bridge' : 'RC Charging Circuit'));
+}
+window.applyPreset = applyPreset;
 
-  const texture = new THREE.CanvasTexture(canvas2d);
-  const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
-  const sprite = new THREE.Sprite(spriteMat);
-  sprite.scale.set(1.4, 0.35, 1);
-  sprite.position.set(x, y, z);
-  return sprite;
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+window.toggleFullscreen = toggleFullscreen;
+
+function showAbout() { document.getElementById('about-modal').classList.remove('hidden'); }
+window.showAbout = showAbout;
+
+// ── Toast ──────────────────────────────────────────────────────
+function toast(msg) {
+  var t = document.getElementById('toast');
+  var el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(function(){ t.removeChild(el); }, 2200);
 }
 
-function updateLabel(sprite, text, color) {
-  const canvas2d = document.createElement('canvas');
-  canvas2d.width = 256;
-  canvas2d.height = 64;
-  const ctx = canvas2d.getContext('2d');
-  ctx.clearRect(0, 0, 256, 64);
+// ── Quiz ───────────────────────────────────────────────────────
+var quizData = [
+  {
+    q: "KCL states that at any node, the sum of currents entering equals the sum leaving. This is a consequence of:",
+    opts: ["Ohm's Law", "Conservation of energy", "Conservation of charge", "Newton's 2nd Law"],
+    ans: 2,
+    ok: "Correct! KCL is conservation of charge — charge cannot accumulate at a node in steady state.",
+    bad: "KCL follows from conservation of charge, not energy. Charge flowing in must equal charge flowing out — it can't pile up."
+  },
+  {
+    q: "In the voltage divider preset (R1=2kΩ, R2=1kΩ, EMF=9V), what is the voltage at node B?",
+    opts: ["6 V", "3 V", "4.5 V", "9 V"],
+    ans: 1,
+    ok: "Right! V_B = EMF × R2/(R1+R2) = 9 × 1000/3000 = 3 V.",
+    bad: "Use V_B = EMF × R2/(R1+R2) = 9 × 1000/3000 = 3 V. The larger R1 takes the larger voltage share."
+  },
+  {
+    q: "In an RC charging circuit with τ = 500 ms, approximately how long until the capacitor reaches 63% of EMF?",
+    opts: ["250 ms", "500 ms", "1000 ms", "1500 ms"],
+    ans: 1,
+    ok: "Exactly! At t = τ, V_c = EMF(1 - 1/e) ≈ 0.632 × EMF. τ is the 63% time constant by definition.",
+    bad: "τ = RC is defined as the time to reach 63.2% of final voltage: V(τ) = EMF·(1-e⁻¹) ≈ 0.632·EMF."
+  }
+];
 
-  ctx.fillStyle = 'rgba(15,23,42,0.8)';
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 248, 56, 8);
-  ctx.fill();
-
-  ctx.strokeStyle = color || '#3b82f6';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 248, 56, 8);
-  ctx.stroke();
-
-  ctx.fillStyle = color || '#60a5fa';
-  ctx.font = 'bold 28px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 128, 32);
-
-  sprite.material.map.dispose();
-  sprite.material.map = new THREE.CanvasTexture(canvas2d);
-  sprite.material.needsUpdate = true;
-}
-
-// ── Electron Particles ───────────────────────────────────────────────────────
-let electronParticles = null;
-let electronPaths = [];
-let electronOffsets = [];
-
-function buildElectronPaths() {
-  electronPaths = [];
-  const d = calcCircuit();
-
-  if (state.circuitType === 'series') {
-    // Single loop: battery(+) -> top wire -> R1 -> right wire -> R2 -> bottom wire -> battery(-)
-    electronPaths.push({
-      points: [
-        new THREE.Vector3(-3.2, 0.3, 0),   // battery +
-        new THREE.Vector3(-3.2, 2.0, 0),   // top-left corner
-        new THREE.Vector3(-0.9, 2.0, 0),   // before R1
-        new THREE.Vector3(0.9, 2.0, 0),    // after R1
-        new THREE.Vector3(3.2, 2.0, 0),    // top-right corner
-        new THREE.Vector3(3.2, 0.0, 0),    // right side (bulb area)
-        new THREE.Vector3(3.2, -2.0, 0),   // bottom-right corner
-        new THREE.Vector3(0.9, -2.0, 0),   // before R2
-        new THREE.Vector3(-0.9, -2.0, 0),  // after R2
-        new THREE.Vector3(-3.2, -2.0, 0),  // bottom-left corner
-        new THREE.Vector3(-3.2, -0.3, 0),  // battery -
-      ],
-      current: d.Itotal,
-      count: 30,
+function buildQuiz() {
+  var html = '';
+  quizData.forEach(function(q, qi) {
+    html += '<div class="mb-3 pb-3 border-b border-slate-700 last:border-0">';
+    html += '<p class="text-xs mb-2 text-slate-200">Q' + (qi+1) + '. ' + q.q + '</p>';
+    q.opts.forEach(function(opt, oi) {
+      html += '<label class="flex items-center gap-2 mb-1 cursor-pointer"><input type="radio" name="q'+qi+'" value="'+oi+'" class="accent-blue-500" /><span class="text-xs text-slate-300">' + opt + '</span></label>';
     });
+    html += '<button class="btn btn-primary text-xs mt-1 py-1 px-3" onclick="checkAnswer('+qi+')">Check</button>';
+    html += '<div id="qfb'+qi+'" class="text-xs mt-1 rounded p-2 hidden"></div>';
+    html += '</div>';
+  });
+  document.getElementById('quiz-body').innerHTML = html;
+}
+
+function checkAnswer(qi) {
+  var radios = document.querySelectorAll('input[name="q'+qi+'"]');
+  var chosen = -1;
+  radios.forEach(function(r, i){ if(r.checked) chosen = i; });
+  if (chosen < 0) { toast('Select an answer first!'); return; }
+  var fb = document.getElementById('qfb'+qi);
+  fb.classList.remove('hidden');
+  if (chosen === quizData[qi].ans) {
+    fb.style.background='rgba(34,197,94,0.15)'; fb.style.color='#86efac';
+    fb.textContent = '✓ ' + quizData[qi].ok;
   } else {
-    // Parallel: two branches
-    // Top branch through R1
-    electronPaths.push({
-      points: [
-        new THREE.Vector3(-3.2, 0.3, 0),
-        new THREE.Vector3(-3.2, 2.0, 0),
-        new THREE.Vector3(-0.9, 1.2, 0),
-        new THREE.Vector3(0.9, 1.2, 0),
-        new THREE.Vector3(3.2, 2.0, 0),
-        new THREE.Vector3(3.2, 0.0, 0),
-        new THREE.Vector3(3.2, -2.0, 0),
-        new THREE.Vector3(-3.2, -2.0, 0),
-        new THREE.Vector3(-3.2, -0.3, 0),
-      ],
-      current: d.IR1,
-      count: 20,
-    });
-    // Bottom branch through R2
-    electronPaths.push({
-      points: [
-        new THREE.Vector3(-3.2, 0.3, 0),
-        new THREE.Vector3(-3.2, 2.0, 0),
-        new THREE.Vector3(-0.9, -1.2, 0),
-        new THREE.Vector3(0.9, -1.2, 0),
-        new THREE.Vector3(3.2, -2.0, 0),
-        new THREE.Vector3(-3.2, -2.0, 0),
-        new THREE.Vector3(-3.2, -0.3, 0),
-      ],
-      current: d.IR2,
-      count: 15,
-    });
+    fb.style.background='rgba(239,68,68,0.15)'; fb.style.color='#fca5a5';
+    fb.textContent = '✗ ' + quizData[qi].bad;
   }
 }
+window.checkAnswer = checkAnswer;
 
-function rebuildElectrons() {
-  if (electronParticles) {
-    electronParticles.forEach(p => {
-      circuitGroup.remove(p.mesh);
-      p.mesh.geometry.dispose();
-      p.mesh.material.dispose();
-    });
-  }
-  electronParticles = [];
-  electronOffsets = [];
-
-  buildElectronPaths();
-
-  electronPaths.forEach((path, pi) => {
-    const curve = new THREE.CatmullRomCurve3(path.points);
-    const count = path.count;
-    const positions = new Float32Array(count * 3);
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const mat = new THREE.PointsMaterial({
-      color: state.isShort ? 0xef4444 : ELECTRON_COLOR,
-      size: state.isShort ? 0.18 : 0.12,
-      transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true,
-    });
-
-    const points = new THREE.Points(geo, mat);
-    circuitGroup.add(points);
-
-    const offsets = [];
-    for (let i = 0; i < count; i++) {
-      offsets.push(i / count);
-    }
-
-    electronParticles.push({ mesh: points, curve, count, current: path.current, offsets });
-  });
+function toggleQuiz() {
+  var p = document.getElementById('quiz-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
+window.toggleQuiz = toggleQuiz;
 
-// ── Build Full Circuit ───────────────────────────────────────────────────────
-let voltageLabels = [];
+buildQuiz();
 
-function rebuildCircuit() {
-  // Clear
-  while (circuitGroup.children.length > 0) {
-    const child = circuitGroup.children[0];
-    circuitGroup.remove(child);
-    if (child.geometry) child.geometry.dispose();
-    if (child.material) {
-      if (child.material.map) child.material.map.dispose();
-      child.material.dispose();
-    }
-  }
-  voltageLabels = [];
+// ── KaTeX ──────────────────────────────────────────────────────
+katex.render('\\sum_k I_k = 0 \\text{ (KCL at each node)}', document.getElementById('f-kcl'), { throwOnError: false });
+katex.render('\\sum_k V_k = 0 \\text{ (KVL around any loop)}', document.getElementById('f-kvl'), { throwOnError: false });
+katex.render('V_C(t) = \\mathcal{E}\\left(1 - e^{-t/RC}\\right)', document.getElementById('f-rc'), { throwOnError: false });
+katex.render('V_{out} = \\mathcal{E}\\cdot\\dfrac{R_2}{R_1+R_2}', document.getElementById('f-div'), { throwOnError: false });
 
-  const d = calcCircuit();
-
-  // Circuit board
-  circuitGroup.add(makeBoard());
-
-  // Battery
-  circuitGroup.add(makeBattery(-3.2, 0, 0));
-
-  // Bulb (at right side)
-  circuitGroup.add(makeBulb(3.2, 0, 0));
-
-  // Ammeter (bottom)
-  circuitGroup.add(makeMeter(0, -2.6, 0.5, 'A', 0xef4444));
-
-  // Voltmeter (top right)
-  circuitGroup.add(makeMeter(3.2, 2.6, 0.5, 'V', 0x3b82f6));
-
-  if (state.circuitType === 'series') {
-    // R1 on top wire
-    circuitGroup.add(makeResistor(0, 2.0, 0, R1_COLOR, 'R1'));
-    // R2 on bottom wire
-    circuitGroup.add(makeResistor(0, -2.0, 0, R2_COLOR, 'R2'));
-
-    // Wires — series loop
-    // Battery+ to top-left
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, 0.5, 0),
-      new THREE.Vector3(-3.2, 2.0, 0),
-    ], WIRE_COLOR));
-    // Top-left to R1 left lead
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, 2.0, 0),
-      new THREE.Vector3(-0.9, 2.0, 0),
-    ], WIRE_COLOR));
-    // R1 right lead to top-right
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(0.9, 2.0, 0),
-      new THREE.Vector3(3.2, 2.0, 0),
-    ], WIRE_COLOR));
-    // Top-right down to bulb
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(3.2, 2.0, 0),
-      new THREE.Vector3(3.2, 0.4, 0),
-    ], WIRE_COLOR));
-    // Bulb down to bottom-right
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(3.2, -0.4, 0),
-      new THREE.Vector3(3.2, -2.0, 0),
-    ], WIRE_COLOR));
-    // Bottom-right to R2 right lead
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(3.2, -2.0, 0),
-      new THREE.Vector3(0.9, -2.0, 0),
-    ], WIRE_COLOR));
-    // R2 left lead to bottom-left
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-0.9, -2.0, 0),
-      new THREE.Vector3(-3.2, -2.0, 0),
-    ], WIRE_COLOR));
-    // Bottom-left to battery-
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, -2.0, 0),
-      new THREE.Vector3(-3.2, -0.5, 0),
-    ], WIRE_COLOR));
-
-    // Voltage drop labels
-    const lR1 = makeLabel('V_R1: ' + d.VR1.toFixed(1) + 'V', 0, 2.7, 0.2, '#3b82f6');
-    circuitGroup.add(lR1);
-    voltageLabels.push({ sprite: lR1, key: 'VR1', color: '#3b82f6' });
-
-    const lR2 = makeLabel('V_R2: ' + d.VR2.toFixed(1) + 'V', 0, -2.7, 0.2, '#f59e0b');
-    circuitGroup.add(lR2);
-    voltageLabels.push({ sprite: lR2, key: 'VR2', color: '#f59e0b' });
-
-    const lBatt = makeLabel('EMF: ' + state.voltage.toFixed(1) + 'V', -3.2, 1.0, 0.5, '#22c55e');
-    circuitGroup.add(lBatt);
-    voltageLabels.push({ sprite: lBatt, key: 'batt', color: '#22c55e' });
-
-  } else {
-    // Parallel: R1 top branch, R2 bottom branch
-    circuitGroup.add(makeResistor(0, 1.2, 0, R1_COLOR, 'R1'));
-    circuitGroup.add(makeResistor(0, -1.2, 0, R2_COLOR, 'R2'));
-
-    // Left bus (battery+ to split)
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, 0.5, 0),
-      new THREE.Vector3(-3.2, 2.0, 0),
-    ], WIRE_COLOR));
-
-    // Split to R1
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, 2.0, 0),
-      new THREE.Vector3(-1.5, 2.0, 0),
-      new THREE.Vector3(-0.9, 1.2, 0),
-    ], WIRE_COLOR));
-
-    // Split to R2
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, 2.0, 0),
-      new THREE.Vector3(-1.5, 2.0, 0),
-      new THREE.Vector3(-1.5, -1.2, 0),
-      new THREE.Vector3(-0.9, -1.2, 0),
-    ], WIRE_COLOR));
-
-    // R1 to right merge
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(0.9, 1.2, 0),
-      new THREE.Vector3(1.5, 2.0, 0),
-      new THREE.Vector3(3.2, 2.0, 0),
-    ], WIRE_COLOR));
-
-    // R2 to right merge
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(0.9, -1.2, 0),
-      new THREE.Vector3(1.5, -1.2, 0),
-      new THREE.Vector3(1.5, -2.0, 0),
-      new THREE.Vector3(3.2, -2.0, 0),
-    ], WIRE_COLOR));
-
-    // Right side down to bulb
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(3.2, 2.0, 0),
-      new THREE.Vector3(3.2, 0.4, 0),
-    ], WIRE_COLOR));
-
-    // Bulb to bottom
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(3.2, -0.4, 0),
-      new THREE.Vector3(3.2, -2.0, 0),
-    ], WIRE_COLOR));
-
-    // Bottom back to battery-
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(3.2, -2.0, 0),
-      new THREE.Vector3(-3.2, -2.0, 0),
-    ], WIRE_COLOR));
-    circuitGroup.add(makeTube([
-      new THREE.Vector3(-3.2, -2.0, 0),
-      new THREE.Vector3(-3.2, -0.5, 0),
-    ], WIRE_COLOR));
-
-    // Voltage drop labels
-    const lR1 = makeLabel('V_R1: ' + d.VR1.toFixed(1) + 'V', 0, 1.9, 0.2, '#3b82f6');
-    circuitGroup.add(lR1);
-    voltageLabels.push({ sprite: lR1, key: 'VR1', color: '#3b82f6' });
-
-    const lR2 = makeLabel('V_R2: ' + d.VR2.toFixed(1) + 'V', 0, -1.9, 0.2, '#f59e0b');
-    circuitGroup.add(lR2);
-    voltageLabels.push({ sprite: lR2, key: 'VR2', color: '#f59e0b' });
-
-    const lBatt = makeLabel('EMF: ' + state.voltage.toFixed(1) + 'V', -3.2, 1.0, 0.5, '#22c55e');
-    circuitGroup.add(lBatt);
-    voltageLabels.push({ sprite: lBatt, key: 'batt', color: '#22c55e' });
-  }
-
-  // Rebuild electrons
-  rebuildElectrons();
-}
-
-// ── Animation Loop ───────────────────────────────────────────────────────────
-let lastTime = performance.now();
-let frameCount = 0;
-let fpsTime = 0;
-
-function animate(time) {
-  requestAnimationFrame(animate);
-
-  const dt = Math.min((time - lastTime) / 1000, 0.05);
-  lastTime = time;
-
-  // FPS counter
-  frameCount++;
-  fpsTime += dt;
-  if (fpsTime >= 1.0) {
-    document.getElementById('fps').textContent = Math.round(frameCount / fpsTime) + ' fps';
-    frameCount = 0;
-    fpsTime = 0;
-  }
-
-  controls.update();
-
-  const d = calcCircuit();
-
-  // Update electron positions
-  if (electronParticles) {
-    electronParticles.forEach(ep => {
-      const speed = Math.min(ep.current * 0.3, 2.0);
-      const positions = ep.mesh.geometry.attributes.position.array;
-
-      for (let i = 0; i < ep.count; i++) {
-        ep.offsets[i] = (ep.offsets[i] + speed * dt * 0.15) % 1.0;
-        const pt = ep.curve.getPoint(ep.offsets[i]);
-        positions[i * 3] = pt.x;
-        positions[i * 3 + 1] = pt.y;
-        positions[i * 3 + 2] = pt.z;
-      }
-      ep.mesh.geometry.attributes.position.needsUpdate = true;
-
-      // Flash color on short circuit
-      if (state.isShort) {
-        const flash = 0.5 + 0.5 * Math.sin(time * 0.01);
-        ep.mesh.material.color.setHex(flash > 0.5 ? 0xff0000 : 0xff4444);
-        ep.mesh.material.size = 0.15 + flash * 0.1;
-      }
-    });
-  }
-
-  // Update bulb brightness
-  if (bulbMesh && bulbGlow) {
-    const power = d.Ptotal;
-    const brightness = Math.min(power / 20, 1.0);
-    bulbMesh.material.emissiveIntensity = 0.1 + brightness * 1.5;
-    bulbMesh.material.opacity = 0.3 + brightness * 0.6;
-    bulbGlow.intensity = brightness * 3;
-    bulbGlow.distance = 3 + brightness * 5;
-
-    if (state.isShort) {
-      bulbMesh.material.emissive.setHex(0xef4444);
-      bulbGlow.color.setHex(0xef4444);
-      const flash = 0.5 + 0.5 * Math.sin(time * 0.015);
-      bulbGlow.intensity = 2 + flash * 4;
-    } else {
-      bulbMesh.material.emissive.setHex(BULB_COLOR);
-      bulbGlow.color.setHex(BULB_COLOR);
-    }
-  }
-
-  // Update voltage labels
-  voltageLabels.forEach(vl => {
-    if (vl.key === 'VR1') updateLabel(vl.sprite, 'V_R1: ' + d.VR1.toFixed(1) + 'V', vl.color);
-    else if (vl.key === 'VR2') updateLabel(vl.sprite, 'V_R2: ' + d.VR2.toFixed(1) + 'V', vl.color);
-    else if (vl.key === 'batt') updateLabel(vl.sprite, 'EMF: ' + state.voltage.toFixed(1) + 'V', vl.color);
-  });
-
-  renderer.render(scene, camera);
-}
-
-// ── Resize ───────────────────────────────────────────────────────────────────
-function onResize() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
+// ── Resize ─────────────────────────────────────────────────────
+window.addEventListener('resize', function() {
+  camera.aspect = container.clientWidth / container.clientHeight;
   camera.updateProjectionMatrix();
-}
-window.addEventListener('resize', onResize);
-onResize();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-rebuildCircuit();
-refreshUI();
-requestAnimationFrame(animate);
+// ── Keyboard ───────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); state.rcPaused = !state.rcPaused; toast(state.rcPaused ? 'RC charging paused' : 'RC charging running'); }
+  if (e.code === 'KeyR') resetSim();
+  if (e.key === '1') setSpeed(0.25);
+  if (e.key === '2') setSpeed(0.5);
+  if (e.key === '3') setSpeed(1);
+  if (e.key === '4') setSpeed(2);
+  if (e.key === '5') setSpeed(3);
+});
+
+// ── Animation loop ─────────────────────────────────────────────
+var clock = new THREE.Clock();
+updateData();
+
+renderer.setAnimationLoop(function() {
+  var dt = Math.min(clock.getDelta(), 0.05) * state.speed;
+  controls.update();
+  stepRC(dt);
+  updateParticles(dt / state.speed);
+  updateData();
+  renderer.render(scene, camera);
+});
 </script>
+<!-- Generated by AetherViz Master for Scivra AP Physics — circuits come alive! -->
 </body>
 </html>

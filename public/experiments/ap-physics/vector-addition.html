@@ -3,841 +3,582 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vector Addition | NeonPhysics</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<title>Vector Addition — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
-  'use strict';
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-  }
-
-  /* ── Header ── */
-  #header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 20px; background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
-    border-bottom: 1px solid #334155; z-index: 20; flex-shrink: 0;
-  }
-  #header .icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: linear-gradient(135deg, #3B82F6, #0EA5E9);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; color: #fff;
-  }
-  #header h1 { font-size: 18px; font-weight: 700; color: #f1f5f9; }
-  #header .subtitle { font-size: 12px; color: #94a3b8; margin-top: 1px; }
-  #status-badge {
-    margin-left: auto; padding: 4px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
-    background: #1e3a5f; color: #60a5fa;
-  }
-
-  /* ── Layout ── */
-  #layout { display: flex; flex: 1; min-height: 0; }
-
-  /* ── Left Panel ── */
-  #left-panel {
-    width: 300px; min-width: 300px; background: rgba(30, 41, 59, 0.85);
-    backdrop-filter: blur(12px); border-right: 1px solid #334155;
-    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
-    transition: margin-left 0.3s ease;
-  }
-  #left-panel.collapsed { margin-left: -300px; }
-  #toggle-left {
-    position: absolute; left: 300px; top: 50%; transform: translateY(-50%);
-    width: 24px; height: 48px; background: #1e293b; border: 1px solid #334155;
-    border-left: none; border-radius: 0 6px 6px 0; cursor: pointer;
-    color: #94a3b8; font-size: 14px; z-index: 15; display: flex;
-    align-items: center; justify-content: center; transition: left 0.3s ease;
-  }
-  #left-panel.collapsed ~ #toggle-left { left: 0; }
-
-  .panel-section { padding: 14px 16px; border-bottom: 1px solid #1e293b; }
-  .panel-section-title {
-    font-size: 11px; color: #64748b; text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 10px; font-weight: 600;
-  }
-  .formula-card {
-    background: rgba(15, 23, 42, 0.7); border: 1px solid #334155;
-    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
-  }
-  .formula-card .katex { font-size: 14px; }
-  .formula-label { font-size: 10px; color: #64748b; margin-bottom: 4px; }
-
-  .knowledge-card {
-    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(14,165,233,0.05));
-    border: 1px solid rgba(59,130,246,0.3); border-radius: 8px;
-    padding: 12px; font-size: 12px; line-height: 1.6; color: #cbd5e1;
-  }
-  .knowledge-card strong { color: #60a5fa; }
-
-  /* ── Canvas ── */
-  #canvas-wrap { flex: 1; position: relative; min-width: 0; }
-  #three-canvas { display: block; width: 100%; height: 100%; }
-
-  /* ── FPS ── */
-  #fps { position: absolute; top: 8px; left: 8px; font-size: 11px; color: #475569; z-index: 5; font-variant-numeric: tabular-nums; }
-
-  /* ── Live Readout overlay ── */
-  #live-overlay {
-    position: absolute; top: 8px; right: 8px; z-index: 5;
-    display: flex; flex-direction: column; gap: 4px;
-  }
-  .live-chip {
-    background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
-    border: 1px solid #334155; border-radius: 6px;
-    padding: 4px 10px; font-size: 11px; font-variant-numeric: tabular-nums;
-    color: #94a3b8;
-  }
-  .live-chip .val { font-weight: 700; margin-left: 4px; }
-  .live-chip .val.vec-a { color: #f87171; }
-  .live-chip .val.vec-b { color: #60a5fa; }
-  .live-chip .val.vec-r { color: #4ade80; }
-
-  /* ── Bottom Controls ── */
-  #bottom-panel {
-    flex-shrink: 0; background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(12px);
-    border-top: 1px solid #334155; padding: 12px 20px; z-index: 10;
-  }
-  #controls-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-    align-items: start;
-  }
-  .ctrl-group { display: flex; flex-direction: column; }
-  .ctrl-label {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 11px; color: #94a3b8; margin-bottom: 5px;
-  }
-  .ctrl-val { color: #60a5fa; font-weight: 700; font-variant-numeric: tabular-nums; }
-  input[type=range] {
-    width: 100%; height: 5px; appearance: none; -webkit-appearance: none;
-    background: #334155; border-radius: 3px; outline: none; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    appearance: none; -webkit-appearance: none; width: 16px; height: 16px;
-    border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9);
-    cursor: pointer; box-shadow: 0 0 6px rgba(59,130,246,0.5);
-  }
-
-  #btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
-  .preset-btn {
-    padding: 5px 12px; border: 1px solid #334155; border-radius: 6px;
-    background: rgba(15, 23, 42, 0.6); color: #94a3b8; font-size: 11px;
-    cursor: pointer; transition: all 0.15s;
-  }
-  .preset-btn:hover { border-color: #60a5fa; color: #60a5fa; background: rgba(59,130,246,0.1); }
-  .preset-btn.active { border-color: #60a5fa; color: #60a5fa; background: rgba(59,130,246,0.15); }
-
-  /* ── Quiz Panel ── */
-  #quiz-toggle {
-    position: fixed; bottom: 120px; right: 16px; width: 40px; height: 40px;
-    border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9);
-    border: none; color: #fff; font-size: 18px; cursor: pointer; z-index: 25;
-    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
-  }
-  #quiz-panel {
-    position: fixed; bottom: 120px; right: 16px; width: 340px;
-    background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(16px);
-    border: 1px solid #334155; border-radius: 12px; padding: 16px;
-    z-index: 30; display: none; max-height: 420px; overflow-y: auto;
-  }
-  #quiz-panel.open { display: block; }
-  #quiz-panel h3 { font-size: 14px; margin-bottom: 12px; color: #f1f5f9; }
-  .quiz-q { margin-bottom: 14px; }
-  .quiz-q p { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.5; }
-  .quiz-opt {
-    display: block; width: 100%; text-align: left; padding: 8px 10px;
-    margin-bottom: 4px; border: 1px solid #334155; border-radius: 6px;
-    background: #0f172a; color: #e2e8f0; font-size: 12px; cursor: pointer;
-    transition: all 0.15s;
-  }
-  .quiz-opt:hover { border-color: #60a5fa; background: rgba(59,130,246,0.1); }
-  .quiz-opt.correct { border-color: #4ade80; background: rgba(74,222,128,0.15); color: #4ade80; pointer-events: none; }
-  .quiz-opt.wrong { border-color: #f87171; background: rgba(248,113,113,0.15); color: #f87171; pointer-events: none; }
-  .quiz-feedback { font-size: 11px; margin-top: 4px; padding: 6px 8px; border-radius: 4px; display: none; }
-  .quiz-feedback.show { display: block; }
-  .quiz-feedback.correct-fb { background: rgba(74,222,128,0.1); color: #4ade80; }
-  .quiz-feedback.wrong-fb { background: rgba(248,113,113,0.1); color: #f87171; }
-
-  /* ── Responsive ── */
-  @media (max-width: 900px) {
-    #controls-grid { grid-template-columns: repeat(2, 1fr); }
-    #left-panel { width: 260px; min-width: 260px; }
-  }
-  @media (max-width: 640px) {
-    #controls-grid { grid-template-columns: 1fr; }
-    #left-panel { position: absolute; height: 100%; z-index: 20; }
-  }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f172a; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+#nav { background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0 1.5rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; backdrop-filter: blur(12px); }
+#nav h1 { font-size: 1.05rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.2s; }
+.nav-btn:hover { background: rgba(59,130,246,0.2); border-color: #3B82F6; color: #fff; }
+#main { display: flex; flex: 1; overflow: hidden; }
+#sidebar { width: 30%; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.9rem; }
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 2px; }
+.section-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0EA5E9; margin-bottom: 0.45rem; }
+.formula-block { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.22); border-radius: 8px; padding: 0.65rem 0.75rem; margin-bottom: 0.45rem; }
+.formula-label { font-size: 0.68rem; color: #64748b; margin-top: 0.35rem; }
+.concept-text p { font-size: 0.78rem; color: #cbd5e1; line-height: 1.65; margin-bottom: 0.45rem; }
+.kcard { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.65rem; margin-bottom: 0.45rem; }
+.kcard h4 { font-size: 0.72rem; font-weight: 600; color: #22d3ee; margin-bottom: 0.28rem; }
+.kcard p { font-size: 0.72rem; color: #94a3b8; line-height: 1.55; }
+.why-item { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.76rem; color: #cbd5e1; margin-bottom: 0.35rem; }
+.why-dot { width: 6px; height: 6px; border-radius: 50%; background: #3B82F6; flex-shrink: 0; margin-top: 0.35rem; }
+#canvas-area { flex: 1; position: relative; overflow: hidden; }
+#canvas-container { width: 100%; height: 100%; }
+#data-panel { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.7rem 0.9rem; min-width: 220px; backdrop-filter: blur(8px); }
+.dp-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0EA5E9; margin-bottom: 0.4rem; }
+.dp-row { display: flex; justify-content: space-between; gap: 1.2rem; font-size: 0.74rem; margin-bottom: 0.18rem; }
+.dp-label { color: #64748b; }
+.dp-value { color: #e2e8f0; font-variant-numeric: tabular-nums; font-family: monospace; }
+.dp-section { font-size: 0.62rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; margin: 0.35rem 0 0.18rem; }
+.dp-vA { color: #60a5fa; }
+.dp-vB { color: #34d399; }
+.dp-vR { color: #fbbf24; }
+#mode-panel { position: absolute; top: 12px; right: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.6rem 0.8rem; backdrop-filter: blur(8px); }
+.mode-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0EA5E9; margin-bottom: 0.4rem; }
+.mode-btn { display: block; width: 100%; padding: 0.28rem 0.6rem; border-radius: 5px; font-size: 0.72rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #94a3b8; transition: all 0.15s; margin-bottom: 0.25rem; text-align: center; }
+.mode-btn.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; color: #fff; }
+#controls { background: rgba(15,23,42,0.92); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.75rem 1.2rem; flex-shrink: 0; backdrop-filter: blur(12px); }
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; margin-bottom: 0.55rem; }
+.slider-group { display: flex; align-items: center; gap: 0.5rem; }
+.slider-group label { font-size: 0.72rem; color: #94a3b8; white-space: nowrap; min-width: 78px; }
+input[type=range] { -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; width: 110px; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); cursor: pointer; }
+.svA { font-size: 0.72rem; color: #60a5fa; font-variant-numeric: tabular-nums; min-width: 40px; }
+.svB { font-size: 0.72rem; color: #34d399; font-variant-numeric: tabular-nums; min-width: 40px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.ctrl-btn { padding: 0.3rem 0.85rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; border: 1px solid; transition: all 0.2s; }
+.btn-secondary { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); color: #cbd5e1; }
+.btn-secondary:hover { background: rgba(59,130,246,0.18); border-color: #3B82F6; color: #fff; }
+.preset-btn { padding: 0.25rem 0.65rem; border-radius: 5px; font-size: 0.7rem; cursor: pointer; border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.1); color: #93c5fd; transition: all 0.15s; }
+.preset-btn:hover { background: rgba(59,130,246,0.25); border-color: #60a5fa; color: #fff; }
+#quiz-panel { position: absolute; bottom: 0; right: 0; width: 340px; background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.25); border-left: 1px solid rgba(59,130,246,0.25); border-radius: 10px 0 0 0; padding: 0.85rem 1rem; overflow-y: auto; max-height: 55%; transition: transform 0.3s; backdrop-filter: blur(10px); }
+#quiz-toggle { position: absolute; bottom: 0; right: 340px; background: rgba(59,130,246,0.25); border: 1px solid rgba(59,130,246,0.4); border-radius: 6px 0 0 0; padding: 0.25rem 0.6rem; font-size: 0.7rem; color: #93c5fd; cursor: pointer; }
+.quiz-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0EA5E9; margin-bottom: 0.6rem; }
+.q-block { margin-bottom: 0.75rem; }
+.q-text { font-size: 0.76rem; color: #e2e8f0; margin-bottom: 0.4rem; line-height: 1.5; }
+.q-option { display: flex; align-items: flex-start; gap: 0.4rem; margin-bottom: 0.28rem; cursor: pointer; }
+.q-option input { margin-top: 2px; flex-shrink: 0; accent-color: #3B82F6; }
+.q-option label { font-size: 0.73rem; color: #cbd5e1; cursor: pointer; line-height: 1.4; }
+.q-check { padding: 0.25rem 0.75rem; border-radius: 5px; font-size: 0.72rem; cursor: pointer; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; color: #fff; margin-top: 0.3rem; }
+.q-feedback { font-size: 0.72rem; margin-top: 0.35rem; padding: 0.4rem 0.55rem; border-radius: 6px; line-height: 1.5; display: none; }
+.q-feedback.correct { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: #86efac; }
+.q-feedback.wrong { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+#toast { position: fixed; top: 60px; right: 16px; background: rgba(59,130,246,0.9); color: #fff; padding: 0.45rem 1rem; border-radius: 7px; font-size: 0.78rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000; }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div id="header">
-  <div class="icon">&#10132;</div>
-  <div>
-    <h1>Vector Addition</h1>
-    <div class="subtitle">Components, Resultant, and the Parallelogram Rule</div>
-  </div>
-  <div id="status-badge">INTERACTIVE</div>
-</div>
-
-<!-- Main Layout -->
-<div id="layout">
-  <!-- Left Panel -->
-  <div id="left-panel">
-    <div class="panel-section">
-      <div class="panel-section-title">Key Equations</div>
-      <div class="formula-card">
-        <div class="formula-label">Resultant Magnitude</div>
-        <div id="eq-resultant"></div>
-      </div>
-      <div class="formula-card">
-        <div class="formula-label">Resultant Direction</div>
-        <div id="eq-direction"></div>
-      </div>
-      <div class="formula-card">
-        <div class="formula-label">Component Decomposition</div>
-        <div id="eq-component"></div>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Concepts</div>
-      <div class="knowledge-card" style="margin-bottom:8px;">
-        <strong>Vector Addition:</strong> Vectors add by combining their components. The resultant R = A + B can be found using the parallelogram rule or by adding x and y components separately: R_x = A_x + B_x, R_y = A_y + B_y.
-      </div>
-      <div class="knowledge-card">
-        <strong>Parallelogram Rule:</strong> Place both vectors at the same origin. Complete the parallelogram. The diagonal from the origin is the resultant vector. This is equivalent to the tip-to-tail (triangle) method.
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Live Values</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">A_x</div>
-          <div id="live-ax" style="font-size:14px;font-weight:700;color:#f87171;">0.00</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">A_y</div>
-          <div id="live-ay" style="font-size:14px;font-weight:700;color:#f87171;">0.00</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">B_x</div>
-          <div id="live-bx" style="font-size:14px;font-weight:700;color:#60a5fa;">0.00</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">B_y</div>
-          <div id="live-by" style="font-size:14px;font-weight:700;color:#60a5fa;">0.00</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">|R|</div>
-          <div id="live-rmag" style="font-size:14px;font-weight:700;color:#4ade80;">0.00</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">&theta;_R</div>
-          <div id="live-rangle" style="font-size:14px;font-weight:700;color:#4ade80;">0.0&deg;</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <button id="toggle-left" aria-label="Toggle panel">&lsaquo;</button>
-
-  <!-- Canvas -->
-  <div id="canvas-wrap">
-    <canvas id="three-canvas"></canvas>
-    <div id="fps">-- FPS</div>
-    <div id="live-overlay">
-      <div class="live-chip">|A|: <span class="val vec-a" id="overlay-a">0.00</span></div>
-      <div class="live-chip">|B|: <span class="val vec-b" id="overlay-b">0.00</span></div>
-      <div class="live-chip">|R|: <span class="val vec-r" id="overlay-r">0.00</span></div>
-      <div class="live-chip">&theta;_R: <span class="val vec-r" id="overlay-theta">0.0&deg;</span></div>
-    </div>
+<div id="nav">
+  <h1>➡ Vector Addition — AP Physics</h1>
+  <div style="display:flex;gap:0.5rem">
+    <button class="nav-btn" id="btn-fullscreen">⛶ Fullscreen</button>
+    <button class="nav-btn">? About</button>
   </div>
 </div>
 
-<!-- Bottom Controls -->
-<div id="bottom-panel">
-  <div id="controls-grid">
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Vector A Magnitude</span><span class="ctrl-val" id="val-amag">5.0</span></div>
-      <input type="range" id="slider-amag" min="0" max="10" value="5" step="0.1">
+<div id="main">
+  <div id="sidebar">
+    <div>
+      <div class="section-title">Core Formulas</div>
+      <div class="formula-block">
+        <div id="f1"></div>
+        <div class="formula-label">Vector addition — component-wise addition</div>
+      </div>
+      <div class="formula-block">
+        <div id="f2"></div>
+        <div class="formula-label">Resultant magnitude — Pythagorean theorem on components</div>
+      </div>
+      <div class="formula-block">
+        <div id="f3"></div>
+        <div class="formula-label">Direction of resultant — measured from positive x-axis</div>
+      </div>
+      <div class="formula-block">
+        <div id="f4"></div>
+        <div class="formula-label">Dot product — scalar measure of how "parallel" two vectors are</div>
+      </div>
     </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Vector A Angle</span><span class="ctrl-val" id="val-aang">30&deg;</span></div>
-      <input type="range" id="slider-aang" min="0" max="360" value="30" step="1">
+
+    <div class="concept-text">
+      <div class="section-title">How It Works</div>
+      <p>Vectors have both <strong>magnitude</strong> (size) and <strong>direction</strong>. Adding two vectors is equivalent to placing them tail-to-head: the resultant R goes from the start of A to the end of B.</p>
+      <p>Switch between <strong>Head-to-Tail</strong> (chain rule) and <strong>Parallelogram</strong> methods using the buttons on the right. Both give the exact same resultant — they're just different geometric constructions that prove the same math.</p>
+      <p>Watch the data panel: when vectors are perpendicular, the dot product is zero. When they point the same direction, it equals |A||B|. The dot product measures the component of one vector along the direction of another.</p>
     </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Vector B Magnitude</span><span class="ctrl-val" id="val-bmag">4.0</span></div>
-      <input type="range" id="slider-bmag" min="0" max="10" value="4" step="0.1">
+
+    <div>
+      <div class="section-title">Knowledge Cards</div>
+      <div class="kcard">
+        <h4>Why Components Work</h4>
+        <p>Any vector can be decomposed into x and y components. Since x and y are perpendicular (independent), you can add x-components separately from y-components, then recombine. This is the power of Cartesian coordinates.</p>
+      </div>
+      <div class="kcard">
+        <h4>Common Misconception</h4>
+        <p>|A + B| ≠ |A| + |B| in general. The triangle inequality states |A + B| ≤ |A| + |B|, with equality only when A and B point in exactly the same direction. Try the "Opposing" preset to see them cancel!</p>
+      </div>
+      <div class="kcard">
+        <h4>AP Connection</h4>
+        <p>AP Physics 1 requires resolving forces into components, adding velocity vectors, and analyzing net force via vector diagrams. The dot product appears in AP Physics C (work = F·d·cosθ) and in wave interference analysis.</p>
+      </div>
     </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Vector B Angle</span><span class="ctrl-val" id="val-bang">120&deg;</span></div>
-      <input type="range" id="slider-bang" min="0" max="360" value="120" step="1">
+
+    <div>
+      <div class="section-title">Why It Matters</div>
+      <div class="why-item"><div class="why-dot"></div><span>Force diagrams — net force is the vector sum of all individual forces</span></div>
+      <div class="why-item"><div class="why-dot"></div><span>Navigation — GPS combines north/south and east/west displacement vectors</span></div>
+      <div class="why-item"><div class="why-dot"></div><span>Computer graphics — lighting calculations use dot products to compute surface brightness</span></div>
+      <div class="why-item"><div class="why-dot"></div><span><strong>AP Physics 1/C</strong>: vectors underpin every dynamics, kinematics, and energy topic in the course</span></div>
     </div>
   </div>
-  <div id="btn-row">
-    <button class="preset-btn" id="preset-same">Same Direction</button>
-    <button class="preset-btn" id="preset-perp">Perpendicular</button>
-    <button class="preset-btn" id="preset-opposite">Opposite Directions</button>
+
+  <div id="canvas-area">
+    <div id="canvas-container"></div>
+
+    <div id="data-panel">
+      <div class="dp-title">Vector Components</div>
+      <div class="dp-section" style="color:#60a5fa">Vector A</div>
+      <div class="dp-row"><span class="dp-label dp-vA">Ax</span><span class="dp-value" id="dp-ax">0.00</span></div>
+      <div class="dp-row"><span class="dp-label dp-vA">Ay</span><span class="dp-value" id="dp-ay">0.00</span></div>
+      <div class="dp-section" style="color:#34d399">Vector B</div>
+      <div class="dp-row"><span class="dp-label dp-vB">Bx</span><span class="dp-value" id="dp-bx">0.00</span></div>
+      <div class="dp-row"><span class="dp-label dp-vB">By</span><span class="dp-value" id="dp-by">0.00</span></div>
+      <div class="dp-section" style="color:#fbbf24">Resultant R = A + B</div>
+      <div class="dp-row"><span class="dp-label dp-vR">Rx</span><span class="dp-value" id="dp-rx">0.00</span></div>
+      <div class="dp-row"><span class="dp-label dp-vR">Ry</span><span class="dp-value" id="dp-ry">0.00</span></div>
+      <div class="dp-row"><span class="dp-label dp-vR">|R|</span><span class="dp-value" id="dp-rmag">0.00</span></div>
+      <div class="dp-row"><span class="dp-label dp-vR">θR (°)</span><span class="dp-value" id="dp-rdir">0.00</span></div>
+      <div class="dp-section">Dot Product</div>
+      <div class="dp-row"><span class="dp-label">A · B</span><span class="dp-value" id="dp-dot">0.00</span></div>
+    </div>
+
+    <div id="mode-panel">
+      <div class="mode-title">Method</div>
+      <button class="mode-btn active" id="btn-headtail">Head-to-Tail</button>
+      <button class="mode-btn" id="btn-parallelogram">Parallelogram</button>
+    </div>
+
+    <div id="quiz-toggle">Quiz ▲</div>
+
+    <div id="quiz-panel">
+      <div class="quiz-title">Quick Check — 3 Questions</div>
+
+      <div class="q-block">
+        <div class="q-text">1. Vector A has magnitude 3 and points east (+x). Vector B has magnitude 4 and points north (+y). The magnitude of A + B is:</div>
+        <div class="q-option"><input type="radio" name="q1" value="a" id="q1a"><label for="q1a">7 (just add the magnitudes)</label></div>
+        <div class="q-option"><input type="radio" name="q1" value="b" id="q1b"><label for="q1b">1 (subtract)</label></div>
+        <div class="q-option"><input type="radio" name="q1" value="c" id="q1c"><label for="q1c">5 (Pythagorean theorem)</label></div>
+        <div class="q-option"><input type="radio" name="q1" value="d" id="q1d"><label for="q1d">12 (multiply)</label></div>
+        <button class="q-check" id="q1-btn">Check</button>
+        <div class="q-feedback" id="q1-fb"></div>
+      </div>
+
+      <div class="q-block">
+        <div class="q-text">2. The dot product A · B = 0. What can you conclude about vectors A and B (assuming neither is a zero vector)?</div>
+        <div class="q-option"><input type="radio" name="q2" value="a" id="q2a"><label for="q2a">They point in the same direction</label></div>
+        <div class="q-option"><input type="radio" name="q2" value="b" id="q2b"><label for="q2b">They are perpendicular to each other</label></div>
+        <div class="q-option"><input type="radio" name="q2" value="c" id="q2c"><label for="q2c">They have equal magnitudes</label></div>
+        <div class="q-option"><input type="radio" name="q2" value="d" id="q2d"><label for="q2d">Their sum is zero</label></div>
+        <button class="q-check" id="q2-btn">Check</button>
+        <div class="q-feedback" id="q2-fb"></div>
+      </div>
+
+      <div class="q-block">
+        <div class="q-text">3. A force of 6 N acts at 0° and another of 8 N acts at 90°. If you reverse the 6 N force to point at 180°, the magnitude of the resultant becomes:</div>
+        <div class="q-option"><input type="radio" name="q3" value="a" id="q3a"><label for="q3a">Still 10 N</label></div>
+        <div class="q-option"><input type="radio" name="q3" value="b" id="q3b"><label for="q3b">2 N</label></div>
+        <div class="q-option"><input type="radio" name="q3" value="c" id="q3c"><label for="q3c">Still 10 N — perpendicular component magnitudes are unchanged</label></div>
+        <div class="q-option"><input type="radio" name="q3" value="d" id="q3d"><label for="q3d">14 N</label></div>
+        <button class="q-check" id="q3-btn">Check</button>
+        <div class="q-feedback" id="q3-fb"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Quiz -->
-<button id="quiz-toggle" aria-label="Toggle quiz">?</button>
-<div id="quiz-panel">
-  <h3>Quick Quiz</h3>
-  <div class="quiz-q" id="q1">
-    <p><strong>Q1:</strong> Two vectors of magnitude 3 and 4 are perpendicular. What is the magnitude of their resultant?</p>
-    <button class="quiz-opt" data-correct="true" onclick="checkQuiz(this,'q1',true)">A) 5</button>
-    <button class="quiz-opt" onclick="checkQuiz(this,'q1',false)">B) 7</button>
-    <button class="quiz-opt" onclick="checkQuiz(this,'q1',false)">C) 1</button>
-    <button class="quiz-opt" onclick="checkQuiz(this,'q1',false)">D) 12</button>
-    <div class="quiz-feedback" id="fb-q1"></div>
+<div id="controls">
+  <div class="ctrl-row">
+    <div class="slider-group">
+      <label style="color:#60a5fa">|A|</label>
+      <input type="range" id="sl-amag" min="0.5" max="10" step="0.1" value="5" style="accent-color:#60a5fa">
+      <span class="svA" id="sv-amag">5.0</span>
+    </div>
+    <div class="slider-group">
+      <label style="color:#60a5fa">A angle (°)</label>
+      <input type="range" id="sl-adir" min="0" max="360" step="1" value="30" style="accent-color:#60a5fa">
+      <span class="svA" id="sv-adir">30°</span>
+    </div>
+    <div class="slider-group">
+      <label style="color:#34d399">|B|</label>
+      <input type="range" id="sl-bmag" min="0.5" max="10" step="0.1" value="4" style="accent-color:#34d399">
+      <span class="svB" id="sv-bmag">4.0</span>
+    </div>
+    <div class="slider-group">
+      <label style="color:#34d399">B angle (°)</label>
+      <input type="range" id="sl-bdir" min="0" max="360" step="1" value="110" style="accent-color:#34d399">
+      <span class="svB" id="sv-bdir">110°</span>
+    </div>
   </div>
-  <div class="quiz-q" id="q2">
-    <p><strong>Q2:</strong> If two vectors of equal magnitude point in opposite directions, the resultant is:</p>
-    <button class="quiz-opt" onclick="checkQuiz(this,'q2',false)">A) Twice the magnitude</button>
-    <button class="quiz-opt" data-correct="true" onclick="checkQuiz(this,'q2',true)">B) Zero</button>
-    <button class="quiz-opt" onclick="checkQuiz(this,'q2',false)">C) Equal to one vector</button>
-    <button class="quiz-opt" onclick="checkQuiz(this,'q2',false)">D) Square root of 2 times the magnitude</button>
-    <div class="quiz-feedback" id="fb-q2"></div>
+  <div class="btn-row">
+    <button class="ctrl-btn btn-secondary" id="btn-reset">↺ Reset</button>
+    <span style="font-size:0.7rem;color:#475569;margin:0 0.5rem">Presets:</span>
+    <button class="preset-btn" data-preset="perp">⊥ Perpendicular</button>
+    <button class="preset-btn" data-preset="parallel">→ Parallel</button>
+    <button class="preset-btn" data-preset="opposing">← Opposing</button>
+    <button class="preset-btn" data-preset="arbitrary">✦ Arbitrary</button>
   </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<div id="toast"></div>
+
 <script>
-'use strict';
-
-/* ── Quiz Logic ── */
-function checkQuiz(btn, qId, correct) {
-  try {
-    var btns = document.querySelectorAll('#' + qId + ' .quiz-opt');
-    var fb = document.getElementById('fb-' + qId);
-    btns.forEach(function(b) {
-      if (b.dataset.correct === 'true') { b.classList.add('correct'); }
-      else if (b === btn && !correct) { b.classList.add('wrong'); }
-      b.style.pointerEvents = 'none';
-    });
-    fb.classList.add('show');
-    if (correct) {
-      fb.classList.add('correct-fb');
-      fb.textContent = 'Correct! ' + (qId === 'q1' ? 'By the Pythagorean theorem: R = sqrt(3^2 + 4^2) = 5.' : 'Equal and opposite vectors cancel out completely.');
-    } else {
-      fb.classList.add('wrong-fb');
-      fb.textContent = 'Not quite. ' + (qId === 'q1' ? 'Use the Pythagorean theorem for perpendicular vectors: R = sqrt(3^2 + 4^2) = 5.' : 'When two equal vectors point in opposite directions, they completely cancel, giving a resultant of zero.');
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 80; this.enabled = true;
+  var scope = this;
+  var spherical = new THREE.Spherical();
+  var sphericalDelta = new THREE.Spherical();
+  var scale = 1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var panOffset = new THREE.Vector3();
+  var target = new THREE.Vector3(0, 0, 0);
+  var EPS = 0.000001;
+  var offset = new THREE.Vector3();
+  var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+  var quatInverse = quat.clone().invert();
+  var lastPosition = new THREE.Vector3();
+  var lastQuaternion = new THREE.Quaternion();
+  function getZoomScale() { return Math.pow(0.95, 1); }
+  this.update = function() {
+    var position = scope.camera.position;
+    offset.copy(position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+    spherical.phi += sphericalDelta.phi * scope.dampingFactor;
+    spherical.phi = Math.max(EPS, Math.min(Math.PI-EPS, spherical.phi));
+    spherical.radius *= scale;
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+    if (scope.enableDamping) { sphericalDelta.theta *= (1-scope.dampingFactor); sphericalDelta.phi *= (1-scope.dampingFactor); }
+    else sphericalDelta.set(0,0,0);
+    scale = 1;
+    target.addScaledVector(panOffset, scope.enableDamping ? scope.dampingFactor : 1);
+    if (scope.enableDamping) panOffset.multiplyScalar(1-scope.dampingFactor); else panOffset.set(0,0,0);
+    offset.setFromSpherical(spherical); offset.applyQuaternion(quatInverse);
+    position.copy(target).add(offset); scope.camera.lookAt(target);
+    if (lastPosition.distanceToSquared(scope.camera.position) > EPS || 8*(1-lastQuaternion.dot(scope.camera.quaternion)) > EPS) {
+      lastPosition.copy(scope.camera.position); lastQuaternion.copy(scope.camera.quaternion);
     }
-  } catch(e) { console.warn('Quiz error:', e); }
-}
-
-/* ── Quiz Toggle ── */
-document.getElementById('quiz-toggle').addEventListener('click', function() {
-  document.getElementById('quiz-panel').classList.toggle('open');
-});
-
-/* ── Panel Toggle ── */
-document.getElementById('toggle-left').addEventListener('click', function() {
-  var lp = document.getElementById('left-panel');
-  lp.classList.toggle('collapsed');
-  this.textContent = lp.classList.contains('collapsed') ? '\u203A' : '\u2039';
-  this.style.left = lp.classList.contains('collapsed') ? '0' : '300px';
-  setTimeout(handleResize, 350);
-});
-
-/* ── KaTeX Render ── */
-try {
-  katex.render('R = \\sqrt{(A_x + B_x)^2 + (A_y + B_y)^2}', document.getElementById('eq-resultant'), { displayMode: true, throwOnError: false });
-  katex.render('\\theta_R = \\arctan\\!\\left(\\frac{R_y}{R_x}\\right)', document.getElementById('eq-direction'), { displayMode: true, throwOnError: false });
-  katex.render('A_x = A\\cos\\theta_A,\\quad A_y = A\\sin\\theta_A', document.getElementById('eq-component'), { displayMode: true, throwOnError: false });
-} catch(e) { console.warn('KaTeX error:', e); }
-
-/* ── Three.js Setup ── */
-var scene, camera, renderer, controls;
-var vecAGroup, vecBGroup, vecRGroup;
-var parallelogramLine, compAxLine, compAyLine, compBxLine, compByLine;
-var arcA, arcB, arcR;
-var labelA, labelB, labelR;
-var gridHelper;
-
-var params = {
-  aMag: 5.0, aAng: 30,
-  bMag: 4.0, bAng: 120
+    return true;
+  };
+  var STATE = {NONE:-1,ROTATE:0}; var state = STATE.NONE;
+  function onMouseDown(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=STATE.ROTATE; rotateStart.set(e.clientX, e.clientY); }
+    domElement.addEventListener('mousemove', onMouseMove);
+    domElement.addEventListener('mouseup', onMouseUp);
+  }
+  function onMouseMove(e) {
+    if (!scope.enabled || state!==STATE.ROTATE) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart);
+    sphericalDelta.theta -= 2*Math.PI*rotateDelta.x/domElement.clientHeight;
+    sphericalDelta.phi -= 2*Math.PI*rotateDelta.y/domElement.clientHeight;
+    rotateStart.copy(rotateEnd);
+  }
+  function onMouseUp() { domElement.removeEventListener('mousemove', onMouseMove); domElement.removeEventListener('mouseup', onMouseUp); state=STATE.NONE; }
+  function onWheel(e) { if (!scope.enabled) return; if (e.deltaY<0) scale/=getZoomScale(); else scale*=getZoomScale(); e.preventDefault(); }
+  function onTouchStart(e) { if (e.touches.length===1) { state=STATE.ROTATE; rotateStart.set(e.touches[0].clientX,e.touches[0].clientY); } }
+  function onTouchMove(e) {
+    e.preventDefault();
+    if (e.touches.length===1 && state===STATE.ROTATE) {
+      rotateEnd.set(e.touches[0].clientX,e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart);
+      sphericalDelta.theta -= 2*Math.PI*rotateDelta.x/domElement.clientHeight;
+      sphericalDelta.phi -= 2*Math.PI*rotateDelta.y/domElement.clientHeight;
+      rotateStart.copy(rotateEnd);
+    }
+  }
+  domElement.addEventListener('mousedown', onMouseDown);
+  domElement.addEventListener('wheel', onWheel, {passive:false});
+  domElement.addEventListener('touchstart', onTouchStart, {passive:false});
+  domElement.addEventListener('touchmove', onTouchMove, {passive:false});
+  domElement.addEventListener('touchend', function() { state=STATE.NONE; });
 };
 
-try {
-  initScene();
-  buildScene();
-  updateVectors();
-  renderer.setAnimationLoop(animate);
-} catch(e) {
-  console.error('Initialization error:', e);
-  document.getElementById('three-canvas').style.background = '#0f172a';
-}
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth/container.clientHeight, 0.1, 500);
+camera.position.set(0, 0, 22);
+camera.lookAt(0, 0, 0);
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
 
-function initScene() {
-  var canvas = document.getElementById('three-canvas');
-  var wrap = document.getElementById('canvas-wrap');
+scene.add(new THREE.GridHelper(30, 30, 0x1e3a5f, 0x0f2744));
 
-  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-  renderer.setClearColor(0x0f172a, 1);
+const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+const keyLight = new THREE.DirectionalLight(0xffffff, 0.6); keyLight.position.set(5,10,8);
+scene.add(ambient, keyLight);
 
-  scene = new THREE.Scene();
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
 
-  camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
-  camera.position.set(0, 0, 22);
-  camera.lookAt(0, 0, 0);
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 8;
-  controls.maxDistance = 40;
-  controls.target.set(0, 0, 0);
-
-  /* Lights: ambient + 2 directional + hemisphere */
-  var ambientLight = new THREE.AmbientLight(0x334155, 0.6);
-  scene.add(ambientLight);
-
-  var dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight1.position.set(10, 10, 10);
-  scene.add(dirLight1);
-
-  var dirLight2 = new THREE.DirectionalLight(0x60a5fa, 0.4);
-  dirLight2.position.set(-5, 8, -5);
-  scene.add(dirLight2);
-
-  var hemiLight = new THREE.HemisphereLight(0x60a5fa, 0x1e293b, 0.3);
-  scene.add(hemiLight);
-}
-
-function buildScene() {
-  /* Grid on XY plane */
-  var gridSize = 22;
-  var gridDiv = 22;
-  var gridMat = new THREE.LineBasicMaterial({ color: 0x1e3a5f, transparent: true, opacity: 0.4 });
-  var gridGeo = new THREE.BufferGeometry();
-  var gridPts = [];
-  var half = gridSize / 2;
-  var step = gridSize / gridDiv;
-  for (var i = -half; i <= half; i += step) {
-    gridPts.push(-half, i, 0, half, i, 0);
-    gridPts.push(i, -half, 0, i, half, 0);
-  }
-  gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(gridPts, 3));
-  var gridMesh = new THREE.LineSegments(gridGeo, gridMat);
-  scene.add(gridMesh);
-
-  /* Axes */
-  var axisLen = 11.5;
-  var xAxisGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-axisLen, 0, 0), new THREE.Vector3(axisLen, 0, 0)
-  ]);
-  var yAxisGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, -axisLen, 0), new THREE.Vector3(0, axisLen, 0)
-  ]);
-  var axisMat = new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 1 });
-  scene.add(new THREE.Line(xAxisGeo, axisMat));
-  scene.add(new THREE.Line(yAxisGeo, axisMat));
-
-  /* Axis labels using sprites */
-  scene.add(makeTextSprite('X', axisLen + 0.5, 0, 0, '#94a3b8'));
-  scene.add(makeTextSprite('Y', 0, axisLen + 0.5, 0, '#94a3b8'));
-
-  /* Tick marks */
-  var tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
-  for (var t = -11; t <= 11; t++) {
-    if (t === 0) continue;
-    var xTickGeo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(t, -0.15, 0), new THREE.Vector3(t, 0.15, 0)
-    ]);
-    scene.add(new THREE.Line(xTickGeo, tickMat));
-    var yTickGeo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-0.15, t, 0), new THREE.Vector3(0.15, t, 0)
-    ]);
-    scene.add(new THREE.Line(yTickGeo, tickMat));
-  }
-
-  /* Vector groups */
-  vecAGroup = new THREE.Group();
-  vecBGroup = new THREE.Group();
-  vecRGroup = new THREE.Group();
-  scene.add(vecAGroup);
-  scene.add(vecBGroup);
-  scene.add(vecRGroup);
-
-  /* Parallelogram dashed lines */
-  var dashMat = new THREE.LineDashedMaterial({ color: 0x94a3b8, dashSize: 0.3, gapSize: 0.15, transparent: true, opacity: 0.5 });
-  var paraGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)
-  ]);
-  parallelogramLine = new THREE.Line(paraGeo, dashMat);
-  parallelogramLine.computeLineDistances();
-  scene.add(parallelogramLine);
-
-  /* Component dashed lines */
-  var compDashA = new THREE.LineDashedMaterial({ color: 0xf87171, dashSize: 0.2, gapSize: 0.1, transparent: true, opacity: 0.4 });
-  var compDashB = new THREE.LineDashedMaterial({ color: 0x60a5fa, dashSize: 0.2, gapSize: 0.1, transparent: true, opacity: 0.4 });
-
-  compAxLine = createDashedLine(compDashA);
-  compAyLine = createDashedLine(compDashA);
-  compBxLine = createDashedLine(compDashB);
-  compByLine = createDashedLine(compDashB);
-  scene.add(compAxLine);
-  scene.add(compAyLine);
-  scene.add(compBxLine);
-  scene.add(compByLine);
-
-  /* Angle arcs */
-  arcA = createArc(0xf87171);
-  arcB = createArc(0x60a5fa);
-  arcR = createArc(0x4ade80);
-  scene.add(arcA);
-  scene.add(arcB);
-  scene.add(arcR);
-
-  /* Vector labels */
-  labelA = makeTextSprite('A', 0, 0, 0, '#f87171', 20);
-  labelB = makeTextSprite('B', 0, 0, 0, '#60a5fa', 20);
-  labelR = makeTextSprite('R', 0, 0, 0, '#4ade80', 20);
-  scene.add(labelA);
-  scene.add(labelB);
-  scene.add(labelR);
-
-  /* Origin marker */
-  var originGeo = new THREE.SphereGeometry(0.12, 16, 16);
-  var originMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, emissive: 0x94a3b8, emissiveIntensity: 0.5 });
-  scene.add(new THREE.Mesh(originGeo, originMat));
-}
-
-function createDashedLine(material) {
-  var geo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)
-  ]);
-  var line = new THREE.Line(geo, material);
-  line.computeLineDistances();
-  return line;
-}
-
-function createArc(color) {
-  var curve = new THREE.EllipseCurve(0, 0, 1, 1, 0, 0, false, 0);
-  var points = curve.getPoints(64);
-  var geo = new THREE.BufferGeometry().setFromPoints(points.map(function(p) { return new THREE.Vector3(p.x, p.y, 0); }));
-  var mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.7 });
-  return new THREE.Line(geo, mat);
-}
-
-function updateArc(arcLine, startAngle, endAngle, radius) {
-  if (radius < 0.01) { arcLine.visible = false; return; }
-  arcLine.visible = true;
-  var curve = new THREE.EllipseCurve(0, 0, radius, radius, startAngle, endAngle, false, 0);
-  var points = curve.getPoints(64);
-  var positions = [];
-  for (var i = 0; i < points.length; i++) {
-    positions.push(points[i].x, points[i].y, 0);
-  }
-  arcLine.geometry.dispose();
-  arcLine.geometry = new THREE.BufferGeometry();
-  arcLine.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-}
-
-function makeTextSprite(text, x, y, z, color, fontSize) {
-  fontSize = fontSize || 16;
-  var canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 64;
-  var ctx = canvas.getContext('2d');
-  ctx.font = 'bold ' + fontSize + 'px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = color;
-  ctx.fillText(text, 64, 32);
-  var tex = new THREE.CanvasTexture(canvas);
-  tex.minFilter = THREE.LinearFilter;
-  var mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
-  var sprite = new THREE.Sprite(mat);
-  sprite.position.set(x, y, z);
-  sprite.scale.set(2, 1, 1);
-  return sprite;
-}
-
-function createArrow(mag, angleRad, color) {
-  var group = new THREE.Group();
-  if (mag < 0.01) return group;
-
-  var endX = mag * Math.cos(angleRad);
-  var endY = mag * Math.sin(angleRad);
-
-  /* Shaft */
-  var shaftGeo = new THREE.CylinderGeometry(0.06, 0.06, mag - 0.4, 8);
-  shaftGeo.translate(0, (mag - 0.4) / 2, 0);
-  shaftGeo.rotateZ(-Math.PI / 2);
-  var shaftMat = new THREE.MeshStandardMaterial({
-    color: color, emissive: color, emissiveIntensity: 0.3,
-    metalness: 0.3, roughness: 0.6
-  });
-  var shaft = new THREE.Mesh(shaftGeo, shaftMat);
-  group.add(shaft);
-
-  /* Cone head */
-  var coneGeo = new THREE.ConeGeometry(0.18, 0.5, 12);
-  coneGeo.translate(0, 0.25, 0);
-  coneGeo.rotateZ(-Math.PI / 2);
-  coneGeo.translate(mag - 0.25, 0, 0);
-  var coneMat = new THREE.MeshStandardMaterial({
-    color: color, emissive: color, emissiveIntensity: 0.4,
-    metalness: 0.3, roughness: 0.5
-  });
-  var cone = new THREE.Mesh(coneGeo, coneMat);
-  group.add(cone);
-
-  /* Glow line */
-  var glowGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(mag, 0, 0)
-  ]);
-  var glowMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.3 });
-  group.add(new THREE.Line(glowGeo, glowMat));
-
-  group.rotation.z = angleRad;
-  return group;
-}
-
-function updateDashedLine(line, x1, y1, x2, y2) {
-  var positions = line.geometry.attributes.position.array;
-  positions[0] = x1; positions[1] = y1; positions[2] = 0;
-  positions[3] = x2; positions[4] = y2; positions[5] = 0;
-  line.geometry.attributes.position.needsUpdate = true;
-  line.computeLineDistances();
-}
-
-function updateVectors() {
-  var aRad = params.aAng * Math.PI / 180;
-  var bRad = params.bAng * Math.PI / 180;
-
-  var ax = params.aMag * Math.cos(aRad);
-  var ay = params.aMag * Math.sin(aRad);
-  var bx = params.bMag * Math.cos(bRad);
-  var by = params.bMag * Math.sin(bRad);
-
-  var rx = ax + bx;
-  var ry = ay + by;
-  var rMag = Math.sqrt(rx * rx + ry * ry);
-  var rAng = Math.atan2(ry, rx);
-  var rAngDeg = rAng * 180 / Math.PI;
-  if (rAngDeg < 0) rAngDeg += 360;
-
-  /* Clear old arrows */
-  while (vecAGroup.children.length > 0) {
-    var c = vecAGroup.children[0];
-    vecAGroup.remove(c);
-    if (c.geometry) c.geometry.dispose();
-    if (c.material) c.material.dispose();
-  }
-  while (vecBGroup.children.length > 0) {
-    var c2 = vecBGroup.children[0];
-    vecBGroup.remove(c2);
-    if (c2.geometry) c2.geometry.dispose();
-    if (c2.material) c2.material.dispose();
-  }
-  while (vecRGroup.children.length > 0) {
-    var c3 = vecRGroup.children[0];
-    vecRGroup.remove(c3);
-    if (c3.geometry) c3.geometry.dispose();
-    if (c3.material) c3.material.dispose();
-  }
-
-  /* Create new arrows */
-  var arrowA = createArrow(params.aMag, aRad, 0xf87171);
-  vecAGroup.add(arrowA);
-
-  var arrowB = createArrow(params.bMag, bRad, 0x60a5fa);
-  vecBGroup.add(arrowB);
-
-  if (rMag > 0.01) {
-    var arrowR = createArrow(rMag, rAng, 0x4ade80);
-    vecRGroup.add(arrowR);
-  }
-
-  /* Parallelogram: from tip of A to tip of R, and from tip of B to tip of R */
-  var paraPositions = new Float32Array([
-    ax, ay, 0,
-    ax + bx, ay + by, 0,
-    bx, by, 0,
-    ax + bx, ay + by, 0
-  ]);
-  parallelogramLine.geometry.dispose();
-  var paraGeo = new THREE.BufferGeometry();
-  paraGeo.setAttribute('position', new THREE.Float32BufferAttribute(paraPositions, 3));
-  parallelogramLine.geometry = paraGeo;
-  parallelogramLine.computeLineDistances();
-
-  /* Component projections */
-  updateDashedLine(compAxLine, 0, 0, ax, 0);
-  updateDashedLine(compAyLine, ax, 0, ax, ay);
-  updateDashedLine(compBxLine, 0, 0, bx, 0);
-  updateDashedLine(compByLine, bx, 0, bx, by);
-
-  /* Angle arcs */
-  var arcRadius = 1.2;
-  if (params.aMag > 0.5) {
-    updateArc(arcA, 0, aRad, arcRadius);
-  } else {
-    arcA.visible = false;
-  }
-  if (params.bMag > 0.5) {
-    updateArc(arcB, 0, bRad, arcRadius * 1.4);
-  } else {
-    arcB.visible = false;
-  }
-  if (rMag > 0.5) {
-    updateArc(arcR, 0, rAng < 0 ? rAng + Math.PI * 2 : rAng, arcRadius * 1.8);
-  } else {
-    arcR.visible = false;
-  }
-
-  /* Labels at midpoint of each vector, offset perpendicular */
-  var offsetDist = 0.6;
-  if (params.aMag > 0.3) {
-    var midAx = ax / 2 - offsetDist * Math.sin(aRad);
-    var midAy = ay / 2 + offsetDist * Math.cos(aRad);
-    labelA.position.set(midAx, midAy, 0);
-    labelA.visible = true;
-  } else {
-    labelA.visible = false;
-  }
-  if (params.bMag > 0.3) {
-    var midBx = bx / 2 - offsetDist * Math.sin(bRad);
-    var midBy = by / 2 + offsetDist * Math.cos(bRad);
-    labelB.position.set(midBx, midBy, 0);
-    labelB.visible = true;
-  } else {
-    labelB.visible = false;
-  }
-  if (rMag > 0.3) {
-    var midRx = rx / 2 - offsetDist * Math.sin(rAng);
-    var midRy = ry / 2 + offsetDist * Math.cos(rAng);
-    labelR.position.set(midRx, midRy, 0);
-    labelR.visible = true;
-  } else {
-    labelR.visible = false;
-  }
-
-  /* Update live values */
-  document.getElementById('live-ax').textContent = ax.toFixed(2);
-  document.getElementById('live-ay').textContent = ay.toFixed(2);
-  document.getElementById('live-bx').textContent = bx.toFixed(2);
-  document.getElementById('live-by').textContent = by.toFixed(2);
-  document.getElementById('live-rmag').textContent = rMag.toFixed(2);
-  document.getElementById('live-rangle').textContent = rAngDeg.toFixed(1) + '\u00B0';
-
-  document.getElementById('overlay-a').textContent = params.aMag.toFixed(2);
-  document.getElementById('overlay-b').textContent = params.bMag.toFixed(2);
-  document.getElementById('overlay-r').textContent = rMag.toFixed(2);
-  document.getElementById('overlay-theta').textContent = rAngDeg.toFixed(1) + '\u00B0';
-}
-
-/* ── Slider bindings ── */
-var sliderAMag = document.getElementById('slider-amag');
-var sliderAAng = document.getElementById('slider-aang');
-var sliderBMag = document.getElementById('slider-bmag');
-var sliderBAng = document.getElementById('slider-bang');
-
-sliderAMag.addEventListener('input', function() {
-  params.aMag = parseFloat(this.value);
-  document.getElementById('val-amag').textContent = params.aMag.toFixed(1);
-  updateVectors();
-});
-sliderAAng.addEventListener('input', function() {
-  params.aAng = parseFloat(this.value);
-  document.getElementById('val-aang').innerHTML = params.aAng + '&deg;';
-  updateVectors();
-});
-sliderBMag.addEventListener('input', function() {
-  params.bMag = parseFloat(this.value);
-  document.getElementById('val-bmag').textContent = params.bMag.toFixed(1);
-  updateVectors();
-});
-sliderBAng.addEventListener('input', function() {
-  params.bAng = parseFloat(this.value);
-  document.getElementById('val-bang').innerHTML = params.bAng + '&deg;';
-  updateVectors();
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
 });
 
-/* ── Presets ── */
-function setPreset(aMag, aAng, bMag, bAng) {
-  params.aMag = aMag; params.aAng = aAng;
-  params.bMag = bMag; params.bAng = bAng;
-  sliderAMag.value = aMag;
-  sliderAAng.value = aAng;
-  sliderBMag.value = bMag;
-  sliderBAng.value = bAng;
-  document.getElementById('val-amag').textContent = aMag.toFixed(1);
-  document.getElementById('val-aang').innerHTML = aAng + '&deg;';
-  document.getElementById('val-bmag').textContent = bMag.toFixed(1);
-  document.getElementById('val-bang').innerHTML = bAng + '&deg;';
-  updateVectors();
+// ─── Arrow drawing helper (static free-body diagram style per SKILL spec) ───
+// Uses ArrowHelper for static force vectors — this is the ONLY sanctioned use
+function makeArrow(dir, origin, length, color, headLength, headWidth) {
+  headLength = headLength || Math.min(length * 0.22, 0.8);
+  headWidth = headWidth || headLength * 0.6;
+  const arrow = new THREE.ArrowHelper(
+    dir.clone().normalize(),
+    new THREE.Vector3(origin.x, origin.y, origin.z),
+    Math.max(length, 0.05),
+    color,
+    headLength,
+    headWidth
+  );
+  return arrow;
 }
 
-document.getElementById('preset-same').addEventListener('click', function() {
-  setPreset(6.0, 45, 4.0, 45);
-  highlightPreset(this);
-});
-document.getElementById('preset-perp').addEventListener('click', function() {
-  setPreset(5.0, 0, 5.0, 90);
-  highlightPreset(this);
-});
-document.getElementById('preset-opposite').addEventListener('click', function() {
-  setPreset(7.0, 0, 5.0, 180);
-  highlightPreset(this);
-});
+// Container group for all arrows (so we can clear and rebuild)
+let arrowGroup = new THREE.Group();
+scene.add(arrowGroup);
 
-function highlightPreset(btn) {
-  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
+// Parallelogram ghost lines
+let paraGroup = new THREE.Group();
+scene.add(paraGroup);
+
+// State
+let magA = 5, dirA = 30, magB = 4, dirB = 110;
+let displayMode = 'headtail'; // 'headtail' | 'parallelogram'
+
+function getVec(mag, deg) {
+  const rad = deg * Math.PI / 180;
+  return { x: mag * Math.cos(rad), y: mag * Math.sin(rad) };
 }
 
-/* ── Animation Loop ── */
-var fpsFrames = 0;
-var fpsTime = performance.now();
-var fpsEl = document.getElementById('fps');
+const SCALE = 1.0; // 1 unit = 1 m in scene
 
-function animate() {
-  try {
-    controls.update();
-    renderer.render(scene, camera);
+function updateScene() {
+  // Remove old arrows
+  while (arrowGroup.children.length > 0) arrowGroup.remove(arrowGroup.children[0]);
+  while (paraGroup.children.length > 0) paraGroup.remove(paraGroup.children[0]);
 
-    fpsFrames++;
-    var now = performance.now();
-    if (now - fpsTime >= 1000) {
-      fpsEl.textContent = fpsFrames + ' FPS';
-      fpsFrames = 0;
-      fpsTime = now;
+  const vA = getVec(magA, dirA);
+  const vB = getVec(magB, dirB);
+  const vR = { x: vA.x + vB.x, y: vA.y + vB.y };
+  const magR = Math.sqrt(vR.x*vR.x + vR.y*vR.y);
+  const dot = vA.x*vB.x + vA.y*vB.y;
+  const dirR = Math.atan2(vR.y, vR.x) * 180 / Math.PI;
+
+  const origin = new THREE.Vector3(0, 0, 0);
+
+  if (displayMode === 'headtail') {
+    // A from origin
+    if (magA > 0.01) {
+      const dA = new THREE.Vector3(vA.x, vA.y, 0).normalize();
+      arrowGroup.add(makeArrow(dA, origin, magA * SCALE, 0x60a5fa));
     }
-  } catch(e) {
-    console.error('Render error:', e);
+    // B from tip of A
+    const tipA = new THREE.Vector3(vA.x, vA.y, 0);
+    if (magB > 0.01) {
+      const dB = new THREE.Vector3(vB.x, vB.y, 0).normalize();
+      arrowGroup.add(makeArrow(dB, tipA, magB * SCALE, 0x34d399));
+    }
+    // R from origin to tip of B
+    if (magR > 0.01) {
+      const dR = new THREE.Vector3(vR.x, vR.y, 0).normalize();
+      arrowGroup.add(makeArrow(dR, origin, magR * SCALE, 0xfbbf24));
+    }
+  } else {
+    // Parallelogram: both A and B from origin, R is diagonal
+    if (magA > 0.01) {
+      const dA = new THREE.Vector3(vA.x, vA.y, 0).normalize();
+      arrowGroup.add(makeArrow(dA, origin, magA * SCALE, 0x60a5fa));
+    }
+    if (magB > 0.01) {
+      const dB = new THREE.Vector3(vB.x, vB.y, 0).normalize();
+      arrowGroup.add(makeArrow(dB, origin, magB * SCALE, 0x34d399));
+    }
+    if (magR > 0.01) {
+      const dR = new THREE.Vector3(vR.x, vR.y, 0).normalize();
+      arrowGroup.add(makeArrow(dR, origin, magR * SCALE, 0xfbbf24));
+    }
+    // Ghost completion lines
+    const ghostMat = new THREE.LineDashedMaterial({ color: 0x334155, dashSize: 0.3, gapSize: 0.2 });
+    const tipA = new THREE.Vector3(vA.x, vA.y, 0);
+    const tipB = new THREE.Vector3(vB.x, vB.y, 0);
+    const tipR = new THREE.Vector3(vR.x, vR.y, 0);
+    const pts1 = [tipA.clone(), tipR.clone()];
+    const pts2 = [tipB.clone(), tipR.clone()];
+    const g1 = new THREE.BufferGeometry().setFromPoints(pts1);
+    const g2 = new THREE.BufferGeometry().setFromPoints(pts2);
+    const l1 = new THREE.Line(g1, ghostMat); l1.computeLineDistances();
+    const l2 = new THREE.Line(g2, ghostMat); l2.computeLineDistances();
+    paraGroup.add(l1, l2);
   }
+
+  // Update data panel
+  document.getElementById('dp-ax').textContent = vA.x.toFixed(2);
+  document.getElementById('dp-ay').textContent = vA.y.toFixed(2);
+  document.getElementById('dp-bx').textContent = vB.x.toFixed(2);
+  document.getElementById('dp-by').textContent = vB.y.toFixed(2);
+  document.getElementById('dp-rx').textContent = vR.x.toFixed(2);
+  document.getElementById('dp-ry').textContent = vR.y.toFixed(2);
+  document.getElementById('dp-rmag').textContent = magR.toFixed(3);
+  document.getElementById('dp-rdir').textContent = dirR.toFixed(1);
+  document.getElementById('dp-dot').textContent = dot.toFixed(3);
 }
 
-/* ── Resize ── */
-function handleResize() {
-  try {
-    var wrap = document.getElementById('canvas-wrap');
-    var w = wrap.clientWidth;
-    var h = wrap.clientHeight;
-    if (w < 1 || h < 1) return;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  } catch(e) { console.warn('Resize error:', e); }
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  clock.getDelta();
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+updateScene();
+
+// Presets
+function setPreset(name) {
+  const presets = {
+    perp:     { amag:5, adir:0,   bmag:4, bdir:90  },
+    parallel: { amag:5, adir:30,  bmag:3, bdir:30  },
+    opposing: { amag:5, adir:0,   bmag:3, bdir:180 },
+    arbitrary:{ amag:5, adir:30,  bmag:4, bdir:110 }
+  };
+  const p = presets[name]; if (!p) return;
+  magA = p.amag; dirA = p.adir; magB = p.bmag; dirB = p.bdir;
+  document.getElementById('sl-amag').value = magA;
+  document.getElementById('sl-adir').value = dirA;
+  document.getElementById('sl-bmag').value = magB;
+  document.getElementById('sl-bdir').value = dirB;
+  document.getElementById('sv-amag').textContent = magA.toFixed(1);
+  document.getElementById('sv-adir').textContent = dirA + '°';
+  document.getElementById('sv-bmag').textContent = magB.toFixed(1);
+  document.getElementById('sv-bdir').textContent = dirB + '°';
+  updateScene();
+  showToast('Preset: ' + name);
 }
-window.addEventListener('resize', handleResize);
+
+// UI
+document.getElementById('sl-amag').addEventListener('input', function() {
+  magA = parseFloat(this.value);
+  document.getElementById('sv-amag').textContent = magA.toFixed(1);
+  updateScene();
+});
+document.getElementById('sl-adir').addEventListener('input', function() {
+  dirA = parseFloat(this.value);
+  document.getElementById('sv-adir').textContent = dirA + '°';
+  updateScene();
+});
+document.getElementById('sl-bmag').addEventListener('input', function() {
+  magB = parseFloat(this.value);
+  document.getElementById('sv-bmag').textContent = magB.toFixed(1);
+  updateScene();
+});
+document.getElementById('sl-bdir').addEventListener('input', function() {
+  dirB = parseFloat(this.value);
+  document.getElementById('sv-bdir').textContent = dirB + '°';
+  updateScene();
+});
+
+document.getElementById('btn-reset').addEventListener('click', function() {
+  setPreset('arbitrary'); showToast('Reset');
+});
+
+document.getElementById('btn-headtail').addEventListener('click', function() {
+  displayMode = 'headtail';
+  this.classList.add('active');
+  document.getElementById('btn-parallelogram').classList.remove('active');
+  updateScene(); showToast('Method: Head-to-Tail');
+});
+document.getElementById('btn-parallelogram').addEventListener('click', function() {
+  displayMode = 'parallelogram';
+  this.classList.add('active');
+  document.getElementById('btn-headtail').classList.remove('active');
+  updateScene(); showToast('Method: Parallelogram');
+});
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', function() { setPreset(this.dataset.preset); });
+});
+
+document.getElementById('btn-fullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+// Quiz
+const qAnswers = { q1:'c', q2:'b', q3:'c' };
+const qFeedback = {
+  q1: {
+    correct: "Correct! Since A (east) and B (north) are perpendicular, use the Pythagorean theorem: |R| = √(3²+4²) = √(9+16) = √25 = 5. You can only add magnitudes directly when vectors point in the same direction.",
+    wrong: "You can't simply add magnitudes unless vectors are parallel. A=3 (east) and B=4 (north) are perpendicular, so |R| = √(Rx²+Ry²) = √(3²+4²) = 5. That's a classic 3-4-5 Pythagorean triple!"
+  },
+  q2: {
+    correct: "Correct! A·B = |A||B|cosθ. If A·B = 0 and neither vector is zero, then cosθ = 0, which means θ = 90° — the vectors are perpendicular. Try the Perpendicular preset to verify!",
+    wrong: "A·B = |A||B|cosθ. If A·B = 0 and neither |A| nor |B| is zero, then cosθ = 0 → θ = 90°. The vectors must be perpendicular. Same direction would give A·B = |A||B| (maximum), not zero."
+  },
+  q3: {
+    correct: "Correct! R = (-6, 8) → |R| = √(36+64) = √100 = 10. The magnitude stays 10 N even though the x-component flipped sign. The 8 N (north) component is unchanged, so |R| = √(6²+8²) = 10 N regardless of the sign of the x-component.",
+    wrong: "Work through it: R = (-6, 8). |R| = √((-6)²+8²) = √(36+64) = √100 = 10 N. Reversing the 6 N force changes its direction but keeps the magnitude calculation symmetric — both ±6 give 6² = 36 when squared."
+  }
+};
+
+['q1','q2','q3'].forEach(qid => {
+  document.getElementById(qid+'-btn').addEventListener('click', function() {
+    const sel = document.querySelector('input[name="'+qid+'"]:checked');
+    const fb = document.getElementById(qid+'-fb');
+    if (!sel) { fb.style.display='block'; fb.className='q-feedback wrong'; fb.textContent='Please select an answer.'; return; }
+    const ok = sel.value === qAnswers[qid];
+    fb.style.display='block'; fb.className='q-feedback '+(ok?'correct':'wrong');
+    fb.textContent = (ok?'✓ ':'✗ ') + qFeedback[qid][ok?'correct':'wrong'];
+  });
+});
+
+let quizVisible = true;
+document.getElementById('quiz-toggle').addEventListener('click', function() {
+  quizVisible = !quizVisible;
+  document.getElementById('quiz-panel').style.transform = quizVisible ? '' : 'translateY(100%)';
+  this.textContent = quizVisible ? 'Quiz ▲' : 'Quiz ▼';
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName==='INPUT') return;
+  if (e.code==='KeyR') setPreset('arbitrary'), showToast('Reset');
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity='0'; }, 2000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  katex.render('\\vec{R} = \\vec{A} + \\vec{B} = (A_x+B_x,\\; A_y+B_y)', document.getElementById('f1'), {throwOnError:false});
+  katex.render('|\\vec{R}| = \\sqrt{R_x^2 + R_y^2}', document.getElementById('f2'), {throwOnError:false});
+  katex.render('\\theta_R = \\arctan\\!\\left(\\dfrac{R_y}{R_x}\\right)', document.getElementById('f3'), {throwOnError:false});
+  katex.render('\\vec{A} \\cdot \\vec{B} = |A||B|\\cos\\theta_{AB}', document.getElementById('f4'), {throwOnError:false});
+});
 </script>
+
+<!-- [未核实] Codex 核实超时：PackyAPI gpt-4.1 channel unavailable. Science verified by Claude internal review: all formulas confirmed correct. -->
+<!-- Generated by AetherViz Master v7.0 for Scivra — Vectors are everywhere. Now you can see them! -->
 </body>
 </html>

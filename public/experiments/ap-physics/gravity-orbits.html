@@ -1,987 +1,697 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gravity and Orbits — NeonPhysics AP Physics C</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden}
-    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(251,146,60,.10),rgba(234,179,8,.06));border-bottom:1px solid rgba(251,146,60,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .header-left{display:flex;align-items:center;gap:12px}
-    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff}
-    .fps-display{font-size:11px;color:#64748b;font-variant-numeric:tabular-nums}
-    .main-layout{display:flex;height:calc(100vh - 52px)}
-    .left-panel{width:300px;min-width:300px;background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
-    .canvas-wrap{flex:1;position:relative;background:#0f172a}
-    canvas{display:block;width:100%!important;height:100%!important}
-    .bottom-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);padding:12px 20px}
-    .controls-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .slider-group{flex:1;min-width:180px}
-    .slider-label{display:flex;justify-content:space-between;margin-bottom:4px}
-    .slider-name{font-size:11px;color:#94a3b8}
-    .slider-val{font-size:11px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fb923c;cursor:pointer}
-    .btn-group{display:flex;gap:6px;flex-shrink:0}
-    .btn{padding:7px 14px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-    .btn-play{background:#22c55e;color:#fff}
-    .btn-play:hover{background:#16a34a}
-    .btn-pause{background:#ef4444;color:#fff}
-    .btn-pause:hover{background:#dc2626}
-    .btn-reset{background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.12)}
-    .btn-reset:hover{background:rgba(255,255,255,.12)}
-    .btn-preset{background:rgba(251,146,60,.12);color:#fdba74;border:1px solid rgba(251,146,60,.25)}
-    .btn-preset:hover{background:rgba(251,146,60,.2)}
-    .btn-preset.active{background:rgba(251,146,60,.3);border-color:#fb923c}
-    .btn-random{background:rgba(168,85,247,.12);color:#c4b5fd;border:1px solid rgba(168,85,247,.25)}
-    .btn-random:hover{background:rgba(168,85,247,.2)}
-    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-    .formula-box{background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.12);border-radius:8px;padding:10px 14px;margin-bottom:8px}
-    .formula-desc{font-size:10px;color:#64748b;margin-top:4px;line-height:1.4}
-    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .metric-card{background:rgba(255,255,255,.03);border-radius:6px;padding:7px 10px}
-    .metric-title{font-size:9px;color:#475569;text-transform:uppercase;margin-bottom:3px}
-    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
-    .val-orange{color:#fb923c}.val-sky{color:#38bdf8}.val-violet{color:#a78bfa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-rose{color:#fb7185}
-    .kepler-section{margin-top:8px}
-    .kepler-law{background:rgba(255,255,255,.02);border-radius:6px;padding:8px 10px;margin-bottom:6px}
-    .kepler-law-title{font-size:11px;font-weight:600;color:#c4b5fd;margin-bottom:3px}
-    .kepler-law-desc{font-size:10px;color:#64748b;line-height:1.4}
-    .orbit-type-badge{display:inline-block;padding:4px 10px;border-radius:5px;font-size:11px;font-weight:700;margin-top:6px}
-    .orbit-circular{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    .orbit-elliptical{background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc}
-    .orbit-hyperbolic{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
-    .quiz-section{margin-top:4px}
-    .quiz-q{background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;margin-bottom:8px}
-    .quiz-q-title{font-size:11px;font-weight:600;color:#e2e8f0;margin-bottom:8px}
-    .quiz-option{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:#cbd5e1;font-size:11px;cursor:pointer;transition:all .15s}
-    .quiz-option:hover{background:rgba(255,255,255,.08)}
-    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
-    .quiz-explanation{font-size:10px;color:#64748b;margin-top:6px;display:none;line-height:1.4}
-    .overlay-metrics{position:absolute;top:12px;left:12px;background:rgba(15,23,42,.85);border:1px solid rgba(251,146,60,.2);border-radius:8px;padding:10px 14px;backdrop-filter:blur(6px);pointer-events:none}
-    .overlay-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-    .overlay-row:last-child{margin-bottom:0}
-    .overlay-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .overlay-text{font-size:11px;font-variant-numeric:tabular-nums}
-    .preset-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
-    @media(max-width:900px){
-      .main-layout{flex-direction:column}
-      .left-panel{width:100%;min-width:0;max-height:40vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
-      .canvas-wrap{min-height:50vh}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity & Orbits — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.5); border-radius: 3px; }
+  .glass { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(12px); }
+  .glass-panel { background: rgba(22,78,99,0.7); border: 1px solid rgba(20,184,166,0.25); backdrop-filter: blur(12px); }
+  .physics-text { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #canvas-container { position: relative; flex: 1; overflow: hidden; }
+  .data-overlay { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 12px 16px; min-width: 210px; font-variant-numeric: tabular-nums; }
+  .data-row { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; margin: 3px 0; }
+  .data-label { color: #94a3b8; } .data-value { color: #60a5fa; font-weight: 600; }
+  .energy-bar-wrap { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .energy-bar-row { display: flex; align-items: center; gap-6px; margin: 2px 0; font-size: 11px; }
+  .energy-bar-label { width: 30px; color: #94a3b8; }
+  .energy-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+  .energy-bar-fill { height: 100%; border-radius: 3px; transition: width 0.1s; }
+  .energy-bar-val { width: 72px; text-align: right; font-size: 10px; color: #94a3b8; }
+  .sidebar { width: 300px; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; display: flex; flex-direction: column; transition: width 0.3s; }
+  .sidebar.collapsed { width: 0; overflow: hidden; }
+  .formula-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+  .knowledge-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+  .control-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 12px 16px; }
+  .slider-group { display: flex; flex-direction: column; gap: 4px; }
+  .slider-label { font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; }
+  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9); cursor: pointer; }
+  .btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; font-weight: 500; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6, #0EA5E9); color: white; }
+  .btn-primary:hover { background: linear-gradient(135deg, #60a5fa, #38bdf8); }
+  .btn-ghost { background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.15); }
+  .btn-preset { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); padding: 5px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .btn-preset:hover, .btn-preset.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; }
+  .speed-btn { padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: #94a3b8; transition: all 0.2s; }
+  .speed-btn.active { background: rgba(59,130,246,0.3); border-color: #3B82F6; color: #60a5fa; }
+  .orbit-type-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  #toast { position: fixed; top: 60px; right: 16px; z-index: 1000; pointer-events: none; }
+  .toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .quiz-panel { position: absolute; bottom: 12px; right: 12px; width: 320px; background: rgba(15,23,42,0.92); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 14px; max-height: 420px; overflow-y: auto; }
+  .quiz-option { padding: 7px 10px; margin: 4px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 13px; transition: all 0.2s; background: rgba(255,255,255,0.04); }
+  .quiz-option:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+  .quiz-option.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+  .quiz-option.incorrect { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+  .quiz-feedback { font-size: 12px; margin-top: 6px; padding: 6px 8px; border-radius: 6px; }
+  .quiz-toggle { position: absolute; bottom: 12px; right: 12px; z-index: 10; }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-left">
-    <span class="badge">AP PHYSICS C</span>
-    <span class="badge badge-free">FREE</span>
-    <h1>Gravity and Orbits</h1>
+
+<!-- Navbar -->
+<nav class="glass flex items-center justify-between px-4 py-2.5 border-b" style="border-color:rgba(59,130,246,0.2); background:rgba(15,23,42,0.85);">
+  <div>
+    <span class="text-lg font-bold physics-text">Gravity & Orbits</span>
+    <span class="text-sm text-slate-400 ml-2">轨道力学 · Kepler's Laws</span>
   </div>
-  <span class="fps-display" id="fpsDisplay">60 FPS</span>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost text-xs" id="toggleSidebar">☰ Panel</button>
+    <button class="btn btn-ghost text-xs" id="btnReset">↺ Reset</button>
+    <button class="btn btn-ghost text-xs" id="btnFullscreen">⛶ Full</button>
+    <button class="btn btn-ghost text-xs" id="btnAbout">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="p-4">
+      <h3 class="text-sm font-semibold text-blue-400 mb-3 uppercase tracking-wider">Core Formulas</h3>
+      <div class="formula-card">
+        <div id="f1"></div>
+        <p class="text-xs text-slate-400 mt-1">Kepler's 3rd Law: period squared ∝ semi-major axis cubed</p>
+      </div>
+      <div class="formula-card">
+        <div id="f2"></div>
+        <p class="text-xs text-slate-400 mt-1">Circular orbital speed: gravity provides centripetal force</p>
+      </div>
+      <div class="formula-card">
+        <div id="f3"></div>
+        <p class="text-xs text-slate-400 mt-1">Orbital eccentricity: 0 = circle, 0<e<1 = ellipse, e≥1 = escape</p>
+      </div>
+      <div class="formula-card">
+        <div id="f4"></div>
+        <p class="text-xs text-slate-400 mt-1">Total mechanical energy (negative = bound orbit)</p>
+      </div>
+
+      <h3 class="text-sm font-semibold text-blue-400 mt-4 mb-2 uppercase tracking-wider">Concept</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2">Gravity provides the centripetal force that keeps planets in orbit. The exact orbit shape — circular, elliptical, or hyperbolic — depends entirely on the initial speed relative to the circular velocity v_c = √(GM/r).</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-2">Kepler's 3rd Law (T² ∝ a³) means any two planets around the same star obey the same ratio T²/a³, regardless of mass. This is a direct consequence of Newton's gravity.</p>
+      <p class="text-xs text-slate-300 leading-relaxed mb-3">At exactly v_esc = √2 · v_c, total energy = 0 and the orbit becomes parabolic — the threshold between bound and unbound. Above that speed, the trajectory is hyperbolic.</p>
+
+      <h3 class="text-sm font-semibold text-blue-400 mb-2 uppercase tracking-wider">Knowledge Cards</h3>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-blue-300">Historical Fact</p>
+        <p class="text-xs text-slate-300 mt-1">Kepler discovered T² ∝ a³ in 1619 purely from data — without knowing why. Newton derived it from his gravity law 50 years later, proving the inverse-square form.</p>
+      </div>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-amber-300">Common Misconception</p>
+        <p class="text-xs text-slate-300 mt-1">Planets do NOT slow down to conserve energy in elliptical orbits — they slow down to conserve angular momentum. Energy is constant throughout the orbit.</p>
+      </div>
+      <div class="knowledge-card">
+        <p class="text-xs font-semibold text-emerald-300">Advanced Connection</p>
+        <p class="text-xs text-slate-300 mt-1">Kepler's 2nd law (equal areas in equal times) is equivalent to conservation of angular momentum — a consequence of the central nature of gravity, not its specific strength.</p>
+      </div>
+
+      <h3 class="text-sm font-semibold text-blue-400 mt-4 mb-2 uppercase tracking-wider">Why It Matters</h3>
+      <ul class="text-xs text-slate-300 space-y-1.5">
+        <li>• Every satellite launch uses orbital mechanics — ISS, GPS, Hubble</li>
+        <li>• Hohmann transfer orbits minimize fuel cost between orbits</li>
+        <li>• AP Physics: Kepler's laws + Newton's law = core curriculum connection</li>
+        <li>• Exoplanet detection uses T² ∝ a³ to infer stellar mass from period</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main canvas -->
+  <div id="canvas-container" class="flex-1 relative">
+    <div class="data-overlay" id="dataOverlay">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="text-xs font-semibold text-blue-400">Orbital Data</div>
+        <span id="orbitTypeBadge" class="orbit-type-badge" style="background:rgba(59,130,246,0.2);color:#60a5fa">Elliptical</span>
+      </div>
+      <div class="data-row"><span class="data-label">Period T</span><span class="data-value" id="dT">—</span></div>
+      <div class="data-row"><span class="data-label">Semi-major a</span><span class="data-value" id="dA">—</span></div>
+      <div class="data-row"><span class="data-label">Eccentricity e</span><span class="data-value" id="dE">—</span></div>
+      <div class="data-row"><span class="data-label">Speed |v|</span><span class="data-value" id="dV">—</span></div>
+      <div class="data-row"><span class="data-label">Distance r</span><span class="data-value" id="dR">—</span></div>
+      <div class="data-row"><span class="data-label">T²/a³ ratio</span><span class="data-value" id="dKepler">—</span></div>
+      <div class="energy-bar-wrap">
+        <div class="text-xs text-slate-400 mb-1">Energy</div>
+        <div class="energy-bar-row">
+          <span class="energy-bar-label" style="color:#3B82F6;font-size:10px">KE</span>
+          <div class="energy-bar-bg"><div class="energy-bar-fill" id="keBar" style="background:#3B82F6;width:50%"></div></div>
+          <span class="energy-bar-val" id="keVal">—</span>
+        </div>
+        <div class="energy-bar-row">
+          <span class="energy-bar-label" style="color:#EF4444;font-size:10px">PE</span>
+          <div class="energy-bar-bg"><div class="energy-bar-fill" id="peBar" style="background:#EF4444;width:50%"></div></div>
+          <span class="energy-bar-val" id="peVal">—</span>
+        </div>
+        <div class="energy-bar-row">
+          <span class="energy-bar-label" style="color:#22C55E;font-size:10px">E</span>
+          <div class="energy-bar-bg"><div class="energy-bar-fill" id="eBar" style="background:#22C55E;width:50%"></div></div>
+          <span class="energy-bar-val" id="eVal">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="quiz-panel" id="quizPanel">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-semibold text-blue-400">Quick Quiz</span>
+        <button class="text-slate-400 hover:text-white text-xs" id="closeQuiz">✕ Hide</button>
+      </div>
+      <div id="quizContainer"></div>
+    </div>
+    <button class="quiz-toggle btn btn-primary text-xs hidden" id="showQuiz">Quiz</button>
+  </div>
 </div>
 
-<div class="main-layout">
-  <div class="left-panel">
-    <div class="section">
-      <div class="section-title">Universal Gravitation</div>
-      <div class="formula-box" id="formulaF"></div>
-      <div class="formula-desc">Every mass attracts every other mass with a force proportional to the product of their masses and inversely proportional to the square of the distance between them.</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Orbital Velocity</div>
-      <div class="formula-box" id="formulaV"></div>
-      <div class="formula-desc">The speed needed for a circular orbit at radius r. Objects moving faster will enter elliptical or escape trajectories.</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Kepler's Third Law</div>
-      <div class="formula-box" id="formulaT"></div>
-      <div class="formula-desc">The square of the orbital period is proportional to the cube of the semi-major axis. This holds for all elliptical orbits around the same central mass.</div>
-    </div>
-
-    <div class="section kepler-section">
-      <div class="section-title">Kepler's Laws Explained</div>
-      <div class="kepler-law">
-        <div class="kepler-law-title">1st Law: Law of Ellipses</div>
-        <div class="kepler-law-desc">Planets move in elliptical orbits with the star at one focus. A circle is a special case with eccentricity = 0.</div>
+<!-- Control Panel -->
+<div class="control-panel">
+  <div class="flex items-start gap-6 flex-wrap">
+    <div class="flex-1 min-w-48">
+      <div class="slider-group mb-3">
+        <div class="slider-label"><span>Initial Speed (× v_circ)</span><span id="speedMulVal" class="text-blue-400">1.0×</span></div>
+        <input type="range" id="sliderSpeedMul" min="0.5" max="2.0" step="0.01" value="1.0">
       </div>
-      <div class="kepler-law">
-        <div class="kepler-law-title">2nd Law: Equal Areas</div>
-        <div class="kepler-law-desc">A line from the planet to the star sweeps equal areas in equal time intervals. Planets move faster near perihelion.</div>
-      </div>
-      <div class="kepler-law">
-        <div class="kepler-law-title">3rd Law: Harmonic Law</div>
-        <div class="kepler-law-desc">T^2 / r^3 = constant for all orbits around the same star. Farther planets have longer periods.</div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Central Mass (M_sun)</span><span id="centralMassVal" class="text-blue-400">1.0</span></div>
+        <input type="range" id="sliderCentralMass" min="0.5" max="5" step="0.1" value="1.0">
       </div>
     </div>
-
-    <div class="section">
-      <div class="section-title">Live Orbital Parameters</div>
-      <div class="metric-grid">
-        <div class="metric-card">
-          <div class="metric-title">Grav. Force</div>
-          <div class="metric-val val-orange" id="forceDisplay">0 N</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Velocity</div>
-          <div class="metric-val val-sky" id="velDisplay">0 km/s</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Distance</div>
-          <div class="metric-val val-violet" id="distDisplay">0 AU</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Period</div>
-          <div class="metric-val val-green" id="periodDisplay">0 yr</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Eccentricity</div>
-          <div class="metric-val val-amber" id="eccDisplay">0</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Energy</div>
-          <div class="metric-val val-red" id="energyDisplay">0 J</div>
-        </div>
+    <div class="flex-1 min-w-48">
+      <div class="slider-group mb-3">
+        <div class="slider-label"><span>Initial Radius (AU)</span><span id="initRadVal" class="text-blue-400">4.0</span></div>
+        <input type="range" id="sliderInitRad" min="1" max="8" step="0.1" value="4.0">
       </div>
-      <div id="orbitTypeBadge" class="orbit-type-badge orbit-circular" style="margin-top:8px">CIRCULAR</div>
+      <div class="flex gap-2 items-center mt-3">
+        <span class="text-xs text-slate-400">Speed:</span>
+        <button class="speed-btn" data-speed="0.25">0.25x</button>
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="3">3x</button>
+      </div>
     </div>
-
-    <div class="section quiz-section">
-      <div class="section-title">Knowledge Check</div>
-      <div class="quiz-q" id="quiz1">
-        <div class="quiz-q-title">Q1: If you double the orbital radius, how does the orbital period change?</div>
-        <button class="quiz-option" data-answer="wrong" onclick="checkQuiz(this)">It doubles (2T)</button>
-        <button class="quiz-option" data-answer="correct" onclick="checkQuiz(this)">It increases by factor 2*sqrt(2) ≈ 2.83</button>
-        <button class="quiz-option" data-answer="wrong" onclick="checkQuiz(this)">It quadruples (4T)</button>
-        <button class="quiz-option" data-answer="wrong" onclick="checkQuiz(this)">It stays the same</button>
-        <div class="quiz-explanation">From Kepler's 3rd law: T^2 ~ r^3, so T ~ r^(3/2). If r doubles, T increases by 2^(3/2) = 2*sqrt(2) ≈ 2.83.</div>
+    <div class="flex flex-col gap-2">
+      <div class="text-xs text-slate-400 mb-1">Presets</div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn-preset active" data-preset="circular">Circular Orbit</button>
+        <button class="btn-preset" data-preset="elliptical">Elliptical (e=0.5)</button>
+        <button class="btn-preset" data-preset="escape">Escape Trajectory</button>
       </div>
-      <div class="quiz-q" id="quiz2">
-        <div class="quiz-q-title">Q2: What happens to gravitational force if both the star mass and distance are doubled?</div>
-        <button class="quiz-option" data-answer="wrong" onclick="checkQuiz(this)">It doubles</button>
-        <button class="quiz-option" data-answer="correct" onclick="checkQuiz(this)">It halves</button>
-        <button class="quiz-option" data-answer="wrong" onclick="checkQuiz(this)">It stays the same</button>
-        <button class="quiz-option" data-answer="wrong" onclick="checkQuiz(this)">It quarters</button>
-        <div class="quiz-explanation">F = GMm/r^2. Double M: F*2. Double r: F/4. Net: 2/4 = 1/2. The force is halved.</div>
-      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button class="btn btn-primary" id="btnPlay">⏸ Pause</button>
+      <button class="btn btn-ghost text-xs" id="btnClearTrail">Clear Trail</button>
     </div>
   </div>
+</div>
 
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="c"></canvas>
-    <div class="overlay-metrics">
-      <div class="overlay-row">
-        <div class="overlay-dot" style="background:#3b82f6"></div>
-        <span class="overlay-text" style="color:#93c5fd" id="olVel">v = 29.8 km/s</span>
-      </div>
-      <div class="overlay-row">
-        <div class="overlay-dot" style="background:#22c55e"></div>
-        <span class="overlay-text" style="color:#86efac" id="olAcc">a = 5.93 mm/s^2</span>
-      </div>
-      <div class="overlay-row">
-        <div class="overlay-dot" style="background:#fb923c"></div>
-        <span class="overlay-text" style="color:#fdba74" id="olForce">F = 3.54e22 N</span>
-      </div>
-    </div>
+<div id="toast"></div>
 
-    <div class="bottom-bar">
-      <div class="controls-row">
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Star Mass</span>
-            <span class="slider-val" id="starMassVal">1.0 M☉</span>
-          </div>
-          <input type="range" id="starMass" min="0.1" max="10" step="0.1" value="1">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Planet Mass</span>
-            <span class="slider-val" id="planetMassVal">1.0 M⊕</span>
-          </div>
-          <input type="range" id="planetMass" min="0.1" max="100" step="0.5" value="1">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Orbital Radius</span>
-            <span class="slider-val" id="orbRadiusVal">1.0 AU</span>
-          </div>
-          <input type="range" id="orbRadius" min="0.2" max="5" step="0.1" value="1">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Initial Velocity</span>
-            <span class="slider-val" id="initVelVal">29.8 km/s</span>
-          </div>
-          <input type="range" id="initVel" min="0" max="50" step="0.5" value="29.8">
-        </div>
-      </div>
-      <div class="controls-row" style="margin-top:8px">
-        <div class="preset-row">
-          <button class="btn btn-preset active" id="presetEarth" onclick="loadPreset('earth')">Earth-Sun</button>
-          <button class="btn btn-preset" id="presetComet" onclick="loadPreset('comet')">Comet</button>
-          <button class="btn btn-preset" id="presetEscape" onclick="loadPreset('escape')">Escape</button>
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-play" id="btnPlay" onclick="togglePlay()">Play</button>
-          <button class="btn btn-reset" onclick="resetSim()">Reset</button>
-          <button class="btn btn-random" onclick="randomize()">Random</button>
-        </div>
-      </div>
+<div id="aboutModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur flex items-center justify-center z-50">
+  <div class="glass-panel rounded-xl p-6 max-w-md w-full mx-4">
+    <h3 class="text-lg font-bold text-blue-400 mb-3">Gravity & Orbits</h3>
+    <p class="text-sm text-slate-300 mb-4">Velocity Verlet integration shows how initial speed determines orbit shape. Watch Kepler's 3rd law emerge in real time.</p>
+    <div class="text-xs text-slate-400 mb-4">
+      <div class="font-semibold text-slate-300 mb-1">Keyboard Shortcuts:</div>
+      <div>Space — Play/Pause | R — Reset | C — Clear Trail</div>
+      <div>1-5 — Speed presets | Q/W/E — Orbit presets</div>
     </div>
+    <button class="btn btn-primary w-full" id="closeAbout">Close</button>
   </div>
 </div>
 
 <script>
-'use strict';
+// ─── Physics constants (simulation units: AU, solar masses, years) ─────────────
+// G = 4π² in AU³/(M_sun · yr²)
+const G_SIM = 4 * Math.PI * Math.PI; // AU³ M_sun⁻¹ yr⁻²
 
-/* ========== QUIZ ========== */
-function checkQuiz(btn) {
-  var parent = btn.closest('.quiz-q');
-  if (parent.classList.contains('answered')) return;
-  parent.classList.add('answered');
-  var buttons = parent.querySelectorAll('.quiz-option');
-  for (var i = 0; i < buttons.length; i++) {
-    buttons[i].classList.add(buttons[i].getAttribute('data-answer'));
-    buttons[i].style.pointerEvents = 'none';
-  }
-  parent.querySelector('.quiz-explanation').style.display = 'block';
-}
-
-/* ========== CONSTANTS ========== */
-var G_REAL = 6.674e-11;
-var M_SUN = 1.989e30;
-var M_EARTH = 5.972e24;
-var AU = 1.496e11;
-var SCALE = 4.0;
-var TRAIL_MAX = 500;
-
-/* ========== STATE ========== */
-var sim = {
-  running: false,
-  starMass: 1.0,
-  planetMass: 1.0,
-  orbRadius: 1.0,
-  initVel: 29.8,
-  px: 0, py: 0, pz: 0,
-  vx: 0, vy: 0, vz: 0,
-  trail: [],
-  trailIdx: 0,
-  time: 0
+// ─── Inline OrbitControls ────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 80; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
 };
 
-/* ========== THREE.JS SETUP ========== */
-var scene, camera, renderer, controls;
-var starMesh, starGlow, starLight, planetMesh;
-var trailLine, trailGeometry;
-var predictLine, predictGeometry;
-var velArrow, accArrow;
-var fieldLines = [];
-var starfield;
-var gridHelper;
+// ─── State ────────────────────────────────────────────────────────────────────
+let speedMul = 1.0;
+let centralMass = 1.0;
+let initRad = 4.0;
+let speedFactor = 1.0;
+let isPlaying = true;
 
-try {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f172a);
+// Planet state (in simulation units: AU, yr)
+let px, py, vx, vy;
+let totalSimTime = 0;
 
-  var canvasEl = document.getElementById('c');
-  var wrap = document.getElementById('canvasWrap');
+// Trail
+const MAX_TRAIL = 800;
+const trailPositions = new Float32Array(MAX_TRAIL * 3);
+let trailHead = 0;
+let trailCount = 0;
 
-  renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+// Period measurement
+let lastCrossTime = -1;
+let measuredPeriod = null;
+let prevPy = 0;
+let prevVy = 0;
 
-  camera = new THREE.PerspectiveCamera(55, wrap.clientWidth / wrap.clientHeight, 0.01, 500);
-  camera.position.set(0, 8, 12);
+// Energy reference
+let E0 = null;
 
-  controls = new THREE.OrbitControls(camera, canvasEl);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 2;
-  controls.maxDistance = 80;
+// ─── Init planet ──────────────────────────────────────────────────────────────
+function initPlanet() {
+  px = initRad; py = 0;
+  const vCirc = Math.sqrt(G_SIM * centralMass / initRad);
+  vx = 0; vy = speedMul * vCirc;
+  totalSimTime = 0;
+  trailHead = 0; trailCount = 0;
+  lastCrossTime = -1; measuredPeriod = null;
+  prevPy = py; prevVy = vy;
 
-  /* Lights: 3+ lights */
-  var ambientLight = new THREE.AmbientLight(0x1e293b, 0.4);
-  scene.add(ambientLight);
-
-  var hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x1e1b4b, 0.3);
-  scene.add(hemiLight);
-
-  starLight = new THREE.PointLight(0xfff4e0, 2.5, 100);
-  starLight.position.set(0, 0, 0);
-  scene.add(starLight);
-
-  var rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
-  rimLight.position.set(-10, 5, -10);
-  scene.add(rimLight);
-
-  /* Star */
-  var starGeom = new THREE.SphereGeometry(0.5, 32, 32);
-  var starMat = new THREE.MeshStandardMaterial({
-    color: 0xfff4e0,
-    emissive: 0xffaa33,
-    emissiveIntensity: 2.0,
-    roughness: 0.2,
-    metalness: 0.0
-  });
-  starMesh = new THREE.Mesh(starGeom, starMat);
-  scene.add(starMesh);
-
-  /* Star glow sprite */
-  var glowCanvas = document.createElement('canvas');
-  glowCanvas.width = 128;
-  glowCanvas.height = 128;
-  var gCtx = glowCanvas.getContext('2d');
-  var gradient = gCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gradient.addColorStop(0, 'rgba(255,200,100,0.6)');
-  gradient.addColorStop(0.4, 'rgba(255,160,50,0.2)');
-  gradient.addColorStop(1, 'rgba(255,100,0,0)');
-  gCtx.fillStyle = gradient;
-  gCtx.fillRect(0, 0, 128, 128);
-  var glowTexture = new THREE.CanvasTexture(glowCanvas);
-  var glowMat = new THREE.SpriteMaterial({ map: glowTexture, transparent: true, blending: THREE.AdditiveBlending });
-  starGlow = new THREE.Sprite(glowMat);
-  starGlow.scale.set(3, 3, 1);
-  scene.add(starGlow);
-
-  /* Planet */
-  var planetGeom = new THREE.SphereGeometry(0.2, 24, 24);
-  var planetMat = new THREE.MeshStandardMaterial({
-    color: 0x3b82f6,
-    roughness: 0.6,
-    metalness: 0.1
-  });
-  planetMesh = new THREE.Mesh(planetGeom, planetMat);
-  scene.add(planetMesh);
-
-  /* Planet atmosphere glow */
-  var atmosGeom = new THREE.SphereGeometry(0.24, 24, 24);
-  var atmosMat = new THREE.MeshBasicMaterial({
-    color: 0x60a5fa,
-    transparent: true,
-    opacity: 0.15,
-    side: THREE.BackSide
-  });
-  var atmosMesh = new THREE.Mesh(atmosGeom, atmosMat);
-  planetMesh.add(atmosMesh);
-
-  /* Trail line */
-  var trailPositions = new Float32Array(TRAIL_MAX * 3);
-  var trailColors = new Float32Array(TRAIL_MAX * 3);
-  trailGeometry = new THREE.BufferGeometry();
-  trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
-  trailGeometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
-  var trailMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.8 });
-  trailLine = new THREE.Line(trailGeometry, trailMat);
-  scene.add(trailLine);
-
-  /* Predicted orbit line (dashed) */
-  var predictPositions = new Float32Array(200 * 3);
-  predictGeometry = new THREE.BufferGeometry();
-  predictGeometry.setAttribute('position', new THREE.BufferAttribute(predictPositions, 3));
-  var predictMat = new THREE.LineDashedMaterial({ color: 0x475569, dashSize: 0.15, gapSize: 0.1, transparent: true, opacity: 0.5 });
-  predictLine = new THREE.Line(predictGeometry, predictMat);
-  scene.add(predictLine);
-
-  /* Velocity arrow (blue) */
-  velArrow = new THREE.ArrowHelper(
-    new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 1, 0x3b82f6, 0.12, 0.08
-  );
-  scene.add(velArrow);
-
-  /* Acceleration arrow (green) */
-  accArrow = new THREE.ArrowHelper(
-    new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, 0), 1, 0x22c55e, 0.12, 0.08
-  );
-  scene.add(accArrow);
-
-  /* Gravity field lines */
-  buildFieldLines();
-
-  /* Grid (orbital plane reference) */
-  gridHelper = new THREE.GridHelper(30, 30, 0x1e293b, 0x0f172a);
-  gridHelper.position.y = -0.5;
-  scene.add(gridHelper);
-
-  /* Starfield background */
-  buildStarfield();
-
-} catch (e) {
-  console.error('Three.js initialization failed:', e);
-  document.body.innerHTML = '<div style="color:#f87171;padding:40px;text-align:center"><h2>WebGL Error</h2><p>' + e.message + '</p></div>';
+  const KE = 0.5 * vy * vy; // unit mass
+  const PE = -G_SIM * centralMass / initRad;
+  E0 = KE + PE;
 }
 
-function buildFieldLines() {
-  for (var i = 0; i < fieldLines.length; i++) {
-    scene.remove(fieldLines[i]);
-  }
-  fieldLines = [];
-  var numLines = 12;
-  for (var i = 0; i < numLines; i++) {
-    var angle = (i / numLines) * Math.PI * 2;
-    var pts = [];
-    for (var r = 0.7; r < 10; r += 0.3) {
-      var falloff = 1.0 / (r * r);
-      pts.push(new THREE.Vector3(Math.cos(angle) * r, 0, Math.sin(angle) * r));
+// ─── Velocity Verlet ──────────────────────────────────────────────────────────
+function getAcceleration(x, y) {
+  const r2 = x * x + y * y;
+  const r = Math.sqrt(r2);
+  const rCubed = r2 * r;
+  const ax = -G_SIM * centralMass * x / rCubed;
+  const ay = -G_SIM * centralMass * y / rCubed;
+  return [ax, ay];
+}
+
+function verletStep(dt) {
+  const [ax1, ay1] = getAcceleration(px, py);
+  const vxH = vx + 0.5 * ax1 * dt;
+  const vyH = vy + 0.5 * ay1 * dt;
+  px += vxH * dt;
+  py += vyH * dt;
+  const [ax2, ay2] = getAcceleration(px, py);
+  vx = vxH + 0.5 * ax2 * dt;
+  vy = vyH + 0.5 * ay2 * dt;
+}
+
+function physicsUpdate(dt) {
+  if (dt > 0.1) dt = 0.02;
+  const maxSubStep = 0.0002; // in simulation years
+  const steps = Math.ceil(dt / maxSubStep);
+  const subDt = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    // Detect y=0 crossing (same direction as initial) for period measurement
+    if (prevPy < 0 && py >= 0 && vx < 0) {
+      const t = totalSimTime;
+      if (lastCrossTime > 0) measuredPeriod = t - lastCrossTime;
+      lastCrossTime = t;
     }
-    var lineGeom = new THREE.BufferGeometry().setFromPoints(pts);
-    var lineMat = new THREE.LineBasicMaterial({
-      color: 0xfb923c,
-      transparent: true,
-      opacity: 0.08
-    });
-    var line = new THREE.Line(lineGeom, lineMat);
-    scene.add(line);
-    fieldLines.push(line);
-  }
-  /* Gravity gradient rings */
-  for (var r = 1; r <= 8; r += 1.5) {
-    var ringPts = [];
-    for (var j = 0; j <= 64; j++) {
-      var a = (j / 64) * Math.PI * 2;
-      ringPts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r));
-    }
-    var ringGeom = new THREE.BufferGeometry().setFromPoints(ringPts);
-    var opacity = 0.12 / (r * 0.5);
-    var ringMat = new THREE.LineBasicMaterial({ color: 0xfb923c, transparent: true, opacity: Math.min(opacity, 0.15) });
-    var ring = new THREE.Line(ringGeom, ringMat);
-    scene.add(ring);
-    fieldLines.push(ring);
+    prevPy = py;
+    verletStep(subDt);
+    totalSimTime += subDt;
   }
 }
 
-function buildStarfield() {
-  var starCount = 1500;
-  var starPositions = new Float32Array(starCount * 3);
-  var starSizes = new Float32Array(starCount);
-  for (var i = 0; i < starCount; i++) {
-    var theta = Math.random() * Math.PI * 2;
-    var phi = Math.acos(2 * Math.random() - 1);
-    var radius = 80 + Math.random() * 120;
-    starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-    starPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-    starPositions[i * 3 + 2] = radius * Math.cos(phi);
-    starSizes[i] = 0.3 + Math.random() * 1.2;
-  }
-  var starGeom = new THREE.BufferGeometry();
-  starGeom.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-  starGeom.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
-  var starMat = new THREE.PointsMaterial({ color: 0xc8d6e5, size: 0.4, sizeAttenuation: true, transparent: true, opacity: 0.7 });
-  starfield = new THREE.Points(starGeom, starMat);
-  scene.add(starfield);
+// ─── Trail update ─────────────────────────────────────────────────────────────
+function recordTrail() {
+  const i = trailHead * 3;
+  trailPositions[i]   = px;
+  trailPositions[i+1] = 0;
+  trailPositions[i+2] = py;
+  trailHead = (trailHead + 1) % MAX_TRAIL;
+  if (trailCount < MAX_TRAIL) trailCount++;
 }
 
-/* ========== PHYSICS ========== */
-function initOrbit() {
-  var r = sim.orbRadius * SCALE;
-  sim.px = r;
-  sim.py = 0;
-  sim.pz = 0;
-
-  var vCircular = circularVelocity(sim.starMass, sim.orbRadius);
-  var vRatio = sim.initVel / vCircular;
-  var vMag = vRatio * Math.sqrt(sim.starMass / sim.orbRadius);
-
-  sim.vx = 0;
-  sim.vy = 0;
-  sim.vz = vMag;
-
-  sim.trail = [];
-  sim.trailIdx = 0;
-  sim.time = 0;
-
-  clearTrail();
-  updatePredictedOrbit();
-}
-
-function circularVelocity(starMassSolar, radiusAU) {
-  var M = starMassSolar * M_SUN;
-  var r = radiusAU * AU;
-  return Math.sqrt(G_REAL * M / r) / 1000;
-}
-
-function escapeVelocity(starMassSolar, radiusAU) {
-  return circularVelocity(starMassSolar, radiusAU) * Math.sqrt(2);
-}
-
-function simStep(dt) {
-  var dx = -sim.px;
-  var dy = -sim.py;
-  var dz = -sim.pz;
-  var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-  if (dist < 0.05) return;
-
-  var GMnorm = sim.starMass / (dist * dist * dist);
-  var ax = GMnorm * dx;
-  var ay = GMnorm * dy;
-  var az = GMnorm * dz;
-
-  /* Velocity Verlet */
-  sim.px += sim.vx * dt + 0.5 * ax * dt * dt;
-  sim.py += sim.vy * dt + 0.5 * ay * dt * dt;
-  sim.pz += sim.vz * dt + 0.5 * az * dt * dt;
-
-  var dx2 = -sim.px;
-  var dy2 = -sim.py;
-  var dz2 = -sim.pz;
-  var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2);
-  if (dist2 < 0.05) return;
-
-  var GMnorm2 = sim.starMass / (dist2 * dist2 * dist2);
-  var ax2 = GMnorm2 * dx2;
-  var ay2 = GMnorm2 * dy2;
-  var az2 = GMnorm2 * dz2;
-
-  sim.vx += 0.5 * (ax + ax2) * dt;
-  sim.vy += 0.5 * (ay + ay2) * dt;
-  sim.vz += 0.5 * (az + az2) * dt;
-
-  sim.time += dt;
-}
-
+// ─── Orbital elements ─────────────────────────────────────────────────────────
 function getOrbitalElements() {
-  var r = Math.sqrt(sim.px * sim.px + sim.py * sim.py + sim.pz * sim.pz);
-  var v = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy + sim.vz * sim.vz);
-  var energy = 0.5 * v * v - sim.starMass / r;
-  var a = -sim.starMass / (2 * energy);
-
-  var hx = sim.py * sim.vz - sim.pz * sim.vy;
-  var hy = sim.pz * sim.vx - sim.px * sim.vz;
-  var hz = sim.px * sim.vy - sim.py * sim.vx;
-  var h = Math.sqrt(hx * hx + hy * hy + hz * hz);
-
-  var ecc;
-  if (energy >= 0) {
-    ecc = 999;
+  const r = Math.sqrt(px * px + py * py);
+  const v2 = vx * vx + vy * vy;
+  const KE = 0.5 * v2;
+  const PE = -G_SIM * centralMass / r;
+  const Etot = KE + PE;
+  // Semi-major axis: E = -GM/(2a)
+  let a, e;
+  if (Etot < 0) {
+    a = -G_SIM * centralMass / (2 * Etot);
+    // Eccentricity via vis-viva and angular momentum
+    const L = px * vy - py * vx; // specific angular momentum
+    const p = L * L / (G_SIM * centralMass);
+    const eSq = 1 - p / a;
+    e = eSq >= 0 ? Math.sqrt(eSq) : 0;
   } else {
-    var p = h * h / sim.starMass;
-    ecc = Math.sqrt(Math.max(0, 1 - p / a));
+    a = Infinity;
+    const L = px * vy - py * vx;
+    const p = L * L / (G_SIM * centralMass);
+    e = Math.sqrt(1 + 2 * Etot * p * p / (G_SIM * centralMass));
   }
-
-  var period;
-  if (a > 0) {
-    period = 2 * Math.PI * Math.sqrt(a * a * a / sim.starMass);
-  } else {
-    period = Infinity;
-  }
-
-  return { r: r, v: v, energy: energy, a: a, ecc: ecc, period: period, h: h };
+  // Theoretical period (Kepler's 3rd)
+  const T_theory = a < 1e6 ? 2 * Math.PI * Math.sqrt(a * a * a / (G_SIM * centralMass)) : Infinity;
+  return { r, v: Math.sqrt(v2), KE, PE, Etot, a, e, T_theory };
 }
 
-function toRealUnits(orbElements) {
-  var rAU = orbElements.r / SCALE;
-  var rMeters = rAU * AU;
-  var vCircRef = circularVelocity(sim.starMass, rAU);
-  var vNormRef = Math.sqrt(sim.starMass / (orbElements.r));
-  var vReal = (orbElements.v / vNormRef) * vCircRef;
+// ─── Three.js setup ───────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
 
-  var M = sim.starMass * M_SUN;
-  var m = sim.planetMass * M_EARTH;
-  var F = G_REAL * M * m / (rMeters * rMeters);
-  var acc = G_REAL * M / (rMeters * rMeters);
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 2000);
+camera.position.set(0, 12, 20);
 
-  var periodYears;
-  if (orbElements.period === Infinity) {
-    periodYears = Infinity;
-  } else {
-    var aAU = orbElements.a / SCALE;
-    periodYears = Math.sqrt(aAU * aAU * aAU / sim.starMass);
-  }
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
 
-  return {
-    rAU: rAU,
-    vKms: vReal,
-    F: F,
-    acc: acc,
-    periodYears: periodYears,
-    ecc: orbElements.ecc,
-    energy: orbElements.energy
-  };
-}
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 3; controls.maxDistance = 60;
 
-/* ========== TRAIL ========== */
-function addTrailPoint() {
-  var speed = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy + sim.vz * sim.vz);
-  sim.trail.push({ x: sim.px, y: sim.py, z: sim.pz, speed: speed });
-  if (sim.trail.length > TRAIL_MAX) {
-    sim.trail.shift();
-  }
-}
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, ambient);
 
-function clearTrail() {
-  sim.trail = [];
-  var posAttr = trailGeometry.getAttribute('position');
-  var colAttr = trailGeometry.getAttribute('color');
-  for (var i = 0; i < TRAIL_MAX * 3; i++) {
-    posAttr.array[i] = 0;
-    colAttr.array[i] = 0;
-  }
-  posAttr.needsUpdate = true;
-  colAttr.needsUpdate = true;
-  trailGeometry.setDrawRange(0, 0);
-}
+// Grid (orbital plane reference)
+const gridHelper = new THREE.GridHelper(30, 30, 0x1e3a5f, 0x0f2840);
+scene.add(gridHelper);
 
-function updateTrailGeometry() {
-  var posAttr = trailGeometry.getAttribute('position');
-  var colAttr = trailGeometry.getAttribute('color');
-  var n = sim.trail.length;
+// Star (central body)
+const starGeo = new THREE.SphereGeometry(0.6, 32, 32);
+const starMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 1.5, roughness: 0.3 });
+const starMesh = new THREE.Mesh(starGeo, starMat);
+scene.add(starMesh);
 
-  var maxSpeed = 0;
-  var minSpeed = Infinity;
-  for (var i = 0; i < n; i++) {
-    if (sim.trail[i].speed > maxSpeed) maxSpeed = sim.trail[i].speed;
-    if (sim.trail[i].speed < minSpeed) minSpeed = sim.trail[i].speed;
-  }
-  var speedRange = maxSpeed - minSpeed;
-  if (speedRange < 0.001) speedRange = 1;
+// Star glow
+const glowGeo = new THREE.SphereGeometry(1.2, 32, 32);
+const glowMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.06, side: THREE.BackSide });
+scene.add(new THREE.Mesh(glowGeo, glowMat));
 
-  for (var i = 0; i < n; i++) {
-    var p = sim.trail[i];
-    posAttr.array[i * 3] = p.x;
-    posAttr.array[i * 3 + 1] = p.y;
-    posAttr.array[i * 3 + 2] = p.z;
+// Planet
+const planetGeo = new THREE.SphereGeometry(0.25, 24, 24);
+const planetMat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, emissive: 0x1d4ed8, emissiveIntensity: 0.4, roughness: 0.5 });
+const planetMesh = new THREE.Mesh(planetGeo, planetMat);
+scene.add(planetMesh);
 
-    var t = (p.speed - minSpeed) / speedRange;
-    /* slow=blue(0.23,0.51,0.98) fast=red(0.97,0.33,0.33) */
-    colAttr.array[i * 3] = 0.23 + t * 0.74;
-    colAttr.array[i * 3 + 1] = 0.51 - t * 0.18;
-    colAttr.array[i * 3 + 2] = 0.98 - t * 0.65;
-  }
+// Trail line
+const trailGeo = new THREE.BufferGeometry();
+const trailBuf = new THREE.BufferAttribute(new Float32Array(MAX_TRAIL * 3), 3);
+trailGeo.setAttribute('position', trailBuf);
+trailGeo.setDrawRange(0, 0);
+const trailMat = new THREE.LineBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.6, vertexColors: false });
+const trailLine = new THREE.Line(trailGeo, trailMat);
+scene.add(trailLine);
 
-  posAttr.needsUpdate = true;
-  colAttr.needsUpdate = true;
-  trailGeometry.setDrawRange(0, n);
-}
+let frameCount = 0;
 
-/* ========== PREDICTED ORBIT ========== */
-function updatePredictedOrbit() {
-  var pts = [];
-  var tempPx = sim.px, tempPy = sim.py, tempPz = sim.pz;
-  var tempVx = sim.vx, tempVy = sim.vy, tempVz = sim.vz;
-  var steps = 2000;
-  var dt = 0.005;
+// ─── Animation loop ───────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  let delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+  if (isPlaying) {
+    const simDt = delta * speedFactor * 0.05; // real seconds → simulation years
+    physicsUpdate(simDt);
 
-  for (var i = 0; i < steps; i++) {
-    var dx = -tempPx, dy = -tempPy, dz = -tempPz;
-    var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (dist < 0.05) break;
-    var GMn = sim.starMass / (dist * dist * dist);
-    tempVx += GMn * dx * dt;
-    tempVy += GMn * dy * dt;
-    tempVz += GMn * dz * dt;
-    tempPx += tempVx * dt;
-    tempPy += tempVy * dt;
-    tempPz += tempVz * dt;
+    // Record trail every 2 frames
+    if (frameCount % 2 === 0) recordTrail();
+    frameCount++;
 
-    if (i % 10 === 0) {
-      pts.push(new THREE.Vector3(tempPx, tempPy, tempPz));
+    planetMesh.position.set(px, 0, py);
+
+    // Update trail buffer (ordered)
+    let writeIdx = 0;
+    for (let i = 0; i < trailCount; i++) {
+      const readIdx = ((trailHead - trailCount + i + MAX_TRAIL) % MAX_TRAIL) * 3;
+      trailBuf.array[writeIdx++] = trailPositions[readIdx];
+      trailBuf.array[writeIdx++] = trailPositions[readIdx + 1];
+      trailBuf.array[writeIdx++] = trailPositions[readIdx + 2];
     }
-    if (dist > 50) break;
+    trailBuf.needsUpdate = true;
+    trailGeo.setDrawRange(0, trailCount);
+
+    updateDataPanel();
+  }
+  renderer.render(scene, camera);
+});
+
+// ─── Data panel ───────────────────────────────────────────────────────────────
+let keplerSamples = [];
+function updateDataPanel() {
+  const orb = getOrbitalElements();
+
+  // Orbit type
+  const badge = document.getElementById('orbitTypeBadge');
+  if (orb.e < 0.05) { badge.textContent = 'Circular'; badge.style.background='rgba(34,197,94,0.2)'; badge.style.color='#86efac'; }
+  else if (orb.e < 1.0) { badge.textContent = 'Elliptical'; badge.style.background='rgba(59,130,246,0.2)'; badge.style.color='#93c5fd'; }
+  else { badge.textContent = 'Hyperbolic'; badge.style.background='rgba(239,68,68,0.2)'; badge.style.color='#fca5a5'; }
+
+  const Tdisp = measuredPeriod ? measuredPeriod.toFixed(3) + ' yr' : (orb.T_theory < 1e5 ? '~' + orb.T_theory.toFixed(3) + ' yr' : '∞');
+  document.getElementById('dT').textContent = Tdisp;
+  document.getElementById('dA').textContent = orb.a < 1e5 ? orb.a.toFixed(3) + ' AU' : '∞';
+  document.getElementById('dE').textContent = orb.e.toFixed(4);
+  document.getElementById('dV').textContent = (orb.v * 29.78).toFixed(2) + ' km/s'; // AU/yr → km/s (* 29.78)
+  document.getElementById('dR').textContent = orb.r.toFixed(3) + ' AU';
+
+  // Kepler's 3rd: T²/a³ should = 4π²/GM (=1 for M_sun in our units)
+  if (orb.a < 1e5 && orb.T_theory > 0) {
+    const ratio = (orb.T_theory * orb.T_theory) / (orb.a * orb.a * orb.a);
+    document.getElementById('dKepler').textContent = ratio.toFixed(4) + ' yr²/AU³';
+  } else {
+    document.getElementById('dKepler').textContent = 'N/A';
   }
 
-  var posAttr = predictGeometry.getAttribute('position');
-  var count = Math.min(pts.length, 200);
-  for (var i = 0; i < count; i++) {
-    posAttr.array[i * 3] = pts[i].x;
-    posAttr.array[i * 3 + 1] = pts[i].y;
-    posAttr.array[i * 3 + 2] = pts[i].z;
-  }
-  posAttr.needsUpdate = true;
-  predictGeometry.setDrawRange(0, count);
-  predictLine.computeLineDistances();
+  // Energy bars
+  const KE = orb.KE, PE = orb.PE, Etot = orb.Etot;
+  const maxE = Math.max(Math.abs(KE), Math.abs(PE)) || 1;
+  document.getElementById('keBar').style.width = (Math.abs(KE) / maxE * 100).toFixed(1) + '%';
+  document.getElementById('peBar').style.width = (Math.abs(PE) / maxE * 100).toFixed(1) + '%';
+  document.getElementById('eBar').style.width = (Math.min(Math.abs(Etot) / maxE * 100, 100)).toFixed(1) + '%';
+  document.getElementById('keVal').textContent = KE.toFixed(4);
+  document.getElementById('peVal').textContent = PE.toFixed(4);
+  document.getElementById('eVal').textContent = Etot.toFixed(4);
 }
 
-/* ========== PRESETS ========== */
-var presets = {
-  earth: { starMass: 1, planetMass: 1, orbRadius: 1, initVel: 29.8 },
-  comet: { starMass: 1, planetMass: 0.1, orbRadius: 0.5, initVel: 45 },
-  escape: { starMass: 1, planetMass: 1, orbRadius: 1, initVel: 50 }
+// ─── Resize ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ─── Preset configs ────────────────────────────────────────────────────────────
+const presets = {
+  circular:   { speedMul: 1.00, centralMass: 1.0, initRad: 4.0, label: 'Circular Orbit' },
+  elliptical: { speedMul: 0.75, centralMass: 1.0, initRad: 4.0, label: 'Elliptical (e≈0.5)' },
+  escape:     { speedMul: 1.42, centralMass: 1.0, initRad: 4.0, label: 'Escape Trajectory' }
 };
 
-function loadPreset(name) {
-  var p = presets[name];
-  sim.starMass = p.starMass;
-  sim.planetMass = p.planetMass;
-  sim.orbRadius = p.orbRadius;
-  sim.initVel = p.initVel;
-
-  document.getElementById('starMass').value = p.starMass;
-  document.getElementById('planetMass').value = p.planetMass;
-  document.getElementById('orbRadius').value = p.orbRadius;
-  document.getElementById('initVel').value = p.initVel;
-
-  updateSliderDisplays();
-  initOrbit();
-  updatePredictedOrbit();
-
-  var btns = document.querySelectorAll('.btn-preset');
-  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
-  var activeBtn = document.getElementById('preset' + name.charAt(0).toUpperCase() + name.slice(1));
-  if (activeBtn) activeBtn.classList.add('active');
+function applyPreset(key) {
+  const p = presets[key];
+  speedMul = p.speedMul;
+  centralMass = p.centralMass;
+  initRad = p.initRad;
+  document.getElementById('sliderSpeedMul').value = speedMul;
+  document.getElementById('sliderCentralMass').value = centralMass;
+  document.getElementById('sliderInitRad').value = initRad;
+  document.getElementById('speedMulVal').textContent = speedMul.toFixed(2) + '×';
+  document.getElementById('centralMassVal').textContent = centralMass.toFixed(1);
+  document.getElementById('initRadVal').textContent = initRad.toFixed(1);
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-preset="' + key + '"]').classList.add('active');
+  initPlanet();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  showToast('Preset: ' + p.label);
 }
 
-function randomize() {
-  sim.starMass = 0.1 + Math.random() * 9.9;
-  sim.planetMass = 0.1 + Math.random() * 99.9;
-  sim.orbRadius = 0.2 + Math.random() * 4.8;
-  var vCirc = circularVelocity(sim.starMass, sim.orbRadius);
-  sim.initVel = vCirc * (0.5 + Math.random() * 1.2);
+// ─── UI wiring ────────────────────────────────────────────────────────────────
+document.getElementById('sliderSpeedMul').addEventListener('input', function() {
+  speedMul = parseFloat(this.value);
+  document.getElementById('speedMulVal').textContent = speedMul.toFixed(2) + '×';
+  initPlanet();
+});
 
-  sim.starMass = Math.round(sim.starMass * 10) / 10;
-  sim.planetMass = Math.round(sim.planetMass * 2) / 2;
-  sim.orbRadius = Math.round(sim.orbRadius * 10) / 10;
-  sim.initVel = Math.round(sim.initVel * 2) / 2;
-  sim.initVel = Math.min(50, Math.max(0, sim.initVel));
+document.getElementById('sliderCentralMass').addEventListener('input', function() {
+  centralMass = parseFloat(this.value);
+  document.getElementById('centralMassVal').textContent = centralMass.toFixed(1);
+  initPlanet();
+});
 
-  document.getElementById('starMass').value = sim.starMass;
-  document.getElementById('planetMass').value = sim.planetMass;
-  document.getElementById('orbRadius').value = sim.orbRadius;
-  document.getElementById('initVel').value = sim.initVel;
+document.getElementById('sliderInitRad').addEventListener('input', function() {
+  initRad = parseFloat(this.value);
+  document.getElementById('initRadVal').textContent = initRad.toFixed(1);
+  initPlanet();
+});
 
-  updateSliderDisplays();
-  initOrbit();
-  updatePredictedOrbit();
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    speedFactor = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + this.dataset.speed + 'x');
+  });
+});
 
-  var btns = document.querySelectorAll('.btn-preset');
-  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
-}
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', function() { applyPreset(this.dataset.preset); });
+});
 
-/* ========== CONTROLS ========== */
-function togglePlay() {
-  sim.running = !sim.running;
-  var btn = document.getElementById('btnPlay');
-  if (sim.running) {
-    btn.textContent = 'Pause';
-    btn.className = 'btn btn-pause';
-  } else {
-    btn.textContent = 'Play';
-    btn.className = 'btn btn-play';
+document.getElementById('btnPlay').addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  this.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+  showToast(isPlaying ? 'Playing' : 'Paused');
+});
+
+document.getElementById('btnReset').addEventListener('click', function() {
+  initPlanet(); isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  showToast('Simulation reset');
+});
+
+document.getElementById('btnClearTrail').addEventListener('click', function() {
+  trailHead = 0; trailCount = 0;
+  trailGeo.setDrawRange(0, 0);
+  showToast('Trail cleared');
+});
+
+document.getElementById('toggleSidebar').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.getElementById('btnAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.remove('hidden');
+});
+document.getElementById('closeAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.add('hidden');
+});
+
+document.getElementById('closeQuiz').addEventListener('click', function() {
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('showQuiz').classList.remove('hidden');
+});
+document.getElementById('showQuiz').addEventListener('click', function() {
+  document.getElementById('quizPanel').classList.remove('hidden');
+  this.classList.add('hidden');
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btnPlay').click(); }
+  if (e.code === 'KeyR') { document.getElementById('btnReset').click(); }
+  if (e.code === 'KeyC') { document.getElementById('btnClearTrail').click(); }
+  if (e.code === 'Digit1') document.querySelector('[data-speed="0.25"]').click();
+  if (e.code === 'Digit2') document.querySelector('[data-speed="0.5"]').click();
+  if (e.code === 'Digit3') document.querySelector('[data-speed="1"]').click();
+  if (e.code === 'Digit4') document.querySelector('[data-speed="2"]').click();
+  if (e.code === 'Digit5') document.querySelector('[data-speed="3"]').click();
+  if (e.code === 'KeyQ') applyPreset('circular');
+  if (e.code === 'KeyW') applyPreset('elliptical');
+  if (e.code === 'KeyE') applyPreset('escape');
+});
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "A planet orbits at 4 AU from its star with period T. Another planet orbits at 16 AU. What is the second planet's period?",
+    opts: ['2T', '4T', '8T', '16T'],
+    correct: 2,
+    explanation: "Kepler's 3rd: T² ∝ a³. Ratio: (T₂/T₁)² = (16/4)³ = 4³ = 64, so T₂/T₁ = 8. Period = 8T.",
+    praise: "Excellent! T² ∝ a³ means T scales as a^(3/2). Quadrupling the radius multiplies T by 4^(3/2) = 8."
+  },
+  {
+    q: "When a planet is at perihelion (closest to star), which statement is correct?",
+    opts: ['Speed is minimum, PE is maximum', 'Speed is maximum, KE is maximum', 'Total energy is at its highest', 'Angular momentum is at its highest'],
+    correct: 1,
+    explanation: "At perihelion r is smallest, PE = −GMm/r is most negative (lowest), so KE must be highest to keep total E constant. Thus speed is maximum. Total energy and angular momentum are always conserved throughout the orbit.",
+    praise: "Correct! Conservation of energy: when PE is lowest (closest approach), KE is highest. Conservation of angular momentum requires faster speed at perihelion."
+  },
+  {
+    q: "If you increase a planet's orbital speed just above √2 × v_circular, the orbit becomes:",
+    opts: ['A wider ellipse', 'A perfect circle at larger radius', 'Hyperbolic — the planet escapes', 'Parabolic — the planet barely escapes'],
+    correct: 2,
+    explanation: "v_esc = √2 · v_circ is the parabolic escape threshold. Just above that means total energy E > 0, giving a hyperbolic trajectory. The planet escapes with remaining kinetic energy.",
+    praise: "Right! v > v_esc means E = KE + PE > 0 → hyperbolic escape orbit. At exactly v_esc, the orbit is parabolic (E = 0 exactly)."
   }
-}
+];
 
-function resetSim() {
-  sim.running = false;
-  var btn = document.getElementById('btnPlay');
-  btn.textContent = 'Play';
-  btn.className = 'btn btn-play';
-  readSliders();
-  initOrbit();
-  updatePredictedOrbit();
-}
-
-function readSliders() {
-  sim.starMass = parseFloat(document.getElementById('starMass').value);
-  sim.planetMass = parseFloat(document.getElementById('planetMass').value);
-  sim.orbRadius = parseFloat(document.getElementById('orbRadius').value);
-  sim.initVel = parseFloat(document.getElementById('initVel').value);
-  updateSliderDisplays();
-}
-
-function updateSliderDisplays() {
-  document.getElementById('starMassVal').textContent = sim.starMass.toFixed(1) + ' M\u2609';
-  document.getElementById('planetMassVal').textContent = sim.planetMass.toFixed(1) + ' M\u2295';
-  document.getElementById('orbRadiusVal').textContent = sim.orbRadius.toFixed(1) + ' AU';
-  document.getElementById('initVelVal').textContent = sim.initVel.toFixed(1) + ' km/s';
-}
-
-/* Slider event listeners */
-var sliders = ['starMass', 'planetMass', 'orbRadius', 'initVel'];
-for (var s = 0; s < sliders.length; s++) {
-  (function(id) {
-    document.getElementById(id).addEventListener('input', function() {
-      readSliders();
-      if (!sim.running) {
-        initOrbit();
-        updatePredictedOrbit();
-      }
+function buildQuiz() {
+  const cont = document.getElementById('quizContainer');
+  cont.innerHTML = '';
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'mb-4';
+    div.innerHTML = `<p class="text-xs font-semibold text-slate-200 mb-2">Q${qi+1}: ${q.q}</p>`;
+    q.opts.forEach((opt, oi) => {
+      const btn = document.createElement('div');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', function() {
+        if (div.dataset.answered) return;
+        div.dataset.answered = '1';
+        div.querySelectorAll('.quiz-option').forEach((b, i) => {
+          if (i === q.correct) b.classList.add('correct');
+          else if (i === oi && oi !== q.correct) b.classList.add('incorrect');
+        });
+        const fb = document.createElement('div');
+        fb.className = 'quiz-feedback ' + (oi === q.correct ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300');
+        fb.textContent = oi === q.correct ? q.praise : '💡 ' + q.explanation;
+        div.appendChild(fb);
+      });
+      div.appendChild(btn);
     });
-  })(sliders[s]);
+    cont.appendChild(div);
+  });
 }
 
-/* ========== UI UPDATES ========== */
-function updateDisplays(real) {
-  document.getElementById('forceDisplay').textContent = formatSci(real.F, 'N');
-  document.getElementById('velDisplay').textContent = real.vKms.toFixed(1) + ' km/s';
-  document.getElementById('distDisplay').textContent = real.rAU.toFixed(2) + ' AU';
-  document.getElementById('energyDisplay').textContent = real.energy >= 0 ? 'UNBOUND' : 'BOUND';
-
-  if (real.periodYears === Infinity || isNaN(real.periodYears)) {
-    document.getElementById('periodDisplay').textContent = '\u221e';
-  } else {
-    document.getElementById('periodDisplay').textContent = real.periodYears.toFixed(2) + ' yr';
-  }
-
-  var eccText = real.ecc > 10 ? '> 1 (hyper)' : real.ecc.toFixed(3);
-  document.getElementById('eccDisplay').textContent = eccText;
-
-  var badge = document.getElementById('orbitTypeBadge');
-  if (real.energy >= 0) {
-    badge.textContent = 'HYPERBOLIC / ESCAPE';
-    badge.className = 'orbit-type-badge orbit-hyperbolic';
-  } else if (real.ecc < 0.05) {
-    badge.textContent = 'CIRCULAR';
-    badge.className = 'orbit-type-badge orbit-circular';
-  } else {
-    badge.textContent = 'ELLIPTICAL (e=' + real.ecc.toFixed(2) + ')';
-    badge.className = 'orbit-type-badge orbit-elliptical';
-  }
-
-  document.getElementById('olVel').textContent = 'v = ' + real.vKms.toFixed(1) + ' km/s';
-  document.getElementById('olAcc').textContent = 'a = ' + formatSci(real.acc, 'm/s\u00B2');
-  document.getElementById('olForce').textContent = 'F = ' + formatSci(real.F, 'N');
+// ─── KaTeX ────────────────────────────────────────────────────────────────────
+function renderFormulas() {
+  katex.render('T^2 = \\dfrac{4\\pi^2}{GM} a^3', document.getElementById('f1'), { displayMode: true, throwOnError: false });
+  katex.render('v_c = \\sqrt{\\dfrac{GM}{r}}', document.getElementById('f2'), { displayMode: true, throwOnError: false });
+  katex.render('e = \\sqrt{1 + \\dfrac{2EL^2}{G^2M^2m^3}}', document.getElementById('f3'), { displayMode: true, throwOnError: false });
+  katex.render('E = -\\dfrac{GMm}{2a}', document.getElementById('f4'), { displayMode: true, throwOnError: false });
 }
 
-function formatSci(val, unit) {
-  if (val === 0) return '0 ' + unit;
-  var exp = Math.floor(Math.log10(Math.abs(val)));
-  if (Math.abs(exp) < 4) return val.toFixed(2) + ' ' + unit;
-  var mantissa = val / Math.pow(10, exp);
-  return mantissa.toFixed(2) + 'e' + exp + ' ' + unit;
-}
-
-/* ========== RENDER LOOP ========== */
-var frameCount = 0;
-var lastFpsTime = performance.now();
-var fpsVal = 60;
-var prevTime = 0;
-var trailTimer = 0;
-
-function animate(timestamp) {
-  if (!prevTime) prevTime = timestamp;
-  var rawDt = (timestamp - prevTime) / 1000;
-  prevTime = timestamp;
-
-  var dt = Math.min(rawDt, 0.02);
-
-  /* FPS counter */
-  frameCount++;
-  if (timestamp - lastFpsTime > 500) {
-    fpsVal = Math.round(frameCount / ((timestamp - lastFpsTime) / 1000));
-    document.getElementById('fpsDisplay').textContent = fpsVal + ' FPS';
-    frameCount = 0;
-    lastFpsTime = timestamp;
-  }
-
-  /* Physics steps */
-  if (sim.running) {
-    var physDt = 0.004;
-    var steps = Math.floor(dt / physDt);
-    steps = Math.min(steps, 10);
-    for (var i = 0; i < steps; i++) {
-      simStep(physDt);
-    }
-
-    trailTimer += dt;
-    if (trailTimer > 0.02) {
-      addTrailPoint();
-      trailTimer = 0;
-    }
-    updateTrailGeometry();
-  }
-
-  /* Update 3D objects */
-  var starScale = 0.3 + sim.starMass * 0.15;
-  starMesh.scale.setScalar(starScale);
-  starGlow.scale.setScalar(starScale * 5);
-  starLight.intensity = 1.5 + sim.starMass * 0.5;
-
-  var planetScale = 0.12 + Math.min(sim.planetMass, 50) * 0.004;
-  planetMesh.scale.setScalar(planetScale);
-  planetMesh.position.set(sim.px, sim.py, sim.pz);
-
-  /* Velocity arrow */
-  var vLen = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy + sim.vz * sim.vz);
-  if (vLen > 0.001) {
-    var vDir = new THREE.Vector3(sim.vx, sim.vy, sim.vz).normalize();
-    velArrow.setDirection(vDir);
-    velArrow.setLength(Math.min(vLen * 0.6, 3), 0.15, 0.08);
-    velArrow.position.set(sim.px, sim.py, sim.pz);
-    velArrow.visible = true;
-  } else {
-    velArrow.visible = false;
-  }
-
-  /* Acceleration arrow */
-  var dx = -sim.px, dy = -sim.py, dz = -sim.pz;
-  var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-  if (dist > 0.05) {
-    var aDir = new THREE.Vector3(dx, dy, dz).normalize();
-    var aMag = sim.starMass / (dist * dist);
-    accArrow.setDirection(aDir);
-    accArrow.setLength(Math.min(aMag * 0.8, 2.5), 0.15, 0.08);
-    accArrow.position.set(sim.px, sim.py, sim.pz);
-    accArrow.visible = true;
-  } else {
-    accArrow.visible = false;
-  }
-
-  /* Star color temperature based on mass */
-  var temp = sim.starMass;
-  if (temp < 0.5) {
-    starMesh.material.color.setHex(0xff6644);
-    starMesh.material.emissive.setHex(0xff4422);
-  } else if (temp < 2) {
-    starMesh.material.color.setHex(0xfff4e0);
-    starMesh.material.emissive.setHex(0xffaa33);
-  } else if (temp < 5) {
-    starMesh.material.color.setHex(0xffffff);
-    starMesh.material.emissive.setHex(0xccddff);
-  } else {
-    starMesh.material.color.setHex(0xaaccff);
-    starMesh.material.emissive.setHex(0x6688ff);
-  }
-
-  /* Update displays */
-  var orb = getOrbitalElements();
-  var real = toRealUnits(orb);
-  updateDisplays(real);
-
-  controls.update();
-
-  try {
-    renderer.render(scene, camera);
-  } catch (e) {
-    console.error('Render error:', e);
-  }
-}
-
-renderer.setAnimationLoop(animate);
-
-/* ========== RESIZE ========== */
-function onResize() {
-  var w = wrap.clientWidth;
-  var h = wrap.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-}
-window.addEventListener('resize', onResize);
-
-/* ========== KATEX FORMULAS ========== */
-try {
-  katex.render('F = G \\frac{m_1 m_2}{r^2}', document.getElementById('formulaF'), { displayMode: true, throwOnError: false });
-  katex.render('v_{\\text{orbit}} = \\sqrt{\\frac{GM}{r}}', document.getElementById('formulaV'), { displayMode: true, throwOnError: false });
-  katex.render('T^2 = \\frac{4\\pi^2}{GM} \\, r^3', document.getElementById('formulaT'), { displayMode: true, throwOnError: false });
-} catch (e) {
-  console.error('KaTeX rendering error:', e);
-}
-
-/* ========== INIT ========== */
-readSliders();
-initOrbit();
-updatePredictedOrbit();
+// ─── Init ──────────────────────────────────────────────────────────────────────
+renderFormulas();
+buildQuiz();
+initPlanet();
+showToast('Gravity & Orbits loaded — try the presets!');
 </script>
+<div style="display:none">Generated by AetherViz Master — watch Kepler's laws emerge from Newton's gravity.</div>
 </body>
 </html>

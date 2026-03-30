@@ -1,456 +1,702 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DNA Replication (Detailed) — Scivra AP Biology</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;display:flex}
-    #sim-canvas{flex:1;display:block}
-    #sidebar{width:320px;min-width:320px;height:100vh;display:flex;flex-direction:column;gap:10px;padding:14px;overflow-y:auto;background:rgba(15,23,42,0.95)}
-    .panel{background:rgba(15,23,42,0.9);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:14px;backdrop-filter:blur(8px)}
-    h1{font-size:1rem;color:#d9f99d;font-weight:700;margin-bottom:4px}
-    .badge{display:inline-block;font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
-    .badge-subject{background:rgba(132,204,22,0.3);color:#d9f99d}
-    .badge-free{background:rgba(34,197,94,0.25);color:#86efac}
-    .slider-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
-    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
-    .slider-row input[type=range]{width:100%;accent-color:#84cc16;height:4px}
-    button{background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;margin:3px 3px 3px 0;transition:all 0.2s}
-    button:hover{background:rgba(132,204,22,0.25)}
-    button.active{background:rgba(132,204,22,0.35);border-color:#84cc16}
-    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-    .data-val{color:#a3e635;font-weight:600;font-family:'JetBrains Mono',monospace}
-    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
-    .section-title{font-size:0.75rem;color:#d9f99d;font-weight:600;margin-bottom:6px}
-    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-    .legend-item{display:flex;align-items:center;gap:4px;font-size:0.62rem;color:#94a3b8}
-    .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .enzyme-list{margin-top:6px}
-    .enzyme-item{display:flex;align-items:center;gap:6px;font-size:0.65rem;color:#94a3b8;padding:2px 0}
-    .enzyme-color{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Replication Fork — AP Biology</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg, #0F172A 0%, #064E3B 50%, #065F46 100%);
+    color: #f1f5f9; font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; }
+  .glass-dark { background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; }
+  .btn-primary { background: linear-gradient(135deg,#10B981,#059669); color:#fff; border:none; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:13px; transition:all .2s; }
+  .btn-primary:hover { filter:brightness(1.15); transform:translateY(-1px); }
+  .btn-speed { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#10B981; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:12px; transition:all .2s; }
+  .btn-speed.active,.btn-speed:hover { background:rgba(16,185,129,0.35); }
+  .btn-preset { background:rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.35); color:#22D3EE; border-radius:7px; padding:5px 12px; cursor:pointer; font-size:12px; transition:all .2s; }
+  .btn-preset.active,.btn-preset:hover { background:rgba(34,211,238,0.28); }
+  input[type=range] { accent-color:#10B981; width:100%; }
+  .data-overlay { position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.82); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:10px 14px; font-size:12px; line-height:1.8; pointer-events:none; }
+  .toast-container { position:fixed; top:70px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+  .toast { background:rgba(16,185,129,0.9); color:#fff; padding:10px 18px; border-radius:9px; font-size:13px; animation:slideIn .3s ease; }
+  @keyframes slideIn { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10000; display:none; align-items:center; justify-content:center; }
+  .modal-bg.open { display:flex; }
+  .quiz-option { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; padding:7px 12px; cursor:pointer; font-size:13px; transition:all .2s; margin-bottom:5px; }
+  .quiz-option:hover { background:rgba(16,185,129,0.2); }
+  .quiz-option.correct { background:rgba(16,185,129,0.35); border-color:#10B981; }
+  .quiz-option.wrong { background:rgba(239,68,68,0.3); border-color:#ef4444; }
+  #sidebar { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(16,185,129,0.4) transparent; }
+  .enzyme-tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; margin:2px; }
+  .enzyme-helicase { background:rgba(251,191,36,0.2); color:#fbbf24; border:1px solid rgba(251,191,36,0.4); }
+  .enzyme-primase { background:rgba(34,211,238,0.2); color:#22D3EE; border:1px solid rgba(34,211,238,0.4); }
+  .enzyme-polIII { background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4); }
+  .enzyme-ligase { background:rgba(248,113,113,0.2); color:#f87171; border:1px solid rgba(248,113,113,0.4); }
+  .enzyme-SSB { background:rgba(167,139,250,0.2); color:#a78bfa; border:1px solid rgba(167,139,250,0.4); }
+</style>
 </head>
 <body>
-<canvas id="sim-canvas"></canvas>
-<div id="sidebar">
-  <div class="panel">
-    <h1>DNA Replication <span class="badge badge-subject">AP BIOLOGY</span><span class="badge badge-free">FREE</span></h1>
-    <p style="font-size:0.68rem;color:#94a3b8;margin-top:4px">Semi-conservative replication at the replication fork</p>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Template 3'&#8594;5'</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Template 5'&#8594;3'</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>New strand</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>RNA Primer</div>
+<nav style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(16,185,129,0.3);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100;flex-shrink:0;">
+  <div>
+    <div style="font-size:18px;font-weight:700;color:#10B981;">DNA Replication Fork</div>
+    <div style="font-size:12px;color:#64748b;">Helicase · Primase · Pol III · Leading & Lagging Strands · AP Biology</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-primary" id="btnReset">↺ Reset</button>
+    <button class="btn-primary" id="btnFullscreen">⛶ Fullscreen</button>
+    <button class="btn-primary" id="btnAbout">? About</button>
+  </div>
+</nav>
+
+<div style="display:flex;flex:1;overflow:hidden;">
+  <aside id="sidebar" style="width:30%;background:rgba(15,23,42,0.92);border-right:1px solid rgba(16,185,129,0.2);padding:16px;overflow-y:auto;flex-shrink:0;">
+
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#10B981;margin-bottom:10px;">Key Formulas</div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:5px;">Okazaki fragment size (prokaryotes):</div>
+      <div id="formula-ok" style="padding:4px 0;">\(\text{~1000–2000 nt (prokaryotes)}, \text{~100–200 nt (eukaryotes)}\)</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:10px;margin-bottom:5px;">E. coli replication rate:</div>
+      <div id="formula-rate" style="padding:4px 0;">\(\approx 1000\,\text{bp/s}\)</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:10px;margin-bottom:5px;">Error rate (with proofreading):</div>
+      <div id="formula-err" style="padding:4px 0;">\(\epsilon \approx 10^{-9} \text{ per bp per replication}\)</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:10px;margin-bottom:5px;">Total E. coli genome:</div>
+      <div id="formula-genome" style="padding:4px 0;">\(4.6 \times 10^6 \text{ bp}, \text{ completed in ~40 min}\)</div>
+    </div>
+
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#22D3EE;margin-bottom:8px;">Enzyme Roles</div>
+      <div style="margin-bottom:8px;">
+        <span class="enzyme-tag enzyme-helicase">Helicase</span>
+        <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">Unwinds the double helix by breaking hydrogen bonds. Moves ahead of the replication fork, using ATP.</div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <span class="enzyme-tag enzyme-SSB">SSB Proteins</span>
+        <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">Single-strand binding proteins stabilize separated template strands, preventing re-annealing.</div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <span class="enzyme-tag enzyme-primase">Primase</span>
+        <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">Synthesizes short RNA primers (5–10 nt). DNA Pol III cannot initiate de novo — needs a 3'-OH.</div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <span class="enzyme-tag enzyme-polIII">DNA Pol III</span>
+        <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">Main replicase. Adds dNTPs 5'→3'. Also has 3'→5' exonuclease (proofreading). ~1000 bp/s in E. coli.</div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <span class="enzyme-tag enzyme-ligase">DNA Ligase</span>
+        <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">Seals nicks between Okazaki fragments after primers replaced by DNA Pol I. Uses NAD+ (prokaryotes).</div>
+      </div>
+    </div>
+
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#22D3EE;margin-bottom:8px;">Leading vs. Lagging</div>
+      <div style="font-size:12px;color:#cbd5e1;line-height:1.7;">
+        <strong style="color:#10B981;">Leading strand</strong> (3'→5' template): synthesized continuously in same direction as fork movement. One primer needed.<br><br>
+        <strong style="color:#22D3EE;">Lagging strand</strong> (5'→3' template): synthesized discontinuously as Okazaki fragments, each requiring its own primer. Fragments are later joined by ligase after primer removal.
+      </div>
+    </div>
+
+    <div class="glass-dark" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#f97316;margin-bottom:8px;">Why It Matters</div>
+      <ul style="font-size:12px;color:#cbd5e1;line-height:1.8;padding-left:16px;">
+        <li>Semiconservative replication (Meselson-Stahl 1958) — each daughter cell gets one original strand</li>
+        <li>Primer requirement explains why DNA can't start fresh — critical for understanding telomere shortening</li>
+        <li>Antibiotic drugs (quinolones) target topoisomerase II (gyrase) to halt replication ahead of helicase</li>
+        <li>Cancer drugs (hydroxyurea) inhibit ribonucleotide reductase, blocking dNTP supply</li>
+      </ul>
+    </div>
+
+    <div class="glass-dark" style="padding:14px;">
+      <div style="font-size:13px;font-weight:600;color:#10B981;margin-bottom:10px;">Predict & Apply</div>
+      <div id="quiz-container"></div>
+    </div>
+  </aside>
+
+  <div id="canvas-container" style="width:70%;position:relative;flex:1;">
+    <div class="data-overlay" id="data-overlay">
+      <div>Fork position: <span id="ov-fork" style="color:#10B981;">0</span> bp</div>
+      <div>Leading strand: <span id="ov-lead" style="color:#22D3EE;">Synthesizing</span></div>
+      <div>Okazaki count: <span id="ov-ok" style="color:#4ade80;">0</span></div>
+      <div>Primers placed: <span id="ov-primers" style="color:#fbbf24;">0</span></div>
+      <div>Errors introduced: <span id="ov-errors" style="color:#f87171;">0</span></div>
+      <div>Ligase events: <span id="ov-ligase" style="color:#a78bfa;">0</span></div>
     </div>
   </div>
-  <div class="panel">
-    <div class="section-title">Controls</div>
-    <div class="slider-row">
-      <label>Speed <span id="speed-val">1.0</span>x</label>
-      <input type="range" id="speed-slider" min="0.2" max="3" step="0.2" value="1">
+</div>
+
+<div style="background:rgba(6,78,59,0.75);backdrop-filter:blur(10px);border-top:1px solid rgba(16,185,129,0.25);padding:10px 20px;flex-shrink:0;">
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <div style="display:flex;gap:16px;align-items:center;flex:1;min-width:300px;">
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;"><label style="font-size:12px;color:#94a3b8;">Replication Speed</label><span style="font-size:12px;color:#10B981;" id="lbl-repspeed">1.0</span></div>
+        <input type="range" id="sl-repspeed" min="0.2" max="4" step="0.1" value="1.0">
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;"><label style="font-size:12px;color:#94a3b8;">Error Rate</label><span style="font-size:12px;color:#f87171;" id="lbl-errrate">0</span></div>
+        <input type="range" id="sl-errrate" min="0" max="5" step="1" value="0">
+      </div>
     </div>
-    <div style="margin-top:4px">
-      <button id="btn-play" class="active">&#9654; Play</button>
-      <button id="btn-pause">&#9208; Pause</button>
-      <button id="btn-reset">&#8634; Reset</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" id="btnPlay">⏸ Pause</button>
+      <button class="btn-primary" id="btnStep">⏩ Step</button>
+    </div>
+    <div style="display:flex;gap:4px;">
+      <button class="btn-speed" data-speed="0.25">0.25x</button>
+      <button class="btn-speed" data-speed="0.5">0.5x</button>
+      <button class="btn-speed active" data-speed="1">1x</button>
+      <button class="btn-speed" data-speed="2">2x</button>
+      <button class="btn-speed" data-speed="3">3x</button>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-preset active" data-preset="normal">Normal Replication</button>
+      <button class="btn-preset" data-preset="blocked">Helicase Blocked</button>
+      <button class="btn-preset" data-preset="error">Pol III Error (no proofreading)</button>
     </div>
   </div>
-  <div class="panel">
-    <div class="section-title">Enzymes</div>
-    <div class="enzyme-list">
-      <div class="enzyme-item"><div class="enzyme-color" style="background:#f59e0b"></div>Helicase — unwinds double helix</div>
-      <div class="enzyme-item"><div class="enzyme-color" style="background:#ec4899"></div>Primase — synthesizes RNA primers</div>
-      <div class="enzyme-item"><div class="enzyme-color" style="background:#22c55e"></div>DNA Pol III — extends new strand 5'&#8594;3'</div>
-      <div class="enzyme-item"><div class="enzyme-color" style="background:#6366f1"></div>Ligase — joins Okazaki fragments</div>
-    </div>
-  </div>
-  <div class="panel">
-    <div class="section-title">Replication Data</div>
-    <div class="data-row">Fork position <span class="data-val" id="d-fork">0</span> bp</div>
-    <div class="data-row">Leading strand <span class="data-val" id="d-leading">0</span> bp</div>
-    <div class="data-row">Okazaki fragments <span class="data-val" id="d-okazaki">0</span></div>
-    <div class="data-row">Primers placed <span class="data-val" id="d-primers">0</span></div>
-    <div class="data-row">Ligase joins <span class="data-val" id="d-ligase">0</span></div>
-    <div class="data-row">Speed <span class="data-val" id="d-speed">1000</span> bp/s</div>
-  </div>
-  <div class="panel">
-    <div class="katex-wrap" id="f1"></div>
-    <div class="katex-wrap" id="f2"></div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="modal-bg" id="aboutModal">
+  <div class="glass-dark" style="padding:28px;max-width:480px;width:90%;">
+    <div style="font-size:16px;font-weight:700;color:#10B981;margin-bottom:14px;">Keyboard Shortcuts</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+      <tr><td style="padding:5px 10px;color:#22D3EE;">Space</td><td style="color:#cbd5e1;">Play / Pause replication</td></tr>
+      <tr><td style="padding:5px 10px;color:#22D3EE;">R</td><td style="color:#cbd5e1;">Reset fork to start</td></tr>
+      <tr><td style="padding:5px 10px;color:#22D3EE;">1–5</td><td style="color:#cbd5e1;">Set speed 0.25x–3x</td></tr>
+    </table>
+    <div style="margin-top:14px;font-size:12px;color:#64748b;">Built with Three.js r134 · Scivra 2026</div>
+    <button class="btn-primary" style="margin-top:14px;" id="closeAbout">Close</button>
   </div>
 </div>
 
 <script>
-const canvas = document.getElementById('sim-canvas');
-const ctx = canvas.getContext('2d');
-let W, H;
-function resize() {
-  W = canvas.clientWidth; H = canvas.clientHeight;
-  canvas.width = W * devicePixelRatio;
-  canvas.height = H * devicePixelRatio;
-  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-}
-resize();
-window.addEventListener('resize', resize);
-
-katex.render("5' \\to 3' \\text{ (synthesis direction)}", document.getElementById('f1'), {displayMode:false});
-katex.render("\\text{Leading: continuous} \\quad \\text{Lagging: Okazaki fragments}", document.getElementById('f2'), {displayMode:false});
-
-let speed = 1, playing = true;
-let forkX = 0; // 0 to 1 progress
-let leadingLen = 0;
-let okazakiFragments = [];
-let primers = [];
-let ligaseJoins = 0;
-let primerCount = 0;
-let lastOkazakiEnd = 0;
-const OKAZAKI_LEN = 0.08;
-const PRIMER_LEN = 0.015;
-
-// DNA base pair colors
-const baseColors = { A: '#f87171', T: '#60a5fa', G: '#fbbf24', C: '#4ade80' };
-const complement = { A: 'T', T: 'A', G: 'C', C: 'G' };
-
-// Generate template sequence
-const templateBases = [];
-const bases = ['A', 'T', 'G', 'C'];
-for (let i = 0; i < 200; i++) {
-  templateBases.push(bases[Math.floor(Math.random() * 4)]);
-}
-
-document.getElementById('speed-slider').oninput = function() {
-  speed = +this.value;
-  document.getElementById('speed-val').textContent = speed.toFixed(1);
-};
-document.getElementById('btn-play').onclick = function() {
-  playing = true;
-  this.classList.add('active');
-  document.getElementById('btn-pause').classList.remove('active');
-};
-document.getElementById('btn-pause').onclick = function() {
-  playing = false;
-  this.classList.add('active');
-  document.getElementById('btn-play').classList.remove('active');
-};
-document.getElementById('btn-reset').onclick = function() {
-  forkX = 0; leadingLen = 0; okazakiFragments = []; primers = [];
-  ligaseJoins = 0; primerCount = 0; lastOkazakiEnd = 0;
-  playing = true;
-  document.getElementById('btn-play').classList.add('active');
-  document.getElementById('btn-pause').classList.remove('active');
-  updateUI();
-};
-
-function updateUI() {
-  document.getElementById('d-fork').textContent = Math.floor(forkX * 1000);
-  document.getElementById('d-leading').textContent = Math.floor(leadingLen * 1000);
-  document.getElementById('d-okazaki').textContent = okazakiFragments.length;
-  document.getElementById('d-primers').textContent = primerCount;
-  document.getElementById('d-ligase').textContent = ligaseJoins;
-  document.getElementById('d-speed').textContent = Math.floor(speed * 1000);
-}
-
-function drawHelixSegment(x1, x2, y, strandGap, isUnwound, topColor, botColor) {
-  const segments = Math.max(1, Math.floor((x2 - x1) / 4));
-  for (let i = 0; i < segments; i++) {
-    const t = i / segments;
-    const x = x1 + (x2 - x1) * t;
-    if (isUnwound) {
-      // Separated strands
-      ctx.fillStyle = topColor;
-      ctx.beginPath();
-      ctx.arc(x, y - strandGap, 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = botColor;
-      ctx.beginPath();
-      ctx.arc(x, y + strandGap, 2, 0, Math.PI * 2);
-      ctx.fill();
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this;
+  var state = -1;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1;
+  var target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button === 0) { state = 0; rotateStart.set(e.clientX, e.clientY); }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', function() { state = -1; document.removeEventListener('mousemove', onMouseMove); });
+  });
+  function onMouseMove(e) {
+    if (!scope.enabled || state !== 0) return;
+    rotateEnd.set(e.clientX, e.clientY);
+    rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+    sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+    rotateStart.copy(rotateEnd);
+  }
+  domElement.addEventListener('wheel', function(e) {
+    if (!scope.enabled) return; e.preventDefault();
+    scale *= (e.deltaY > 0) ? 1.1 : 0.9;
+  }, { passive: false });
+  domElement.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) { state = 0; rotateStart.set(e.touches[0].clientX, e.touches[0].clientY); }
+  });
+  domElement.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1 && state === 0) {
+      rotateEnd.set(e.touches[0].clientX, e.touches[0].clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(0.005);
+      sphericalDelta.theta -= rotateDelta.x; sphericalDelta.phi -= rotateDelta.y;
+      rotateStart.copy(rotateEnd);
+    }
+  });
+  this.update = function() {
+    var offset = new THREE.Vector3();
+    var quat = new THREE.Quaternion().setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+    var quatInverse = quat.clone().invert();
+    offset.copy(camera.position).sub(target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    if (scope.enableDamping) {
+      spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+      spherical.phi += sphericalDelta.phi * scope.dampingFactor;
     } else {
-      // Double helix
-      const wave = Math.sin((x / 12) + Date.now() / 3000) * 6;
-      ctx.fillStyle = topColor;
-      ctx.beginPath();
-      ctx.arc(x, y + wave, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = botColor;
-      ctx.beginPath();
-      ctx.arc(x, y - wave, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      // Base pair rungs
-      if (i % 3 === 0) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(x, y + wave);
-        ctx.lineTo(x, y - wave);
-        ctx.stroke();
-      }
+      spherical.theta += sphericalDelta.theta;
+      spherical.phi += sphericalDelta.phi;
     }
-  }
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius * scale));
+    if (scope.enableDamping) { sphericalDelta.theta *= (1-scope.dampingFactor); sphericalDelta.phi *= (1-scope.dampingFactor); }
+    else { sphericalDelta.set(0,0,0); }
+    scale = 1;
+    offset.setFromSpherical(spherical).applyQuaternion(quatInverse);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+  };
+  this.dispose = function() {};
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const simState = {
+  playing: true, speed: 1.0, repSpeed: 1.0, errorRate: 0,
+  forkPos: 0, maxFork: 60, okazakiCount: 0, primerCount: 0,
+  ligaseCount: 0, errorCount: 0,
+  helicaseBlocked: false, noProofreading: false,
+  totalAngle: 0
+};
+
+function showToast(msg) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; c.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
 }
 
-function draw() {
-  ctx.clearRect(0, 0, W, H);
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.1, 1000);
+camera.position.set(0, 8, 22);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
 
-  const centerY = H * 0.5;
-  const dnaLeft = 30;
-  const dnaRight = W - 30;
-  const dnaLen = dnaRight - dnaLeft;
-  const forkPx = dnaLeft + forkX * dnaLen;
-  const strandGap = 35;
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0); keyLight.position.set(5,10,7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5,5,-5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0,5,-10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
 
-  // Unreplicated DNA (right of fork)
-  if (forkPx < dnaRight) {
-    drawHelixSegment(forkPx + 20, dnaRight, centerY, strandGap, false, '#f87171', '#60a5fa');
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ── Scene Objects ─────────────────────────────────────────────────────────────
+const rootGroup = new THREE.Group();
+scene.add(rootGroup);
+
+// Materials
+const mTemplate1 = new THREE.MeshPhongMaterial({ color: 0x94a3b8, shininess: 60 });
+const mTemplate2 = new THREE.MeshPhongMaterial({ color: 0x64748b, shininess: 60 });
+const mLeading = new THREE.MeshPhongMaterial({ color: 0x10B981, shininess: 100 });
+const mLagging = new THREE.MeshPhongMaterial({ color: 0x22D3EE, shininess: 100 });
+const mHelicase = new THREE.MeshPhongMaterial({ color: 0xfbbf24, shininess: 120, emissive: 0x443300 });
+const mPrimase = new THREE.MeshPhongMaterial({ color: 0x22D3EE, shininess: 100, emissive: 0x001133 });
+const mPolIII = new THREE.MeshPhongMaterial({ color: 0x10B981, shininess: 120, emissive: 0x002211 });
+const mLigase = new THREE.MeshPhongMaterial({ color: 0xf87171, shininess: 100, emissive: 0x220000 });
+const mPrimer = new THREE.MeshPhongMaterial({ color: 0xfde68a, transparent: true, opacity: 0.8 });
+const mOkazaki = new THREE.MeshPhongMaterial({ color: 0x67e8f9, transparent: true, opacity: 0.9 });
+const mError = new THREE.MeshPhongMaterial({ color: 0xff4444, emissive: 0x330000 });
+
+// Static template helix
+const templateGroup = new THREE.Group();
+rootGroup.add(templateGroup);
+
+const TOTAL = 60;
+const SPACING = 0.5;
+const HELIX_R = 1.2;
+const BPT = 10;
+
+for (let i = 0; i < TOTAL; i++) {
+  const angle = (i / BPT) * Math.PI * 2;
+  const x = i * SPACING - TOTAL * SPACING * 0.5;
+  const y1 = Math.sin(angle) * HELIX_R;
+  const z1 = Math.cos(angle) * HELIX_R;
+  const y2 = Math.sin(angle + Math.PI) * HELIX_R;
+  const z2 = Math.cos(angle + Math.PI) * HELIX_R;
+
+  const s1 = new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8), mTemplate1.clone());
+  s1.position.set(x, y1, z1);
+  templateGroup.add(s1);
+
+  const s2 = new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8), mTemplate2.clone());
+  s2.position.set(x, y2, z2);
+  templateGroup.add(s2);
+
+  if (i > 0) {
+    const prev = i - 1;
+    const pa = (prev / BPT) * Math.PI * 2;
+    const px = prev * SPACING - TOTAL * SPACING * 0.5;
+    addTubeS(templateGroup,
+      new THREE.Vector3(px, Math.sin(pa)*HELIX_R, Math.cos(pa)*HELIX_R),
+      new THREE.Vector3(x, y1, z1), 0.055, mTemplate1.clone());
+    addTubeS(templateGroup,
+      new THREE.Vector3(px, Math.sin(pa+Math.PI)*HELIX_R, Math.cos(pa+Math.PI)*HELIX_R),
+      new THREE.Vector3(x, y2, z2), 0.055, mTemplate2.clone());
   }
 
-  // Unwound template strands (left of fork)
-  if (forkPx > dnaLeft) {
-    // Top template (3'->5' = leading template)
-    ctx.strokeStyle = '#f87171';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(dnaLeft, centerY - strandGap);
-    ctx.lineTo(forkPx, centerY - strandGap);
-    ctx.stroke();
-
-    // Bottom template (5'->3' = lagging template)
-    ctx.strokeStyle = '#60a5fa';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(dnaLeft, centerY + strandGap);
-    ctx.lineTo(forkPx, centerY + strandGap);
-    ctx.stroke();
-
-    // Leading strand (continuous, green)
-    const leadEnd = dnaLeft + leadingLen * dnaLen;
-    if (leadEnd > dnaLeft) {
-      ctx.strokeStyle = '#4ade80';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(dnaLeft, centerY - strandGap - 6);
-      ctx.lineTo(Math.min(leadEnd, forkPx - 5), centerY - strandGap - 6);
-      ctx.stroke();
-
-      // Base pair connections on leading strand
-      for (let px = dnaLeft; px < Math.min(leadEnd, forkPx - 5); px += 8) {
-        ctx.strokeStyle = 'rgba(74,222,128,0.2)';
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(px, centerY - strandGap);
-        ctx.lineTo(px, centerY - strandGap - 6);
-        ctx.stroke();
-      }
-    }
-
-    // Lagging strand: Okazaki fragments (green segments with gaps)
-    for (const frag of okazakiFragments) {
-      const fragStart = dnaLeft + frag.start * dnaLen;
-      const fragEnd = dnaLeft + frag.end * dnaLen;
-
-      // Primer (yellow, short)
-      if (frag.primerStart !== undefined) {
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(dnaLeft + frag.primerStart * dnaLen, centerY + strandGap + 6);
-        ctx.lineTo(fragStart, centerY + strandGap + 6);
-        ctx.stroke();
-      }
-
-      // Fragment (green)
-      ctx.strokeStyle = frag.joined ? '#22c55e' : '#4ade80';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(fragStart, centerY + strandGap + 6);
-      ctx.lineTo(fragEnd, centerY + strandGap + 6);
-      ctx.stroke();
-
-      // Base pair connections
-      for (let px = fragStart; px < fragEnd; px += 8) {
-        ctx.strokeStyle = 'rgba(74,222,128,0.2)';
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(px, centerY + strandGap);
-        ctx.lineTo(px, centerY + strandGap + 6);
-        ctx.stroke();
-      }
-    }
-  }
-
-  // Helicase at fork
-  ctx.fillStyle = 'rgba(245,158,11,0.7)';
-  ctx.beginPath();
-  ctx.arc(forkPx + 5, centerY, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(245,158,11,0.9)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // Helicase label
-  ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 7px "JetBrains Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('HEL', forkPx + 5, centerY + 2);
-
-  // Fork opening lines
-  ctx.strokeStyle = 'rgba(245,158,11,0.3)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(forkPx + 15, centerY - 5);
-  ctx.lineTo(forkPx + 25, centerY - strandGap);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(forkPx + 15, centerY + 5);
-  ctx.lineTo(forkPx + 25, centerY + strandGap);
-  ctx.stroke();
-
-  // DNA Pol III on leading strand
-  if (leadingLen > 0.02) {
-    const polX = dnaLeft + leadingLen * dnaLen;
-    ctx.fillStyle = 'rgba(34,197,94,0.7)';
-    ctx.beginPath();
-    ctx.arc(polX, centerY - strandGap - 6, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 6px "JetBrains Mono", monospace';
-    ctx.fillText('POL', polX, centerY - strandGap - 5);
-  }
-
-  // Primase near latest Okazaki fragment start
-  if (okazakiFragments.length > 0 && playing) {
-    const latest = okazakiFragments[okazakiFragments.length - 1];
-    if (latest.end - latest.start < OKAZAKI_LEN * 0.3) {
-      const primX = dnaLeft + latest.start * dnaLen;
-      ctx.fillStyle = 'rgba(236,72,153,0.7)';
-      ctx.beginPath();
-      ctx.arc(primX, centerY + strandGap + 6, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 5px "JetBrains Mono", monospace';
-      ctx.fillText('PRI', primX, centerY + strandGap + 8);
-    }
-  }
-
-  // Ligase between joined fragments
-  for (let i = 1; i < okazakiFragments.length; i++) {
-    if (okazakiFragments[i].joined && !okazakiFragments[i].ligaseShown) {
-      okazakiFragments[i].ligaseShown = true;
-    }
-  }
-
-  // Direction labels
-  ctx.fillStyle = 'rgba(248,113,113,0.6)';
-  ctx.font = '10px "Segoe UI", system-ui';
-  ctx.textAlign = 'left';
-  ctx.fillText("3'", dnaLeft - 20, centerY - strandGap + 4);
-  ctx.textAlign = 'right';
-  ctx.fillText("5'", dnaRight + 20, centerY - strandGap + 4);
-
-  ctx.fillStyle = 'rgba(96,165,250,0.6)';
-  ctx.textAlign = 'left';
-  ctx.fillText("5'", dnaLeft - 20, centerY + strandGap + 4);
-  ctx.textAlign = 'right';
-  ctx.fillText("3'", dnaRight + 20, centerY + strandGap + 4);
-
-  // Leading/Lagging labels
-  ctx.fillStyle = '#4ade80';
-  ctx.font = 'bold 11px "Segoe UI", system-ui';
-  ctx.textAlign = 'left';
-  ctx.fillText('LEADING STRAND (continuous)', dnaLeft, centerY - strandGap - 22);
-  ctx.fillText('LAGGING STRAND (Okazaki fragments)', dnaLeft, centerY + strandGap + 28);
-
-  // Synthesis direction arrows
-  ctx.fillStyle = 'rgba(74,222,128,0.5)';
-  ctx.font = '9px "Segoe UI", system-ui';
-  ctx.textAlign = 'center';
-  const midX = (dnaLeft + forkPx) / 2;
-  ctx.fillText("5' \u2192 3' synthesis", midX, centerY - strandGap - 34);
-  ctx.fillText("5' \u2192 3' synthesis (\u2190 read 3' to 5')", midX, centerY + strandGap + 42);
-
-  // Base pair visualization near fork
-  if (forkPx > dnaLeft + 50) {
-    ctx.font = '8px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    const startIdx = Math.max(0, Math.floor(forkX * 100) - 15);
-    const endIdx = Math.min(templateBases.length, Math.floor(forkX * 100) + 2);
-    for (let i = startIdx; i < endIdx; i++) {
-      const bx = dnaLeft + (i / 100) * dnaLen;
-      if (bx < dnaLeft || bx > forkPx - 10) continue;
-      const base = templateBases[i];
-      const comp = complement[base];
-      // Top template base
-      ctx.fillStyle = baseColors[base];
-      ctx.fillText(base, bx, centerY - strandGap - 12);
-      // Bottom template base
-      ctx.fillStyle = baseColors[comp];
-      ctx.fillText(comp, bx, centerY + strandGap + 20);
-    }
-  }
+  // base pair rod
+  const bp = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,HELIX_R*2*0.8,6), new THREE.MeshPhongMaterial({color:0x334155,transparent:true,opacity:0.5}));
+  bp.position.set(x, 0, 0);
+  bp.rotation.z = angle + Math.PI/2;
+  templateGroup.add(bp);
 }
 
-function update() {
-  if (!playing) return;
-  const dt = 0.0008 * speed;
+function addTubeS(parent, from, to, r, mat) {
+  const dir = new THREE.Vector3().subVectors(to, from);
+  const len = dir.length();
+  if (len < 0.001) return;
+  const geo = new THREE.CylinderGeometry(r, r, len, 6);
+  const mesh = new THREE.Mesh(geo, mat);
+  const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+  mesh.position.copy(mid);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+  parent.add(mesh);
+  return mesh;
+}
 
-  // Advance fork
-  if (forkX < 0.95) {
-    forkX += dt;
+// Dynamic elements
+const dynamicGroup = new THREE.Group();
+rootGroup.add(dynamicGroup);
+
+// Helicase sphere
+const helicaseMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), mHelicase);
+scene.add(helicaseMesh);
+
+// PolIII leading
+const polIIILeadMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,0.6), mPolIII);
+scene.add(polIIILeadMesh);
+
+// PolIII lagging
+const polIIILagMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), mLagging.clone());
+scene.add(polIIILagMesh);
+
+// Primase
+const primaseMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.38), mPrimase);
+scene.add(primaseMesh);
+
+// Ligase
+const ligaseMesh = new THREE.Mesh(new THREE.TetrahedronGeometry(0.42), mLigase);
+scene.add(ligaseMesh);
+
+// Leading strand growing bar
+let leadingBar = null;
+let okazakiMeshes = [];
+let primerMeshes = [];
+let errorMeshes = [];
+
+let lastOkazakiAt = -8;
+let lastLigaseAt = -16;
+let lastErrorAt = -6;
+let currentOkazakiLen = 0;
+
+function getHelixPos(idx) {
+  const angle = (idx / BPT) * Math.PI * 2;
+  const x = idx * SPACING - TOTAL * SPACING * 0.5;
+  return {
+    x,
+    y1: Math.sin(angle) * HELIX_R,
+    z1: Math.cos(angle) * HELIX_R,
+    y2: Math.sin(angle + Math.PI) * HELIX_R,
+    z2: Math.cos(angle + Math.PI) * HELIX_R
+  };
+}
+
+function updateDynamic() {
+  const fp = simState.forkPos;
+  const pos = getHelixPos(fp);
+
+  // Helicase at fork tip
+  helicaseMesh.position.set(pos.x + 0.3, 0, 0);
+
+  // PolIII leading — slightly behind fork on strand 1 side
+  polIIILeadMesh.position.set(pos.x - 1.5, pos.y1 * 0.7, pos.z1 * 0.7);
+
+  // PolIII lagging — behind fork more, strand 2 side
+  polIIILagMesh.position.set(pos.x - 3.0, pos.y2 * 0.7, pos.z2 * 0.7);
+
+  // Primase — oscillates near lagging strand
+  const primOsc = Math.sin(simState.forkPos * 0.5) * 0.5;
+  primaseMesh.position.set(pos.x - 4.5 + primOsc, pos.y2, pos.z2);
+
+  // Ligase — moves periodically after Okazaki
+  const ligX = Math.max(-TOTAL * SPACING * 0.5 + 2, pos.x - 12 + Math.sin(simState.forkPos * 0.2) * 1.5);
+  ligaseMesh.position.set(ligX, pos.y2 * 0.5, pos.z2 * 0.5);
+
+  // Remove old dynamic meshes
+  while (dynamicGroup.children.length > 0) dynamicGroup.remove(dynamicGroup.children[0]);
+  leadingBar = null;
+
+  // Leading strand bar
+  if (fp > 1) {
+    const startX = -TOTAL * SPACING * 0.5;
+    const endX = pos.x;
+    const len = endX - startX;
+    if (len > 0.01) {
+      const geo = new THREE.CylinderGeometry(0.09, 0.09, len, 8);
+      leadingBar = new THREE.Mesh(geo, mLeading.clone());
+      leadingBar.rotation.z = Math.PI / 2;
+      const startPos = getHelixPos(0);
+      leadingBar.position.set(startX + len * 0.5, startPos.y1 * 1.1, startPos.z1 * 1.1);
+      dynamicGroup.add(leadingBar);
+    }
   }
 
-  // Leading strand follows fork
-  leadingLen = Math.min(forkX - 0.01, leadingLen + dt);
+  // Okazaki fragments
+  okazakiMeshes.forEach(m => dynamicGroup.add(m));
 
-  // Lagging strand: create Okazaki fragments
-  if (forkX - lastOkazakiEnd > OKAZAKI_LEN + PRIMER_LEN && forkX > 0.05) {
-    primerCount++;
-    const primerStart = forkX - PRIMER_LEN;
-    okazakiFragments.push({
-      primerStart: primerStart,
-      start: forkX,
-      end: forkX,
-      growing: true,
-      joined: false,
-      ligaseShown: false
+  // Primer indicators
+  primerMeshes.forEach(m => dynamicGroup.add(m));
+
+  // Error dots
+  errorMeshes.forEach(m => dynamicGroup.add(m));
+}
+
+function spawnOkazaki(atFork) {
+  if (simState.helicaseBlocked) return;
+  const fp = Math.floor(atFork);
+  const fragLen = 8;
+  const startIdx = Math.max(0, fp - fragLen);
+  const endIdx = Math.min(TOTAL - 1, fp);
+  if (endIdx <= startIdx) return;
+
+  const startPos = getHelixPos(startIdx);
+  const endPos = getHelixPos(endIdx);
+  const len = (endIdx - startIdx) * SPACING;
+
+  const geo = new THREE.CylinderGeometry(0.1, 0.1, len, 8);
+  const mesh = new THREE.Mesh(geo, mOkazaki.clone());
+  mesh.rotation.z = Math.PI / 2;
+  const sp2 = getHelixPos(Math.floor((startIdx+endIdx)/2));
+  mesh.position.set(startPos.x + len * 0.5, sp2.y2 * 1.15, sp2.z2 * 1.15);
+  okazakiMeshes.push(mesh);
+  if (okazakiMeshes.length > 6) okazakiMeshes.shift();
+
+  simState.okazakiCount++;
+}
+
+function spawnPrimer(atFork) {
+  if (simState.helicaseBlocked) return;
+  const fp = Math.floor(atFork);
+  const pos = getHelixPos(fp);
+  const geo = new THREE.SphereGeometry(0.18, 8, 8);
+  const mesh = new THREE.Mesh(geo, mPrimer.clone());
+  mesh.position.set(pos.x, pos.y2 * 1.3, pos.z2 * 1.3);
+  primerMeshes.push(mesh);
+  if (primerMeshes.length > 8) primerMeshes.shift();
+  simState.primerCount++;
+}
+
+function spawnError(atFork) {
+  if (!simState.noProofreading) return;
+  const fp = Math.floor(atFork);
+  const pos = getHelixPos(Math.max(0, fp - 2));
+  const geo = new THREE.SphereGeometry(0.2, 8, 8);
+  const mesh = new THREE.Mesh(geo, mError.clone());
+  mesh.position.set(pos.x, pos.y1 * 1.4, pos.z1 * 1.4);
+  errorMeshes.push(mesh);
+  if (errorMeshes.length > 10) errorMeshes.shift();
+  simState.errorCount++;
+}
+
+function updateOverlay() {
+  document.getElementById('ov-fork').textContent = Math.floor(simState.forkPos);
+  document.getElementById('ov-lead').textContent = simState.helicaseBlocked ? 'Blocked' : 'Synthesizing';
+  document.getElementById('ov-ok').textContent = simState.okazakiCount;
+  document.getElementById('ov-primers').textContent = simState.primerCount;
+  document.getElementById('ov-errors').textContent = simState.errorCount;
+  document.getElementById('ov-ligase').textContent = simState.ligaseCount;
+}
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+
+  if (simState.playing && !simState.helicaseBlocked) {
+    simState.forkPos += delta * simState.speed * simState.repSpeed * 3.0;
+    if (simState.forkPos >= simState.maxFork) simState.forkPos = 0;
+
+    // Okazaki fragments every 8 units
+    if (simState.forkPos - lastOkazakiAt >= 8) {
+      spawnOkazaki(simState.forkPos);
+      spawnPrimer(simState.forkPos);
+      lastOkazakiAt = simState.forkPos;
+    }
+
+    // Ligase events
+    if (simState.forkPos - lastLigaseAt >= 12 && okazakiMeshes.length >= 2) {
+      simState.ligaseCount++;
+      lastLigaseAt = simState.forkPos;
+    }
+
+    // Errors
+    if (simState.noProofreading && simState.forkPos - lastErrorAt >= (6 - simState.errorRate)) {
+      spawnError(simState.forkPos);
+      lastErrorAt = simState.forkPos;
+    }
+  }
+
+  updateDynamic();
+  updateOverlay();
+
+  // Slow helix rotation for visual interest
+  simState.totalAngle += delta * 0.2;
+  rootGroup.rotation.x = Math.sin(simState.totalAngle * 0.3) * 0.15;
+
+  renderer.render(scene, camera);
+});
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+const PRESETS = {
+  normal: { repSpeed: 1.0, errorRate: 0, helicaseBlocked: false, noProofreading: false },
+  blocked: { repSpeed: 0.0, errorRate: 0, helicaseBlocked: true, noProofreading: false },
+  error: { repSpeed: 0.8, errorRate: 4, helicaseBlocked: false, noProofreading: true }
+};
+
+function applyPreset(key) {
+  const p = PRESETS[key];
+  Object.assign(simState, p);
+  document.getElementById('sl-repspeed').value = p.repSpeed;
+  document.getElementById('sl-errrate').value = p.errorRate;
+  document.getElementById('lbl-repspeed').textContent = p.repSpeed.toFixed(1);
+  document.getElementById('lbl-errrate').textContent = p.errorRate;
+  document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-preset="${key}"]`).classList.add('active');
+  if (key === 'blocked') showToast('Helicase inhibited — fork stalled');
+  else if (key === 'error') showToast('No proofreading — errors accumulate!');
+  else showToast('Normal replication active');
+}
+
+// ── UI Events ─────────────────────────────────────────────────────────────────
+document.getElementById('sl-repspeed').addEventListener('input', function() {
+  simState.repSpeed = parseFloat(this.value);
+  document.getElementById('lbl-repspeed').textContent = simState.repSpeed.toFixed(1);
+});
+document.getElementById('sl-errrate').addEventListener('input', function() {
+  simState.errorRate = parseInt(this.value);
+  document.getElementById('lbl-errrate').textContent = simState.errorRate;
+  simState.noProofreading = simState.errorRate > 0;
+});
+document.getElementById('btnPlay').addEventListener('click', function() {
+  simState.playing = !simState.playing;
+  this.textContent = simState.playing ? '⏸ Pause' : '▶ Play';
+  showToast(simState.playing ? 'Playing' : 'Paused');
+});
+document.getElementById('btnStep').addEventListener('click', function() {
+  simState.forkPos = Math.min(simState.forkPos + 2, simState.maxFork);
+  showToast('Step: fork at ' + Math.floor(simState.forkPos));
+});
+document.getElementById('btnReset').addEventListener('click', function() {
+  simState.forkPos = 0; simState.okazakiCount = 0; simState.primerCount = 0;
+  simState.ligaseCount = 0; simState.errorCount = 0;
+  okazakiMeshes = []; primerMeshes = []; errorMeshes = [];
+  lastOkazakiAt = -8; lastLigaseAt = -16; lastErrorAt = -6;
+  applyPreset('normal');
+  showToast('Reset');
+});
+document.getElementById('btnFullscreen').addEventListener('click', function() {
+  if (!document.fullscreenElement) container.requestFullscreen();
+  else document.exitFullscreen();
+});
+document.getElementById('btnAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.add('open');
+});
+document.getElementById('closeAbout').addEventListener('click', function() {
+  document.getElementById('aboutModal').classList.remove('open');
+});
+
+document.querySelectorAll('.btn-speed').forEach(b => {
+  b.addEventListener('click', function() {
+    simState.speed = parseFloat(this.dataset.speed);
+    document.querySelectorAll('.btn-speed').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + this.dataset.speed + 'x');
+  });
+});
+document.querySelectorAll('.btn-preset').forEach(b => {
+  b.addEventListener('click', function() { applyPreset(this.dataset.preset); });
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('btnPlay').click(); }
+  if (e.code === 'KeyR') document.getElementById('btnReset').click();
+  const speeds = ['0.25','0.5','1','2','3'];
+  if (e.code.startsWith('Digit')) {
+    const d = parseInt(e.key) - 1;
+    if (d >= 0 && d < 5) document.querySelector(`[data-speed="${speeds[d]}"]`)?.click();
+  }
+});
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizData = [
+  {
+    q: "If you mutate the 3'→5' exonuclease domain of DNA Pol III, what is the most likely consequence?",
+    opts: [
+      "Replication proceeds faster",
+      "The error rate dramatically increases",
+      "Okazaki fragments become longer",
+      "Helicase activity is enhanced"
+    ],
+    ans: 1,
+    explain: "The 3'→5' exonuclease is the proofreading domain. Without it, misincorporated bases go uncorrected, drastically raising error frequency."
+  },
+  {
+    q: "Why does the lagging strand require multiple RNA primers while the leading strand needs only one?",
+    opts: [
+      "DNA Pol III moves faster on the lagging strand",
+      "Lagging strand synthesis is discontinuous — each Okazaki fragment needs its own 3'-OH start",
+      "Primase only works on single-stranded DNA templates",
+      "The lagging strand runs antiparallel to helicase movement"
+    ],
+    ans: 1,
+    explain: "Each Okazaki fragment must be initiated anew because Pol III can only extend existing strands 5'→3'. Since the lagging template runs 3'→5' toward the fork, synthesis goes away from the fork in short bursts, each requiring a new primer."
+  },
+  {
+    q: "An antibiotic blocks DNA gyrase (topoisomerase II). Which downstream effect would you predict?",
+    opts: [
+      "Ligase cannot join Okazaki fragments",
+      "Positive supercoils accumulate ahead of the fork, stalling helicase",
+      "Primase fails to synthesize RNA primers",
+      "Leading strand elongation continues normally but lagging stops"
+    ],
+    ans: 1,
+    explain: "Gyrase relieves positive supercoiling that builds up ahead of the advancing helicase. Without it, torsional stress stops helicase — the fork stalls entirely."
+  }
+];
+
+const qContainer = document.getElementById('quiz-container');
+quizData.forEach((qd, qi) => {
+  const div = document.createElement('div');
+  div.style.marginBottom = '14px';
+  div.innerHTML = `<div style="font-size:12px;color:#e2e8f0;margin-bottom:6px;font-weight:600;">${qi+1}. ${qd.q}</div>`;
+  qd.opts.forEach((opt, oi) => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', function() {
+      div.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('correct','wrong'));
+      btn.classList.add(oi === qd.ans ? 'correct' : 'wrong');
+      if (oi !== qd.ans) div.querySelectorAll('.quiz-option')[qd.ans].classList.add('correct');
+      showToast(oi === qd.ans ? 'Correct!' : 'Incorrect');
+      let expl = div.querySelector('.explanation');
+      if (!expl) {
+        expl = document.createElement('div');
+        expl.className = 'explanation';
+        expl.style.cssText = 'font-size:11px;color:#94a3b8;margin-top:6px;padding:6px 8px;background:rgba(255,255,255,0.05);border-radius:6px;';
+        expl.textContent = qd.explain;
+        div.appendChild(expl);
+      }
     });
-    lastOkazakiEnd = forkX;
-  }
+    div.appendChild(btn);
+  });
+  qContainer.appendChild(div);
+});
 
-  // Grow Okazaki fragments (they grow backward, away from fork)
-  for (const frag of okazakiFragments) {
-    if (frag.growing) {
-      frag.end += dt * 0.6;
-      // Stop when reaching previous fragment
-      const idx = okazakiFragments.indexOf(frag);
-      if (idx > 0) {
-        const prev = okazakiFragments[idx - 1];
-        if (frag.end >= prev.start - 0.002) {
-          frag.end = prev.start;
-          frag.growing = false;
-          // Ligase joins
-          if (!frag.joined) {
-            frag.joined = true;
-            ligaseJoins++;
-          }
-        }
-      }
-      if (frag.end - frag.start >= OKAZAKI_LEN) {
-        frag.growing = false;
-      }
-    }
-  }
-
-  if (Date.now() % 100 < 20) updateUI();
-}
-
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-loop();
+renderMathInElement(document.body, { delimiters: [{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}] });
 </script>
 </body>
 </html>

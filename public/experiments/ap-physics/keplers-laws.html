@@ -1,641 +1,698 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kepler's Laws — NeonPhysics AP Physics C</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e8eaf0;overflow:hidden}
-    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(251,146,60,.10),rgba(234,179,8,.06));border-bottom:1px solid rgba(251,146,60,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .header-left{display:flex;align-items:center;gap:12px}
-    .badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff}
-    .fps-display{font-size:11px;color:#64748b;font-variant-numeric:tabular-nums}
-    .main-layout{display:flex;height:calc(100vh - 52px)}
-    .left-panel{width:300px;min-width:300px;background:#0d1117;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
-    .canvas-wrap{flex:1;position:relative;background:#0f172a}
-    canvas{display:block;width:100%!important;height:100%!important}
-    .bottom-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);padding:12px 20px}
-    .controls-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .slider-group{flex:1;min-width:180px}
-    .slider-label{display:flex;justify-content:space-between;margin-bottom:4px}
-    .slider-name{font-size:11px;color:#94a3b8}
-    .slider-val{font-size:11px;font-weight:600;color:#fb923c;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:rgba(251,146,60,.2);border-radius:2px;cursor:pointer}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fb923c;cursor:pointer}
-    .btn-group{display:flex;gap:6px;flex-shrink:0}
-    .btn{padding:7px 14px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-    .btn-play{background:#22c55e;color:#fff}
-    .btn-play:hover{background:#16a34a}
-    .btn-pause{background:#ef4444;color:#fff}
-    .btn-pause:hover{background:#dc2626}
-    .btn-reset{background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.12)}
-    .btn-reset:hover{background:rgba(255,255,255,.12)}
-    .btn-preset{background:rgba(251,146,60,.12);color:#fdba74;border:1px solid rgba(251,146,60,.25)}
-    .btn-preset:hover{background:rgba(251,146,60,.2)}
-    .btn-preset.active{background:rgba(251,146,60,.3);border-color:#fb923c}
-    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-    .formula-box{background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.12);border-radius:8px;padding:10px 14px;margin-bottom:8px}
-    .formula-desc{font-size:10px;color:#64748b;margin-top:4px;line-height:1.4}
-    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .metric-card{background:rgba(255,255,255,.03);border-radius:6px;padding:7px 10px}
-    .metric-title{font-size:9px;color:#475569;text-transform:uppercase;margin-bottom:3px}
-    .metric-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
-    .val-orange{color:#fb923c}.val-sky{color:#38bdf8}.val-violet{color:#a78bfa}.val-green{color:#34d399}.val-amber{color:#fbbf24}.val-red{color:#f87171}.val-rose{color:#fb7185}
-    .preset-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
-    .quiz-section{margin-top:4px}
-    .quiz-q{background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;margin-bottom:8px}
-    .quiz-q-title{font-size:11px;font-weight:600;color:#e2e8f0;margin-bottom:8px}
-    .quiz-option{display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:#cbd5e1;font-size:11px;cursor:pointer;transition:all .15s}
-    .quiz-option:hover{background:rgba(255,255,255,.08)}
-    .quiz-option.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-    .quiz-option.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
-    .quiz-explanation{font-size:10px;color:#64748b;margin-top:6px;display:none;line-height:1.4}
-    .overlay-metrics{position:absolute;top:12px;left:12px;background:rgba(15,23,42,.85);border:1px solid rgba(251,146,60,.2);border-radius:8px;padding:10px 14px;backdrop-filter:blur(6px);pointer-events:none}
-    .overlay-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-    .overlay-row:last-child{margin-bottom:0}
-    .overlay-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .overlay-text{font-size:11px;font-variant-numeric:tabular-nums}
-    .kepler-law{background:rgba(255,255,255,.02);border-radius:6px;padding:8px 10px;margin-bottom:6px}
-    .kepler-law-title{font-size:11px;font-weight:600;color:#c4b5fd;margin-bottom:3px}
-    .kepler-law-desc{font-size:10px;color:#64748b;line-height:1.4}
-    .third-law-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:10px}
-    .third-law-table th{color:#475569;text-align:left;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.08)}
-    .third-law-table td{color:#94a3b8;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums}
-    .third-law-table .highlight{color:#fb923c;font-weight:600}
-    @media(max-width:900px){
-      .main-layout{flex-direction:column}
-      .left-panel{width:100%;min-width:0;max-height:40vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
-      .canvas-wrap{min-height:50vh}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kepler's Laws of Planetary Motion</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --primary: #3B82F6; --primary-light: #0EA5E9;
+    --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.13);
+    --panel-bg: rgba(15,23,42,0.88);
+  }
+  #toast-container { position: fixed; top: 64px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: rgba(30,41,59,0.97); border: 1px solid rgba(59,130,246,0.4); color: #f8fafc; padding: 10px 16px; border-radius: 8px; font-size: 13px; animation: slideIn 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+  @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .sidebar { width: 300px; min-width: 300px; background: var(--panel-bg); border-right: 1px solid var(--glass-border); overflow-y: auto; display: flex; flex-direction: column; gap: 0; transition: width 0.3s ease; }
+  .sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; }
+  .sidebar-section { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .sidebar-section h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #60A5FA; margin-bottom: 10px; }
+  .formula-block { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .formula-block .formula-label { font-size: 11px; color: #94A3B8; margin-top: 6px; }
+  .glass-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 12px; color: #CBD5E1; line-height: 1.6; }
+  .glass-card strong { color: #60A5FA; }
+  #canvas-container { flex: 1; position: relative; overflow: hidden; }
+  #data-overlay { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.82); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 12px 16px; font-size: 12px; min-width: 200px; z-index: 10; font-variant-numeric: tabular-nums; }
+  #data-overlay .data-row { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+  #data-overlay .data-label { color: #94A3B8; }
+  #data-overlay .data-value { color: #60A5FA; font-weight: 600; }
+  .bottom-panel { background: var(--panel-bg); border-top: 1px solid var(--glass-border); padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .slider-group { display: flex; align-items: center; gap: 8px; }
+  .slider-group label { font-size: 12px; color: #94A3B8; white-space: nowrap; min-width: 120px; }
+  .slider-group input[type=range] { width: 110px; accent-color: #3B82F6; }
+  .slider-group .val { font-size: 12px; color: #60A5FA; font-variant-numeric: tabular-nums; min-width: 48px; }
+  .btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: linear-gradient(135deg, #3B82F6, #0EA5E9); color: white; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #CBD5E1; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+  .btn-speed { background: var(--glass-bg); border: 1px solid var(--glass-border); color: #94A3B8; padding: 4px 9px; font-size: 11px; }
+  .btn-speed.active { background: rgba(59,130,246,0.3); border-color: #3B82F6; color: #60A5FA; }
+  .preset-btn { background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.3); color: #38BDF8; padding: 5px 11px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+  .preset-btn:hover { background: rgba(14,165,233,0.25); }
+  .quiz-panel { position: absolute; bottom: 0; right: 0; width: 360px; background: var(--panel-bg); border-top: 1px solid var(--glass-border); border-left: 1px solid var(--glass-border); border-radius: 12px 0 0 0; z-index: 20; transition: transform 0.3s ease; }
+  .quiz-panel.hidden-panel { transform: translateY(100%); }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--glass-border); }
+  .quiz-header h3 { font-size: 13px; font-weight: 700; color: #60A5FA; }
+  .quiz-body { padding: 12px 14px; }
+  .quiz-question { font-size: 12px; color: #CBD5E1; margin-bottom: 10px; line-height: 1.5; }
+  .quiz-option { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; margin-bottom: 5px; cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass-bg); font-size: 12px; transition: all 0.12s; }
+  .quiz-option:hover { border-color: #3B82F6; }
+  .quiz-option.correct { background: rgba(34,197,94,0.15); border-color: #22C55E; color: #86EFAC; }
+  .quiz-option.wrong { background: rgba(239,68,68,0.15); border-color: #EF4444; color: #FCA5A5; }
+  .quiz-feedback { font-size: 11px; color: #94A3B8; margin-top: 8px; line-height: 1.5; min-height: 36px; }
+  .quiz-nav { display: flex; justify-content: space-between; margin-top: 10px; }
+  #quiz-float-btn { position: absolute; bottom: 12px; right: 12px; z-index: 25; background: linear-gradient(135deg,#3B82F6,#0EA5E9); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.5); display: none; }
+  .area-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94A3B8; cursor: pointer; }
+  .area-toggle input { accent-color: #3B82F6; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 52px; background: rgba(15,23,42,0.92); border-bottom: 1px solid rgba(59,130,246,0.25); flex-shrink: 0; z-index: 30; }
+  nav .title { font-size: 16px; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  nav .subtitle { font-size: 11px; color: #64748B; }
+  .main-layout { display: flex; flex: 1; overflow: hidden; }
+  .shortcuts-hint { position: absolute; bottom: 56px; left: 12px; font-size: 10px; color: #475569; z-index: 10; }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-left">
-    <span class="badge">AP PHYSICS C</span>
-    <span class="badge badge-free">FREE</span>
-    <h1>Kepler's Laws</h1>
+
+<nav>
+  <div>
+    <div class="title">Kepler's Laws of Planetary Motion</div>
+    <div class="subtitle">开普勒行星运动定律 — AP Physics / Astronomy</div>
   </div>
-  <span class="fps-display" id="fpsDisplay">60 FPS</span>
-</div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-ghost" id="toggle-sidebar-btn">☰ Panel</button>
+    <button class="btn btn-ghost" id="reset-btn">↺ Reset</button>
+    <button class="btn btn-ghost" id="fullscreen-btn">⛶ Full</button>
+    <button class="btn btn-ghost" id="about-btn">? About</button>
+  </div>
+</nav>
 
 <div class="main-layout">
-  <div class="left-panel">
-    <div class="section">
-      <div class="section-title">Presets</div>
-      <div class="preset-row">
-        <button class="btn btn-preset" onclick="applyPreset('circular')">Circular Orbit</button>
-        <button class="btn btn-preset" onclick="applyPreset('comet')">Comet Orbit</button>
-        <button class="btn btn-preset" onclick="applyPreset('mercury')">Mercury</button>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <h3>Kepler's Three Laws</h3>
+      <div class="formula-block">
+        <div id="f1"></div>
+        <div class="formula-label">Law 1: Planets follow elliptical orbits with the Sun at one focus.</div>
+      </div>
+      <div class="formula-block">
+        <div id="f2"></div>
+        <div class="formula-label">Law 2: A line from planet to Sun sweeps equal areas in equal time intervals.</div>
+      </div>
+      <div class="formula-block">
+        <div id="f3"></div>
+        <div class="formula-label">Law 3: The square of orbital period is proportional to the cube of semi-major axis.</div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">1st Law: Elliptical Orbits</div>
-      <div class="formula-box" id="formula1"></div>
-      <div class="formula-desc">Every planet moves in an elliptical orbit with the star at one focus. The semi-latus rectum l = a(1 - e&sup2;) defines the shape.</div>
+    <div class="sidebar-section">
+      <h3>Concept Explanation</h3>
+      <p style="font-size:12px;color:#CBD5E1;line-height:1.7;margin-bottom:8px;">
+        Kepler's laws describe how planets move under gravity. An ellipse has two foci — the Sun sits at <em>one</em> focus, not the center. Eccentricity e controls how stretched the ellipse is (e=0 is a circle).
+      </p>
+      <p style="font-size:12px;color:#CBD5E1;line-height:1.7;margin-bottom:8px;">
+        Equal-area sweeping (Law 2) is a direct consequence of <strong>conservation of angular momentum</strong>. A planet speeds up near perihelion and slows near aphelion — the swept area stays constant.
+      </p>
+      <p style="font-size:12px;color:#CBD5E1;line-height:1.7;">
+        Law 3 connects orbital geometry to dynamics. It allowed astronomers to compute relative distances in the Solar System long before spacecraft existed.
+      </p>
     </div>
 
-    <div class="section">
-      <div class="section-title">2nd Law: Equal Areas</div>
-      <div class="formula-box" id="formula2"></div>
-      <div class="formula-desc">A line from the star to the planet sweeps out equal areas in equal time intervals. The planet moves faster near perihelion and slower near aphelion.</div>
+    <div class="sidebar-section">
+      <h3>Key Facts</h3>
+      <div class="glass-card"><strong>Historical Note:</strong> Kepler published Laws 1 & 2 in 1609, Law 3 in 1619 — 10 years before Newton was born. Newton later proved they follow from universal gravitation.</div>
+      <div class="glass-card"><strong>Common Misconception:</strong> Earth's seasons are NOT caused by varying distance from the Sun. Earth's orbit is nearly circular (e=0.017). Seasons come from axial tilt.</div>
+      <div class="glass-card"><strong>AP Connection:</strong> Law 3 ties directly to <em>circular orbit derivation</em>: set gravitational force = centripetal force → T² ∝ r³.</div>
     </div>
 
-    <div class="section">
-      <div class="section-title">3rd Law: Harmonic Law</div>
-      <div class="formula-box" id="formula3"></div>
-      <div class="formula-desc">The square of the orbital period is proportional to the cube of the semi-major axis. This ratio is the same for all orbits around the same star.</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Live Metrics</div>
-      <div class="metric-grid">
-        <div class="metric-card">
-          <div class="metric-title">Period T</div>
-          <div class="metric-val val-orange" id="metricT">—</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Speed</div>
-          <div class="metric-val val-sky" id="metricV">—</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Distance r</div>
-          <div class="metric-val val-violet" id="metricR">—</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">dA/dt</div>
-          <div class="metric-val val-green" id="metricDA">—</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Perihelion</div>
-          <div class="metric-val val-amber" id="metricPeri">—</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Aphelion</div>
-          <div class="metric-val val-red" id="metricApo">—</div>
-        </div>
-        <div class="metric-card" style="grid-column:span 2">
-          <div class="metric-title">T&sup2;/a&sup3; (should be constant)</div>
-          <div class="metric-val val-rose" id="metricRatio">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">3rd Law Verification</div>
-      <table class="third-law-table" id="thirdLawTable">
-        <thead><tr><th>a (AU)</th><th>T (yr)</th><th>T&sup2;/a&sup3;</th></tr></thead>
-        <tbody id="thirdLawBody"></tbody>
-      </table>
-    </div>
-
-    <div class="section quiz-section">
-      <div class="section-title">Quiz</div>
-      <div class="quiz-q">
-        <div class="quiz-q-title">Q1: A planet is at aphelion (farthest point). How does its speed compare to when it is at perihelion?</div>
-        <button class="quiz-option" data-q="1" data-correct="false" onclick="checkQuiz(this)">A) Faster at aphelion</button>
-        <button class="quiz-option" data-q="1" data-correct="false" onclick="checkQuiz(this)">B) Same speed at both points</button>
-        <button class="quiz-option" data-q="1" data-correct="true" onclick="checkQuiz(this)">C) Slower at aphelion</button>
-        <button class="quiz-option" data-q="1" data-correct="false" onclick="checkQuiz(this)">D) Speed depends only on mass</button>
-        <div class="quiz-explanation" id="expl1">Correct: C. By Kepler's 2nd Law (equal areas), the planet must move slower at aphelion (farther from the star) to sweep the same area per unit time as at perihelion (closer, faster).</div>
-      </div>
-      <div class="quiz-q">
-        <div class="quiz-q-title">Q2: Planet X has a semi-major axis 4 times that of Planet Y, orbiting the same star. How do their periods compare?</div>
-        <button class="quiz-option" data-q="2" data-correct="false" onclick="checkQuiz(this)">A) T_X = 4 T_Y</button>
-        <button class="quiz-option" data-q="2" data-correct="true" onclick="checkQuiz(this)">B) T_X = 8 T_Y</button>
-        <button class="quiz-option" data-q="2" data-correct="false" onclick="checkQuiz(this)">C) T_X = 16 T_Y</button>
-        <button class="quiz-option" data-q="2" data-correct="false" onclick="checkQuiz(this)">D) T_X = 2 T_Y</button>
-        <div class="quiz-explanation" id="expl2">Correct: B. By Kepler's 3rd Law, T&sup2; &#8733; a&sup3;. If a_X = 4a_Y, then T_X&sup2; = 4&sup3; T_Y&sup2; = 64 T_Y&sup2;, so T_X = 8 T_Y.</div>
-      </div>
+    <div class="sidebar-section">
+      <h3>Why It Matters</h3>
+      <ul style="font-size:12px;color:#CBD5E1;line-height:1.8;padding-left:14px;">
+        <li>Satellite orbit design (GPS, ISS)</li>
+        <li>Exoplanet detection via transit timing</li>
+        <li>Interplanetary mission planning (Hohmann transfers)</li>
+        <li>AP Physics C: Universal Gravitation — core topic</li>
+      </ul>
     </div>
   </div>
 
-  <div class="canvas-wrap" id="canvasWrap">
-    <div class="overlay-metrics" id="overlayMetrics">
-      <div class="overlay-row">
-        <div class="overlay-dot" style="background:#fbbf24"></div>
-        <span class="overlay-text" style="color:#fbbf24" id="overlayStarLabel">Star: 1.00 M&#9737;</span>
-      </div>
-      <div class="overlay-row">
-        <div class="overlay-dot" style="background:#38bdf8"></div>
-        <span class="overlay-text" style="color:#38bdf8" id="overlayPlanetLabel">Planet: r = — AU</span>
-      </div>
-      <div class="overlay-row">
-        <div class="overlay-dot" style="background:#34d399"></div>
-        <span class="overlay-text" style="color:#34d399" id="overlayAreaLabel">Swept area: equal</span>
-      </div>
+  <!-- Canvas -->
+  <div id="canvas-container" style="position:relative;flex:1;">
+    <div id="data-overlay">
+      <div style="font-size:11px;font-weight:700;color:#60A5FA;margin-bottom:8px;border-bottom:1px solid rgba(96,165,250,0.2);padding-bottom:5px;">ORBITAL DATA</div>
+      <div class="data-row"><span class="data-label">Semi-major axis a</span><span class="data-value" id="d-a">—</span></div>
+      <div class="data-row"><span class="data-label">Eccentricity e</span><span class="data-value" id="d-e">—</span></div>
+      <div class="data-row"><span class="data-label">T (measured)</span><span class="data-value" id="d-tm">—</span></div>
+      <div class="data-row"><span class="data-label">T (theoretical)</span><span class="data-value" id="d-tt">—</span></div>
+      <div class="data-row"><span class="data-label">Perihelion speed</span><span class="data-value" id="d-vp">—</span></div>
+      <div class="data-row"><span class="data-label">Aphelion speed</span><span class="data-value" id="d-va">—</span></div>
+      <div class="data-row"><span class="data-label">Area sweep rate</span><span class="data-value" id="d-area">—</span></div>
+      <div class="data-row"><span class="data-label">Current speed</span><span class="data-value" id="d-v">—</span></div>
     </div>
+    <div class="shortcuts-hint">Space: Play/Pause | R: Reset | 1-5: Speed</div>
+  </div>
+</div>
 
-    <div class="bottom-bar">
-      <div class="controls-row">
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Semi-major axis a</span>
-            <span class="slider-val" id="valA">1.00 AU</span>
-          </div>
-          <input type="range" id="sliderA" min="0.5" max="5" step="0.01" value="1">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Eccentricity e</span>
-            <span class="slider-val" id="valE">0.50</span>
-          </div>
-          <input type="range" id="sliderE" min="0" max="0.9" step="0.01" value="0.5">
-        </div>
-        <div class="slider-group">
-          <div class="slider-label">
-            <span class="slider-name">Star mass M</span>
-            <span class="slider-val" id="valM">1.00 M&#9737;</span>
-          </div>
-          <input type="range" id="sliderM" min="0.5" max="5" step="0.01" value="1">
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-play" id="btnPlay" onclick="togglePlay()">&#9654; Play</button>
-          <button class="btn btn-reset" onclick="resetSim()">Reset</button>
-        </div>
-      </div>
+<!-- Bottom Controls -->
+<div class="bottom-panel">
+  <div class="controls-row">
+    <div class="slider-group">
+      <label>Semi-major axis a (AU)</label>
+      <input type="range" id="sl-a" min="0.5" max="5" step="0.05" value="1.5">
+      <span class="val" id="v-a">1.50</span>
     </div>
+    <div class="slider-group">
+      <label>Eccentricity e</label>
+      <input type="range" id="sl-e" min="0" max="0.9" step="0.01" value="0.3">
+      <span class="val" id="v-e">0.30</span>
+    </div>
+    <div class="slider-group">
+      <label>Central mass (M☉)</label>
+      <input type="range" id="sl-m" min="1" max="5" step="0.1" value="1">
+      <span class="val" id="v-m">1.0</span>
+    </div>
+    <label class="area-toggle"><input type="checkbox" id="show-area" checked> Show swept area</label>
+  </div>
+  <div class="controls-row">
+    <button class="btn btn-primary" id="play-btn">⏸ Pause</button>
+    <div style="display:flex;gap:4px;">
+      <button class="btn btn-speed" data-speed="0.25">0.25x</button>
+      <button class="btn btn-speed active" data-speed="1">1x</button>
+      <button class="btn btn-speed" data-speed="2">2x</button>
+      <button class="btn btn-speed" data-speed="3">3x</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="preset-btn" data-preset="mercury">Mercury (e=0.21)</button>
+      <button class="preset-btn" data-preset="earth">Earth (e=0.017)</button>
+      <button class="preset-btn" data-preset="comet">Highly Elliptical Comet</button>
+    </div>
+    <button class="btn btn-ghost" id="show-quiz-btn" style="margin-left:auto;">📝 Quiz</button>
+  </div>
+</div>
+
+<!-- Quiz Panel -->
+<div class="quiz-panel" id="quiz-panel">
+  <div class="quiz-header">
+    <h3>📝 Quick Quiz</h3>
+    <button class="btn btn-ghost" id="hide-quiz-btn" style="padding:3px 8px;font-size:11px;">✕</button>
+  </div>
+  <div class="quiz-body" id="quiz-body"></div>
+</div>
+<button id="quiz-float-btn" title="Open Quiz">📝</button>
+
+<div id="toast-container"></div>
+
+<!-- About Modal -->
+<div id="about-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:24px;max-width:420px;width:90%;">
+    <h3 style="color:#60A5FA;margin-bottom:12px;font-size:16px;">About This Simulation</h3>
+    <p style="font-size:13px;color:#CBD5E1;line-height:1.7;margin-bottom:12px;">Kepler's Laws interactive simulation. Orbits computed using exact 2-body Newtonian gravity with velocity Verlet integration.</p>
+    <p style="font-size:12px;color:#94A3B8;margin-bottom:12px;"><strong>Shortcuts:</strong> Space (Play/Pause) · R (Reset) · 1-5 (Speed)</p>
+    <button class="btn btn-primary" id="close-about">Close</button>
   </div>
 </div>
 
 <script>
-(function(){
-  // --- KaTeX Formulas ---
-  function renderFormulas(){
-    katex.render(String.raw`r = \frac{a(1-e^2)}{1 + e\cos\theta}`, document.getElementById('formula1'), {displayMode:true});
-    katex.render(String.raw`\frac{dA}{dt} = \frac{L}{2m} = \text{const}`, document.getElementById('formula2'), {displayMode:true});
-    katex.render(String.raw`T^2 = \frac{4\pi^2}{GM}\,a^3`, document.getElementById('formula3'), {displayMode:true});
+// ─── Inline OrbitControls ────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
+};
+
+// ─── KaTeX Formulas ──────────────────────────────────────────────────────────
+katex.render('\\text{Law 1: } r = \\frac{a(1-e^2)}{1+e\\cos\\theta}', document.getElementById('f1'), {throwOnError:false,displayMode:true});
+katex.render('\\text{Law 2: } \\frac{dA}{dt} = \\frac{L}{2m} = \\text{const}', document.getElementById('f2'), {throwOnError:false,displayMode:true});
+katex.render('\\text{Law 3: } T^2 = \\frac{4\\pi^2}{GM} a^3', document.getElementById('f3'), {throwOnError:false,displayMode:true});
+
+// ─── Scene Setup ─────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 12, 18);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 3;
+controls.maxDistance = 50;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5,10,7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5,5,-5);
+const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(keyLight, fillLight, ambient);
+
+// Stars background (subtle)
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
+for(let i=0;i<1500;i++){
+  starPos.push((Math.random()-0.5)*200,(Math.random()-0.5)*200,(Math.random()-0.5)*200);
+}
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos,3));
+const starMat = new THREE.PointsMaterial({color:0xffffff, size:0.15, transparent:true, opacity:0.5});
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ─── Physics State ────────────────────────────────────────────────────────────
+// Units: AU, years (G*M_sun in AU^3/yr^2 = 4π²)
+const G_AU = 4 * Math.PI * Math.PI; // G*M_sun in AU³/yr²
+
+let simState = {
+  a: 1.5, e: 0.3, M: 1.0,
+  x: 0, y: 0, vx: 0, vy: 0,
+  running: true, speed: 1.0,
+  time: 0,
+  showArea: true,
+  // period measurement
+  lastSign: 0, lastCrossTime: -1, measuredT: null,
+  // area tracking
+  areaAccum: 0, areaTimer: 0, sweepRate: 0,
+  sweepPoints: [],
+};
+
+function initOrbit() {
+  const { a, e, M } = simState;
+  // Start at perihelion: x = a(1-e) from center, Sun at focus (c = ae from center)
+  // In our frame, Sun at origin
+  const r_peri = a * (1 - e);
+  const r_apo = a * (1 + e);
+  // vis-viva: v² = GM*(2/r - 1/a)
+  const GM = G_AU * M;
+  const v_peri = Math.sqrt(GM * (2/r_peri - 1/a));
+  const v_apo  = Math.sqrt(GM * (2/r_apo  - 1/a));
+  simState.x = r_peri; simState.y = 0;
+  simState.vx = 0; simState.vy = v_peri;
+  simState.time = 0;
+  simState.measuredT = null; simState.lastSign = 0; simState.lastCrossTime = -1;
+  simState.sweepRate = 0.5 * r_peri * v_peri; // L/2m = r_peri * v_peri / 2 (at perihelion vy perp)
+  simState.areaAccum = 0; simState.areaTimer = 0;
+  simState.sweepPoints = [];
+  // store reference values
+  simState.v_peri = v_peri;
+  simState.v_apo = v_apo;
+  updateDataPanel();
+}
+
+function getAccel(x, y) {
+  const GM = G_AU * simState.M;
+  const r2 = x*x + y*y;
+  const r = Math.sqrt(r2);
+  const f = -GM / (r2 * r);
+  return { ax: f*x, ay: f*y };
+}
+
+function verletStep(dt) {
+  const { x, y, vx, vy } = simState;
+  const a1 = getAccel(x, y);
+  const vxh = vx + 0.5*a1.ax*dt;
+  const vyh = vy + 0.5*a1.ay*dt;
+  const nx = x + vxh*dt;
+  const ny = y + vyh*dt;
+  const a2 = getAccel(nx, ny);
+  simState.x = nx; simState.y = ny;
+  simState.vx = vxh + 0.5*a2.ax*dt;
+  simState.vy = vyh + 0.5*a2.ay*dt;
+}
+
+function physicsUpdate(dt) {
+  const maxSubStep = 0.0002; // years
+  const steps = Math.ceil(dt / maxSubStep);
+  const subDt = dt / steps;
+  for(let i=0;i<steps;i++) verletStep(subDt);
+}
+
+// ─── 3D Objects ──────────────────────────────────────────────────────────────
+// Sun
+const sunGeo = new THREE.SphereGeometry(0.4, 32, 32);
+const sunMat = new THREE.MeshStandardMaterial({ color:0xFBBF24, emissive:0xFBBF24, emissiveIntensity:2.5, roughness:0.3, metalness:0 });
+const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+scene.add(sunMesh);
+// Sun glow (point light)
+const sunLight = new THREE.PointLight(0xFBBF24, 2.5, 80);
+scene.add(sunLight);
+
+// Planet
+const planetGeo = new THREE.SphereGeometry(0.18, 32, 32);
+const planetMat = new THREE.MeshStandardMaterial({ color:0x3B82F6, emissive:0x0EA5E9, emissiveIntensity:0.6, roughness:0.4 });
+const planetMesh = new THREE.Mesh(planetGeo, planetMat);
+scene.add(planetMesh);
+
+// Orbit path line
+let orbitLine = null;
+function buildOrbitLine() {
+  if(orbitLine) scene.remove(orbitLine);
+  const { a, e } = simState;
+  const pts = [];
+  const b = a * Math.sqrt(1 - e*e);
+  const c = a * e; // focal distance from center
+  const N = 128;
+  for(let i=0;i<=N;i++){
+    const theta = (i/N)*Math.PI*2;
+    const px = a*Math.cos(theta) - c;
+    const py = b*Math.sin(theta);
+    pts.push(new THREE.Vector3(px, 0, py));
   }
-  renderFormulas();
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({ color:0x3B82F6, opacity:0.35, transparent:true });
+  orbitLine = new THREE.LineLoop(geo, mat);
+  scene.add(orbitLine);
+}
 
-  // --- Parameters ---
-  var params = { a: 1.0, e: 0.5, M: 1.0 };
-  var playing = false;
-  var trueAnomaly = 0;
-  var sweepTriangles = [];
-  var sweepTimer = 0;
-  var SWEEP_INTERVAL = 0.4;
-  var MAX_TRIANGLES = 20;
-  var SCALE = 3.0;
-  var orbitTrails = [];
+// Area sweep mesh (fan geometry, updated each frame)
+let sweepMesh = null;
+const MAX_SWEEP_PTS = 60;
 
-  // --- DOM refs ---
-  var sliderA = document.getElementById('sliderA');
-  var sliderE = document.getElementById('sliderE');
-  var sliderM = document.getElementById('sliderM');
-  var valA = document.getElementById('valA');
-  var valE = document.getElementById('valE');
-  var valM = document.getElementById('valM');
-
-  sliderA.addEventListener('input', function(){ params.a = parseFloat(this.value); valA.textContent = params.a.toFixed(2)+' AU'; rebuildOrbit(); });
-  sliderE.addEventListener('input', function(){ params.e = parseFloat(this.value); valE.textContent = params.e.toFixed(2); rebuildOrbit(); });
-  sliderM.addEventListener('input', function(){ params.M = parseFloat(this.value); valM.textContent = params.M.toFixed(2)+' M\u2609'; rebuildOrbit(); });
-
-  // --- Presets ---
-  window.applyPreset = function(name){
-    document.querySelectorAll('.btn-preset').forEach(function(b){ b.classList.remove('active'); });
-    var presets = {
-      circular: {a:1, e:0, M:1},
-      comet:    {a:3, e:0.85, M:1},
-      mercury:  {a:0.39, e:0.2, M:1}
-    };
-    var p = presets[name];
-    if(!p) return;
-    params.a = p.a; params.e = p.e; params.M = p.M;
-    sliderA.value = p.a; sliderE.value = p.e; sliderM.value = p.M;
-    valA.textContent = p.a.toFixed(2)+' AU';
-    valE.textContent = p.e.toFixed(2);
-    valM.textContent = p.M.toFixed(2)+' M\u2609';
-    event.target.classList.add('active');
-    resetSim();
-  };
-
-  // --- Three.js Setup ---
-  var wrap = document.getElementById('canvasWrap');
-  var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f172a);
-
-  var camera = new THREE.PerspectiveCamera(50, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
-  camera.position.set(0, 12, 12);
-
-  var renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-  wrap.insertBefore(renderer.domElement, wrap.firstChild);
-
-  var controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 3;
-  controls.maxDistance = 50;
-
-  // --- Grid ---
-  var gridHelper = new THREE.GridHelper(30, 30, 0x1e293b, 0x1e293b);
-  gridHelper.position.y = -0.05;
-  scene.add(gridHelper);
-
-  // --- Star ---
-  var starGeo = new THREE.SphereGeometry(0.35, 32, 32);
-  var starMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
-  var starMesh = new THREE.Mesh(starGeo, starMat);
-  scene.add(starMesh);
-
-  // Star glow
-  var glowGeo = new THREE.SphereGeometry(0.55, 32, 32);
-  var glowMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.15 });
-  var glowMesh = new THREE.Mesh(glowGeo, glowMat);
-  scene.add(glowMesh);
-
-  // Point light from star
-  var starLight = new THREE.PointLight(0xfbbf24, 2, 50);
-  scene.add(starLight);
-  scene.add(new THREE.AmbientLight(0x334155, 0.4));
-
-  // --- Planet ---
-  var planetGeo = new THREE.SphereGeometry(0.15, 24, 24);
-  var planetMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.4, metalness: 0.3 });
-  var planetMesh = new THREE.Mesh(planetGeo, planetMat);
-  scene.add(planetMesh);
-
-  // --- Orbit line ---
-  var orbitLine = null;
-  var periMarker = null;
-  var apoMarker = null;
-  var sweepGroup = new THREE.Group();
-  scene.add(sweepGroup);
-
-  // --- Comparison orbits for 3rd law ---
-  var comparisonOrbits = [];
-  var comparisonColors = [0xa78bfa, 0xf87171, 0x34d399];
-
-  function createOrbitPoints(a, e, segments){
-    var pts = [];
-    for(var i = 0; i <= segments; i++){
-      var theta = (i / segments) * Math.PI * 2;
-      var r = a * (1 - e * e) / (1 + e * Math.cos(theta));
-      pts.push(new THREE.Vector3(r * Math.cos(theta) * SCALE, 0, r * Math.sin(theta) * SCALE));
-    }
-    return pts;
+function buildSweepGeometry(pts) {
+  if(sweepMesh) scene.remove(sweepMesh);
+  if(pts.length < 2) return;
+  // Fan from origin through the last MAX_SWEEP_PTS positions
+  const verts = [];
+  const sun = new THREE.Vector3(0,0,0);
+  for(let i=0;i<pts.length-1;i++){
+    verts.push(sun.x, sun.y, sun.z);
+    verts.push(pts[i].x, 0, pts[i].y);
+    verts.push(pts[i+1].x, 0, pts[i+1].y);
   }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  const mat = new THREE.MeshBasicMaterial({ color:0x0EA5E9, transparent:true, opacity:0.18, side:THREE.DoubleSide, depthWrite:false });
+  sweepMesh = new THREE.Mesh(geo, mat);
+  scene.add(sweepMesh);
+}
 
-  function createMarker(color){
-    var geo = new THREE.SphereGeometry(0.08, 12, 12);
-    var mat = new THREE.MeshBasicMaterial({ color: color });
-    return new THREE.Mesh(geo, mat);
-  }
+// ─── UI Helpers ──────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
 
-  function rebuildOrbit(){
-    // Remove old orbit
-    if(orbitLine) scene.remove(orbitLine);
-    if(periMarker) scene.remove(periMarker);
-    if(apoMarker) scene.remove(apoMarker);
+function updateDataPanel() {
+  const { a, e, M, v_peri, v_apo, measuredT, sweepRate, vx, vy } = simState;
+  const GM = G_AU * M;
+  const T_theory = Math.sqrt(a*a*a / M); // in years, T² = a³/M (Kepler3)
+  document.getElementById('d-a').textContent = a.toFixed(2) + ' AU';
+  document.getElementById('d-e').textContent = e.toFixed(3);
+  document.getElementById('d-tm').textContent = measuredT ? measuredT.toFixed(3) + ' yr' : '—';
+  document.getElementById('d-tt').textContent = T_theory.toFixed(3) + ' yr';
+  document.getElementById('d-vp').textContent = v_peri ? (v_peri * 4.74).toFixed(2) + ' km/s' : '—';
+  document.getElementById('d-va').textContent = v_apo ? (v_apo * 4.74).toFixed(2) + ' km/s' : '—';
+  document.getElementById('d-area').textContent = sweepRate ? sweepRate.toFixed(4) + ' AU²/yr' : '—';
+  const v_now = Math.sqrt(vx*vx + vy*vy);
+  document.getElementById('d-v').textContent = (v_now * 4.74).toFixed(2) + ' km/s';
+}
 
-    // Main orbit
-    var pts = createOrbitPoints(params.a, params.e, 256);
-    var lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
-    var lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.5 });
-    orbitLine = new THREE.Line(lineGeo, lineMat);
-    scene.add(orbitLine);
+// ─── Simulation Logic ────────────────────────────────────────────────────────
+let simTime = 0; // accumulated sim years
+let prevY = 0;
+const AREA_WINDOW = 0.04; // years of sweep to visualize
 
-    // Perihelion marker (theta=0)
-    var rPeri = params.a * (1 - params.e);
-    periMarker = createMarker(0xfbbf24);
-    periMarker.position.set(rPeri * SCALE, 0, 0);
-    scene.add(periMarker);
+function resetSim() {
+  buildOrbitLine();
+  initOrbit();
+  simTime = 0;
+  prevY = 0;
+  if(sweepMesh){ scene.remove(sweepMesh); sweepMesh = null; }
+  simState.sweepPoints = [];
+}
 
-    // Aphelion marker (theta=PI)
-    var rApo = params.a * (1 + params.e);
-    apoMarker = createMarker(0xf87171);
-    apoMarker.position.set(-rApo * SCALE, 0, 0);
-    scene.add(apoMarker);
+resetSim();
 
-    // Update metrics
-    document.getElementById('metricPeri').textContent = rPeri.toFixed(3) + ' AU';
-    document.getElementById('metricApo').textContent = rApo.toFixed(3) + ' AU';
+// ─── Main Loop ───────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
 
-    // Comparison orbits for 3rd law
-    comparisonOrbits.forEach(function(o){ scene.remove(o); });
-    comparisonOrbits = [];
+renderer.setAnimationLoop(() => {
+  let delta = clock.getDelta();
+  if(delta > 0.1) delta = 0.02;
+  controls.update();
 
-    var compA = [1.0, 2.0, 3.5];
-    var thirdLawBody = document.getElementById('thirdLawBody');
-    thirdLawBody.innerHTML = '';
+  if(simState.running) {
+    const dtSim = delta * simState.speed * 0.15; // scale: 1 real sec ≈ 0.15 simulated years
+    physicsUpdate(dtSim);
+    simState.time += dtSim;
+    simTime += dtSim;
 
-    for(var ci = 0; ci < compA.length; ci++){
-      var ca = compA[ci];
-      if(Math.abs(ca - params.a) < 0.05) continue;
-      var ce = Math.min(params.e, 0.6);
-      var cpts = createOrbitPoints(ca, ce, 128);
-      var cGeo = new THREE.BufferGeometry().setFromPoints(cpts);
-      var cMat = new THREE.LineBasicMaterial({ color: comparisonColors[ci], transparent: true, opacity: 0.25 });
-      var cLine = new THREE.Line(cGeo, cMat);
-      scene.add(cLine);
-      comparisonOrbits.push(cLine);
-    }
-
-    // 3rd law table
-    var allA = compA.slice();
-    if(allA.indexOf(params.a) === -1) allA.push(params.a);
-    allA.sort(function(x,y){return x-y;});
-    for(var ti = 0; ti < allA.length; ti++){
-      var ta = allA[ti];
-      var tPeriod = Math.sqrt(ta * ta * ta / params.M);
-      var ratio = (tPeriod * tPeriod) / (ta * ta * ta);
-      var isMain = Math.abs(ta - params.a) < 0.05;
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td'+(isMain?' class="highlight"':'')+'>' + ta.toFixed(2) + '</td>' +
-                     '<td'+(isMain?' class="highlight"':'')+'>' + tPeriod.toFixed(3) + '</td>' +
-                     '<td'+(isMain?' class="highlight"':'')+'>' + ratio.toFixed(4) + '</td>';
-      thirdLawBody.appendChild(tr);
-    }
-
-    // Clear sweep triangles
-    while(sweepGroup.children.length > 0) sweepGroup.remove(sweepGroup.children[0]);
-    sweepTriangles = [];
-    sweepTimer = 0;
-
-    updateMetrics();
-  }
-
-  // --- Physics: Kepler equation solver ---
-  function solveKepler(M, e){
-    // Newton's method for E from M = E - e*sin(E)
-    var E = M;
-    for(var i = 0; i < 20; i++){
-      var dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
-      E -= dE;
-      if(Math.abs(dE) < 1e-10) break;
-    }
-    return E;
-  }
-
-  function eccentricToTrue(E, e){
-    return 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
-  }
-
-  // --- Simulation state ---
-  var meanAnomaly = 0;
-  var prevTheta = 0;
-
-  function getOrbitalPeriod(){
-    return Math.sqrt(params.a * params.a * params.a / params.M);
-  }
-
-  function updateMetrics(){
-    var r = params.a * (1 - params.e * params.e) / (1 + params.e * Math.cos(trueAnomaly));
-    var T = getOrbitalPeriod();
-    var n = 2 * Math.PI / T;
-    // vis-viva: v^2 = GM(2/r - 1/a)
-    var v = Math.sqrt(params.M * (2 / r - 1 / params.a));
-    // areal velocity = L/(2m) = sqrt(GM*a*(1-e^2)) / 2
-    var dAdt = 0.5 * Math.sqrt(params.M * params.a * (1 - params.e * params.e));
-    var ratio = (T * T) / (params.a * params.a * params.a);
-
-    document.getElementById('metricT').textContent = T.toFixed(3) + ' yr';
-    document.getElementById('metricV').textContent = v.toFixed(3) + ' AU/yr';
-    document.getElementById('metricR').textContent = r.toFixed(3) + ' AU';
-    document.getElementById('metricDA').textContent = dAdt.toFixed(4) + ' AU\u00B2/yr';
-    document.getElementById('metricRatio').textContent = ratio.toFixed(4) + ' yr\u00B2/AU\u00B3';
-
-    document.getElementById('overlayStarLabel').textContent = 'Star: ' + params.M.toFixed(2) + ' M\u2609';
-    document.getElementById('overlayPlanetLabel').textContent = 'Planet: r = ' + r.toFixed(3) + ' AU';
-    document.getElementById('overlayAreaLabel').textContent = 'dA/dt = ' + dAdt.toFixed(4) + ' (const)';
-  }
-
-  function addSweepTriangle(theta1, theta2){
-    var steps = 12;
-    var vertices = [0, 0, 0]; // star at origin
-    for(var i = 0; i <= steps; i++){
-      var t = theta1 + (theta2 - theta1) * i / steps;
-      var r = params.a * (1 - params.e * params.e) / (1 + params.e * Math.cos(t));
-      vertices.push(r * Math.cos(t) * SCALE, 0.01, r * Math.sin(t) * SCALE);
-    }
-
-    var indices = [];
-    for(var i = 1; i <= steps; i++){
-      indices.push(0, i, i + 1);
-    }
-
-    var geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geo.setIndex(indices);
-
-    // Color based on position — near perihelion = warm, near aphelion = cool
-    var midTheta = (theta1 + theta2) / 2;
-    var normalizedAngle = Math.abs(midTheta % (2 * Math.PI));
-    if(normalizedAngle > Math.PI) normalizedAngle = 2 * Math.PI - normalizedAngle;
-    var hue = 0.28 + 0.38 * (normalizedAngle / Math.PI); // green(0.28) to blue(0.66)
-    var color = new THREE.Color().setHSL(hue, 0.7, 0.5);
-
-    var mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
-    var mesh = new THREE.Mesh(geo, mat);
-    sweepGroup.add(mesh);
-    sweepTriangles.push(mesh);
-
-    if(sweepTriangles.length > MAX_TRIANGLES){
-      var old = sweepTriangles.shift();
-      sweepGroup.remove(old);
-      old.geometry.dispose();
-      old.material.dispose();
-    }
-  }
-
-  // --- Play/Pause ---
-  window.togglePlay = function(){
-    playing = !playing;
-    var btn = document.getElementById('btnPlay');
-    if(playing){
-      btn.textContent = '\u23F8 Pause';
-      btn.className = 'btn btn-pause';
-    } else {
-      btn.textContent = '\u25B6 Play';
-      btn.className = 'btn btn-play';
-    }
-  };
-
-  window.resetSim = function(){
-    meanAnomaly = 0;
-    trueAnomaly = 0;
-    prevTheta = 0;
-    while(sweepGroup.children.length > 0){
-      var c = sweepGroup.children[0];
-      sweepGroup.remove(c);
-      c.geometry.dispose();
-      c.material.dispose();
-    }
-    sweepTriangles = [];
-    sweepTimer = 0;
-    rebuildOrbit();
-  };
-
-  // --- Quiz ---
-  window.checkQuiz = function(btn){
-    var q = btn.getAttribute('data-q');
-    var correct = btn.getAttribute('data-correct') === 'true';
-    var siblings = btn.parentElement.querySelectorAll('.quiz-option[data-q="'+q+'"]');
-    siblings.forEach(function(s){
-      s.style.pointerEvents = 'none';
-      if(s.getAttribute('data-correct') === 'true') s.classList.add('correct');
-    });
-    if(!correct) btn.classList.add('wrong');
-    document.getElementById('expl' + q).style.display = 'block';
-  };
-
-  // --- FPS ---
-  var frameCount = 0;
-  var fpsTime = 0;
-
-  // --- Animation ---
-  var clock = new THREE.Clock();
-
-  function animate(){
-    requestAnimationFrame(animate);
-    var dt = clock.getDelta();
-    if(dt > 0.1) dt = 0.1;
-
-    // FPS
-    frameCount++;
-    fpsTime += dt;
-    if(fpsTime >= 0.5){
-      document.getElementById('fpsDisplay').textContent = Math.round(frameCount / fpsTime) + ' FPS';
-      frameCount = 0;
-      fpsTime = 0;
-    }
-
-    if(playing){
-      var T = getOrbitalPeriod();
-      var n = 2 * Math.PI / T;
-      var simSpeed = 0.5;
-      meanAnomaly += n * dt * simSpeed;
-
-      var E = solveKepler(meanAnomaly, params.e);
-      trueAnomaly = eccentricToTrue(E, params.e);
-
-      var r = params.a * (1 - params.e * params.e) / (1 + params.e * Math.cos(trueAnomaly));
-
-      planetMesh.position.set(
-        r * Math.cos(trueAnomaly) * SCALE,
-        0,
-        r * Math.sin(trueAnomaly) * SCALE
-      );
-
-      // Sweep triangles at fixed time intervals
-      sweepTimer += dt * simSpeed;
-      if(sweepTimer >= SWEEP_INTERVAL){
-        addSweepTriangle(prevTheta, trueAnomaly);
-        prevTheta = trueAnomaly;
-        sweepTimer = 0;
+    // Period detection: y-sign change + going up (perihelion crossing)
+    const curSign = Math.sign(simState.y);
+    if(prevY < 0 && simState.y >= 0 && simState.vx > 0) {
+      if(simState.lastCrossTime >= 0) {
+        simState.measuredT = simState.time - simState.lastCrossTime;
       }
+      simState.lastCrossTime = simState.time;
+    }
+    prevY = simState.y;
 
-      // Fade old triangles
-      for(var i = 0; i < sweepTriangles.length; i++){
-        var age = (sweepTriangles.length - i) / sweepTriangles.length;
-        sweepTriangles[i].material.opacity = 0.1 + 0.3 * (1 - age);
-      }
+    // Area tracking
+    simState.sweepPoints.push({x: simState.x, y: simState.y});
+    if(simState.sweepPoints.length > MAX_SWEEP_PTS) simState.sweepPoints.shift();
 
-      updateMetrics();
+    // Angular momentum L = r x v (z-component, 2D)
+    simState.sweepRate = 0.5 * Math.abs(simState.x * simState.vy - simState.y * simState.vx);
+
+    // Update planet position (AU → scene units, 1 AU = 3 scene units)
+    const SC = 3;
+    planetMesh.position.set(simState.x * SC, 0, simState.y * SC);
+
+    // Swept area visualization
+    if(simState.showArea) {
+      buildSweepGeometry(simState.sweepPoints);
+    } else if(sweepMesh) {
+      scene.remove(sweepMesh); sweepMesh = null;
     }
 
-    // Star pulsing glow
-    var pulse = 0.13 + 0.04 * Math.sin(clock.elapsedTime * 2);
-    glowMat.opacity = pulse;
-    var glowScale = 1.0 + 0.08 * Math.sin(clock.elapsedTime * 1.5);
-    glowMesh.scale.setScalar(glowScale);
-
-    // Star size by mass
-    var starScale = 0.35 * Math.pow(params.M, 0.3);
-    starMesh.scale.setScalar(starScale / 0.35);
-
-    controls.update();
-    renderer.render(scene, camera);
+    updateDataPanel();
   }
 
-  // --- Resize ---
-  window.addEventListener('resize', function(){
-    var w = wrap.clientWidth;
-    var h = wrap.clientHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+  renderer.render(scene, camera);
+});
+
+// ─── UI Events ───────────────────────────────────────────────────────────────
+document.getElementById('play-btn').addEventListener('click', () => {
+  simState.running = !simState.running;
+  document.getElementById('play-btn').textContent = simState.running ? '⏸ Pause' : '▶ Play';
+  showToast(simState.running ? 'Simulation running' : 'Simulation paused');
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  resetSim();
+  showToast('Simulation reset');
+});
+
+document.getElementById('sl-a').addEventListener('input', function() {
+  simState.a = parseFloat(this.value);
+  document.getElementById('v-a').textContent = simState.a.toFixed(2);
+  resetSim();
+  showToast('Semi-major axis: ' + simState.a.toFixed(2) + ' AU');
+});
+
+document.getElementById('sl-e').addEventListener('input', function() {
+  simState.e = parseFloat(this.value);
+  document.getElementById('v-e').textContent = simState.e.toFixed(2);
+  resetSim();
+  showToast('Eccentricity: ' + simState.e.toFixed(2));
+});
+
+document.getElementById('sl-m').addEventListener('input', function() {
+  simState.M = parseFloat(this.value);
+  document.getElementById('v-m').textContent = simState.M.toFixed(1);
+  resetSim();
+  showToast('Central mass: ' + simState.M.toFixed(1) + ' M☉');
+});
+
+document.getElementById('show-area').addEventListener('change', function() {
+  simState.showArea = this.checked;
+  if(!this.checked && sweepMesh){ scene.remove(sweepMesh); sweepMesh=null; }
+});
+
+// Speed buttons
+document.querySelectorAll('.btn-speed').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const sp = parseFloat(this.dataset.speed);
+    simState.speed = sp;
+    document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    showToast('Speed: ' + sp + 'x');
   });
+});
 
-  // --- Init ---
-  rebuildOrbit();
-  // Place planet at perihelion initially
-  var initR = params.a * (1 - params.e);
-  planetMesh.position.set(initR * SCALE, 0, 0);
-  animate();
+// Presets
+const PRESETS = {
+  mercury: { a: 0.387, e: 0.205, M: 1.0, label: 'Mercury (e=0.21)' },
+  earth:   { a: 1.0,   e: 0.017, M: 1.0, label: 'Earth (e=0.017)' },
+  comet:   { a: 4.5,   e: 0.88,  M: 1.0, label: 'Highly Elliptical Comet' },
+};
 
-})();
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const p = PRESETS[this.dataset.preset];
+    if(!p) return;
+    simState.a = p.a; simState.e = p.e; simState.M = p.M;
+    document.getElementById('sl-a').value = p.a;
+    document.getElementById('sl-e').value = p.e;
+    document.getElementById('sl-m').value = p.M;
+    document.getElementById('v-a').textContent = p.a.toFixed(2);
+    document.getElementById('v-e').textContent = p.e.toFixed(3);
+    document.getElementById('v-m').textContent = p.M.toFixed(1);
+    resetSim();
+    showToast('Preset: ' + p.label);
+  });
+});
+
+// Keyboard
+window.addEventListener('keydown', (e) => {
+  if(e.target.tagName === 'INPUT') return;
+  if(e.code === 'Space') { e.preventDefault(); document.getElementById('play-btn').click(); }
+  if(e.code === 'KeyR') { document.getElementById('reset-btn').click(); }
+  const speedMap = {'1':0.25,'2':1,'3':2,'4':3};
+  if(speedMap[e.key]) {
+    const sp = speedMap[e.key];
+    simState.speed = sp;
+    document.querySelectorAll('.btn-speed').forEach(b => {
+      b.classList.toggle('active', parseFloat(b.dataset.speed) === sp);
+    });
+    showToast('Speed: ' + sp + 'x');
+  }
+});
+
+// Fullscreen
+document.getElementById('fullscreen-btn').addEventListener('click', () => {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+// About
+document.getElementById('about-btn').addEventListener('click', () => {
+  document.getElementById('about-modal').style.display = 'flex';
+});
+document.getElementById('close-about').addEventListener('click', () => {
+  document.getElementById('about-modal').style.display = 'none';
+});
+
+// Sidebar toggle
+document.getElementById('toggle-sidebar-btn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+const QUIZ = [
+  {
+    q: "If you double a planet's semi-major axis (a → 2a), the orbital period changes by a factor of:",
+    opts: ["2", "√2", "2√2", "4"],
+    ans: 2,
+    ok: "Correct! By Kepler's 3rd Law T² ∝ a³, so T ∝ a^(3/2). Doubling a gives T → 2^(3/2) = 2√2 ≈ 2.83 times longer.",
+    no: "Not quite. Use T² ∝ a³: if a → 2a, then T² → (2a)³/a³ = 8 times larger, so T → √8 = 2√2. The answer is 2√2."
+  },
+  {
+    q: "A planet is fastest when it is:",
+    opts: ["At aphelion (farthest from Sun)", "At perihelion (closest to Sun)", "At the end of the semi-minor axis", "Always at constant speed"],
+    ans: 1,
+    ok: "Correct! Kepler's 2nd Law (equal areas) means the planet sweeps more arc per unit time when close. Angular momentum conservation: v is highest at smallest r.",
+    no: "Careful — by conservation of angular momentum (L = mvr = const), when r is smallest (perihelion), v must be largest to keep L constant. So perihelion is fastest."
+  },
+  {
+    q: "Earth's seasons are caused by:",
+    opts: ["Earth being closer to the Sun in summer", "Earth's axial tilt of 23.5°", "The elliptical shape of Earth's orbit", "Changes in the Sun's energy output"],
+    ans: 1,
+    ok: "Correct! Earth's orbit is nearly circular (e=0.017). Seasons come from axial tilt — the hemisphere tilted toward the Sun receives more direct sunlight.",
+    no: "This is a very common misconception! Earth's orbit is nearly circular (e=0.017), so distance varies only ~3%. The real cause is Earth's 23.5° axial tilt, which changes how directly sunlight hits each hemisphere."
+  }
+];
+
+let currentQ = 0, answered = false;
+
+function renderQuiz() {
+  const q = QUIZ[currentQ];
+  const body = document.getElementById('quiz-body');
+  body.innerHTML = `
+    <div style="font-size:11px;color:#64748B;margin-bottom:6px;">Question ${currentQ+1} / ${QUIZ.length}</div>
+    <div class="quiz-question">${q.q}</div>
+    <div id="opts"></div>
+    <div class="quiz-feedback" id="qfb"></div>
+    <div class="quiz-nav">
+      <button class="btn btn-ghost" id="q-prev" style="font-size:11px;padding:4px 10px;" ${currentQ===0?'disabled':''}>← Prev</button>
+      <button class="btn btn-ghost" id="q-next" style="font-size:11px;padding:4px 10px;" ${currentQ===QUIZ.length-1?'disabled':''}>Next →</button>
+    </div>`;
+  const opts = document.getElementById('opts');
+  q.opts.forEach((o, i) => {
+    const el = document.createElement('div');
+    el.className = 'quiz-option';
+    el.textContent = String.fromCharCode(65+i) + '. ' + o;
+    el.addEventListener('click', () => {
+      if(answered) return;
+      answered = true;
+      if(i === q.ans) {
+        el.classList.add('correct');
+        document.getElementById('qfb').textContent = '✓ ' + q.ok;
+        document.getElementById('qfb').style.color = '#86EFAC';
+      } else {
+        el.classList.add('wrong');
+        opts.children[q.ans].classList.add('correct');
+        document.getElementById('qfb').textContent = '✗ ' + q.no;
+        document.getElementById('qfb').style.color = '#FCA5A5';
+      }
+    });
+    opts.appendChild(el);
+  });
+  answered = false;
+  document.getElementById('q-prev').addEventListener('click', () => { if(currentQ>0){currentQ--;renderQuiz();} });
+  document.getElementById('q-next').addEventListener('click', () => { if(currentQ<QUIZ.length-1){currentQ++;renderQuiz();} });
+}
+
+document.getElementById('show-quiz-btn').addEventListener('click', () => {
+  document.getElementById('quiz-panel').classList.remove('hidden-panel');
+  document.getElementById('quiz-float-btn').style.display = 'none';
+  renderQuiz();
+});
+
+document.getElementById('hide-quiz-btn').addEventListener('click', () => {
+  document.getElementById('quiz-panel').classList.add('hidden-panel');
+  document.getElementById('quiz-float-btn').style.display = 'flex';
+  document.getElementById('quiz-float-btn').style.alignItems = 'center';
+  document.getElementById('quiz-float-btn').style.justifyContent = 'center';
+});
+
+document.getElementById('quiz-float-btn').addEventListener('click', () => {
+  document.getElementById('quiz-panel').classList.remove('hidden-panel');
+  document.getElementById('quiz-float-btn').style.display = 'none';
+  renderQuiz();
+});
+
+renderQuiz();
+
+// Initial toast
+showToast('Kepler\'s Laws loaded — drag to orbit, use sliders to explore!');
 </script>
+<!-- Generated by AetherViz Master — May your orbits be elliptical and your curiosity boundless! -->
 </body>
 </html>

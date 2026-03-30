@@ -3,807 +3,536 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bending Light — Snell's Law &amp; Total Internal Reflection — NeonPhysics AP Physics</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-<script src="/lib/orbit-controls.js"></script>
+<title>Bending Light (Refraction) — AetherViz</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
-  .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.08));border-bottom:1px solid rgba(59,130,246,.2);flex-shrink:0}
-  .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-  .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
-  .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-  h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
-  .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
-  .layout{display:flex;flex:1;overflow:hidden}
-  .canvas-wrap{flex:1;position:relative;background:#0a0e16}
-  canvas{display:block;width:100%;height:100%}
-  .fps{position:absolute;bottom:10px;right:12px;font-size:10px;color:#334155;font-variant-numeric:tabular-nums;font-family:monospace}
-  .overlay{position:absolute;top:12px;left:12px;background:rgba(10,14,22,.9);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px);min-width:220px}
-  .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px}
-  .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
-  .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
-  .blue{color:#60a5fa} .violet{color:#c084fc} .orange{color:#fb923c} .green{color:#4ade80} .red{color:#f87171} .yellow{color:#facc15} .cyan{color:#22d3ee}
-  .tir-badge{display:none;margin-top:6px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fca5a5;text-align:center}
-  .tir-badge.show{display:block}
-  .sidebar{width:290px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
-  .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
-  .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-  .param-row{margin-bottom:12px}
-  .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
-  .param-name{font-size:11px;color:#94a3b8}
-  .param-val{font-size:11px;font-weight:700;color:#60a5fa;font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(59,130,246,.25);border-radius:2px;cursor:pointer;outline:none}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
-  .formula-box{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px}
-  .formula-desc{font-size:10px;color:#475569;margin-top:3px}
-  .katex-display{margin:0!important}
-  .katex{font-size:1em!important}
-  .preset-btn{display:block;width:100%;padding:9px 12px;margin-bottom:8px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#cbd5e1;font-size:12px;cursor:pointer;text-align:left;transition:all .15s}
-  .preset-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#e0f2fe}
-  .preset-btn .preset-name{font-weight:600;color:#7dd3fc;margin-bottom:2px}
-  .preset-btn .preset-desc{font-size:10px;color:#64748b}
-  .material-select{width:100%;padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:#161b22;color:#e8eaf0;font-size:11px;cursor:pointer;outline:none;margin-bottom:8px}
-  .material-select:focus{border-color:rgba(59,130,246,.4)}
-  .legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
-  .legend-line{width:16px;height:2px;border-radius:1px}
-  .quiz-box{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:12px}
-  .quiz-q{font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.5}
-  .quiz-opt{display:block;width:100%;padding:7px 10px;margin-bottom:5px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;cursor:pointer;text-align:left;transition:all .15s}
-  .quiz-opt:hover{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2)}
-  .quiz-opt.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac}
-  .quiz-opt.wrong{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
-  .quiz-feedback{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:5px;display:none}
-  .quiz-feedback.show{display:block}
-  .quiz-feedback.correct{background:rgba(34,197,94,.1);color:#86efac}
-  .quiz-feedback.wrong{background:rgba(239,68,68,.1);color:#fca5a5}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #1e293b; } ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 2px; }
+  .glass { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(12px); }
+  .glass-panel { background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.25); backdrop-filter: blur(16px); }
+  .btn-primary { background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: none; cursor: pointer; transition: all 0.2s; }
+  .btn-primary:hover { background: linear-gradient(135deg,#60A5FA,#38BDF8); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(59,130,246,0.4); }
+  .btn-secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+  .slider-track { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2); outline: none; cursor: pointer; }
+  .slider-track::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg,#3B82F6,#0EA5E9); border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+  .preset-btn { font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93C5FD; }
+  .preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.35); border-color: #3B82F6; color: #fff; }
+  .quiz-opt { padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; font-size: 13px; }
+  .quiz-opt:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.5); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22C55E; }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.2); border-color: #EF4444; }
+  #toast { position: fixed; top: 70px; right: 20px; z-index: 9999; pointer-events: none; }
+  .toast-msg { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.5); border-radius: 8px; padding: 10px 16px; margin-bottom: 8px; font-size: 13px; color: #93C5FD; animation: slideIn 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .katex { font-size: 0.95em; }
+  #left-panel { overflow-y: auto; max-height: calc(100vh - 56px); }
+  .tir-badge { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.5); border-radius: 12px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #FCA5A5; pointer-events: none; white-space: nowrap; }
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <span class="badge">AP PHYSICS</span>
-    <span class="badge badge-free">FREE</span>
+
+<!-- NAV -->
+<nav class="glass-panel flex items-center justify-between px-4 h-14 fixed top-0 left-0 right-0 z-50">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-bold">n</div>
+    <div>
+      <div class="text-sm font-semibold text-white">Bending Light — Refraction</div>
+      <div class="text-xs text-slate-400">Snell's Law · Total Internal Reflection · AP Physics</div>
+    </div>
   </div>
-  <h1>Bending Light — Snell's Law &amp; Total Internal Reflection</h1>
-  <p class="subtitle">Explore refraction, reflection, and critical angle at material interfaces</p>
-</div>
+  <div class="flex items-center gap-2">
+    <button class="btn-secondary text-xs px-3 py-1.5 rounded-lg text-slate-300" onclick="resetSim()">Reset</button>
+    <button class="btn-secondary text-xs px-3 py-1.5 rounded-lg text-slate-300" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="btn-secondary text-xs px-3 py-1.5 rounded-lg text-slate-300" onclick="document.getElementById('about-modal').classList.remove('hidden')">About</button>
+  </div>
+</nav>
 
-<div class="layout">
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="c"></canvas>
-    <div class="overlay">
-      <div class="stat-row">
-        <span class="stat-label">Incident Angle</span>
-        <span class="stat-value yellow" id="statTheta1">45.0°</span>
+<!-- LAYOUT -->
+<div class="flex pt-14 h-screen">
+  <!-- LEFT PANEL -->
+  <div id="left-panel" class="glass-panel w-72 flex-shrink-0 p-4 space-y-4 border-r border-blue-900/30">
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Core Formulas</div>
+      <div class="glass rounded-lg p-3 space-y-2">
+        <div id="f1" class="text-center py-1"></div>
+        <div class="text-xs text-slate-400 text-center">Snell's Law — conservation of wave phase at interface</div>
+        <div id="f2" class="text-center py-1 mt-2"></div>
+        <div class="text-xs text-slate-400 text-center">Critical angle for total internal reflection</div>
+        <div id="f3" class="text-center py-1 mt-2"></div>
+        <div class="text-xs text-slate-400 text-center">Index of refraction definition</div>
       </div>
-      <div class="stat-row">
-        <span class="stat-label">Refracted Angle</span>
-        <span class="stat-value cyan" id="statTheta2">28.1°</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Critical Angle</span>
-        <span class="stat-value orange" id="statCritical">N/A</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Reflectance</span>
-        <span class="stat-value violet" id="statReflect">4.0%</span>
-      </div>
-      <div class="tir-badge" id="tirBadge">TOTAL INTERNAL REFLECTION</div>
     </div>
-    <div class="fps" id="fps">0 FPS</div>
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Concept</div>
+      <div class="text-sm text-slate-300 leading-relaxed space-y-2">
+        <p>Light slows down when entering a denser medium. Since frequency is fixed (determined by the source), the wavelength shrinks, and the wavefronts bunch together. This change in wave speed is what bends the ray — the direction must shift so the wavefront stays coherent across the interface.</p>
+        <p>When light tries to exit a denser medium at too steep an angle, there is no real solution for a transmitted angle — <span class="text-blue-300 font-medium">total internal reflection</span> (TIR) occurs. Every photon bounces back. Fiber optics, prism binoculars, and diamonds exploit this.</p>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Key Insights</div>
+      <div class="space-y-2">
+        <div class="glass rounded-lg p-2.5 text-xs text-slate-300">
+          <span class="text-amber-400 font-semibold">Common Misconception:</span> Light "chooses" to bend. It doesn't — the wave phase must be continuous across the interface, forcing the direction change.
+        </div>
+        <div class="glass rounded-lg p-2.5 text-xs text-slate-300">
+          <span class="text-blue-400 font-semibold">Historical Note:</span> Ibn al-Haytham first described refraction quantitatively (~1000 CE); Willebrord Snellius derived the sine law in 1621.
+        </div>
+        <div class="glass rounded-lg p-2.5 text-xs text-slate-300">
+          <span class="text-emerald-400 font-semibold">AP Connection:</span> TIR only occurs from denser to less dense (n₁ > n₂). Critical angle θ_c = arcsin(n₂/n₁).
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Why It Matters</div>
+      <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+        <li>Fiber optic cables: TIR guides signals around the globe</li>
+        <li>Camera lenses: multiple refracting surfaces correct aberrations</li>
+        <li>Mirages: atmospheric refraction bends light near hot ground</li>
+        <li>Diamond brilliance: high n = 2.42 creates TIR sparkle</li>
+      </ul>
+    </div>
   </div>
 
-  <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Parameters</div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Incident Angle</span>
-          <span class="param-val" id="valAngle">45°</span>
-        </div>
-        <input type="range" id="sliderAngle" min="0" max="89" step="0.5" value="45">
-      </div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">n&#x2081; (upper medium)</span>
-          <span class="param-val" id="valN1">1.00</span>
-        </div>
-        <input type="range" id="sliderN1" min="1.0" max="2.5" step="0.01" value="1.0">
-      </div>
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">n&#x2082; (lower medium)</span>
-          <span class="param-val" id="valN2">1.50</span>
-        </div>
-        <input type="range" id="sliderN2" min="1.0" max="2.5" step="0.01" value="1.5">
+  <!-- MAIN CANVAS -->
+  <div class="flex-1 relative" id="canvas-container">
+    <!-- Data overlay -->
+    <div class="glass-panel rounded-xl p-3 text-xs z-10 absolute top-3 left-3" style="font-variant-numeric: tabular-nums; min-width:200px;">
+      <div class="text-blue-400 font-semibold mb-2">Live Data</div>
+      <div class="space-y-1">
+        <div class="flex justify-between"><span class="text-slate-400">Incident angle θ₁</span><span id="d-t1" class="text-white">30.0°</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Refracted angle θ₂</span><span id="d-t2" class="text-white">22.1°</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Critical angle θ_c</span><span id="d-tc" class="text-white">48.8°</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">n₁</span><span id="d-n1" class="text-white">1.00</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">n₂</span><span id="d-n2" class="text-white">1.33</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Status</span><span id="d-status" class="text-emerald-400">Refraction</span></div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Material Presets</div>
-      <select class="material-select" id="matN1">
-        <option value="1.00">Upper: Air (n=1.00)</option>
-        <option value="1.33">Upper: Water (n=1.33)</option>
-        <option value="1.50">Upper: Glass (n=1.50)</option>
-        <option value="2.42">Upper: Diamond (n=2.42)</option>
-      </select>
-      <select class="material-select" id="matN2">
-        <option value="1.00">Lower: Air (n=1.00)</option>
-        <option value="1.33">Lower: Water (n=1.33)</option>
-        <option value="1.50" selected>Lower: Glass (n=1.50)</option>
-        <option value="2.42">Lower: Diamond (n=2.42)</option>
-      </select>
-    </div>
+    <!-- TIR badge -->
+    <div id="tir-badge" class="tir-badge">Total Internal Reflection</div>
+  </div>
 
-    <div class="section">
-      <div class="section-title">Presets</div>
-      <button class="preset-btn" onclick="applyPreset('airGlass')">
-        <div class="preset-name">Air to Glass</div>
-        <div class="preset-desc">n&#x2081;=1.00, n&#x2082;=1.50, angle=45°</div>
-      </button>
-      <button class="preset-btn" onclick="applyPreset('waterAir')">
-        <div class="preset-name">Water to Air (Total Reflection)</div>
-        <div class="preset-desc">n&#x2081;=1.33, n&#x2082;=1.00, angle=50° (>&theta;<sub>c</sub>=48.8°)</div>
-      </button>
-      <button class="preset-btn" onclick="applyPreset('diamond')">
-        <div class="preset-name">Diamond Brilliance</div>
-        <div class="preset-desc">n&#x2082;=2.42 — extreme refraction</div>
-      </button>
+  <!-- RIGHT QUIZ PANEL -->
+  <div class="glass-panel w-72 flex-shrink-0 border-l border-blue-900/30 flex flex-col">
+    <div class="p-3 border-b border-blue-900/30 flex items-center justify-between">
+      <span class="text-sm font-semibold text-white">Quiz</span>
+      <button class="btn-secondary text-xs px-2 py-1 rounded" onclick="toggleQuiz()">Hide</button>
     </div>
-
-    <div class="section">
-      <div class="section-title">Ray Legend</div>
-      <div class="legend-row">
-        <div class="legend-item"><div class="legend-line" style="background:#facc15"></div><span>Incident ray</span></div>
-        <div class="legend-item"><div class="legend-line" style="background:#22d3ee"></div><span>Refracted ray</span></div>
-        <div class="legend-item"><div class="legend-line" style="background:#a78bfa;opacity:.6"></div><span>Reflected ray</span></div>
-        <div class="legend-item"><div class="legend-line" style="background:#ffffff;border-top:1px dashed #fff;background:none"></div><span>Normal line</span></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Snell's Law</div>
-      <div class="formula-box">
-        <div id="katex1"></div>
-        <div class="formula-desc">Snell's law of refraction</div>
-      </div>
-      <div class="formula-box">
-        <div id="katex2"></div>
-        <div class="formula-desc">Critical angle for total internal reflection (n&#x2081; > n&#x2082;)</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">AP Practice</div>
-      <div class="quiz-box" id="quiz1">
-        <div class="quiz-q">1. Light travels from glass (n=1.50) into water (n=1.33). What is the critical angle for total internal reflection?</div>
-        <button class="quiz-opt" onclick="checkQuiz(1,'a',this)">A) 41.8°</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,'b',this)">B) 48.8°</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,'c',this)">C) 62.5°</button>
-        <button class="quiz-opt" onclick="checkQuiz(1,'d',this)">D) 90.0°</button>
-        <div class="quiz-feedback" id="fb1"></div>
-      </div>
-      <div class="quiz-box" id="quiz2">
-        <div class="quiz-q">2. A ray hits a glass-air interface at 30° from the normal. If n<sub>glass</sub>=1.50, what is the refracted angle in air?</div>
-        <button class="quiz-opt" onclick="checkQuiz(2,'a',this)">A) 19.5°</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,'b',this)">B) 30.0°</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,'c',this)">C) 48.6°</button>
-        <button class="quiz-opt" onclick="checkQuiz(2,'d',this)">D) 60.0°</button>
-        <div class="quiz-feedback" id="fb2"></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">About</div>
-      <div style="font-size:11px;color:#475569;line-height:1.6">
-        Adjust the incident angle and refractive indices to explore Snell's law. When light passes from a denser to a less dense medium (n&#x2081; > n&#x2082;), total internal reflection occurs beyond the critical angle. The reflected ray intensity increases as the angle approaches the critical angle.
-      </div>
+    <div id="quiz-panel" class="p-3 overflow-y-auto flex-1">
+      <div id="q-container" class="space-y-4 text-sm"></div>
     </div>
   </div>
 </div>
+
+<!-- BOTTOM CONTROLS -->
+<div class="glass-panel fixed bottom-0 left-0 right-0 p-3 border-t border-blue-900/30 z-40">
+  <div class="flex items-center gap-6 flex-wrap">
+    <div class="flex gap-2">
+      <button class="preset-btn" onclick="applyPreset('air-water')">Air→Water (n=1.33)</button>
+      <button class="preset-btn" onclick="applyPreset('air-glass')">Air→Glass (n=1.5)</button>
+      <button class="preset-btn" onclick="applyPreset('tir')">Total Internal Reflection</button>
+    </div>
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 w-28">Incident angle (°)</label>
+        <input type="range" id="sl-angle" class="slider-track w-28" min="0" max="89" step="1" value="30">
+        <span id="v-angle" class="text-xs text-blue-300 w-8">30</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 w-10">n₁</label>
+        <input type="range" id="sl-n1" class="slider-track w-24" min="1.0" max="1.5" step="0.05" value="1.0">
+        <span id="v-n1" class="text-xs text-blue-300 w-8">1.00</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 w-10">n₂</label>
+        <input type="range" id="sl-n2" class="slider-track w-24" min="1.0" max="2.4" step="0.05" value="1.33">
+        <span id="v-n2" class="text-xs text-blue-300 w-8">1.33</span>
+      </div>
+    </div>
+    <div class="text-xs text-slate-500 ml-auto">Space: reset · R: reset · 1-3: presets</div>
+  </div>
+</div>
+
+<!-- ABOUT MODAL -->
+<div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="glass-panel rounded-2xl p-6 max-w-sm w-full mx-4">
+    <h3 class="text-lg font-bold text-white mb-3">Bending Light — Refraction</h3>
+    <p class="text-sm text-slate-300 mb-4">Interactive Snell's Law demonstration with total internal reflection. Rays computed analytically from the exact Snell's Law formula.</p>
+    <div class="text-xs text-slate-400 space-y-1 mb-4">
+      <div><span class="text-blue-400">R</span> — Reset simulation</div>
+      <div><span class="text-blue-400">1</span> — Preset: Air→Water</div>
+      <div><span class="text-blue-400">2</span> — Preset: Air→Glass</div>
+      <div><span class="text-blue-400">3</span> — Preset: TIR</div>
+    </div>
+    <button class="btn-primary text-sm px-4 py-2 rounded-lg w-full" onclick="document.getElementById('about-modal').classList.add('hidden')">Close</button>
+  </div>
+</div>
+
+<div id="toast"></div>
 
 <script>
-(function() {
-  'use strict';
+// ===== INLINE OrbitControls =====
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
 
-  // ── KaTeX Formulas ──────────────────────────────────────────────────────
-  try {
-    katex.render('n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2', document.getElementById('katex1'), { displayMode: true });
-    katex.render('\\theta_c = \\arcsin\\!\\left(\\frac{n_2}{n_1}\\right)', document.getElementById('katex2'), { displayMode: true });
-  } catch (e) {
-    // KaTeX rendering failed silently
+// ===== PHYSICS PARAMS =====
+var params = { theta1_deg: 30, n1: 1.0, n2: 1.33 };
+var wavePhase = 0;
+var playing = true;
+
+// ===== THREE.JS SETUP =====
+var container = document.getElementById('canvas-container');
+var W = container.clientWidth, H = container.clientHeight;
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+var camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
+camera.position.set(0, 8, 16);
+var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// Lights
+var keyLight = new THREE.DirectionalLight(0xffffff, 1.0); keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+var fillLight = new THREE.DirectionalLight(0xffffff, 0.4); fillLight.position.set(-5, 5, -5);
+var backLight = new THREE.DirectionalLight(0xffffff, 0.3); backLight.position.set(0, 5, -10);
+var ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
+scene.add(new THREE.GridHelper(20, 20, 0x334155, 0x1e293b));
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 4; controls.maxDistance = 35;
+
+// ===== INTERFACE PLANE =====
+var interfaceMat = new THREE.MeshPhysicalMaterial({ color: 0x0EA5E9, transparent: true, opacity: 0.12, side: THREE.DoubleSide, roughness: 0.1, metalness: 0 });
+var interfaceMesh = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), interfaceMat);
+interfaceMesh.rotation.x = -Math.PI / 2;
+interfaceMesh.position.y = 0;
+scene.add(interfaceMesh);
+
+// Media labels — upper plane (medium 1)
+var medium1Mesh = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshStandardMaterial({ color: 0x0f172a, transparent: true, opacity: 0.0, side: THREE.DoubleSide }));
+medium1Mesh.rotation.x = -Math.PI / 2; medium1Mesh.position.set(0, 0.01, -3);
+scene.add(medium1Mesh);
+
+// Normal line (dashed visual — solid tube)
+var normalGeo = new THREE.CylinderGeometry(0.04, 0.04, 14, 8);
+var normalMat = new THREE.MeshStandardMaterial({ color: 0x475569, transparent: true, opacity: 0.5 });
+var normalMesh = new THREE.Mesh(normalGeo, normalMat);
+normalMesh.position.set(0, 0, 0);
+scene.add(normalMesh);
+
+// ===== RAY LINES =====
+// We build rays as THREE.Line objects updated each frame
+function makeRayLine(color) {
+  var geo = new THREE.BufferGeometry();
+  var pts = new Float32Array(6); // 2 points x 3
+  geo.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+  var mat = new THREE.LineBasicMaterial({ color: color, linewidth: 3 });
+  var line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return line;
+}
+
+var rayIncident = makeRayLine(0x3B82F6);
+var rayRefracted = makeRayLine(0x22C55E);
+var rayReflected = makeRayLine(0xF59E0B);
+
+// Small sphere at intersection
+var hitSphere = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.5 }));
+hitSphere.position.set(0, 0, 0);
+scene.add(hitSphere);
+
+// Wavefront planes for incident ray
+var waveFronts = [];
+for (var wi = 0; wi < 5; wi++) {
+  var wfMat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+  var wfMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 3.5), wfMat);
+  waveFronts.push(wfMesh);
+  scene.add(wfMesh);
+}
+
+// ===== UPDATE RAYS =====
+function computeSnell() {
+  var t1 = params.theta1_deg * Math.PI / 180;
+  var n1 = params.n1, n2 = params.n2;
+  var sinT2 = (n1 / n2) * Math.sin(t1);
+  var tir = sinT2 > 1.0;
+  var t2 = tir ? null : Math.asin(sinT2);
+  return { t1: t1, t2: t2, tir: tir, n1: n1, n2: n2 };
+}
+
+function updateRayPositions() {
+  var s = computeSnell();
+  var t1 = s.t1;
+  var RAY_LEN = 7;
+
+  // Incident ray: comes from upper-left area toward origin
+  var ix = -Math.sin(t1) * RAY_LEN;
+  var iy = Math.cos(t1) * RAY_LEN;
+  setLinePts(rayIncident, ix, iy, 0, 0, 0, 0);
+
+  // Reflected ray: angle of reflection = angle of incidence
+  var rx = Math.sin(t1) * RAY_LEN;
+  var ry = Math.cos(t1) * RAY_LEN;
+  setLinePts(rayReflected, 0, 0, 0, rx, ry, 0);
+
+  if (!s.tir && s.t2 !== null) {
+    // Refracted ray goes downward
+    var refX = Math.sin(s.t2) * RAY_LEN;
+    var refY = -Math.cos(s.t2) * RAY_LEN;
+    setLinePts(rayRefracted, 0, 0, 0, refX, refY, 0);
+    rayRefracted.visible = true;
+    rayReflected.material.opacity = 0.4;
+    document.getElementById('tir-badge').style.display = 'none';
+    document.getElementById('d-status').textContent = 'Refraction';
+    document.getElementById('d-status').style.color = '#34D399';
+  } else {
+    rayRefracted.visible = false;
+    rayReflected.material.opacity = 1.0;
+    document.getElementById('tir-badge').style.display = 'block';
+    document.getElementById('d-status').textContent = 'Total Internal Reflection';
+    document.getElementById('d-status').style.color = '#FCA5A5';
   }
 
-  // ── State ───────────────────────────────────────────────────────────────
-  var params = { angle: 45, n1: 1.0, n2: 1.5 };
-  var RAY_LEN = 5;
-
-  // ── DOM refs ────────────────────────────────────────────────────────────
-  var canvas = document.getElementById('c');
-  var wrap = document.getElementById('canvasWrap');
-  var fpsEl = document.getElementById('fps');
-  var tirBadge = document.getElementById('tirBadge');
-  var fpsCount = 0, fpsLast = performance.now();
-
-  // ── Three.js setup ──────────────────────────────────────────────────────
-  var renderer, scene, camera, controls;
-
-  try {
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x0f172a, 1);
-
-    scene = new THREE.Scene();
-
-    var W = wrap.clientWidth, H = wrap.clientHeight;
-    camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
-    camera.position.set(0, 3, 12);
-    camera.lookAt(0, 0, 0);
-    renderer.setSize(W, H);
-
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.minDistance = 5;
-    controls.maxDistance = 25;
-    controls.target.set(0, 0, 0);
-
-    // Lighting — 4 lights
-    var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-
-    var dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    dirLight.position.set(5, 8, 10);
-    scene.add(dirLight);
-
-    var fillLight = new THREE.DirectionalLight(0x3b82f6, 0.3);
-    fillLight.position.set(-5, -3, 5);
-    scene.add(fillLight);
-
-    var pointLight = new THREE.PointLight(0xfacc15, 0.4, 30);
-    pointLight.position.set(0, 5, 0);
-    scene.add(pointLight);
-
-  } catch (e) {
-    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">WebGL initialization failed: ' + e.message + '</div>';
-    return;
+  // Wavefronts perpendicular to incident ray
+  var perpX = Math.cos(t1), perpY = Math.sin(t1);
+  for (var wi = 0; wi < waveFronts.length; wi++) {
+    var dist = 1 + wi * 1.4 + ((wavePhase * 1.5) % 1.4);
+    var wx = -Math.sin(t1) * dist;
+    var wy = Math.cos(t1) * dist;
+    waveFronts[wi].position.set(wx, wy, 0);
+    waveFronts[wi].rotation.set(0, Math.atan2(perpX, perpY) - Math.PI / 2, t1);
   }
+}
 
-  // ── Static scene elements ───────────────────────────────────────────────
+function setLinePts(line, x1, y1, z1, x2, y2, z2) {
+  var pos = line.geometry.attributes.position;
+  pos.setXYZ(0, x1, y1, z1);
+  pos.setXYZ(1, x2, y2, z2);
+  pos.needsUpdate = true;
+  line.geometry.computeBoundingSphere();
+}
 
-  // Upper medium (transparent slab)
-  var upperGeo = new THREE.BoxGeometry(10, 4, 6);
-  var upperMat = new THREE.MeshPhysicalMaterial({
-    color: 0x1e3a5f,
-    transparent: true,
-    opacity: 0.12,
-    roughness: 0.1,
-    side: THREE.DoubleSide,
-    depthWrite: false
-  });
-  var upperSlab = new THREE.Mesh(upperGeo, upperMat);
-  upperSlab.position.set(0, 2, 0);
-  scene.add(upperSlab);
+// ===== DATA PANEL =====
+function updateData() {
+  var s = computeSnell();
+  var t1d = params.theta1_deg;
+  var t2d = s.tir ? '—' : (s.t2 * 180 / Math.PI).toFixed(1) + '°';
+  var hasCrit = params.n1 > params.n2;
+  var tc = hasCrit ? (Math.asin(params.n2 / params.n1) * 180 / Math.PI).toFixed(1) + '°' : 'N/A';
+  document.getElementById('d-t1').textContent = t1d.toFixed(1) + '°';
+  document.getElementById('d-t2').textContent = t2d;
+  document.getElementById('d-tc').textContent = tc;
+  document.getElementById('d-n1').textContent = params.n1.toFixed(2);
+  document.getElementById('d-n2').textContent = params.n2.toFixed(2);
+}
 
-  // Lower medium (colored semi-transparent slab)
-  var lowerGeo = new THREE.BoxGeometry(10, 4, 6);
-  var lowerMat = new THREE.MeshPhysicalMaterial({
-    color: 0x0ea5e9,
-    transparent: true,
-    opacity: 0.25,
-    roughness: 0.2,
-    side: THREE.DoubleSide,
-    depthWrite: false
-  });
-  var lowerSlab = new THREE.Mesh(lowerGeo, lowerMat);
-  lowerSlab.position.set(0, -2, 0);
-  scene.add(lowerSlab);
+// ===== MEDIA VISUALIZATION =====
+var medium2Vis;
+function buildMediaViz() {
+  if (medium2Vis) scene.remove(medium2Vis);
+  var denser = params.n2 > params.n1;
+  var col = denser ? 0x0369A1 : 0x1e3a5f;
+  var mat = new THREE.MeshStandardMaterial({ color: col, transparent: true, opacity: denser ? 0.2 : 0.06, side: THREE.DoubleSide });
+  medium2Vis = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), mat);
+  medium2Vis.rotation.x = -Math.PI / 2;
+  medium2Vis.position.set(0, -0.01, 3);
+  scene.add(medium2Vis);
+}
+buildMediaViz();
 
-  // Interface plane (thin bright line at y=0)
-  var interfaceGeo = new THREE.PlaneGeometry(10, 6);
-  var interfaceMat = new THREE.MeshBasicMaterial({
-    color: 0x334155,
-    transparent: true,
-    opacity: 0.3,
-    side: THREE.DoubleSide
-  });
-  var interfacePlane = new THREE.Mesh(interfaceGeo, interfaceMat);
-  interfacePlane.rotation.x = -Math.PI / 2;
-  interfacePlane.position.y = 0;
-  scene.add(interfacePlane);
-
-  // Interface border line
-  var borderPts = [
-    new THREE.Vector3(-5, 0, 3), new THREE.Vector3(5, 0, 3),
-    new THREE.Vector3(5, 0, -3), new THREE.Vector3(-5, 0, -3),
-    new THREE.Vector3(-5, 0, 3)
-  ];
-  var borderGeo = new THREE.BufferGeometry().setFromPoints(borderPts);
-  var borderMat = new THREE.LineBasicMaterial({ color: 0x475569 });
-  scene.add(new THREE.Line(borderGeo, borderMat));
-
-  // Grid on interface
-  var gridHelper = new THREE.GridHelper(10, 20, 0x1e293b, 0x1e293b);
-  gridHelper.position.y = 0.01;
-  scene.add(gridHelper);
-
-  // ── Dynamic objects (rebuilt on parameter change) ───────────────────────
-  var dynamicGroup = new THREE.Group();
-  scene.add(dynamicGroup);
-
-  function clearDynamic() {
-    while (dynamicGroup.children.length > 0) {
-      var child = dynamicGroup.children[0];
-      dynamicGroup.remove(child);
-      if (child.geometry) child.geometry.dispose();
-      if (child.material) {
-        if (child.material.dispose) child.material.dispose();
-      }
-    }
-  }
-
-  function makeLine(pts, color, linewidth) {
-    var geo = new THREE.BufferGeometry().setFromPoints(pts);
-    var mat = new THREE.LineBasicMaterial({ color: color, linewidth: linewidth || 1 });
-    var line = new THREE.Line(geo, mat);
-    return line;
-  }
-
-  function makeDashedLine(pts, color, dashSize, gapSize) {
-    var geo = new THREE.BufferGeometry().setFromPoints(pts);
-    var mat = new THREE.LineDashedMaterial({
-      color: color,
-      dashSize: dashSize || 0.2,
-      gapSize: gapSize || 0.15,
-      linewidth: 1
+// ===== ANIMATION =====
+var clock = new THREE.Clock();
+renderer.setAnimationLoop(function() {
+  var delta = Math.min(clock.getDelta(), 0.05);
+  if (playing) {
+    wavePhase += delta * 1.2;
+    waveFronts.forEach(function(wf, i) {
+      wf.material.opacity = 0.08 + 0.1 * Math.abs(Math.sin(wavePhase * 2 + i));
     });
-    var line = new THREE.Line(geo, mat);
-    line.computeLineDistances();
-    return line;
   }
+  updateRayPositions();
+  controls.update();
+  renderer.render(scene, camera);
+});
 
-  function makeArrowhead(origin, direction, color, size) {
-    var dir = direction.clone().normalize();
-    var arrowGeo = new THREE.ConeGeometry(size * 0.35, size, 8);
-    var arrowMat = new THREE.MeshBasicMaterial({ color: color });
-    var cone = new THREE.Mesh(arrowGeo, arrowMat);
-    cone.position.copy(origin);
-    // Orient cone along direction
-    var up = new THREE.Vector3(0, 1, 0);
-    var quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-    cone.quaternion.copy(quat);
-    return cone;
+// ===== SLIDERS =====
+document.getElementById('sl-angle').addEventListener('input', function() {
+  params.theta1_deg = parseFloat(this.value);
+  document.getElementById('v-angle').textContent = this.value;
+  updateData();
+});
+document.getElementById('sl-n1').addEventListener('input', function() {
+  params.n1 = parseFloat(this.value);
+  document.getElementById('v-n1').textContent = parseFloat(this.value).toFixed(2);
+  buildMediaViz();
+  updateData();
+});
+document.getElementById('sl-n2').addEventListener('input', function() {
+  params.n2 = parseFloat(this.value);
+  document.getElementById('v-n2').textContent = parseFloat(this.value).toFixed(2);
+  buildMediaViz();
+  updateData();
+});
+
+// ===== PRESETS =====
+function applyPreset(name) {
+  if (name === 'air-water') {
+    params.theta1_deg = 30; params.n1 = 1.0; params.n2 = 1.33;
+    document.getElementById('sl-angle').value = 30; document.getElementById('sl-n1').value = 1.0; document.getElementById('sl-n2').value = 1.33;
+    document.getElementById('v-angle').textContent = '30'; document.getElementById('v-n1').textContent = '1.00'; document.getElementById('v-n2').textContent = '1.33';
+    showToast('Preset: Air → Water (n=1.33)');
+  } else if (name === 'air-glass') {
+    params.theta1_deg = 35; params.n1 = 1.0; params.n2 = 1.5;
+    document.getElementById('sl-angle').value = 35; document.getElementById('sl-n1').value = 1.0; document.getElementById('sl-n2').value = 1.5;
+    document.getElementById('v-angle').textContent = '35'; document.getElementById('v-n1').textContent = '1.00'; document.getElementById('v-n2').textContent = '1.50';
+    showToast('Preset: Air → Glass (n=1.5)');
+  } else if (name === 'tir') {
+    params.theta1_deg = 55; params.n1 = 1.5; params.n2 = 1.0;
+    document.getElementById('sl-angle').value = 55; document.getElementById('sl-n1').value = 1.5; document.getElementById('sl-n2').value = 1.0;
+    document.getElementById('v-angle').textContent = '55'; document.getElementById('v-n1').textContent = '1.50'; document.getElementById('v-n2').textContent = '1.00';
+    showToast('Preset: Total Internal Reflection (glass→air, θ > θ_c)');
   }
+  buildMediaViz();
+  updateData();
+}
 
-  function makeArc(center, radius, startAngle, endAngle, color, segments) {
-    segments = segments || 32;
-    var pts = [];
-    for (var i = 0; i <= segments; i++) {
-      var t = startAngle + (endAngle - startAngle) * (i / segments);
-      pts.push(new THREE.Vector3(
-        center.x + radius * Math.sin(t),
-        center.y + radius * Math.cos(t),
-        center.z
-      ));
-    }
-    return makeLine(pts, color, 1);
+function resetSim() {
+  applyPreset('air-water');
+  wavePhase = 0;
+  showToast('Simulation reset');
+}
+
+function toggleQuiz() { document.getElementById('quiz-panel').classList.toggle('hidden'); }
+function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+
+function showToast(msg) {
+  var d = document.createElement('div');
+  d.className = 'toast-msg';
+  d.textContent = msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(function() { d.remove(); }, 2200);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space' || e.code === 'KeyR') resetSim();
+  if (e.code === 'Digit1') applyPreset('air-water');
+  if (e.code === 'Digit2') applyPreset('air-glass');
+  if (e.code === 'Digit3') applyPreset('tir');
+});
+
+window.addEventListener('resize', function() {
+  var W2 = container.clientWidth, H2 = container.clientHeight;
+  camera.aspect = W2 / H2;
+  camera.updateProjectionMatrix();
+  renderer.setSize(W2, H2);
+});
+
+// ===== QUIZ =====
+var quizData = [
+  {
+    q: "A ray travels from water (n=1.33) into glass (n=1.5) at θ₁=40°. Compared to the incident ray, the refracted ray is:",
+    opts: ["Bent toward the normal (smaller angle)", "Bent away from the normal (larger angle)", "Undeviated — same angle as incident", "Totally internally reflected"],
+    ans: 0,
+    ok: "Correct! n₂ > n₁, so the light enters a denser medium and the refracted angle θ₂ = arcsin(n₁/n₂ · sin40°) < 40° — bent toward the normal.",
+    no: "Remember: going from lower n to higher n (denser medium) bends the ray toward the normal. n₂=1.5 > n₁=1.33 means the angle decreases. TIR is impossible here since n₁ < n₂."
+  },
+  {
+    q: "A fiber optic cable uses glass (n=1.5) in air (n=1.0). What is the critical angle for total internal reflection?",
+    opts: ["About 41.8°", "About 48.2°", "About 33.6°", "TIR cannot occur since glass is denser"],
+    ans: 0,
+    ok: "Exactly! θ_c = arcsin(n₂/n₁) = arcsin(1.0/1.5) = arcsin(0.667) ≈ 41.8°. Any ray inside the fiber hitting the wall at > 41.8° from the normal is totally internally reflected.",
+    no: "Critical angle formula: θ_c = arcsin(n₂/n₁). Here n₁=1.5 (glass), n₂=1.0 (air): θ_c = arcsin(1/1.5) ≈ 41.8°. TIR does occur when traveling from denser to less dense medium at angles exceeding θ_c."
+  },
+  {
+    q: "If you increase the incident angle from 20° to 40° in air striking glass (n=1.5), what happens to the refracted angle?",
+    opts: ["It doubles (also increases from ~13° to ~26°)", "It increases but less than doubles — due to the sine function", "It stays the same — only wavelength changes", "It decreases — larger incidence means more bending back"],
+    ans: 1,
+    ok: "Right! Snell's Law gives θ₂ = arcsin(sin θ₁/n₂). sin(20°)≈0.342 → θ₂≈13.2°; sin(40°)≈0.643 → θ₂≈25.4°. The angle increases but doesn't double because arcsin is not linear.",
+    no: "Apply Snell's Law: θ₂ = arcsin(sinθ₁/1.5). sin(20°)/1.5 ≈ 0.228 → θ₂ ≈ 13.2°; sin(40°)/1.5 ≈ 0.429 → θ₂ ≈ 25.4°. The refracted angle grows, but because arcsin is a nonlinear function, it doesn't scale proportionally."
   }
+];
 
-  function makeTextSprite(text, color, fontSize) {
-    var cnv = document.createElement('canvas');
-    var sz = 256;
-    cnv.width = sz;
-    cnv.height = sz;
-    var ctx = cnv.getContext('2d');
-    ctx.clearRect(0, 0, sz, sz);
-    ctx.font = 'bold ' + (fontSize || 48) + 'px -apple-system, sans-serif';
-    ctx.fillStyle = color || '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, sz / 2, sz / 2);
-    var tex = new THREE.CanvasTexture(cnv);
-    var spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
-    var sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(1.2, 1.2, 1);
-    return sprite;
-  }
-
-  function buildScene() {
-    clearDynamic();
-
-    var theta1Rad = params.angle * Math.PI / 180;
-    var n1 = params.n1;
-    var n2 = params.n2;
-
-    // Compute refraction
-    var sinTheta2 = (n1 / n2) * Math.sin(theta1Rad);
-    var isTIR = Math.abs(sinTheta2) > 1.0;
-    var theta2Rad = isTIR ? 0 : Math.asin(sinTheta2);
-
-    // Critical angle
-    var hasCritical = n1 > n2;
-    var criticalAngle = hasCritical ? Math.asin(n2 / n1) : -1;
-
-    // Fresnel reflectance (simplified, s-polarization)
-    var reflectance = 0;
-    if (isTIR) {
-      reflectance = 1.0;
-    } else {
-      var cosT1 = Math.cos(theta1Rad);
-      var cosT2 = Math.cos(theta2Rad);
-      var rs = (n1 * cosT1 - n2 * cosT2) / (n1 * cosT1 + n2 * cosT2);
-      var rp = (n2 * cosT1 - n1 * cosT2) / (n2 * cosT1 + n1 * cosT2);
-      reflectance = 0.5 * (rs * rs + rp * rp);
-    }
-
-    // Update stats
-    document.getElementById('statTheta1').textContent = params.angle.toFixed(1) + '\u00B0';
-    if (isTIR) {
-      document.getElementById('statTheta2').textContent = 'TIR';
-      document.getElementById('statTheta2').className = 'stat-value red';
-    } else {
-      document.getElementById('statTheta2').textContent = (theta2Rad * 180 / Math.PI).toFixed(1) + '\u00B0';
-      document.getElementById('statTheta2').className = 'stat-value cyan';
-    }
-    if (hasCritical) {
-      document.getElementById('statCritical').textContent = (criticalAngle * 180 / Math.PI).toFixed(1) + '\u00B0';
-    } else {
-      document.getElementById('statCritical').textContent = 'N/A';
-    }
-    document.getElementById('statReflect').textContent = (reflectance * 100).toFixed(1) + '%';
-    tirBadge.className = isTIR ? 'tir-badge show' : 'tir-badge';
-
-    // ── Normal line (white dashed, vertical through origin) ──
-    var normalLine = makeDashedLine(
-      [new THREE.Vector3(0, -3.5, 0), new THREE.Vector3(0, 3.5, 0)],
-      0xffffff, 0.15, 0.1
-    );
-    dynamicGroup.add(normalLine);
-
-    // "N" label at top of normal
-    var nLabel = makeTextSprite('N', '#ffffff', 40);
-    nLabel.position.set(0.3, 3.8, 0);
-    dynamicGroup.add(nLabel);
-
-    // ── Incident ray (yellow, from upper-left to origin) ──
-    var incidentDir = new THREE.Vector3(Math.sin(theta1Rad), -Math.cos(theta1Rad), 0);
-    var incidentStart = new THREE.Vector3(-incidentDir.x * RAY_LEN, -incidentDir.y * RAY_LEN, 0);
-    var incidentEnd = new THREE.Vector3(0, 0, 0);
-
-    var incidentRay = makeLine([incidentStart, incidentEnd], 0xfacc15, 2);
-    dynamicGroup.add(incidentRay);
-
-    // Arrowhead on incident ray
-    var incArrowPos = incidentEnd.clone().add(incidentDir.clone().multiplyScalar(-0.5));
-    var incArrow = makeArrowhead(incArrowPos, incidentDir, 0xfacc15, 0.35);
-    dynamicGroup.add(incArrow);
-
-    // Animated glow particles on incident ray
-    var glowGeo = new THREE.SphereGeometry(0.06, 8, 8);
-    var glowMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-    for (var gi = 0; gi < 5; gi++) {
-      var glow = new THREE.Mesh(glowGeo, glowMat);
-      var t = gi / 5;
-      glow.position.lerpVectors(incidentStart, incidentEnd, t);
-      glow.userData.t = t;
-      glow.userData.type = 'incidentGlow';
-      glow.userData.start = incidentStart.clone();
-      glow.userData.end = incidentEnd.clone();
-      dynamicGroup.add(glow);
-    }
-
-    // ── Reflected ray (purple, dashed or solid depending on TIR) ──
-    var reflectDir = new THREE.Vector3(Math.sin(theta1Rad), Math.cos(theta1Rad), 0);
-    var reflectEnd = reflectDir.clone().multiplyScalar(RAY_LEN);
-    var reflectOpacity = isTIR ? 1.0 : Math.max(0.15, reflectance);
-
-    var reflectColor = 0xa78bfa;
-    if (isTIR) {
-      var reflRay = makeLine([new THREE.Vector3(0, 0, 0), reflectEnd], reflectColor, 2);
-      dynamicGroup.add(reflRay);
-      // Glow particles on reflected ray during TIR
-      for (var ri = 0; ri < 5; ri++) {
-        var rg = new THREE.Mesh(glowGeo, new THREE.MeshBasicMaterial({ color: reflectColor }));
-        var rt = ri / 5;
-        rg.position.lerpVectors(new THREE.Vector3(0, 0, 0), reflectEnd, rt);
-        rg.userData.t = rt;
-        rg.userData.type = 'reflectGlow';
-        rg.userData.start = new THREE.Vector3(0, 0, 0);
-        rg.userData.end = reflectEnd.clone();
-        dynamicGroup.add(rg);
-      }
-    } else {
-      var reflRayDash = makeDashedLine(
-        [new THREE.Vector3(0, 0, 0), reflectEnd],
-        reflectColor, 0.2, 0.15
-      );
-      reflRayDash.material.opacity = reflectOpacity;
-      reflRayDash.material.transparent = true;
-      dynamicGroup.add(reflRayDash);
-    }
-
-    var reflArrow = makeArrowhead(
-      reflectEnd.clone().add(reflectDir.clone().multiplyScalar(-0.5)),
-      reflectDir, reflectColor, isTIR ? 0.35 : 0.25
-    );
-    reflArrow.material.opacity = reflectOpacity;
-    reflArrow.material.transparent = true;
-    dynamicGroup.add(reflArrow);
-
-    // ── Refracted ray (cyan, below interface) ──
-    if (!isTIR) {
-      var refractDir = new THREE.Vector3(Math.sin(theta2Rad), -Math.cos(theta2Rad), 0);
-      var refractEnd = refractDir.clone().multiplyScalar(RAY_LEN);
-      var refractRay = makeLine([new THREE.Vector3(0, 0, 0), refractEnd], 0x22d3ee, 2);
-      dynamicGroup.add(refractRay);
-
-      var refrArrow = makeArrowhead(
-        refractEnd.clone().add(refractDir.clone().multiplyScalar(-0.5)),
-        refractDir, 0x22d3ee, 0.35
-      );
-      dynamicGroup.add(refrArrow);
-
-      // Glow particles on refracted ray
-      for (var fi = 0; fi < 5; fi++) {
-        var fg = new THREE.Mesh(glowGeo, new THREE.MeshBasicMaterial({ color: 0x22d3ee }));
-        var ft = fi / 5;
-        fg.position.lerpVectors(new THREE.Vector3(0, 0, 0), refractEnd, ft);
-        fg.userData.t = ft;
-        fg.userData.type = 'refractGlow';
-        fg.userData.start = new THREE.Vector3(0, 0, 0);
-        fg.userData.end = refractEnd.clone();
-        dynamicGroup.add(fg);
-      }
-
-      // ── Refracted angle arc (cyan) ──
-      if (theta2Rad > 0.02) {
-        var arcRefract = makeArc(
-          new THREE.Vector3(0, 0, 0),
-          1.2, 0, -theta2Rad, 0x22d3ee, 24
-        );
-        dynamicGroup.add(arcRefract);
-
-        var refLabelAngle = -theta2Rad * 0.5;
-        var refLabel = makeTextSprite('\u03B8\u2082', '#22d3ee', 36);
-        refLabel.position.set(1.6 * Math.sin(refLabelAngle), 1.6 * Math.cos(refLabelAngle), 0);
-        refLabel.scale.set(0.8, 0.8, 1);
-        dynamicGroup.add(refLabel);
-      }
-    }
-
-    // ── Incident angle arc (yellow) ──
-    if (theta1Rad > 0.02) {
-      // Arc from normal (up direction) to incident ray direction
-      // The arc sweeps from 0 to theta1 on the left side of normal
-      var arcIncident = makeArc(
-        new THREE.Vector3(0, 0, 0),
-        1.0, 0, theta1Rad, 0xfacc15, 24
-      );
-      // Rotate to correct position: arc should be between normal (up) and incident ray
-      // The arc function creates points along (sin(t), cos(t)) which goes from up toward right
-      // For incident ray going upper-left, we need to flip x
-      // Actually, let's recompute manually
-      dynamicGroup.remove(arcIncident);
-      if (arcIncident.geometry) arcIncident.geometry.dispose();
-      if (arcIncident.material) arcIncident.material.dispose();
-
-      var incArcPts = [];
-      for (var ai = 0; ai <= 24; ai++) {
-        var at = theta1Rad * (ai / 24);
-        // Arc from normal up direction, sweeping toward incident ray (upper-left)
-        incArcPts.push(new THREE.Vector3(
-          -Math.sin(at) * 1.0,
-          Math.cos(at) * 1.0,
-          0
-        ));
-      }
-      var arcInc = makeLine(incArcPts, 0xfacc15, 1);
-      dynamicGroup.add(arcInc);
-
-      var incLabelAngle = theta1Rad * 0.5;
-      var incLabel = makeTextSprite('\u03B8\u2081', '#facc15', 36);
-      incLabel.position.set(-Math.sin(incLabelAngle) * 1.5, Math.cos(incLabelAngle) * 1.5, 0);
-      incLabel.scale.set(0.8, 0.8, 1);
-      dynamicGroup.add(incLabel);
-    }
-
-    // ── Reflected angle arc (violet, small) ──
-    if (theta1Rad > 0.02) {
-      var reflArcPts = [];
-      for (var ra = 0; ra <= 24; ra++) {
-        var rat = theta1Rad * (ra / 24);
-        reflArcPts.push(new THREE.Vector3(
-          Math.sin(rat) * 0.8,
-          Math.cos(rat) * 0.8,
-          0
-        ));
-      }
-      var arcRefl = makeLine(reflArcPts, 0xa78bfa, 1);
-      arcRefl.material.opacity = 0.5;
-      arcRefl.material.transparent = true;
-      dynamicGroup.add(arcRefl);
-    }
-
-    // ── Refracted angle arc (cyan, below) ──
-    if (!isTIR && theta2Rad > 0.02) {
-      // Remove the previous one (already added above with makeArc)
-      // Actually we already added it above; let's just keep it
-    }
-
-    // Update slab colors based on n values
-    updateSlabColors();
-  }
-
-  function updateSlabColors() {
-    // Higher n → more saturated/opaque
-    var n1Norm = (params.n1 - 1.0) / 1.5; // 0 to 1
-    var n2Norm = (params.n2 - 1.0) / 1.5;
-
-    upperMat.opacity = 0.05 + n1Norm * 0.3;
-    upperMat.color.setHSL(0.58, 0.5 + n1Norm * 0.3, 0.15 + n1Norm * 0.1);
-
-    lowerMat.opacity = 0.1 + n2Norm * 0.35;
-    lowerMat.color.setHSL(0.52, 0.6 + n2Norm * 0.3, 0.2 + n2Norm * 0.15);
-  }
-
-  // ── Slider / control bindings ───────────────────────────────────────────
-  var sliderAngle = document.getElementById('sliderAngle');
-  var sliderN1 = document.getElementById('sliderN1');
-  var sliderN2 = document.getElementById('sliderN2');
-  var matN1 = document.getElementById('matN1');
-  var matN2 = document.getElementById('matN2');
-
-  function updateFromSliders() {
-    params.angle = parseFloat(sliderAngle.value);
-    params.n1 = parseFloat(sliderN1.value);
-    params.n2 = parseFloat(sliderN2.value);
-
-    document.getElementById('valAngle').textContent = params.angle.toFixed(0) + '\u00B0';
-    document.getElementById('valN1').textContent = params.n1.toFixed(2);
-    document.getElementById('valN2').textContent = params.n2.toFixed(2);
-
-    // Sync material selects
-    syncMatSelect(matN1, params.n1);
-    syncMatSelect(matN2, params.n2);
-
-    buildScene();
-  }
-
-  function syncMatSelect(selectEl, val) {
-    var opts = selectEl.options;
-    var matched = false;
-    for (var i = 0; i < opts.length; i++) {
-      if (Math.abs(parseFloat(opts[i].value) - val) < 0.005) {
-        selectEl.selectedIndex = i;
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      selectEl.selectedIndex = -1;
-    }
-  }
-
-  sliderAngle.addEventListener('input', updateFromSliders);
-  sliderN1.addEventListener('input', updateFromSliders);
-  sliderN2.addEventListener('input', updateFromSliders);
-
-  matN1.addEventListener('change', function() {
-    var v = parseFloat(this.value);
-    params.n1 = v;
-    sliderN1.value = v;
-    document.getElementById('valN1').textContent = v.toFixed(2);
-    buildScene();
-  });
-
-  matN2.addEventListener('change', function() {
-    var v = parseFloat(this.value);
-    params.n2 = v;
-    sliderN2.value = v;
-    document.getElementById('valN2').textContent = v.toFixed(2);
-    buildScene();
-  });
-
-  // ── Presets ─────────────────────────────────────────────────────────────
-  window.applyPreset = function(name) {
-    if (name === 'airGlass') {
-      params.angle = 45; params.n1 = 1.0; params.n2 = 1.5;
-    } else if (name === 'waterAir') {
-      params.angle = 50; params.n1 = 1.33; params.n2 = 1.0;
-    } else if (name === 'diamond') {
-      params.angle = 45; params.n1 = 1.0; params.n2 = 2.42;
-    }
-    sliderAngle.value = params.angle;
-    sliderN1.value = params.n1;
-    sliderN2.value = params.n2;
-    document.getElementById('valAngle').textContent = params.angle.toFixed(0) + '\u00B0';
-    document.getElementById('valN1').textContent = params.n1.toFixed(2);
-    document.getElementById('valN2').textContent = params.n2.toFixed(2);
-    syncMatSelect(matN1, params.n1);
-    syncMatSelect(matN2, params.n2);
-    buildScene();
-  };
-
-  // ── Quiz ────────────────────────────────────────────────────────────────
-  var quizAnswered = { 1: false, 2: false };
-  var quizCorrect = { 1: 'c', 2: 'c' };
-  var quizExplanations = {
-    1: '\u03B8c = arcsin(n2/n1) = arcsin(1.33/1.50) = arcsin(0.887) = 62.5\u00B0',
-    2: 'n1 sin\u03B81 = n2 sin\u03B82 \u2192 1.50 \u00D7 sin(30\u00B0) = 1.00 \u00D7 sin\u03B82 \u2192 sin\u03B82 = 0.75 \u2192 \u03B82 = 48.6\u00B0'
-  };
-
-  window.checkQuiz = function(qNum, answer, btn) {
-    if (quizAnswered[qNum]) return;
-    quizAnswered[qNum] = true;
-    var fb = document.getElementById('fb' + qNum);
-    var isCorrect = (answer === quizCorrect[qNum]);
-    btn.classList.add(isCorrect ? 'correct' : 'wrong');
-    if (!isCorrect) {
-      var parent = btn.parentElement;
-      var opts = parent.querySelectorAll('.quiz-opt');
-      opts.forEach(function(o) {
-        if (o.textContent.charAt(0).toLowerCase() === quizCorrect[qNum]) {
-          o.classList.add('correct');
+function buildQuiz() {
+  var c = document.getElementById('q-container');
+  c.innerHTML = '';
+  quizData.forEach(function(q, qi) {
+    var div = document.createElement('div');
+    div.className = 'glass rounded-xl p-3';
+    div.innerHTML = '<p class="text-xs text-slate-300 mb-2 font-medium">Q' + (qi+1) + ': ' + q.q + '</p>';
+    var optsDiv = document.createElement('div');
+    q.opts.forEach(function(opt, oi) {
+      var btn = document.createElement('div');
+      btn.className = 'quiz-opt';
+      btn.textContent = opt;
+      btn.addEventListener('click', function() {
+        if (div.dataset.answered) return;
+        div.dataset.answered = '1';
+        var feedback = document.createElement('div');
+        feedback.className = 'text-xs mt-2 p-2 rounded-lg leading-relaxed';
+        if (oi === q.ans) {
+          btn.classList.add('correct');
+          feedback.style.background = 'rgba(34,197,94,0.1)';
+          feedback.style.color = '#86EFAC';
+          feedback.textContent = '✓ ' + q.ok;
+        } else {
+          btn.classList.add('wrong');
+          optsDiv.children[q.ans].classList.add('correct');
+          feedback.style.background = 'rgba(239,68,68,0.1)';
+          feedback.style.color = '#FCA5A5';
+          feedback.textContent = '✗ ' + q.no;
         }
+        div.appendChild(feedback);
       });
-    }
-    fb.textContent = (isCorrect ? 'Correct! ' : 'Incorrect. ') + quizExplanations[qNum];
-    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
-  };
-
-  // ── Animation loop ──────────────────────────────────────────────────────
-  var clock = new THREE.Clock();
-
-  function animate() {
-    var elapsed = clock.getElapsedTime();
-
-    // Animate glow particles along rays
-    dynamicGroup.children.forEach(function(child) {
-      if (child.userData && child.userData.type) {
-        var speed = 0.4;
-        var newT = (child.userData.t + elapsed * speed) % 1.0;
-        // Pulse along the ray
-        var pulse = ((newT * 3 + child.userData.t * 5) % 1.0);
-        child.position.lerpVectors(child.userData.start, child.userData.end, pulse);
-        child.material.opacity = 0.3 + 0.7 * Math.sin(pulse * Math.PI);
-        child.material.transparent = true;
-      }
+      optsDiv.appendChild(btn);
     });
-
-    controls.update();
-
-    renderer.render(scene, camera);
-
-    // FPS counter
-    fpsCount++;
-    var now = performance.now();
-    if (now - fpsLast >= 1000) {
-      fpsEl.textContent = fpsCount + ' FPS';
-      fpsCount = 0;
-      fpsLast = now;
-    }
-  }
-
-  renderer.setAnimationLoop(animate);
-
-  // ── Resize ──────────────────────────────────────────────────────────────
-  window.addEventListener('resize', function() {
-    var w = wrap.clientWidth;
-    var h = wrap.clientHeight;
-    if (w === 0 || h === 0) return;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    div.appendChild(optsDiv);
+    c.appendChild(div);
   });
+}
 
-  // ── Initial build ───────────────────────────────────────────────────────
-  buildScene();
+// ===== KaTeX =====
+function renderFormulas() {
+  katex.render("n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2", document.getElementById('f1'), { displayMode: true, throwOnError: false });
+  katex.render("\\theta_c = \\arcsin\\!\\left(\\frac{n_2}{n_1}\\right),\\; n_1 > n_2", document.getElementById('f2'), { displayMode: true, throwOnError: false });
+  katex.render("n = \\frac{c}{v} = \\frac{\\lambda_0}{\\lambda}", document.getElementById('f3'), { displayMode: true, throwOnError: false });
+}
 
-})();
+renderFormulas();
+buildQuiz();
+updateData();
+showToast('Welcome! Adjust θ₁ or switch presets.');
 </script>
+<!-- Generated by AetherViz Master 7.0 — Light always finds the fastest path. -->
 </body>
 </html>

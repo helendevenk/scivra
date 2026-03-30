@@ -1,548 +1,637 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Geometric Optics — Lens Ray Tracing — NeonPhysics AP Physics</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#e8eaf0;overflow:hidden;height:100vh;display:flex;flex-direction:column}
-    .header{padding:14px 24px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.08));border-bottom:1px solid rgba(59,130,246,.2);flex-shrink:0}
-    .header-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-    .badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
-    .badge-free{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
-    h1{font-size:1.4rem;font-weight:700;color:#f0f4ff;line-height:1.2}
-    .subtitle{color:#94a3b8;font-size:.82rem;margin-top:2px}
-    .layout{display:flex;flex:1;overflow:hidden}
-    .canvas-wrap{flex:1;position:relative;background:#0a0e16}
-    canvas{display:block;width:100%;height:100%}
-    .fps{position:absolute;bottom:10px;right:12px;font-size:10px;color:#334155;font-variant-numeric:tabular-nums;font-family:monospace}
-    .overlay{position:absolute;top:12px;left:12px;background:rgba(10,14,22,.9);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px);min-width:200px}
-    .stat-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:6px}
-    .stat-label{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
-    .stat-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
-    .blue{color:#60a5fa} .violet{color:#c084fc} .orange{color:#fb923c} .green{color:#4ade80} .red{color:#f87171}
-    .sidebar{width:280px;background:#0d1117;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;flex-shrink:0}
-    .section{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .section-title{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-    .param-row{margin-bottom:12px}
-    .param-label{display:flex;justify-content:space-between;margin-bottom:5px}
-    .param-name{font-size:11px;color:#94a3b8}
-    .param-val{font-size:11px;font-weight:700;color:#60a5fa;font-variant-numeric:tabular-nums}
-    input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(59,130,246,.25);border-radius:2px;cursor:pointer;outline:none}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#3b82f6;cursor:pointer;box-shadow:0 0 6px rgba(59,130,246,.6)}
-    .formula-box{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:7px;padding:8px 12px;margin-bottom:7px}
-    .formula-text{font-family:'Courier New',monospace;font-size:12px;color:#93c5fd;letter-spacing:.3px}
-    .formula-desc{font-size:10px;color:#475569;margin-top:3px}
-    .legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-    .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
-    .legend-line{width:16px;height:2px;border-radius:1px}
-    .lens-type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:8px}
-    .convex-badge{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
-    .concave-badge{background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.4);color:#fdba74}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Geometric Optics: Lenses (Advanced)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --primary: #3B82F6; --primary-end: #0EA5E9;
+    --bg: #0f172a; --panel: rgba(15,23,42,0.9);
+    --glass: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.12);
+    --text: #f8fafc; --muted: #94a3b8; --accent: #0EA5E9;
+    --success: #22c55e; --error: #ef4444;
+  }
+  nav { background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 0 1.5rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 50; }
+  nav h1 { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #3B82F6, #0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  nav .nav-btns { display: flex; gap: 0.5rem; }
+  nav button { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  nav button:hover { background: rgba(59,130,246,0.3); color: #fff; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 300px; min-width: 300px; background: rgba(15,23,42,0.9); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+  .sidebar h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3B82F6; margin-bottom: 0.5rem; }
+  .card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 0.85rem; }
+  .formula-row { margin-bottom: 0.6rem; }
+  .formula-row .katex-desc { font-size: 0.72rem; color: #94a3b8; margin-top: 0.2rem; }
+  .concept-text { font-size: 0.8rem; color: #cbd5e1; line-height: 1.6; }
+  .fact-card { background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 8px; padding: 0.7rem; font-size: 0.75rem; color: #7dd3fc; }
+  .fact-card strong { color: #38bdf8; }
+  #canvas-container { flex: 1; position: relative; overflow: hidden; }
+  .data-panel { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.82); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 0.75rem 1rem; min-width: 200px; font-variant-numeric: tabular-nums; }
+  .data-panel h4 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #3B82F6; margin-bottom: 0.5rem; letter-spacing: 0.06em; }
+  .data-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; margin-bottom: 0.3rem; gap: 1rem; }
+  .data-label { color: #94a3b8; }
+  .data-value { color: #e2e8f0; font-weight: 600; }
+  .bottom-panel { background: rgba(15,23,42,0.92); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.8rem 1.2rem; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .controls-row { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .slider-group { display: flex; align-items: center; gap: 0.5rem; }
+  .slider-group label { font-size: 0.78rem; color: #94a3b8; white-space: nowrap; min-width: 130px; }
+  .slider-group input[type=range] { width: 120px; accent-color: #3B82F6; cursor: pointer; }
+  .slider-group .val { font-size: 0.78rem; color: #38bdf8; min-width: 55px; font-variant-numeric: tabular-nums; }
+  .presets-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .presets-row label { font-size: 0.78rem; color: #94a3b8; }
+  .preset-btn { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+  .preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.35); color: #fff; border-color: #3B82F6; }
+  .quiz-panel { position: absolute; bottom: 10px; right: 12px; width: 330px; background: rgba(15,23,42,0.93); border: 1px solid rgba(59,130,246,0.25); border-radius: 12px; padding: 0.9rem; max-height: 340px; overflow-y: auto; }
+  .quiz-panel h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #3B82F6; margin-bottom: 0.7rem; letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; }
+  .quiz-panel h4 button { background: none; border: none; color: #64748b; font-size: 1rem; cursor: pointer; padding: 0; }
+  .q-block { margin-bottom: 0.75rem; }
+  .q-text { font-size: 0.78rem; color: #e2e8f0; margin-bottom: 0.4rem; font-weight: 500; }
+  .q-options { display: flex; flex-direction: column; gap: 0.3rem; }
+  .q-options label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #94a3b8; cursor: pointer; padding: 0.25rem 0.4rem; border-radius: 5px; border: 1px solid transparent; transition: all 0.15s; }
+  .q-options label:hover { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); }
+  .q-options label.correct { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #86efac; }
+  .q-options label.wrong { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+  .check-btn { margin-top: 0.4rem; background: linear-gradient(135deg, #3B82F6, #0EA5E9); border: none; color: white; padding: 0.3rem 0.85rem; border-radius: 6px; font-size: 0.74rem; cursor: pointer; font-weight: 600; }
+  .q-feedback { font-size: 0.72rem; margin-top: 0.35rem; padding: 0.35rem 0.5rem; border-radius: 6px; }
+  .q-feedback.good { background: rgba(34,197,94,0.12); color: #86efac; }
+  .q-feedback.bad { background: rgba(239,68,68,0.1); color: #fca5a5; }
+  .toast { position: fixed; top: 60px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; pointer-events: none; }
+  .toast-item { background: rgba(15,23,42,0.95); border: 1px solid rgba(59,130,246,0.35); color: #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; animation: slideIn 0.2s ease-out; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-track { background: transparent; } .sidebar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  .quiz-panel::-webkit-scrollbar { width: 3px; } .quiz-panel::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
+  canvas { display: block; }
+  .speed-group { display: flex; gap: 0.3rem; align-items: center; }
+  .speed-btn { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #93c5fd; padding: 0.25rem 0.5rem; border-radius: 5px; font-size: 0.73rem; cursor: pointer; transition: all 0.15s; }
+  .speed-btn:hover, .speed-btn.active { background: rgba(59,130,246,0.35); color: #fff; }
+  .sidebar-toggle { display: none; }
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <span class="badge">AP PHYSICS</span>
-    <span class="badge badge-free">FREE</span>
+<nav>
+  <h1>🔭 Geometric Optics: Lenses (Advanced)</h1>
+  <div class="nav-btns">
+    <button onclick="resetSim()">Reset</button>
+    <button onclick="toggleFullscreen()">Fullscreen</button>
+    <button onclick="showAbout()">About</button>
   </div>
-  <h1>Geometric Optics — Lens Ray Tracing</h1>
-  <p class="subtitle">Thin lens equation, focal points, and image formation</p>
-</div>
-
-<div class="layout">
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="c"></canvas>
-    <div class="overlay">
-      <div class="stat-row">
-        <span class="stat-label">Image Distance v</span>
-        <span class="stat-value blue" id="statV">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Magnification m</span>
-        <span class="stat-value violet" id="statM">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Image Type</span>
-        <span class="stat-value orange" id="statType">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Orientation</span>
-        <span class="stat-value green" id="statOrient">—</span>
+</nav>
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <div>
+      <h3>Core Formulas</h3>
+      <div class="card">
+        <div class="formula-row">
+          <div id="f1"></div>
+          <div class="formula-desc" style="font-size:0.72rem;color:#94a3b8;margin-top:0.2rem;">Thin lens equation for each lens</div>
+        </div>
+        <div class="formula-row" style="margin-top:0.6rem;">
+          <div id="f2"></div>
+          <div class="formula-desc" style="font-size:0.72rem;color:#94a3b8;margin-top:0.2rem;">Lateral magnification per lens</div>
+        </div>
+        <div class="formula-row" style="margin-top:0.6rem;">
+          <div id="f3"></div>
+          <div class="formula-desc" style="font-size:0.72rem;color:#94a3b8;margin-top:0.2rem;">Total magnification = product</div>
+        </div>
       </div>
     </div>
-    <div class="fps" id="fps">0 FPS</div>
+    <div>
+      <h3>Concept</h3>
+      <div class="card concept-text">
+        <p>A two-lens system allows one lens's image to serve as the object for the next. The <strong style="color:#38bdf8">intermediate image</strong> position and size fully determines what the second lens receives.</p>
+        <p style="margin-top:0.5rem;">For a <strong style="color:#38bdf8">compound microscope</strong>, both lenses converge the beam — the objective forms a magnified real image inside the barrel, then the eyepiece re-magnifies it. For a <strong style="color:#38bdf8">refracting telescope</strong>, a long-focal-length objective gathers light and the eyepiece magnifies the resulting image.</p>
+        <p style="margin-top:0.5rem;">Real rays are traced through each lens using Snell's law in the paraxial approximation. Sign conventions: distances positive to the right.</p>
+      </div>
+    </div>
+    <div>
+      <h3>Knowledge Cards</h3>
+      <div class="fact-card" style="margin-bottom:0.5rem;">
+        <strong>Historical Fact:</strong> Galileo improved the Dutch telescope in 1609 by pairing a converging and a diverging lens, achieving ~20× magnification.
+      </div>
+      <div class="fact-card" style="margin-bottom:0.5rem;">
+        <strong>Common Misconception:</strong> Total magnification is NOT f₁/f₂ for a two-lens system in general — that formula applies only to the afocal (telescopic) configuration.
+      </div>
+      <div class="fact-card">
+        <strong>AP Connection:</strong> AP Physics C Optics FRQs frequently ask for intermediate image position using 1/f = 1/do + 1/di applied twice.
+      </div>
+    </div>
+    <div>
+      <h3>Why It Matters</h3>
+      <div class="card concept-text">
+        <ul style="padding-left:1rem;list-style:disc;display:flex;flex-direction:column;gap:0.35rem;">
+          <li>Eyeglasses use thin-lens combinations to correct refractive errors</li>
+          <li>Microscopes enable cell biology and materials science research</li>
+          <li>Camera lens stacks achieve zoom without moving elements</li>
+          <li>AP Physics — Unit 14 Geometric Optics</li>
+        </ul>
+      </div>
+    </div>
   </div>
-
-  <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Lens Parameters</div>
-      <div id="lensTypeBadge" class="lens-type-badge convex-badge">CONVEX LENS (f > 0)</div>
-
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Focal Length f</span>
-          <span class="param-val" id="valF">20 cm</span>
-        </div>
-        <input type="range" id="sliderF" min="-50" max="50" step="1" value="20">
-      </div>
-
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Object Distance u</span>
-          <span class="param-val" id="valU">30 cm</span>
-        </div>
-        <input type="range" id="sliderU" min="5" max="100" step="1" value="30">
-      </div>
-
-      <div class="param-row">
-        <div class="param-label">
-          <span class="param-name">Object Height</span>
-          <span class="param-val" id="valH">2 cm</span>
-        </div>
-        <input type="range" id="sliderH" min="1" max="5" step="0.5" value="2">
-      </div>
+  <div id="canvas-container">
+    <div class="data-panel" id="dataPanel">
+      <h4>Live Data</h4>
+      <div class="data-row"><span class="data-label">Obj. distance (do₁)</span><span class="data-value" id="d-do1">—</span></div>
+      <div class="data-row"><span class="data-label">Intermediate image (di₁)</span><span class="data-value" id="d-di1">—</span></div>
+      <div class="data-row"><span class="data-label">Final image (di₂)</span><span class="data-value" id="d-di2">—</span></div>
+      <div class="data-row"><span class="data-label">Magnification m₁</span><span class="data-value" id="d-m1">—</span></div>
+      <div class="data-row"><span class="data-label">Magnification m₂</span><span class="data-value" id="d-m2">—</span></div>
+      <div class="data-row"><span class="data-label">Total magnification</span><span class="data-value" id="d-mtot">—</span></div>
     </div>
-
-    <div class="section">
-      <div class="section-title">Ray Legend</div>
-      <div class="legend-row">
-        <div class="legend-item">
-          <div class="legend-line" style="background:#ef4444"></div>
-          <span>Ray 1 — Parallel</span>
+    <div class="quiz-panel" id="quizPanel">
+      <h4>Quiz <button onclick="toggleQuiz()" id="quizToggleBtn">▲</button></h4>
+      <div id="quizBody">
+        <div class="q-block" id="q1">
+          <div class="q-text">1. In a compound microscope, what is the role of the objective lens?</div>
+          <div class="q-options" id="q1-opts">
+            <label><input type="radio" name="q1" value="0"/> It forms a virtual, reduced image of the specimen</label>
+            <label><input type="radio" name="q1" value="1"/> It forms a real, magnified intermediate image close to the eyepiece focal point</label>
+            <label><input type="radio" name="q1" value="2"/> It simply redirects parallel rays without forming an image</label>
+          </div>
+          <button class="check-btn" onclick="checkQ(1,1)">Check</button>
+          <div class="q-feedback" id="q1-fb" style="display:none"></div>
         </div>
-        <div class="legend-item">
-          <div class="legend-line" style="background:#22c55e"></div>
-          <span>Ray 2 — Focal</span>
+        <div class="q-block" id="q2">
+          <div class="q-text">2. If the intermediate image falls beyond the second lens (do₂ < 0), what kind of object does Lens 2 receive?</div>
+          <div class="q-options" id="q2-opts">
+            <label><input type="radio" name="q2" value="0"/> A real object</label>
+            <label><input type="radio" name="q2" value="1"/> A virtual object</label>
+            <label><input type="radio" name="q2" value="2"/> No object — the system breaks down</label>
+          </div>
+          <button class="check-btn" onclick="checkQ(2,1)">Check</button>
+          <div class="q-feedback" id="q2-fb" style="display:none"></div>
         </div>
-        <div class="legend-item">
-          <div class="legend-line" style="background:#3b82f6"></div>
-          <span>Ray 3 — Center</span>
+        <div class="q-block" id="q3">
+          <div class="q-text">3. A simple telescope has f₁ = 40 cm, f₂ = 5 cm. What is its angular magnification?</div>
+          <div class="q-options" id="q3-opts">
+            <label><input type="radio" name="q3" value="0"/> +8×</label>
+            <label><input type="radio" name="q3" value="1"/> −8×</label>
+            <label><input type="radio" name="q3" value="2"/> +0.125×</label>
+          </div>
+          <button class="check-btn" onclick="checkQ(3,1)">Check</button>
+          <div class="q-feedback" id="q3-fb" style="display:none"></div>
         </div>
-        <div class="legend-item">
-          <div class="legend-line" style="background:#f59e0b;border-top:1px dashed #f59e0b;background:none"></div>
-          <span>Virtual (dashed)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Thin Lens Equations</div>
-      <div class="formula-box">
-        <div class="formula-text">1/f = 1/v + 1/u</div>
-        <div class="formula-desc">Thin lens equation (sign convention: real = positive)</div>
-      </div>
-      <div class="formula-box">
-        <div class="formula-text">m = −v / u</div>
-        <div class="formula-desc">Lateral magnification</div>
-      </div>
-      <div class="formula-box">
-        <div class="formula-text">f_threshold: u = f → v → ∞</div>
-        <div class="formula-desc">Object at focal point → no image formed</div>
-      </div>
-      <div class="formula-box">
-        <div class="formula-text">Real image: v > 0, inverted</div>
-        <div class="formula-desc">Virtual image: v &lt; 0, upright</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">About</div>
-      <div style="font-size:11px;color:#475569;line-height:1.6">
-        Drag sliders to adjust the focal length and object position. Positive focal length = convex (converging) lens. Negative = concave (diverging) lens. Three principal rays determine image location.
       </div>
     </div>
   </div>
 </div>
-
+<div class="bottom-panel">
+  <div class="controls-row">
+    <div class="slider-group">
+      <label>f₁ Focal Length (cm)</label>
+      <input type="range" id="sl-f1" min="5" max="30" step="0.5" value="10"/>
+      <span class="val" id="v-f1">10.0 cm</span>
+    </div>
+    <div class="slider-group">
+      <label>f₂ Focal Length (cm)</label>
+      <input type="range" id="sl-f2" min="-30" max="30" step="0.5" value="5"/>
+      <span class="val" id="v-f2">5.0 cm</span>
+    </div>
+    <div class="slider-group">
+      <label>Object Distance (cm)</label>
+      <input type="range" id="sl-do" min="5" max="50" step="0.5" value="12"/>
+      <span class="val" id="v-do">12.0 cm</span>
+    </div>
+    <div class="slider-group">
+      <label>Lens Separation (cm)</label>
+      <input type="range" id="sl-sep" min="10" max="60" step="0.5" value="25"/>
+      <span class="val" id="v-sep">25.0 cm</span>
+    </div>
+  </div>
+  <div class="presets-row">
+    <label>Presets:</label>
+    <button class="preset-btn" onclick="applyPreset('telescope')">Simple Telescope</button>
+    <button class="preset-btn" onclick="applyPreset('microscope')">Compound Microscope</button>
+    <button class="preset-btn" onclick="applyPreset('camera')">Camera Lens System</button>
+    <span style="color:#475569;font-size:0.75rem;margin-left:0.5rem;">Space=Pause | R=Reset | 1-5 Speed</span>
+  </div>
+</div>
+<div class="toast" id="toastContainer"></div>
 <script>
-(function() {
-  'use strict';
+// ── OrbitControls inline ──────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50;
+  this.enabled = true;
+  var scope = this;
+  var rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3();
+  var isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.sub(target));
+  camera.position.add(target);
+  function onMouseDown(e) { if(!scope.enabled) return; if(e.button===0){isRotating=true; rotateStart.set(e.clientX,e.clientY);} if(e.button===2){isPanning=true; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseMove(e) { if(!scope.enabled) return; if(isRotating){rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart); sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth; sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight; rotateStart.copy(rotateEnd);} if(isPanning){var dx=e.clientX-rotateStart.x, dy=e.clientY-rotateStart.y; panOffset.x-=dx*0.01; panOffset.y+=dy*0.01; rotateStart.set(e.clientX,e.clientY);} }
+  function onMouseUp() { isRotating=false; isPanning=false; }
+  function onWheel(e) { if(!scope.enabled) return; scale*=e.deltaY>0?1.1:0.9; scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale)); e.preventDefault(); }
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('mousemove',onMouseMove); domElement.addEventListener('mouseup',onMouseUp); domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update = function() { spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi; spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi)); spherical.radius*=scale; spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius)); target.add(panOffset); var pos=new THREE.Vector3().setFromSpherical(spherical).add(target); camera.position.copy(pos); camera.lookAt(target); if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);} else{sphericalDelta.set(0,0,0); scale=1; panOffset.set(0,0,0);} };
+  this.dispose = function() { domElement.removeEventListener('mousedown',onMouseDown); domElement.removeEventListener('mousemove',onMouseMove); domElement.removeEventListener('mouseup',onMouseUp); domElement.removeEventListener('wheel',onWheel); };
+};
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  var params = { f: 20, u: 30, h: 2 };
-  // 1 unit = 10 cm; scene spans ±14 units wide, ±7 high
-  var SCALE = 0.1; // cm → units
+// ── Scene setup ───────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
 
-  // ── Three.js setup ─────────────────────────────────────────────────────────
-  var canvas = document.getElementById('c');
-  var wrap = document.getElementById('canvasWrap');
-  var renderer, scene, camera;
-  var sceneObjects = [];
-  var fpsEl = document.getElementById('fps');
-  var fpsCount = 0, fpsLast = performance.now();
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 8, 22);
 
-  try {
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x0a0e16, 1);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
-    scene = new THREE.Scene();
+// Lights
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(keyLight, fillLight, backLight, ambient);
 
-    var W = wrap.clientWidth, H = wrap.clientHeight;
-    var aspect = W / H;
-    var frustH = 8;
-    camera = new THREE.OrthographicCamera(
-      -frustH * aspect, frustH * aspect,
-      frustH, -frustH, 0.1, 100
-    );
-    camera.position.set(0, 0, 10);
-    camera.lookAt(0, 0, 0);
+// Grid
+scene.add(new THREE.GridHelper(40, 40, 0x334155, 0x1e293b));
 
-    renderer.setSize(W, H);
+// Optical axis
+const axisGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-18, 0, 0), new THREE.Vector3(18, 0, 0)]);
+const axisMat = new THREE.LineBasicMaterial({ color: 0x334155 });
+scene.add(new THREE.Line(axisGeo, axisMat));
 
-    // Ambient light (for any mesh materials)
-    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    var dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    dirLight.position.set(0, 5, 10);
-    scene.add(dirLight);
-    var rimLight = new THREE.DirectionalLight(0x3b82f6, 0.4);
-    rimLight.position.set(-5, -3, 5);
-    scene.add(rimLight);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 50;
 
-  } catch(e) {
-    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">WebGL initialization failed: ' + e.message + '</div>';
-    return;
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let params = { f1: 10, f2: 5, do1: 12, sep: 25 };
+let simPaused = false;
+let speedFactor = 1.0;
+const speeds = [0.25, 0.5, 1.0, 2.0, 3.0];
+let speedIdx = 2;
+
+// ── 3D Objects ────────────────────────────────────────────────────────────────
+// Lens geometry: thin disk
+function makeLens(color) {
+  const geo = new THREE.CylinderGeometry(2.0, 2.0, 0.12, 32);
+  const mat = new THREE.MeshPhysicalMaterial({ color, transparent: true, opacity: 0.55, roughness: 0.05, metalness: 0, side: THREE.DoubleSide });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.z = Math.PI / 2;
+  return mesh;
+}
+
+const lens1Mesh = makeLens(0x3B82F6);
+const lens2Mesh = makeLens(0x0EA5E9);
+scene.add(lens1Mesh, lens2Mesh);
+
+// Object arrow
+function makeArrow(color) {
+  const grp = new THREE.Group();
+  const shaftGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.8, 8);
+  const shaftMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5 });
+  const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+  shaft.position.y = 0.9;
+  const headGeo = new THREE.ConeGeometry(0.18, 0.4, 8);
+  const head = new THREE.Mesh(headGeo, shaftMat);
+  head.position.y = 1.8 + 0.2;
+  grp.add(shaft, head);
+  return grp;
+}
+
+const objArrow = makeArrow(0xFBBF24);
+const img1Arrow = makeArrow(0xF472B6);
+const img2Arrow = makeArrow(0x34D399);
+scene.add(objArrow, img1Arrow, img2Arrow);
+
+// Ray lines group
+const raysGroup = new THREE.Group();
+scene.add(raysGroup);
+
+// Label sprites (simple canvas textures)
+function makeLabel(text, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'transparent';
+  ctx.clearRect(0, 0, 256, 64);
+  ctx.fillStyle = color;
+  ctx.font = 'bold 28px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 128, 42);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(3, 0.75, 1);
+  return sprite;
+}
+
+const labelL1 = makeLabel('Lens 1', '#60A5FA');
+const labelL2 = makeLabel('Lens 2', '#38BDF8');
+const labelObj = makeLabel('Object', '#FCD34D');
+const labelImg1 = makeLabel('Image 1', '#F9A8D4');
+const labelImg2 = makeLabel('Image 2', '#6EE7B7');
+scene.add(labelL1, labelL2, labelObj, labelImg1, labelImg2);
+
+// Focal point indicators
+const fpGeo = new THREE.SphereGeometry(0.15, 12, 12);
+const fp1Mat = new THREE.MeshStandardMaterial({ color: 0x3B82F6, emissive: 0x3B82F6, emissiveIntensity: 1.5 });
+const fp2Mat = new THREE.MeshStandardMaterial({ color: 0x0EA5E9, emissive: 0x0EA5E9, emissiveIntensity: 1.5 });
+const fp1a = new THREE.Mesh(fpGeo, fp1Mat); // front focal point lens1
+const fp1b = new THREE.Mesh(fpGeo, fp1Mat); // rear focal point lens1
+const fp2a = new THREE.Mesh(fpGeo, fp2Mat);
+const fp2b = new THREE.Mesh(fpGeo, fp2Mat);
+scene.add(fp1a, fp1b, fp2a, fp2b);
+
+// ── Physics ───────────────────────────────────────────────────────────────────
+// SCALE: 1 Three.js unit = 5 cm
+const SCALE = 1 / 5;
+
+function computeOptics() {
+  const { f1, f2, do1, sep } = params;
+  // Lens 1
+  const inv_di1 = 1 / f1 - 1 / do1;
+  const di1 = (Math.abs(inv_di1) < 1e-9) ? 1e9 : 1 / inv_di1;
+  const m1 = -di1 / do1;
+  // Object distance for lens 2: measured from lens 2
+  const do2 = sep - di1; // positive if image1 is to left of lens2
+  const inv_di2 = 1 / f2 - 1 / do2;
+  const di2 = (Math.abs(inv_di2) < 1e-9) ? 1e9 : 1 / inv_di2;
+  const m2 = -di2 / do2;
+  const mTot = m1 * m2;
+  const angMag = (f2 !== 0) ? -(f1 / f2) : Infinity;
+  return { di1, do2, di2, m1, m2, mTot, angMag };
+}
+
+function updateScene() {
+  const { f1, f2, do1, sep } = params;
+  const { di1, do2, di2, m1, m2, mTot, angMag } = computeOptics();
+
+  // Positions in Three.js units
+  // Lens1 at x=0, object to the left
+  const L1x = 0;
+  const L2x = sep * SCALE;
+  const ObjX = -do1 * SCALE;
+  const Img1X = L1x + di1 * SCALE;
+  const Img2X = L2x + di2 * SCALE;
+
+  // Arrow heights
+  const objH = 2.0;
+  const img1H = Math.min(Math.max(objH * Math.abs(m1), 0.15), 6);
+  const img2H = Math.min(Math.max(img1H * Math.abs(m2), 0.15), 6);
+
+  // Place lenses
+  lens1Mesh.position.set(L1x, 0, 0);
+  lens2Mesh.position.set(L2x, 0, 0);
+
+  // Place focal points
+  fp1a.position.set(L1x - f1 * SCALE, 0, 0);
+  fp1b.position.set(L1x + f1 * SCALE, 0, 0);
+  fp2a.position.set(L2x + f2 * SCALE, 0, 0);
+  fp2b.position.set(L2x - f2 * SCALE, 0, 0);
+
+  // Place object arrow
+  objArrow.position.set(ObjX, 0, 0);
+  objArrow.scale.y = objH / 2.0;
+  objArrow.scale.x = 1; objArrow.scale.z = 1;
+
+  // Place intermediate image
+  const img1Flip = m1 < 0 ? -1 : 1;
+  img1Arrow.position.set(Img1X, 0, 0);
+  img1Arrow.scale.set(1, img1H / 2.0 * img1Flip, 1);
+
+  // Place final image
+  const img2Flip = m2 < 0 ? -1 : 1;
+  img2Arrow.position.set(Img2X, 0, 0);
+  img2Arrow.scale.set(1, img2H / 2.0 * img2Flip, 1);
+
+  // Show/hide images based on validity
+  const img1Valid = isFinite(di1) && Math.abs(di1) < 500;
+  const img2Valid = isFinite(di2) && Math.abs(di2) < 500 && isFinite(do2);
+  img1Arrow.visible = img1Valid;
+  img2Arrow.visible = img2Valid;
+  labelImg1.visible = img1Valid;
+  labelImg2.visible = img2Valid;
+
+  // Labels
+  labelL1.position.set(L1x, 3.2, 0);
+  labelL2.position.set(L2x, 3.2, 0);
+  labelObj.position.set(ObjX, objH * objH / 2.0 + 0.8, 0);
+  if (img1Valid) labelImg1.position.set(Img1X, img1H + 1.0, 0);
+  if (img2Valid) labelImg2.position.set(Img2X, img2H + 1.0, 0);
+
+  // Ray tracing
+  updateRays(L1x, L2x, ObjX, Img1X, Img2X, objH, img1H * img1Flip, img2H * img2Flip, f1, f2, do1, di1, do2, di2);
+
+  // Data panel
+  document.getElementById('d-do1').textContent = do1.toFixed(1) + ' cm';
+  document.getElementById('d-di1').textContent = img1Valid ? di1.toFixed(1) + ' cm' : '∞';
+  document.getElementById('d-di2').textContent = img2Valid ? di2.toFixed(1) + ' cm' : '∞';
+  document.getElementById('d-m1').textContent = isFinite(m1) ? m1.toFixed(3) : '∞';
+  document.getElementById('d-m2').textContent = isFinite(m2) ? m2.toFixed(3) : '∞';
+  document.getElementById('d-mtot').textContent = isFinite(mTot) ? mTot.toFixed(3) : '∞';
+}
+
+function makeLine(pts, color, opacity) {
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: opacity || 0.85 });
+  return new THREE.Line(geo, mat);
+}
+
+function updateRays(L1x, L2x, ObjX, Img1X, Img2X, objH, img1H, img2H, f1, f2, do1, di1, do2, di2) {
+  // Clear previous rays
+  while (raysGroup.children.length) raysGroup.remove(raysGroup.children[0]);
+
+  const y0 = objH; // tip of object arrow
+  const colors = [0xFF6B6B, 0x4ADE80, 0xFBBF24];
+
+  // 3 principal rays through Lens 1
+  // Ray 1: parallel to axis → refracted through rear focal point
+  // Ray 2: through front focal point → emerges parallel
+  // Ray 3: through center (undeviated)
+
+  const f1s = f1 * SCALE;
+  const f2s = f2 * SCALE;
+
+  function addSeg(p1, p2, col, op) {
+    const pts = [new THREE.Vector3(p1[0], p1[1], 0), new THREE.Vector3(p2[0], p2[1], 0)];
+    raysGroup.add(makeLine(pts, col, op));
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function makeLine(points, color, dashed, dashSize, gapSize) {
-    var geo = new THREE.BufferGeometry().setFromPoints(points);
-    var mat;
-    if (dashed) {
-      mat = new THREE.LineDashedMaterial({ color: color, dashSize: dashSize || 0.25, gapSize: gapSize || 0.15, linewidth: 1 });
-    } else {
-      mat = new THREE.LineBasicMaterial({ color: color, linewidth: 1 });
+  const img1Valid = isFinite(di1) && Math.abs(di1) < 500;
+  const img2Valid = isFinite(di2) && Math.abs(di2) < 500;
+
+  // --- Rays through Lens 1 ---
+  // Ray 1 (red): from object tip, parallel to axis until L1, then toward rear F1
+  if (img1Valid) {
+    const di1s = di1 * SCALE;
+    // Segment: Object to Lens1
+    addSeg([ObjX, y0], [L1x, y0], colors[0], 0.8);
+    // After Lens1: goes through rear focal point (or parallel if di1→∞)
+    // slope = (img1H - y0) / (Img1X - L1x)
+    if (Math.abs(Img1X - L1x) > 0.01) {
+      const slope = (img1H - y0) / (Img1X - L1x);
+      const endX = Math.min(Img1X + 1.5, L2x + 0.2);
+      addSeg([L1x, y0], [endX, y0 + slope * (endX - L1x)], colors[0], 0.8);
     }
-    var line = new THREE.Line(geo, mat);
-    if (dashed) line.computeLineDistances();
-    scene.add(line);
-    sceneObjects.push(line);
-    return line;
+
+    // Ray 2 (green): from object tip through front focal point of L1, emerges parallel
+    const frontF1x = L1x - f1s;
+    const slopeIn = (0 - y0) / (frontF1x - ObjX);
+    const yAtL1 = y0 + slopeIn * (L1x - ObjX);
+    addSeg([ObjX, y0], [L1x, yAtL1], colors[1], 0.8);
+    // emerges parallel to axis
+    if (img1Valid) {
+      const endX2 = Math.min(Img1X + 1.5, L2x + 0.2);
+      addSeg([L1x, yAtL1], [endX2, yAtL1 + 0 * (endX2 - L1x)], colors[1], 0.8);
+    }
+
+    // Ray 3 (yellow): through center undeviated
+    const slopeCtr = (img1H - y0) / (Img1X - ObjX);
+    const endX3 = Math.min(Img1X + 1.5, L2x + 0.2);
+    addSeg([ObjX, y0], [endX3, y0 + slopeCtr * (endX3 - ObjX)], colors[2], 0.8);
   }
 
-  function makeArrow(from, to, color, headLen) {
-    var dir = new THREE.Vector3().subVectors(to, from).normalize();
-    var length = from.distanceTo(to);
-    headLen = headLen || Math.min(0.3, length * 0.25);
-    var arrow = new THREE.ArrowHelper(dir, from, length, color, headLen, headLen * 0.5);
-    scene.add(arrow);
-    sceneObjects.push(arrow);
-    return arrow;
+  // --- Rays through Lens 2 ---
+  if (img1Valid && img2Valid && Math.abs(Img2X - L2x) > 0.01) {
+    // From img1 tip through Lens 2
+    const img1TipX = Img1X;
+    const img1TipY = img1H;
+    // Ray through center of L2
+    const slopeC = (img2H - img1TipY) / (Img2X - img1TipX);
+    const extX = Img2X + 2.0;
+    addSeg([img1TipX, img1TipY], [L2x, img1TipY + slopeC * (L2x - img1TipX)], colors[2], 0.55);
+    addSeg([L2x, img1TipY + slopeC * (L2x - img1TipX)], [extX, img1TipY + slopeC * extX - img1TipY + img1TipY + slopeC * (L2x - img1TipX) + slopeC * (extX - L2x)], colors[2], 0.55);
+
+    // Parallel ray from img1 tip through L2 → focal point
+    addSeg([img1TipX, img1TipY], [L2x, img1TipY], colors[0], 0.55);
+    // After L2: toward rear focal point
+    const rearF2x = L2x + f2s;
+    const slopeR = (0 - img1TipY) / (rearF2x - L2x);
+    addSeg([L2x, img1TipY], [extX, img1TipY + slopeR * (extX - L2x)], colors[0], 0.55);
   }
+}
 
-  function makeSphere(pos, radius, color, emissive) {
-    var geo = new THREE.SphereGeometry(radius, 16, 12);
-    var mat = new THREE.MeshPhongMaterial({ color: color, emissive: emissive || color, emissiveIntensity: 0.7, shininess: 80 });
-    var mesh = new THREE.Mesh(geo, mat);
-    mesh.position.copy(pos);
-    scene.add(mesh);
-    sceneObjects.push(mesh);
-    return mesh;
-  }
-
-  function clearSceneObjects() {
-    for (var i = 0; i < sceneObjects.length; i++) {
-      var obj = sceneObjects[i];
-      scene.remove(obj);
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) obj.material.dispose();
-    }
-    sceneObjects = [];
-  }
-
-  // ── Physics ────────────────────────────────────────────────────────────────
-  function computeImage(f, u) {
-    // Sign convention: object on left → u positive in real life (but here we pass raw cm)
-    // Thin lens: 1/v = 1/f - 1/u  (using real is positive convention)
-    if (Math.abs(f) < 0.5) return null;
-    if (Math.abs(u - f) < 0.5) return null; // at focal point → no image
-    var inv_v = 1/f - 1/u;
-    if (Math.abs(inv_v) < 1e-6) return null;
-    var v = 1 / inv_v;
-    var m = -v / u;
-    return { v: v, m: m };
-  }
-
-  // ── Build scene ─────────────────────────────────────────────────────────────
-  function buildScene() {
-    clearSceneObjects();
-
-    var f  = params.f;   // cm
-    var u  = params.u;   // cm, object distance (positive, object on left)
-    var h  = params.h;   // cm, object height
-
-    // Convert to scene units (1 unit = 10 cm)
-    var fU  = f  * SCALE;
-    var uU  = u  * SCALE;
-    var hU  = h  * SCALE;
-
-    var imgData = computeImage(f, u);
-    var vU = imgData ? imgData.v * SCALE : null;
-    var m  = imgData ? imgData.m : 0;
-    var imageH = imgData ? m * hU : 0;
-
-    var isReal   = imgData && imgData.v > 0;
-    var isUpright = imageH > 0;
-
-    // ── Update HUD ──
-    var statV     = document.getElementById('statV');
-    var statM     = document.getElementById('statM');
-    var statType  = document.getElementById('statType');
-    var statOrient= document.getElementById('statOrient');
-    var badgeEl   = document.getElementById('lensTypeBadge');
-
-    if (imgData) {
-      statV.textContent     = imgData.v.toFixed(1) + ' cm';
-      statM.textContent     = imgData.m.toFixed(2) + '×';
-      statType.textContent  = isReal ? 'Real' : 'Virtual';
-      statOrient.textContent = isUpright ? 'Upright' : 'Inverted';
-    } else {
-      statV.textContent = '∞'; statM.textContent = '—';
-      statType.textContent = 'No image'; statOrient.textContent = '—';
-    }
-
-    if (f > 0) {
-      badgeEl.textContent = 'CONVEX LENS (f > 0)';
-      badgeEl.className = 'lens-type-badge convex-badge';
-    } else if (f < 0) {
-      badgeEl.textContent = 'CONCAVE LENS (f < 0)';
-      badgeEl.className = 'lens-type-badge concave-badge';
-    } else {
-      badgeEl.textContent = 'FLAT GLASS (f = 0)';
-      badgeEl.className = 'lens-type-badge convex-badge';
-    }
-
-    // ── Optical Axis ──
-    makeLine([
-      new THREE.Vector3(-13, 0, 0),
-      new THREE.Vector3(13, 0, 0)
-    ], 0x334155);
-
-    // ── Lens ── (vertical blue glowing bar at x=0)
-    var lensH = 5.5;
-    var lensColor = f > 0 ? 0x3b82f6 : 0xf97316;
-    makeLine([new THREE.Vector3(0, -lensH, 0), new THREE.Vector3(0, lensH, 0)], lensColor);
-    // Lens caps (convex/concave decorative lines)
-    if (f > 0) {
-      // Convex: outward arrowheads on top and bottom
-      makeArrow(new THREE.Vector3(0, lensH - 0.4, 0), new THREE.Vector3(0, lensH, 0), lensColor, 0.4);
-      makeArrow(new THREE.Vector3(0, -(lensH - 0.4), 0), new THREE.Vector3(0, -lensH, 0), lensColor, 0.4);
-    } else if (f < 0) {
-      // Concave: inward arrowheads
-      makeArrow(new THREE.Vector3(0, lensH, 0), new THREE.Vector3(0, lensH - 0.4, 0), lensColor, 0.4);
-      makeArrow(new THREE.Vector3(0, -lensH, 0), new THREE.Vector3(0, -(lensH - 0.4), 0), lensColor, 0.4);
-    }
-    // Glow sphere at center
-    makeSphere(new THREE.Vector3(0, 0, 0), 0.1, lensColor, lensColor);
-
-    // ── Focal Points ──
-    if (Math.abs(fU) > 0.05) {
-      makeSphere(new THREE.Vector3(fU, 0, 0), 0.14, 0xfbbf24, 0xfbbf24);
-      makeSphere(new THREE.Vector3(-fU, 0, 0), 0.14, 0xfbbf24, 0xfbbf24);
-      // Labels (small tick marks)
-      makeLine([new THREE.Vector3(fU, -0.12, 0), new THREE.Vector3(fU, 0.12, 0)], 0xfbbf24);
-      makeLine([new THREE.Vector3(-fU, -0.12, 0), new THREE.Vector3(-fU, 0.12, 0)], 0xfbbf24);
-    }
-
-    // ── Object Arrow (red, on left side at x = -uU) ──
-    var objX = -uU;
-    makeArrow(
-      new THREE.Vector3(objX, 0, 0),
-      new THREE.Vector3(objX, hU, 0),
-      0xef4444, 0.2
-    );
-    // Object base dot
-    makeSphere(new THREE.Vector3(objX, 0, 0), 0.08, 0xef4444, 0xef4444);
-
-    // ── Image Arrow ──
-    if (imgData) {
-      var imgX = vU;
-      var imgColor = isReal ? 0xfb923c : 0xa78bfa;
-      var imgDashed = !isReal;
-      // Arrow (vertical)
-      if (imgDashed) {
-        // Virtual image: dashed line
-        makeLine([
-          new THREE.Vector3(imgX, 0, 0),
-          new THREE.Vector3(imgX, imageH, 0)
-        ], imgColor, true, 0.2, 0.12);
-      } else {
-        makeArrow(
-          new THREE.Vector3(imgX, 0, 0),
-          new THREE.Vector3(imgX, imageH, 0),
-          imgColor, 0.2
-        );
-      }
-      makeSphere(new THREE.Vector3(imgX, 0, 0), 0.08, imgColor, imgColor);
-    }
-
-    // ── Three Principal Rays ──
-    // Object tip position
-    var objTip = new THREE.Vector3(objX, hU, 0);
-    var axisY  = 0; // optical axis y = 0
-
-    // Clamp for display
-    var xMax = 12.5;
-
-    if (imgData) {
-      var imgX = vU;
-
-      // === RAY 1: Parallel to axis → through rear focal point (or extension) ===
-      // Before lens: horizontal from object tip to lens (x=0)
-      makeLine([objTip, new THREE.Vector3(0, hU, 0)], 0xef4444);
-
-      if (f > 0) {
-        // Refracted ray goes through rear focal point F'(+fU, 0)
-        var ray1Dir = new THREE.Vector3(fU - 0, 0 - hU, 0).normalize();
-        var tMax1 = (xMax - 0) / ray1Dir.x;
-        var ray1End = new THREE.Vector3(0 + ray1Dir.x * tMax1, hU + ray1Dir.y * tMax1, 0);
-        makeLine([new THREE.Vector3(0, hU, 0), ray1End], 0xef4444);
-      } else {
-        // Concave lens: ray diverges as if from virtual focal F'(-|f|, 0) on same side
-        // After lens at (0, hU), direction toward imaginary F'(fU, 0) — but extended backward
-        // Diverging: after lens, ray goes straight right but angled AWAY from axis
-        // Direction from F'(fU,0) through lens point (0,hU): slope = (hU-0)/(0-fU) = hU/(-fU)
-        var slopeR1 = hU / (-fU); // positive since fU < 0
-        var ray1EndX = xMax;
-        var ray1EndY = hU + slopeR1 * (ray1EndX - 0);
-        makeLine([new THREE.Vector3(0, hU, 0), new THREE.Vector3(ray1EndX, ray1EndY, 0)], 0xef4444);
-        // Virtual extension (dashed) back to virtual focal
-        makeLine([new THREE.Vector3(fU, 0, 0), new THREE.Vector3(0, hU, 0)], 0xef4444, true, 0.18, 0.1);
-      }
-
-      // === RAY 2: Through front focal point → parallel after lens ===
-      if (f > 0) {
-        // Ray from tip through F(-fU, 0) to lens
-        var fromF = new THREE.Vector3(-fU, 0, 0);
-        var dirToLens = new THREE.Vector3(0 - objTip.x, hU - objTip.y, 0).normalize();
-        // Start from well left of object
-        var tStart2 = (-xMax - objTip.x) / dirToLens.x;
-        var ray2Start = new THREE.Vector3(objTip.x + dirToLens.x * tStart2, objTip.y + dirToLens.y * tStart2, 0);
-        // Only draw from object tip to lens
-        makeLine([objTip, new THREE.Vector3(0, hU, 0)], 0x22c55e);
-        // After lens: parallel to axis
-        makeLine([new THREE.Vector3(0, hU, 0), new THREE.Vector3(xMax, hU, 0)], 0x22c55e);
-      } else {
-        // Concave: ray aimed at rear virtual focal (+|f| on right)
-        // Direction from objTip toward +|f| virtual focal
-        var vFocal = new THREE.Vector3(-fU, 0, 0); // -fU > 0
-        var dir2 = new THREE.Vector3(vFocal.x - objTip.x, vFocal.y - objTip.y, 0).normalize();
-        var t2 = (0 - objTip.x) / dir2.x;
-        var lensHitY2 = objTip.y + dir2.y * t2;
-        makeLine([objTip, new THREE.Vector3(0, lensHitY2, 0)], 0x22c55e);
-        // After: parallel
-        makeLine([new THREE.Vector3(0, lensHitY2, 0), new THREE.Vector3(xMax, lensHitY2, 0)], 0x22c55e);
-      }
-
-      // === RAY 3: Through optical center → straight through ===
-      var dir3 = new THREE.Vector3(0 - objTip.x, 0 - objTip.y, 0).normalize();
-      var tEnd3 = (xMax - objTip.x) / dir3.x;
-      var ray3End = new THREE.Vector3(objTip.x + dir3.x * tEnd3, objTip.y + dir3.y * tEnd3, 0);
-      makeLine([objTip, ray3End], 0x3b82f6);
-
-      // === Convergence / divergence dashed lines to image (if virtual) ===
-      if (!isReal) {
-        // Dashed extensions from lens back-side to virtual image
-        // Ray 1 virtual extension
-        var imgTip = new THREE.Vector3(imgX, imageH, 0);
-        makeLine([new THREE.Vector3(0, hU, 0), imgTip], 0xef4444, true, 0.15, 0.1);
-      }
-
-    } else {
-      // No image (object at focal): rays emerge parallel
-      makeLine([objTip, new THREE.Vector3(0, hU, 0)], 0xef4444);
-      makeLine([new THREE.Vector3(0, hU, 0), new THREE.Vector3(xMax, hU, 0)], 0xef4444);
-      // Ray through center
-      var dir3b = new THREE.Vector3(0 - objTip.x, 0 - objTip.y, 0).normalize();
-      makeLine([objTip, new THREE.Vector3(0, 0, 0)], 0x3b82f6);
-      makeLine([new THREE.Vector3(0, 0, 0), new THREE.Vector3(xMax, 0, 0)], 0x3b82f6);
-    }
-
-    // ── Distance markers (thin horizontal guide lines) ──
-    // Object distance line
-    makeLine([
-      new THREE.Vector3(objX, -hU - 0.6, 0),
-      new THREE.Vector3(0,    -hU - 0.6, 0)
-    ], 0x1e3a5f);
-
-    if (imgData && Math.abs(vU) > 0.1) {
-      makeLine([
-        new THREE.Vector3(0,    -hU - 0.9, 0),
-        new THREE.Vector3(vU,   -hU - 0.9, 0)
-      ], 0x2d1b0e);
-    }
-  }
-
-  // ── UI Bindings ────────────────────────────────────────────────────────────
-  function updateSliderLabel(id, val, unit) {
-    document.getElementById(id).textContent = val + ' ' + unit;
-  }
-
-  document.getElementById('sliderF').addEventListener('input', function() {
-    var v = parseInt(this.value);
-    if (v === 0) { this.value = 1; v = 1; }
-    params.f = v;
-    updateSliderLabel('valF', v, 'cm');
-    buildScene();
+// ── Sliders ───────────────────────────────────────────────────────────────────
+function bindSlider(id, valId, paramKey, unit, mult) {
+  const sl = document.getElementById(id);
+  const vl = document.getElementById(valId);
+  sl.addEventListener('input', () => {
+    const v = parseFloat(sl.value);
+    params[paramKey] = v;
+    vl.textContent = v.toFixed(1) + ' ' + unit;
+    updateScene();
   });
+}
+bindSlider('sl-f1', 'v-f1', 'f1', 'cm', 1);
+bindSlider('sl-f2', 'v-f2', 'f2', 'cm', 1);
+bindSlider('sl-do', 'v-do', 'do1', 'cm', 1);
+bindSlider('sl-sep', 'v-sep', 'sep', 'cm', 1);
 
-  document.getElementById('sliderU').addEventListener('input', function() {
-    params.u = parseInt(this.value);
-    updateSliderLabel('valU', params.u, 'cm');
-    buildScene();
-  });
+// ── Presets ───────────────────────────────────────────────────────────────────
+const PRESETS = {
+  telescope: { f1: 25, f2: 5, do1: 45, sep: 30, label: 'Simple Telescope' },
+  microscope: { f1: 5, f2: 5, do1: 6, sep: 20, label: 'Compound Microscope' },
+  camera: { f1: 15, f2: -10, do1: 30, sep: 25, label: 'Camera Lens System' }
+};
 
-  document.getElementById('sliderH').addEventListener('input', function() {
-    params.h = parseFloat(this.value);
-    updateSliderLabel('valH', params.h, 'cm');
-    buildScene();
-  });
+function applyPreset(key) {
+  const p = PRESETS[key];
+  params.f1 = p.f1; params.f2 = p.f2; params.do1 = p.do1; params.sep = p.sep;
+  document.getElementById('sl-f1').value = p.f1; document.getElementById('v-f1').textContent = p.f1.toFixed(1) + ' cm';
+  document.getElementById('sl-f2').value = p.f2; document.getElementById('v-f2').textContent = p.f2.toFixed(1) + ' cm';
+  document.getElementById('sl-do').value = p.do1; document.getElementById('v-do').textContent = p.do1.toFixed(1) + ' cm';
+  document.getElementById('sl-sep').value = p.sep; document.getElementById('v-sep').textContent = p.sep.toFixed(1) + ' cm';
+  updateScene();
+  showToast('Preset: ' + p.label);
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
 
-  // ── Resize ─────────────────────────────────────────────────────────────────
-  function onResize() {
-    try {
-      var W = wrap.clientWidth, H = wrap.clientHeight;
-      if (W < 1 || H < 1) return;
-      var aspect = W / H;
-      var frustH = 8;
-      camera.left   = -frustH * aspect;
-      camera.right  =  frustH * aspect;
-      camera.top    =  frustH;
-      camera.bottom = -frustH;
-      camera.updateProjectionMatrix();
-      renderer.setSize(W, H);
-    } catch(e) {}
-  }
-  window.addEventListener('resize', onResize);
+// ── KaTeX ─────────────────────────────────────────────────────────────────────
+katex.render('\\frac{1}{f} = \\frac{1}{d_o} + \\frac{1}{d_i}', document.getElementById('f1'), { throwOnError: false, displayMode: true });
+katex.render('m = -\\frac{d_i}{d_o}', document.getElementById('f2'), { throwOnError: false, displayMode: true });
+katex.render('M_{total} = m_1 \\cdot m_2', document.getElementById('f3'), { throwOnError: false, displayMode: true });
 
-  // ── Render Loop ────────────────────────────────────────────────────────────
-  function animate() {
-    requestAnimationFrame(animate);
-    try {
-      renderer.render(scene, camera);
-      fpsCount++;
-      var now = performance.now();
-      if (now - fpsLast >= 1000) {
-        fpsEl.textContent = fpsCount + ' FPS';
-        fpsCount = 0;
-        fpsLast = now;
-      }
-    } catch(e) {}
-  }
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+const quizAnswers = {
+  1: { correct: 1, explanation: 'Correct! The objective creates a real, inverted, magnified image just inside the eyepiece focal length, which the eyepiece then re-magnifies as a virtual image.' },
+  2: { correct: 1, explanation: 'Correct! When the converging rays from Lens 1 cross before reaching Lens 2, the point of convergence acts as a virtual object for Lens 2 (do₂ < 0).' },
+  3: { correct: 1, explanation: 'Correct! Angular magnification M = −f₁/f₂ = −40/5 = −8×. The negative sign means inverted image, so the magnitude is 8×.' }
+};
 
-  // ── Init ───────────────────────────────────────────────────────────────────
-  try {
-    buildScene();
-    animate();
-  } catch(e) {
-    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px">Scene build failed: ' + e.message + '</div>';
-  }
+function checkQ(n, correct) {
+  const sel = document.querySelector(`input[name="q${n}"]:checked`);
+  const fb = document.getElementById(`q${n}-fb`);
+  const opts = document.querySelectorAll(`#q${n}-opts label`);
+  if (!sel) { showToast('Select an answer first'); return; }
+  const ans = parseInt(sel.value);
+  const qa = quizAnswers[n];
+  opts.forEach((l, i) => { l.classList.remove('correct', 'wrong'); if (i === qa.correct) l.classList.add('correct'); else if (i === ans && ans !== qa.correct) l.classList.add('wrong'); });
+  fb.style.display = 'block';
+  if (ans === qa.correct) { fb.className = 'q-feedback good'; fb.textContent = '✓ ' + qa.explanation; }
+  else { fb.className = 'q-feedback bad'; fb.textContent = '✗ Not quite — ' + qa.explanation; }
+}
 
-})();
+function toggleQuiz() {
+  const body = document.getElementById('quizBody');
+  const btn = document.getElementById('quizToggleBtn');
+  if (body.style.display === 'none') { body.style.display = 'block'; btn.textContent = '▲'; }
+  else { body.style.display = 'none'; btn.textContent = '▼'; }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const tc = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  tc.appendChild(el);
+  setTimeout(() => { if (el.parentNode) tc.removeChild(el); }, 2000);
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+function resetSim() { applyPreset('microscope'); showToast('Simulation reset'); }
+function toggleFullscreen() { if (!document.fullscreenElement) container.requestFullscreen(); else document.exitFullscreen(); }
+function showAbout() { showToast('Geometric Optics Lenses | AetherViz v7.0 | Keys: Space=Pause R=Reset 1-5=Speed'); }
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); simPaused = !simPaused; showToast(simPaused ? 'Paused' : 'Playing'); }
+  if (e.code === 'KeyR') resetSim();
+  const spd = parseInt(e.key);
+  if (spd >= 1 && spd <= 5) { speedIdx = spd - 1; speedFactor = speeds[speedIdx]; showToast('Speed: ' + speeds[speedIdx] + 'x'); }
+});
+
+// ── Animation loop ────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+// Init
+updateScene();
 </script>
+<div style="display:none">Generated by AetherViz Master v7.0. Keep exploring the wonders of optics!</div>
 </body>
 </html>

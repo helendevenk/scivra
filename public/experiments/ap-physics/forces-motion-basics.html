@@ -3,909 +3,522 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forces and Motion: Basics | NeonPhysics</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<title>Forces & Motion Basics — AP Physics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-  }
-
-  /* ── Header ── */
-  #header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 20px; background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
-    border-bottom: 1px solid #334155; z-index: 20; flex-shrink: 0;
-  }
-  #header .icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: linear-gradient(135deg, #3B82F6, #0EA5E9);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; color: #fff;
-  }
-  #header h1 { font-size: 18px; font-weight: 700; color: #f1f5f9; }
-  #header .subtitle { font-size: 12px; color: #94a3b8; margin-top: 1px; }
-  #status-badge {
-    margin-left: auto; padding: 4px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
-    transition: all 0.3s ease;
-  }
-  #status-badge.at-rest { background: #166534; color: #4ade80; }
-  #status-badge.accelerating { background: #7c2d12; color: #fb923c; }
-  #status-badge.constant-v { background: #1e3a5f; color: #60a5fa; }
-
-  /* ── Layout ── */
-  #layout { display: flex; flex: 1; min-height: 0; }
-
-  /* ── Left Panel ── */
-  #left-panel {
-    width: 300px; min-width: 300px; background: rgba(30, 41, 59, 0.85);
-    backdrop-filter: blur(12px); border-right: 1px solid #334155;
-    display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
-    transition: margin-left 0.3s ease;
-  }
-  #left-panel.collapsed { margin-left: -300px; }
-  #toggle-left {
-    position: absolute; left: 300px; top: 50%; transform: translateY(-50%);
-    width: 24px; height: 48px; background: #1e293b; border: 1px solid #334155;
-    border-left: none; border-radius: 0 6px 6px 0; cursor: pointer;
-    color: #94a3b8; font-size: 14px; z-index: 15; display: flex;
-    align-items: center; justify-content: center; transition: left 0.3s ease;
-  }
-  #left-panel.collapsed ~ #toggle-left { left: 0; }
-
-  .panel-section { padding: 14px 16px; border-bottom: 1px solid #1e293b; }
-  .panel-section-title {
-    font-size: 11px; color: #64748b; text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 10px; font-weight: 600;
-  }
-  .formula-card {
-    background: rgba(15, 23, 42, 0.7); border: 1px solid #334155;
-    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
-  }
-  .formula-card .katex { font-size: 14px; }
-  .formula-label { font-size: 10px; color: #64748b; margin-bottom: 4px; }
-
-  .knowledge-card {
-    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(14,165,233,0.05));
-    border: 1px solid rgba(59,130,246,0.3); border-radius: 8px;
-    padding: 12px; font-size: 12px; line-height: 1.6; color: #cbd5e1;
-  }
-  .knowledge-card strong { color: #60a5fa; }
-
-  /* ── Canvas ── */
-  #canvas-wrap { flex: 1; position: relative; min-width: 0; }
-  #three-canvas { display: block; width: 100%; height: 100%; }
-
-  /* ── FPS ── */
-  #fps { position: absolute; top: 8px; left: 8px; font-size: 11px; color: #475569; z-index: 5; font-variant-numeric: tabular-nums; }
-
-  /* ── Live Readout overlay ── */
-  #live-overlay {
-    position: absolute; top: 8px; right: 8px; z-index: 5;
-    display: flex; flex-direction: column; gap: 4px;
-  }
-  .live-chip {
-    background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
-    border: 1px solid #334155; border-radius: 6px;
-    padding: 4px 10px; font-size: 11px; font-variant-numeric: tabular-nums;
-    color: #94a3b8;
-  }
-  .live-chip .val { font-weight: 700; margin-left: 4px; }
-  .live-chip .val.vel { color: #38bdf8; }
-  .live-chip .val.acc { color: #fb923c; }
-  .live-chip .val.net { color: #a78bfa; }
-
-  /* ── Bottom Controls ── */
-  #bottom-panel {
-    flex-shrink: 0; background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(12px);
-    border-top: 1px solid #334155; padding: 12px 20px; z-index: 10;
-  }
-  #controls-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-    align-items: start;
-  }
-  .ctrl-group { display: flex; flex-direction: column; }
-  .ctrl-label {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 11px; color: #94a3b8; margin-bottom: 5px;
-  }
-  .ctrl-val { color: #60a5fa; font-weight: 700; font-variant-numeric: tabular-nums; }
-  input[type=range] {
-    width: 100%; height: 5px; appearance: none; -webkit-appearance: none;
-    background: #334155; border-radius: 3px; outline: none; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    appearance: none; -webkit-appearance: none; width: 16px; height: 16px;
-    border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9);
-    cursor: pointer; box-shadow: 0 0 6px rgba(59,130,246,0.5);
-  }
-
-  #btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
-  .ctrl-btn {
-    padding: 7px 18px; border: 1px solid #334155; border-radius: 6px;
-    background: #1e293b; color: #cbd5e1; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s;
-  }
-  .ctrl-btn:hover { background: #334155; }
-  .ctrl-btn.primary { background: linear-gradient(135deg, #3B82F6, #0EA5E9); border-color: #60a5fa; color: #fff; }
-  .ctrl-btn.primary:hover { opacity: 0.9; }
-  .preset-btn {
-    padding: 5px 12px; border: 1px solid #334155; border-radius: 6px;
-    background: rgba(15, 23, 42, 0.6); color: #94a3b8; font-size: 11px;
-    cursor: pointer; transition: all 0.15s;
-  }
-  .preset-btn:hover { border-color: #60a5fa; color: #60a5fa; background: rgba(59,130,246,0.1); }
-
-  /* ── Quiz Panel ── */
-  #quiz-toggle {
-    position: fixed; bottom: 120px; right: 16px; width: 40px; height: 40px;
-    border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #0EA5E9);
-    border: none; color: #fff; font-size: 18px; cursor: pointer; z-index: 25;
-    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
-  }
-  #quiz-panel {
-    position: fixed; bottom: 120px; right: 16px; width: 320px;
-    background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(16px);
-    border: 1px solid #334155; border-radius: 12px; padding: 16px;
-    z-index: 30; display: none; max-height: 400px; overflow-y: auto;
-  }
-  #quiz-panel.open { display: block; }
-  #quiz-panel h3 { font-size: 14px; margin-bottom: 12px; color: #f1f5f9; }
-  .quiz-q { margin-bottom: 14px; }
-  .quiz-q p { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.5; }
-  .quiz-opt {
-    display: block; width: 100%; text-align: left; padding: 8px 10px;
-    margin-bottom: 4px; border: 1px solid #334155; border-radius: 6px;
-    background: #0f172a; color: #e2e8f0; font-size: 12px; cursor: pointer;
-    transition: all 0.15s;
-  }
-  .quiz-opt:hover { border-color: #60a5fa; background: rgba(59,130,246,0.1); }
-  .quiz-opt.correct { border-color: #4ade80; background: rgba(74,222,128,0.15); color: #4ade80; pointer-events: none; }
-  .quiz-opt.wrong { border-color: #f87171; background: rgba(248,113,113,0.15); color: #f87171; pointer-events: none; }
-  .quiz-feedback { font-size: 11px; margin-top: 4px; padding: 6px 8px; border-radius: 4px; display: none; }
-  .quiz-feedback.show { display: block; }
-  .quiz-feedback.correct-fb { background: rgba(74,222,128,0.1); color: #4ade80; }
-  .quiz-feedback.wrong-fb { background: rgba(248,113,113,0.1); color: #f87171; }
-
-  /* ── Responsive ── */
-  @media (max-width: 900px) {
-    #controls-grid { grid-template-columns: repeat(2, 1fr); }
-    #left-panel { width: 260px; min-width: 260px; }
-  }
-  @media (max-width: 640px) {
-    #controls-grid { grid-template-columns: 1fr; }
-    #left-panel { position: absolute; height: 100%; z-index: 20; }
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 2px; }
+.nav { background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(59,130,246,0.3); backdrop-filter: blur(12px); padding: 0 1.25rem; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 100; }
+.nav-title { font-size: 1rem; font-weight: 700; background: linear-gradient(135deg,#3B82F6,#0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-sub { font-size: 0.68rem; color: #94a3b8; margin-left: 0.5rem; }
+.btn { padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-ghost { background: rgba(255,255,255,0.07); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); }
+.btn-ghost:hover { background: rgba(255,255,255,0.13); }
+.main { display: flex; flex: 1; overflow: hidden; }
+.sidebar { width: 30%; background: rgba(15,23,42,0.92); border-right: 1px solid rgba(59,130,246,0.2); overflow-y: auto; padding: 0.9rem; flex-shrink: 0; }
+.sidebar-section { margin-bottom: 1.1rem; }
+.sidebar-title { font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #3B82F6; margin-bottom: 0.55rem; }
+.formula-block { background: rgba(59,130,246,0.09); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.65rem; margin-bottom: 0.45rem; }
+.formula-desc { font-size: 0.7rem; color: #94a3b8; margin-top: 0.28rem; }
+.concept-text { font-size: 0.76rem; color: #cbd5e1; line-height: 1.6; }
+.concept-text p { margin-bottom: 0.45rem; }
+.info-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.4rem; }
+.info-card-title { font-size: 0.68rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.2rem; }
+.info-card-text { font-size: 0.7rem; color: #94a3b8; line-height: 1.5; }
+.canvas-area { flex: 1; position: relative; overflow: hidden; }
+#canvas-container { width: 100%; height: 100%; }
+.data-overlay { position: absolute; top: 10px; left: 10px; background: rgba(15,23,42,0.85); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.65rem 0.9rem; backdrop-filter: blur(8px); min-width: 190px; z-index: 10; }
+.data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; gap: 1rem; }
+.data-label { font-size: 0.68rem; color: #94a3b8; }
+.data-val { font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #60a5fa; }
+.energy-overlay { position: absolute; top: 10px; right: 10px; width: 190px; background: rgba(15,23,42,0.88); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.65rem 0.9rem; z-index: 10; backdrop-filter: blur(8px); }
+.energy-title { font-size: 0.62rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+.energy-bar-row { margin-bottom: 0.4rem; }
+.energy-bar-label { font-size: 0.62rem; color: #94a3b8; margin-bottom: 2px; display: flex; justify-content: space-between; }
+.energy-bar-track { height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+.energy-bar-fill { height: 100%; border-radius: 4px; }
+.control-panel { background: rgba(15,23,42,0.95); border-top: 1px solid rgba(59,130,246,0.2); padding: 0.75rem 1rem; flex-shrink: 0; z-index: 50; }
+.controls-grid { display: grid; grid-template-columns: repeat(3,1fr) auto auto; gap: 0.7rem; align-items: center; }
+.slider-group { display: flex; flex-direction: column; gap: 0.2rem; }
+.slider-label { font-size: 0.68rem; color: #94a3b8; display: flex; justify-content: space-between; }
+.slider-val { color: #60a5fa; font-weight: 700; }
+input[type=range] { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 3px; background: rgba(59,130,246,0.25); outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3B82F6; cursor: pointer; }
+.preset-btn { padding: 0.28rem 0.65rem; border-radius: 6px; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(59,130,246,0.35); background: rgba(59,130,246,0.1); color: #93c5fd; transition: all 0.15s; white-space: nowrap; }
+.preset-btn:hover, .preset-btn.active { background: rgba(59,130,246,0.28); border-color: #3B82F6; color: #fff; }
+.btn-speed { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(59,130,246,0.3); background: rgba(255,255,255,0.05); color: #94a3b8; transition: all 0.15s; }
+.btn-speed.active { background: rgba(59,130,246,0.3); color: #93c5fd; border-color: #3B82F6; }
 </style>
 </head>
 <body>
-
-<!-- Header -->
-<div id="header">
-  <div class="icon">&#9889;</div>
-  <div>
-    <h1>Forces and Motion: Basics</h1>
-    <div class="subtitle">Newton's First &amp; Second Laws &mdash; Net Force, Mass, and Acceleration</div>
+<nav class="nav">
+  <div style="display:flex;align-items:center;">
+    <span class="nav-title">Forces &amp; Motion Basics</span>
+    <span class="nav-sub">AP Physics · Newton's Laws · Free Body Diagrams</span>
   </div>
-  <div id="status-badge" class="at-rest">AT REST</div>
-</div>
-
-<!-- Main Layout -->
-<div id="layout">
-  <!-- Left Panel -->
-  <div id="left-panel">
-    <div class="panel-section">
-      <div class="panel-section-title">Key Equations</div>
-      <div class="formula-card">
-        <div class="formula-label">Newton's Second Law</div>
-        <div id="eq-newton2"></div>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="preset-btn" onclick="loadPreset('flat',this)">Block on Flat</button>
+    <button class="preset-btn" onclick="loadPreset('incline',this)">Inclined Plane 30°</button>
+    <button class="preset-btn" onclick="loadPreset('atwood',this)">Atwood Machine</button>
+    <button class="btn btn-ghost" onclick="resetSim()">↺ Reset</button>
+  </div>
+</nav>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Newton's Laws</div>
+      <div class="formula-block">
+        <div>\(\vec{F}_{net} = m\vec{a}\)</div>
+        <div class="formula-desc">Newton's 2nd Law: net force equals mass times acceleration</div>
       </div>
-      <div class="formula-card">
-        <div class="formula-label">Friction Force</div>
-        <div id="eq-friction"></div>
+      <div class="formula-block">
+        <div>\(a = \frac{F_{net}}{m} = \frac{F - f}{m}\)</div>
+        <div class="formula-desc">Acceleration from applied force minus friction</div>
       </div>
-      <div class="formula-card">
-        <div class="formula-label">Acceleration</div>
-        <div id="eq-accel"></div>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Newton's Laws</div>
-      <div class="knowledge-card" style="margin-bottom:8px;">
-        <strong>First Law (Inertia):</strong> An object at rest stays at rest, and an object in motion stays in motion with constant velocity, unless acted upon by a net external force. If applied force equals friction, the object moves at constant velocity (or stays still).
-      </div>
-      <div class="knowledge-card">
-        <strong>Second Law (F=ma):</strong> The acceleration of an object is directly proportional to the net force and inversely proportional to its mass. A larger net force produces greater acceleration; a heavier object accelerates less for the same force. The friction force <strong>f = &mu;N = &mu;mg</strong> opposes motion.
+      <div class="formula-block">
+        <div>\(f_k = \mu_k N \quad f_s \leq \mu_s N\)</div>
+        <div class="formula-desc">Kinetic and static friction. µ_s > µ_k always.</div>
       </div>
     </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Live Values</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">Applied Force</div>
-          <div id="live-applied" style="font-size:14px;font-weight:700;color:#facc15;">0 N</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">Friction</div>
-          <div id="live-friction" style="font-size:14px;font-weight:700;color:#f87171;">0 N</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">Net Force</div>
-          <div id="live-net" style="font-size:14px;font-weight:700;color:#a78bfa;">0 N</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">Acceleration</div>
-          <div id="live-accel" style="font-size:14px;font-weight:700;color:#fb923c;">0 m/s&sup2;</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">Velocity</div>
-          <div id="live-vel" style="font-size:14px;font-weight:700;color:#38bdf8;">0 m/s</div>
-        </div>
-        <div class="formula-card" style="text-align:center;">
-          <div class="formula-label">Weight (mg)</div>
-          <div id="live-weight" style="font-size:14px;font-weight:700;color:#3b82f6;">0 N</div>
-        </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Inclined Plane</div>
+      <div class="formula-block">
+        <div>\(F_\parallel = mg\sin\theta\)</div>
+        <div class="formula-desc">Component along slope (causes motion down)</div>
+      </div>
+      <div class="formula-block">
+        <div>\(N = mg\cos\theta\)</div>
+        <div class="formula-desc">Normal force (perpendicular to slope)</div>
+      </div>
+      <div class="formula-block">
+        <div>\(a = g(\sin\theta - \mu_k\cos\theta)\)</div>
+        <div class="formula-desc">Net acceleration down the slope with friction</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Atwood Machine</div>
+      <div class="formula-block">
+        <div>\(a = \frac{(m_2 - m_1)g}{m_1 + m_2}\)</div>
+        <div class="formula-desc">Acceleration when masses differ (massless string/pulley)</div>
+      </div>
+      <div class="formula-block">
+        <div>\(T = \frac{2m_1 m_2 g}{m_1 + m_2}\)</div>
+        <div class="formula-desc">Tension in string connecting the two masses</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Free Body Diagram Tips</div>
+      <div class="info-card">
+        <div class="info-card-title">Always Draw FBD First</div>
+        <div class="info-card-text">List all forces: weight mg↓, normal N⊥surface, friction f‖surface (opposes motion), tension T along string, applied force F in direction of push/pull.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Choose Smart Axes</div>
+        <div class="info-card-text">For inclined planes: tilt x-axis along slope. This makes N and component decompositions cleaner — fewer trig terms in each equation.</div>
       </div>
     </div>
   </div>
-
-  <button id="toggle-left" aria-label="Toggle panel">&lsaquo;</button>
-
-  <!-- Canvas -->
-  <div id="canvas-wrap">
-    <canvas id="three-canvas"></canvas>
-    <div id="fps">-- FPS</div>
-    <div id="live-overlay">
-      <div class="live-chip">v: <span class="val vel" id="overlay-vel">0.00</span> m/s</div>
-      <div class="live-chip">a: <span class="val acc" id="overlay-acc">0.00</span> m/s&sup2;</div>
-      <div class="live-chip">F<sub>net</sub>: <span class="val net" id="overlay-net">0.00</span> N</div>
+  <div class="canvas-area">
+    <div id="canvas-container"></div>
+    <div class="data-overlay">
+      <div style="font-size:0.65rem;font-weight:700;color:#3B82F6;margin-bottom:0.4rem;text-transform:uppercase;">Live Data</div>
+      <div class="data-row"><span class="data-label">Acceleration</span><span class="data-val" id="d-acc">0.00 m/s²</span></div>
+      <div class="data-row"><span class="data-label">Velocity</span><span class="data-val" id="d-vel">0.00 m/s</span></div>
+      <div class="data-row"><span class="data-label">Normal N</span><span class="data-val" id="d-norm">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Friction f</span><span class="data-val" id="d-fric">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">F_net</span><span class="data-val" id="d-fnet">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Tension T</span><span class="data-val" id="d-tens">0.00 N</span></div>
+      <div class="data-row"><span class="data-label">Position x</span><span class="data-val" id="d-pos">0.00 m</span></div>
     </div>
-  </div>
-</div>
-
-<!-- Bottom Controls -->
-<div id="bottom-panel">
-  <div id="controls-grid">
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Applied Force</span><span class="ctrl-val" id="val-force">100 N</span></div>
-      <input type="range" id="slider-force" min="0" max="500" value="100" step="10">
+    <div class="energy-overlay">
+      <div class="energy-title">Energy Panel</div>
+      <div class="energy-bar-row">
+        <div class="energy-bar-label"><span>KE</span><span id="e-ke">0 J</span></div>
+        <div class="energy-bar-track"><div class="energy-bar-fill" id="bar-ke" style="width:0%;background:#3B82F6;"></div></div>
+      </div>
+      <div class="energy-bar-row">
+        <div class="energy-bar-label"><span>PE</span><span id="e-pe">0 J</span></div>
+        <div class="energy-bar-track"><div class="energy-bar-fill" id="bar-pe" style="width:50%;background:#ef4444;"></div></div>
+      </div>
+      <div class="energy-bar-row">
+        <div class="energy-bar-label"><span>W_friction</span><span id="e-wf">0 J</span></div>
+        <div class="energy-bar-track"><div class="energy-bar-fill" id="bar-wf" style="width:0%;background:#f59e0b;"></div></div>
+      </div>
+      <div class="energy-bar-row">
+        <div class="energy-bar-label"><span>Total E</span><span id="e-total">0 J</span></div>
+        <div class="energy-bar-track"><div class="energy-bar-fill" id="bar-total" style="width:50%;background:#22c55e;"></div></div>
+      </div>
     </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Mass</span><span class="ctrl-val" id="val-mass">50 kg</span></div>
-      <input type="range" id="slider-mass" min="1" max="200" value="50" step="5">
-    </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label"><span>Friction Coeff (&mu;)</span><span class="ctrl-val" id="val-mu">0.30</span></div>
-      <input type="range" id="slider-mu" min="0" max="1" value="0.3" step="0.05">
-    </div>
-  </div>
-  <div id="btn-row">
-    <button class="ctrl-btn primary" id="btn-play">&#9654; Play</button>
-    <button class="ctrl-btn" id="btn-pause">&#10074;&#10074; Pause</button>
-    <button class="ctrl-btn" id="btn-reset">&#8635; Reset</button>
-    <button class="ctrl-btn" id="btn-random">&#127922; Random</button>
-    <span style="width:16px;"></span>
-    <button class="preset-btn" id="preset-ice">Frictionless Ice</button>
-    <button class="preset-btn" id="preset-heavy">Heavy Object</button>
-    <button class="preset-btn" id="preset-tug">Tug of War</button>
   </div>
 </div>
-
-<!-- Quiz -->
-<button id="quiz-toggle" aria-label="Toggle quiz">?</button>
-<div id="quiz-panel">
-  <h3>Quick Check</h3>
-  <div class="quiz-q" id="q1">
-    <p>1. A 10 kg box is pushed with 60 N on a surface with &mu; = 0.3. What is the acceleration?</p>
-    <button class="quiz-opt" data-correct="false" onclick="checkQuiz(this,'q1')">A) 6.0 m/s&sup2;</button>
-    <button class="quiz-opt" data-correct="true" onclick="checkQuiz(this,'q1')">B) 3.06 m/s&sup2;</button>
-    <button class="quiz-opt" data-correct="false" onclick="checkQuiz(this,'q1')">C) 0.3 m/s&sup2;</button>
-    <button class="quiz-opt" data-correct="false" onclick="checkQuiz(this,'q1')">D) 2.0 m/s&sup2;</button>
-    <div class="quiz-feedback" id="fb-q1"></div>
-  </div>
-  <div class="quiz-q" id="q2">
-    <p>2. According to Newton's First Law, what happens to an object with zero net force?</p>
-    <button class="quiz-opt" data-correct="false" onclick="checkQuiz(this,'q2')">A) It decelerates to a stop</button>
-    <button class="quiz-opt" data-correct="false" onclick="checkQuiz(this,'q2')">B) It accelerates uniformly</button>
-    <button class="quiz-opt" data-correct="true" onclick="checkQuiz(this,'q2')">C) It maintains constant velocity (including zero)</button>
-    <button class="quiz-opt" data-correct="false" onclick="checkQuiz(this,'q2')">D) It changes direction randomly</button>
-    <div class="quiz-feedback" id="fb-q2"></div>
+<div class="control-panel">
+  <div class="controls-grid">
+    <div class="slider-group">
+      <div class="slider-label"><span>Mass (kg)</span><span class="slider-val" id="lbl-mass">2.0</span></div>
+      <input type="range" id="sl-mass" min="0.5" max="10" step="0.5" value="2" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Applied F (N)</span><span class="slider-val" id="lbl-force">5.0</span></div>
+      <input type="range" id="sl-force" min="0" max="50" step="0.5" value="5" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Friction µ</span><span class="slider-val" id="lbl-mu">0.20</span></div>
+      <input type="range" id="sl-mu" min="0" max="0.8" step="0.01" value="0.2" oninput="onSlider()">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:0.1rem;">Speed</div>
+      <div style="display:flex;gap:0.3rem;">
+        <button class="btn-speed" onclick="setSimSpeed(0.5,this)">0.5×</button>
+        <button class="btn-speed active" onclick="setSimSpeed(1,this)">1×</button>
+        <button class="btn-speed" onclick="setSimSpeed(2,this)">2×</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:0.1rem;">Vectors</div>
+      <button class="btn btn-ghost" onclick="toggleVectors()" id="btn-vec" style="font-size:0.7rem;padding:0.25rem 0.6rem;">Show FBD</button>
+    </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-'use strict';
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+    }
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
 
-document.addEventListener('DOMContentLoaded', function () {
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
 
-  /* ── KaTeX Formulas ── */
-  try {
-    katex.render('F_{\\text{net}} = ma', document.getElementById('eq-newton2'), { displayMode: true });
-    katex.render('f = \\mu N = \\mu m g', document.getElementById('eq-friction'), { displayMode: true });
-    katex.render('a = \\frac{F_{\\text{net}}}{m}', document.getElementById('eq-accel'), { displayMode: true });
-  } catch (e) {
-    console.warn('KaTeX render error:', e);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(6, 5, 12);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.9); dirLight.position.set(6,10,5); dirLight.castShadow = true; scene.add(dirLight);
+scene.add(Object.assign(new THREE.DirectionalLight(0x3B82F6, 0.3), { position: new THREE.Vector3(-6,4,-4) }));
+scene.add(Object.assign(new THREE.DirectionalLight(0x0EA5E9, 0.2), { position: new THREE.Vector3(0,-4,-6) }));
+const grid = new THREE.GridHelper(20, 20, 0x1e3a5f, 0x1e293b); scene.add(grid);
+
+// Surface
+const surfaceMat = new THREE.MeshPhongMaterial({ color: 0x1e3a5f, side: THREE.DoubleSide });
+const flatSurface = new THREE.Mesh(new THREE.BoxGeometry(16, 0.1, 3), surfaceMat);
+flatSurface.position.y = 0; scene.add(flatSurface);
+
+// Incline ramp group
+const rampGroup = new THREE.Group();
+const rampMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 0.15, 3), new THREE.MeshPhongMaterial({ color: 0x1e3a5f }));
+rampGroup.add(rampMesh);
+scene.add(rampGroup);
+
+// Pulley for Atwood
+const pulleyMesh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.07, 8, 24), new THREE.MeshPhongMaterial({ color: 0x94a3b8 }));
+pulleyMesh.position.set(0, 4, 0);
+scene.add(pulleyMesh);
+
+// Main block
+const blockMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8),
+  new THREE.MeshPhongMaterial({ color: 0x3B82F6, emissive: 0x1e3a8a, shininess: 80 }));
+blockMesh.castShadow = true; scene.add(blockMesh);
+
+// Second mass (Atwood)
+const mass2Mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6),
+  new THREE.MeshPhongMaterial({ color: 0xef4444, emissive: 0x7f1d1d }));
+mass2Mesh.castShadow = true; scene.add(mass2Mesh);
+
+// String line
+const stringMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
+let stringLine = new THREE.Line(new THREE.BufferGeometry(), stringMat); scene.add(stringLine);
+
+// FBD arrows
+function makeArrow(col) {
+  const g = new THREE.Group();
+  const m = new THREE.MeshPhongMaterial({ color: col });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1,8), m); shaft.position.y=0.5;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.07,0.2,8), m); head.position.y=1.1;
+  g.add(shaft); g.add(head); scene.add(g); return g;
+}
+const arrowWeight = makeArrow(0xf59e0b);
+const arrowNormal = makeArrow(0x22c55e);
+const arrowFriction = makeArrow(0xef4444);
+const arrowApplied = makeArrow(0x3B82F6);
+[arrowWeight, arrowNormal, arrowFriction, arrowApplied].forEach(a => a.visible = false);
+
+function setArrow(g, origin, dir, len) {
+  g.position.copy(origin);
+  g.scale.set(1, len, 1);
+  const up = new THREE.Vector3(0, 1, 0);
+  g.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize()));
+}
+
+// Simulation state
+let mode = 'flat';
+let mass = 2, appliedF = 5, mu = 0.2, simSpeed = 1;
+let px = -5, vx = 0, friction_work = 0;
+let showVectors = false;
+const G = 9.8;
+// Atwood: m1 on table (block), m2 hanging
+let m2 = 1; // set per preset
+
+function loadPreset(p, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  mode = p;
+  resetSim();
+  if (p === 'flat') {
+    document.getElementById('sl-mass').value = 2;
+    document.getElementById('sl-force').value = 8;
+    document.getElementById('sl-mu').value = 0.2;
+    m2 = 0;
+  } else if (p === 'incline') {
+    document.getElementById('sl-mass').value = 3;
+    document.getElementById('sl-force').value = 0;
+    document.getElementById('sl-mu').value = 0.15;
+    m2 = 0;
+  } else if (p === 'atwood') {
+    document.getElementById('sl-mass').value = 1;
+    document.getElementById('sl-force').value = 0;
+    document.getElementById('sl-mu').value = 0;
+    m2 = 2;
+  }
+  onSlider();
+}
+
+function onSlider() {
+  mass = parseFloat(document.getElementById('sl-mass').value);
+  appliedF = parseFloat(document.getElementById('sl-force').value);
+  mu = parseFloat(document.getElementById('sl-mu').value);
+  document.getElementById('lbl-mass').textContent = mass.toFixed(1);
+  document.getElementById('lbl-force').textContent = appliedF.toFixed(1);
+  document.getElementById('lbl-mu').textContent = mu.toFixed(2);
+}
+
+function setSimSpeed(s, btn) {
+  simSpeed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function toggleVectors() {
+  showVectors = !showVectors;
+  document.getElementById('btn-vec').textContent = showVectors ? 'Hide FBD' : 'Show FBD';
+  [arrowWeight, arrowNormal, arrowFriction, arrowApplied].forEach(a => a.visible = showVectors);
+}
+
+function resetSim() {
+  px = -5; vx = 0; friction_work = 0;
+}
+
+let lastTime = null;
+
+renderer.setAnimationLoop(function(time) {
+  if (lastTime === null) lastTime = time;
+  const dt = Math.min((time - lastTime) / 1000, 0.05) * simSpeed;
+  lastTime = time;
+
+  let acc = 0, N = 0, fric = 0, T = 0;
+  const theta = mode === 'incline' ? 30 * Math.PI / 180 : 0;
+
+  if (mode === 'flat') {
+    N = mass * G;
+    fric = mu * N * (vx !== 0 || appliedF > mu * N ? 1 : 0);
+    const fNet = appliedF - fric;
+    acc = fNet / mass;
+    T = 0;
+  } else if (mode === 'incline') {
+    N = mass * G * Math.cos(theta);
+    const fGravDown = mass * G * Math.sin(theta);
+    fric = mu * N;
+    const fNet = appliedF - fGravDown - fric;
+    acc = fNet / mass;
+    T = 0;
+  } else { // atwood
+    N = 0;
+    fric = 0;
+    acc = (m2 - mass) * G / (mass + m2);
+    T = 2 * mass * m2 * G / (mass + m2);
   }
 
-  /* ── Left panel toggle ── */
-  const leftPanel = document.getElementById('left-panel');
-  const toggleLeft = document.getElementById('toggle-left');
-  toggleLeft.addEventListener('click', function () {
-    leftPanel.classList.toggle('collapsed');
-    toggleLeft.textContent = leftPanel.classList.contains('collapsed') ? '\u203A' : '\u2039';
-  });
+  // Velocity Verlet
+  const newVx = vx + acc * dt;
+  px += (vx + newVx) * 0.5 * dt;
+  vx = newVx;
+  if (mode === 'flat' && (px > 7 || px < -7)) { px = Math.sign(px) * 7; vx = 0; }
+  if (mode === 'atwood') { px = Math.max(-3, Math.min(3, px)); }
+  friction_work += Math.abs(fric * vx * dt);
 
-  /* ── Quiz logic ── */
-  const quizPanel = document.getElementById('quiz-panel');
-  const quizToggle = document.getElementById('quiz-toggle');
-  quizToggle.addEventListener('click', function () {
-    quizPanel.classList.toggle('open');
-    quizToggle.style.display = quizPanel.classList.contains('open') ? 'none' : '';
-  });
-  document.addEventListener('click', function (e) {
-    if (quizPanel.classList.contains('open') && !quizPanel.contains(e.target) && e.target !== quizToggle) {
-      quizPanel.classList.remove('open');
-      quizToggle.style.display = '';
-    }
-  });
-
-  /* ── Slider references ── */
-  const sliderForce = document.getElementById('slider-force');
-  const sliderMass = document.getElementById('slider-mass');
-  const sliderMu = document.getElementById('slider-mu');
-  const valForce = document.getElementById('val-force');
-  const valMass = document.getElementById('val-mass');
-  const valMu = document.getElementById('val-mu');
-
-  sliderForce.addEventListener('input', function () { valForce.textContent = this.value + ' N'; });
-  sliderMass.addEventListener('input', function () { valMass.textContent = this.value + ' kg'; });
-  sliderMu.addEventListener('input', function () { valMu.textContent = parseFloat(this.value).toFixed(2); });
-
-  /* ── Physics state ── */
-  const G = 9.81;
-  let simRunning = false;
-  let velocity = 0;
-  let positionX = 0;
-  let tugMode = false;
-  let tugOppositeForce = 0;
-  const trailPositions = [];
-  const MAX_TRAIL = 200;
-
-  function getAppliedForce() { return parseFloat(sliderForce.value); }
-  function getMass() { return parseFloat(sliderMass.value); }
-  function getMu() { return parseFloat(sliderMu.value); }
-
-  /* ── Buttons ── */
-  document.getElementById('btn-play').addEventListener('click', function () { simRunning = true; });
-  document.getElementById('btn-pause').addEventListener('click', function () { simRunning = false; });
-  document.getElementById('btn-reset').addEventListener('click', function () {
-    simRunning = false;
-    velocity = 0;
-    positionX = 0;
-    tugMode = false;
-    tugOppositeForce = 0;
-    trailPositions.length = 0;
-    updateTrailGeometry();
-    if (block) { block.position.x = 0; }
-    if (arrowAppliedBack) { arrowAppliedBack.visible = false; }
-  });
-  document.getElementById('btn-random').addEventListener('click', function () {
-    sliderForce.value = Math.round((Math.random() * 500) / 10) * 10;
-    sliderMass.value = Math.round((Math.random() * 199 + 1) / 5) * 5;
-    sliderMu.value = (Math.random()).toFixed(2);
-    valForce.textContent = sliderForce.value + ' N';
-    valMass.textContent = sliderMass.value + ' kg';
-    valMu.textContent = parseFloat(sliderMu.value).toFixed(2);
-  });
-
-  /* ── Presets ── */
-  document.getElementById('preset-ice').addEventListener('click', function () {
-    sliderMu.value = 0; sliderForce.value = 100; sliderMass.value = 50;
-    valMu.textContent = '0.00'; valForce.textContent = '100 N'; valMass.textContent = '50 kg';
-    tugMode = false; tugOppositeForce = 0;
-    if (arrowAppliedBack) { arrowAppliedBack.visible = false; }
-  });
-  document.getElementById('preset-heavy').addEventListener('click', function () {
-    sliderMu.value = 0.5; sliderForce.value = 300; sliderMass.value = 200;
-    valMu.textContent = '0.50'; valForce.textContent = '300 N'; valMass.textContent = '200 kg';
-    tugMode = false; tugOppositeForce = 0;
-    if (arrowAppliedBack) { arrowAppliedBack.visible = false; }
-  });
-  document.getElementById('preset-tug').addEventListener('click', function () {
-    sliderMu.value = 0.1; sliderForce.value = 200; sliderMass.value = 80;
-    valMu.textContent = '0.10'; valForce.textContent = '200 N'; valMass.textContent = '80 kg';
-    tugMode = true;
-    tugOppositeForce = 150;
-    if (arrowAppliedBack) { arrowAppliedBack.visible = true; }
-  });
-
-  /* ── Three.js Setup ── */
-  let scene, camera, renderer, controls;
-  let block, ground;
-  let arrowApplied, arrowFriction, arrowNormal, arrowGravity, arrowAppliedBack;
-  let labelApplied, labelFriction, labelNormal, labelGravity, labelAppliedBack;
-  let trailLine, trailGeometry;
-  let handMesh;
-
-  const canvas = document.getElementById('three-canvas');
-  const canvasWrap = document.getElementById('canvas-wrap');
-
-  try {
-    /* ── Scene ── */
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a);
-    scene.fog = new THREE.Fog(0x0f172a, 40, 80);
-
-    /* ── Camera ── */
-    camera = new THREE.PerspectiveCamera(45, canvasWrap.clientWidth / canvasWrap.clientHeight, 0.1, 200);
-    camera.position.set(8, 6, 12);
-    camera.lookAt(0, 1, 0);
-
-    /* ── Renderer ── */
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setSize(canvasWrap.clientWidth, canvasWrap.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-
-    /* ── Controls ── */
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.minDistance = 5;
-    controls.maxDistance = 40;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05;
-    controls.target.set(0, 1, 0);
-
-    /* ── Lights ── */
-    const ambientLight = new THREE.AmbientLight(0x8899bb, 0.5);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(8, 12, 6);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.set(1024, 1024);
-    dirLight.shadow.camera.left = -15;
-    dirLight.shadow.camera.right = 15;
-    dirLight.shadow.camera.top = 15;
-    dirLight.shadow.camera.bottom = -15;
-    scene.add(dirLight);
-
-    const fillLight = new THREE.DirectionalLight(0x6699ff, 0.3);
-    fillLight.position.set(-5, 4, -3);
-    scene.add(fillLight);
-
-    const hemisphereLight = new THREE.HemisphereLight(0x4488ff, 0x223344, 0.4);
-    scene.add(hemisphereLight);
-
-    /* ── Ground ── */
-    const groundGeo = new THREE.PlaneGeometry(60, 60);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a2744, roughness: 0.8, metalness: 0.2 });
-    ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    /* ── Grid helper ── */
-    const gridHelper = new THREE.GridHelper(60, 60, 0x334155, 0x1e293b);
-    gridHelper.position.y = 0.01;
-    scene.add(gridHelper);
-
-    /* ── Block ── */
-    const blockSize = 1.5;
-    const blockGeo = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-    const blockMat = new THREE.MeshStandardMaterial({
-      color: 0x3B82F6, roughness: 0.4, metalness: 0.3,
-      emissive: 0x1a3a6a, emissiveIntensity: 0.15
-    });
-    block = new THREE.Mesh(blockGeo, blockMat);
-    block.position.set(0, blockSize / 2, 0);
-    block.castShadow = true;
-    block.receiveShadow = true;
-    scene.add(block);
-
-    /* ── Mass label on block ── */
-    const massCanvas = document.createElement('canvas');
-    massCanvas.width = 128;
-    massCanvas.height = 64;
-    const massCtx = massCanvas.getContext('2d');
-    const massTexture = new THREE.CanvasTexture(massCanvas);
-    const massSprMat = new THREE.SpriteMaterial({ map: massTexture, transparent: true });
-    const massSprite = new THREE.Sprite(massSprMat);
-    massSprite.scale.set(1.2, 0.6, 1);
-    massSprite.position.set(0, blockSize + 0.5, 0);
-    block.add(massSprite);
-
-    function updateMassLabel(m) {
-      massCtx.clearRect(0, 0, 128, 64);
-      massCtx.fillStyle = 'rgba(15,23,42,0.8)';
-      massCtx.beginPath();
-      massCtx.roundRect(4, 4, 120, 56, 8);
-      massCtx.fill();
-      massCtx.fillStyle = '#60a5fa';
-      massCtx.font = 'bold 28px system-ui';
-      massCtx.textAlign = 'center';
-      massCtx.textBaseline = 'middle';
-      massCtx.fillText(m + ' kg', 64, 32);
-      massTexture.needsUpdate = true;
-    }
-
-    /* ── Hand / push indicator ── */
-    const handGroup = new THREE.Group();
-    const palmGeo = new THREE.BoxGeometry(0.4, 0.6, 0.3);
-    const palmMat = new THREE.MeshStandardMaterial({ color: 0xf5c5a3, roughness: 0.7 });
-    const palm = new THREE.Mesh(palmGeo, palmMat);
-    palm.castShadow = true;
-    handGroup.add(palm);
-    const fingerGeo = new THREE.BoxGeometry(0.08, 0.35, 0.25);
-    for (let i = 0; i < 4; i++) {
-      const finger = new THREE.Mesh(fingerGeo, palmMat);
-      finger.position.set(-0.13 + i * 0.085, 0.45, 0);
-      finger.castShadow = true;
-      handGroup.add(finger);
-    }
-    const thumbGeo = new THREE.BoxGeometry(0.1, 0.25, 0.1);
-    const thumb = new THREE.Mesh(thumbGeo, palmMat);
-    thumb.position.set(-0.28, 0.1, 0);
-    thumb.rotation.z = 0.5;
-    handGroup.add(thumb);
-    handGroup.position.set(-blockSize / 2 - 0.6, blockSize / 2, 0);
-    handGroup.rotation.z = Math.PI / 2;
-    block.add(handGroup);
-    handMesh = handGroup;
-
-    /* ── Force arrows helper ── */
-    function createForceArrow(color, origin, dir, length) {
-      const arrowHelper = new THREE.ArrowHelper(
-        dir.normalize(), origin, length, color, 0.3, 0.15
-      );
-      scene.add(arrowHelper);
-      return arrowHelper;
-    }
-
-    function createLabel(text, color) {
-      const c = document.createElement('canvas');
-      c.width = 256; c.height = 64;
-      const ctx = c.getContext('2d');
-      const tex = new THREE.CanvasTexture(c);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
-      const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(2, 0.5, 1);
-      sprite.userData.canvas = c;
-      sprite.userData.ctx = ctx;
-      sprite.userData.texture = tex;
-      sprite.userData.color = color;
-      scene.add(sprite);
-      return sprite;
-    }
-
-    function updateLabel(sprite, text) {
-      const ctx = sprite.userData.ctx;
-      const c = sprite.userData.canvas;
-      ctx.clearRect(0, 0, c.width, c.height);
-      ctx.fillStyle = 'rgba(15,23,42,0.75)';
-      ctx.beginPath();
-      ctx.roundRect(2, 2, c.width - 4, c.height - 4, 8);
-      ctx.fill();
-      ctx.fillStyle = sprite.userData.color;
-      ctx.font = 'bold 22px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, c.width / 2, c.height / 2);
-      sprite.userData.texture.needsUpdate = true;
-    }
-
-    /* ── Create arrows ── */
-    const arrowOrigin = new THREE.Vector3(0, blockSize / 2, 0);
-    arrowApplied = createForceArrow(0xfacc15, arrowOrigin.clone(), new THREE.Vector3(1, 0, 0), 2);
-    arrowFriction = createForceArrow(0xf87171, arrowOrigin.clone(), new THREE.Vector3(-1, 0, 0), 1);
-    arrowNormal = createForceArrow(0x4ade80, new THREE.Vector3(0, blockSize, 0), new THREE.Vector3(0, 1, 0), 2);
-    arrowGravity = createForceArrow(0x3b82f6, arrowOrigin.clone(), new THREE.Vector3(0, -1, 0), 2);
-    arrowAppliedBack = createForceArrow(0xff6b6b, arrowOrigin.clone(), new THREE.Vector3(-1, 0, 0), 1.5);
-    arrowAppliedBack.visible = false;
-
-    labelApplied = createLabel('F', '#facc15');
-    labelFriction = createLabel('f', '#f87171');
-    labelNormal = createLabel('N', '#4ade80');
-    labelGravity = createLabel('mg', '#3b82f6');
-    labelAppliedBack = createLabel('F2', '#ff6b6b');
-    labelAppliedBack.visible = false;
-
-    /* ── Trail line ── */
-    const trailMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 });
-    trailGeometry = new THREE.BufferGeometry();
-    trailGeometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(MAX_TRAIL * 3), 3));
-    trailGeometry.setDrawRange(0, 0);
-    trailLine = new THREE.Line(trailGeometry, trailMat);
-    scene.add(trailLine);
-
-    function updateTrailGeometry() {
-      const posArr = trailGeometry.attributes.position.array;
-      const len = trailPositions.length;
-      for (let i = 0; i < len; i++) {
-        posArr[i * 3] = trailPositions[i];
-        posArr[i * 3 + 1] = 0.05;
-        posArr[i * 3 + 2] = 0;
-      }
-      trailGeometry.attributes.position.needsUpdate = true;
-      trailGeometry.setDrawRange(0, len);
-    }
-
-    /* ── Arrow update helper ── */
-    function setArrow(arrow, origin, dir, length) {
-      arrow.position.copy(origin);
-      if (length > 0.01) {
-        arrow.setDirection(dir.normalize());
-        arrow.setLength(length, Math.min(length * 0.2, 0.4), Math.min(length * 0.1, 0.2));
-        arrow.visible = true;
-      } else {
-        arrow.visible = false;
-      }
-    }
-
-    /* ── FPS counter ── */
-    const fpsEl = document.getElementById('fps');
-    let frameCount = 0;
-    let fpsTime = performance.now();
-
-    /* ── DOM references for live values ── */
-    const liveApplied = document.getElementById('live-applied');
-    const liveFriction = document.getElementById('live-friction');
-    const liveNet = document.getElementById('live-net');
-    const liveAccel = document.getElementById('live-accel');
-    const liveVel = document.getElementById('live-vel');
-    const liveWeight = document.getElementById('live-weight');
-    const overlayVel = document.getElementById('overlay-vel');
-    const overlayAcc = document.getElementById('overlay-acc');
-    const overlayNet = document.getElementById('overlay-net');
-    const statusBadge = document.getElementById('status-badge');
-
-    /* ── Physics time ── */
-    let lastTime = performance.now();
-    const SCALE = 0.05;
-    const MAX_VEL = 50;
-    const RESET_POS = 25;
-
-    /* ── Animation Loop ── */
-    renderer.setAnimationLoop(function () {
-      const now = performance.now();
-      const rawDt = (now - lastTime) / 1000;
-      lastTime = now;
-      const dt = Math.min(rawDt, 0.05);
-
-      /* FPS */
-      frameCount++;
-      if (now - fpsTime >= 500) {
-        fpsEl.textContent = Math.round(frameCount / ((now - fpsTime) / 1000)) + ' FPS';
-        frameCount = 0;
-        fpsTime = now;
-      }
-
-      const appliedF = getAppliedForce();
-      const mass = getMass();
-      const mu = getMu();
-      const weight = mass * G;
-      const normalForce = weight;
-      const maxStaticFriction = mu * normalForce;
-
-      /* Determine net horizontal force */
-      let netApplied = appliedF;
-      if (tugMode) {
-        netApplied = appliedF - tugOppositeForce;
-      }
-
-      let frictionForce = 0;
-      let netForce = 0;
-      let accel = 0;
-
-      if (simRunning) {
-        if (Math.abs(velocity) < 0.001 && Math.abs(netApplied) <= maxStaticFriction) {
-          /* Static friction balances applied force - object stays still */
-          frictionForce = netApplied;
-          netForce = 0;
-          accel = 0;
-          velocity = 0;
-        } else {
-          /* Kinetic friction opposes motion direction */
-          if (Math.abs(velocity) < 0.001) {
-            /* Just breaking free from rest */
-            frictionForce = maxStaticFriction * Math.sign(netApplied);
-          } else {
-            frictionForce = maxStaticFriction * Math.sign(velocity);
-          }
-          netForce = netApplied - frictionForce;
-          accel = netForce / mass;
-          velocity += accel * dt;
-
-          /* Clamp velocity to prevent runaway */
-          velocity = Math.max(-MAX_VEL, Math.min(MAX_VEL, velocity));
-
-          /* If friction would reverse velocity, stop instead */
-          if (Math.abs(netApplied) < maxStaticFriction) {
-            const prevSign = Math.sign(velocity - accel * dt);
-            if (prevSign !== 0 && Math.sign(velocity) !== prevSign) {
-              velocity = 0;
-            }
-          }
-        }
-
-        positionX += velocity * dt * SCALE;
-
-        /* Wrap around if too far */
-        if (Math.abs(positionX) > RESET_POS) {
-          positionX = -RESET_POS * Math.sign(positionX) * 0.8;
-          trailPositions.length = 0;
-        }
-
-        /* Trail */
-        if (Math.abs(velocity) > 0.01) {
-          trailPositions.push(positionX);
-          if (trailPositions.length > MAX_TRAIL) {
-            trailPositions.shift();
-          }
-          updateTrailGeometry();
-        }
-      } else {
-        /* Paused: still show static values */
-        if (Math.abs(velocity) < 0.001) {
-          frictionForce = Math.min(Math.abs(netApplied), maxStaticFriction) * Math.sign(netApplied);
-          netForce = netApplied - frictionForce;
-        } else {
-          frictionForce = maxStaticFriction * Math.sign(velocity);
-          netForce = netApplied - frictionForce;
-        }
-        accel = netForce / mass;
-      }
-
-      /* ── Update 3D objects ── */
-      block.position.x = positionX;
-
-      /* Scale block by mass */
-      const massScale = 0.7 + (mass / 200) * 0.8;
-      block.scale.set(massScale, massScale, massScale);
-      updateMassLabel(mass);
-
-      /* Hand visibility based on force */
-      handMesh.visible = appliedF > 0;
-      const handPulse = simRunning && appliedF > 0 ? Math.sin(now * 0.005) * 0.05 : 0;
-      handMesh.position.x = -blockSize / 2 * (1 / massScale) - 0.6 + handPulse;
-
-      /* Force arrow scaling */
-      const forceScale = 0.005;
-      const blockCenter = new THREE.Vector3(positionX, blockSize * massScale / 2, 0);
-      const blockTop = new THREE.Vector3(positionX, blockSize * massScale, 0);
-      const blockBottom = new THREE.Vector3(positionX, blockSize * massScale / 2, 0);
-
-      /* Applied force arrow (yellow, right) */
-      setArrow(arrowApplied, blockCenter, new THREE.Vector3(1, 0, 0), appliedF * forceScale);
-      updateLabel(labelApplied, 'F = ' + appliedF.toFixed(0) + ' N');
-      labelApplied.position.set(positionX + appliedF * forceScale + 1.2, blockSize * massScale / 2 + 0.3, 0);
-      labelApplied.visible = appliedF > 0;
-
-      /* Friction arrow (red, opposing motion/applied) */
-      const absFriction = Math.abs(frictionForce);
-      if (absFriction > 0.01) {
-        setArrow(arrowFriction, blockCenter, new THREE.Vector3(-Math.sign(frictionForce), 0, 0), absFriction * forceScale);
-        arrowFriction.visible = true;
-      } else {
-        arrowFriction.visible = false;
-      }
-      updateLabel(labelFriction, 'f = ' + absFriction.toFixed(1) + ' N');
-      labelFriction.position.set(positionX - Math.sign(frictionForce || 1) * (absFriction * forceScale + 1.2), blockSize * massScale / 2 + 0.3, 0);
-      labelFriction.visible = absFriction > 0.01;
-
-      /* Normal force arrow (green, up) */
-      setArrow(arrowNormal, blockTop, new THREE.Vector3(0, 1, 0), normalForce * forceScale);
-      updateLabel(labelNormal, 'N = ' + normalForce.toFixed(0) + ' N');
-      labelNormal.position.set(positionX + 0.8, blockSize * massScale + normalForce * forceScale + 0.5, 0);
-
-      /* Gravity arrow (blue, down) */
-      setArrow(arrowGravity, blockBottom, new THREE.Vector3(0, -1, 0), weight * forceScale);
-      updateLabel(labelGravity, 'mg = ' + weight.toFixed(0) + ' N');
-      labelGravity.position.set(positionX + 0.8, blockSize * massScale / 2 - weight * forceScale - 0.5, 0);
-
-      /* Tug of war opposing force arrow */
-      if (tugMode) {
-        arrowAppliedBack.visible = true;
-        labelAppliedBack.visible = true;
-        setArrow(arrowAppliedBack, blockCenter, new THREE.Vector3(-1, 0, 0), tugOppositeForce * forceScale);
-        updateLabel(labelAppliedBack, 'F2 = ' + tugOppositeForce.toFixed(0) + ' N');
-        labelAppliedBack.position.set(positionX - tugOppositeForce * forceScale - 1.5, blockSize * massScale / 2 + 0.8, 0);
-      } else {
-        arrowAppliedBack.visible = false;
-        labelAppliedBack.visible = false;
-      }
-
-      /* ── Update UI ── */
-      liveApplied.textContent = (tugMode ? netApplied.toFixed(0) : appliedF.toFixed(0)) + ' N';
-      liveFriction.textContent = absFriction.toFixed(1) + ' N';
-      liveNet.textContent = netForce.toFixed(1) + ' N';
-      liveAccel.textContent = accel.toFixed(2) + ' m/s\u00B2';
-      liveVel.textContent = velocity.toFixed(2) + ' m/s';
-      liveWeight.textContent = weight.toFixed(0) + ' N';
-
-      overlayVel.textContent = velocity.toFixed(2);
-      overlayAcc.textContent = accel.toFixed(2);
-      overlayNet.textContent = netForce.toFixed(1);
-
-      /* Status badge */
-      if (Math.abs(velocity) < 0.01 && Math.abs(accel) < 0.01) {
-        statusBadge.textContent = 'AT REST';
-        statusBadge.className = 'at-rest';
-      } else if (Math.abs(accel) > 0.01) {
-        statusBadge.textContent = 'ACCELERATING';
-        statusBadge.className = 'accelerating';
-      } else {
-        statusBadge.textContent = 'CONSTANT V';
-        statusBadge.className = 'constant-v';
-      }
-
-      /* ── Render ── */
-      controls.update();
-      renderer.render(scene, camera);
-    });
-
-    /* ── Resize ── */
-    window.addEventListener('resize', function () {
-      const w = canvasWrap.clientWidth;
-      const h = canvasWrap.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    });
-
-  } catch (err) {
-    console.error('Three.js initialization error:', err);
-    const wrap = document.getElementById('canvas-wrap');
-    if (wrap) {
-      wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:16px;padding:20px;text-align:center;">Failed to initialize 3D scene.<br>' + err.message + '</div>';
-    }
+  // Position scene objects
+  if (mode === 'flat') {
+    rampGroup.visible = false; flatSurface.visible = true; pulleyMesh.visible = false; mass2Mesh.visible = false; stringLine.visible = false;
+    blockMesh.position.set(px, 0.45, 0);
+    blockMesh.rotation.set(0,0,0);
+  } else if (mode === 'incline') {
+    rampGroup.visible = true; flatSurface.visible = false; pulleyMesh.visible = false; mass2Mesh.visible = false; stringLine.visible = false;
+    rampGroup.rotation.z = -theta;
+    rampGroup.position.set(0, 2 * Math.sin(theta), 0);
+    // Block on ramp surface
+    const rampSurfaceY = 2 * Math.sin(theta) + 0.1;
+    blockMesh.position.set(px * Math.cos(theta), rampSurfaceY + px * Math.sin(theta) * 0.5 + 0.45 * Math.cos(theta), 0);
+    blockMesh.rotation.z = -theta;
+  } else { // atwood
+    rampGroup.visible = false; flatSurface.visible = true; pulleyMesh.visible = true; mass2Mesh.visible = true; stringLine.visible = true;
+    blockMesh.position.set(-0.5, 3 - px, 0);
+    mass2Mesh.position.set(0.5, 3 + px, 0);
+    const strPts = [
+      new THREE.Vector3(-0.5, 3 - px + 0.3, 0),
+      new THREE.Vector3(0, 3.9, 0),
+      new THREE.Vector3(0.5, 3 + px + 0.3, 0)
+    ];
+    stringLine.geometry.dispose();
+    stringLine.geometry = new THREE.BufferGeometry().setFromPoints(strPts);
   }
+
+  // FBD Vectors
+  if (showVectors) {
+    const bp = blockMesh.position.clone();
+    setArrow(arrowWeight, bp.clone().add(new THREE.Vector3(0,0.4,0)), new THREE.Vector3(0,-1,0), Math.min(mass*G/20,1.5));
+    if (mode !== 'atwood') {
+      setArrow(arrowNormal, bp.clone().add(new THREE.Vector3(0,0.4,0)), new THREE.Vector3(-Math.sin(theta), Math.cos(theta), 0), Math.min(N/20,1.5));
+      if (fric > 0) setArrow(arrowFriction, bp.clone().add(new THREE.Vector3(0,0.4,0)), new THREE.Vector3(-Math.sign(vx||1)*Math.cos(theta), Math.sin(theta)*Math.sign(vx||1), 0), Math.min(fric/15,1.2));
+    }
+    if (appliedF > 0) setArrow(arrowApplied, bp.clone().add(new THREE.Vector3(0,0.4,0)), new THREE.Vector3(Math.cos(theta), Math.sin(theta)*0.3, 0), Math.min(appliedF/15,1.5));
+    [arrowWeight, arrowNormal, arrowFriction, arrowApplied].forEach(a => a.visible = true);
+  } else {
+    [arrowWeight, arrowNormal, arrowFriction, arrowApplied].forEach(a => a.visible = false);
+  }
+
+  // Energy
+  const h = mode === 'atwood' ? px + 3 : (mode === 'incline' ? -px * Math.sin(theta) + 2 : 0);
+  const KE = 0.5 * mass * vx * vx;
+  const PE = mass * G * Math.max(0, h);
+  const totalE = KE + PE + friction_work;
+  const maxE = Math.max(totalE, 1);
+
+  document.getElementById('d-acc').textContent = acc.toFixed(2) + ' m/s²';
+  document.getElementById('d-vel').textContent = vx.toFixed(2) + ' m/s';
+  document.getElementById('d-norm').textContent = N.toFixed(2) + ' N';
+  document.getElementById('d-fric').textContent = fric.toFixed(2) + ' N';
+  document.getElementById('d-fnet').textContent = (mass * acc).toFixed(2) + ' N';
+  document.getElementById('d-tens').textContent = T.toFixed(2) + ' N';
+  document.getElementById('d-pos').textContent = px.toFixed(2) + ' m';
+
+  document.getElementById('e-ke').textContent = KE.toFixed(1) + ' J';
+  document.getElementById('e-pe').textContent = PE.toFixed(1) + ' J';
+  document.getElementById('e-wf').textContent = friction_work.toFixed(1) + ' J';
+  document.getElementById('e-total').textContent = totalE.toFixed(1) + ' J';
+  document.getElementById('bar-ke').style.width = (KE/maxE*100)+'%';
+  document.getElementById('bar-pe').style.width = (PE/maxE*100)+'%';
+  document.getElementById('bar-wf').style.width = (friction_work/maxE*100)+'%';
+  document.getElementById('bar-total').style.width = '80%';
+
+  controls.update();
+  renderer.render(scene, camera);
 });
 
-/* ── Quiz check (global) ── */
-function checkQuiz(btn, qId) {
-  'use strict';
-  const question = document.getElementById(qId);
-  const feedback = document.getElementById('fb-' + qId);
-  const options = question.querySelectorAll('.quiz-opt');
-  const isCorrect = btn.getAttribute('data-correct') === 'true';
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
 
-  options.forEach(function (opt) {
-    opt.style.pointerEvents = 'none';
-    if (opt.getAttribute('data-correct') === 'true') {
-      opt.classList.add('correct');
-    } else if (opt === btn && !isCorrect) {
-      opt.classList.add('wrong');
-    }
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  renderMathInElement(document.body, { delimiters: [{left:'\\(',right:'\\)',display:false}] });
+  loadPreset('flat', document.querySelector('.preset-btn'));
+});
+onSlider();
 
-  feedback.classList.add('show');
-  if (isCorrect) {
-    feedback.classList.add('correct-fb');
-    if (qId === 'q1') {
-      feedback.textContent = 'Correct! a = (60 - 0.3 x 10 x 9.81) / 10 = (60 - 29.43) / 10 = 3.06 m/s\u00B2';
-    } else {
-      feedback.textContent = 'Correct! Newton\'s First Law states that without a net force, velocity remains unchanged.';
-    }
-  } else {
-    feedback.classList.add('wrong-fb');
-    if (qId === 'q1') {
-      feedback.textContent = 'Incorrect. Remember: a = (F_applied - \u03BCmg) / m = (60 - 29.43) / 10 = 3.06 m/s\u00B2';
-    } else {
-      feedback.textContent = 'Incorrect. Newton\'s First Law: no net force means no change in velocity (stays at rest or constant speed).';
-    }
-  }
-}
+// ── AP Physics Reference: Newton's Laws & Forces ─────────────────────────────
+// FREE BODY DIAGRAM (FBD) STRATEGY:
+// Step 1 — Isolate the object (draw a dot or outline).
+// Step 2 — Identify ALL forces: weight (mg down), normal (N perpendicular to surface),
+//   friction (f opposing motion), tension (T along string), applied force (F).
+// Step 3 — Choose coordinate axes. For inclines: x along slope, y perpendicular.
+// Step 4 — Write ΣFx = max and ΣFy = may for each axis.
+// Step 5 — Solve the system of equations.
+//
+// INCLINED PLANE COMPONENT BREAKDOWN:
+// Weight along slope (down-slope): W_parallel = mg sin θ
+// Normal force:                     N = mg cos θ
+// Friction (opposing motion):       f_k = µ_k * mg cos θ
+// Net acceleration down slope:      a = g(sin θ - µ_k cos θ)
+// Object remains still if:          µ_s ≥ tan θ
+//
+// ATWOOD MACHINE:
+// Two masses m1 < m2 connected by massless string over frictionless pulley.
+// Acceleration:  a = (m2 - m1)g / (m1 + m2)
+// Tension:       T = 2*m1*m2*g / (m1 + m2)
+// Note: tension is SAME throughout string (massless string, frictionless pulley).
+// If m1 = m2: a = 0, T = m1*g = m2*g (system in equilibrium).
+//
+// FRICTION CONCEPTS:
+// Static friction:  f_s ≤ µ_s * N  (prevents motion)
+// Kinetic friction: f_k = µ_k * N  (opposes motion, constant)
+// µ_s > µ_k always (harder to start sliding than to keep sliding).
+// Friction does not depend on contact area (for standard AP Physics).
+//
+// CONNECTED OBJECTS (block on table with hanging mass):
+// Block mass M on frictionless table, hanging mass m.
+// Net force on system = mg.
+// Total mass = M + m.
+// Acceleration a = mg / (M + m).
+// Tension T = Mm*g / (M + m) = M*a.
+//
+// VELOCITY VERLET INTEGRATION (used in this simulation):
+// x(t+dt) = x(t) + v(t)*dt + 0.5*a(t)*dt²
+// v(t+dt) = v(t) + 0.5*(a(t) + a(t+dt))*dt
+// More accurate than Euler method for physics simulations.
 </script>
 </body>
 </html>

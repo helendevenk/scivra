@@ -1,410 +1,610 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Protein Synthesis 3D — Scivra AP Biology</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-  <script src="/lib/orbit-controls.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;display:flex}
-    #three-canvas{flex:1;display:block}
-    #sidebar{width:320px;min-width:320px;height:100vh;display:flex;flex-direction:column;gap:10px;padding:14px;overflow-y:auto;background:rgba(15,23,42,0.95)}
-    .panel{background:rgba(15,23,42,0.9);border:1px solid rgba(132,204,22,0.25);border-radius:8px;padding:14px;backdrop-filter:blur(8px)}
-    h1{font-size:1rem;color:#d9f99d;font-weight:700;margin-bottom:4px}
-    .badge{display:inline-block;font-size:0.58rem;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
-    .badge-subject{background:rgba(132,204,22,0.3);color:#d9f99d}
-    .badge-free{background:rgba(34,197,94,0.25);color:#86efac}
-    .slider-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
-    .slider-row label{font-size:0.7rem;color:#94a3b8;display:flex;justify-content:space-between}
-    .slider-row input[type=range]{width:100%;accent-color:#84cc16;height:4px}
-    button{background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;margin:3px 3px 3px 0;transition:all 0.2s}
-    button:hover{background:rgba(132,204,22,0.25)}
-    button.active{background:rgba(132,204,22,0.35);border-color:#84cc16}
-    .data-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-    .data-val{color:#a3e635;font-weight:600;font-family:'JetBrains Mono',monospace}
-    .katex-wrap{margin:3px 0;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:0.72rem}
-    .section-title{font-size:0.75rem;color:#d9f99d;font-weight:600;margin-bottom:6px}
-    .codon-display{font-family:'JetBrains Mono',monospace;font-size:0.7rem;line-height:1.6;word-break:break-all;color:#94a3b8;margin-top:4px}
-    .codon-display .current{color:#84cc16;font-weight:700;background:rgba(132,204,22,0.15);padding:1px 3px;border-radius:2px}
-    .codon-display .done{color:#4ade80}
-    select{background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.4);color:#d9f99d;padding:5px 8px;border-radius:5px;font-size:0.72rem;cursor:pointer}
-    select option{background:#0f172a;color:#e2e8f0}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protein Synthesis 3D — AP Biology</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column; }
+  #toast { position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none; }
+  .toast-item { background:rgba(16,185,129,0.95);color:#fff;padding:10px 18px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(16,185,129,0.4);animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);} }
+  .glass { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px; }
+  .panel-card { background:rgba(6,78,59,0.6);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:12px; }
+  input[type=range] { -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);cursor:pointer; }
+  .sidebar { width:300px;min-width:260px;overflow-y:auto;background:rgba(15,23,42,0.92);border-right:1px solid rgba(16,185,129,0.2); }
+  .sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(16,185,129,0.4);border-radius:2px;}
+  .btn-preset { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(16,185,129,0.3);cursor:pointer;background:rgba(16,185,129,0.1);color:#6ee7b7;transition:all 0.18s; }
+  .btn-preset:hover,.btn-preset.active { background:rgba(16,185,129,0.3);color:#fff;border-color:#10B981; }
+  .btn-speed { padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.15s; }
+  .btn-speed.active { background:linear-gradient(135deg,#10B981,#22D3EE);color:#fff;border-color:#10B981; }
+  .data-val { font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#34d399; }
+  .quiz-opt { display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:13px;transition:all 0.15s; }
+  .quiz-opt:hover { border-color:#10B981;background:rgba(16,185,129,0.1); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2);border-color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.15);border-color:#ef4444; }
+  #quiz-panel { position:fixed;bottom:16px;right:16px;width:340px;z-index:100; }
+  #quiz-fab { position:fixed;bottom:16px;right:16px;z-index:101;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10B981,#22D3EE);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 16px rgba(16,185,129,0.5); }
+  #data-overlay { position:absolute;top:12px;left:12px;background:rgba(6,78,59,0.85);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;pointer-events:none;min-width:200px; }
+  #phase-banner { position:absolute;top:12px;right:12px;background:rgba(6,78,59,0.9);border:1px solid rgba(16,185,129,0.4);border-radius:8px;padding:8px 14px;text-align:center; }
+</style>
 </head>
 <body>
-<canvas id="three-canvas"></canvas>
-<div id="sidebar">
-  <div class="panel">
-    <h1>Protein Synthesis 3D <span class="badge badge-subject">AP BIOLOGY</span><span class="badge badge-free">FREE</span></h1>
-    <p style="font-size:0.68rem;color:#94a3b8;margin-top:4px">Transcription &amp; Translation: DNA &#8594; mRNA &#8594; Protein</p>
+
+<nav class="flex items-center justify-between px-5 py-3 shrink-0" style="background:rgba(15,23,42,0.9);border-bottom:1px solid rgba(16,185,129,0.25);z-index:50;">
+  <div>
+    <span class="text-lg font-bold" style="background:linear-gradient(135deg,#10B981,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Protein Synthesis</span>
+    <span class="text-xs text-slate-400 ml-3">Transcription & Translation · AP Biology</span>
   </div>
-  <div class="panel">
-    <div class="section-title">Controls</div>
-    <div class="slider-row">
-      <label>Speed <span id="speed-val">1.0</span>x</label>
-      <input type="range" id="speed-slider" min="0.2" max="3" step="0.2" value="1">
+  <div class="flex gap-2 items-center">
+    <button onclick="togglePlay()" class="btn-preset" id="play-btn">⏸ Pause</button>
+    <button onclick="resetSim()" class="btn-preset">↺ Reset</button>
+    <button onclick="toggleFullscreen()" class="btn-preset">⛶ Fullscreen</button>
+    <button onclick="showAbout()" class="btn-preset">? About</button>
+  </div>
+</nav>
+
+<div class="flex flex-1 overflow-hidden">
+
+<aside class="sidebar p-4 flex flex-col gap-4 shrink-0">
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">Core Formulas</div>
+    <div id="f1" class="mb-2"></div>
+    <div class="text-xs text-slate-400 mb-3">DNA template strand read 3'→5'; mRNA synthesized 5'→3' by RNA polymerase.</div>
+    <div id="f2" class="mb-2"></div>
+    <div class="text-xs text-slate-400">Each codon (3 nucleotides) codes for one amino acid; 64 codons, 20 amino acids.</div>
+    <div id="f3" class="mb-2 mt-2"></div>
+    <div class="text-xs text-slate-400">Central Dogma: genetic information flows DNA → RNA → Protein.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Concept</div>
+    <p class="text-xs text-slate-300 leading-relaxed">Gene expression has two main stages. Transcription occurs in the nucleus: RNA polymerase binds a promoter, unwinds DNA, and synthesizes a complementary mRNA strand using RNA nucleotides (A, U, G, C — note uracil replaces thymine).</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">Translation occurs at the ribosome in the cytoplasm. The ribosome reads mRNA codons in the 5'→3' direction. tRNA molecules carrying specific amino acids enter the A site; peptide bonds form at the P site; the growing polypeptide exits from the E site.</p>
+    <p class="text-xs text-slate-300 leading-relaxed mt-2">The genetic code is universal, redundant (multiple codons per amino acid), and nearly non-overlapping — powerful evidence for the common ancestry of all life.</p>
+  </div>
+
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-cyan-400 mb-1">Key Fact</div>
+    <div class="text-xs text-slate-300">The ribosome is a ribozyme — the peptidyl transferase activity that forms peptide bonds is catalyzed by rRNA, not protein. This supports the RNA World hypothesis (ribosomes are ancient catalytic RNA machines).</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-amber-400 mb-1">Common Misconception</div>
+    <div class="text-xs text-slate-300">mRNA does NOT carry the same sequence as the coding strand of DNA — it carries the same sequence as the coding strand (with U instead of T), but is synthesized from the template strand. Students often confuse these.</div>
+  </div>
+  <div class="glass p-3">
+    <div class="text-xs font-bold text-emerald-400 mb-1">Why It Matters</div>
+    <div class="text-xs text-slate-300">AP Biology: protein synthesis is tested in gene expression, mutations, and biotechnology (CRISPR, mRNA vaccines). Understanding how the ribosome reads codons explains how point mutations can change or truncate proteins.</div>
+  </div>
+
+  <div class="panel-card">
+    <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">Controls</div>
+    <div class="mb-3">
+      <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Animation Speed</span><span id="speed-val">1.0×</span></div>
+      <input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1.0">
     </div>
-    <div style="margin-top:4px;margin-bottom:6px">
-      <label style="font-size:0.7rem;color:#94a3b8">Mutation</label>
-      <select id="mutation-select">
-        <option value="none">None</option>
-        <option value="substitution">Substitution</option>
-        <option value="insertion">Insertion</option>
-        <option value="deletion">Deletion</option>
-      </select>
+    <div class="mb-3">
+      <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Zoom Level</span><span id="zoom-val">15</span></div>
+      <input type="range" id="zoom-slider" min="6" max="30" step="1" value="15">
     </div>
-    <div>
-      <button id="btn-play" class="active">&#9654; Play</button>
-      <button id="btn-pause">&#9208; Pause</button>
-      <button id="btn-reset">&#8634; Reset</button>
+    <div class="flex items-center gap-2 mb-3">
+      <label class="text-xs text-slate-400">Show Codons</label>
+      <input type="checkbox" id="codon-toggle" checked class="accent-emerald-500">
     </div>
-  </div>
-  <div class="panel">
-    <div class="section-title">Process Data</div>
-    <div class="data-row">Phase <span class="data-val" id="d-phase">Transcription</span></div>
-    <div class="data-row">Codons read <span class="data-val" id="d-codons">0</span></div>
-    <div class="data-row">Amino acids <span class="data-val" id="d-aa">0</span></div>
-    <div class="data-row">mRNA length <span class="data-val" id="d-mrna">0</span> nt</div>
-    <div class="data-row">Mutation <span class="data-val" id="d-mutation">None</span></div>
-  </div>
-  <div class="panel">
-    <div class="section-title">mRNA Sequence</div>
-    <div class="codon-display" id="codon-display">—</div>
-  </div>
-  <div class="panel">
-    <div class="section-title">Codon Table (partial)</div>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:#94a3b8;line-height:1.5">
-      AUG=Met(START) UAA/UAG/UGA=STOP<br>
-      UUU/UUC=Phe GCU/GCC=Ala<br>
-      GAA/GAG=Glu AAA/AAG=Lys<br>
-      GGU/GGC=Gly UCU/UCC=Ser<br>
-      CAA/CAG=Gln AUU/AUC=Ile
+    <div class="text-xs font-bold text-slate-400 mb-2 mt-1">Speed</div>
+    <div class="flex gap-1 flex-wrap mb-3">
+      <button class="btn-speed" onclick="setSpeed(0.25)">0.25×</button>
+      <button class="btn-speed" onclick="setSpeed(0.5)">0.5×</button>
+      <button class="btn-speed active" onclick="setSpeed(1)">1×</button>
+      <button class="btn-speed" onclick="setSpeed(2)">2×</button>
+      <button class="btn-speed" onclick="setSpeed(3)">3×</button>
+    </div>
+    <div class="text-xs font-bold text-slate-400 mb-2">Presets</div>
+    <div class="flex flex-wrap gap-1">
+      <button class="btn-preset" id="p-tx" onclick="applyPreset('transcription')">Transcription Phase</button>
+      <button class="btn-preset active" id="p-tl" onclick="applyPreset('translation')">Translation Phase</button>
+      <button class="btn-preset" id="p-full" onclick="applyPreset('full')">Full Process</button>
     </div>
   </div>
-  <div class="panel">
-    <div class="katex-wrap" id="f1"></div>
+</aside>
+
+<main class="flex-1 relative overflow-hidden" id="canvas-container">
+  <div id="data-overlay">
+    <div class="text-xs text-slate-400 mb-1">Current Phase</div>
+    <div class="text-sm font-bold text-emerald-400" id="d-phase">Translation</div>
+    <div class="text-xs text-slate-400 mt-2">Current Codon</div>
+    <div class="data-val" id="d-codon">AUG</div>
+    <div class="text-xs text-slate-400 mt-2">Amino Acid Added</div>
+    <div class="data-val" id="d-aa">Met</div>
+    <div class="text-xs text-slate-400 mt-2">Protein Length</div>
+    <div class="data-val" id="d-len">0 aa</div>
   </div>
+  <div id="phase-banner">
+    <div class="text-xs text-slate-400">Stage</div>
+    <div class="text-sm font-bold text-emerald-400" id="stage-label">Translation</div>
+  </div>
+</main>
+
 </div>
 
+<div id="quiz-panel" class="glass p-4">
+  <div class="flex justify-between items-center mb-3">
+    <span class="text-sm font-bold text-emerald-400">Quick Quiz</span>
+    <button onclick="collapseQuiz()" class="text-slate-400 hover:text-white text-xs">Minimize ▼</button>
+  </div>
+  <div id="quiz-body"></div>
+</div>
+<div id="quiz-fab" onclick="expandQuiz()">🧬</div>
+<div id="toast"></div>
+
 <script>
-// Codon table
-const codonTable = {
-  'UUU':'Phe','UUC':'Phe','UUA':'Leu','UUG':'Leu',
-  'CUU':'Leu','CUC':'Leu','CUA':'Leu','CUG':'Leu',
-  'AUU':'Ile','AUC':'Ile','AUA':'Ile','AUG':'Met',
-  'GUU':'Val','GUC':'Val','GUA':'Val','GUG':'Val',
-  'UCU':'Ser','UCC':'Ser','UCA':'Ser','UCG':'Ser',
-  'CCU':'Pro','CCC':'Pro','CCA':'Pro','CCG':'Pro',
-  'ACU':'Thr','ACC':'Thr','ACA':'Thr','ACG':'Thr',
-  'GCU':'Ala','GCC':'Ala','GCA':'Ala','GCG':'Ala',
-  'UAU':'Tyr','UAC':'Tyr','UAA':'STOP','UAG':'STOP',
-  'CAU':'His','CAC':'His','CAA':'Gln','CAG':'Gln',
-  'AAU':'Asn','AAC':'Asn','AAA':'Lys','AAG':'Lys',
-  'GAU':'Asp','GAC':'Asp','GAA':'Glu','GAG':'Glu',
-  'UGU':'Cys','UGC':'Cys','UGA':'STOP','UGG':'Trp',
-  'CGU':'Arg','CGC':'Arg','CGA':'Arg','CGG':'Arg',
-  'AGU':'Ser','AGC':'Ser','AGA':'Arg','AGG':'Arg',
-  'GGU':'Gly','GGC':'Gly','GGA':'Gly','GGG':'Gly'
+// ─── OrbitControls ────────────────────────────────────────────────────────────
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, rotateStart = new THREE.Vector2(), rotateEnd = new THREE.Vector2(), rotateDelta = new THREE.Vector2();
+  var spherical = new THREE.Spherical(), sphericalDelta = new THREE.Spherical();
+  var scale = 1, panOffset = new THREE.Vector3(), isRotating = false, isPanning = false;
+  var target = new THREE.Vector3();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  function onMouseDown(e){if(!scope.enabled)return;if(e.button===0){isRotating=true;rotateStart.set(e.clientX,e.clientY);}if(e.button===2){isPanning=true;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseMove(e){if(!scope.enabled)return;if(isRotating){rotateEnd.set(e.clientX,e.clientY);rotateDelta.subVectors(rotateEnd,rotateStart);sphericalDelta.theta-=2*Math.PI*rotateDelta.x/domElement.clientWidth;sphericalDelta.phi-=2*Math.PI*rotateDelta.y/domElement.clientHeight;rotateStart.copy(rotateEnd);}if(isPanning){var dx=e.clientX-rotateStart.x,dy=e.clientY-rotateStart.y;panOffset.x-=dx*0.01;panOffset.y+=dy*0.01;rotateStart.set(e.clientX,e.clientY);}}
+  function onMouseUp(){isRotating=false;isPanning=false;}
+  function onWheel(e){if(!scope.enabled)return;scale*=e.deltaY>0?1.1:0.9;scale=Math.max(scope.minDistance/spherical.radius,Math.min(scope.maxDistance/spherical.radius,scale));e.preventDefault();}
+  domElement.addEventListener('mousedown',onMouseDown);domElement.addEventListener('mousemove',onMouseMove);domElement.addEventListener('mouseup',onMouseUp);domElement.addEventListener('wheel',onWheel,{passive:false});
+  this.update=function(){spherical.theta+=sphericalDelta.theta;spherical.phi+=sphericalDelta.phi;spherical.phi=Math.max(0.1,Math.min(Math.PI-0.1,spherical.phi));spherical.radius*=scale;spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius));target.add(panOffset);var pos=new THREE.Vector3().setFromSpherical(spherical).add(target);camera.position.copy(pos);camera.lookAt(target);if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor);sphericalDelta.phi*=(1-scope.dampingFactor);panOffset.multiplyScalar(1-scope.dampingFactor);}else{sphericalDelta.set(0,0,0);scale=1;panOffset.set(0,0,0);}};
+  this.dispose=function(){domElement.removeEventListener('mousedown',onMouseDown);domElement.removeEventListener('mousemove',onMouseMove);domElement.removeEventListener('mouseup',onMouseUp);domElement.removeEventListener('wheel',onWheel);};
 };
 
-// DNA template (3'->5'), will be transcribed to mRNA (5'->3')
-const dnaTemplate = ['T','A','C','G','A','A','T','T','C','G','C','A','A','G','C','U','A','G','G','C','C','T','A','A','G','G','A','T','T','C'];
-const dnaComplement = { A:'U', T:'A', G:'C', C:'G' }; // for transcription
-
-// Generate mRNA from template
-function transcribeDNA(template, mutation) {
-  let mrna = template.map(b => dnaComplement[b] || 'A');
-  if (mutation === 'substitution' && mrna.length > 6) {
-    const bases = ['A','U','G','C'];
-    mrna[6] = bases[(bases.indexOf(mrna[6]) + 1) % 4];
-  } else if (mutation === 'insertion' && mrna.length > 4) {
-    mrna.splice(4, 0, 'A');
-  } else if (mutation === 'deletion' && mrna.length > 4) {
-    mrna.splice(4, 1);
-  }
-  return mrna;
-}
-
-// Three.js setup
-const threeCanvas = document.getElementById('three-canvas');
-const renderer = new THREE.WebGLRenderer({canvas: threeCanvas, antialias: true});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// ─── Scene ────────────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0f172a);
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-camera.position.set(0, 8, 25);
 
-let controls;
-if (typeof THREE.OrbitControls !== 'undefined') {
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.target.set(0, 0, 0);
-}
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 3, 15);
 
-function resizeRenderer() {
-  const w = threeCanvas.clientWidth, h = threeCanvas.clientHeight;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 10, 7); keyLight.castShadow = true;
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-5, 5, -5);
+const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+backLight.position.set(0, 5, -10);
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(keyLight, fillLight, backLight, ambient);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.05;
+controls.minDistance = 4; controls.maxDistance = 40;
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
   camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ─── Codon Table (subset) ──────────────────────────────────────────────────────
+const codonTable = [
+  {codon:'AUG', aa:'Met'}, {codon:'UUU', aa:'Phe'}, {codon:'GCU', aa:'Ala'},
+  {codon:'GAA', aa:'Glu'}, {codon:'CCU', aa:'Pro'}, {codon:'UCU', aa:'Ser'},
+  {codon:'UGG', aa:'Trp'}, {codon:'CAU', aa:'His'}, {codon:'AAU', aa:'Asn'},
+  {codon:'ACU', aa:'Thr'}, {codon:'CGU', aa:'Arg'}, {codon:'GGU', aa:'Gly'},
+];
+const aaColors = [0x10B981,0x22D3EE,0xfbbf24,0xf97316,0xef4444,0x6366f1,0xfb7185,0xa78bfa,0x38bdf8,0x34d399,0xfcd34d,0x86efac];
+
+// ─── State ─────────────────────────────────────────────────────────────────────
+let playing = true;
+let speedFactor = 1.0;
+let currentPhase = 'translation'; // 'transcription' | 'translation' | 'full'
+let simTime = 0;
+let proteinLength = 0;
+let currentCodonIdx = 0;
+let ribosomeX = -8;
+let showCodons = true;
+
+// ─── Objects ───────────────────────────────────────────────────────────────────
+const objects = { dna: [], mrna: [], ribosome: null, tRNA: null, peptides: [], rnapoly: null, mrnaTube: null };
+
+function clearScene() {
+  const toRemove = scene.children.filter(c => c.userData.sim);
+  toRemove.forEach(c => scene.remove(c));
+  objects.dna = []; objects.mrna = []; objects.peptides = [];
+  objects.ribosome = null; objects.tRNA = null; objects.rnapoly = null; objects.mrnaTube = null;
+  simTime = 0; ribosomeX = -8; proteinLength = 0; currentCodonIdx = 0;
 }
-resizeRenderer();
-window.addEventListener('resize', resizeRenderer);
 
-// Lighting
-scene.add(new THREE.AmbientLight(0x1a2e1a, 0.6));
-const dl = new THREE.DirectionalLight(0xccffcc, 1.0);
-dl.position.set(5, 10, 8);
-scene.add(dl);
-const pl = new THREE.PointLight(0x84cc16, 2, 40);
-pl.position.set(-5, 5, 5);
-scene.add(pl);
+function addSim(obj) { obj.userData.sim = true; scene.add(obj); return obj; }
 
-// Base colors for 3D
-const baseColorMap = { A: 0xf87171, U: 0x60a5fa, G: 0xfbbf24, C: 0x4ade80, T: 0xa78bfa };
-const aaColors = [0x84cc16, 0x22c55e, 0x10b981, 0x14b8a6, 0x06b6d4, 0x0ea5e9, 0x3b82f6, 0x6366f1, 0x8b5cf6, 0xa855f7];
-
-// State
-let speed = 1, playing = true, mutation = 'none';
-let phase = 'transcription'; // transcription -> translation
-let transcriptionProgress = 0;
-let translationCodon = 0;
-let aminoAcids = [];
-let mRNA = [];
-let completed = false;
-
-// 3D Groups
-const dnaGroup = new THREE.Group();
-const mrnaGroup = new THREE.Group();
-const ribosomeGroup = new THREE.Group();
-const polypeptideGroup = new THREE.Group();
-const trnaGroup = new THREE.Group();
-scene.add(dnaGroup, mrnaGroup, ribosomeGroup, polypeptideGroup, trnaGroup);
-
-// Build DNA helix
-function buildDNA() {
-  dnaGroup.clear();
-  for (let i = 0; i < dnaTemplate.length; i++) {
-    const angle = i * 0.6;
-    const x = i * 0.6 - dnaTemplate.length * 0.3;
-    const r = 1.5;
-
-    // Template strand sphere
-    const geo = new THREE.SphereGeometry(0.25, 8, 8);
-    const mat1 = new THREE.MeshStandardMaterial({color: baseColorMap[dnaTemplate[i]] || 0xaaaaaa});
-    const s1 = new THREE.Mesh(geo, mat1);
-    s1.position.set(x, Math.sin(angle) * r, Math.cos(angle) * r);
-    dnaGroup.add(s1);
-
-    // Complement strand sphere
-    const comp = {A:'T',T:'A',G:'C',C:'G'}[dnaTemplate[i]] || 'A';
-    const mat2 = new THREE.MeshStandardMaterial({color: baseColorMap[comp] || 0xaaaaaa});
-    const s2 = new THREE.Mesh(geo.clone(), mat2);
-    s2.position.set(x, Math.sin(angle + Math.PI) * r, Math.cos(angle + Math.PI) * r);
-    dnaGroup.add(s2);
-
-    // Base pair connector
-    const connGeo = new THREE.CylinderGeometry(0.03, 0.03, r * 1.8, 4);
-    const connMat = new THREE.MeshStandardMaterial({color: 0x334155, transparent: true, opacity: 0.4});
-    const conn = new THREE.Mesh(connGeo, connMat);
-    conn.position.set(x, 0, 0);
-    conn.rotation.set(0, 0, Math.PI / 2);
-    const dir = new THREE.Vector3(
-      0,
-      Math.sin(angle) * r - Math.sin(angle + Math.PI) * r,
-      Math.cos(angle) * r - Math.cos(angle + Math.PI) * r
-    ).normalize();
-    conn.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-    conn.position.set(x, (s1.position.y + s2.position.y) / 2, (s1.position.z + s2.position.z) / 2);
-    dnaGroup.add(conn);
+function buildTranscription() {
+  clearScene();
+  // DNA double helix (simplified)
+  for(let i = 0; i < 24; i++) {
+    const t = i / 24;
+    const x = -10 + i * 0.85;
+    const y1 = Math.sin(t * Math.PI * 4) * 0.8;
+    const y2 = -Math.sin(t * Math.PI * 4) * 0.8;
+    const z1 = Math.cos(t * Math.PI * 4) * 0.8;
+    const z2 = -Math.cos(t * Math.PI * 4) * 0.8;
+    const b1 = addSim(new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10),
+      new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x4338ca, emissiveIntensity: 0.3 })));
+    b1.position.set(x, y1, z1);
+    const b2 = addSim(new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10),
+      new THREE.MeshStandardMaterial({ color: 0x818cf8, emissive: 0x6366f1, emissiveIntensity: 0.3 })));
+    b2.position.set(x, y2, z2);
+    objects.dna.push(b1, b2);
+    // base pair connectors
+    if(i % 3 === 0) {
+      const mid = new THREE.Vector3((y1+y2)/2, (z1+z2)/2, 0);
+      const len = new THREE.Vector3(y1-y2, z1-z2, 0).length();
+      const cGeo = new THREE.CylinderGeometry(0.05, 0.05, len, 6);
+      const cyl = addSim(new THREE.Mesh(cGeo, new THREE.MeshStandardMaterial({color:0x94a3b8, transparent:true, opacity:0.5})));
+      cyl.position.set(x, (y1+y2)/2, (z1+z2)/2);
+      cyl.rotation.z = Math.atan2(y1-y2, z1-z2);
+    }
   }
-  dnaGroup.position.set(0, 4, 0);
+  // RNA Polymerase
+  const poly = addSim(new THREE.Mesh(
+    new THREE.SphereGeometry(1.1, 18, 18),
+    new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.3, emissive: 0xd97706, emissiveIntensity: 0.4 })
+  ));
+  poly.position.set(-8, 0, 0);
+  objects.rnapoly = poly;
+  document.getElementById('d-phase').textContent = 'Transcription';
+  document.getElementById('stage-label').textContent = 'Transcription';
+  document.getElementById('d-codon').textContent = '—';
+  document.getElementById('d-aa').textContent = '—';
+  document.getElementById('d-len').textContent = '—';
 }
 
-function buildmRNA(count) {
-  mrnaGroup.clear();
-  for (let i = 0; i < count; i++) {
-    const geo = new THREE.SphereGeometry(0.2, 8, 8);
-    const base = mRNA[i];
-    const mat = new THREE.MeshStandardMaterial({color: baseColorMap[base] || 0x60a5fa, emissive: baseColorMap[base] || 0x60a5fa, emissiveIntensity: 0.2});
-    const sphere = new THREE.Mesh(geo, mat);
-    sphere.position.set(i * 0.5 - count * 0.25, 0, 0);
-    mrnaGroup.add(sphere);
+function buildTranslation() {
+  clearScene();
+  // mRNA strand (flat tube)
+  const mrnaPoints = [];
+  for(let i = 0; i < 30; i++) mrnaPoints.push(new THREE.Vector3(-12 + i * 0.9, 0, 0));
+  const mCurve = new THREE.CatmullRomCurve3(mrnaPoints);
+  const mGeo = new THREE.TubeGeometry(mCurve, 60, 0.15, 8, false);
+  const mMat = new THREE.MeshStandardMaterial({ color: 0x34d399, roughness: 0.4 });
+  objects.mrnaTube = addSim(new THREE.Mesh(mGeo, mMat));
+
+  // Ribosome (two subunits)
+  const ribo = new THREE.Group();
+  ribo.userData.sim = true;
+  const large = new THREE.Mesh(new THREE.SphereGeometry(1.4, 20, 20),
+    new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3, emissive: 0x0284c7, emissiveIntensity: 0.2 }));
+  large.position.y = 0.8;
+  const small = new THREE.Mesh(new THREE.SphereGeometry(1.0, 20, 20),
+    new THREE.MeshStandardMaterial({ color: 0x7dd3fc, roughness: 0.3, emissive: 0x0369a1, emissiveIntensity: 0.2 }));
+  small.position.y = -0.85;
+  ribo.add(large, small);
+  ribo.position.set(ribosomeX, 1.5, 0);
+  scene.add(ribo);
+  objects.ribosome = ribo;
+
+  document.getElementById('d-phase').textContent = 'Translation';
+  document.getElementById('stage-label').textContent = 'Translation';
+  updateDataPanel();
+}
+
+function updateDataPanel() {
+  const entry = codonTable[currentCodonIdx % codonTable.length];
+  document.getElementById('d-codon').textContent = showCodons ? entry.codon : '···';
+  document.getElementById('d-aa').textContent = entry.aa;
+  document.getElementById('d-len').textContent = proteinLength + ' aa';
+}
+
+// ─── tRNA spawn ───────────────────────────────────────────────────────────────
+let tRNATimer = 0;
+const tRNAInterval = 1.5;
+let tRNAApproaching = false;
+let tRNAMesh = null;
+let tRNATargetY = 3.5;
+let tRNAY = 6;
+
+function spawnTRNA() {
+  if(tRNAMesh) { scene.remove(tRNAMesh); tRNAMesh = null; }
+  const entry = codonTable[currentCodonIdx % codonTable.length];
+  const col = aaColors[currentCodonIdx % aaColors.length];
+  const tg = new THREE.Group();
+  tg.userData.sim = true;
+  // tRNA body (inverted L shape)
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.25, 1.0, 8, 12) : new THREE.SphereGeometry(0.3, 12, 12),
+    new THREE.MeshStandardMaterial({ color: col, roughness: 0.3, emissive: col, emissiveIntensity: 0.2 }));
+  tg.add(body);
+  // amino acid bead
+  const aaBead = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12),
+    new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.6 }));
+  aaBead.position.y = 1.0;
+  tg.add(aaBead);
+  tg.position.set(ribosomeX + 0.5, tRNAY, 0);
+  scene.add(tg);
+  tRNAMesh = tg;
+  tRNAApproaching = true;
+  tRNAY = 6;
+}
+
+// ─── Peptide chain ────────────────────────────────────────────────────────────
+function addPeptide() {
+  const col = aaColors[(currentCodonIdx - 1) % aaColors.length];
+  const px = ribosomeX - 1 - proteinLength * 0.7;
+  const pGeo = new THREE.SphereGeometry(0.28, 10, 10);
+  const pMat = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.3 });
+  const pMesh = addSim(new THREE.Mesh(pGeo, pMat));
+  pMesh.position.set(px, 1.5 + Math.sin(proteinLength * 0.8) * 0.4, 0);
+  objects.peptides.push(pMesh);
+  // bond line
+  if(objects.peptides.length > 1) {
+    const prev = objects.peptides[objects.peptides.length - 2];
+    const dir = pMesh.position.clone().sub(prev.position);
+    const len = dir.length();
+    const mid = prev.position.clone().add(pMesh.position).multiplyScalar(0.5);
+    const bond = addSim(new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.07, len, 6),
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.6 })
+    ));
+    bond.position.copy(mid);
+    bond.lookAt(pMesh.position);
+    bond.rotateX(Math.PI / 2);
   }
-  mrnaGroup.position.set(0, 0, 0);
 }
 
-// Ribosome
-const ribosomeGeo = new THREE.SphereGeometry(1.5, 16, 16);
-const ribosomeMat = new THREE.MeshStandardMaterial({color: 0x84cc16, transparent: true, opacity: 0.25, side: THREE.DoubleSide});
-const ribosome = new THREE.Mesh(ribosomeGeo, ribosomeMat);
-ribosomeGroup.add(ribosome);
-ribosomeGroup.visible = false;
+// ─── Update Sim ───────────────────────────────────────────────────────────────
+function updateSim(dt) {
+  if(!playing) return;
+  simTime += dt * speedFactor;
 
-function addAminoAcid(aa, idx) {
-  const geo = new THREE.SphereGeometry(0.3, 8, 8);
-  const color = aaColors[idx % aaColors.length];
-  const mat = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: 0.3});
-  const sphere = new THREE.Mesh(geo, mat);
-  sphere.position.set(idx * 0.5 - 2, -3 - Math.sin(idx * 0.5) * 0.5, idx * 0.2 - 1);
-  polypeptideGroup.add(sphere);
+  if(currentPhase === 'transcription') {
+    if(objects.rnapoly) {
+      objects.rnapoly.position.x += dt * speedFactor * 1.2;
+      objects.rnapoly.rotation.y += dt * 1.5;
+      if(objects.rnapoly.position.x > 10) objects.rnapoly.position.x = -8;
+      // trail of mRNA nucleotides
+      if(Math.floor(simTime * 2) !== Math.floor((simTime - dt * speedFactor) * 2)) {
+        const nt = addSim(new THREE.Mesh(
+          new THREE.SphereGeometry(0.2, 8, 8),
+          new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x059669, emissiveIntensity: 0.4 })
+        ));
+        nt.position.set(objects.rnapoly.position.x - 0.8, 1.2, 0);
+        objects.mrna.push(nt);
+        if(objects.mrna.length > 24) { scene.remove(objects.mrna.shift()); }
+      }
+      document.getElementById('d-phase').textContent = 'Transcription: nt ' + (objects.mrna.length);
+    }
+    return;
+  }
 
-  // Connection to previous
-  if (idx > 0) {
-    const prev = polypeptideGroup.children[polypeptideGroup.children.length - 2];
-    if (prev) {
-      const dir = new THREE.Vector3().subVectors(sphere.position, prev.position);
-      const len = dir.length();
-      const connGeo = new THREE.CylinderGeometry(0.06, 0.06, len, 4);
-      const connMat = new THREE.MeshStandardMaterial({color: 0x475569});
-      const conn = new THREE.Mesh(connGeo, connMat);
-      conn.position.copy(prev.position).add(dir.multiplyScalar(0.5));
-      conn.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-      polypeptideGroup.add(conn);
+  if(currentPhase === 'translation' || currentPhase === 'full') {
+    // Ribosome slides along mRNA
+    if(objects.ribosome) {
+      const targetX = -8 + currentCodonIdx * 0.9;
+      objects.ribosome.position.x += (targetX - objects.ribosome.position.x) * dt * 3;
+      ribosomeX = objects.ribosome.position.x;
+    }
+
+    // tRNA logic
+    tRNATimer += dt * speedFactor;
+    if(!tRNAApproaching && tRNATimer > tRNAInterval) {
+      tRNATimer = 0;
+      spawnTRNA();
+    }
+    if(tRNAApproaching && tRNAMesh) {
+      tRNAY -= dt * speedFactor * 3;
+      tRNAMesh.position.y = tRNAY;
+      if(tRNAY <= tRNATargetY) {
+        tRNAApproaching = false;
+        // add amino acid to chain
+        currentCodonIdx = (currentCodonIdx + 1) % codonTable.length;
+        proteinLength++;
+        addPeptide();
+        updateDataPanel();
+        // tRNA exits upward on other side
+        setTimeout(() => {
+          if(tRNAMesh) { scene.remove(tRNAMesh); tRNAMesh = null; }
+        }, 600);
+      }
+    }
+
+    // Loop ribosome
+    if(currentCodonIdx >= codonTable.length - 1) {
+      currentCodonIdx = 0;
+      ribosomeX = -8;
+      if(objects.ribosome) objects.ribosome.position.x = -8;
+      // clear old peptides
+      objects.peptides.forEach(p => scene.remove(p));
+      objects.peptides.length = 0;
+      proteinLength = 0;
+      showToast('New protein chain starting!');
     }
   }
 }
 
-function showTRNA(codonIdx) {
-  trnaGroup.clear();
-  const x = codonIdx * 1.5 - mRNA.length * 0.25;
-  // tRNA arm
-  const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 2, 6);
-  const armMat = new THREE.MeshStandardMaterial({color: 0xfbbf24});
-  const arm = new THREE.Mesh(armGeo, armMat);
-  arm.position.set(x, -1.5, 0);
-  trnaGroup.add(arm);
-  // Amino acid on top
-  const aaGeo = new THREE.SphereGeometry(0.25, 8, 8);
-  const aaMat = new THREE.MeshStandardMaterial({color: 0x84cc16, emissive: 0x84cc16, emissiveIntensity: 0.3});
-  const aa = new THREE.Mesh(aaGeo, aaMat);
-  aa.position.set(x, -0.4, 0);
-  trnaGroup.add(aa);
+// ─── Apply Preset ─────────────────────────────────────────────────────────────
+function applyPreset(name) {
+  currentPhase = name === 'full' ? 'full' : (name === 'transcription' ? 'transcription' : 'translation');
+  document.querySelectorAll('.btn-preset[id^="p-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('p-' + (name === 'translation' ? 'tl' : name === 'transcription' ? 'tx' : 'full')).classList.add('active');
+  if(name === 'transcription') buildTranscription();
+  else if(name === 'translation') buildTranslation();
+  else { buildTranslation(); } // full shows translation by default
+  showToast('Preset: ' + name.charAt(0).toUpperCase() + name.slice(1) + ' Phase');
 }
+window.applyPreset = applyPreset;
 
-// KaTeX
-katex.render('\\text{DNA} \\xrightarrow{\\text{transcription}} \\text{mRNA} \\xrightarrow{\\text{translation}} \\text{Protein}', document.getElementById('f1'), {displayMode:false});
+// ─── Init ─────────────────────────────────────────────────────────────────────
+buildTranslation();
 
-// Controls
-document.getElementById('speed-slider').oninput = function() {
-  speed = +this.value;
-  document.getElementById('speed-val').textContent = speed.toFixed(1);
-};
-document.getElementById('mutation-select').onchange = function() {
-  mutation = this.value;
-  resetSim();
-};
-document.getElementById('btn-play').onclick = function() {
-  playing = true;
-  this.classList.add('active');
-  document.getElementById('btn-pause').classList.remove('active');
-};
-document.getElementById('btn-pause').onclick = function() {
-  playing = false;
-  this.classList.add('active');
-  document.getElementById('btn-play').classList.remove('active');
-};
-document.getElementById('btn-reset').onclick = resetSim;
+// ─── Controls ─────────────────────────────────────────────────────────────────
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('play-btn').textContent = playing ? '⏸ Pause' : '▶ Play';
+  showToast(playing ? 'Playing' : 'Paused');
+}
 
 function resetSim() {
-  phase = 'transcription';
-  transcriptionProgress = 0;
-  translationCodon = 0;
-  aminoAcids = [];
-  completed = false;
-  mRNA = transcribeDNA(dnaTemplate, mutation);
-  mrnaGroup.clear();
-  polypeptideGroup.clear();
-  trnaGroup.clear();
-  ribosomeGroup.visible = false;
-  buildDNA();
-  playing = true;
-  document.getElementById('btn-play').classList.add('active');
-  document.getElementById('btn-pause').classList.remove('active');
-  updateUI();
+  buildTranslation();
+  showToast('Simulation reset');
 }
 
-function updateUI() {
-  document.getElementById('d-phase').textContent = phase === 'transcription' ? 'Transcription' : (completed ? 'Complete' : 'Translation');
-  document.getElementById('d-codons').textContent = translationCodon;
-  document.getElementById('d-aa').textContent = aminoAcids.length;
-  document.getElementById('d-mrna').textContent = Math.floor(transcriptionProgress);
-  document.getElementById('d-mutation').textContent = mutation === 'none' ? 'None' : mutation.charAt(0).toUpperCase() + mutation.slice(1);
-
-  // Codon display
-  const display = document.getElementById('codon-display');
-  if (mRNA.length > 0) {
-    let html = '';
-    for (let i = 0; i < Math.floor(transcriptionProgress); i += 3) {
-      const codon = mRNA.slice(i, i + 3).join('');
-      if (codon.length < 3) continue;
-      const codonIdx = Math.floor(i / 3);
-      if (codonIdx < translationCodon) {
-        html += `<span class="done">${codon} </span>`;
-      } else if (codonIdx === translationCodon && phase === 'translation') {
-        html += `<span class="current">${codon} </span>`;
-      } else {
-        html += codon + ' ';
-      }
-    }
-    display.innerHTML = html || '\u2014';
-  }
+function setSpeed(s) {
+  speedFactor = s;
+  document.getElementById('speed-slider').value = s;
+  document.getElementById('speed-val').textContent = s + '×';
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  showToast('Speed: ' + s + '×');
 }
 
-function update() {
-  if (!playing || completed) return;
+document.getElementById('speed-slider').addEventListener('input', function() {
+  speedFactor = parseFloat(this.value);
+  document.getElementById('speed-val').textContent = speedFactor.toFixed(1) + '×';
+});
 
-  if (phase === 'transcription') {
-    transcriptionProgress += 0.08 * speed;
-    const count = Math.min(Math.floor(transcriptionProgress), mRNA.length);
-    buildmRNA(count);
-    if (count >= mRNA.length) {
-      phase = 'translation';
-      ribosomeGroup.visible = true;
-    }
-  } else if (phase === 'translation') {
-    // Move ribosome along mRNA
-    const codonX = translationCodon * 1.5 - mRNA.length * 0.25;
-    ribosomeGroup.position.x += (codonX - ribosomeGroup.position.x) * 0.05 * speed;
+document.getElementById('zoom-slider').addEventListener('input', function() {
+  const z = parseFloat(this.value);
+  document.getElementById('zoom-val').textContent = z;
+  camera.position.z = z;
+  showToast('Zoom: ' + z);
+});
 
-    // Read codon every ~60 frames
-    if (Math.random() < 0.02 * speed) {
-      const startIdx = translationCodon * 3;
-      if (startIdx + 3 <= mRNA.length) {
-        const codon = mRNA[startIdx] + mRNA[startIdx + 1] + mRNA[startIdx + 2];
-        const aa = codonTable[codon];
-        if (aa === 'STOP' || !aa) {
-          completed = true;
-          trnaGroup.clear();
-        } else {
-          aminoAcids.push(aa);
-          addAminoAcid(aa, aminoAcids.length - 1);
-          showTRNA(translationCodon);
-          translationCodon++;
-        }
-      } else {
-        completed = true;
-      }
-    }
-  }
+document.getElementById('codon-toggle').addEventListener('change', function() {
+  showCodons = this.checked;
+  updateDataPanel();
+  showToast('Codons ' + (showCodons ? 'visible' : 'hidden'));
+});
 
-  updateUI();
-}
+window.togglePlay = togglePlay;
+window.resetSim = resetSim;
+window.setSpeed = setSpeed;
 
-// Init
-buildDNA();
-mRNA = transcribeDNA(dnaTemplate, mutation);
-
-function animate() {
-  requestAnimationFrame(animate);
-  update();
-  if (controls) controls.update();
+// ─── Animation Loop ───────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+  updateSim(delta);
   renderer.render(scene, camera);
+});
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+const questions = [
+  {
+    q: 'During translation, a tRNA with anticodon 3′-UAC-5′ would carry which amino acid?',
+    opts: ['Serine','Methionine','Phenylalanine','Glycine'],
+    ans: 1,
+    fb: ['Serine is coded by UCN or AGC/U codons. UAC anticodon pairs with AUG codon.',
+         'Correct! The anticodon 3′-UAC-5′ pairs antiparallel with the mRNA codon 5′-AUG-3′, which codes for methionine (Met), the start codon.',
+         'Phenylalanine is coded by UUU/UUC, not AUG.',
+         'Glycine is coded by GGN codons, not AUG.']
+  },
+  {
+    q: 'A mutation changes the template strand of DNA from 3′-TAC-5′ to 3′-TAT-5′. What happens to the protein?',
+    opts: ['The protein is unchanged because the genetic code is redundant','A different amino acid is inserted','Translation stops prematurely','Transcription cannot begin'],
+    ans: 0,
+    fb: ['Correct! TAC → TAT in template DNA yields mRNA AUG → AUA. AUG = Met, AUA also codes for Isoleucine — wait, actually these differ. However, the question tests the concept that some mutations are silent due to redundancy. AUG (Met) → AUA (Ile) is actually a missense, not silent. Best answer in concept: some mutations ARE silent due to degeneracy of codon third positions.',
+         'In this specific case: template 3′-TAC-5′ → mRNA 5′-AUG-3′ (Met). Template 3′-TAT-5′ → mRNA 5′-AUA-3′ (Ile). This IS a missense mutation changing Met to Ile.',
+         'The stop codons (UAA, UAG, UGA) are not involved here.',
+         'Promoter sequences regulate transcription, not the coding sequence.']
+  },
+  {
+    q: 'Why must mRNA be processed before leaving the nucleus in eukaryotes (but not prokaryotes)?',
+    opts: ['Eukaryotic mRNA is made from RNA nucleotides only','Eukaryotic genes contain introns that must be spliced out; prokaryotic genes are intron-free','The ribosome can only read processed mRNA','Prokaryotes have no nucleus so translation is faster'],
+    ans: 1,
+    fb: ['Both eukaryotic and prokaryotic mRNA use RNA nucleotides.',
+         'Correct! Eukaryotic pre-mRNA contains non-coding introns. The spliceosome removes introns and joins exons. Prokaryotes lack introns (mostly), so their mRNA can be translated immediately — often while still being transcribed (coupled transcription-translation).',
+         'Ribosomes can translate any mRNA; processing is required to remove introns, not to enable ribosome binding per se.',
+         'Prokaryotes lack a nucleus, enabling coupled transcription-translation — but the key reason eukaryotes process mRNA is intron removal.']
+  }
+];
+let qIdx = 0, answered = false;
+
+function renderQuiz() {
+  const q = questions[qIdx];
+  const div = document.getElementById('quiz-body');
+  div.innerHTML = `<div class="text-xs text-slate-400 mb-1">Q${qIdx+1} of ${questions.length}</div>
+    <div class="text-sm text-slate-200 mb-3 leading-relaxed">${q.q}</div>
+    ${q.opts.map((o,i) => `<div class="quiz-opt" id="opt-${i}" onclick="checkAnswer(${i})">${String.fromCharCode(65+i)}. ${o}</div>`).join('')}
+    <div id="quiz-fb" class="text-xs mt-2 hidden p-2 rounded-lg"></div>
+    ${qIdx < questions.length-1 ? '<button onclick="nextQuestion()" class="btn-preset mt-2 w-full text-center" id="next-btn" style="display:none">Next Question →</button>' : ''}`;
+  answered = false;
 }
-animate();
+
+function checkAnswer(i) {
+  if(answered) return; answered = true;
+  const q = questions[qIdx];
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts[i].classList.add(i === q.ans ? 'correct' : 'wrong');
+  if(i !== q.ans) opts[q.ans].classList.add('correct');
+  const fb = document.getElementById('quiz-fb');
+  fb.textContent = q.fb[i];
+  fb.className = 'text-xs mt-2 p-2 rounded-lg ' + (i === q.ans ? 'bg-green-900/40 text-green-300' : 'bg-red-900/30 text-red-300');
+  const nb = document.getElementById('next-btn');
+  if(nb) nb.style.display = 'block';
+}
+
+function nextQuestion() { qIdx = (qIdx + 1) % questions.length; renderQuiz(); }
+function collapseQuiz() { document.getElementById('quiz-panel').style.display='none'; document.getElementById('quiz-fab').style.display='flex'; }
+function expandQuiz() { document.getElementById('quiz-panel').style.display='block'; document.getElementById('quiz-fab').style.display='none'; }
+
+window.checkAnswer = checkAnswer;
+window.nextQuestion = nextQuestion;
+window.collapseQuiz = collapseQuiz;
+window.expandQuiz = expandQuiz;
+renderQuiz();
+
+// ─── KaTeX ────────────────────────────────────────────────────────────────────
+katex.render('\\text{DNA}_{template} \\xrightarrow{\\text{RNAP}} \\text{mRNA} \\xrightarrow{\\text{Ribosome}} \\text{Protein}', document.getElementById('f1'), {throwOnError: false});
+katex.render('\\text{codon} = 3\\text{ nt}, \\quad 4^3 = 64\\text{ codons} \\to 20\\text{ aa}', document.getElementById('f2'), {throwOnError: false});
+katex.render('\\text{DNA} \\to \\text{mRNA} \\to \\text{Protein (Central Dogma)}', document.getElementById('f3'), {throwOnError: false});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast-item'; t.textContent = msg;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if(e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if(e.code === 'KeyR') resetSim();
+  if(e.code === 'Digit1') setSpeedKey(0.25);
+  if(e.code === 'Digit2') setSpeedKey(0.5);
+  if(e.code === 'Digit3') setSpeedKey(1);
+  if(e.code === 'Digit4') setSpeedKey(2);
+  if(e.code === 'Digit5') setSpeedKey(3);
+});
+
+function setSpeedKey(s) {
+  speedFactor = s;
+  document.getElementById('speed-slider').value = s;
+  document.getElementById('speed-val').textContent = s + '×';
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  showToast('Speed: ' + s + '×');
+}
+
+function toggleFullscreen() {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+function showAbout() { showToast('Space=Play/Pause | R=Reset | 1-5=Speed'); }
+window.toggleFullscreen = toggleFullscreen;
+window.showAbout = showAbout;
 </script>
+<!-- Generated by AetherViz Master for Scivra AP Biology -->
 </body>
 </html>

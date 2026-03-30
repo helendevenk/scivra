@@ -1,1019 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sound Waves - Interactive Experiment</title>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-    <script src="/lib/orbit-controls.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            color: #e0e0e0;
-            overflow-x: hidden;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        #canvas-container {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            min-height: 600px;
-        }
-        .controls-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .control-group {
-            margin-bottom: 20px;
-        }
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #b0b0b0;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-        .control-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        .control-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            cursor: pointer;
-        }
-        .value-display {
-            display: inline-block;
-            float: right;
-            color: #f093fb;
-            font-weight: 600;
-        }
-        .section-title {
-            color: #f093fb;
-            font-size: 0.95em;
-            font-weight: 600;
-            margin: 20px 0 12px 0;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(240, 147, 251, 0.2);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .medium-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .medium-btn {
-            padding: 8px 14px;
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #b0b0b0;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: all 0.3s ease;
-            flex: 1;
-            text-align: center;
-            min-width: 80px;
-        }
-        .medium-btn:hover {
-            background: rgba(240, 147, 251, 0.1);
-            border-color: #f093fb;
-        }
-        .medium-btn.active {
-            background: rgba(240, 147, 251, 0.2);
-            border-color: #f093fb;
-            color: #f093fb;
-            font-weight: 600;
-        }
-        .info-box {
-            margin-top: 15px;
-            padding: 12px;
-            background: rgba(240, 147, 251, 0.1);
-            border-radius: 8px;
-            border-left: 3px solid #f093fb;
-        }
-        .info-box .info-label {
-            font-size: 0.85em;
-            color: #b0b0b0;
-            margin-bottom: 4px;
-        }
-        .info-box .info-value {
-            font-size: 1.2em;
-            color: #f093fb;
-            font-weight: 600;
-        }
-        .doppler-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .toggle-switch {
-            position: relative;
-            width: 44px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.15);
-            border-radius: 24px;
-            transition: 0.3s;
-        }
-        .toggle-slider:before {
-            content: '';
-            position: absolute;
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background: #e0e0e0;
-            border-radius: 50%;
-            transition: 0.3s;
-        }
-        .toggle-switch input:checked + .toggle-slider {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-        }
-        .toggle-switch input:checked + .toggle-slider:before {
-            transform: translateX(20px);
-        }
-        #spectrum-canvas {
-            width: 100%;
-            height: 120px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.4);
-            margin-top: 8px;
-        }
-        .doppler-readout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .doppler-readout .readout-item {
-            padding: 8px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 6px;
-            text-align: center;
-        }
-        .doppler-readout .readout-label {
-            font-size: 0.75em;
-            color: #888;
-            margin-bottom: 2px;
-        }
-        .doppler-readout .readout-value {
-            font-size: 1em;
-            color: #4ac6ff;
-            font-weight: 600;
-        }
-        .formula-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .formula-section h2 {
-            color: #f093fb;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        .formula-item {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border-left: 3px solid #f093fb;
-        }
-        .knowledge-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .knowledge-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-        .knowledge-card:hover {
-            transform: translateY(-5px);
-            border-color: #f093fb;
-        }
-        .knowledge-card h3 {
-            color: #f093fb;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-        .knowledge-card p {
-            color: #b0b0b0;
-            line-height: 1.6;
-            font-size: 0.95em;
-        }
-        .quiz-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .quiz-section h2 {
-            color: #f093fb;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-        .quiz-question {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-        .quiz-question h4 {
-            color: #e0e0e0;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        .quiz-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .quiz-option {
-            padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .quiz-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #f093fb;
-        }
-        .quiz-option.correct {
-            background: rgba(76, 175, 80, 0.2);
-            border-color: #4caf50;
-        }
-        .quiz-option.incorrect {
-            background: rgba(244, 67, 54, 0.2);
-            border-color: #f44336;
-        }
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            .knowledge-cards {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Waves — K5 Science</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0f172a; color:#f8fafc; font-family:Inter,system-ui,sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:rgba(234,179,8,0.5);border-radius:2px;}
+.nav { background:rgba(15,23,42,0.9); border-bottom:1px solid rgba(234,179,8,0.25); padding:0 1.25rem; height:52px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; z-index:50; }
+.nav-title { font-size:1rem; font-weight:700; background:linear-gradient(135deg,#EAB308,#84CC16); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-sub { font-size:0.68rem; color:#94a3b8; margin-left:0.5rem; }
+.main { display:flex; flex:1; overflow:hidden; }
+.sidebar { width:30%; background:rgba(15,23,42,0.92); border-right:1px solid rgba(234,179,8,0.2); overflow-y:auto; padding:0.9rem; flex-shrink:0; }
+.sidebar-section { margin-bottom:1.1rem; }
+.sidebar-title { font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#EAB308; margin-bottom:0.55rem; }
+.fact-card { background:rgba(234,179,8,0.1); border:1px solid rgba(234,179,8,0.25); border-radius:8px; padding:0.65rem; margin-bottom:0.45rem; }
+.fact-title { font-size:0.72rem; font-weight:700; color:#FDE047; margin-bottom:0.2rem; }
+.fact-text { font-size:0.7rem; color:#cbd5e1; line-height:1.55; }
+.formula-block { background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.2); border-radius:8px; padding:0.6rem; margin-bottom:0.4rem; }
+.formula-desc { font-size:0.68rem; color:#94a3b8; margin-top:0.25rem; }
+.canvas-area { flex:1; position:relative; overflow:hidden; }
+#canvas-container { width:100%; height:100%; }
+.data-overlay { position:absolute; top:10px; left:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:0.65rem 0.9rem; backdrop-filter:blur(8px); min-width:175px; z-index:10; }
+.data-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem; gap:0.75rem; }
+.data-label { font-size:0.68rem; color:#94a3b8; }
+.data-val { font-size:0.72rem; font-weight:700; font-variant-numeric:tabular-nums; color:#FDE047; }
+.wave-overlay { position:absolute; top:10px; right:10px; width:200px; background:rgba(15,23,42,0.88); border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:0.65rem 0.9rem; z-index:10; backdrop-filter:blur(8px); }
+.wave-canvas { width:100%; height:70px; border-radius:6px; background:rgba(255,255,255,0.04); margin-top:0.4rem; }
+.control-panel { background:rgba(15,23,42,0.95); border-top:1px solid rgba(234,179,8,0.2); padding:0.75rem 1rem; flex-shrink:0; z-index:50; }
+.controls-grid { display:grid; grid-template-columns:repeat(3,1fr) auto; gap:0.7rem; align-items:center; }
+.slider-group { display:flex; flex-direction:column; gap:0.2rem; }
+.slider-label { font-size:0.68rem; color:#94a3b8; display:flex; justify-content:space-between; }
+.slider-val { color:#FDE047; font-weight:700; }
+input[type=range] { -webkit-appearance:none; width:100%; height:5px; border-radius:3px; background:rgba(234,179,8,0.2); outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg,#EAB308,#84CC16); cursor:pointer; }
+.preset-btn { padding:0.28rem 0.65rem; border-radius:6px; font-size:0.68rem; font-weight:600; cursor:pointer; border:1px solid rgba(234,179,8,0.35); background:rgba(234,179,8,0.1); color:#FDE047; transition:all 0.15s; white-space:nowrap; }
+.preset-btn:hover,.preset-btn.active { background:rgba(234,179,8,0.28); border-color:#EAB308; color:#fff; }
+.btn { padding:0.3rem 0.8rem; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; }
+.btn-ghost { background:rgba(255,255,255,0.07); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); }
+.btn-ghost:hover { background:rgba(255,255,255,0.13); }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Sound Waves</h1>
-        <p class="subtitle">Visualize how sound travels through different media as waves</p>
-
-        <div class="main-content">
-            <div id="canvas-container"></div>
-
-            <div class="controls-panel">
-                <h3 style="color: #f093fb; margin-bottom: 15px;">Controls</h3>
-
-                <div class="control-group">
-                    <label>
-                        Frequency (Hz)
-                        <span class="value-display" id="freq-value">440</span>
-                    </label>
-                    <input type="range" id="frequency" min="100" max="1000" value="440" step="10">
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        Amplitude
-                        <span class="value-display" id="amp-value">1.0</span>
-                    </label>
-                    <input type="range" id="amplitude" min="0.1" max="2.0" value="1.0" step="0.1">
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        Particle Density
-                        <span class="value-display" id="density-value">50</span>
-                    </label>
-                    <input type="range" id="particle-density" min="20" max="100" value="50" step="5">
-                </div>
-
-                <div class="section-title">Medium</div>
-                <div class="medium-buttons">
-                    <div class="medium-btn active" data-medium="air" onclick="setMedium('air')">Air</div>
-                    <div class="medium-btn" data-medium="water" onclick="setMedium('water')">Water</div>
-                    <div class="medium-btn" data-medium="steel" onclick="setMedium('steel')">Steel</div>
-                </div>
-                <div class="info-box" style="margin-top:10px;">
-                    <div class="info-label">Speed of Sound</div>
-                    <div class="info-value" id="speed-display">343 m/s</div>
-                </div>
-                <div class="info-box">
-                    <div class="info-label">Wavelength</div>
-                    <div class="info-value" id="wavelength-display">0.78 m</div>
-                </div>
-
-                <div class="section-title">Doppler Effect</div>
-                <div class="doppler-toggle">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="doppler-toggle">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span style="color:#b0b0b0; font-size:0.9em;">Enable moving source</span>
-                </div>
-                <div class="control-group" id="doppler-speed-group" style="display:none;">
-                    <label>
-                        Source Speed (m/s)
-                        <span class="value-display" id="source-speed-value">50</span>
-                    </label>
-                    <input type="range" id="source-speed" min="10" max="300" value="50" step="5">
-                </div>
-                <div class="doppler-readout" id="doppler-readout" style="display:none;">
-                    <div class="readout-item">
-                        <div class="readout-label">Approaching f'</div>
-                        <div class="readout-value" id="doppler-approach">--</div>
-                    </div>
-                    <div class="readout-item">
-                        <div class="readout-label">Receding f'</div>
-                        <div class="readout-value" id="doppler-recede">--</div>
-                    </div>
-                </div>
-
-                <div class="section-title">Frequency Spectrum</div>
-                <canvas id="spectrum-canvas"></canvas>
-            </div>
-        </div>
-
-        <div class="formula-section">
-            <h2>Key Formulas</h2>
-            <div class="formula-item">
-                <strong>Wave Speed:</strong> $v = f \lambda$
-                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">where $v$ is speed, $f$ is frequency, $\lambda$ is wavelength</p>
-            </div>
-            <div class="formula-item">
-                <strong>Period:</strong> $T = \frac{1}{f}$
-                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">where $T$ is period (time for one cycle), $f$ is frequency</p>
-            </div>
-            <div class="formula-item">
-                <strong>Doppler Effect:</strong> $f' = f \times \frac{v}{v \pm v_s}$
-                <p style="margin-top: 8px; color: #888; font-size: 0.9em;">$f'$ = observed frequency, $v$ = sound speed, $v_s$ = source speed. Use $-$ when approaching, $+$ when receding.</p>
-            </div>
-        </div>
-
-        <div class="knowledge-cards">
-            <div class="knowledge-card">
-                <h3>What is Sound?</h3>
-                <p>Sound is a vibration that travels through air (or other materials) as a wave. When objects vibrate, they create pressure waves that our ears detect as sound.</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>Frequency and Pitch</h3>
-                <p>Frequency is how many waves pass a point per second (measured in Hz). Higher frequency means higher pitch. A dog whistle has very high frequency!</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>Amplitude and Volume</h3>
-                <p>Amplitude is the height of the wave. Larger amplitude means louder sound. When you turn up the volume, you're increasing the amplitude of the sound waves.</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>Speed of Sound</h3>
-                <p>Sound travels at about 343 m/s in air. In water it's about 1480 m/s, and in steel about 5960 m/s! Particles closer together transmit sound faster.</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>The Doppler Effect</h3>
-                <p>When a sound source moves toward you, waves get compressed and the pitch sounds higher. When it moves away, waves stretch out and the pitch drops. That's why a siren changes pitch as it passes!</p>
-            </div>
-            <div class="knowledge-card">
-                <h3>Musical Notes</h3>
-                <p>Different musical notes have different frequencies. Middle A is 440 Hz. When you play an instrument, you're creating sound waves at specific frequencies.</p>
-            </div>
-        </div>
-
-        <div class="quiz-section">
-            <h2>Test Your Knowledge</h2>
-
-            <div class="quiz-question">
-                <h4>1. What determines the pitch (how high or low) of a sound?</h4>
-                <div class="quiz-options">
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Amplitude</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, true)">B) Frequency</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) Speed</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Volume</div>
-                </div>
-            </div>
-
-            <div class="quiz-question">
-                <h4>2. Sound travels fastest through which material?</h4>
-                <div class="quiz-options">
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Air</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">B) Water</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, true)">C) Steel</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Vacuum</div>
-                </div>
-            </div>
-
-            <div class="quiz-question">
-                <h4>3. An ambulance drives toward you with its siren on. What happens to the pitch you hear?</h4>
-                <div class="quiz-options">
-                    <div class="quiz-option" onclick="checkAnswer(this, true)">A) The pitch sounds higher</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">B) The pitch sounds lower</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) The pitch stays the same</div>
-                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) The sound disappears</div>
-                </div>
-            </div>
-        </div>
+<nav class="nav">
+  <div style="display:flex;align-items:center;">
+    <span class="nav-title">Sound Waves</span>
+    <span class="nav-sub">K5 Science · Vibrations &amp; Sound · Ages 5–11</span>
+  </div>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="preset-btn" onclick="loadPreset('bass',this)">Low Pitch (Bass)</button>
+    <button class="preset-btn" onclick="loadPreset('treble',this)">High Pitch (Treble)</button>
+    <button class="preset-btn" onclick="loadPreset('loud',this)">Loud vs Quiet</button>
+    <button class="btn btn-ghost" onclick="resetSim()">↺ Reset</button>
+  </div>
+</nav>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">What is Sound?</div>
+      <div class="fact-card">
+        <div class="fact-title">Sound is Vibration!</div>
+        <div class="fact-text">Sound is made by vibrating objects. When a guitar string vibrates, it pushes air molecules back and forth, creating a wave that travels to your ears. No vibration = no sound!</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-title">Sound Needs a Medium</div>
+        <div class="fact-text">Sound travels through solids, liquids, and gases. It CANNOT travel through empty space (vacuum). That's why there's no sound in outer space! Speed in air ≈ 343 m/s.</div>
+      </div>
     </div>
-
-    <script>
-    'use strict';
-
-    try {
-        var container = document.getElementById('canvas-container');
-        var scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0f172a);
-
-        var camera = new THREE.PerspectiveCamera(
-            60,
-            container.clientWidth / container.clientHeight,
-            0.1,
-            1000
-        );
-        camera.position.set(0, 8, 30);
-
-        var renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
-
-        var controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-
-        var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-
-        var pointLight1 = new THREE.PointLight(0xf093fb, 1.2, 100);
-        pointLight1.position.set(10, 15, 10);
-        scene.add(pointLight1);
-
-        var pointLight2 = new THREE.PointLight(0x4ac6ff, 0.8, 80);
-        pointLight2.position.set(-10, 10, -10);
-        scene.add(pointLight2);
-
-        var directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
-        directionalLight.position.set(0, 20, 5);
-        scene.add(directionalLight);
-
-        var gridHelper = new THREE.GridHelper(40, 20, 0x1a2744, 0x111b2e);
-        gridHelper.position.y = -6;
-        scene.add(gridHelper);
-
-        var mediumData = {
-            air:   { speed: 343,  color: 0x4a90e2, particleColor: 0x4a90e2, label: 'Air',   density: 1.0 },
-            water: { speed: 1480, color: 0x00c9a7, particleColor: 0x00c9a7, label: 'Water', density: 4.3 },
-            steel: { speed: 5960, color: 0xf5a623, particleColor: 0xf5a623, label: 'Steel', density: 17.4 }
-        };
-
-        var currentMedium = 'air';
-        var frequency = 440;
-        var amplitude = 1.0;
-        var particleCount = 50;
-        var time = 0;
-        var dopplerEnabled = false;
-        var sourceSpeed = 50;
-        var sourcePosition = -15;
-        var sourceDirection = 1;
-
-        var speakerGroup = new THREE.Group();
-        var coneGeo = new THREE.ConeGeometry(1.0, 2.0, 32);
-        var coneMat = new THREE.MeshPhongMaterial({ color: 0xf093fb, emissive: 0xf093fb, emissiveIntensity: 0.15 });
-        var cone = new THREE.Mesh(coneGeo, coneMat);
-        cone.rotation.z = -Math.PI / 2;
-        speakerGroup.add(cone);
-
-        var ringGeo = new THREE.RingGeometry(1.1, 1.3, 32);
-        var ringMat = new THREE.MeshBasicMaterial({ color: 0xf5576c, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
-        var ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.y = Math.PI / 2;
-        ring.position.x = 1.0;
-        speakerGroup.add(ring);
-
-        speakerGroup.position.set(-15, 0, 0);
-        scene.add(speakerGroup);
-
-        var observerGeo = new THREE.SphereGeometry(0.5, 16, 16);
-        var observerMat = new THREE.MeshPhongMaterial({ color: 0x4ac6ff, emissive: 0x4ac6ff, emissiveIntensity: 0.3 });
-        var observer = new THREE.Mesh(observerGeo, observerMat);
-        observer.position.set(15, 0, 0);
-        observer.visible = false;
-        scene.add(observer);
-
-        var observerLabel = createTextSprite('Observer', 0x4ac6ff);
-        observerLabel.position.set(15, 1.5, 0);
-        observerLabel.visible = false;
-        scene.add(observerLabel);
-
-        function createTextSprite(text, color) {
-            var canvas2d = document.createElement('canvas');
-            canvas2d.width = 256;
-            canvas2d.height = 64;
-            var ctx2d = canvas2d.getContext('2d');
-            ctx2d.fillStyle = 'transparent';
-            ctx2d.fillRect(0, 0, 256, 64);
-            ctx2d.font = 'bold 28px sans-serif';
-            ctx2d.textAlign = 'center';
-            ctx2d.fillStyle = '#' + new THREE.Color(color).getHexString();
-            ctx2d.fillText(text, 128, 40);
-            var tex = new THREE.CanvasTexture(canvas2d);
-            var mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-            var sprite = new THREE.Sprite(mat);
-            sprite.scale.set(4, 1, 1);
-            return sprite;
-        }
-
-        var particles = [];
-        var particleGeometry = new THREE.SphereGeometry(0.15, 12, 12);
-
-        function createParticles(count) {
-            particles.forEach(function(p) { scene.remove(p.mesh); });
-            particles = [];
-
-            var md = mediumData[currentMedium];
-            for (var i = 0; i < count; i++) {
-                var mat = new THREE.MeshPhongMaterial({
-                    color: md.particleColor,
-                    emissive: md.particleColor,
-                    emissiveIntensity: 0.2,
-                    transparent: true,
-                    opacity: 0.9
-                });
-                var mesh = new THREE.Mesh(particleGeometry, mat);
-                var x = -12 + (i / count) * 24;
-                var z = (Math.random() - 0.5) * 2;
-                mesh.position.set(x, 0, z);
-                mesh.userData.originalX = x;
-                mesh.userData.originalZ = z;
-                scene.add(mesh);
-                particles.push({ mesh: mesh });
-            }
-        }
-        createParticles(particleCount);
-
-        var wavePoints = [];
-        for (var wi = 0; wi <= 200; wi++) {
-            wavePoints.push(new THREE.Vector3(-12 + (wi / 200) * 24, 0, 0));
-        }
-        var waveGeometry = new THREE.BufferGeometry().setFromPoints(wavePoints);
-        var waveMaterial = new THREE.LineBasicMaterial({ color: 0xf093fb, linewidth: 2 });
-        var waveLine = new THREE.Line(waveGeometry, waveMaterial);
-        waveLine.position.y = -4;
-        scene.add(waveLine);
-
-        var sphericalWaves = [];
-        var maxSpheres = 8;
-
-        function createSphericalWave(originX) {
-            var geo = new THREE.SphereGeometry(0.5, 32, 24);
-            var mat = new THREE.MeshBasicMaterial({
-                color: mediumData[currentMedium].particleColor,
-                transparent: true,
-                opacity: 0.35,
-                wireframe: true,
-                side: THREE.DoubleSide
-            });
-            var mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(originX, 0, 0);
-            scene.add(mesh);
-            return { mesh: mesh, age: 0, originX: originX };
-        }
-
-        var sphereSpawnTimer = 0;
-        var sphereSpawnInterval = 0.4;
-
-        function getWaveSpeed() {
-            return mediumData[currentMedium].speed;
-        }
-
-        function updateDopplerReadout() {
-            var v = getWaveSpeed();
-            var vs = sourceSpeed;
-            if (dopplerEnabled && vs < v) {
-                var fApproach = frequency * (v / (v - vs));
-                var fRecede = frequency * (v / (v + vs));
-                document.getElementById('doppler-approach').textContent = Math.round(fApproach) + ' Hz';
-                document.getElementById('doppler-recede').textContent = Math.round(fRecede) + ' Hz';
-            } else if (dopplerEnabled && vs >= v) {
-                document.getElementById('doppler-approach').textContent = 'Sonic boom!';
-                document.getElementById('doppler-recede').textContent = Math.round(frequency * (v / (v + vs))) + ' Hz';
-            } else {
-                document.getElementById('doppler-approach').textContent = '--';
-                document.getElementById('doppler-recede').textContent = '--';
-            }
-        }
-
-        function updateDisplays() {
-            var v = getWaveSpeed();
-            var wl = v / frequency;
-            document.getElementById('speed-display').textContent = v + ' m/s';
-            document.getElementById('wavelength-display').textContent = wl.toFixed(2) + ' m';
-            updateDopplerReadout();
-        }
-
-        var spectrumCanvas = document.getElementById('spectrum-canvas');
-        var specCtx = spectrumCanvas.getContext('2d');
-
-        function resizeSpectrumCanvas() {
-            var rect = spectrumCanvas.getBoundingClientRect();
-            spectrumCanvas.width = rect.width * Math.min(window.devicePixelRatio, 2);
-            spectrumCanvas.height = rect.height * Math.min(window.devicePixelRatio, 2);
-            specCtx.scale(Math.min(window.devicePixelRatio, 2), Math.min(window.devicePixelRatio, 2));
-        }
-        resizeSpectrumCanvas();
-
-        function drawSpectrum() {
-            var w = spectrumCanvas.getBoundingClientRect().width;
-            var h = spectrumCanvas.getBoundingClientRect().height;
-            specCtx.clearRect(0, 0, w, h);
-
-            specCtx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            specCtx.fillRect(0, 0, w, h);
-
-            var harmonics = [
-                { freq: frequency, amp: amplitude, label: 'f' },
-                { freq: frequency * 2, amp: amplitude * 0.5, label: '2f' },
-                { freq: frequency * 3, amp: amplitude * 0.3, label: '3f' },
-                { freq: frequency * 4, amp: amplitude * 0.15, label: '4f' },
-                { freq: frequency * 5, amp: amplitude * 0.08, label: '5f' }
-            ];
-
-            var maxFreq = 5500;
-            var barWidth = Math.max(8, w * 0.04);
-            var padding = 25;
-            var graphH = h - padding * 2;
-
-            specCtx.strokeStyle = 'rgba(255,255,255,0.08)';
-            specCtx.lineWidth = 1;
-            for (var gl = 0; gl <= 4; gl++) {
-                var gy = padding + (graphH / 4) * gl;
-                specCtx.beginPath();
-                specCtx.moveTo(padding, gy);
-                specCtx.lineTo(w - 10, gy);
-                specCtx.stroke();
-            }
-
-            specCtx.fillStyle = '#666';
-            specCtx.font = '9px sans-serif';
-            specCtx.textAlign = 'center';
-            var freqMarks = [0, 1000, 2000, 3000, 4000, 5000];
-            freqMarks.forEach(function(fm) {
-                var fx = padding + (fm / maxFreq) * (w - padding - 10);
-                specCtx.fillText(fm >= 1000 ? (fm/1000) + 'k' : fm, fx, h - 5);
-            });
-
-            harmonics.forEach(function(harm, idx) {
-                if (harm.freq > maxFreq) return;
-                var bx = padding + (harm.freq / maxFreq) * (w - padding - 10) - barWidth / 2;
-                var bh = (harm.amp / 2.0) * graphH;
-                var by = padding + graphH - bh;
-
-                var gradient = specCtx.createLinearGradient(bx, by, bx, by + bh);
-                gradient.addColorStop(0, 'rgba(240, 147, 251, 0.9)');
-                gradient.addColorStop(1, 'rgba(245, 87, 108, 0.6)');
-                specCtx.fillStyle = gradient;
-
-                specCtx.beginPath();
-                specCtx.roundRect(bx, by, barWidth, bh, 3);
-                specCtx.fill();
-
-                specCtx.fillStyle = '#f093fb';
-                specCtx.font = 'bold 10px sans-serif';
-                specCtx.textAlign = 'center';
-                specCtx.fillText(harm.label, bx + barWidth / 2, by - 4);
-
-                specCtx.fillStyle = '#aaa';
-                specCtx.font = '8px sans-serif';
-                specCtx.fillText(Math.round(harm.freq), bx + barWidth / 2, by - 14);
-            });
-
-            if (dopplerEnabled) {
-                var v = getWaveSpeed();
-                var vs = sourceSpeed;
-                if (vs < v) {
-                    var fA = frequency * (v / (v - vs));
-                    var fR = frequency * (v / (v + vs));
-
-                    if (fA <= maxFreq) {
-                        var ax = padding + (fA / maxFreq) * (w - padding - 10);
-                        specCtx.strokeStyle = '#4ac6ff';
-                        specCtx.lineWidth = 2;
-                        specCtx.setLineDash([4, 3]);
-                        specCtx.beginPath();
-                        specCtx.moveTo(ax, padding);
-                        specCtx.lineTo(ax, padding + graphH);
-                        specCtx.stroke();
-                        specCtx.setLineDash([]);
-                        specCtx.fillStyle = '#4ac6ff';
-                        specCtx.font = 'bold 9px sans-serif';
-                        specCtx.fillText("f' approach", ax, padding - 4);
-                    }
-
-                    var rx = padding + (fR / maxFreq) * (w - padding - 10);
-                    specCtx.strokeStyle = '#ff7b7b';
-                    specCtx.lineWidth = 2;
-                    specCtx.setLineDash([4, 3]);
-                    specCtx.beginPath();
-                    specCtx.moveTo(rx, padding);
-                    specCtx.lineTo(rx, padding + graphH);
-                    specCtx.stroke();
-                    specCtx.setLineDash([]);
-                    specCtx.fillStyle = '#ff7b7b';
-                    specCtx.font = 'bold 9px sans-serif';
-                    specCtx.fillText("f' recede", rx, padding - 4);
-                }
-            }
-        }
-
-        function updateWave(dt) {
-            time += dt;
-            var v = getWaveSpeed();
-            var wavelength = v / frequency;
-            var k = (2 * Math.PI) / (wavelength * 0.15);
-            var omega = 2 * Math.PI * frequency;
-            var timeScale = 0.001;
-
-            if (dopplerEnabled) {
-                sourcePosition += sourceDirection * sourceSpeed * dt * 0.8;
-                if (sourcePosition > 12) {
-                    sourceDirection = -1;
-                    sourcePosition = 12;
-                }
-                if (sourcePosition < -12) {
-                    sourceDirection = 1;
-                    sourcePosition = -12;
-                }
-                speakerGroup.position.x = sourcePosition;
-            } else {
-                sourcePosition = -15;
-                speakerGroup.position.x = -15;
-            }
-
-            var ampScale = amplitude * 0.5;
-
-            particles.forEach(function(particle) {
-                var ox = particle.mesh.userData.originalX;
-                var distFromSource = dopplerEnabled ? (ox - sourcePosition) : (ox + 15);
-                var displacement = ampScale * Math.sin(k * distFromSource - omega * time * timeScale);
-
-                particle.mesh.position.x = ox + displacement * 0.5;
-
-                var normalizedAmp = amplitude / 2.0;
-                var baseSize = 0.8 + normalizedAmp * 0.6;
-                particle.mesh.scale.setScalar(baseSize);
-
-                var intensity = Math.abs(displacement) / Math.max(ampScale, 0.01);
-                particle.mesh.material.emissiveIntensity = 0.15 + intensity * 0.4 * normalizedAmp;
-                particle.mesh.material.opacity = 0.6 + normalizedAmp * 0.3;
-            });
-
-            var positions = waveLine.geometry.attributes.position.array;
-            for (var i = 0; i <= 200; i++) {
-                var x = -12 + (i / 200) * 24;
-                var distWave = dopplerEnabled ? (x - sourcePosition) : (x + 15);
-                var y = amplitude * Math.sin(k * distWave - omega * time * timeScale);
-                positions[i * 3 + 1] = y;
-            }
-            waveLine.geometry.attributes.position.needsUpdate = true;
-
-            var pulseScale = 1 + Math.sin(omega * time * timeScale) * 0.1 * amplitude;
-            cone.scale.x = pulseScale;
-            ring.material.opacity = 0.3 + Math.abs(Math.sin(omega * time * timeScale)) * 0.4;
-
-            sphereSpawnTimer += dt;
-            if (sphereSpawnTimer >= sphereSpawnInterval) {
-                sphereSpawnTimer = 0;
-                if (sphericalWaves.length < maxSpheres) {
-                    var ox2 = dopplerEnabled ? sourcePosition : -15;
-                    sphericalWaves.push(createSphericalWave(ox2));
-                }
-            }
-
-            var expansionRate = v * 0.003;
-            for (var si = sphericalWaves.length - 1; si >= 0; si--) {
-                var sw = sphericalWaves[si];
-                sw.age += dt;
-                var radius = sw.age * expansionRate * 20;
-                sw.mesh.scale.setScalar(radius);
-
-                var fadeStart = 1.5;
-                var maxAge = 3.5;
-                if (sw.age > fadeStart) {
-                    sw.mesh.material.opacity = 0.35 * (1 - (sw.age - fadeStart) / (maxAge - fadeStart));
-                }
-
-                var ampFactor = amplitude / 2.0;
-                sw.mesh.material.opacity *= (0.4 + ampFactor * 0.6);
-
-                if (sw.age > maxAge) {
-                    scene.remove(sw.mesh);
-                    sw.mesh.geometry.dispose();
-                    sw.mesh.material.dispose();
-                    sphericalWaves.splice(si, 1);
-                }
-            }
-
-            speakerGroup.scale.x = pulseScale;
-        }
-
-        window.setMedium = function(medium) {
-            currentMedium = medium;
-            var btns = document.querySelectorAll('.medium-btn');
-            btns.forEach(function(b) {
-                b.classList.toggle('active', b.getAttribute('data-medium') === medium);
-            });
-
-            var md = mediumData[medium];
-            waveMaterial.color.set(md.color);
-
-            particles.forEach(function(p) {
-                p.mesh.material.color.set(md.particleColor);
-                p.mesh.material.emissive.set(md.particleColor);
-            });
-
-            sphericalWaves.forEach(function(sw) {
-                sw.mesh.material.color.set(md.particleColor);
-            });
-
-            updateDisplays();
-        };
-
-        document.getElementById('frequency').addEventListener('input', function(e) {
-            frequency = parseFloat(e.target.value);
-            document.getElementById('freq-value').textContent = frequency;
-            updateDisplays();
-        });
-
-        document.getElementById('amplitude').addEventListener('input', function(e) {
-            amplitude = parseFloat(e.target.value);
-            document.getElementById('amp-value').textContent = amplitude.toFixed(1);
-        });
-
-        document.getElementById('particle-density').addEventListener('input', function(e) {
-            particleCount = parseInt(e.target.value);
-            document.getElementById('density-value').textContent = particleCount;
-            createParticles(particleCount);
-        });
-
-        document.getElementById('doppler-toggle').addEventListener('change', function(e) {
-            dopplerEnabled = e.target.checked;
-            document.getElementById('doppler-speed-group').style.display = dopplerEnabled ? 'block' : 'none';
-            document.getElementById('doppler-readout').style.display = dopplerEnabled ? 'grid' : 'none';
-            observer.visible = dopplerEnabled;
-            observerLabel.visible = dopplerEnabled;
-
-            if (!dopplerEnabled) {
-                sourcePosition = -15;
-                sourceDirection = 1;
-                speakerGroup.position.x = -15;
-            }
-            updateDisplays();
-        });
-
-        document.getElementById('source-speed').addEventListener('input', function(e) {
-            sourceSpeed = parseFloat(e.target.value);
-            document.getElementById('source-speed-value').textContent = sourceSpeed;
-            updateDopplerReadout();
-        });
-
-        window.checkAnswer = function(element, isCorrect) {
-            var options = element.parentElement.children;
-            for (var oi = 0; oi < options.length; oi++) {
-                options[oi].style.pointerEvents = 'none';
-            }
-            if (isCorrect) {
-                element.classList.add('correct');
-            } else {
-                element.classList.add('incorrect');
-                for (var oj = 0; oj < options.length; oj++) {
-                    if (options[oj].getAttribute('onclick') && options[oj].getAttribute('onclick').indexOf('true') !== -1) {
-                        options[oj].classList.add('correct');
-                    }
-                }
-            }
-        };
-
-        var clock = new THREE.Clock();
-        var spectrumDrawTimer = 0;
-
-        renderer.setAnimationLoop(function() {
-            var dt = Math.min(clock.getDelta(), 0.05);
-            updateWave(dt);
-            controls.update();
-            renderer.render(scene, camera);
-
-            spectrumDrawTimer += dt;
-            if (spectrumDrawTimer > 0.1) {
-                spectrumDrawTimer = 0;
-                drawSpectrum();
-            }
-        });
-
-        window.addEventListener('resize', function() {
-            if (!container.clientWidth || !container.clientHeight) return;
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            resizeSpectrumCanvas();
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof renderMathInElement === 'function') {
-                renderMathInElement(document.body, {
-                    delimiters: [
-                        { left: '$$', right: '$$', display: true },
-                        { left: '$', right: '$', display: false }
-                    ]
-                });
-            }
-        });
-
-        updateDisplays();
-
-    } catch (err) {
-        console.error('Sound Waves experiment initialization error:', err);
-        var errContainer = document.getElementById('canvas-container');
-        if (errContainer) {
-            errContainer.innerHTML = '<div style="padding:40px;text-align:center;color:#f44336;">' +
-                '<h3>Failed to initialize 3D scene</h3>' +
-                '<p style="color:#888;margin-top:10px;">' + (err.message || 'Unknown error') + '</p>' +
-                '</div>';
-        }
+    <div class="sidebar-section">
+      <div class="sidebar-title">Pitch &amp; Frequency</div>
+      <div class="fact-card">
+        <div class="fact-title">High Frequency = High Pitch</div>
+        <div class="fact-text">Frequency = how many vibrations per second (Hz). High Hz = squeaky/high pitch. Low Hz = deep/low pitch. A dog whistle is ~40,000 Hz — too high for humans to hear!</div>
+      </div>
+      <div class="formula-block">
+        <div>Musical note A = 440 Hz</div>
+        <div class="formula-desc">Middle A on a piano vibrates 440 times every second</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-title">Human Hearing Range</div>
+        <div class="fact-text">Humans hear 20 Hz to 20,000 Hz. Bats and dolphins use echolocation with ultrasound (&gt;20,000 Hz) to "see" in the dark or underwater.</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Loudness &amp; Amplitude</div>
+      <div class="fact-card">
+        <div class="fact-title">Big Vibration = Loud Sound</div>
+        <div class="fact-text">Amplitude = size of the vibration. Big amplitude = loud (high decibels). Small amplitude = quiet. A whisper is ~30 dB. A jet engine is ~140 dB — that's 10,000× louder!</div>
+      </div>
+      <div class="formula-block">
+        <div>Speed of sound = 343 m/s</div>
+        <div class="formula-desc">In air at 20°C. Much faster in water (1500 m/s) and steel (5000 m/s)!</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Speed in Different Materials</div>
+      <div class="fact-card">
+        <div class="fact-title">Solids &gt; Liquids &gt; Gases</div>
+        <div class="fact-text">Molecules are closer together in solids, so vibrations pass faster. Steel: ~5000 m/s. Water: ~1500 m/s. Air: ~343 m/s. That's why you can hear a train coming by putting your ear on the rail!</div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-area">
+    <div id="canvas-container"></div>
+    <div class="data-overlay">
+      <div style="font-size:0.65rem;font-weight:700;color:#EAB308;margin-bottom:0.4rem;text-transform:uppercase;">Sound Data</div>
+      <div class="data-row"><span class="data-label">Frequency</span><span class="data-val" id="d-freq">440 Hz</span></div>
+      <div class="data-row"><span class="data-label">Amplitude</span><span class="data-val" id="d-amp">1.0</span></div>
+      <div class="data-row"><span class="data-label">Wavelength</span><span class="data-val" id="d-wave">0.78 m</span></div>
+      <div class="data-row"><span class="data-label">Period</span><span class="data-val" id="d-per">2.3 ms</span></div>
+      <div class="data-row"><span class="data-label">Speed</span><span class="data-val" id="d-spd">343 m/s</span></div>
+      <div class="data-row"><span class="data-label">Loudness</span><span class="data-val" id="d-loud">80 dB</span></div>
+    </div>
+    <div class="wave-overlay">
+      <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">Waveform</div>
+      <canvas class="wave-canvas" id="wave-canvas" width="180" height="70"></canvas>
+      <div style="margin-top:0.3rem;font-size:0.62rem;color:#64748b;" id="wave-desc">Medium pitch, medium volume</div>
+    </div>
+  </div>
+</div>
+<div class="control-panel">
+  <div class="controls-grid">
+    <div class="slider-group">
+      <div class="slider-label"><span>Frequency (Hz)</span><span class="slider-val" id="lbl-freq">440</span></div>
+      <input type="range" id="sl-freq" min="50" max="2000" step="10" value="440" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Amplitude (Volume)</span><span class="slider-val" id="lbl-amp">1.0</span></div>
+      <input type="range" id="sl-amp" min="0.1" max="3" step="0.1" value="1.0" oninput="onSlider()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Medium</span><span class="slider-val" id="lbl-medium">Air</span></div>
+      <input type="range" id="sl-medium" min="0" max="2" step="1" value="0" oninput="onMediumChange()">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:0.1rem;">Show</div>
+      <button class="btn btn-ghost" onclick="toggleParticles()" id="btn-part" style="font-size:0.7rem;padding:0.3rem 0.7rem;">Particles</button>
+    </div>
+  </div>
+</div>
+
+<script>
+THREE.OrbitControls = function(camera, domElement) {
+  this.camera = camera; this.domElement = domElement;
+  this.enableDamping = true; this.dampingFactor = 0.05;
+  this.minDistance = 2; this.maxDistance = 50; this.enabled = true;
+  var scope = this, state = -1;
+  var rs = new THREE.Vector2(), re = new THREE.Vector2(), rd = new THREE.Vector2();
+  var sph = new THREE.Spherical(), sd = new THREE.Spherical();
+  var scale = 1, target = new THREE.Vector3();
+  domElement.addEventListener('mousedown', function(e) {
+    if (!scope.enabled) return;
+    if (e.button===0) { state=0; rs.set(e.clientX,e.clientY); }
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', function() { state=-1; document.removeEventListener('mousemove', mm); });
+  });
+  function mm(e) {
+    if (!scope.enabled||state!==0) return;
+    re.set(e.clientX,e.clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+    sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
+  }
+  domElement.addEventListener('wheel', function(e) { if(!scope.enabled)return; e.preventDefault(); scale*=(e.deltaY>0)?1.1:0.9; }, {passive:false});
+  domElement.addEventListener('touchstart', function(e) { if(e.touches.length===1){state=0;rs.set(e.touches[0].clientX,e.touches[0].clientY);} });
+  domElement.addEventListener('touchmove', function(e) {
+    if(e.touches.length===1&&state===0){
+      re.set(e.touches[0].clientX,e.touches[0].clientY); rd.subVectors(re,rs).multiplyScalar(0.005);
+      sd.theta-=rd.x; sd.phi-=rd.y; rs.copy(re);
     }
-    </script>
+  });
+  this.update = function() {
+    var quat=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0));
+    var qi=quat.clone().invert();
+    var off=new THREE.Vector3().copy(camera.position).sub(target).applyQuaternion(quat);
+    sph.setFromVector3(off);
+    var d=scope.enableDamping?scope.dampingFactor:1;
+    sph.theta+=sd.theta*d; sph.phi+=sd.phi*d;
+    sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+    sph.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,sph.radius*scale));
+    if(scope.enableDamping){sd.theta*=(1-d);sd.phi*=(1-d);}else sd.set(0,0,0);
+    scale=1;
+    camera.position.copy(target).add(off.setFromSpherical(sph).applyQuaternion(qi));
+    camera.lookAt(target);
+  };
+  this.dispose=function(){};
+};
+
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 200);
+camera.position.set(0, 5, 14);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8); dirLight.position.set(5,10,5); scene.add(dirLight);
+scene.add(Object.assign(new THREE.DirectionalLight(0xEAB308, 0.3), { position: new THREE.Vector3(-5,4,-4) }));
+
+const grid = new THREE.GridHelper(20, 20, 0x2d2000, 0x1a1400); scene.add(grid);
+
+// Source speaker
+const speakerGroup = new THREE.Group();
+const speakerBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 0.8), new THREE.MeshPhongMaterial({ color: 0x334155 }));
+speakerBody.position.y = 0.9;
+const speakerCone = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.3,0.2,16), new THREE.MeshPhongMaterial({ color: 0x1e293b }));
+speakerCone.rotation.z = Math.PI/2; speakerCone.position.set(0.65, 0.9, 0);
+speakerGroup.add(speakerBody); speakerGroup.add(speakerCone);
+speakerGroup.position.set(-7, 0, 0);
+scene.add(speakerGroup);
+
+// Speaker membrane (vibrating disk)
+const membraneMesh = new THREE.Mesh(new THREE.CircleGeometry(0.45, 24),
+  new THREE.MeshPhongMaterial({ color: 0x94a3b8, side: THREE.DoubleSide }));
+membraneMesh.rotation.y = Math.PI/2; membraneMesh.position.set(-6.3, 0.9, 0);
+scene.add(membraneMesh);
+
+// Wave rings (expanding circles)
+const MAX_RINGS = 12;
+const rings = [];
+for (let i = 0; i < MAX_RINGS; i++) {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.04, 6, 32),
+    new THREE.MeshPhongMaterial({ color: 0xEAB308, transparent: true, opacity: 0 }));
+  ring.rotation.y = Math.PI/2; ring.position.set(-6, 0.9, 0);
+  ring.userData = { r: 0, active: false, phase: i / MAX_RINGS };
+  scene.add(ring); rings.push(ring);
+}
+
+// Particle grid (air molecules)
+const PART_COUNT = 200;
+const particleGeo = new THREE.BufferGeometry();
+const partPositions = new Float32Array(PART_COUNT * 3);
+const partRestX = [];
+for (let i = 0; i < PART_COUNT; i++) {
+  const x = -5 + (i % 20) * 0.7;
+  const y = 0.1 + Math.floor(i / 20) * 0.6;
+  const z = (Math.random() - 0.5) * 2;
+  partPositions[i*3] = x; partPositions[i*3+1] = y; partPositions[i*3+2] = z;
+  partRestX.push(x);
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(partPositions, 3));
+const particlePoints = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x60a5fa, size: 0.12, transparent: true, opacity: 0.7 }));
+scene.add(particlePoints);
+let showParticles = true;
+
+// Ear receiver
+const earGroup = new THREE.Group();
+const earBody = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshPhongMaterial({ color: 0xf59e0b }));
+earBody.position.y = 0.9;
+earGroup.add(earBody);
+earGroup.position.set(7, 0, 0);
+scene.add(earGroup);
+
+// Waveform 2D canvas
+const waveCanvas = document.getElementById('wave-canvas');
+const wctx = waveCanvas.getContext('2d');
+
+function drawWaveform(freq, amp) {
+  wctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+  wctx.strokeStyle = '#EAB308';
+  wctx.lineWidth = 2;
+  wctx.beginPath();
+  const cycles = Math.min(freq / 100, 6);
+  for (let x = 0; x < waveCanvas.width; x++) {
+    const t = x / waveCanvas.width * cycles * Math.PI * 2;
+    const y = waveCanvas.height/2 - amp * 20 * Math.sin(t + simTime * 5);
+    if (x === 0) wctx.moveTo(x, Math.max(5, Math.min(waveCanvas.height-5, y)));
+    else wctx.lineTo(x, Math.max(5, Math.min(waveCanvas.height-5, y)));
+  }
+  wctx.stroke();
+}
+
+let freq = 440, amp = 1.0, mediumIdx = 0, simTime = 0;
+const MEDIA = [{ name: 'Air', speed: 343, color: 0x60a5fa }, { name: 'Water', speed: 1500, color: 0x3b82f6 }, { name: 'Steel', speed: 5000, color: 0x94a3b8 }];
+
+function loadPreset(p, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (p === 'bass') { document.getElementById('sl-freq').value = 100; document.getElementById('sl-amp').value = 1.5; document.getElementById('e-mode') && (document.getElementById('e-mode').textContent='Low pitch'); }
+  else if (p === 'treble') { document.getElementById('sl-freq').value = 1500; document.getElementById('sl-amp').value = 0.8; }
+  else if (p === 'loud') { document.getElementById('sl-freq').value = 440; document.getElementById('sl-amp').value = 2.5; }
+  onSlider();
+}
+
+function onSlider() {
+  freq = parseFloat(document.getElementById('sl-freq').value);
+  amp = parseFloat(document.getElementById('sl-amp').value);
+  document.getElementById('lbl-freq').textContent = freq;
+  document.getElementById('lbl-amp').textContent = amp.toFixed(1);
+  updateDesc();
+}
+
+function onMediumChange() {
+  mediumIdx = parseInt(document.getElementById('sl-medium').value);
+  document.getElementById('lbl-medium').textContent = MEDIA[mediumIdx].name;
+  scene.background = new THREE.Color(mediumIdx === 1 ? 0x0a1628 : mediumIdx === 2 ? 0x100a08 : 0x0f172a);
+}
+
+function toggleParticles() {
+  showParticles = !showParticles;
+  particlePoints.visible = showParticles;
+  document.getElementById('btn-part').textContent = showParticles ? 'Particles' : 'Rings';
+}
+
+function updateDesc() {
+  const p = freq < 200 ? 'Low' : freq < 800 ? 'Medium' : 'High';
+  const v = amp < 1 ? 'quiet' : amp < 2 ? 'medium volume' : 'loud';
+  document.getElementById('wave-desc').textContent = p + ' pitch, ' + v;
+}
+
+function resetSim() {
+  simTime = 0;
+  rings.forEach(r => { r.userData.r = 0; r.userData.active = false; r.scale.setScalar(0); r.material.opacity = 0; });
+}
+
+let lastTime = null, ringTimer = 0;
+
+renderer.setAnimationLoop(function(time) {
+  if (lastTime === null) lastTime = time;
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
+  simTime += dt;
+
+  const soundSpeed = MEDIA[mediumIdx].speed;
+  const wavelength = soundSpeed / freq;
+  const period = 1 / freq;
+
+  // Emit rings
+  ringTimer += dt;
+  const emitInterval = period * 0.5; // visual: half period
+  if (ringTimer >= emitInterval) {
+    ringTimer = 0;
+    const ring = rings.find(r => !r.userData.active);
+    if (ring) { ring.userData.active = true; ring.userData.r = 0.3; ring.position.set(-6, 0.9, 0); }
+  }
+
+  // Update rings
+  const ringSpeed = soundSpeed / 100; // scale for scene
+  rings.forEach(ring => {
+    if (!ring.userData.active) return;
+    ring.userData.r += ringSpeed * dt;
+    const r = ring.userData.r;
+    ring.geometry.dispose();
+    ring.geometry = new THREE.TorusGeometry(r, 0.04 * amp, 6, 32);
+    ring.material.opacity = Math.max(0, 0.8 * (1 - r / 14)) * (amp / 2);
+    ring.material.color.set(MEDIA[mediumIdx].color);
+    if (r > 14) { ring.userData.active = false; ring.material.opacity = 0; }
+  });
+
+  // Speaker membrane vibration
+  const membraneDisp = amp * 0.08 * Math.sin(2 * Math.PI * freq * simTime);
+  membraneMesh.position.x = -6.3 + membraneDisp;
+  speakerBody.scale.y = 1 + Math.abs(membraneDisp) * 0.05;
+
+  // Particle displacement (longitudinal wave)
+  if (showParticles) {
+    for (let i = 0; i < PART_COUNT; i++) {
+      const restX = partRestX[i];
+      const waveDist = (restX - (-6)) / (wavelength / 5);
+      const disp = amp * 0.15 * Math.sin(2 * Math.PI * (simTime / period - waveDist));
+      partPositions[i*3] = restX + disp;
+    }
+    particleGeo.attributes.position.needsUpdate = true;
+  }
+
+  // Ear bob
+  earBody.position.x = 7 + 0.05 * Math.sin(2 * Math.PI * freq * simTime * 0.1);
+
+  // HUD
+  const dB = Math.max(0, 20 * Math.log10(amp * 5e5));
+  document.getElementById('d-freq').textContent = freq + ' Hz';
+  document.getElementById('d-amp').textContent = amp.toFixed(1);
+  document.getElementById('d-wave').textContent = (soundSpeed / freq).toFixed(3) + ' m';
+  document.getElementById('d-per').textContent = (period * 1000).toFixed(2) + ' ms';
+  document.getElementById('d-spd').textContent = soundSpeed + ' m/s';
+  document.getElementById('d-loud').textContent = dB.toFixed(0) + ' dB';
+
+  drawWaveform(freq, amp);
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderMathInElement(document.body, { delimiters: [{left:'\\(',right:'\\)',display:false}] });
+  loadPreset('bass', document.querySelector('.preset-btn'));
+});
+onSlider();
+
+// ── K5 Science: Sound Waves Educator Notes ───────────────────────────────────
+// NGSS ALIGNMENT:
+// 1-PS4-1: Plan and conduct investigations to provide evidence that vibrating
+//   materials can make sound and that sound can make materials vibrate.
+// 1-PS4-4: Use tools and materials to design and build a device that uses light
+//   or sound to solve the problem of communicating over a distance.
+// 4-PS4-1: Develop a model of waves to describe patterns in terms of amplitude
+//   and wavelength and that waves can cause objects to move.
+//
+// CORE CONCEPTS FOR K5:
+// Sound is a mechanical wave — it requires a medium (matter) to travel through.
+// It CANNOT travel through vacuum (empty space). This is why space is silent!
+//
+// FREQUENCY AND PITCH:
+// Frequency (Hz) = number of vibrations per second
+// Low frequency (20-300 Hz)   = bass, rumble, thunder, tuba
+// Mid frequency (300-3000 Hz) = human speech (most important range for us)
+// High frequency (3000-20000) = treble, birds chirping, piccolo
+//
+// Human hearing: 20 Hz to 20,000 Hz (decreases with age)
+// Dogs hear up to 65,000 Hz. Bats use 20,000-200,000 Hz for echolocation.
+//
+// AMPLITUDE AND LOUDNESS:
+// Amplitude = maximum displacement of the vibrating medium from rest
+// Larger amplitude = more energy = louder sound
+// Decibel scale is logarithmic:
+//   0 dB   = threshold of hearing (barely audible)
+//   30 dB  = whisper
+//   60 dB  = normal conversation
+//   85 dB  = traffic (prolonged exposure can cause hearing damage)
+//   120 dB = rock concert (pain threshold nearby)
+//   140 dB = jet engine at close range (immediate hearing damage)
+//   194 dB = theoretical maximum in Earth's atmosphere
+//
+// SPEED OF SOUND IN DIFFERENT MEDIA:
+// Speed depends on density and elasticity of medium.
+// Air (20°C):  343 m/s   (≈ 1 mile per 5 seconds — count between lightning/thunder!)
+// Water:       1482 m/s  (4.3× faster than air)
+// Wood:        ~3960 m/s
+// Steel:       5120 m/s  (15× faster than air — put ear on rail!)
+// Glass:       5640 m/s
+// Rule: Solids > Liquids > Gases (molecules closer = faster transfer)
+//
+// WAVELENGTH RELATIONSHIP:
+// wavelength (m) = speed (m/s) / frequency (Hz)
+// Low notes have LONG wavelengths. High notes have SHORT wavelengths.
+// Example: 60 Hz bass note: λ = 343/60 = 5.7 m (longer than a car!)
+// Example: 4000 Hz treble:  λ = 343/4000 = 0.086 m = 8.6 cm
+//
+// FUN FACTS:
+// - Sound travels 1 km in about 3 seconds. Count seconds after lightning!
+// - Blue whales communicate with sounds as low as 10 Hz — heard 800 km away
+// - The crack of a whip is a tiny sonic boom (tip moves faster than sound)
+// - Humans can speak due to vocal cords vibrating 100-200 Hz for normal speech
+// - Musical instruments work by resonance — forcing air columns or strings to
+//   vibrate at natural frequencies (harmonics)
+//
+// CLASSROOM ACTIVITIES FOR SOUND:
+// Activity 1 — Feel vibrations: hold your hand on your throat while humming.
+//   You can feel your vocal cords vibrating! Try different pitches.
+//
+// Activity 2 — Rubber band guitar: stretch rubber bands of different thicknesses
+//   over a box. Pluck them. Thicker/looser band = lower pitch. Tighter/thinner = higher.
+//   This shows how frequency relates to tension and mass of vibrating object.
+//
+// Activity 3 — Tuning fork in water: touch a vibrating tuning fork to water surface.
+//   Water splashes — proving the fork is vibrating even though you barely see it!
+//
+// Activity 4 — Sound and distance: whisper at different distances. Sound gets quieter
+//   farther away because energy spreads over larger sphere (intensity ∝ 1/r²).
+//
+// Activity 5 — Telephone string: connect two paper cups with taut string.
+//   Speak into one, hear in other. Vibrations travel through string!
+//   Works because string conducts vibrations better than air at low volumes.
+//
+// MUSIC AND SCIENCE CONNECTION:
+// Musical notes are defined by frequency:
+//   A4 = 440 Hz (concert pitch reference)
+//   A5 = 880 Hz (one octave up — exactly 2× frequency)
+//   A3 = 220 Hz (one octave down — exactly 0.5× frequency)
+// Each octave = doubling of frequency. This is a logarithmic relationship.
+//
+// Harmonics: strings/pipes vibrate at fundamental frequency AND integer multiples.
+// These overtones give each instrument its unique timbre (sound quality).
+// Flute: few overtones. Violin: rich overtones. This is why they sound different
+// even playing the exact same note.
+//
+// ECHOLOCATION AND REAL-WORLD APPLICATIONS:
+// Bats use ultrasound (20,000-200,000 Hz) pulses. Time the echo to calculate distance.
+// Dolphins use ~200,000 Hz clicks — can resolve objects 1 cm at 30 m distance.
+// Medical ultrasound: 1-20 MHz to image soft tissue (frequencies too high for hearing).
+// Sonar (Sound Navigation And Ranging): submarines map ocean floor using echoes.
+// Seismology: earthquakes produce seismic waves — scientists use echoes to map
+//   Earth's interior (different wave speeds reveal Earth's layers).
+</script>
 </body>
 </html>
