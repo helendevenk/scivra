@@ -21,7 +21,7 @@ beforeEach(() => {
   vi.mocked(db).mockReturnValue(mockDb as any);
 });
 
-const MOCK_EXAM = { id: 'exam-1', slug: 'ap-physics-1', title: 'AP Physics 1', isPublished: true, sort: 1, createdAt: new Date() };
+const MOCK_EXAM = { id: 'exam-1', slug: 'ap-physics-1', titleEn: 'AP Physics 1', titleZh: 'AP 物理 1', isPublished: true, sort: 1, createdAt: new Date() };
 
 describe('createApExam', () => {
   it('inserts and returns exam', async () => {
@@ -33,9 +33,9 @@ describe('createApExam', () => {
 
 describe('updateApExam', () => {
   it('updates and returns exam', async () => {
-    mockDb._resolveInsert([{ ...MOCK_EXAM, title: 'Updated' }]);
-    const result = await updateApExam('exam-1', { title: 'Updated' });
-    expect(result.title).toBe('Updated');
+    mockDb._resolveInsert([{ ...MOCK_EXAM, titleEn: 'Updated' }]);
+    const result = await updateApExam('exam-1', { titleEn: 'Updated' });
+    expect(result.titleEn).toBe('Updated');
   });
 });
 

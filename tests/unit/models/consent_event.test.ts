@@ -26,11 +26,10 @@ beforeEach(() => {
 const MOCK_CONSENT_EVENT = {
   id: 'mock-uuid',
   userId: 'user-1',
-  consentType: 'terms',
-  consentVersion: '1.0',
-  granted: true,
-  ipAddress: '127.0.0.1',
-  userAgent: 'test-agent',
+  eventType: 'terms_accept',
+  policyVersion: '1.0',
+  ipHash: 'hash-127.0.0.1',
+  userAgentHash: 'hash-test-agent',
   createdAt: new Date('2026-03-27'),
 };
 
@@ -40,11 +39,10 @@ describe('createConsentEvent', () => {
 
     const result = await createConsentEvent({
       userId: 'user-1',
-      consentType: 'terms',
-      consentVersion: '1.0',
-      granted: true,
-      ipAddress: '127.0.0.1',
-      userAgent: 'test-agent',
+      eventType: 'terms_accept',
+      policyVersion: '1.0',
+      ipHash: 'hash-127.0.0.1',
+      userAgentHash: 'hash-test-agent',
     });
 
     expect(result).toEqual(MOCK_CONSENT_EVENT);
@@ -57,7 +55,7 @@ describe('createConsentEvent', () => {
 
 describe('deleteConsentEventsOlderThan', () => {
   it('deletes events older than cutoff and returns count', async () => {
-    mockDb._resolveSelect({ count: 5 });
+    mockDb._resolveSelect({ count: 5 } as unknown as unknown[]);
 
     const cutoff = new Date('2026-01-01');
     const result = await deleteConsentEventsOlderThan(cutoff);
@@ -68,7 +66,7 @@ describe('deleteConsentEventsOlderThan', () => {
   });
 
   it('returns 0 when no events to delete', async () => {
-    mockDb._resolveSelect({ count: 0 });
+    mockDb._resolveSelect({ count: 0 } as unknown as unknown[]);
 
     const cutoff = new Date('2020-01-01');
     const result = await deleteConsentEventsOlderThan(cutoff);

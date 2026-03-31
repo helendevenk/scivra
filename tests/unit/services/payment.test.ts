@@ -289,7 +289,7 @@ describe('payment service', () => {
       expect(updateOrderInTransaction).toHaveBeenCalledTimes(1);
       const callArg = vi.mocked(updateOrderInTransaction).mock.calls[0][0];
       expect(callArg.newSubscription).toBeDefined();
-      expect(callArg.newSubscription.subscriptionId).toBe('sub_1');
+      expect(callArg.newSubscription!.subscriptionId).toBe('sub_1');
     });
 
     it('should create newCredit when order has creditsAmount > 0', async () => {
@@ -298,8 +298,8 @@ describe('payment service', () => {
       await handleCheckoutSuccess({ order, session });
       const callArg = vi.mocked(updateOrderInTransaction).mock.calls[0][0];
       expect(callArg.newCredit).toBeDefined();
-      expect(callArg.newCredit.credits).toBe(100);
-      expect(callArg.newCredit.remainingCredits).toBe(100);
+      expect(callArg.newCredit!.credits).toBe(100);
+      expect(callArg.newCredit!.remainingCredits).toBe(100);
     });
   });
 

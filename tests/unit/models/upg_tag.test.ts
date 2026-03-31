@@ -8,7 +8,7 @@ const _holder: { current: MockChain } = { current: null as unknown as MockChain 
 vi.mock('@/core/db', () => {
   const proxy = new Proxy({} as MockChain, {
     get(_target, prop) {
-      return (_holder.current as Record<string | symbol, unknown>)?.[prop];
+      return (_holder.current as unknown as Record<string | symbol, unknown>)?.[prop];
     },
   });
   return { db: vi.fn(() => proxy) };

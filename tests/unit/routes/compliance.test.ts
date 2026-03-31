@@ -53,7 +53,7 @@ function makeConsentRequest(body: Record<string, unknown>) {
 describe('POST /api/compliance/age-gate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getSignUser).mockResolvedValue(null);
+    vi.mocked(getSignUser).mockResolvedValue(undefined);
   });
 
   it('should accept valid birthdate and return age gate result', async () => {
@@ -146,7 +146,7 @@ describe('POST /api/compliance/age-gate', () => {
 describe('POST /api/compliance/consent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getSignUser).mockResolvedValue(null);
+    vi.mocked(getSignUser).mockResolvedValue(undefined);
   });
 
   it('should record consent successfully with session ID', async () => {
@@ -184,7 +184,7 @@ describe('POST /api/compliance/consent', () => {
   });
 
   it('should require sessionId when user is anonymous', async () => {
-    vi.mocked(getSignUser).mockResolvedValue(null);
+    vi.mocked(getSignUser).mockResolvedValue(undefined);
 
     const res = await consentPOST(
       makeConsentRequest({

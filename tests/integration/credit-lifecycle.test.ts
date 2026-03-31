@@ -291,7 +291,7 @@ describe('Credit Lifecycle Integration', () => {
   });
 
   it('should use PAYMENT scene for one-time payment credit grants', () => {
-    const paymentType = 'one-time';
+    const paymentType: string = 'one-time';
     const scene =
       paymentType === 'subscription'
         ? CreditTransactionScene.SUBSCRIPTION

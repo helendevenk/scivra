@@ -30,10 +30,10 @@ beforeEach(() => {
 const MOCK_RECORD = {
   id: 'mod-1',
   generationId: 'gen-1',
-  userId: 'user-1',
-  contentType: 'input',
-  content: 'harmless physics prompt',
+  checkType: 'input',
   status: 'pass',
+  reason: null,
+  matchedKeywords: null,
   checkedAt: new Date('2026-03-27T00:00:00Z'),
   reviewedBy: null,
   reviewNotes: null,
@@ -46,9 +46,7 @@ describe('createModerationRecord', () => {
 
     const result = await createModerationRecord({
       generationId: 'gen-1',
-      userId: 'user-1',
-      contentType: 'input',
-      content: 'harmless physics prompt',
+      checkType: 'input',
       status: 'pass',
     });
 

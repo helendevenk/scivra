@@ -26,16 +26,25 @@ import { NotebookEditor } from '@/shared/blocks/notebook/NotebookEditor';
 function makeNotebook(overrides: Partial<any> = {}) {
   return {
     id: 'nb-1',
+    userId: 'user-1',
+    experimentId: null,
+    generationId: null,
+    autopilotSessionId: null,
     title: 'My Notebook',
     status: 'draft',
+    language: 'en',
     version: 1,
     hypothesis: JSON.stringify([{ type: 'text', content: 'Test hypothesis', source: 'user' }]),
     method: null,
     data: null,
     analysis: null,
     conclusion: null,
-    updatedAt: '2026-03-20T00:00:00Z',
-    createdAt: '2026-03-19T00:00:00Z',
+    aiSuggestionsUsed: 0,
+    aiModel: null,
+    createdAt: new Date('2026-03-19T00:00:00Z'),
+    updatedAt: new Date('2026-03-20T00:00:00Z'),
+    completedAt: null,
+    deletedAt: null,
     ...overrides,
   };
 }

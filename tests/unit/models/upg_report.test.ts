@@ -26,12 +26,11 @@ beforeEach(() => {
 const MOCK_UPG_REPORT = {
   id: 'report-1',
   generationId: 'gen-1',
-  reporterId: 'user-1',
-  reason: 'inappropriate',
-  details: 'Contains harmful content',
+  userId: 'user-1',
+  reportType: 'inappropriate',
+  content: 'Contains harmful content',
   status: 'pending',
   createdAt: new Date('2026-03-27'),
-  updatedAt: new Date('2026-03-27'),
 };
 
 describe('createUpgReport', () => {
@@ -41,9 +40,9 @@ describe('createUpgReport', () => {
     const result = await createUpgReport({
       id: 'report-1',
       generationId: 'gen-1',
-      reporterId: 'user-1',
-      reason: 'inappropriate',
-      details: 'Contains harmful content',
+      userId: 'user-1',
+      reportType: 'inappropriate',
+      content: 'Contains harmful content',
     });
 
     expect(result).toEqual(MOCK_UPG_REPORT);
@@ -57,9 +56,10 @@ describe('createUpgReport', () => {
     mockDb._resolveInsert([reportWithMockId]);
 
     const result = await createUpgReport({
+      id: 'mock-uuid',
       generationId: 'gen-1',
-      reporterId: 'user-1',
-      reason: 'inappropriate',
+      userId: 'user-1',
+      reportType: 'inappropriate',
     });
 
     expect(result.id).toBe('mock-uuid');

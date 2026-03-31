@@ -33,9 +33,9 @@ vi.mock('@/shared/lib/experiments/access', () => ({
   canAccessTier: vi.fn(() => true),
 }));
 
-const mockGetExperimentHtmlPath = vi.fn(() => '/sims/test.html');
+const mockGetExperimentHtmlPath = vi.fn((_slug: string): string | null => '/sims/test.html');
 vi.mock('@/shared/lib/experiments/html-map', () => ({
-  getExperimentHtmlPath: (...args: any[]) => mockGetExperimentHtmlPath(...args),
+  getExperimentHtmlPath: (slug: string) => mockGetExperimentHtmlPath(slug),
 }));
 
 vi.mock('next/dynamic', () => ({

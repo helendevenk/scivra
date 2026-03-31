@@ -51,7 +51,7 @@ describe('Gallery API Routes', () => {
 
   describe('GET /api/gallery', () => {
     it('should return paginated list', async () => {
-      mockGetUserInfo.mockResolvedValue(null);
+      mockGetUserInfo.mockResolvedValue(undefined);
       mockGetGalleryList.mockResolvedValue({
         list: [
           { id: 'gen-1', title: 'Test', isPublic: true },
@@ -72,7 +72,7 @@ describe('Gallery API Routes', () => {
     });
 
     it('should filter by tag', async () => {
-      mockGetUserInfo.mockResolvedValue(null);
+      mockGetUserInfo.mockResolvedValue(undefined);
       mockGetGalleryList.mockResolvedValue({
         list: [{ id: 'gen-1', title: 'Gravity' }],
         nextCursor: null,
@@ -88,7 +88,7 @@ describe('Gallery API Routes', () => {
     });
 
     it('should search with keyword', async () => {
-      mockGetUserInfo.mockResolvedValue(null);
+      mockGetUserInfo.mockResolvedValue(undefined);
       mockGetGalleryList.mockResolvedValue({
         list: [],
         nextCursor: null,
@@ -108,7 +108,7 @@ describe('Gallery API Routes', () => {
 
   describe('POST /api/gallery/[id]/like', () => {
     it('should require auth to like', async () => {
-      mockGetUserInfo.mockResolvedValue(null);
+      mockGetUserInfo.mockResolvedValue(undefined);
 
       const req = makeRequest('http://localhost/api/gallery/gen-1/like', {
         method: 'POST',
@@ -155,7 +155,7 @@ describe('Gallery API Routes', () => {
 
   describe('POST /api/gallery/publish', () => {
     it('should require auth to publish', async () => {
-      mockGetUserInfo.mockResolvedValue(null);
+      mockGetUserInfo.mockResolvedValue(undefined);
 
       const req = makeRequest('http://localhost/api/gallery/publish', {
         method: 'POST',

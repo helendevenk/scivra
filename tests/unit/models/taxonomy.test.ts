@@ -27,7 +27,8 @@ beforeEach(() => {
 
 const MOCK_TAXONOMY = {
   id: 'tax-1',
-  name: 'Physics',
+  userId: 'user-1',
+  title: 'Physics',
   slug: 'physics',
   type: TaxonomyType.CATEGORY,
   status: TaxonomyStatus.PUBLISHED,
@@ -43,9 +44,11 @@ describe('addTaxonomy', () => {
 
     const result = await addTaxonomy({
       id: 'tax-1',
-      name: 'Physics',
+      userId: 'user-1',
+      title: 'Physics',
       slug: 'physics',
       type: TaxonomyType.CATEGORY,
+      status: TaxonomyStatus.PUBLISHED,
     });
 
     expect(result).toEqual(MOCK_TAXONOMY);
@@ -57,12 +60,12 @@ describe('addTaxonomy', () => {
 
 describe('updateTaxonomy', () => {
   it('updates taxonomy fields and returns updated record', async () => {
-    const updated = { ...MOCK_TAXONOMY, name: 'Advanced Physics' };
+    const updated = { ...MOCK_TAXONOMY, title: 'Advanced Physics' };
     mockDb._resolveInsert([updated]);
 
-    const result = await updateTaxonomy('tax-1', { name: 'Advanced Physics' });
+    const result = await updateTaxonomy('tax-1', { title: 'Advanced Physics' });
 
-    expect(result.name).toBe('Advanced Physics');
+    expect(result.title).toBe('Advanced Physics');
     expect(mockDb.update).toHaveBeenCalled();
     expect(mockDb.set).toHaveBeenCalled();
     expect(mockDb.where).toHaveBeenCalled();
@@ -72,7 +75,7 @@ describe('updateTaxonomy', () => {
   it('returns undefined when taxonomy does not exist', async () => {
     mockDb._resolveInsert([]);
 
-    const result = await updateTaxonomy('nonexistent', { name: 'X' });
+    const result = await updateTaxonomy('nonexistent', { title: 'X' });
 
     expect(result).toBeUndefined();
   });

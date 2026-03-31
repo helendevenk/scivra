@@ -55,6 +55,8 @@ const basePricingItem = {
   currency: 'USD',
   amount: 499,
   price: '$4.99',
+  interval: 'month' as const,
+  product_id: 'prod_test_001',
 };
 
 // Dialog/Drawer render via portal to document.body, so we query from body

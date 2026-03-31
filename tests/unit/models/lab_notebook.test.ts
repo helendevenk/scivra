@@ -35,16 +35,21 @@ const MOCK_NOTEBOOK = {
   userId: 'user-1',
   experimentId: 'exp-1',
   generationId: null,
+  autopilotSessionId: null,
   title: 'Projectile Motion Lab',
+  status: 'draft',
+  language: 'en',
   hypothesis: 'Objects follow parabolic paths',
   method: 'Launch at various angles',
   data: 'angle=45, range=100m',
   analysis: 'Confirms prediction',
   conclusion: 'Hypothesis supported',
-  status: 'draft',
+  aiSuggestionsUsed: 0,
+  aiModel: null,
   version: 1,
   createdAt: new Date('2026-03-27'),
   updatedAt: new Date('2026-03-27'),
+  completedAt: null,
   deletedAt: null,
 };
 
@@ -53,6 +58,7 @@ describe('createLabNotebook', () => {
     mockDb._resolveInsert([MOCK_NOTEBOOK]);
 
     const result = await createLabNotebook({
+      id: 'mock-uuid',
       userId: 'user-1',
       experimentId: 'exp-1',
       title: 'Projectile Motion Lab',
@@ -82,6 +88,7 @@ describe('createLabNotebook', () => {
     mockDb._resolveInsert([MOCK_NOTEBOOK]);
 
     await createLabNotebook({
+      id: 'mock-uuid',
       userId: 'user-1',
       title: 'Test',
     });

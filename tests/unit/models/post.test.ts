@@ -88,9 +88,11 @@ describe('addPost', () => {
 
     const result = await addPost({
       id: 'post-1',
+      userId: 'user-1',
       slug: 'hello-world',
       title: 'Hello World',
       type: PostType.ARTICLE,
+      status: PostStatus.PUBLISHED,
     });
 
     expect(result).toEqual(MOCK_POST);

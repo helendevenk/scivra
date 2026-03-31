@@ -75,6 +75,7 @@ describe('createUpgGeneration', () => {
     mockDb._resolveInsert([MOCK_GENERATION]);
 
     const result = await createUpgGeneration({
+      id: 'gen-1',
       userId: 'user-1',
       prompt: 'Projectile motion',
       promptHash: 'hash-1',

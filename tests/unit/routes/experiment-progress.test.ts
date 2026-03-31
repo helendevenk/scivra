@@ -63,7 +63,7 @@ const EXPERIMENT = {
 } as any;
 
 function makeRequest(url: string, init?: RequestInit): NextRequest {
-  return new NextRequest(new URL(url, 'http://localhost'), init);
+  return new NextRequest(new URL(url, 'http://localhost'), init as any);
 }
 
 function makeParams(id: string = SLUG) {
@@ -75,7 +75,7 @@ describe('Experiment Progress API', () => {
     vi.clearAllMocks();
     mockSubscriptionToTier.mockReturnValue('free' as any);
     mockCanAccessExperiment.mockReturnValue(true);
-    mockGetCurrentSubscription.mockResolvedValue(null);
+    mockGetCurrentSubscription.mockResolvedValue(undefined as any);
   });
 
   // --- GET ---
@@ -129,7 +129,7 @@ describe('Experiment Progress API', () => {
       mockGetExperimentBySlug.mockReturnValue(EXPERIMENT);
       mockGetSignUser.mockResolvedValue({ id: 'user-1' } as any);
       mockTrackUsage.mockResolvedValue({ remaining: 240, limit: 300, used: 60 } as any);
-      mockGetProgress.mockResolvedValue(null);
+      mockGetProgress.mockResolvedValue(undefined as any);
 
       const req = makeRequest(`http://localhost/api/experiments/${SLUG}/progress`, {
         method: 'POST',
@@ -186,7 +186,7 @@ describe('Experiment Progress API', () => {
 
     it('should require auth for complete_challenge', async () => {
       mockGetExperimentBySlug.mockReturnValue(EXPERIMENT);
-      mockGetSignUser.mockResolvedValue(null);
+      mockGetSignUser.mockResolvedValue(undefined);
 
       const req = makeRequest(`http://localhost/api/experiments/${SLUG}/progress`, {
         method: 'POST',

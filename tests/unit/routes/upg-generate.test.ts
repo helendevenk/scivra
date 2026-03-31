@@ -76,12 +76,12 @@ function setupAuthenticatedUser() {
   vi.mocked(getUserInfo).mockResolvedValue({ id: 'user-1', email: 'test@example.com' } as never);
   vi.mocked(getRemainingCredits).mockResolvedValue(100);
   vi.mocked(getDailyQuotaCount).mockResolvedValue(0);
-  vi.mocked(getCurrentSubscription).mockResolvedValue(null);
+  vi.mocked(getCurrentSubscription).mockResolvedValue(undefined as any);
   vi.mocked(subscriptionToTier).mockReturnValue('free' as never);
 }
 
 function setupAnonymousUser() {
-  vi.mocked(getUserInfo).mockResolvedValue(null);
+  vi.mocked(getUserInfo).mockResolvedValue(undefined);
 }
 
 function setupSuccessfulGeneration() {

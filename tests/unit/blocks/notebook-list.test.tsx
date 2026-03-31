@@ -28,10 +28,25 @@ import { NotebookList } from '@/shared/blocks/notebook/NotebookList';
 function makeNotebook(overrides: Partial<any> = {}) {
   return {
     id: 'nb-1',
+    userId: 'user-1',
+    experimentId: null,
+    generationId: null,
+    autopilotSessionId: null,
     title: 'Test Notebook',
     status: 'draft',
+    language: 'en',
+    hypothesis: null,
+    method: null,
+    data: null,
+    analysis: null,
+    conclusion: null,
+    aiSuggestionsUsed: 0,
+    aiModel: null,
     version: 1,
-    updatedAt: '2026-03-20T00:00:00Z',
+    createdAt: new Date('2026-03-19T00:00:00Z'),
+    updatedAt: new Date('2026-03-20T00:00:00Z'),
+    completedAt: null,
+    deletedAt: null,
     ...overrides,
   };
 }

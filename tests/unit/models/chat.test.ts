@@ -45,6 +45,10 @@ describe('createChat', () => {
       id: 'chat-1',
       userId: 'user-1',
       title: 'Physics Question',
+      status: ChatStatus.CREATED,
+      model: 'claude-sonnet-4-6',
+      provider: 'anthropic',
+      parts: '[]',
     });
 
     expect(result).toEqual(MOCK_CHAT);

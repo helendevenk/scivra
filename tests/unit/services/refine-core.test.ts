@@ -107,7 +107,7 @@ function validOriginalGeneration(overrides?: Record<string, unknown>) {
     version: 1,
     category: 'physics',
     ...overrides,
-  };
+  } as any;
 }
 
 function baseParams(overrides?: Partial<RefineCoreParams>): RefineCoreParams {
@@ -147,7 +147,7 @@ describe('refineCore', () => {
 
   // 2. Original not found → failed
   it('should fail when original generation is not found', async () => {
-    mockedFindById.mockResolvedValueOnce(undefined);
+    mockedFindById.mockResolvedValueOnce(undefined as any);
 
     const result = await refineCore(baseParams());
 

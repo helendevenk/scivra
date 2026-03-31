@@ -53,8 +53,10 @@ beforeEach(() => {
 const MOCK_PATH = {
   id: 'path-1',
   slug: 'ap-physics-1',
-  title: 'AP Physics 1',
-  description: 'Intro to AP Physics',
+  titleEn: 'AP Physics 1',
+  titleZh: 'AP 物理 1',
+  descriptionEn: 'Intro to AP Physics',
+  descriptionZh: 'AP 物理简介',
   category: 'physics',
   level: 'AP',
   isPublished: true,
@@ -67,9 +69,12 @@ const MOCK_NODE = {
   id: 'node-1',
   pathId: 'path-1',
   orderIndex: 0,
-  title: 'Kinematics',
-  type: 'experiment',
-  experimentId: 'projectile-motion',
+  titleEn: 'Kinematics',
+  titleZh: '运动学',
+  descriptionEn: 'Learn about kinematics',
+  descriptionZh: '学习运动学',
+  quizQuestion: 'What is velocity?',
+  experimentSlug: 'projectile-motion',
   createdAt: new Date(),
 };
 
@@ -119,10 +124,10 @@ describe('createLearningPath', () => {
 
 describe('updateLearningPath', () => {
   it('updates and returns path', async () => {
-    const updated = { ...MOCK_PATH, title: 'Updated' };
+    const updated = { ...MOCK_PATH, titleEn: 'Updated' };
     mockDb._resolveInsert([updated]);
-    const result = await updateLearningPath('path-1', { title: 'Updated' });
-    expect(result.title).toBe('Updated');
+    const result = await updateLearningPath('path-1', { titleEn: 'Updated' });
+    expect(result.titleEn).toBe('Updated');
   });
 });
 
@@ -169,10 +174,10 @@ describe('createNode', () => {
 
 describe('updateNode', () => {
   it('updates and returns node', async () => {
-    const updated = { ...MOCK_NODE, title: 'Updated' };
+    const updated = { ...MOCK_NODE, titleEn: 'Updated' };
     mockDb._resolveInsert([updated]);
-    const result = await updateNode('node-1', { title: 'Updated' });
-    expect(result.title).toBe('Updated');
+    const result = await updateNode('node-1', { titleEn: 'Updated' });
+    expect(result.titleEn).toBe('Updated');
   });
 });
 
@@ -307,7 +312,7 @@ describe('checkNodeAccess', () => {
   });
 
   it('requires subscription for paid nodes when no sub', async () => {
-    vi.mocked(getCurrentSubscription).mockResolvedValue(null);
+    vi.mocked(getCurrentSubscription).mockResolvedValue(null as any);
     const result = await checkNodeAccess(3, { id: 'user-1' });
     expect(result).toEqual({ allowed: false, reason: 'subscription_required' });
   });

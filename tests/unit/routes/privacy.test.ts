@@ -43,7 +43,7 @@ describe('Privacy API Routes', () => {
 
   describe('POST /api/privacy/export', () => {
     it('should return unauthorized when not signed in', async () => {
-      mockGetSignUser.mockResolvedValue(null);
+      mockGetSignUser.mockResolvedValue(undefined);
 
       const res = await exportPost();
       const json = await res.json();
@@ -86,7 +86,7 @@ describe('Privacy API Routes', () => {
 
   describe('POST /api/privacy/delete', () => {
     it('should return unauthorized when not signed in', async () => {
-      mockGetSignUser.mockResolvedValue(null);
+      mockGetSignUser.mockResolvedValue(undefined);
 
       const res = await deletePost();
       const json = await res.json();
@@ -162,7 +162,7 @@ describe('Privacy API Routes', () => {
     });
 
     it('should return error for invalid user (not found)', async () => {
-      mockGetSignUser.mockResolvedValue(null);
+      mockGetSignUser.mockResolvedValue(undefined);
 
       const res = await statusGet(makeNextRequest(), {
         params: Promise.resolve({ id: 'req-1' }),
