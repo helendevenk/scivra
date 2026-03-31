@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { RiAppleFill, RiGithubFill, RiGoogleFill, RiMicrosoftFill } from 'react-icons/ri';
+import { RiGithubFill, RiGoogleFill, RiMicrosoftFill } from 'react-icons/ri';
 import { toast } from 'sonner';
 
 import { signIn } from '@/core/auth/client';
@@ -88,15 +88,6 @@ export function SocialProviders({
       title: t('microsoft_sign_in_title'),
       icon: <RiMicrosoftFill />,
       onClick: () => handleSignIn({ provider: 'microsoft' }),
-    });
-  }
-
-  if (configs.apple_auth_enabled === 'true') {
-    providers.push({
-      name: 'apple',
-      title: t('apple_sign_in_title'),
-      icon: <RiAppleFill />,
-      onClick: () => handleSignIn({ provider: 'apple' }),
     });
   }
 

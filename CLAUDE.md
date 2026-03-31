@@ -226,10 +226,8 @@ src/
 - **Sprint 2026-03-22/23**：16 commits / 20 新测试文件 / 365 文件改动
 
 ### 进行中 🟡
-- UPG 端到端联调（generate → view → my 主链路未完整跑通）
-- OrbitControls 不稳定（方案已设计：预编译到 `public/lib/`，未落地）
-- single-slit-diffraction.html 渲染 bug
 - T3-T6 测试编写（覆盖率 ~15% → 目标 90% shared / 80% api）
+- UPG v1/v2 A/B 测试（CTO 建议跑 1 周验证生产效果）
 
 ### 未开始 ⬜
 - 监控增强（Sentry 集成、Analytics Bridge）
@@ -239,7 +237,15 @@ src/
 - 社交功能完善（评论、收藏）
 - 移动端优化
 - ISR 静态化（landing/pricing/listing 页面）
-- 剩余 109 张实验缩略图生成
+- OrbitControls 去重（175 个 HTML 内联副本 → 统一引用 `public/lib/orbit-controls.js`，代码卫生）
+
+### 已完成（本轮 2026-03-31）
+- ✅ 93 个 TS 类型错误修复（25 文件），`tsc --noEmit` 加入 CI 门控
+- ✅ 52 张缺失实验缩略图生成（Gemini 2.5 Flash Image），覆盖率 100%（182 张 / 179 实验）
+- ✅ UPG Prompt v2 升级（pedagogy + Verlet + review pipeline）— 2026-03-28 完成
+- ✅ 实验目录统一（experiments-v2 → experiments）
+- ✅ UPG 端到端联调（35 passed, 0 failed @ d53c821；pipeline test @ 33a1bc9）
+- ✅ single-slit-diffraction 渲染 bug（maxAngle 动态化，中央极大从 2% → 14% 可见）
 
 ### 下一步优先级（推荐）
 

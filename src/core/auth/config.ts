@@ -100,14 +100,6 @@ export async function getSocialProviders(configs: Record<string, string>) {
     };
   }
 
-  // apple auth
-  if (configs.apple_client_id && configs.apple_client_secret) {
-    providers.apple = {
-      clientId: configs.apple_client_id,
-      clientSecret: configs.apple_client_secret,
-    };
-  }
-
   return providers;
 }
 
