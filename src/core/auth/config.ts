@@ -89,6 +89,25 @@ export async function getSocialProviders(configs: Record<string, string>) {
     };
   }
 
+  // microsoft auth
+  if (configs.microsoft_client_id && configs.microsoft_client_secret) {
+    providers.microsoft = {
+      clientId: configs.microsoft_client_id,
+      clientSecret: configs.microsoft_client_secret,
+      ...(configs.microsoft_tenant_id
+        ? { tenantId: configs.microsoft_tenant_id }
+        : {}),
+    };
+  }
+
+  // apple auth
+  if (configs.apple_client_id && configs.apple_client_secret) {
+    providers.apple = {
+      clientId: configs.apple_client_id,
+      clientSecret: configs.apple_client_secret,
+    };
+  }
+
   return providers;
 }
 
