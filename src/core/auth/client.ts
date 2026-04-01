@@ -3,9 +3,17 @@ import { createAuthClient } from 'better-auth/react';
 
 import { envConfigs } from '@/config';
 
+function getAuthBaseURL() {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return envConfigs.auth_url;
+}
+
 // create default auth client, without plugins
 export const authClient = createAuthClient({
-  baseURL: envConfigs.auth_url,
+  baseURL: getAuthBaseURL(),
   fetchOptions: {
     retry: 3,
   },
@@ -17,7 +25,7 @@ export const { useSession, signIn, signUp, signOut } = authClient;
 // get auth client with plugins
 export function getAuthClient(configs: Record<string, string>) {
   const authClient = createAuthClient({
-    baseURL: envConfigs.auth_url,
+    baseURL: getAuthBaseURL(),
     plugins: getAuthPlugins(configs),
     fetchOptions: {
       retry: 3,
