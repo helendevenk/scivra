@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import {
-  getExperimentBySlug,
-  getStandardsForSubject,
-} from "@/shared/lib/experiments/registry";
+  getExperimentBySlugForSubjectAsync,
+  getStandardsForSubjectAsync,
+} from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
 import { ExperimentFlow } from "@/shared/blocks/experiments/experiment-flow";
 import { getSignUser } from "@/shared/models/user";
@@ -29,7 +29,12 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug, standard, subject } = await params;
-  const experiment = getExperimentBySlug(slug);
+  if (!(subject in SUBJECTS)) return {};
+
+  const experiment = await getExperimentBySlugForSubjectAsync(
+    subject as Subject,
+    slug
+  );
   if (!experiment) return {};
 
   const standardLabel = STANDARD_LABELS[standard as PrimaryStandard] ?? standard;
@@ -77,10 +82,10 @@ export default async function ExperimentDetailPage({ params }: Props) {
 
   const subjectKey = subject as Subject;
   const standardKey = standard as PrimaryStandard;
-  const subjectStandards = getStandardsForSubject(subjectKey);
+  const subjectStandards = await getStandardsForSubjectAsync(subjectKey);
   if (!subjectStandards.includes(standardKey)) notFound();
 
-  const experiment = getExperimentBySlug(slug);
+  const experiment = await getExperimentBySlugForSubjectAsync(subjectKey, slug);
   if (!experiment) notFound();
   if (experiment.subject !== subjectKey || experiment.primaryStandard !== standardKey) notFound();
 

@@ -3,10 +3,10 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import {
-  getExperimentsByStandard,
-  getExperimentsBySubject,
-  getStandardsForSubject,
-} from "@/shared/lib/experiments/registry";
+  getExperimentsByStandardForSubjectAsync,
+  getExperimentsBySubjectAsync,
+  getStandardsForSubjectAsync,
+} from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS, STANDARD_LABELS } from "@/shared/lib/experiments/subjects";
 import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
@@ -50,8 +50,10 @@ export default async function SubjectPage({ params, searchParams }: Props) {
   const activeGrade =
     grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
 
-  const standards = getStandardsForSubject(subjectKey);
-  const allSubjectExperiments = getExperimentsBySubject(subjectKey);
+  const [standards, allSubjectExperiments] = await Promise.all([
+    getStandardsForSubjectAsync(subjectKey),
+    getExperimentsBySubjectAsync(subjectKey),
+  ]);
   const totalCount = activeGrade
     ? allSubjectExperiments.filter((e) => e.gradeLevel === activeGrade).length
     : allSubjectExperiments.length;
@@ -80,14 +82,20 @@ export default async function SubjectPage({ params, searchParams }: Props) {
       </section>
 
       {/* Standards Sections */}
-      {standards.map((standard) => {
-        const experiments = getExperimentsByStandard(standard);
-        // Filter by subject and optionally by grade
-        const subjectExperiments = experiments.filter(
-          (exp) =>
-            exp.subject === subjectKey &&
-            (!activeGrade || exp.gradeLevel === activeGrade)
-        );
+      {(
+        await Promise.all(
+          standards.map(async (standard) => ({
+            standard,
+            experiments: await getExperimentsByStandardForSubjectAsync(
+              subjectKey,
+              standard
+            ),
+          }))
+        )
+      ).map(({ standard, experiments }) => {
+        const subjectExperiments = activeGrade
+          ? experiments.filter((exp) => exp.gradeLevel === activeGrade)
+          : experiments;
         if (subjectExperiments.length === 0) return null;
 
         return (

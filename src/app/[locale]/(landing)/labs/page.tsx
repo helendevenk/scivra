@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { getAllSubjectsWithCounts } from "@/shared/lib/experiments/registry";
+import { getAllSubjectsWithCountsAsync } from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS } from "@/shared/lib/experiments/subjects";
 import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
@@ -53,7 +53,7 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
   const activeGrade =
     grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
 
-  const subjectsWithCounts = getAllSubjectsWithCounts(activeGrade);
+  const subjectsWithCounts = await getAllSubjectsWithCountsAsync(activeGrade);
   const countsMap = new Map(
     subjectsWithCounts.map((s) => [s.subject, s.count])
   );

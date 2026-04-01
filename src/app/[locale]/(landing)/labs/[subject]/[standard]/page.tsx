@@ -3,9 +3,9 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import {
-  getExperimentsByStandard,
-  getStandardsForSubject,
-} from "@/shared/lib/experiments/registry";
+  getExperimentsByStandardForSubjectAsync,
+  getStandardsForSubjectAsync,
+} from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
 import type { Subject, PrimaryStandard } from "@/shared/types/experiment";
 import type { Metadata } from "next";
@@ -47,17 +47,16 @@ export default async function StandardPage({ params }: Props) {
   const subjectConfig = SUBJECTS[subjectKey];
 
   // Validate this standard actually belongs to this subject
-  const subjectStandards = getStandardsForSubject(subjectKey);
+  const subjectStandards = await getStandardsForSubjectAsync(subjectKey);
   if (!subjectStandards.includes(standardKey)) {
     notFound();
   }
 
   const t = await getTranslations("experiments");
 
-  const allExperiments = getExperimentsByStandard(standardKey);
-  // Filter to only this subject's experiments under this standard
-  const experiments = allExperiments.filter(
-    (exp) => exp.subject === subjectKey
+  const experiments = await getExperimentsByStandardForSubjectAsync(
+    subjectKey,
+    standardKey
   );
 
   const standardLabel = STANDARD_LABELS[standardKey];
