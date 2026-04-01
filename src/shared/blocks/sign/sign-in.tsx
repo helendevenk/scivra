@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { envConfigs } from '@/config';
 import { signIn } from '@/core/auth/client';
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { defaultLocale } from '@/config/locale';
@@ -53,6 +54,11 @@ export function SignIn({
     }
   }
 
+  // Build absolute callback URL (better-auth requires absolute URLs)
+  const absoluteCallbackUrl = callbackUrl.startsWith('http')
+    ? callbackUrl
+    : `${envConfigs.app_url}${callbackUrl}`;
+
   const handleSignIn = async () => {
     if (loading) {
       return;
@@ -67,7 +73,7 @@ export function SignIn({
       {
         email,
         password,
-        callbackURL: callbackUrl,
+        callbackURL: absoluteCallbackUrl,
       },
       {
         onRequest: (ctx) => {
@@ -76,7 +82,10 @@ export function SignIn({
         onResponse: (ctx) => {
           setLoading(false);
         },
-        onSuccess: (ctx) => {},
+        onSuccess: (ctx) => {
+          // Navigate to callback URL on success
+          router.push(callbackUrl);
+        },
         onError: (e: any) => {
           toast.error(e?.error?.message || 'sign in failed');
           setLoading(false);
