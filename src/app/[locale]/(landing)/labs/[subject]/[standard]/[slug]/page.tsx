@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import {
-  getAllExperiments,
   getExperimentBySlug,
   getStandardsForSubject,
 } from "@/shared/lib/experiments/registry";
@@ -15,6 +14,10 @@ import { envConfigs } from "@/config";
 import type { Subject, PrimaryStandard, Tier } from "@/shared/types/experiment";
 import type { Metadata } from "next";
 
+// Use ISR to avoid loading all experiments at build time
+export const revalidate = 3600; // 1 hour cache
+export const dynamicParams = true;
+
 interface Props {
   params: Promise<{
     locale: string;
@@ -22,17 +25,6 @@ interface Props {
     standard: string;
     slug: string;
   }>;
-}
-
-export function generateStaticParams() {
-  const allExperiments = getAllExperiments();
-  return allExperiments
-    .filter((exp) => exp.subject)
-    .map((exp) => ({
-      subject: exp.subject as string,
-      standard: exp.primaryStandard,
-      slug: exp.slug,
-    }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -5,6 +5,9 @@ import { SUBJECTS } from "@/shared/lib/experiments/subjects";
 import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
 
+// Use ISR to cache this page for 1 hour
+export const revalidate = 3600;
+
 const SUBJECT_ICONS: Record<Subject, string> = {
   physics: "⚛️",
   chemistry: "🧪",

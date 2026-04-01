@@ -3,23 +3,25 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import {
-  getStandardsForSubject,
   getExperimentsByStandard,
   getExperimentsBySubject,
+  getStandardsForSubject,
 } from "@/shared/lib/experiments/registry";
-import { SUBJECTS, SUBJECT_LIST, STANDARD_LABELS } from "@/shared/lib/experiments/subjects";
+import { SUBJECTS, STANDARD_LABELS } from "@/shared/lib/experiments/subjects";
 import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+
+// Use ISR (Incremental Static Regeneration) to cache pages for 1 hour
+// First request will be slower (loads experiment data), subsequent requests use cache
+// This avoids Vercel function timeout on cold starts
+export const revalidate = 3600; // 1 hour cache
+export const dynamicParams = true;
 
 const VALID_GRADES = new Set<string>(["K-2", "3-5", "6-8", "9-12", "AP"]);
 
 interface Props {
   params: Promise<{ locale: string; subject: string }>;
   searchParams: Promise<{ grade?: string }>;
-}
-
-export function generateStaticParams() {
-  return SUBJECT_LIST.map((subject) => ({ subject }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

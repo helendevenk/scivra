@@ -6,23 +6,16 @@ import {
   getExperimentsByStandard,
   getStandardsForSubject,
 } from "@/shared/lib/experiments/registry";
-import { SUBJECTS, SUBJECT_LIST, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
+import { SUBJECTS, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
 import type { Subject, PrimaryStandard } from "@/shared/types/experiment";
 import type { Metadata } from "next";
 
+// Use ISR to avoid loading all experiments at build time
+export const revalidate = 3600; // 1 hour cache
+export const dynamicParams = true;
+
 interface Props {
   params: Promise<{ locale: string; subject: string; standard: string }>;
-}
-
-export function generateStaticParams() {
-  const params: Array<{ subject: string; standard: string }> = [];
-  for (const subject of SUBJECT_LIST) {
-    const standards = getStandardsForSubject(subject);
-    for (const standard of standards) {
-      params.push({ subject, standard });
-    }
-  }
-  return params;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
