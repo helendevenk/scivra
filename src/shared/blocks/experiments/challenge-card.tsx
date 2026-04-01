@@ -26,6 +26,9 @@ type AnswerState = "unanswered" | "correct" | "wrong";
 export function ChallengeCard({ challenge, onComplete, onNeedHelp }: ChallengeCardProps) {
   const [answerState, setAnswerState] = useState<AnswerState>("unanswered");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [positiveFeedback] = useState(
+    () => POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)]
+  );
 
   const handleSelect = (option: string) => {
     if (answerState === "correct") return;
@@ -44,8 +47,6 @@ export function ChallengeCard({ challenge, onComplete, onNeedHelp }: ChallengeCa
     setAnswerState("unanswered");
     setSelectedOption(null);
   };
-
-  const positiveFeedback = POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
 
   return (
     <div
