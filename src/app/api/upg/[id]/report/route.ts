@@ -57,8 +57,8 @@ export async function POST(
     }
 
     return respData({ id: report.id, reportType, status: report.status });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('UPG report failed:', e);
-    return respErr(e.message || 'Failed to submit report');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to submit report');
   }
 }

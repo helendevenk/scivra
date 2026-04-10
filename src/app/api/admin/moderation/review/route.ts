@@ -76,8 +76,8 @@ export async function POST(request: Request) {
       success: true,
       record: updated,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Manual review failed:', e);
-    return respErr(e.message || 'Manual review failed');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Manual review failed');
   }
 }

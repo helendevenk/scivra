@@ -290,18 +290,18 @@ export async function POST(req: Request) {
       });
 
       return respData(result.checkoutInfo);
-    } catch (e: any) {
+    } catch (e: unknown) {
       // update order status to completed, means checkout failed
       await updateOrderByOrderNo(orderNo, {
         status: OrderStatus.COMPLETED, // means checkout failed
         checkoutInfo: JSON.stringify(checkoutOrder),
       });
 
-      return respErr('checkout failed: ' + e.message);
+      return respErr('checkout failed: ' + (e instanceof Error ? e.message : String(e)));
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('checkout failed:', e);
-    return respErr('checkout failed: ' + e.message);
+    return respErr('checkout failed: ' + (e instanceof Error ? e.message : String(e)));
   }
 }
 
@@ -325,7 +325,7 @@ async function getPaymentProductId(
         productIds[`${productId}_${checkoutCurrency}`] || productIds[productId]
       );
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('get payment product id failed:', e);
     return;
   }
@@ -352,7 +352,7 @@ async function getPromotionCode(
         promotionCodes[productId]
       );
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('get promotion code failed:', e);
     return;
   }

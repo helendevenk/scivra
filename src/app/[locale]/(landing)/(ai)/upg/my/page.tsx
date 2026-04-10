@@ -157,8 +157,8 @@ export default function UpgMyPage() {
       const { code, message, data: respData } = await resp.json();
       if (code !== 0) throw new Error(message);
       setData(respData);
-    } catch (e: any) {
-      toast.error(e.message || t('errors.load_failed'));
+    } catch (e: unknown) {
+      toast.error((e instanceof Error ? e.message : String(e)) || t('errors.load_failed'));
     } finally {
       setLoading(false);
     }
@@ -180,8 +180,8 @@ export default function UpgMyPage() {
       if (code !== 0) throw new Error(message);
       toast.success(t('errors.delete_success'));
       fetchData(page, debouncedSearch, statusFilter);
-    } catch (e: any) {
-      toast.error(e.message || t('errors.delete_failed'));
+    } catch (e: unknown) {
+      toast.error((e instanceof Error ? e.message : String(e)) || t('errors.delete_failed'));
     } finally {
       setDeletingId(null);
     }

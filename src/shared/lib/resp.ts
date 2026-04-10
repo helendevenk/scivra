@@ -1,24 +1,20 @@
-export function respData(data: any) {
-  return respJson(0, 'ok', data || []);
+export const ResponseCode = {
+  SUCCESS: 0,
+  ERROR: -1,
+} as const;
+
+export function respData<T>(data: T) {
+  return respJson(ResponseCode.SUCCESS, 'ok', data ?? []);
 }
 
 export function respOk() {
-  return respJson(0, 'ok');
+  return respJson(ResponseCode.SUCCESS, 'ok');
 }
 
 export function respErr(message: string) {
-  return respJson(-1, message);
+  return respJson(ResponseCode.ERROR, message);
 }
 
-export function respJson(code: number, message: string, data?: any) {
-  let json = {
-    code: code,
-    message: message,
-    data: data,
-  };
-  if (data) {
-    json['data'] = data;
-  }
-
-  return Response.json(json);
+export function respJson<T>(code: number, message: string, data?: T) {
+  return Response.json({ code, message, ...(data !== undefined && { data }) });
 }

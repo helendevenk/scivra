@@ -45,8 +45,8 @@ export async function POST(
     });
 
     return respData(node);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin create node failed:', e);
-    return respErr(e.message || 'Failed to create node');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to create node');
   }
 }

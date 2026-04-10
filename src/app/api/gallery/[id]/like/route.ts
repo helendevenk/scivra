@@ -23,8 +23,8 @@ export async function POST(
 
     const result = await toggleLike(user.id, id);
     return respData(result);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Gallery like failed:', e);
-    return respErr(e.message || 'Failed to toggle like');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to toggle like');
   }
 }

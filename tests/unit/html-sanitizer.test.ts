@@ -48,7 +48,7 @@ describe('HTML Sanitizer (Phase 1 Fix)', () => {
     expect(result.issues).toContain('Removed fetch() calls');
   });
 
-  it('should detect XSS vectors in attributes', () => {
+  it('should remove XSS vectors in attributes', () => {
     const html = `
       <!DOCTYPE html>
       <html>
@@ -59,10 +59,12 @@ describe('HTML Sanitizer (Phase 1 Fix)', () => {
     `;
 
     const result = sanitizeHtml(html);
-    const hasXssWarning = result.issues.some(issue =>
-      issue.includes('XSS vector detected')
+    const hasXssRemoval = result.issues.some(issue =>
+      issue.includes('Removed XSS vector')
     );
-    expect(hasXssWarning).toBe(true);
+    expect(hasXssRemoval).toBe(true);
+    // Verify the onerror attribute was actually removed
+    expect(result.sanitized).not.toMatch(/onerror\s*=/i);
   });
 
   it('should allow whitelisted CDN scripts', () => {

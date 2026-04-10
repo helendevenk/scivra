@@ -4,7 +4,10 @@ export default [
   ...nextConfig,
   {
     linterOptions: {
-      reportUnusedDisableDirectives: false,
+      reportUnusedDisableDirectives: true,
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];

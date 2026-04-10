@@ -34,8 +34,8 @@ export async function GET(
     }
 
     return respData({ ...detail, isLiked });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Gallery detail failed:', e);
-    return respErr(e.message || 'Failed to get gallery detail');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get gallery detail');
   }
 }

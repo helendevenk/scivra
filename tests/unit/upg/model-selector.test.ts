@@ -5,6 +5,6 @@ describe('selectModel', () => {
   it('should return the default model', () => {
     const model = selectModel();
 
-    expect(model).toBe('claude-sonnet-4-6');
+    expect(model).toBe('glm-5-turbo');
   });
 });

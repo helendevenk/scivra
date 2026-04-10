@@ -76,8 +76,8 @@ export async function POST(
       explanation,
       progress,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Learning path submit failed:', e);
-    return respErr(e.message || 'Failed to submit answer');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to submit answer');
   }
 }

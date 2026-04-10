@@ -75,8 +75,8 @@ export async function GET(
     }
 
     return respData({ path, nodes: safeNodes, progress });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Learning path detail failed:', e);
-    return respErr(e.message || 'Failed to get learning path');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get learning path');
   }
 }

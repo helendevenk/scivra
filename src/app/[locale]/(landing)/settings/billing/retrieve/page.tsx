@@ -65,8 +65,8 @@ export default async function RetrieveBillingPage({
     await updateSubscriptionBySubscriptionNo(subscription.subscriptionNo, {
       billingUrl: billing.billingUrl,
     });
-  } catch (error: any) {
-    return <Empty message={error.message || 'get billing failed'} />;
+  } catch (error: unknown) {
+    return <Empty message={(error instanceof Error ? error.message : String(error)) || 'get billing failed'} />;
   }
 
   if (!billingUrl) {

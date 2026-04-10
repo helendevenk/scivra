@@ -207,10 +207,10 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
         // Anonymous user just generated successfully — show registration prompt
         setShowRegistrationPrompt(true);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       stopProgressSimulation();
       setProgress(0);
-      const msg = e.message || t('errors.generation_failed');
+      const msg = (e instanceof Error ? e.message : String(e)) || t('errors.generation_failed');
       setError(msg);
       // Anonymous rate limit hit — prompt to sign in
       if (!user && msg.includes('once per day')) {
@@ -254,8 +254,8 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
       const { code, message } = await resp.json();
       if (code !== 0) throw new Error(message);
       toast.success(t('errors.report_success'));
-    } catch (e: any) {
-      toast.error(e.message || t('errors.report_failed'));
+    } catch (e: unknown) {
+      toast.error((e instanceof Error ? e.message : String(e)) || t('errors.report_failed'));
     }
   };
 

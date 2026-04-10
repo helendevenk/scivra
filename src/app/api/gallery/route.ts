@@ -42,8 +42,8 @@ export async function GET(request: Request) {
     }
 
     return respData(result);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Gallery list failed:', e);
-    return respErr(e.message || 'Failed to get gallery list');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get gallery list');
   }
 }

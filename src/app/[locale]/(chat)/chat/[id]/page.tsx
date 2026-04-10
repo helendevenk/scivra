@@ -44,7 +44,7 @@ export default function ChatPage() {
       if (data.id) {
         fetchMessages(data.id);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.log('fetch chat failed:', e);
     }
   };
@@ -72,7 +72,7 @@ export default function ChatPage() {
           metadata: item.metadata ? JSON.parse(item.metadata) : undefined,
         })) as UIMessage[]
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.log('fetch messages failed:', e);
     }
   };

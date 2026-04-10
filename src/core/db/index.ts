@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
-import { envConfigs } from '@/config';
+import { envConfigs, validateCriticalEnv } from '@/config';
 import { isCloudflareWorker } from '@/shared/lib/env';
 
 // Global database connection instance (singleton pattern)
@@ -9,6 +9,7 @@ let dbInstance: ReturnType<typeof drizzle> | null = null;
 let client: ReturnType<typeof postgres> | null = null;
 
 export function db() {
+  validateCriticalEnv();
   let databaseUrl = envConfigs.database_url;
 
   let isHyperdrive = false;

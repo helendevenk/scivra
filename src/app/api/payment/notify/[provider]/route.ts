@@ -137,10 +137,10 @@ export async function POST(
 
     // Webhook response: providers (Stripe/PayPal/Creem) expect 200 with any JSON body
     return Response.json({ code: 0, message: 'success' });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('handle payment notify failed', err);
     // Return 200 even on error to prevent provider retries flooding the system.
     // Errors are logged and monitored via Sentry.
-    return Response.json({ code: -1, message: `handle payment notify failed: ${err.message}` });
+    return Response.json({ code: -1, message: `handle payment notify failed: ${(err instanceof Error ? err.message : String(err))}` });
   }
 }

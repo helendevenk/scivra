@@ -306,9 +306,9 @@ export function Pricing({
       }
 
       window.location.href = checkoutUrl;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.log('checkout failed: ', e);
-      toast.error('checkout failed: ' + e.message);
+      toast.error('checkout failed: ' + (e instanceof Error ? e.message : String(e)));
 
       setIsLoading(false);
       setProductId(null);

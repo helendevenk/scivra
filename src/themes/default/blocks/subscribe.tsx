@@ -49,9 +49,9 @@ export function Subscribe({
       if (message) {
         toast.success(message);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setLoading(false);
-      toast.error(e.message || 'subscribe failed');
+      toast.error((e instanceof Error ? e.message : String(e)) || 'subscribe failed');
     }
   };
 
