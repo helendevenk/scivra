@@ -9,6 +9,8 @@ import {
 import { SUBJECTS, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
 import type { Subject, PrimaryStandard } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+import { envConfigs } from "@/config";
+import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
 
 // Use ISR to avoid loading all experiments at build time
 export const revalidate = 3600; // 1 hour cache
@@ -19,15 +21,16 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { subject, standard } = await params;
+  const { locale, subject, standard } = await params;
   if (!(subject in SUBJECTS)) return {};
   if (!ALL_STANDARDS.includes(standard as PrimaryStandard)) return {};
 
   const standardLabel =
     STANDARD_LABELS[standard as PrimaryStandard] ?? standard;
   return {
-    title: `${standardLabel} Virtual Labs | NeonPhysics`,
+    title: `${standardLabel} Virtual Labs | ${envConfigs.app_name}`,
     description: `Interactive ${standardLabel} virtual labs and experiments. Explore standards-aligned simulations with real-time parameter controls.`,
+    alternates: getPageAlternates(`/labs/${subject}/${standard}`, locale),
   };
 }
 
@@ -52,8 +55,6 @@ export default async function StandardPage({ params }: Props) {
     notFound();
   }
 
-  const t = await getTranslations("experiments");
-
   const experiments = await getExperimentsByStandardForSubjectAsync(
     subjectKey,
     standardKey
@@ -65,12 +66,12 @@ export default async function StandardPage({ params }: Props) {
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href={`/${locale}/labs`} className="hover:text-primary">
+        <Link href={getLocalizedPath("/labs", locale)} className="hover:text-primary">
           Labs
         </Link>
         <span className="mx-2">/</span>
         <Link
-          href={`/${locale}/labs/${subject}`}
+          href={getLocalizedPath(`/labs/${subject}`, locale)}
           className="hover:text-primary"
         >
           {subjectConfig.label}
@@ -101,7 +102,10 @@ export default async function StandardPage({ params }: Props) {
           {experiments.map((exp) => (
             <Link
               key={exp.id}
-              href={`/${locale}/labs/${subject}/${standard}/${exp.slug}`}
+              href={getLocalizedPath(
+                `/labs/${subject}/${standard}/${exp.slug}`,
+                locale
+              )}
               className="group overflow-hidden rounded-xl border border-primary/10 bg-card transition-all hover:border-primary/30 hover:shadow-lg"
             >
               {exp.thumbnail && (

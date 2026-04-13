@@ -38,10 +38,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = routing.defaultLocale;
   }
 
-  if (['zh-CN'].includes(locale)) {
-    locale = 'zh';
-  }
-
   try {
     // load all local messages
     const allMessages = await Promise.all(
@@ -49,19 +45,19 @@ export default getRequestConfig(async ({ requestLocale }) => {
     );
 
     // merge all local messages
-    const messages: any = {};
+    const messages: Record<string, unknown> = {};
 
     localeMessagesPaths.forEach((path, index) => {
       const localMessages = allMessages[index];
 
       const keys = path.split('/');
-      let current = messages;
+      let current: Record<string, unknown> = messages;
 
       for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]]) {
           current[keys[i]] = {};
         }
-        current = current[keys[i]];
+        current = current[keys[i]] as Record<string, unknown>;
       }
 
       current[keys[keys.length - 1]] = localMessages;

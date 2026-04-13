@@ -10,6 +10,7 @@ import {
 import { SUBJECTS, STANDARD_LABELS } from "@/shared/lib/experiments/subjects";
 import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
 
 // Use ISR (Incremental Static Regeneration) to cache pages for 1 hour
 // First request will be slower (loads experiment data), subsequent requests use cache
@@ -25,12 +26,13 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { subject } = await params;
+  const { locale, subject } = await params;
   if (!(subject in SUBJECTS)) return {};
   const label = SUBJECTS[subject as Subject].label;
   return {
     title: `${label} Virtual Labs | Scivra`,
     description: `Browse interactive ${label.toLowerCase()} virtual labs and experiments. Standards-aligned simulations for AP, NGSS, and K-12 curriculum.`,
+    alternates: getPageAlternates(`/labs/${subject}`, locale),
   };
 }
 
@@ -45,7 +47,6 @@ export default async function SubjectPage({ params, searchParams }: Props) {
 
   const subjectKey = subject as Subject;
   const subjectConfig = SUBJECTS[subjectKey];
-  const t = await getTranslations("experiments");
 
   const activeGrade =
     grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
@@ -62,7 +63,7 @@ export default async function SubjectPage({ params, searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href={`/${locale}/labs`} className="hover:text-primary">
+        <Link href={getLocalizedPath("/labs", locale)} className="hover:text-primary">
           Labs
         </Link>
         <span className="mx-2">/</span>
@@ -105,7 +106,7 @@ export default async function SubjectPage({ params, searchParams }: Props) {
                 {STANDARD_LABELS[standard]}
               </h2>
               <Link
-                href={`/${locale}/labs/${subject}/${standard}`}
+                href={getLocalizedPath(`/labs/${subject}/${standard}`, locale)}
                 className="text-sm font-medium text-primary hover:underline"
               >
                 View all {subjectExperiments.length} labs
@@ -116,7 +117,10 @@ export default async function SubjectPage({ params, searchParams }: Props) {
               {subjectExperiments.slice(0, 6).map((exp) => (
                 <Link
                   key={exp.id}
-                  href={`/${locale}/labs/${subject}/${standard}/${exp.slug}`}
+                  href={getLocalizedPath(
+                    `/labs/${subject}/${standard}/${exp.slug}`,
+                    locale
+                  )}
                   className="group overflow-hidden rounded-xl border border-primary/10 bg-card transition-all hover:border-primary/30 hover:shadow-lg"
                 >
                   {exp.thumbnail && (

@@ -1,5 +1,4 @@
 import moment from 'moment';
-import { useLocale } from 'next-intl';
 
 export function Time({
   value,
@@ -9,14 +8,11 @@ export function Time({
 }: {
   value: string | Date;
   placeholder?: string;
-  metadata?: Record<string, any>;
+  metadata?: {
+    format?: string;
+  };
   className?: string;
 }) {
-  let locale = useLocale();
-  if (locale === 'zh') {
-    locale = 'zh-cn';
-  }
-
   if (!value) {
     if (placeholder) {
       return <div className={className}>{placeholder}</div>;
@@ -28,8 +24,8 @@ export function Time({
   return (
     <div className={className}>
       {metadata?.format
-        ? moment(value).locale(locale).format(metadata?.format)
-        : moment(value).locale(locale).fromNow()}
+        ? moment(value).locale('en').format(metadata?.format)
+        : moment(value).locale('en').fromNow()}
     </div>
   );
 }

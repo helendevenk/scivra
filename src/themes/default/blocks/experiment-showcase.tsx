@@ -40,7 +40,7 @@ export function ExperimentShowcase({
             {section.items?.map((item, idx) => (
               <Link
                 key={idx}
-                href={item.url || '/experiments'}
+                href={item.url || '/labs'}
                 className="group border-border hover:border-primary/30 overflow-hidden rounded-xl border transition-all duration-300 hover:shadow-lg motion-reduce:transition-none"
               >
                 <div className="bg-muted relative aspect-[16/10] overflow-hidden">
@@ -93,7 +93,7 @@ export function ExperimentShowcase({
           <ScrollAnimation delay={0.3}>
             <div className="text-center">
               <Button asChild variant="outline" size="lg">
-                <Link href={(section.cta as Record<string, string>).url || '/experiments'}>
+                <Link href={(section.cta as Record<string, string>).url || '/labs'}>
                   <span>{(section.cta as Record<string, string>).title}</span>
                   <ArrowRight className="ml-2 size-4" />
                 </Link>

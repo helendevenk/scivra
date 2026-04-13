@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { UIMessage } from 'ai';
 
 import { ChatBox } from '@/shared/blocks/chat/box';
 import { Loader } from '@/shared/components/ai-elements/loader';
+import { getMetadata } from '@/shared/lib/seo';
 import { Chat } from '@/shared/types/chat';
+
+export const generateMetadata = getMetadata({
+  noIndex: true,
+});
 
 export default function ChatPage() {
   const params = useParams();
@@ -16,7 +21,43 @@ export default function ChatPage() {
     null
   );
 
-  const fetchChat = async (chatId: string) => {
+  const fetchMessages = useCallback(async (chatId: string) => {
+    try {
+      const resp = await fetch('/api/chat/messages', {
+        method: 'POST',
+        body: JSON.stringify({ chatId, page: 1, limit: 100 }),
+      });
+      if (!resp.ok) {
+        throw new Error(`request failed with status: ${resp.status}`);
+      }
+      const { code, message, data } = await resp.json();
+      if (code !== 0) {
+        throw new Error(message);
+      }
+
+      const { list } = data as {
+        list: Array<{
+          id: string;
+          role: UIMessage['role'];
+          parts?: string | null;
+          metadata?: string | null;
+        }>;
+      };
+
+      setInitialMessages(
+        list.map((item) => ({
+          id: item.id,
+          role: item.role,
+          parts: item.parts ? JSON.parse(item.parts) : [],
+          metadata: item.metadata ? JSON.parse(item.metadata) : undefined,
+        })) as UIMessage[]
+      );
+    } catch (e: unknown) {
+      console.log('fetch messages failed:', e);
+    }
+  }, []);
+
+  const fetchChat = useCallback(async (chatId: string) => {
     try {
       const resp = await fetch('/api/chat/info', {
         method: 'POST',
@@ -47,39 +88,11 @@ export default function ChatPage() {
     } catch (e: unknown) {
       console.log('fetch chat failed:', e);
     }
-  };
-
-  const fetchMessages = async (chatId: string) => {
-    try {
-      const resp = await fetch('/api/chat/messages', {
-        method: 'POST',
-        body: JSON.stringify({ chatId, page: 1, limit: 100 }),
-      });
-      if (!resp.ok) {
-        throw new Error(`request failed with status: ${resp.status}`);
-      }
-      const { code, message, data } = await resp.json();
-      if (code !== 0) {
-        throw new Error(message);
-      }
-
-      const { list } = data;
-      setInitialMessages(
-        list.map((item: any) => ({
-          id: item.id,
-          role: item.role,
-          parts: item.parts ? JSON.parse(item.parts) : [],
-          metadata: item.metadata ? JSON.parse(item.metadata) : undefined,
-        })) as UIMessage[]
-      );
-    } catch (e: unknown) {
-      console.log('fetch messages failed:', e);
-    }
-  };
+  }, [fetchMessages]);
 
   useEffect(() => {
     fetchChat(params.id as string);
-  }, [params.id]);
+  }, [fetchChat, params.id]);
 
   return initialChat && initialMessages ? (
     <ChatBox initialChat={initialChat} initialMessages={initialMessages} />

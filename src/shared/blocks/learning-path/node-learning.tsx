@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button';
@@ -29,16 +29,21 @@ interface PathData {
 interface NodeLearningProps {
   node: NodeData;
   path: PathData;
+  experimentHref?: string;
   locale: string;
 }
 
-export function NodeLearning({ node, path, locale }: NodeLearningProps) {
+export function NodeLearning({
+  node,
+  path,
+  experimentHref,
+  locale,
+}: NodeLearningProps) {
   const t = useTranslations('learn');
-  const loc = useLocale();
 
-  const pathTitle = loc === 'zh' ? path.titleZh : path.titleEn;
-  const nodeTitle = loc === 'zh' ? node.titleZh : node.titleEn;
-  const nodeDesc = loc === 'zh' ? node.descriptionZh : node.descriptionEn;
+  const pathTitle = path.titleEn;
+  const nodeTitle = node.titleEn;
+  const nodeDesc = node.descriptionEn;
   const totalNodes = path.nodeCount ?? 0;
   const isFirst = node.orderIndex === 0;
   const isLast = node.orderIndex >= totalNodes - 1;
@@ -82,10 +87,10 @@ export function NodeLearning({ node, path, locale }: NodeLearningProps) {
         </div>
       )}
 
-      {node.experimentSlug && (
+      {node.experimentSlug && experimentHref && (
         <div className="rounded-lg border border-primary/10 bg-card p-4">
           <Button asChild variant="outline">
-            <Link href={`/experiments/${node.experimentSlug}`}>
+            <Link href={experimentHref}>
               <ExternalLink className="mr-2 h-4 w-4" />
               {node.experimentSlug}
             </Link>
@@ -99,7 +104,6 @@ export function NodeLearning({ node, path, locale }: NodeLearningProps) {
           quizQuestion={node.quizQuestion}
           slug={path.slug}
           orderIndex={node.orderIndex}
-          locale={locale}
           isLast={isLast}
         />
       )}

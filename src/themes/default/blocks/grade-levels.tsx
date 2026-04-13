@@ -34,7 +34,7 @@ export function GradeLevels({
             {section.items?.map((item, idx) => (
               <Link
                 key={idx}
-                href={item.url || '/experiments'}
+                href={item.url || '/labs'}
                 className="border-border hover:border-primary group rounded-lg border p-5 text-center transition-all duration-200 hover:bg-primary/5 motion-reduce:transition-none"
               >
                 <div className="text-foreground mb-1 text-2xl font-bold">

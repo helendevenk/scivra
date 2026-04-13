@@ -13,6 +13,7 @@ import {
   Category as BlogCategoryType,
   Post as BlogPostType,
 } from '@/shared/types/blocks/blog';
+import { getLocalizedPath } from '@/shared/lib/seo';
 
 import { getTaxonomies, TaxonomyStatus, TaxonomyType } from './taxonomy';
 
@@ -289,7 +290,7 @@ export async function getLocalPage({
     author_name: frontmatter.author_name || '',
     author_image: frontmatter.author_image || '',
     author_role: '',
-    url: `/${locale}/${slug}`,
+    url: getLocalizedPath(`/${slug}`, locale),
   };
 
   return post;

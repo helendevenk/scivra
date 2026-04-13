@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useLocale } from 'next-intl';
 import { getAllDisciplines } from '@/shared/lib/upg/disciplines';
 import { cn } from '@/shared/lib/utils';
 import { Atom, FlaskConical, Dna, Sigma, Globe } from 'lucide-react';
@@ -21,7 +20,6 @@ interface DisciplineSelectorProps {
 }
 
 export function DisciplineSelector({ selected, onChange }: DisciplineSelectorProps) {
-  const locale = useLocale() as 'en' | 'zh';
   const allDisciplines = useMemo(() => getAllDisciplines(), []);
 
   return (
@@ -44,7 +42,7 @@ export function DisciplineSelector({ selected, onChange }: DisciplineSelectorPro
             )}
           >
             {Icon && <Icon className="h-4 w-4" />}
-            <span>{d.name[locale]}</span>
+            <span>{d.name.en}</span>
             {!d.enabled && (
               <span className="text-xs bg-muted-foreground/20 px-1.5 py-0.5 rounded">
                 Soon

@@ -26,7 +26,7 @@ interface UpgViewClientProps {
   htmlContent: string;
   isPublic: boolean;
   isOwner: boolean;
-  language: 'zh' | 'en';
+  language: 'en';
   isLoggedIn: boolean;
 }
 

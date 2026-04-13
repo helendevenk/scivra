@@ -328,7 +328,7 @@ export default function UpgMyPage() {
                               {getStatusText(gen.status)}
                             </span>
                             <span>
-                              {new Date(gen.createdAt).toLocaleDateString(gen.language === 'zh' ? 'zh' : 'en', {
+                              {new Date(gen.createdAt).toLocaleDateString('en-US', {
                                 year: 'numeric', month: 'short', day: 'numeric',
                               })}
                             </span>

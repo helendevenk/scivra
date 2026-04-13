@@ -2,6 +2,7 @@ import { permanentRedirect, notFound } from "next/navigation";
 import { getExperimentBySlugForSubjectAsync } from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS } from "@/shared/lib/experiments/subjects";
 import type { Subject } from "@/shared/types/experiment";
+import { getLocalizedPath } from "@/shared/lib/seo";
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
@@ -33,11 +34,13 @@ export default async function ExperimentPageRedirect({ params }: Props) {
   if (!experiment) notFound();
 
   if (!experiment.subject) {
-    permanentRedirect(`/${locale}/labs`);
+    permanentRedirect(getLocalizedPath("/labs", locale));
   }
 
-  const prefix = locale === "en" ? "" : `/${locale}`;
   permanentRedirect(
-    `${prefix}/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`
+    getLocalizedPath(
+      `/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`,
+      locale
+    )
   );
 }

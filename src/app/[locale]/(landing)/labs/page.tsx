@@ -4,6 +4,7 @@ import { getAllSubjectsWithCountsAsync } from "@/shared/lib/experiments/registry
 import { SUBJECTS } from "@/shared/lib/experiments/subjects";
 import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
 
 // Use ISR to cache this page for 1 hour
 export const revalidate = 3600;
@@ -41,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       "Explore 179+ free interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Aligned with AP, NGSS, and K-12 standards.",
     keywords:
       "virtual labs, science experiments, physics simulations, chemistry labs, biology labs, interactive learning, AP Physics, NGSS",
+    alternates: getPageAlternates("/labs", locale),
   };
 }
 
@@ -48,7 +50,6 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { grade } = await searchParams;
   setRequestLocale(locale);
-  const t = await getTranslations("experiments");
 
   const activeGrade =
     grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
@@ -82,8 +83,8 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
               value === "all" ? !activeGrade : activeGrade === value;
             const href =
               value === "all"
-                ? `/${locale}/labs`
-                : `/${locale}/labs?grade=${value}`;
+                ? getLocalizedPath("/labs", locale)
+                : getLocalizedPath(`/labs?grade=${value}`, locale);
 
             return (
               <Link
@@ -115,8 +116,8 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
             if (activeGrade && count === 0) return null;
 
             const href = activeGrade
-              ? `/${locale}/labs/${key}?grade=${activeGrade}`
-              : `/${locale}/labs/${key}`;
+              ? getLocalizedPath(`/labs/${key}?grade=${activeGrade}`, locale)
+              : getLocalizedPath(`/labs/${key}`, locale);
 
             return (
               <Link

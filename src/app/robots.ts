@@ -16,10 +16,12 @@ export default function robots(): MetadataRoute.Robots {
         '/admin/*',
         '/api/*',
         '/dashboard/*',
+        '/chat/*',
+        '/notebooks/*',
+        '/embed/*',
       ],
     },
     sitemap: `${appUrl}/sitemap.xml`,
     host: appUrl,
   };
 }
-

@@ -13,6 +13,8 @@ import { subscriptionToTier, canAccessExperiment } from "@/shared/lib/experiment
 import { envConfigs } from "@/config";
 import type { Subject, PrimaryStandard, Tier } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+import { getLocalizedPath, getPageAlternates, normalizeSeoText } from "@/shared/lib/seo";
+import { getExperimentBySlug } from "@/shared/lib/experiments/registry";
 
 // Use ISR to avoid loading all experiments at build time
 export const revalidate = 3600; // 1 hour cache
@@ -39,34 +41,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const standardLabel = STANDARD_LABELS[standard as PrimaryStandard] ?? standard;
   const appUrl = envConfigs.app_url || "https://scivra.com";
-  const prefix = locale === "en" ? "" : `/${locale}`;
-  const canonicalUrl = `${appUrl}${prefix}/labs/${subject}/${standard}/${slug}`;
+  const alternates = getPageAlternates(`/labs/${subject}/${standard}/${slug}`, locale);
+  const canonicalUrl = alternates.canonical;
   const thumbnail = experiment.thumbnail
     ? `${appUrl}${experiment.thumbnail}`
     : `${appUrl}/imgs/og-default.png`;
+  const metadataTitle =
+    normalizeSeoText(experiment.seoTitle) ||
+    `${experiment.title} | ${standardLabel} Virtual Lab | ${envConfigs.app_name}`;
 
   return {
-    title: `${experiment.title} | ${standardLabel} Virtual Lab | NeonPhysics`,
+    title: metadataTitle,
     description: experiment.description,
     keywords: experiment.seoKeywords,
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        en: `${appUrl}/labs/${subject}/${standard}/${slug}`,
-        zh: `${appUrl}/zh/labs/${subject}/${standard}/${slug}`,
-      },
-    },
+    alternates,
     openGraph: {
-      title: `${experiment.title} | ${standardLabel} Virtual Lab`,
+      title: metadataTitle,
       description: experiment.description,
       type: "article",
       url: canonicalUrl,
       images: [{ url: thumbnail, width: 1200, height: 630, alt: experiment.title }],
-      siteName: "NeonPhysics",
+      siteName: envConfigs.app_name,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${experiment.title} | ${standardLabel} Virtual Lab`,
+      title: metadataTitle,
       description: experiment.description,
       images: [thumbnail],
     },
@@ -92,8 +91,7 @@ export default async function ExperimentDetailPage({ params }: Props) {
   const subjectConfig = SUBJECTS[subjectKey];
   const standardLabel = STANDARD_LABELS[standardKey];
   const appUrl = envConfigs.app_url || "https://scivra.com";
-  const prefix = locale === "en" ? "" : `/${locale}`;
-  const pageUrl = `${appUrl}${prefix}/labs/${subject}/${standard}/${slug}`;
+  const pageUrl = getPageAlternates(`/labs/${subject}/${standard}/${slug}`, locale).canonical;
 
   // Real auth
   let userTier: Tier = "free";
@@ -124,7 +122,7 @@ export default async function ExperimentDetailPage({ params }: Props) {
     image: experiment.thumbnail ? `${appUrl}${experiment.thumbnail}` : undefined,
     provider: {
       "@type": "Organization",
-      name: "NeonPhysics",
+      name: envConfigs.app_name,
       url: appUrl,
     },
     teaches: experiment.tags,
@@ -141,19 +139,19 @@ export default async function ExperimentDetailPage({ params }: Props) {
         "@type": "ListItem",
         position: 1,
         name: "Labs",
-        item: `${appUrl}${prefix}/labs`,
+        item: getPageAlternates("/labs", locale).canonical,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: subjectConfig.label,
-        item: `${appUrl}${prefix}/labs/${subject}`,
+        item: getPageAlternates(`/labs/${subject}`, locale).canonical,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: standardLabel,
-        item: `${appUrl}${prefix}/labs/${subject}/${standard}`,
+        item: getPageAlternates(`/labs/${subject}/${standard}`, locale).canonical,
       },
       {
         "@type": "ListItem",
@@ -178,15 +176,18 @@ export default async function ExperimentDetailPage({ params }: Props) {
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-muted-foreground">
-          <Link href={`/${locale}/labs`} className="hover:text-primary">
+          <Link href={getLocalizedPath("/labs", locale)} className="hover:text-primary">
             Labs
           </Link>
           <span className="mx-2">/</span>
-          <Link href={`/${locale}/labs/${subject}`} className="hover:text-primary">
+          <Link href={getLocalizedPath(`/labs/${subject}`, locale)} className="hover:text-primary">
             {subjectConfig.label}
           </Link>
           <span className="mx-2">/</span>
-          <Link href={`/${locale}/labs/${subject}/${standard}`} className="hover:text-primary">
+          <Link
+            href={getLocalizedPath(`/labs/${subject}/${standard}`, locale)}
+            className="hover:text-primary"
+          >
             {standardLabel}
           </Link>
           <span className="mx-2">/</span>
@@ -250,13 +251,25 @@ export default async function ExperimentDetailPage({ params }: Props) {
             </h2>
             <div className="flex flex-wrap gap-2">
               {experiment.relatedExperiments.map((relId) => (
-                <Link
-                  key={relId}
-                  href={`/${locale}/labs`}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm hover:border-primary/40 hover:text-primary transition-colors"
-                >
-                  {relId.replace(/-/g, " ")}
-                </Link>
+                (() => {
+                  const relatedExperiment = getExperimentBySlug(relId);
+                  const relatedHref = relatedExperiment
+                    ? getLocalizedPath(
+                        `/labs/${relatedExperiment.subject}/${relatedExperiment.primaryStandard}/${relatedExperiment.slug}`,
+                        locale
+                      )
+                    : getLocalizedPath("/labs", locale);
+
+                  return (
+                    <Link
+                      key={relId}
+                      href={relatedHref}
+                      className="rounded-md border border-border px-3 py-1.5 text-sm hover:border-primary/40 hover:text-primary transition-colors"
+                    >
+                      {relatedExperiment?.title ?? relId.replace(/-/g, " ")}
+                    </Link>
+                  );
+                })()
               ))}
             </div>
           </aside>

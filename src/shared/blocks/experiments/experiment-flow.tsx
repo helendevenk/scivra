@@ -118,7 +118,7 @@ export function ExperimentFlow({ experiment, userTier, canAccess, locale }: Expe
       standard: experiment.primaryStandard,
     }));
 
-  const shareUrl = `https://neonphysics.com/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://scivra.com"}/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[200px_1fr]">

@@ -1,6 +1,69 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { envConfigs } from '@/config';
+import { defaultLocale, locales } from '@/config/locale';
+
+function normalizePath(path: string) {
+  if (!path) {
+    return '/';
+  }
+
+  if (!path.startsWith('/')) {
+    return `/${path}`;
+  }
+
+  return path;
+}
+
+export function getLocalizedPath(path: string, locale: string) {
+  const normalizedPath = normalizePath(path);
+  const prefix =
+    !locale || locale === defaultLocale ? '' : `/${locale}`;
+
+  if (normalizedPath === '/') {
+    return prefix || '/';
+  }
+
+  return `${prefix}${normalizedPath}`;
+}
+
+export function getAbsoluteUrl(path: string) {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  return `${envConfigs.app_url}${normalizePath(path)}`;
+}
+
+export function getPageAlternates(path: string, locale: string) {
+  const normalizedPath = normalizePath(path);
+
+  return {
+    canonical: getAbsoluteUrl(getLocalizedPath(normalizedPath, locale)),
+    languages: Object.fromEntries([
+      ...locales.map((supportedLocale) => [
+        supportedLocale,
+        getAbsoluteUrl(getLocalizedPath(normalizedPath, supportedLocale)),
+      ]),
+      ['x-default', getAbsoluteUrl(getLocalizedPath(normalizedPath, defaultLocale))],
+    ]),
+  };
+}
+
+export function normalizeSeoText(value?: string | null) {
+  if (!value) {
+    return '';
+  }
+
+  const appName = envConfigs.app_name || 'Scivra';
+  const appHost = envConfigs.app_url
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '');
+
+  return value
+    .replace(/NeonPhysics/g, appName)
+    .replace(/neonphysics\.com/gi, appHost);
+}
 
 // get metadata for page component
 export function getMetadata(
@@ -37,7 +100,11 @@ export function getMetadata(
     );
 
     // translated metadata
-    let translatedMetadata: any = {};
+    let translatedMetadata: {
+      title?: string;
+      description?: string;
+      keywords?: string;
+    } = {};
     if (options.metadataKey) {
       translatedMetadata = await getTranslatedMetadata(
         options.metadataKey,
@@ -46,10 +113,11 @@ export function getMetadata(
     }
 
     // canonical url
-    const canonicalUrl = await getCanonicalUrl(
+    const alternates = await getCanonicalAlternates(
       options.canonicalUrl || '',
       locale || ''
     );
+    const canonicalUrl = alternates.canonical;
 
     const title =
       passedMetadata.title || translatedMetadata.title || defaultMetadata.title;
@@ -73,6 +141,7 @@ export function getMetadata(
     }
 
     return {
+      metadataBase: new URL(envConfigs.app_url),
       title:
         passedMetadata.title ||
         translatedMetadata.title ||
@@ -85,9 +154,7 @@ export function getMetadata(
         passedMetadata.keywords ||
         translatedMetadata.keywords ||
         defaultMetadata.keywords,
-      alternates: {
-        canonical: canonicalUrl,
-      },
+      alternates,
 
       openGraph: {
         type: 'website',
@@ -104,7 +171,6 @@ export function getMetadata(
         title,
         description,
         images: [imageUrl.toString()],
-        site: envConfigs.app_url,
       },
 
       robots: {
@@ -128,28 +194,16 @@ async function getTranslatedMetadata(metadataKey: string, locale: string) {
   };
 }
 
-async function getCanonicalUrl(canonicalUrl: string, locale: string) {
+async function getCanonicalAlternates(canonicalUrl: string, locale: string) {
   if (!canonicalUrl) {
     canonicalUrl = '/';
   }
 
-  if (canonicalUrl.startsWith('http')) {
-    // full url
-    canonicalUrl = canonicalUrl;
-  } else {
-    // relative path
-    if (!canonicalUrl.startsWith('/')) {
-      canonicalUrl = `/${canonicalUrl}`;
-    }
-
-    canonicalUrl = `${envConfigs.app_url}${
-      !locale || locale === 'en' ? '' : `/${locale}`
-    }${canonicalUrl}`;
-
-    if (locale !== 'en' && canonicalUrl.endsWith('/')) {
-      canonicalUrl = canonicalUrl.slice(0, -1);
-    }
+  if (canonicalUrl.startsWith('http://') || canonicalUrl.startsWith('https://')) {
+    return {
+      canonical: canonicalUrl,
+    };
   }
 
-  return canonicalUrl;
+  return getPageAlternates(canonicalUrl, locale);
 }

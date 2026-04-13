@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('UPG — Generator Page', () => {
   test('UPG page loads with input form', async ({ page }) => {
-    const res = await page.goto('/en/upg');
+    const res = await page.goto('/upg');
     expect(res?.status()).toBe(200);
 
     // Page title
@@ -14,7 +14,7 @@ test.describe('UPG — Generator Page', () => {
   });
 
   test('empty prompt keeps generate button disabled', async ({ page }) => {
-    await page.goto('/en/upg');
+    await page.goto('/upg');
 
     // The textarea should be empty
     const textarea = page.locator('textarea').first();
@@ -26,7 +26,7 @@ test.describe('UPG — Generator Page', () => {
   });
 
   test('valid prompt enables generate button', async ({ page }) => {
-    await page.goto('/en/upg');
+    await page.goto('/upg');
 
     const textarea = page.locator('textarea').first();
     await textarea.fill('Doppler Effect');
@@ -39,7 +39,7 @@ test.describe('UPG — Generator Page', () => {
 
 test.describe('UPG — Gallery Page', () => {
   test('gallery page loads with published UPGs', async ({ page }) => {
-    const res = await page.goto('/en/gallery');
+    const res = await page.goto('/gallery');
     expect(res?.status()).toBe(200);
 
     // Page should have a heading
@@ -50,7 +50,7 @@ test.describe('UPG — Gallery Page', () => {
   });
 
   test('gallery card shows content if items exist', async ({ page }) => {
-    await page.goto('/en/gallery');
+    await page.goto('/gallery');
     await page.waitForTimeout(2000); // wait for client-side render
 
     const cards = page.locator('a[href*="/gallery/"], [data-testid="gallery-card"]');
@@ -65,7 +65,7 @@ test.describe('UPG — Gallery Page', () => {
   });
 
   test('gallery detail page loads when clicking card', async ({ page }) => {
-    await page.goto('/en/gallery');
+    await page.goto('/gallery');
     await page.waitForTimeout(2000);
 
     const cards = page.locator('a[href*="/gallery/"]');

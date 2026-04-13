@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { BookOpen, CheckCircle } from 'lucide-react';
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -35,10 +35,9 @@ interface LearningPathCardProps {
 
 export function LearningPathCard({ path, progress }: LearningPathCardProps) {
   const t = useTranslations('learn');
-  const locale = useLocale();
 
-  const title = locale === 'zh' ? path.titleZh : path.titleEn;
-  const description = locale === 'zh' ? path.descriptionZh : path.descriptionEn;
+  const title = path.titleEn;
+  const description = path.descriptionEn;
   const total = path.nodeCount ?? 0;
   const current = progress?.currentNode ?? 0;
   const isCompleted = progress?.completed ?? false;

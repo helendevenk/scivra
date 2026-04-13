@@ -18,7 +18,7 @@ import {
   User,
   Waves,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Link } from '@/core/i18n/navigation';
@@ -59,7 +59,6 @@ interface UpgGeneratorProps {
 }
 
 export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
-  const locale = useLocale();
   const t = useTranslations('upg');
   const { user, isCheckSign, setIsShowSignModal, fetchUserCredits } =
     useAppContext();
@@ -184,7 +183,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: trimmed,
-          language: locale === 'en' ? 'en' : 'zh',
+          language: 'en',
           discipline,
           isRegenerate,
         }),
@@ -328,7 +327,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                   <button
                     key={tmpl.key}
                     type="button"
-                    onClick={() => setPrompt(locale === 'en' ? tmpl.prompt_en : tmpl.prompt_zh)}
+                    onClick={() => setPrompt(tmpl.prompt_en)}
                     disabled={isGenerating}
                     className={cn(
                       'group relative flex items-center gap-3 rounded-lg border p-3 text-left cursor-pointer',
@@ -438,7 +437,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                         <span className="text-xs text-muted-foreground">
-                          {new Date(gen.createdAt).toLocaleDateString(locale === 'en' ? 'en' : 'zh', {
+                          {new Date(gen.createdAt).toLocaleDateString('en-US', {
                             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
                           })}
                         </span>

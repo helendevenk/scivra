@@ -1,56 +1,30 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Navigation — Desktop', () => {
-  test('main navigation links work (Experiments, Pricing, Blog)', async ({
+  test('homepage exposes core product links without locale prefixes', async ({
     page,
   }) => {
-    await page.goto('/en');
+    await page.goto('/');
+    const labsLink = page.locator('a[href="/labs"]').first();
+    const pricingLink = page.locator('a[href="/pricing"]').first();
 
-    // Experiments link — direct nav item (no dropdown)
-    const experimentsLink = page
-      .locator('header')
-      .getByText('Experiments', { exact: true })
-      .first();
-    await expect(experimentsLink).toBeVisible();
-    await experimentsLink.click();
-    await page.waitForURL(/\/experiments/);
-    await expect(page.locator('h1').first()).toBeVisible();
-
-    // Go back to home
-    await page.goto('/en');
-
-    // Pricing link — direct nav item
-    const pricingLink = page
-      .locator('header')
-      .getByText('Pricing', { exact: true })
-      .first();
+    await expect(labsLink).toBeVisible();
     await expect(pricingLink).toBeVisible();
+
+    await labsLink.click();
+    await page.waitForURL('/labs');
+    await expect(page.url()).not.toContain('/en/');
+
+    await page.goto('/');
     await pricingLink.click();
-    await page.waitForURL(/\/pricing/);
-    await expect(page.locator('h1').first()).toBeVisible();
-
-    // Blog is under "Content" dropdown — click Content trigger, then Blog
-    await page.goto('/en');
-    const contentTrigger = page
-      .locator('header')
-      .getByText('Content', { exact: true })
-      .first();
-
-    if (await contentTrigger.isVisible()) {
-      await contentTrigger.click();
-
-      const blogLink = page.getByText('Blog', { exact: true }).first();
-      await expect(blogLink).toBeVisible();
-      await blogLink.click();
-      await page.waitForURL(/\/blog/);
-      await expect(page.locator('h1').first()).toBeVisible();
-    }
+    await page.waitForURL('/pricing');
+    await expect(page.url()).not.toContain('/en/');
   });
 
   test('mobile hamburger menu opens and links work', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/en');
+    await page.goto('/');
 
     // Hamburger button should be visible on mobile
     const hamburger = page.locator('button[aria-label*="Menu"]').first();
@@ -64,18 +38,16 @@ test.describe('Navigation — Desktop', () => {
     await expect(mobileNav).toBeVisible();
 
     // Click Experiments link in mobile menu
-    const experimentsLink = mobileNav
-      .getByText('Experiments', { exact: true })
-      .first();
-    await expect(experimentsLink).toBeVisible();
-    await experimentsLink.click();
+    const pricingLink = mobileNav.locator('a[href="/pricing"]').first();
+    await expect(pricingLink).toBeVisible();
+    await pricingLink.click();
 
-    await page.waitForURL(/\/experiments/);
+    await page.waitForURL('/pricing');
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
   test('footer links work', async ({ page }) => {
-    await page.goto('/en');
+    await page.goto('/');
 
     // Scroll to footer
     const footer = page.locator('footer').first();
@@ -104,7 +76,7 @@ test.describe('Navigation — Desktop', () => {
   });
 
   test('logo links to homepage', async ({ page }) => {
-    await page.goto('/en/experiments');
+    await page.goto('/labs');
 
     // Brand logo should link to home
     const logo = page.locator('header a').first();
@@ -113,12 +85,12 @@ test.describe('Navigation — Desktop', () => {
     await logo.click();
 
     // Should navigate to homepage (URL should be / or /en)
-    await page.waitForURL(/\/(en)?$/);
+    await page.waitForURL('/');
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
   test('404 page for invalid route', async ({ page }) => {
-    await page.goto('/en/this-route-does-not-exist-12345');
+    await page.goto('/this-route-does-not-exist-12345');
 
     // App renders error/not-found page with "Something went wrong" or similar
     await expect(
@@ -127,25 +99,22 @@ test.describe('Navigation — Desktop', () => {
   });
 
   test('back button navigation works', async ({ page }) => {
-    // Navigate: home -> experiments -> detail -> back -> back
-    await page.goto('/en');
+    await page.goto('/');
     await expect(page.locator('h1').first()).toBeVisible();
     const homeUrl = page.url();
 
-    await page.goto('/en/experiments');
+    await page.goto('/labs');
     await expect(page.locator('h1').first()).toBeVisible();
 
-    await page.goto('/en/experiments/newtons-laws-of-motion');
+    await page.goto('/labs/physics/ngss-hs/newtons-laws-of-motion');
     await expect(page.locator('h1').first()).toBeVisible();
 
-    // Go back to experiments list
     await page.goBack();
-    await page.waitForURL(/\/experiments$/);
-    await expect(page.locator('h1').first()).toHaveText(
-      'Physics Experiments'
+    await page.waitForURL('/labs');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Interactive Science Labs'
     );
 
-    // Go back to homepage
     await page.goBack();
     expect(page.url()).toBe(homeUrl);
   });

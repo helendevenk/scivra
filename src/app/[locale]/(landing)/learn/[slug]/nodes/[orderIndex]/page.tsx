@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { getExperimentBySlug } from '@/shared/lib/experiments/registry';
+import { getLocalizedPath } from '@/shared/lib/seo';
 
 import {
   getPublishedPathBySlug,
@@ -26,8 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!node) return {};
 
   return {
-    title: locale === 'zh' ? node.titleZh : node.titleEn,
-    description: locale === 'zh' ? node.descriptionZh : node.descriptionEn,
+    title: node.titleEn,
+    description: node.descriptionEn,
+    robots: {
+      index: false,
+      follow: false,
+    },
   };
 }
 
@@ -46,6 +52,15 @@ export default async function NodePage({ params }: Props) {
 
   const user = await getUserInfo();
   const access = await checkNodeAccess(orderIndex, user);
+  const experiment = node.experimentSlug
+    ? getExperimentBySlug(node.experimentSlug)
+    : undefined;
+  const experimentHref = experiment
+    ? getLocalizedPath(
+        `/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`,
+        locale
+      )
+    : undefined;
 
   if (!access.allowed) {
     return <NodePaywall reason={access.reason!} />;
@@ -55,6 +70,7 @@ export default async function NodePage({ params }: Props) {
     <NodeLearning
       node={node}
       path={path}
+      experimentHref={experimentHref}
       locale={locale}
     />
   );

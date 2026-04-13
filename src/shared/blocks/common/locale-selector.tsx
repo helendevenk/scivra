@@ -1,7 +1,5 @@
 'use client';
-/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
 
-import { useEffect, useState } from 'react';
 import { Check, Globe, Languages } from 'lucide-react';
 import { useLocale } from 'next-intl';
 
@@ -24,11 +22,11 @@ export function LocaleSelector({
   const currentLocale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
+  const isSingleLocale = Object.keys(localeNames).length <= 1;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (isSingleLocale) {
+    return null;
+  }
 
   const handleSwitchLanguage = (value: string) => {
     if (value !== currentLocale) {
@@ -39,29 +37,6 @@ export function LocaleSelector({
       });
     }
   };
-
-  // Return a placeholder during SSR to avoid hydration mismatch
-  if (!mounted) {
-    return (
-      <Button
-        variant={type === 'icon' ? 'ghost' : 'outline'}
-        size={type === 'icon' ? 'icon' : 'sm'}
-        className={
-          type === 'icon' ? 'h-auto w-auto p-0' : 'hover:bg-primary/10'
-        }
-        disabled
-      >
-        {type === 'icon' ? (
-          <Languages size={18} />
-        ) : (
-          <>
-            <Globe size={16} />
-            {localeNames[currentLocale]}
-          </>
-        )}
-      </Button>
-    );
-  }
 
   return (
     <DropdownMenu>
