@@ -17,7 +17,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug, orderIndex: orderStr, locale } = await params;
+  const { orderIndex: orderStr, locale, slug } = await params;
   const orderIndex = parseInt(orderStr, 10);
   if (isNaN(orderIndex)) return {};
 
@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!node) return {};
 
   return {
-    title: node.titleEn,
-    description: node.descriptionEn,
+    title: locale === 'zh' ? node.titleZh : node.titleEn,
+    description: locale === 'zh' ? node.descriptionZh : node.descriptionEn,
     robots: {
       index: false,
       follow: false,
@@ -52,9 +52,7 @@ export default async function NodePage({ params }: Props) {
 
   const user = await getUserInfo();
   const access = await checkNodeAccess(orderIndex, user);
-  const experiment = node.experimentSlug
-    ? getExperimentBySlug(node.experimentSlug)
-    : undefined;
+  const experiment = node.experimentSlug ? getExperimentBySlug(node.experimentSlug) : undefined;
   const experimentHref = experiment
     ? getLocalizedPath(
         `/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`,

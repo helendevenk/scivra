@@ -11,9 +11,8 @@ import {
 } from '@/shared/models/learning_path';
 import { getUserInfo } from '@/shared/models/user';
 import { LearningPathDetail } from '@/shared/blocks/learning-path';
-import { envConfigs } from '@/config';
-import { getPageAlternates } from '@/shared/lib/seo';
 import { buildLearningPathJsonLd } from '@/shared/lib/seo/json-ld';
+import { getPageAlternates, getSiteUrl } from '@/shared/lib/seo';
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
@@ -23,9 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
   const path = await getPublishedPathBySlug(slug);
   if (!path) return {};
+
   return {
-    title: path.titleEn,
-    description: path.descriptionEn,
+    title: locale === 'zh' ? path.titleZh : path.titleEn,
+    description: locale === 'zh' ? path.descriptionZh : path.descriptionEn,
     alternates: getPageAlternates(`/learn/${slug}`, locale),
   };
 }
@@ -71,9 +71,9 @@ export default async function LearnDetailPage({ params }: Props) {
     progress = await getOrCreateProgress(user.id, path.id);
   }
 
-  const siteUrl = envConfigs.app_url || 'https://scivra.com';
-  const title = path.titleEn;
-  const description = path.descriptionEn;
+  const siteUrl = getSiteUrl();
+  const title = locale === 'zh' ? path.titleZh : path.titleEn;
+  const description = locale === 'zh' ? path.descriptionZh : path.descriptionEn;
   const jsonLd = buildLearningPathJsonLd({
     title,
     description,
@@ -91,11 +91,7 @@ export default async function LearnDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <LearningPathDetail
-        path={path}
-        nodes={safeNodes}
-        progress={progress}
-      />
+      <LearningPathDetail path={path} nodes={safeNodes} progress={progress} />
     </div>
   );
 }

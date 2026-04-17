@@ -1,9 +1,9 @@
 import { MetadataRoute } from 'next';
 
-import { envConfigs } from '@/config';
+import { getSiteUrl } from '@/shared/lib/seo';
 
 export default function robots(): MetadataRoute.Robots {
-  const appUrl = envConfigs.app_url;
+  const appUrl = getSiteUrl();
 
   return {
     rules: {

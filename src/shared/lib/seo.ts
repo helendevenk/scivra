@@ -15,10 +15,25 @@ function normalizePath(path: string) {
   return path;
 }
 
+export function getSiteUrl() {
+  const rawUrl = envConfigs.app_url || 'https://scivra.com';
+
+  try {
+    const url = new URL(rawUrl);
+    if (url.hostname === 'www.scivra.com') {
+      url.hostname = 'scivra.com';
+    }
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return rawUrl
+      .replace(/^https:\/\/www\.scivra\.com/i, 'https://scivra.com')
+      .replace(/\/$/, '');
+  }
+}
+
 export function getLocalizedPath(path: string, locale: string) {
   const normalizedPath = normalizePath(path);
-  const prefix =
-    !locale || locale === defaultLocale ? '' : `/${locale}`;
+  const prefix = !locale || locale === defaultLocale ? '' : `/${locale}`;
 
   if (normalizedPath === '/') {
     return prefix || '/';
@@ -32,7 +47,7 @@ export function getAbsoluteUrl(path: string) {
     return path;
   }
 
-  return `${envConfigs.app_url}${normalizePath(path)}`;
+  return `${getSiteUrl()}${normalizePath(path)}`;
 }
 
 export function getPageAlternates(path: string, locale: string) {
@@ -56,23 +71,20 @@ export function normalizeSeoText(value?: string | null) {
   }
 
   const appName = envConfigs.app_name || 'Scivra';
-  const appHost = envConfigs.app_url
-    .replace(/^https?:\/\//, '')
-    .replace(/\/$/, '');
+  const appHost = getSiteUrl().replace(/^https?:\/\//, '');
 
   return value
     .replace(/NeonPhysics/g, appName)
     .replace(/neonphysics\.com/gi, appHost);
 }
 
-// get metadata for page component
 export function getMetadata(
   options: {
     title?: string;
     description?: string;
     keywords?: string;
     metadataKey?: string;
-    canonicalUrl?: string; // relative path or full url
+    canonicalUrl?: string;
     imageUrl?: string;
     appName?: string;
     noIndex?: boolean;
@@ -86,37 +98,25 @@ export function getMetadata(
     const { locale } = await params;
     setRequestLocale(locale);
 
-    // passed metadata
     const passedMetadata = {
       title: options.title,
       description: options.description,
       keywords: options.keywords,
     };
 
-    // default metadata
-    const defaultMetadata = await getTranslatedMetadata(
-      defaultMetadataKey,
-      locale
-    );
+    const defaultMetadata = await getTranslatedMetadata(defaultMetadataKey, locale);
 
-    // translated metadata
     let translatedMetadata: {
       title?: string;
       description?: string;
       keywords?: string;
     } = {};
+
     if (options.metadataKey) {
-      translatedMetadata = await getTranslatedMetadata(
-        options.metadataKey,
-        locale
-      );
+      translatedMetadata = await getTranslatedMetadata(options.metadataKey, locale);
     }
 
-    // canonical url
-    const alternates = await getCanonicalAlternates(
-      options.canonicalUrl || '',
-      locale || ''
-    );
+    const alternates = await getCanonicalAlternates(options.canonicalUrl || '', locale || '');
     const canonicalUrl = alternates.canonical;
 
     const title =
@@ -126,53 +126,41 @@ export function getMetadata(
       translatedMetadata.description ||
       defaultMetadata.description;
 
-    // image url
     let imageUrl = options.imageUrl || '/logo.png';
-    if (imageUrl.startsWith('http')) {
-      imageUrl = imageUrl;
-    } else {
-      imageUrl = `${envConfigs.app_url}${imageUrl}`;
+    if (!imageUrl.startsWith('http')) {
+      imageUrl = `${getSiteUrl()}${imageUrl}`;
     }
 
-    // app name
     let appName = options.appName;
     if (!appName) {
-      appName = envConfigs.app_name || '';
+      appName = envConfigs.app_name || 'Scivra';
     }
 
     return {
-      metadataBase: new URL(envConfigs.app_url),
-      title:
-        passedMetadata.title ||
-        translatedMetadata.title ||
-        defaultMetadata.title,
-      description:
-        passedMetadata.description ||
-        translatedMetadata.description ||
-        defaultMetadata.description,
+      metadataBase: new URL(getSiteUrl()),
+      title,
+      description,
       keywords:
         passedMetadata.keywords ||
         translatedMetadata.keywords ||
         defaultMetadata.keywords,
       alternates,
-
       openGraph: {
         type: 'website',
-        locale: locale,
+        locale,
         url: canonicalUrl,
         title,
         description,
         siteName: appName,
         images: [imageUrl.toString()],
       },
-
       twitter: {
         card: 'summary_large_image',
         title,
         description,
         images: [imageUrl.toString()],
+        site: getSiteUrl(),
       },
-
       robots: {
         index: options.noIndex ? false : true,
         follow: options.noIndex ? false : true,

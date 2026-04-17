@@ -1,10 +1,8 @@
 import type { Experiment } from '@/shared/types/experiment';
-import { envConfigs } from '@/config';
-import {
-  getAbsoluteUrl,
-  getLocalizedPath,
-  normalizeSeoText,
-} from '@/shared/lib/seo';
+
+import { getAbsoluteUrl, getLocalizedPath, normalizeSeoText } from '@/shared/lib/seo';
+
+const SITE_NAME = 'Scivra';
 
 /**
  * Build JSON-LD structured data for an experiment page.
@@ -15,7 +13,7 @@ export function buildExperimentJsonLd(input: {
   siteUrl: string;
   locale?: string;
 }): Record<string, unknown> {
-  const { experiment, locale = 'en' } = input;
+  const { experiment, siteUrl, locale = 'en' } = input;
   const url = getAbsoluteUrl(
     getLocalizedPath(
       `/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`,
@@ -35,8 +33,8 @@ export function buildExperimentJsonLd(input: {
     isAccessibleForFree: experiment.tier === 'free',
     provider: {
       '@type': 'Organization',
-      name: envConfigs.app_name,
-      url: envConfigs.app_url,
+      name: SITE_NAME,
+      url: siteUrl,
     },
     about: {
       '@type': 'Thing',
@@ -97,7 +95,7 @@ export function buildLearningPathJsonLd(input: {
     url,
     provider: {
       '@type': 'Organization',
-      name: envConfigs.app_name,
+      name: SITE_NAME,
       url: siteUrl,
     },
     educationalLevel: mapDifficultyToLevel(level),

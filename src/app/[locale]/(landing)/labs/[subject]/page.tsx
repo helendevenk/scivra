@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import {
   getExperimentsByStandardForSubjectAsync,
   getExperimentsBySubjectAsync,
@@ -12,10 +12,7 @@ import type { Subject, GradeLevel } from "@/shared/types/experiment";
 import type { Metadata } from "next";
 import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
 
-// Use ISR (Incremental Static Regeneration) to cache pages for 1 hour
-// First request will be slower (loads experiment data), subsequent requests use cache
-// This avoids Vercel function timeout on cold starts
-export const revalidate = 3600; // 1 hour cache
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 const VALID_GRADES = new Set<string>(["K-2", "3-5", "6-8", "9-12", "AP"]);
@@ -41,13 +38,10 @@ export default async function SubjectPage({ params, searchParams }: Props) {
   const { grade } = await searchParams;
   setRequestLocale(locale);
 
-  if (!(subject in SUBJECTS)) {
-    notFound();
-  }
+  if (!(subject in SUBJECTS)) notFound();
 
   const subjectKey = subject as Subject;
   const subjectConfig = SUBJECTS[subjectKey];
-
   const activeGrade =
     grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
 
@@ -61,7 +55,6 @@ export default async function SubjectPage({ params, searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
-      {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href={getLocalizedPath("/labs", locale)} className="hover:text-primary">
           Labs
@@ -70,27 +63,20 @@ export default async function SubjectPage({ params, searchParams }: Props) {
         <span className="text-foreground">{subjectConfig.label}</span>
       </nav>
 
-      {/* Header */}
       <section className="mb-10">
         <h1 className="font-heading mb-2 text-3xl font-bold text-foreground md:text-4xl">
           {subjectConfig.label} Virtual Labs
         </h1>
         <p className="text-muted-foreground">
-          {totalCount} interactive{" "}
-          {totalCount === 1 ? "experiment" : "experiments"} aligned with
-          curriculum standards.
+          {totalCount} interactive {totalCount === 1 ? "experiment" : "experiments"} aligned with curriculum standards.
         </p>
       </section>
 
-      {/* Standards Sections */}
       {(
         await Promise.all(
           standards.map(async (standard) => ({
             standard,
-            experiments: await getExperimentsByStandardForSubjectAsync(
-              subjectKey,
-              standard
-            ),
+            experiments: await getExperimentsByStandardForSubjectAsync(subjectKey, standard),
           }))
         )
       ).map(({ standard, experiments }) => {
@@ -117,10 +103,7 @@ export default async function SubjectPage({ params, searchParams }: Props) {
               {subjectExperiments.slice(0, 6).map((exp) => (
                 <Link
                   key={exp.id}
-                  href={getLocalizedPath(
-                    `/labs/${subject}/${standard}/${exp.slug}`,
-                    locale
-                  )}
+                  href={getLocalizedPath(`/labs/${subject}/${standard}/${exp.slug}`, locale)}
                   className="group overflow-hidden rounded-xl border border-primary/10 bg-card transition-all hover:border-primary/30 hover:shadow-lg"
                 >
                   {exp.thumbnail && (
@@ -136,36 +119,19 @@ export default async function SubjectPage({ params, searchParams }: Props) {
                   )}
                   <div className="p-4">
                     <div className="mb-2 flex items-center justify-between">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          exp.tier === "free"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                        }`}
-                      >
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        exp.tier === "free"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                      }`}>
                         {exp.tier === "free" ? "Free" : "Pro 🔒"}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          exp.difficulty === "beginner"
-                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                            : exp.difficulty === "intermediate"
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                              : "bg-red-500/10 text-red-700 dark:text-red-400"
-                        }`}
-                      >
-                        {exp.difficulty}
                       </span>
                     </div>
                     <h3 className="font-heading mb-1 text-base font-semibold text-foreground group-hover:text-primary">
                       {exp.title}
                     </h3>
-                    <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
-                      {exp.subtitle}
-                    </p>
-                    <span className="text-xs text-muted-foreground">
-                      ~{exp.estimatedTime} min
-                    </span>
+                    <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">{exp.subtitle}</p>
+                    <span className="text-xs text-muted-foreground">~{exp.estimatedTime} min</span>
                   </div>
                 </Link>
               ))}

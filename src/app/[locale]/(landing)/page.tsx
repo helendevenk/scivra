@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
+import { buildWebsiteJsonLd } from '@/shared/lib/seo/json-ld';
+import { getSiteUrl } from '@/shared/lib/seo';
 import { DynamicPage, Section } from '@/shared/types/blocks/landing';
 
 export const revalidate = 3600;
@@ -40,5 +42,18 @@ export default async function LandingPage({
   // load page component
   const Page = await getThemePage('dynamic-page');
 
-  return <Page locale={locale} page={page} />;
+  const websiteJsonLd = buildWebsiteJsonLd({
+    siteUrl: getSiteUrl(),
+    siteName: 'Scivra',
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <Page locale={locale} page={page} />
+    </>
+  );
 }

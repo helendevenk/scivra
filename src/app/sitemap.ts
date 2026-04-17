@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 
-import { envConfigs } from '@/config';
 import { locales } from '@/config/locale';
 import { docsSource, pagesSource, postsSource } from '@/core/docs/source';
 import {
@@ -8,6 +7,7 @@ import {
   getAllSubjectsWithCounts,
   getStandardsForSubject,
 } from '@/shared/lib/experiments/registry';
+import { getSiteUrl } from '@/shared/lib/seo';
 import { getPublishedPaths } from '@/shared/models/learning_path';
 import { getPosts, PostStatus, PostType } from '@/shared/models/post';
 
@@ -20,6 +20,7 @@ function getLocalizedUrl(baseUrl: string, locale: string, path: string) {
 function appendLocalizedEntries(
   entries: MetadataRoute.Sitemap,
   seenUrls: Set<string>,
+  baseUrl: string,
   input: {
     path: string;
     lastModified?: Date;
@@ -43,12 +44,12 @@ function appendLocalizedEntries(
   }
 }
 
-const baseUrl = envConfigs.app_url || 'https://scivra.com';
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = getSiteUrl();
   const staticPages = [
     '/',
     '/labs',
+    '/upg',
     '/learn',
     '/pricing',
     '/gallery',
@@ -68,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seenUrls = new Set<string>();
 
   for (const page of staticPages) {
-    appendLocalizedEntries(entries, seenUrls, {
+    appendLocalizedEntries(entries, seenUrls, baseUrl, {
       path: page,
       lastModified: new Date(),
       changeFrequency:
@@ -78,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   for (const { subject } of subjects) {
-    appendLocalizedEntries(entries, seenUrls, {
+    appendLocalizedEntries(entries, seenUrls, baseUrl, {
       path: `/labs/${subject}`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -87,7 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const standards = getStandardsForSubject(subject);
     for (const standard of standards) {
-      appendLocalizedEntries(entries, seenUrls, {
+      appendLocalizedEntries(entries, seenUrls, baseUrl, {
         path: `/labs/${subject}/${standard}`,
         lastModified: new Date(),
         changeFrequency: 'weekly',
@@ -97,7 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   for (const exp of experiments) {
-    appendLocalizedEntries(entries, seenUrls, {
+    appendLocalizedEntries(entries, seenUrls, baseUrl, {
       path: `/labs/${exp.subject}/${exp.primaryStandard}/${exp.slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -178,7 +179,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     for (const path of publishedPaths) {
-      appendLocalizedEntries(entries, seenUrls, {
+      appendLocalizedEntries(entries, seenUrls, baseUrl, {
         path: `/learn/${path.slug}`,
         lastModified: path.updatedAt,
         changeFrequency: 'weekly',
@@ -189,7 +190,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const post of publishedPosts) {
       if (!post.slug) continue;
 
-      appendLocalizedEntries(entries, seenUrls, {
+      appendLocalizedEntries(entries, seenUrls, baseUrl, {
         path: `/blog/${post.slug}`,
         lastModified: post.updatedAt || post.createdAt,
         changeFrequency: 'monthly',
