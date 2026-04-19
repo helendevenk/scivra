@@ -18,6 +18,7 @@ import {
   Stats,
   Subscribe,
   Testimonials,
+  UPGSection,
 } from '@/themes/default/blocks';
 
 export default async function DynamicPage({
@@ -51,6 +52,8 @@ export default async function DynamicPage({
               return <ExperimentShowcase key={sectionKey} section={section} />;
             case 'grade-levels':
               return <GradeLevels key={sectionKey} section={section} />;
+            case 'upg-section':
+              return <UPGSection key={sectionKey} section={section} />;
             case 'logos':
               return <Logos key={sectionKey} section={section} />;
             case 'features':

@@ -30,20 +30,31 @@ export function GradeLevels({
         </ScrollAnimation>
 
         <ScrollAnimation delay={0.2}>
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {section.items?.map((item, idx) => (
               <Link
                 key={idx}
                 href={item.url || '/labs'}
-                className="border-border hover:border-primary group rounded-lg border p-5 text-center transition-all duration-200 hover:bg-primary/5 motion-reduce:transition-none"
+                className="border-border hover:border-primary group rounded-xl border bg-background/50 p-5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/5 hover:shadow-[0_0_0_1px_oklch(0.78_0.15_192_/_0.2),0_8px_24px_oklch(0.78_0.15_192_/_0.12)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               >
-                <div className="text-foreground mb-1 text-2xl font-bold">
+                {typeof item.count === 'number' && (
+                  <div
+                    className="text-primary font-mono text-3xl font-bold"
+                    style={{
+                      textShadow:
+                        '0 0 20px oklch(0.78 0.15 192 / 0.4)',
+                    }}
+                  >
+                    {item.count}
+                  </div>
+                )}
+                <div className="text-foreground mt-1 text-lg font-semibold">
                   {item.title}
                 </div>
-                <div className="text-muted-foreground mb-2 text-sm">
+                <div className="text-muted-foreground text-xs">
                   {item.age as string}
                 </div>
-                <div className="text-muted-foreground mt-1 text-xs">
+                <div className="text-muted-foreground mt-2 text-xs">
                   {item.description}
                 </div>
               </Link>

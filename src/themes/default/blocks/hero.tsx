@@ -4,7 +4,6 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from '@/core/i18n/navigation';
 import { SmartIcon } from '@/shared/blocks/common';
 import { Button } from '@/shared/components/ui/button';
-import { Highlighter } from '@/shared/components/ui/highlighter';
 import { cn } from '@/shared/lib/utils';
 import { Section } from '@/shared/types/blocks/landing';
 
@@ -42,6 +41,15 @@ export function Hero({
       )}
     >
       <HeroBackground />
+      {/* V2 signature: gold accent radial in top-right + teal radial from top-left */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(circle at 85% 10%, oklch(0.82 0.17 75 / 0.10), transparent 55%), radial-gradient(circle at 15% 30%, oklch(0.78 0.15 192 / 0.08), transparent 50%)',
+        }}
+      />
       {section.announcement && (
         <Link
           href={section.announcement.url || ''}
@@ -68,15 +76,21 @@ export function Hero({
 
       <div className="relative mx-auto max-w-full px-4 text-center md:max-w-5xl">
         {texts && texts.length > 0 ? (
-          <h1 className="text-foreground text-4xl font-semibold text-balance sm:mt-12 sm:text-6xl">
+          <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
             {texts[0]}
-            <Highlighter action="underline" color="#FF9800">
+            <span
+              className="italic text-primary"
+              style={{
+                textShadow:
+                  '0 0 24px oklch(0.78 0.15 192 / 0.5), 0 0 56px oklch(0.78 0.15 192 / 0.25)',
+              }}
+            >
               {highlightText}
-            </Highlighter>
+            </span>
             {texts[1]}
           </h1>
         ) : (
-          <h1 className="text-foreground text-4xl font-semibold text-balance sm:mt-12 sm:text-6xl">
+          <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
             {section.title}
           </h1>
         )}

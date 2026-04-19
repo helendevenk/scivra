@@ -21,7 +21,7 @@ export default async function LandingPage({
     'hero',
     'experiment_showcase',
     'grade_levels',
-    'usage',
+    'upg_section',
     'stats',
     'testimonials',
     'faq',

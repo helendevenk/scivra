@@ -111,7 +111,7 @@ export function Header({ header }: { header: HeaderType }) {
                     {item.icon && <SmartIcon name={item.icon as string} />}
                     {item.title}
                     {item.badge && (
-                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+                      <span className="rounded-full bg-[oklch(0.82_0.17_75)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[oklch(0.18_0.03_75)]">
                         {item.badge}
                       </span>
                     )}
