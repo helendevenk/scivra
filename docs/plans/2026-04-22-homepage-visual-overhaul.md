@@ -1,8 +1,8 @@
 ---
 name: homepage-visual-overhaul
-status: phase-0-complete
+status: phase-1-complete-awaiting-visual-review
 created: 2026-04-22T03:37:27Z
-updated: 2026-04-23T03:23:00Z
+updated: 2026-04-23T04:15:00Z
 ---
 
 # Scivra Homepage Visual Overhaul（v3 · 双审后最终版）
