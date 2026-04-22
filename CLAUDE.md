@@ -161,21 +161,16 @@ src/
 - 限流：Redis 滑动窗口 + 分布式锁（替代了内存 Map）
 - 积分流程：**先调 AI → 成功后扣积分**（CTO 修正，非先扣后退）
 
-## UI 设计方向（已确认）
+## UI 设计方向（Brand SSOT）
 
-2026-03-08 确认采用 **np-one 教育学术风**（commit `617a385`），完整迁移到 neonphysics-v2。
+品牌规范的唯一事实源：[`docs/design/brand-spec.md`](./docs/design/brand-spec.md)
 
-| 维度 | 值 |
-|------|---|
-| CSS 前缀 | `.np-*`（从 `.edu-*` 迁移，旧前缀有 deprecated 别名） |
-| 主色调 | 学术蓝 oklch(0.50 0.20 250) |
-| 点缀色 | 学术金 oklch(0.75 0.15 75) |
-| 标题字体 | Merriweather (serif) |
-| 正文字体 | Noto Sans |
-| 代码字体 | JetBrains Mono |
-| 主题文件 | `src/config/style/theme-education.css`（394 行） |
+任何色值 / 字体 / face / token 改动，**先更新 brand-spec，再改 theme.css**，不在 CLAUDE.md 里复述（避免文档漂移 —— 历史上 CLAUDE.md 说"学术蓝 250°"但代码实际是 teal 192°，两边对不上）。
 
-其他两个方案（np-two 游戏风 `vib-*`、np-three 终端风 `eff-*`）已淘汰删除。
+- Face system 与 tokens 实现：`src/config/style/theme.css` + `theme-education.css`
+- CSS 前缀：`.np-*`
+- 字体 stack（由 theme.css 决定）：Merriweather (serif, 标题) / Space Grotesk (sans, 正文) / JetBrains Mono (代码 + 数据)
+- 改造计划：`docs/plans/2026-04-22-homepage-visual-overhaul.md`（Motion Poetics 静态版主页）
 
 ## 数据库 Schema 概览
 
