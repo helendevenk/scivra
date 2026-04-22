@@ -51,6 +51,9 @@ export function Header({ header }: { header: HeaderType }) {
   const isLarge = useMedia('(min-width: 64rem)');
   const router = useRouter();
   const pathname = usePathname();
+  // Homepage variant: drop nav-item icons (text-only) to avoid iconography slop
+  // (next-intl usePathname strips locale prefix so '/' covers both / and /zh)
+  const isHomepage = pathname === '/';
 
   useEffect(() => {
     // Listen to scroll event to enable header styles on scroll
@@ -108,7 +111,9 @@ export function Header({ header }: { header: HeaderType }) {
                         : ''
                     }`}
                   >
-                    {item.icon && <SmartIcon name={item.icon as string} />}
+                    {!isHomepage && item.icon && (
+                      <SmartIcon name={item.icon as string} />
+                    )}
                     {item.title}
                     {item.badge && (
                       <span className="rounded-full bg-[oklch(0.82_0.17_75)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[oklch(0.18_0.03_75)]">
@@ -123,7 +128,7 @@ export function Header({ header }: { header: HeaderType }) {
             return (
               <NavigationMenuItem key={idx}>
                 <NavigationMenuTrigger className="flex flex-row items-center gap-2 text-sm">
-                  {item.icon && (
+                  {!isHomepage && item.icon && (
                     <SmartIcon name={item.icon as string} className="h-4 w-4" />
                   )}
                   {item.title}
