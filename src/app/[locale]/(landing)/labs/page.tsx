@@ -6,6 +6,7 @@ import {
   resolveGradeLevels,
   VALID_GRADE_INPUTS,
 } from "@/shared/lib/experiments/grade-filter";
+import { GRADE_CONFIGS } from "@/shared/lib/experiments/grade-constants";
 import type { Subject } from "@/shared/types/experiment";
 import type { Metadata } from "next";
 import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
@@ -14,10 +15,7 @@ export const revalidate = 3600;
 
 const GRADE_LEVELS: { value: string; label: string }[] = [
   { value: "all", label: "All Grades" },
-  { value: "K-5", label: "Elementary (K-5)" },
-  { value: "6-8", label: "Middle School" },
-  { value: "9-12", label: "High School" },
-  { value: "AP", label: "AP" },
+  ...GRADE_CONFIGS.map((c) => ({ value: c.urlParam, label: c.label })),
 ];
 
 const SUBJECT_SIGNATURES: Record<Subject, (props: { className?: string }) => React.ReactElement> = {
