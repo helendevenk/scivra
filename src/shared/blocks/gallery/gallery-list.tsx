@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Eye, GitFork, Heart, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+import { Link } from '@/core/i18n/navigation';
 import { toast } from 'sonner';
 
 import { BadgeCheck } from 'lucide-react';
@@ -201,9 +203,20 @@ export function GalleryList({ initialTag }: GalleryListProps) {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-lg font-medium">{t('empty.title')}</p>
-          <p className="text-muted-foreground mt-1">{t('empty.description')}</p>
+        <div className="mx-auto max-w-2xl py-16 text-center">
+          <h2 className="mb-3 font-serif text-3xl font-semibold italic text-foreground">
+            Be the first.
+          </h2>
+          <p className="mb-6 text-muted-foreground">
+            The gallery is still warming up. Try UPG &mdash; your creation shows up
+            here for other students to fork.
+          </p>
+          <Link
+            href="/upg"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.45_0.12_192/0.6)] transition-colors hover:bg-primary/92"
+          >
+            Try UPG <span aria-hidden>→</span>
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
