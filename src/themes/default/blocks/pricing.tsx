@@ -346,7 +346,7 @@ export function Pricing({
         <p className="text-muted-foreground mx-auto mb-2 max-w-xl lg:max-w-none lg:text-lg">
           {pricing.description}
         </p>
-        <p className="mt-3 font-mono text-xs text-muted-foreground/80">
+        <p className="mt-3 font-mono text-xs text-muted-foreground">
           Start free · Cancel anytime · 7-day money-back guarantee
         </p>
       </div>

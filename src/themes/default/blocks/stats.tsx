@@ -54,7 +54,7 @@ export function Stats({
 
         {trustLine && (
           <ScrollAnimation delay={0.3}>
-            <p className="text-muted-foreground/80 text-center font-mono text-xs tracking-wider uppercase">
+            <p className="text-muted-foreground text-center font-mono text-xs tracking-wider uppercase">
               {trustLine}
             </p>
           </ScrollAnimation>

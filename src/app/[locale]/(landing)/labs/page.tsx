@@ -139,7 +139,7 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
           aligned with AP, NGSS, and K-12 standards &mdash; completely free to
           start.
         </p>
-        <p className="mt-4 font-mono text-xs text-muted-foreground/80 md:text-sm">
+        <p className="mt-4 font-mono text-xs text-muted-foreground md:text-sm">
           {totalCount} experiments · 5 disciplines · NGSS / AP aligned
         </p>
       </section>
