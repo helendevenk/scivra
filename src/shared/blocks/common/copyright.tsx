@@ -19,7 +19,7 @@ export function Copyright({ brand }: { brand: BrandType }) {
       <a
         href={brand?.url || envConfigs.app_url}
         target={brand?.target || ''}
-        className="text-primary hover:text-primary/80 cursor-pointer"
+        className="text-primary underline underline-offset-2 decoration-primary/40 hover:decoration-primary cursor-pointer"
       >
         {brand?.title || envConfigs.app_name}
       </a>
