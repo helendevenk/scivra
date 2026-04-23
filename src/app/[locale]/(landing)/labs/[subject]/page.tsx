@@ -8,14 +8,16 @@ import {
   getStandardsForSubjectAsync,
 } from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS, STANDARD_LABELS } from "@/shared/lib/experiments/subjects";
-import type { Subject, GradeLevel } from "@/shared/types/experiment";
+import {
+  resolveGradeLevels,
+  VALID_GRADE_INPUTS,
+} from "@/shared/lib/experiments/grade-filter";
+import type { Subject } from "@/shared/types/experiment";
 import type { Metadata } from "next";
 import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
-
-const VALID_GRADES = new Set<string>(["K-2", "3-5", "6-8", "9-12", "AP"]);
 
 interface Props {
   params: Promise<{ locale: string; subject: string }>;
@@ -42,15 +44,19 @@ export default async function SubjectPage({ params, searchParams }: Props) {
 
   const subjectKey = subject as Subject;
   const subjectConfig = SUBJECTS[subjectKey];
-  const activeGrade =
-    grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
+  const activeGradeInput =
+    grade && VALID_GRADE_INPUTS.has(grade) ? grade : undefined;
+  const gradeLevels = resolveGradeLevels(activeGradeInput);
+  const gradeSet = gradeLevels ? new Set(gradeLevels) : undefined;
 
   const [standards, allSubjectExperiments] = await Promise.all([
     getStandardsForSubjectAsync(subjectKey),
     getExperimentsBySubjectAsync(subjectKey),
   ]);
-  const totalCount = activeGrade
-    ? allSubjectExperiments.filter((e) => e.gradeLevel === activeGrade).length
+  const totalCount = gradeSet
+    ? allSubjectExperiments.filter(
+        (e) => e.gradeLevel !== undefined && gradeSet.has(e.gradeLevel)
+      ).length
     : allSubjectExperiments.length;
 
   return (
@@ -80,8 +86,11 @@ export default async function SubjectPage({ params, searchParams }: Props) {
           }))
         )
       ).map(({ standard, experiments }) => {
-        const subjectExperiments = activeGrade
-          ? experiments.filter((exp) => exp.gradeLevel === activeGrade)
+        const subjectExperiments = gradeSet
+          ? experiments.filter(
+              (exp) =>
+                exp.gradeLevel !== undefined && gradeSet.has(exp.gradeLevel)
+            )
           : experiments;
         if (subjectExperiments.length === 0) return null;
 

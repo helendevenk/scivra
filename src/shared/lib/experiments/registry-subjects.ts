@@ -539,7 +539,7 @@ export async function getExperimentBySlugForSubjectAsync(
 }
 
 export async function getAllSubjectsWithCountsAsync(
-  gradeLevel?: GradeLevel
+  gradeLevel?: GradeLevel | GradeLevel[]
 ): Promise<
   Array<{
     subject: Subject;
@@ -554,12 +554,19 @@ export async function getAllSubjectsWithCountsAsync(
     }))
   );
 
+  const allowed =
+    gradeLevel === undefined
+      ? undefined
+      : new Set(Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel]);
+
   return subjectExperiments
     .map(({ subject, experiments }) => ({
       subject,
-      count: gradeLevel
+      count: allowed
         ? experiments.filter(
-            (experiment) => experiment.gradeLevel === gradeLevel
+            (experiment) =>
+              experiment.gradeLevel !== undefined &&
+              allowed.has(experiment.gradeLevel)
           ).length
         : experiments.length,
     }))
