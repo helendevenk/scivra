@@ -179,25 +179,53 @@ export default async function ExperimentDetailPage({ params }: Props) {
           <span className="text-foreground">{experiment.title}</span>
         </nav>
 
-        <section className="mb-8">
-          <div className="mb-3 flex flex-wrap items-center gap-3">
-            <span className={`rounded-full px-3 py-1 text-xs font-medium ${
+        <section className="mb-10">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider ${
               experiment.tier === "free"
-                ? "bg-[hsl(var(--np-green))]/10 text-[hsl(var(--np-green))]"
-                : "border border-primary/30 text-primary"
+                ? "bg-[oklch(0.82_0.17_75)]/15 text-[oklch(0.55_0.14_75)]"
+                : "bg-primary/12 text-primary"
             }`}>
-              {experiment.tier === "free" ? "Free" : "Pro 🔒"}
+              {experiment.tier === "free" ? "Free" : "Pro"}
             </span>
-            <span className="text-xs text-muted-foreground">~{experiment.estimatedTime} min</span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              ~{experiment.estimatedTime} min · {standardLabel}
+            </span>
           </div>
 
-          <h1 className="font-heading mb-2 text-3xl font-bold text-foreground md:text-4xl">
-            {experiment.title}
+          <h1 className="mb-3 font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-5xl lg:text-6xl">
+            <span className="relative inline-block italic">
+              {experiment.title}
+              <span
+                aria-hidden
+                className="absolute inset-x-0 -bottom-0.5 h-[0.14em] bg-[oklch(0.82_0.17_75)]/60"
+              />
+            </span>
           </h1>
-          <p className="text-lg text-muted-foreground">{experiment.subtitle}</p>
+
+          {experiment.subtitle && (
+            <p className="mb-4 max-w-3xl text-lg text-muted-foreground md:text-xl">
+              {experiment.subtitle}
+            </p>
+          )}
+
+          {experiment.formulas && experiment.formulas.length > 0 && (
+            <div
+              data-formula-strip
+              className="mb-4 inline-flex flex-wrap items-center gap-2 rounded-lg border border-primary/15 bg-card/60 px-4 py-2 font-mono text-sm text-foreground"
+            >
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Key equation
+              </span>
+              <span aria-hidden className="text-muted-foreground/40">
+                │
+              </span>
+              <span>{experiment.formulas[0].latex}</span>
+            </div>
+          )}
 
           {experiment.theory && (
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               {experiment.theory}
             </p>
           )}
