@@ -56,7 +56,7 @@ export function Hero3DPreview() {
   return (
     <div
       data-hero-3d-preview
-      className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-[oklch(0.45_0.12_192/0.04)] via-card to-[oklch(0.82_0.17_75/0.03)] shadow-[0_0_0_1px_oklch(0.45_0.12_192/0.15),0_24px_48px_-24px_oklch(0.45_0.12_192/0.35)] md:aspect-[5/4]"
+      className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-[oklch(0.78_0.15_192/0.08)] via-[oklch(0.96_0.02_192/0.4)] to-[oklch(0.82_0.17_75/0.06)] shadow-[0_0_0_1px_oklch(0.45_0.12_192/0.18),0_30px_60px_-25px_oklch(0.45_0.12_192/0.45)] md:aspect-[5/4]"
     >
       <HeroProjectileScene
         velocity={sim.parameters.velocity}

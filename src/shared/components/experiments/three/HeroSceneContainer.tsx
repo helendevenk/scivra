@@ -29,9 +29,10 @@ export function HeroSceneContainer({
       dpr={[1, 1.5]}
       style={{ background: "transparent" }}
     >
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[5, 10, 5]} intensity={0.7} />
-      <pointLight position={[-6, 4, -6]} intensity={0.35} color="oklch(0.75 0.15 192)" />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[5, 10, 5]} intensity={0.65} />
+      <pointLight position={[-6, 4, -6]} intensity={0.7} color="#4ee5f5" />
+      <pointLight position={[6, 2, 4]} intensity={0.45} color="#f5bc4a" />
 
       {children}
 
