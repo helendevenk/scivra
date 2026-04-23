@@ -8,6 +8,7 @@ import { ExperimentHook } from "./experiment-hook";
 import { LearningCardList } from "./learning-card";
 import { ChallengeCard } from "./challenge-card";
 import { ExperimentSummary } from "./experiment-summary";
+import { InlineProPaywall } from "./inline-pro-paywall";
 import { useIframeInteraction } from "@/shared/hooks/useIframeInteraction";
 import { useSimulation } from "@/shared/hooks/useSimulation";
 import { canAccessTier } from "@/shared/lib/experiments/access";
@@ -215,9 +216,7 @@ export function ExperimentFlow({ experiment, userTier, canAccess, locale }: Expe
                 </div>
               )
             ) : (
-              <div className="flex aspect-video items-center justify-center rounded-xl border border-primary/20 bg-card text-muted-foreground">
-                <p className="text-sm">Upgrade to Pro to access this experiment</p>
-              </div>
+              <InlineProPaywall experimentTitle={experiment.title} locale={locale} />
             )}
 
             {/* Advance button */}
