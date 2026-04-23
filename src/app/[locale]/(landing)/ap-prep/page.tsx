@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { ApExamList } from '@/shared/blocks/ap-prep';
+import { ApExamList, ApPrepHero } from '@/shared/blocks/ap-prep';
 import { getMetadata } from '@/shared/lib/seo';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
@@ -20,14 +20,15 @@ export default async function ApPrepPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations('ap-prep');
   const tl = await getTranslations('landing');
 
   const page: DynamicPage = {
     sections: {
-      hero: {
-        title: t('page.title'),
-        description: t('page.description'),
+      // key deliberately not "hero" — dynamic-page.tsx has a dedicated `case 'hero'`
+      // that renders the default Hero block and ignores section.component.
+      // Using a non-reserved key routes through the `default` case which honors component.
+      ap_prep_hero: {
+        component: <ApPrepHero />,
       },
       exams: {
         component: <ApExamList />,
