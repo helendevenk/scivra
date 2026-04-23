@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
 
 interface ScrollAnimationProps {
   children: React.ReactNode;
@@ -11,6 +10,10 @@ interface ScrollAnimationProps {
   direction?: "up" | "down" | "left" | "right";
   stagger?: boolean;
 }
+
+// Fail-open timeout: if IntersectionObserver doesn't fire within this window
+// (headless screenshots, SEO crawlers, slow JS), force content visible.
+const FAIL_OPEN_MS = 1500;
 
 export function ScrollAnimation({
   children,
@@ -22,13 +25,19 @@ export function ScrollAnimation({
   const ref = useRef(null);
   const isInView = useInView(ref, {
     once: true,
-    margin: "-50px", // Optimization: trigger animation earlier for better perceived performance
+    margin: "-50px",
   });
 
-  // Respect user's reduced motion preference (accessibility)
   const shouldReduceMotion = useReducedMotion();
 
-  // If user prefers reduced motion or JavaScript is disabled, show content directly
+  const [failOpen, setFailOpen] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setFailOpen(true), FAIL_OPEN_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  const visible = isInView || failOpen;
+
   if (shouldReduceMotion) {
     return (
       <div ref={ref} className={className}>
@@ -87,7 +96,7 @@ export function ScrollAnimation({
         ref={ref}
         variants={containerVariants}
         initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
+        animate={visible ? "visible" : "hidden"}
         className={className}
       >
         {React.Children.map(children, (child) => (
@@ -106,7 +115,7 @@ export function ScrollAnimation({
         filter: "blur(4px)",
       }}
       animate={
-        isInView
+        visible
           ? {
               opacity: 1,
               x: 0,
