@@ -306,7 +306,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder={t('generator.placeholder')}
-                    className="min-h-28 w-full resize-none rounded-[7px] border-0 bg-background p-4 text-base shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                    className="min-h-28 w-full resize-none rounded-[7px] border-0 bg-background p-4 font-mono text-sm shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/60"
                   />
                 </div>
                 <div className="text-muted-foreground flex items-center justify-between px-2 text-xs">
