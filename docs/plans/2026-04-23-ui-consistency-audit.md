@@ -404,3 +404,53 @@ done
    - P1-5 UPG hero + AP Prep 强化
    - 生产 Lighthouse + Real User Monitoring 数据
 4. **持续**：把本轮 audit 加到 CI —— axe 扫描 + fixed-size screenshot diff
+
+## 10. Hero 3D Upgrade (2026-04-23 evening)
+
+User feedback (2026-04-23): "整个网站都需要表达 3D 动态实验、交互式学习". 旧 hero 副标题承诺 "Launch a 3D lab, tweak the numbers, watch physics happen" 但视觉只是静态 2D SVG 抛物线。Visual ↔ copy 不一致。
+
+**Plan reference:** `docs/superpowers/plans/2026-04-23-hero-3d-interactive.md`（8 任务，对应 8 commits）
+
+### Implementation
+
+Hero 拆 2 列：
+- 左：Merriweather H1 + 副标题 + CTA + 学科按钮 + tip + avatars（unchanged copy）
+- 右：`<Hero3DPreview />` — 自动播放的 3D 抛物线场景，含 Play/Pause/Reset + mono 参数条
+
+`<HeroIllustration />` SVG 转为 `prefers-reduced-motion` fallback（`motion-safe:hidden`）。两路互斥，只渲染其一。
+
+### Files delivered
+
+- `src/shared/components/experiments/three/HeroSceneContainer.tsx`（lean R3F wrapper, no stars/bloom/grid）
+- `src/shared/components/experiments/three/HeroProjectileScene.tsx`（loopable 3D projectile）
+- `src/themes/default/blocks/hero-3d-preview.tsx`（top-level component with controls）
+- `src/themes/default/blocks/hero.tsx`（rewired to 2-column）
+- `tests/unit/hero/hero-3d-preview.test.tsx`（reduced-motion branch unit test）
+- `tests/e2e/hero.spec.ts`（extended with canvas-mount + fallback E2E）
+
+### LCP measurements (localhost dev server)
+
+- Cold load: LCP 876 ms
+- Warm load: LCP 536 ms
+- LCP element: `<h1>` (preserved — text paints first, R3F loads after)
+- Initial transferSize: **67 KB** (vs Phase 1 baseline 68 KB → no growth from dynamic import)
+- Console errors: 0
+
+LCP 是 dev server 数字。生产 Vercel 通常做到 30-50% 更好。`HeroProjectileScene` 通过 `next/dynamic({ ssr: false })` 加载，不进 LCP 关键路径。
+
+### Regression checks
+
+- `tests/unit/hero/hero-3d-preview.test.tsx` — 2 passed
+- `tests/e2e/hero.spec.ts` — 2 new tests passed; 7 of 8 existing pass（1 pre-existing 失败 in H1 copy regex，与本轮无关）
+- `tests/integration/a11y/homepage-axe.test.ts` — 0 serious/critical WCAG violations
+- `tests/integration/experiment-urls.test.ts` — 179/179 routes return 200
+- `pnpm tsc --noEmit` — clean
+
+### Mobile (375 × 812)
+
+- H1 top: 96 px
+- Primary CTA top: 392 px (above the fold ✅)
+- Canvas top: 632 px (180 px peek above fold — students see preview without scrolling)
+- Canvas size: 343 × 257 px (4/3 aspect)
+
+No mobile aspect adjustment needed — original aspect-[4/3] keeps CTA above the fold.
