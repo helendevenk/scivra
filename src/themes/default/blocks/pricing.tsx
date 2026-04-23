@@ -332,11 +332,22 @@ export function Pricing({
         {pricing.sr_only_title && (
           <h1 className="sr-only">{pricing.sr_only_title}</h1>
         )}
-        <h2 className="mb-6 text-3xl font-bold text-pretty lg:text-4xl">
-          {pricing.title}
+        <h2 className="mb-5 font-serif text-4xl font-semibold leading-[1.08] tracking-tight text-pretty md:text-5xl lg:text-6xl">
+          <span className="italic">Pick</span>{' '}
+          <span className="relative inline-block">
+            {pricing.title}
+            <span
+              aria-hidden
+              className="absolute inset-x-0 -bottom-1 h-[0.18em] bg-[oklch(0.82_0.17_75)]/70"
+            />
+          </span>
+          .
         </h2>
-        <p className="text-muted-foreground mx-auto mb-4 max-w-xl lg:max-w-none lg:text-lg">
+        <p className="text-muted-foreground mx-auto mb-2 max-w-xl lg:max-w-none lg:text-lg">
           {pricing.description}
+        </p>
+        <p className="mt-3 font-mono text-xs text-muted-foreground/80">
+          Start free · Cancel anytime · 7-day money-back guarantee
         </p>
       </div>
 
@@ -387,16 +398,25 @@ export function Pricing({
             const currencies = getCurrenciesFromItem(item);
 
             return (
-              <Card key={idx} className="relative">
+              <Card
+                key={idx}
+                className={cn(
+                  'relative transition-shadow',
+                  item.is_featured &&
+                    'border-primary/40 shadow-[0_0_0_1px_oklch(0.45_0.12_192/0.35),0_24px_48px_-24px_oklch(0.45_0.12_192/0.45)]'
+                )}
+              >
                 {item.label && (
-                  <span className="absolute inset-x-0 -top-3 mx-auto flex h-6 w-fit items-center rounded-full bg-linear-to-br/increasing from-purple-400 to-amber-300 px-3 py-1 text-xs font-medium text-amber-950 ring-1 ring-white/20 ring-offset-1 ring-offset-gray-950/5 ring-inset">
+                  <span className="absolute inset-x-0 -top-3 mx-auto flex h-6 w-fit items-center rounded-full bg-[oklch(0.82_0.17_75)] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[oklch(0.18_0.03_75)] ring-1 ring-[oklch(0.82_0.17_75)]/40">
                     {item.label}
                   </span>
                 )}
 
                 <CardHeader>
                   <CardTitle className="font-medium">
-                    <h3 className="text-sm font-medium">{item.title}</h3>
+                    <h3 className="font-serif text-xl font-semibold italic text-foreground">
+                      {item.title}
+                    </h3>
                   </CardTitle>
 
                   <div className="my-3 flex items-baseline gap-2">
@@ -406,12 +426,12 @@ export function Pricing({
                       </span>
                     )}
 
-                    <div className="my-3 block text-2xl font-semibold">
-                      <span className="text-primary">
+                    <div className="my-3 block text-3xl font-semibold">
+                      <span className="font-mono text-primary">
                         {displayedItem.price}
                       </span>{' '}
                       {displayedItem.unit ? (
-                        <span className="text-muted-foreground text-sm font-normal">
+                        <span className="text-muted-foreground font-mono text-sm font-normal">
                           {displayedItem.unit}
                         </span>
                       ) : (
