@@ -35,7 +35,11 @@ const nextConfig = {
     ],
   },
   async redirects() {
-    return [];
+    return [
+      // Chinese locale retired 2026-04-23. Old inbound links → English home.
+      { source: '/zh', destination: '/', permanent: true },
+      { source: '/zh/:path*', destination: '/:path*', permanent: true },
+    ];
   },
   async headers() {
     return [
