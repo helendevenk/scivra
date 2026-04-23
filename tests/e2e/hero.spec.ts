@@ -12,9 +12,11 @@ test.describe('Homepage Hero · V3 static SVG', () => {
     expect(text).toMatch(/Experiments|Textbook|Scivra|实验/i);
   });
 
-  test('inline SVG hero illustration renders', async ({ page }) => {
+  test('SVG fallback exists in DOM (rendered under reduced-motion only)', async ({ page }) => {
+    // Under default motion-safe, the SVG is hidden via motion-safe:hidden but
+    // still present in the DOM as the prefers-reduced-motion fallback.
     const svg = page.locator('svg[data-hero-illustration]').first();
-    await expect(svg).toBeVisible();
+    await expect(svg).toHaveCount(1);
   });
 
   test('FreePik hero PNG is NOT loaded', async ({ page }) => {
@@ -84,6 +86,41 @@ test.describe('Homepage Hero · V3 static SVG', () => {
 
     // With reduced motion, animation is disabled → dashoffset should be 0
     expect(offset).toMatch(/^0/);
+
+    await context.close();
+  });
+});
+
+test.describe('Homepage hero · interactive 3D preview', () => {
+  test('3D canvas mounts within 5s at desktop width', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    const canvas = page.locator('[data-hero-3d-preview] canvas');
+    await expect(canvas).toBeVisible({ timeout: 5_000 });
+
+    // wait a beat to let R3F sizing settle
+    await page.waitForTimeout(500);
+    const box = await canvas.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(200);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(140);
+  });
+
+  test('reduced-motion users get the SVG fallback, not a canvas', async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    await page.goto('/');
+
+    // Wait until the hero has hydrated enough for either branch to settle
+    await page.waitForLoadState('networkidle');
+
+    // The Hero3DPreview wrapper should NOT mount under reduced-motion
+    const previewWrapper = page.locator('[data-hero-3d-preview]');
+    await expect(previewWrapper).toHaveCount(0);
+
+    // The SVG fallback should be visible (its parent has motion-safe:hidden,
+    // which doesn't apply under prefers-reduced-motion: reduce)
+    const svgFallback = page.locator('[data-hero-illustration]').first();
+    await expect(svgFallback).toBeVisible();
 
     await context.close();
   });
