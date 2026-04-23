@@ -21,7 +21,7 @@ describe('Homepage WCAG AA', () => {
 
     // Restore attributes that live on <html> itself but are lost when we
     // replace innerHTML (the outer <html> tag isn't part of innerHTML).
-    const langMatch = html.match(/<html[^>]*\slang="([^"]+)"/i);
+    const langMatch = html.match(/<html[^>]*\slang=["']([^"']+)["']/i);
     if (langMatch) {
       document.documentElement.setAttribute('lang', langMatch[1]);
     }
