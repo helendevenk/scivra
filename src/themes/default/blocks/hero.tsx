@@ -11,6 +11,7 @@ import { track } from '@/shared/lib/analytics/track';
 import { cn } from '@/shared/lib/utils';
 import { Section } from '@/shared/types/blocks/landing';
 
+import { Hero3DPreview } from './hero-3d-preview';
 import { HeroBackground } from './hero-background';
 import { SocialAvatars } from './social-avatars';
 
@@ -218,97 +219,104 @@ export function Hero({
         </Link>
       )}
 
-      <div className="relative mx-auto max-w-full px-4 text-center md:max-w-5xl">
-        {texts && texts.length > 0 ? (
-          <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
-            {texts[0]}
-            <em
-              className="text-primary not-italic"
-              style={{
-                fontStyle: 'italic',
-                borderBottom: '4px solid oklch(0.75 0.15 75)',
-                paddingBottom: '0.08em',
-                textShadow:
-                  '0 0 24px oklch(0.78 0.15 192 / 0.5), 0 0 56px oklch(0.78 0.15 192 / 0.25)',
-              }}
-            >
-              {highlightText}
-            </em>
-            {texts[1]}
-          </h1>
-        ) : (
-          <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
-            {section.title}
-          </h1>
-        )}
-
-        <p
-          className="text-muted-foreground mt-8 mb-8 text-lg text-balance"
-          dangerouslySetInnerHTML={{ __html: section.description ?? '' }}
-        />
-
-        {/* V3 inline SVG hero illustration (replaces FreePik PNG) */}
-        <div className="my-10 flex justify-center md:my-12">
-          <HeroIllustration />
-        </div>
-
-        {section.buttons && (
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {section.buttons.map((button, idx) => (
-              <Button
-                asChild
-                size={button.size || 'default'}
-                variant={button.variant || 'default'}
-                className="px-4 text-sm"
-                key={idx}
-              >
-                <Link
-                  href={button.url ?? ''}
-                  target={button.target ?? '_self'}
-                  onClick={() =>
-                    track('hero_cta_click', {
-                      variant: idx === 0 ? 'primary' : 'secondary',
-                      locale,
-                    })
-                  }
+      <div className="relative mx-auto max-w-full px-4 text-center md:max-w-6xl">
+        <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:gap-12 md:text-left">
+          <div>
+            {texts && texts.length > 0 ? (
+              <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
+                {texts[0]}
+                <em
+                  className="text-primary not-italic"
+                  style={{
+                    fontStyle: 'italic',
+                    borderBottom: '4px solid oklch(0.75 0.15 75)',
+                    paddingBottom: '0.08em',
+                    textShadow:
+                      '0 0 24px oklch(0.78 0.15 192 / 0.5), 0 0 56px oklch(0.78 0.15 192 / 0.25)',
+                  }}
                 >
-                  {button.icon && <SmartIcon name={button.icon as string} />}
-                  <span>{button.title}</span>
-                </Link>
-              </Button>
-            ))}
+                  {highlightText}
+                </em>
+                {texts[1]}
+              </h1>
+            ) : (
+              <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
+                {section.title}
+              </h1>
+            )}
+
+            <p
+              className="text-muted-foreground mt-8 mb-8 text-lg text-balance"
+              dangerouslySetInnerHTML={{ __html: section.description ?? '' }}
+            />
+
+            {section.buttons && (
+              <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
+                {section.buttons.map((button, idx) => (
+                  <Button
+                    asChild
+                    size={button.size || 'default'}
+                    variant={button.variant || 'default'}
+                    className="px-4 text-sm"
+                    key={idx}
+                  >
+                    <Link
+                      href={button.url ?? ''}
+                      target={button.target ?? '_self'}
+                      onClick={() =>
+                        track('hero_cta_click', {
+                          variant: idx === 0 ? 'primary' : 'secondary',
+                          locale,
+                        })
+                      }
+                    >
+                      {button.icon && <SmartIcon name={button.icon as string} />}
+                      <span>{button.title}</span>
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {section.subjects && (section.subjects as SubjectButton[]).length > 0 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+                {(section.subjects as SubjectButton[]).map((subject, idx) => (
+                  <Link
+                    key={idx}
+                    href={subject.url}
+                    onClick={() =>
+                      track('grade_tile_click', {
+                        grade: subject.title,
+                        locale,
+                      })
+                    }
+                    className="border-border hover:border-primary group flex flex-col items-center gap-1 rounded-lg border px-4 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                  >
+                    <SmartIcon name={subject.icon} size={20} className="text-primary" />
+                    <span className="text-foreground text-sm font-medium">{subject.title}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {section.tip && (
+              <p
+                className="text-muted-foreground mt-6 block text-center text-sm md:text-left"
+                dangerouslySetInnerHTML={{ __html: section.tip ?? '' }}
+              />
+            )}
+
+            {section.show_avatars && <SocialAvatars tip={section.avatars_tip || ''} />}
           </div>
-        )}
 
-        {section.subjects && (section.subjects as SubjectButton[]).length > 0 && (
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {(section.subjects as SubjectButton[]).map((subject, idx) => (
-              <Link
-                key={idx}
-                href={subject.url}
-                onClick={() =>
-                  track('grade_tile_click', {
-                    grade: subject.title,
-                    locale,
-                  })
-                }
-                className="border-border hover:border-primary group flex flex-col items-center gap-1 rounded-lg border px-4 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-              >
-                <SmartIcon name={subject.icon} size={20} className="text-primary" />
-                <span className="text-foreground text-sm font-medium">{subject.title}</span>
-              </Link>
-            ))}
+          {/* Right column — interactive 3D preview (auto-plays) + reduced-motion SVG fallback */}
+          <div className="relative">
+            <Hero3DPreview />
+            <div className="motion-safe:hidden flex justify-center">
+              <HeroIllustration />
+            </div>
           </div>
-        )}
-
-        {section.tip && (
-          <p
-            className="text-muted-foreground mt-6 block text-center text-sm"
-            dangerouslySetInnerHTML={{ __html: section.tip ?? '' }}
-          />
-        )}
-
-        {section.show_avatars && <SocialAvatars tip={section.avatars_tip || ''} />}
+        </div>
       </div>
 
       {/* Note: section.image is ignored in V3 — inline SVG illustration replaces it.
