@@ -9,7 +9,7 @@ test.describe('Homepage Hero · V3 static SVG', () => {
     const h1 = page.getByRole('heading', { level: 1 });
     await expect(h1).toBeVisible();
     const text = await h1.textContent();
-    expect(text).toMatch(/Experiments|Textbook|Scivra|实验/i);
+    expect(text).toMatch(/experiments?|textbook|scivra|实验/i);
   });
 
   test('SVG fallback exists in DOM (rendered under reduced-motion only)', async ({ page }) => {
