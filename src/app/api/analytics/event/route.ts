@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const ALLOWED_EVENTS = new Set([
   'hero_cta_click',
+  'hero_3d_preview_click',
   'grade_tile_click',
   'experiment_card_click',
   'scroll_depth_25',

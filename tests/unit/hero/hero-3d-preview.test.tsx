@@ -1,10 +1,27 @@
+import type { ComponentProps, ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
-import { Hero3DPreview } from '@/themes/default/blocks/hero-3d-preview';
+
+// Mock next-intl-backed Link before importing the component, so we don't
+// pull next-intl's navigation chain into jsdom (it tries to resolve
+// `next/navigation` as ESM and fails under vitest).
+vi.mock('@/core/i18n/navigation', () => ({
+  Link: ({ children, ...props }: { children?: ReactNode } & ComponentProps<'a'>) => (
+    <a {...props}>{children}</a>
+  ),
+}));
 
 vi.mock('@/shared/components/experiments/three/HeroProjectileScene', () => ({
   HeroProjectileScene: () => <div data-testid="hero-scene-stub" />,
 }));
+
+// Track calls to /api/analytics/event so we can also confirm we're not
+// triggering it as a side effect of the matchMedia mock alone.
+vi.mock('@/shared/lib/analytics/track', () => ({
+  track: vi.fn(),
+}));
+
+const { Hero3DPreview } = await import('@/themes/default/blocks/hero-3d-preview');
 
 function setMatchMedia(reducedMotion: boolean) {
   Object.defineProperty(window, 'matchMedia', {
