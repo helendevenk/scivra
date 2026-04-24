@@ -47,15 +47,26 @@ function useHasMounted(): boolean {
   );
 }
 
+// Guard window.matchMedia access for jsdom (where window exists but matchMedia
+// is not implemented) and for any consumer that mounts <Hero /> in a test
+// without manually polyfilling matchMedia.
+function hasMatchMedia(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function";
+}
 function subscribeReducedMotion(callback: () => void): () => void {
+  if (!hasMatchMedia()) return () => {};
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
   mq.addEventListener("change", callback);
   return () => mq.removeEventListener("change", callback);
 }
+function getReducedMotionSnapshot(): boolean {
+  if (!hasMatchMedia()) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 function useReducedMotion(): boolean {
   return useSyncExternalStore(
     subscribeReducedMotion,
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    getReducedMotionSnapshot,
     () => false
   );
 }
