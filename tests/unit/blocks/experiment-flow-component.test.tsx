@@ -192,9 +192,14 @@ describe('ExperimentFlow', () => {
     expect(iframe?.getAttribute('title')).toBe('Test Experiment');
   });
 
-  it('should show upgrade message when canAccess is false', () => {
+  it('should show upgrade card when canAccess is false', () => {
     const { container } = renderFlow({ canAccess: false, flowState: { currentStage: 'explore' } });
-    expect(container.textContent).toContain('Upgrade to Pro to access this experiment');
+    // The conversion-card paywall (commit b3c3e86) replaced the earlier
+    // "Upgrade to Pro to access this experiment" line with a richer card:
+    // "Unlock <title>" headline + Pro labs sell line + free-trial CTA.
+    expect(container.textContent).toContain('Unlock');
+    expect(container.textContent).toContain('Pro labs');
+    expect(container.textContent).toMatch(/free trial/i);
   });
 
   it('should render learning cards in learn stage', () => {
