@@ -11,7 +11,7 @@ import { track } from '@/shared/lib/analytics/track';
 import { cn } from '@/shared/lib/utils';
 import { Section } from '@/shared/types/blocks/landing';
 
-import { Hero3DPreview } from './hero-3d-preview';
+import { Hero3DPreview, HERO_PREVIEW_LAB_HREF } from './hero-3d-preview';
 import { HeroBackground } from './hero-background';
 import { SocialAvatars } from './social-avatars';
 
@@ -309,12 +309,23 @@ export function Hero({
             {section.show_avatars && <SocialAvatars tip={section.avatars_tip || ''} />}
           </div>
 
-          {/* Right column — interactive 3D preview (auto-plays) + reduced-motion SVG fallback */}
+          {/* Right column — interactive 3D preview (auto-plays) + reduced-motion SVG fallback.
+              Both routes click through to the underlying lab. */}
           <div className="relative">
             <Hero3DPreview />
-            <div className="motion-safe:hidden flex justify-center">
+            <Link
+              href={HERO_PREVIEW_LAB_HREF}
+              onClick={() =>
+                track('hero_3d_preview_click', {
+                  target: 'projectile-motion',
+                  via: 'svg-fallback',
+                })
+              }
+              aria-label="Open the Projectile Motion lab"
+              className="motion-safe:hidden flex justify-center rounded-2xl transition-opacity hover:opacity-90"
+            >
               <HeroIllustration />
-            </div>
+            </Link>
           </div>
         </div>
       </div>
