@@ -5,7 +5,7 @@
  * Checks:
  *   1. <link rel="canonical"> present + absolute URL
  *   2. <script type="application/ld+json"> present + valid JSON + has @type
- *   3. <link rel="alternate" hreflang="..."> pairs (en + zh)
+ *   3. <link rel="alternate" hreflang="..."> at minimum en + x-default
  *   4. exactly one <h1>
  *   5. OG card: og:title, og:description, og:image, og:type, og:url
  *
@@ -67,13 +67,15 @@ async function main() {
   }
   results.push({ check: 'json-ld', pass: jsonLdPass, detail: jsonLdDetail });
 
-  // 3. Hreflang
+  // 3. Hreflang — site is currently English-only (zh locale was retired
+  // in commit 14a0056). Require at minimum 'en' + 'x-default'; if more
+  // locales come back later, they're tolerated, just not required here.
   const hreflangs = [
     ...html.matchAll(/<link[^>]+hreflang=["']([^"']+)["']/gi),
   ].map((m) => m[1]);
   results.push({
     check: 'hreflang',
-    pass: hreflangs.includes('en') && hreflangs.includes('zh'),
+    pass: hreflangs.includes('en') && hreflangs.includes('x-default'),
     detail: hreflangs.join(',') || 'missing',
   });
 
