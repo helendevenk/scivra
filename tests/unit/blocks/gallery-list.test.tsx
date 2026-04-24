@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
 // Stub the next-intl-backed navigation Link so we don't pull next-intl's
 // navigation chain into jsdom (it tries to resolve `next/navigation` as
@@ -98,6 +99,14 @@ describe('GalleryList', () => {
     vi.stubGlobal('IntersectionObserver', vi.fn(() => ({
       observe: vi.fn(), disconnect: vi.fn(), unobserve: vi.fn(),
     })));
+  });
+
+  // Without explicit cleanup, mounted GalleryList instances leak between
+  // tests — a stale fetch resolution can fire setState on an unmounted
+  // tree at vitest teardown, producing 'window is not defined' from the
+  // React 19 scheduler under jsdom.
+  afterEach(() => {
+    cleanup();
   });
 
   it('should show skeletons while loading', () => {
