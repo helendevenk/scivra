@@ -60,7 +60,12 @@ function subscribeReducedMotion(callback: () => void): () => void {
   return () => mq.removeEventListener("change", callback);
 }
 function getReducedMotionSnapshot(): boolean {
-  if (!hasMatchMedia()) return false;
+  // In environments without matchMedia (jsdom, ancient browsers), behave as
+  // if the user opted out of motion. This keeps the canvas from mounting
+  // inside unit tests that render the parent <Hero /> without polyfilling
+  // matchMedia — the dynamic R3F import would otherwise pull three.js,
+  // which touches `window` and produces unhandled errors at teardown.
+  if (!hasMatchMedia()) return true;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 function useReducedMotion(): boolean {
