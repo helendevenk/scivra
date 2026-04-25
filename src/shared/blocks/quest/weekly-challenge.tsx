@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/shared/components/ui/button';
@@ -36,7 +36,6 @@ interface LeaderboardEntry {
 
 export function WeeklyChallenge() {
   const t = useTranslations('quest');
-  const locale = useLocale();
   const router = useRouter();
   const [quest, setQuest] = useState<WeeklyQuest | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -61,10 +60,10 @@ export function WeeklyChallenge() {
   }, []);
 
   function getTitle(q: WeeklyQuest) {
-    return locale === 'zh' ? q.titleZh : q.titleEn;
+    return q.titleEn;
   }
   function getDesc(q: WeeklyQuest) {
-    return locale === 'zh' ? q.descriptionZh : q.descriptionEn;
+    return q.descriptionEn;
   }
 
   function formatTime(seconds: number | null) {

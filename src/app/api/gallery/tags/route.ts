@@ -11,8 +11,8 @@ export async function GET(request: Request) {
 
     const tags = await getPopularTags(limit);
     return respData({ tags });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Gallery tags failed:', e);
-    return respErr(e.message || 'Failed to get tags');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get tags');
   }
 }

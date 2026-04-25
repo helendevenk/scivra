@@ -21,9 +21,9 @@ export async function PUT(
 
     const node = await updateNode(nodeId, body);
     return respData(node);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin update node failed:', e);
-    return respErr(e.message || 'Failed to update node');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to update node');
   }
 }
 
@@ -40,8 +40,8 @@ export async function DELETE(
     const { nodeId } = await params;
     await deleteNodeWithReorder(nodeId);
     return respOk();
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin delete node failed:', e);
-    return respErr(e.message || 'Failed to delete node');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to delete node');
   }
 }

@@ -1,7 +1,7 @@
 // UPG hardcoded constants (V0.2: migrate to config table)
 
-export const UPG_DEFAULT_MODEL = 'claude-sonnet-4-6';
-export const UPG_FALLBACK_MODEL = 'claude-haiku-4-5-20251001';
+export const UPG_DEFAULT_MODEL = process.env.OPUS_MODEL || 'glm-5-turbo';
+export const UPG_FALLBACK_MODEL = process.env.UPG_FALLBACK_MODEL || 'glm-5-turbo';
 export const UPG_MAX_GENERATION_TIME_MS = 300000; // 5 min for Sonnet
 export const UPG_CREDITS_PER_GENERATION = 10;
 export const UPG_CREDITS_PER_REGENERATION = 5;

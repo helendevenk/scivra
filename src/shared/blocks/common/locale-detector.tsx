@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect, react-hooks/purity, react-hooks/immutability, react-hooks/static-components */
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
@@ -23,11 +23,15 @@ export function LocaleDetector() {
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const bannerRef = useRef<HTMLDivElement>(null);
   const hasCheckedRef = useRef(false);
+  const isSingleLocale = locales.length <= 1;
 
   const detectBrowserLocale = (): string | null => {
     if (typeof window === 'undefined') return null;
 
-    const browserLang = navigator.language || (navigator as any).userLanguage;
+    const browserLang =
+      navigator.language ||
+      (navigator as Navigator & { userLanguage?: string }).userLanguage ||
+      '';
     const langCode = browserLang.split('-')[0].toLowerCase();
 
     // Check if the detected language is in our supported locales
@@ -60,6 +64,10 @@ export function LocaleDetector() {
   );
 
   useEffect(() => {
+    if (isSingleLocale) {
+      return;
+    }
+
     // Only run initial check once to avoid interference with manual locale switches
     if (hasCheckedRef.current) {
       return;
@@ -98,10 +106,14 @@ export function LocaleDetector() {
     ) {
       setShowBanner(true);
     }
-  }, [currentLocale, switchToLocale]);
+  }, [currentLocale, isSingleLocale, switchToLocale]);
 
   // Adjust header and main content position when banner is shown
   useEffect(() => {
+    if (isSingleLocale) {
+      return;
+    }
+
     if (showBanner && bannerRef.current) {
       const bannerHeight = bannerRef.current.offsetHeight;
 
@@ -152,7 +164,7 @@ export function LocaleDetector() {
         (sidebarWrapper as HTMLElement).style.paddingTop = '0px';
       }
     };
-  }, [showBanner]);
+  }, [isSingleLocale, showBanner]);
 
   const handleSwitch = () => {
     if (browserLocale) {
@@ -188,7 +200,7 @@ export function LocaleDetector() {
     }
   };
 
-  if (!showBanner || !browserLocale) {
+  if (isSingleLocale || !showBanner || !browserLocale) {
     return null;
   }
 

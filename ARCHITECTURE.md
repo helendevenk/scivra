@@ -1,6 +1,6 @@
-# NeonPhysics v2 — Architecture Guide
+# Scivra v2 — Architecture Guide
 
-> **Last verified:** 2026-03-23 | **Quarterly review:** update this date after verifying accuracy
+> **Last verified:** 2026-04-13 | **Quarterly review:** update this date after verifying accuracy
 
 This document is for **human developers**. For AI assistant instructions, see `CLAUDE.md`.
 For coding standards and rules, see `.claude/rules/`.
@@ -21,12 +21,12 @@ For coding standards and rules, see `.claude/rules/`.
 
 ## 1. System Overview
 
-NeonPhysics is an **AI-powered science education SaaS** targeting North American high school students and teachers. Two business lines:
+Scivra is an **AI-powered science education SaaS** targeting North American high school students and teachers. Two business lines:
 
 - **Curated Labs** — Human-designed 3D interactive experiments (React Three Fiber), aligned to NGSS/AP Physics standards
 - **UPG (Universal Principle Generator)** — AI generates standalone HTML interactive visualizations from any science prompt in 30-60 seconds
 
-**Revenue:** Freemium subscriptions (Free / Pro $4.99/mo / Max $9.99/mo) + UPG credit consumption (10 credits per generation).
+**Revenue:** Freemium subscriptions (Free / Pro $4.99/mo / Max $9.99/mo) + UPG credit consumption.
 
 ```mermaid
 graph TB
@@ -35,7 +35,7 @@ graph TB
         A[Anonymous Visitor]
     end
 
-    subgraph NeonPhysics["NeonPhysics (Next.js 16)"]
+    subgraph Scivra["Scivra (Next.js 16)"]
         WEB[Web App<br>App Router + React 19]
         API[API Routes<br>Serverless Functions]
     end
@@ -73,8 +73,8 @@ graph TB
 | Database | PostgreSQL + Drizzle ORM | 0.44.2 |
 | Auth | Better Auth + RBAC | 1.3.7 |
 | i18n | next-intl (en/zh, prefix: as-needed) | 4.3.4 |
-| 3D | React Three Fiber + Drei (app) / Three.js r134 (UPG CDN) | 9.5.0 |
-| AI | OpenRouter (MiniMax GLM-5) via custom client | — |
+| 3D | React Three Fiber + Drei (app) / standalone Three.js in generated UPG HTML | 9.5.0 |
+| AI | Anthropic-compatible chat client with env/DB-configurable base URL | — |
 | Cache | Upstash Redis (rate limiting + distributed locks) | REST |
 | Payment | Stripe / PayPal / Creem | — |
 | Storage | Cloudflare R2 | — |
@@ -90,12 +90,12 @@ graph TB
 
 ```bash
 # 1. Clone and install
-git clone <repo-url> && cd neonphysics-v2
+git clone <repo-url> && cd scivra
 pnpm install
 
 # 2. Configure environment
 cp .env.example .env.local
-# Fill in: DATABASE_URL, AUTH_SECRET, UPSTASH_REDIS_REST_URL/TOKEN, OPENROUTER_API_KEY
+# Fill in: DATABASE_URL, AUTH_SECRET, UPSTASH_REDIS_REST_URL/TOKEN, ANTHROPIC_API_KEY or OPENROUTER_API_KEY
 
 # 3. Setup database
 pnpm db:push          # Apply schema to DB
@@ -151,10 +151,10 @@ pnpm dev              # Turbopack dev server at localhost:3000
 
 ### Testing
 
-- **Unit tests:** `tests/unit/` — Vitest, 64+ tests
+- **Unit tests:** `tests/unit/` — Vitest, broad module coverage across routes, models, services, blocks, and UPG internals
 - **E2E tests:** Playwright, screenshots saved to `test-screenshots/`
 - **Must test:** UPG pipeline, credit consumption, rate limiting, API auth
-- **Rule:** No mocking the database — use a real test database
+- **Current practice:** unit tests use focused mocks heavily; integration tests cover route/service orchestration
 
 ## 4. Directory Structure
 
@@ -170,7 +170,7 @@ src/
 │   │   └── (ai)/        # AI tools (UPG, image, music, video generators)
 │   └── api/          # API route handlers
 ├── config/           # Configuration (schema, i18n messages, styles, env)
-│   ├── db/schema.ts  # All 38 Drizzle table definitions
+│   ├── db/schema.ts  # Central Drizzle schema definitions
 │   ├── locale/       # en/zh translation JSON files
 │   └── style/        # Tailwind + edu-academic theme CSS
 ├── core/             # Infrastructure (no business logic)
@@ -187,12 +187,12 @@ src/
 │   ├── email/        # Resend
 │   └── monitoring/   # Sentry
 ├── shared/           # Business logic layer
-│   ├── blocks/       # Business UI components (22 domain directories)
-│   ├── components/ui/# shadcn/ui atomic components (48 components, zero business logic)
+│   ├── blocks/       # Business UI components organized by domain
+│   ├── components/ui/# shadcn/ui atomic components
 │   ├── contexts/     # React Context (AppContext, ChatContext)
-│   ├── hooks/        # Custom hooks (8)
+│   ├── hooks/        # Custom hooks
 │   ├── lib/          # Domain logic & utilities
-│   ├── models/       # Data access layer (42 model files, one per table)
+│   ├── models/       # Data access layer
 │   ├── services/     # Service layer (AI, payment, storage, email, RBAC)
 │   └── types/        # TypeScript definitions
 └── themes/           # Landing page theme components
@@ -203,9 +203,9 @@ src/
 ```
 app → shared → config
 app → core
-app → extensions (API routes only)
+app → extensions (primarily API routes and integration boundaries)
 shared → config
-shared ✗ core (injected via app layer)
+shared/models → core/db
 config ✗ shared (no back-references)
 ```
 
@@ -218,8 +218,8 @@ Violations will cause circular dependencies and break the build.
 | **Routes** | `src/app/` | Page layout, data orchestration, API handlers | shared, core, extensions | — |
 | **Core** | `src/core/` | Auth, compliance, RBAC, DB connection, i18n, theme | config | shared |
 | **Models** | `src/shared/models/` | Database CRUD (one file per table) | config, core/db | extensions |
-| **Services** | `src/shared/services/` | Business orchestration (AI, payment, storage) | models, lib, config | core directly |
-| **Lib** | `src/shared/lib/` | Domain logic, utilities (UPG pipeline, physics, etc.) | config | core, services |
+| **Services** | `src/shared/services/` | Business orchestration (AI, payment, storage) | models, lib, config | most core modules directly |
+| **Lib** | `src/shared/lib/` | Domain logic, utilities (UPG pipeline, physics, etc.) | config, selected shared modules | unnecessary runtime coupling to app |
 | **Blocks** | `src/shared/blocks/` | Business UI components, organized by domain | components/ui, hooks, lib | core, models |
 | **UI** | `src/shared/components/ui/` | shadcn/ui atoms (Button, Card, Dialog, etc.) | nothing | everything above |
 | **Extensions** | `src/extensions/` | Third-party integrations (pluggable) | config | shared, core |
@@ -242,10 +242,10 @@ Violations will cause circular dependencies and break the build.
 | **Experiments** | `shared/blocks/experiments/`, `shared/lib/experiments/` | `experiment_progress` | Active | Curated 3D lab experiments with progress tracking |
 | **Learning Paths** | `shared/blocks/learning-path/` | `learning_path`, `learning_path_node`, `learning_path_progress`, `learning_stats` | Active | Structured course sequences |
 | **Gallery** | `shared/blocks/gallery/` | `upg_generation` (shared), `upg_like` | Active | Social discovery: like, fork, publish UPGs |
-| **AP Prep** | `shared/blocks/ap-prep/` | `ap_exam`, `ap_unit`, `ap_question`, `ap_attempt`, `ap_user_progress` | Designed | AP Physics exam practice system |
-| **Quest** | `shared/blocks/quest/` | `quest`, `quest_step`, `quest_attempt`, `quest_step_response`, `achievement` | Designed | Gamified physics challenges with scoring |
-| **Lab Notebook** | `shared/blocks/notebook/` | `lab_notebook`, `lab_notebook_version`, `lab_notebook_export` | Designed | Student experiment journals with AI assistance |
-| **Chat** | `shared/blocks/chat/` | `chat`, `chat_message` | Active | AI conversation interface via OpenRouter |
+| **AP Prep** | `shared/blocks/ap-prep/` | `ap_exam`, `ap_unit`, `ap_question`, `ap_attempt`, `ap_user_progress` | Active | AP Physics exam practice system |
+| **Quest** | `shared/blocks/quest/` | `quest`, `quest_step`, `quest_attempt`, `quest_step_response`, `achievement` | Active | Gamified physics challenges with scoring |
+| **Lab Notebook** | `shared/blocks/notebook/` | `lab_notebook`, `lab_notebook_version`, `lab_notebook_export` | Active | Student experiment journals with AI assistance |
+| **Chat** | `shared/blocks/chat/` | `chat`, `chat_message` | Active | AI conversation interface |
 
 ### UPG Domain Deep Dive
 
@@ -253,13 +253,14 @@ The UPG domain is the most complex. Key files:
 
 | File | Purpose |
 |------|---------|
-| `shared/lib/upg/generate-core.ts` | Core pipeline: AI call → sanitize → quality check → store. Shared by generate and fork endpoints. |
+| `shared/lib/upg/generate-core.ts` | Core pipeline: moderation → AI call → sanitize → quality check → validation → store. Shared by generate and fork endpoints. |
 | `shared/lib/upg/system-prompt.ts` | 400+ line system prompt with modular components (Three.js directives, visual design, interaction, etc.) |
 | `shared/lib/upg/html-sanitizer.ts` | XSS protection: iframe sandbox + CDN whitelist (only `cdn.jsdelivr.net`). Never weaken this. |
 | `shared/lib/upg/quality-checker.ts` | Validates generated HTML: canvas/WebGL renderer, scene/camera creation, no infinite loops, responsive |
-| `shared/lib/upg/openrouter-client.ts` | Direct HTTP client for OpenRouter (not Vercel AI SDK — UPG needs sync Chat Completions) |
+| `shared/lib/upg/anthropic-client.ts` | Primary Anthropic-compatible HTTP client used by generate/refine flows; can target Anthropic directly or a compatible gateway via base URL. |
+| `shared/lib/upg/openrouter-client.ts` | Auxiliary OpenRouter client retained in the codebase for provider-specific use cases. |
 | `shared/lib/upg/disciplines/` | Per-subject configuration (Physics, Chemistry, Biology, Earth Science, Math) |
-| `shared/lib/upg/validation/` | Input validation schemas |
+| `shared/lib/upg/validation/` | Full validation pipeline and technical/physics validators |
 | `shared/lib/moderation/` | Input/output content moderation (sensitive word lists, HTML pattern checks) |
 | `shared/lib/performance/` | Injected into generated HTML: FPS counter, adaptive quality, mobile optimization |
 
@@ -283,7 +284,7 @@ sequenceDiagram
     participant C as Client
     participant API as API Route
     participant RL as Redis<br>(Rate Limit)
-    participant AI as OpenRouter<br>(AI Provider)
+    participant AI as Anthropic-compatible<br>(AI Provider)
     participant SAN as Sanitizer +<br>Quality Check
     participant DB as PostgreSQL
     participant CR as Credit<br>Ledger
@@ -327,9 +328,9 @@ sequenceDiagram
 
 | Decision | Why |
 |----------|-----|
-| **Credits deducted AFTER AI success** | Avoids complex refund flows. If AI fails, user pays nothing. If DB fails post-credit, `refundCredits()` handles it. |
+| **Credits deducted AFTER AI success** | Keeps failed generations free. A compensating `refundCredits()` path still exists for post-generation persistence failures. |
 | **Redis distributed lock** | Prevents a user from spamming generate. Serverless instances are isolated — in-memory locks don't work. Lock auto-expires (5min TTL) to prevent deadlocks on crashes. |
-| **Separate OpenRouter client** (not Vercel AI SDK) | AI SDK is designed for async streaming. UPG needs synchronous Chat Completions with full HTML response. |
+| **Separate provider client** (not Vercel AI SDK) | UPG needs synchronous full-HTML completions and provider-specific retry/error handling. |
 | **HTML sanitization + iframe sandbox** | Generated HTML runs in user browsers. CDN whitelist (jsdelivr only) + banned patterns (eval, fetch, XMLHttpRequest) prevent XSS. |
 | **Input + output moderation** | Input: sensitive word detection before AI call. Output: HTML pattern check after generation. Both non-blocking on "pending" — only block on "failed". |
 | **Quality check is non-blocking on warnings** | Warnings are logged but don't reject the generation. Only hard failures (no canvas, no renderer) cause rejection. |
@@ -349,7 +350,7 @@ sequenceDiagram
 ### Auth Stack
 
 - **Framework:** Better Auth 1.3.7 (`src/core/auth/`)
-- **Methods:** Email/password + OAuth (Google, GitHub)
+- **Methods:** Email/password + OAuth (Google, GitHub, optional Microsoft)
 - **Session:** Token-based, stored in DB + cookie
 - **User retrieval:** `getUserInfo()` returns current user or null (anonymous access supported)
 
@@ -370,9 +371,9 @@ RBAC is defined in `src/core/rbac/`. Initialize with `pnpm rbac:init`, assign wi
 
 Located in `src/core/compliance/`. Key flows:
 
-1. **Age gate** — On signup, users declare age group. Under-13 triggers COPPA protections.
-2. **COPPA restrictions** — Max 5 min/day usage for minors, parental consent required. Tracked in `daily_usage` and `user_compliance_profile` tables.
-3. **GDPR data rights** — Export (`/api/privacy/export`) and deletion (`/api/privacy/delete`) requests tracked in `privacy_request` table with audit trail in `consent_event`.
+1. **Age gate** — Clients post age-group decisions to `/api/compliance/age-gate`; results are recorded in `consent_event` and `user_compliance_profile`.
+2. **Consent management** — Cookie/privacy/terms events are tracked through `/api/compliance/consent`.
+3. **Data rights** — Export, deletion, and status APIs live under `/api/privacy/*`, backed by `privacy_request` and `consent_event`.
 
 ## 9. Payment & Credit System
 

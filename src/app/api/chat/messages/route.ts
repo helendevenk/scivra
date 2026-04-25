@@ -41,8 +41,8 @@ export async function POST(req: Request) {
       limit,
       hasMore: page * limit < total,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('get chat messages failed:', e);
-    return respErr(`get chat messages failed: ${e.message}`);
+    return respErr(`get chat messages failed: ${(e instanceof Error ? e.message : String(e))}`);
   }
 }

@@ -43,7 +43,7 @@ export async function callAnthropic(
 
   try {
     const baseUrl = (
-      params.baseUrl || process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com'
+      params.baseUrl || process.env.ANTHROPIC_BASE_URL || 'https://open.bigmodel.cn/api/anthropic'
     ).replace(/\/+$/, '');
 
     // Some proxies require Bearer auth instead of x-api-key
@@ -105,17 +105,21 @@ export async function callAnthropic(
       outputTokens: usage.output_tokens ?? 0,
       costUsd: 0,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AnthropicError) throw err;
-    if (err?.name === 'AbortError') {
+    const isAbort =
+      (err instanceof Error && err.name === 'AbortError') ||
+      (typeof err === 'object' && err !== null && 'name' in err && (err as { name: string }).name === 'AbortError');
+    if (isAbort) {
       throw new AnthropicError(
         `Anthropic request timed out after ${UPG_MAX_GENERATION_TIME_MS}ms`,
         408,
         'timeout'
       );
     }
+    const message = err instanceof Error ? err.message : 'unknown error';
     throw new AnthropicError(
-      `Anthropic request failed: ${err?.message ?? 'unknown error'}`,
+      `Anthropic request failed: ${message}`,
       0,
       'unknown'
     );

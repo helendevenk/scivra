@@ -59,8 +59,8 @@ export async function GET(request: Request) {
         total: records.length,
       },
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Get pending moderation records failed:', e);
-    return respErr(e.message || 'Failed to get pending moderation records');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get pending moderation records');
   }
 }

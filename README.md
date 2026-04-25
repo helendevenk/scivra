@@ -1,16 +1,13 @@
 # Scivra v2
 
-Scivra v2 是基于 ShipAny Template Two 二次开发的教育类 AI SaaS 项目，当前包含两条业务主线：
+Scivra v2 是一个面向科学教育的 AI SaaS 项目，当前包含两条业务主线：
 
 - **Curated Labs（精选实验）**：物理实验可视化与课程化能力。
 - **UPG（Universal Principle Generator）**：输入主题后生成交互式可视化内容。
 
 ## 当前状态
 
-- 主线仓库：`/Users/sky/Desktop/sciwangzhan/scivra-v2`
-- 历史副本：已归档到 `/Users/sky/Desktop/sciwangzhan/archive/scivra-v2-copy-2026-02-25`
-- 统一状态看板：[`docs/WORKSPACE-STATUS.md`](./docs/WORKSPACE-STATUS.md)
-- 基线文档（单一真相）：[`docs/PROJECT-BASELINE.md`](./docs/PROJECT-BASELINE.md)
+仓库仍在持续迭代中。历史规划、阶段报告与当前代码实现可能存在时间差，评审和开发时请优先以代码目录、[ARCHITECTURE.md](./ARCHITECTURE.md) 和现有测试为准。
 
 ## 技术栈
 
@@ -39,7 +36,7 @@ docs/                                  # 基线、状态、归档记录
 ### 1) 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2) 配置环境变量
@@ -52,42 +49,40 @@ cp .env.example .env.local
 ### 3) 初始化数据库
 
 ```bash
-npm run db:push
+pnpm db:push
 ```
 
 ### 4) 本地启动
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ## 常用命令
 
 ```bash
-npm run dev
-npm run build
-npm run lint
-npm run test
-npm run test:coverage
-npm run test:e2e
-npm run db:generate
-npm run db:push
+pnpm dev
+pnpm build
+pnpm lint
+pnpm test
+pnpm test:coverage
+pnpm test:e2e
+pnpm db:generate
+pnpm db:push
 ```
 
 ## 文档索引
 
-### 代码真相类（优先阅读）
-- [项目基线（Single Source of Truth）](./docs/PROJECT-BASELINE.md)
-- [工作区统一状态看板](./docs/WORKSPACE-STATUS.md)
+### 代码真相类
+- [架构说明](./ARCHITECTURE.md)
+- [技术债务记录](./docs/tech-debt.md)
 - [归档记录](./docs/ARCHIVE-LOG.md)
 
-### 产品与计划（战略输入）
-- [Scivra 产品策划书](/Users/sky/Desktop/sciwangzhan/NeonPhysics-PRD.md)
-- [Scivra 开发计划书](/Users/sky/Desktop/sciwangzhan/NeonPhysics-DevPlan.md)
-- [UPG PRD](/Users/sky/Desktop/sciwangzhan/UPG-PRD.md)
-- [UPG 开发计划](/Users/sky/Desktop/sciwangzhan/UPG-DEV-PLAN.md)
-- [UPG CTO 评审](/Users/sky/Desktop/sciwangzhan/UPG-CTO-REVIEW.md)
+### 计划与阶段资料
+- [计划文档目录](./docs/plans)
+- [阶段报告目录](./docs/reports)
+- [测试计划与报告](./docs/test-plans), [测试结果](./docs/test-reports)
 
 ## 说明
 
-当前仓库仍处于持续迭代期，部分“历史任务文档”与“代码实际落地”存在差异。开发与评审时请优先以 `docs/PROJECT-BASELINE.md` 与代码目录为准。
+当前仓库文档较多，且包含历史设计稿、复盘与归档材料。阅读时建议先看 `README.md`、`ARCHITECTURE.md` 和 `tests/`，再按需进入 `docs/plans/` 与 `docs/reports/`。

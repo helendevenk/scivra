@@ -25,8 +25,8 @@ export async function POST(request: Request) {
       reason: result.reason,
       issues: result.issues,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Output moderation failed:', e);
-    return respErr(e.message || 'Output moderation failed');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Output moderation failed');
   }
 }

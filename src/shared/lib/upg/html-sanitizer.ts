@@ -151,20 +151,22 @@ export function sanitizeHtml(html: string): SanitizeResult {
     sanitized = sanitized.replace(/\bsessionStorage\b/g, '/* _ss_blocked_ */');
   }
 
-  // 11. Check for common XSS vectors in attributes
-  const xssPatterns = [
-    /on\w+\s*=\s*["'][^"']*["']/gi, // onerror, onclick, onload, etc.
-    /javascript:/gi, // javascript: protocol
-    /data:text\/html/gi, // data: URLs with HTML
-    /<iframe[^>]*>/gi, // nested iframes
-    /<object[^>]*>/gi, // object tags
-    /<embed[^>]*>/gi, // embed tags
+  // 11. Remove common XSS vectors
+  const xssPatterns: Array<{ pattern: RegExp; label: string; replacement: string }> = [
+    { pattern: /\s+on\w+\s*=\s*["'][^"']*["']/gi, label: 'inline event handler', replacement: '' },
+    { pattern: /javascript\s*:/gi, label: 'javascript: protocol', replacement: '/* js-blocked */:' },
+    { pattern: /data:text\/html/gi, label: 'data:text/html URL', replacement: 'data:text/plain' },
+    { pattern: /<iframe[^>]*>[\s\S]*?<\/iframe>/gi, label: 'iframe', replacement: '<!-- iframe blocked -->' },
+    { pattern: /<iframe[^>]*\/?>/gi, label: 'iframe', replacement: '<!-- iframe blocked -->' },
+    { pattern: /<object[^>]*>[\s\S]*?<\/object>/gi, label: 'object tag', replacement: '<!-- object blocked -->' },
+    { pattern: /<embed[^>]*\/?>/gi, label: 'embed tag', replacement: '<!-- embed blocked -->' },
   ];
 
-  for (const pattern of xssPatterns) {
+  for (const { pattern, label, replacement } of xssPatterns) {
     if (pattern.test(sanitized)) {
-      issues.push(`Potential XSS vector detected: ${pattern.source}`);
-      // Don't auto-remove, just warn - let iframe sandbox handle it
+      issues.push(`Removed XSS vector: ${label}`);
+      pattern.lastIndex = 0; // reset after test()
+      sanitized = sanitized.replace(pattern, replacement);
     }
   }
 

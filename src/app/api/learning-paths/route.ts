@@ -22,8 +22,8 @@ export async function GET(request: Request) {
     }
 
     return respData({ paths });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Learning paths list failed:', e);
-    return respErr(e.message || 'Failed to get learning paths');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get learning paths');
   }
 }

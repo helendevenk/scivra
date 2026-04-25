@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { BookOpen, CheckCircle, ChevronRight } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -22,7 +22,6 @@ interface PathProgress {
 
 export function DashboardLearnPanel() {
   const t = useTranslations('learn');
-  const locale = useLocale();
   const [paths, setPaths] = useState<PathProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,7 +83,7 @@ export function DashboardLearnPanel() {
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {paths.slice(0, 4).map((p) => {
-          const title = locale === 'zh' ? p.titleZh : p.titleEn;
+          const title = p.titleEn;
           const percent =
             p.nodeCount > 0
               ? Math.round((p.currentNode / p.nodeCount) * 100)

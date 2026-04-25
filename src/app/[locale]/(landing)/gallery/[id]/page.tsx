@@ -1,6 +1,11 @@
 import { setRequestLocale } from 'next-intl/server';
 
 import { GalleryDetailClient } from '@/shared/blocks/gallery/gallery-detail';
+import { getMetadata } from '@/shared/lib/seo';
+
+export const generateMetadata = getMetadata({
+  noIndex: true,
+});
 
 export default async function GalleryDetailPage({
   params,

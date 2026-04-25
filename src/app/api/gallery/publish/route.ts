@@ -21,8 +21,8 @@ export async function POST(request: Request) {
     }
 
     return respData(result);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Gallery publish failed:', e);
-    return respErr(e.message || 'Failed to toggle publish');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to toggle publish');
   }
 }

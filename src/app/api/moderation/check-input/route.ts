@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       reason: result.reason,
       // 不返回 matchedKeywords，避免用户绕过审核
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Input moderation failed:', e);
-    return respErr(e.message || 'Input moderation failed');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Input moderation failed');
   }
 }

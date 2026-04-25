@@ -7,6 +7,8 @@ import type {
   Tier,
   Wave,
 } from "@/shared/types/experiment";
+import { getExperimentsBySubjectAsync } from "./registry-subjects";
+import { SUBJECT_LIST } from "./subjects";
 
 // Wave 1 — Original 4
 import { newtonsLaws } from "./data/newtons-laws";
@@ -486,4 +488,12 @@ export function getAllSubjectsWithCounts(
     subject,
     count,
   }));
+}
+
+export async function getAllExperimentsAsync(): Promise<Experiment[]> {
+  const bySubject = await Promise.all(
+    SUBJECT_LIST.map((subject) => getExperimentsBySubjectAsync(subject))
+  );
+
+  return bySubject.flat();
 }

@@ -1,5 +1,9 @@
 import type { Experiment } from '@/shared/types/experiment';
 
+import { getAbsoluteUrl, getLocalizedPath, normalizeSeoText } from '@/shared/lib/seo';
+
+const SITE_NAME = 'Scivra';
+
 /**
  * Build JSON-LD structured data for an experiment page.
  * Returns a plain object ready to be serialized into a <script type="application/ld+json"> tag.
@@ -7,14 +11,20 @@ import type { Experiment } from '@/shared/types/experiment';
 export function buildExperimentJsonLd(input: {
   experiment: Experiment;
   siteUrl: string;
+  locale?: string;
 }): Record<string, unknown> {
-  const { experiment, siteUrl } = input;
-  const url = `${siteUrl.replace(/\/+$/, '')}/experiments/${experiment.slug}`;
+  const { experiment, siteUrl, locale = 'en' } = input;
+  const url = getAbsoluteUrl(
+    getLocalizedPath(
+      `/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`,
+      locale
+    )
+  );
 
   return {
     '@context': 'https://schema.org',
     '@type': 'LearningResource',
-    name: experiment.seoTitle || experiment.title,
+    name: normalizeSeoText(experiment.seoTitle) || experiment.title,
     description: experiment.description,
     url,
     educationalLevel: mapDifficultyToLevel(experiment.difficulty),
@@ -23,7 +33,7 @@ export function buildExperimentJsonLd(input: {
     isAccessibleForFree: experiment.tier === 'free',
     provider: {
       '@type': 'Organization',
-      name: 'Scivra',
+      name: SITE_NAME,
       url: siteUrl,
     },
     about: {
@@ -75,7 +85,7 @@ export function buildLearningPathJsonLd(input: {
   locale: string;
 }): Record<string, unknown> {
   const { title, description, slug, level, category, nodeCount, siteUrl, locale } = input;
-  const url = `${siteUrl.replace(/\/+$/, '')}/${locale}/learn/${slug}`;
+  const url = getAbsoluteUrl(getLocalizedPath(`/learn/${slug}`, locale));
 
   return {
     '@context': 'https://schema.org',
@@ -85,7 +95,7 @@ export function buildLearningPathJsonLd(input: {
     url,
     provider: {
       '@type': 'Organization',
-      name: 'Scivra',
+      name: SITE_NAME,
       url: siteUrl,
     },
     educationalLevel: mapDifficultyToLevel(level),

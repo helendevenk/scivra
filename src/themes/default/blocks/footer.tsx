@@ -57,7 +57,11 @@ export function Footer({ footer }: { footer: FooterType }) {
         <div className="flex min-w-0 flex-wrap items-center gap-4 sm:gap-8">
           {footer.show_built_with !== false ? <BuiltWith /> : null}
           <div className="min-w-0 flex-1" />
-          {footer.show_theme !== false ? <ThemeToggler type="toggle" /> : null}
+          {footer.show_theme !== false ? (
+            <div className="text-foreground/80 hover:text-foreground [&_button]:text-inherit">
+              <ThemeToggler type="toggle" />
+            </div>
+          ) : null}
           {footer.show_locale !== false ? (
             <LocaleSelector type="button" />
           ) : null}

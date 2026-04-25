@@ -30,8 +30,8 @@ export async function GET(request: Request) {
       page,
       pageSize,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('UPG get my generations failed:', e);
-    return respErr(e.message || 'Failed to get generations');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get generations');
   }
 }

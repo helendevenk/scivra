@@ -99,9 +99,9 @@ export async function callOpenRouter(params: CallOpenRouterParams): Promise<Call
       outputTokens: usage.completion_tokens ?? 0,
       costUsd: typeof usage.total_cost === 'number' ? usage.total_cost : 0,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof OpenRouterError) throw err;
-    if (err?.name === 'AbortError') {
+    if (err instanceof Error && err.name === 'AbortError') {
       throw new OpenRouterError(
         `OpenRouter request timed out after ${UPG_MAX_GENERATION_TIME_MS}ms`,
         408,
@@ -109,7 +109,7 @@ export async function callOpenRouter(params: CallOpenRouterParams): Promise<Call
       );
     }
     throw new OpenRouterError(
-      `OpenRouter request failed: ${err?.message ?? 'unknown error'}`,
+      `OpenRouter request failed: ${(err instanceof Error ? err.message : String(err)) ?? 'unknown error'}`,
       0,
       'unknown'
     );

@@ -56,8 +56,8 @@ export async function GET() {
       recentActivity,
       actionHints,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Dashboard failed:', e);
-    return respErr(e.message || 'Failed to get dashboard data');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get dashboard data');
   }
 }

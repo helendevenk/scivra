@@ -66,8 +66,8 @@ export async function POST(
       status: result.status,
       htmlContent: result.htmlContent,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Gallery fork failed:', e);
-    return respErr(e.message || 'Failed to fork generation');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to fork generation');
   }
 }

@@ -133,6 +133,7 @@ export async function generateCore(
   // Resolve API key and base URL from env vars or DB config
   const configs = await getAllConfigs();
   const apiKey =
+    process.env.ANTHROPIC_AUTH_TOKEN ||
     process.env.ANTHROPIC_API_KEY ||
     process.env.OPENROUTER_API_KEY ||
     configs.openrouter_api_key;

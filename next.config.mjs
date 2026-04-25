@@ -15,6 +15,7 @@ const withNextIntl = createNextIntlPlugin({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: process.env.VERCEL ? undefined : 'standalone',
+  // Disabled: React Three Fiber / Drei cause double-mount issues with StrictMode
   reactStrictMode: false,
   poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
@@ -24,14 +25,21 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     qualities: [60, 70, 75],
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*',
-      },
+      { protocol: 'https', hostname: 'cdn.jsdelivr.net' },
+      { protocol: 'https', hostname: 'cdnjs.cloudflare.com' },
+      { protocol: 'https', hostname: 'unpkg.com' },
+      { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
     ],
   },
   async redirects() {
-    return [];
+    return [
+      // Chinese locale retired 2026-04-23. Old inbound links → English home.
+      { source: '/zh', destination: '/', permanent: true },
+      { source: '/zh/:path*', destination: '/:path*', permanent: true },
+    ];
   },
   async headers() {
     return [

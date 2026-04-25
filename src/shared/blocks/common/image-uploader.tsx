@@ -233,10 +233,11 @@ export function ImageUploader({
             });
             return next;
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Upload failed:', error);
+          const errMsg = error instanceof Error ? error.message : String(error);
           toast.error(
-            error?.message ? `Upload failed: ${error.message}` : 'Upload failed'
+            errMsg ? `Upload failed: ${errMsg}` : 'Upload failed'
           );
           setItems((prev) => {
             const next = prev.map((current) =>

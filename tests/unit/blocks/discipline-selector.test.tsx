@@ -123,11 +123,8 @@ describe('DisciplineSelector', () => {
     expect(chemButton?.className).toContain('bg-muted');
   });
 
-  it('should use zh locale for discipline names', () => {
-    mockUseLocale.mockReturnValue('zh');
-    const { container } = renderSelector();
-    expect(container.textContent).toContain('物理');
-    expect(container.textContent).toContain('化学');
-    expect(container.textContent).toContain('数学');
-  });
+  // zh locale was retired site-wide (commit 14a0056). The previous
+  // "should use zh locale for discipline names" test asserted Chinese
+  // strings that no longer exist in any disciplines bundle. Removed
+  // instead of skipped — the contract being tested no longer exists.
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/shared/components/ui/button';
@@ -71,7 +71,6 @@ interface StepConfig {
 
 export function QuestDetail({ slug }: { slug: string }) {
   const t = useTranslations('quest');
-  const locale = useLocale();
   const router = useRouter();
 
   const [questData, setQuestData] = useState<QuestData | null>(null);
@@ -247,10 +246,10 @@ export function QuestDetail({ slug }: { slug: string }) {
   }, []);
 
   function getTitle(item: { titleEn: string; titleZh: string }) {
-    return locale === 'zh' ? item.titleZh : item.titleEn;
+    return item.titleEn;
   }
   function getContent(item: { contentEn: string; contentZh: string }) {
-    return locale === 'zh' ? item.contentZh : item.contentEn;
+    return item.contentEn;
   }
 
   if (loading) {
@@ -339,9 +338,7 @@ export function QuestDetail({ slug }: { slug: string }) {
         <div>
           <h1 className="text-2xl font-bold">{getTitle(questData)}</h1>
           <p className="mt-2 text-muted-foreground">
-            {locale === 'zh'
-              ? questData.descriptionZh
-              : questData.descriptionEn}
+            {questData.descriptionEn}
           </p>
           <div className="mt-3 flex gap-2">
             <Badge variant="secondary">
@@ -467,10 +464,7 @@ export function QuestDetail({ slug }: { slug: string }) {
                   <p className="text-sm font-medium">
                     {t('step.predict_choice_label')}
                   </p>
-                  {(locale === 'zh'
-                    ? config.options_zh
-                    : config.options_en
-                  )?.map((opt, idx) => (
+                  {config.options_en?.map((opt, idx) => (
                     <Button
                       key={idx}
                       variant={
@@ -540,11 +534,9 @@ export function QuestDetail({ slug }: { slug: string }) {
                   </CardContent>
                 </Card>
               </div>
-              {(locale === 'zh' ? config.feedbackZh : config.feedbackEn) && (
+              {config.feedbackEn && (
                 <p className="text-sm text-muted-foreground">
-                  {locale === 'zh'
-                    ? config.feedbackZh
-                    : config.feedbackEn}
+                  {config.feedbackEn}
                 </p>
               )}
             </div>
@@ -557,10 +549,7 @@ export function QuestDetail({ slug }: { slug: string }) {
                   <p className="text-sm font-medium">
                     {t('step.explain_choice_label')}
                   </p>
-                  {(locale === 'zh'
-                    ? config.options_zh
-                    : config.options_en
-                  )?.map((opt, idx) => (
+                  {config.options_en?.map((opt, idx) => (
                     <Button
                       key={idx}
                       variant={

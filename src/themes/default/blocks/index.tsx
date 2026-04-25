@@ -24,6 +24,7 @@ export * from './pricing';
 
 export * from './experiment-showcase';
 export * from './grade-levels';
+export * from './upg-section';
 
 export * from './blog';
 export * from './blog-detail';

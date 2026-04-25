@@ -1,4 +1,15 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { ComponentProps, ReactNode } from 'react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+
+// Stub the next-intl-backed navigation Link so we don't pull next-intl's
+// navigation chain into jsdom (it tries to resolve `next/navigation` as
+// ESM and fails under vitest).
+vi.mock('@/core/i18n/navigation', () => ({
+  Link: ({ children, ...props }: { children?: ReactNode } & ComponentProps<'a'>) => (
+    <a {...props}>{children}</a>
+  ),
+}));
 
 vi.mock('next-intl', () => ({
   useTranslations: vi.fn(() => (key: string, params?: Record<string, string>) => {
@@ -90,6 +101,14 @@ describe('GalleryList', () => {
     })));
   });
 
+  // Without explicit cleanup, mounted GalleryList instances leak between
+  // tests — a stale fetch resolution can fire setState on an unmounted
+  // tree at vitest teardown, producing 'window is not defined' from the
+  // React 19 scheduler under jsdom.
+  afterEach(() => {
+    cleanup();
+  });
+
   it('should show skeletons while loading', () => {
     global.fetch = vi.fn(() => new Promise(() => {})) as any;
     const { container } = render(<GalleryList />);
@@ -108,14 +127,17 @@ describe('GalleryList', () => {
     });
   });
 
-  it('should show empty state when no items returned', async () => {
+  it('should show Motion Poetics empty state when no items returned', async () => {
     global.fetch = vi.fn(() => Promise.resolve(makeApiResponse([]))) as any;
 
     const { container } = render(<GalleryList />);
 
+    // Empty state was redesigned in commit e8c3786 — Motion Poetics: italic
+    // "Be the first." + 'gallery is still warming up' tagline + Try UPG CTA.
     await waitFor(() => {
-      expect(container.textContent).toContain('No results found');
-      expect(container.textContent).toContain('Try a different search');
+      expect(container.textContent).toContain('Be the first.');
+      expect(container.textContent).toMatch(/warming up/i);
+      expect(container.textContent).toMatch(/Try UPG/i);
     });
   });
 

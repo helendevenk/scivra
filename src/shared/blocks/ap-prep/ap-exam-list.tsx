@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { Button } from '@/shared/components/ui/button';
@@ -20,7 +20,6 @@ interface ExamItem {
 
 export function ApExamList() {
   const t = useTranslations('ap-prep');
-  const locale = useLocale();
   const [exams, setExams] = useState<ExamItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,9 +71,8 @@ export function ApExamList() {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {exams.map((exam) => {
-        const title = locale === 'zh' ? exam.titleZh : exam.titleEn;
-        const description =
-          locale === 'zh' ? exam.descriptionZh : exam.descriptionEn;
+        const title = exam.titleEn;
+        const description = exam.descriptionEn;
 
         return (
           <Link

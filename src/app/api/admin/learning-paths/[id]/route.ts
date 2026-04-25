@@ -20,9 +20,9 @@ export async function PUT(
 
     const path = await updateLearningPath(id, body);
     return respData(path);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin update learning path failed:', e);
-    return respErr(e.message || 'Failed to update learning path');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to update learning path');
   }
 }
 
@@ -39,8 +39,8 @@ export async function DELETE(
     const { id } = await params;
     await deleteLearningPath(id);
     return respOk();
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin delete learning path failed:', e);
-    return respErr(e.message || 'Failed to delete learning path');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to delete learning path');
   }
 }

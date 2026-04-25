@@ -98,34 +98,32 @@ export function Header({ header }: { header: HeaderType }) {
           {header.nav?.items?.map((item, idx) => {
             if (!item.children || item.children.length === 0) {
               return (
-                <NavigationMenuLink key={idx} asChild>
-                  <Link
-                    href={item.url || ''}
-                    target={item.target || '_self'}
-                    className={`flex flex-row items-center gap-2 px-4 py-1.5 text-sm ${
-                      item.is_active || pathname.endsWith(item.url as string)
-                        ? 'bg-muted/40 text-muted-foreground'
-                        : ''
-                    }`}
-                  >
-                    {item.icon && <SmartIcon name={item.icon as string} />}
-                    {item.title}
-                    {item.badge && (
-                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                </NavigationMenuLink>
+                <NavigationMenuItem key={idx}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={item.url || ''}
+                      target={item.target || '_self'}
+                      className={`flex flex-row items-center gap-2 px-4 py-1.5 text-sm ${
+                        item.is_active || pathname.endsWith(item.url as string)
+                          ? 'bg-muted/40 text-muted-foreground'
+                          : ''
+                      }`}
+                    >
+                      {item.title}
+                      {item.badge && (
+                        <span className="rounded-full bg-[oklch(0.82_0.17_75)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[oklch(0.18_0.03_75)]">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
               );
             }
 
             return (
               <NavigationMenuItem key={idx}>
                 <NavigationMenuTrigger className="flex flex-row items-center gap-2 text-sm">
-                  {item.icon && (
-                    <SmartIcon name={item.icon as string} className="h-4 w-4" />
-                  )}
                   {item.title}
                   {item.badge && (
                     <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">

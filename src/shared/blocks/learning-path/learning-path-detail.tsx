@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { CheckCircle, Lock, Play } from 'lucide-react';
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -47,10 +47,9 @@ export function LearningPathDetail({
   progress,
 }: LearningPathDetailProps) {
   const t = useTranslations('learn');
-  const locale = useLocale();
 
-  const title = locale === 'zh' ? path.titleZh : path.titleEn;
-  const description = locale === 'zh' ? path.descriptionZh : path.descriptionEn;
+  const title = path.titleEn;
+  const description = path.descriptionEn;
   const total = path.nodeCount ?? 0;
   const current = progress?.currentNode ?? 0;
   const isCompleted = progress?.completed ?? false;
@@ -98,7 +97,7 @@ export function LearningPathDetail({
         </h2>
         <div className="space-y-2">
           {nodes.map((node) => {
-            const nodeTitle = locale === 'zh' ? node.titleZh : node.titleEn;
+            const nodeTitle = node.titleEn;
             const isCurrent = !isCompleted && node.orderIndex === current;
             const isDone = node.orderIndex < current || isCompleted;
 

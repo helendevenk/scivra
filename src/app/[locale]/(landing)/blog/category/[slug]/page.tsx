@@ -2,7 +2,6 @@ import moment from 'moment';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { envConfigs } from '@/config';
 import { Empty } from '@/shared/blocks/common';
 import {
   PostType as DBPostType,
@@ -20,6 +19,7 @@ import {
   Category as CategoryType,
   Post as PostType,
 } from '@/shared/types/blocks/blog';
+import { getPageAlternates } from '@/shared/lib/seo';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
 export const revalidate = 3600;
@@ -35,12 +35,7 @@ export async function generateMetadata({
   return {
     title: `${slug} | ${t('title')}`,
     description: t('description'),
-    alternates: {
-      canonical:
-        locale !== envConfigs.locale
-          ? `${envConfigs.app_url}/${locale}/blog/category/${slug}`
-          : `${envConfigs.app_url}/blog/category/${slug}`,
-    },
+    alternates: getPageAlternates(`/blog/category/${slug}`, locale),
   };
 }
 

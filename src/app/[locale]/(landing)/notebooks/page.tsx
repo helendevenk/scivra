@@ -7,6 +7,11 @@ import {
   getNotebooksByUserCount,
 } from '@/shared/models/lab_notebook';
 import { NotebookList } from '@/shared/blocks/notebook/NotebookList';
+import { getMetadata } from '@/shared/lib/seo';
+
+export const generateMetadata = getMetadata({
+  noIndex: true,
+});
 
 export default async function NotebooksPage({
   searchParams,

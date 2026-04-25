@@ -314,9 +314,9 @@ export function Form({
       }
 
       setLoading(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log('submit form error', err);
-      toast.error(err.message || 'submit form failed');
+      toast.error((err instanceof Error ? err.message : String(err)) || 'submit form failed');
       setLoading(false);
     }
   }

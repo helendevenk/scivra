@@ -33,9 +33,9 @@ export async function GET(
     incrementViewCount(id).catch(() => {});
 
     return respData(generation);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('UPG get generation failed:', e);
-    return respErr(e.message || 'Failed to get generation');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get generation');
   }
 }
 
@@ -66,8 +66,8 @@ export async function DELETE(
     await softDeleteUpgGeneration(id);
 
     return respData({ id, deleted: true });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('UPG delete generation failed:', e);
-    return respErr(e.message || 'Failed to delete generation');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to delete generation');
   }
 }

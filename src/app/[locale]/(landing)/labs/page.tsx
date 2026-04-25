@@ -1,31 +1,90 @@
 import Link from "next/link";
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { getAllSubjectsWithCountsAsync } from "@/shared/lib/experiments/registry-subjects";
 import { SUBJECTS } from "@/shared/lib/experiments/subjects";
-import type { Subject, GradeLevel } from "@/shared/types/experiment";
+import {
+  resolveGradeLevels,
+  VALID_GRADE_INPUTS,
+} from "@/shared/lib/experiments/grade-filter";
+import { GRADE_CONFIGS } from "@/shared/lib/experiments/grade-constants";
+import type { Subject } from "@/shared/types/experiment";
 import type { Metadata } from "next";
+import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
 
-// Use ISR to cache this page for 1 hour
 export const revalidate = 3600;
 
-const SUBJECT_ICONS: Record<Subject, string> = {
-  physics: "⚛️",
-  chemistry: "🧪",
-  biology: "🧬",
-  "earth-science": "🌍",
-  math: "🔢",
-};
-
-const GRADE_LEVELS: { value: GradeLevel | "all"; label: string }[] = [
+const GRADE_LEVELS: { value: string; label: string }[] = [
   { value: "all", label: "All Grades" },
-  { value: "K-2", label: "K-2" },
-  { value: "3-5", label: "3-5" },
-  { value: "6-8", label: "Middle School" },
-  { value: "9-12", label: "High School" },
-  { value: "AP", label: "AP" },
+  ...GRADE_CONFIGS.map((c) => ({ value: c.urlParam, label: c.label })),
 ];
 
-const VALID_GRADES = new Set<string>(["K-2", "3-5", "6-8", "9-12", "AP"]);
+const SUBJECT_SIGNATURES: Record<Subject, (props: { className?: string }) => React.ReactElement> = {
+  physics: ({ className }) => (
+    <svg viewBox="0 0 80 80" className={className} fill="none" aria-hidden>
+      <path
+        d="M8 56 Q40 8 72 56"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <circle cx="40" cy="20" r="3" fill="currentColor" />
+      <path d="M8 56 L14 62 M8 56 L14 50" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  chemistry: ({ className }) => (
+    <svg viewBox="0 0 80 80" className={className} fill="none" aria-hidden>
+      <path
+        d="M30 14 L30 32 L18 58 Q16 66 24 66 L56 66 Q64 66 62 58 L50 32 L50 14"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <path d="M24 14 L56 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="32" cy="50" r="2.5" fill="currentColor" />
+      <circle cx="44" cy="56" r="2" fill="currentColor" />
+      <circle cx="38" cy="44" r="1.5" fill="currentColor" />
+    </svg>
+  ),
+  biology: ({ className }) => (
+    <svg viewBox="0 0 80 80" className={className} fill="none" aria-hidden>
+      <path
+        d="M24 12 Q56 28 24 44 Q56 60 24 68"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M56 12 Q24 28 56 44 Q24 60 56 68"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <line x1="28" y1="20" x2="52" y2="20" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="28" y1="32" x2="52" y2="32" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="28" y1="44" x2="52" y2="44" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="28" y1="56" x2="52" y2="56" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  "earth-science": ({ className }) => (
+    <svg viewBox="0 0 80 80" className={className} fill="none" aria-hidden>
+      <circle cx="40" cy="40" r="26" stroke="currentColor" strokeWidth="2.5" />
+      <path d="M14 40 Q40 26 66 40" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M14 40 Q40 54 66 40" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M40 14 Q52 40 40 66" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M40 14 Q28 40 40 66" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  math: ({ className }) => (
+    <svg viewBox="0 0 80 80" className={className} fill="none" aria-hidden>
+      <path d="M12 60 L68 20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M12 60 Q40 60 40 20" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" />
+      <circle cx="40" cy="40" r="2.5" fill="currentColor" />
+      <text x="46" y="44" fontSize="12" fontFamily="ui-monospace,monospace" fill="currentColor">
+        ƒ(x)
+      </text>
+    </svg>
+  ),
+};
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -41,6 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       "Explore 179+ free interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Aligned with AP, NGSS, and K-12 standards.",
     keywords:
       "virtual labs, science experiments, physics simulations, chemistry labs, biology labs, interactive learning, AP Physics, NGSS",
+    alternates: getPageAlternates('/labs', locale),
   };
 }
 
@@ -48,42 +108,49 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { grade } = await searchParams;
   setRequestLocale(locale);
-  const t = await getTranslations("experiments");
 
-  const activeGrade =
-    grade && VALID_GRADES.has(grade) ? (grade as GradeLevel) : undefined;
+  const activeGradeInput =
+    grade && VALID_GRADE_INPUTS.has(grade) ? grade : undefined;
+  const gradeLevels = resolveGradeLevels(activeGradeInput);
 
-  const subjectsWithCounts = await getAllSubjectsWithCountsAsync(activeGrade);
-  const countsMap = new Map(
-    subjectsWithCounts.map((s) => [s.subject, s.count])
-  );
+  const subjectsWithCounts = await getAllSubjectsWithCountsAsync(gradeLevels);
+  const countsMap = new Map(subjectsWithCounts.map((s) => [s.subject, s.count]));
 
   const subjectKeys = Object.keys(SUBJECTS) as Subject[];
   const totalCount = subjectsWithCounts.reduce((sum, s) => sum + s.count, 0);
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
-      {/* Hero */}
-      <section className="mb-8 text-center">
-        <h1 className="font-heading mb-3 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          Interactive Science Labs
+      <section className="mb-10 text-center">
+        <h1 className="mb-4 font-serif text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl">
+          <span className="italic">Interactive</span>{" "}
+          <span className="relative inline-block">
+            Science Labs
+            <span
+              aria-hidden
+              className="absolute inset-x-0 -bottom-1 h-[0.22em] bg-[oklch(0.82_0.17_75)]/70"
+            />
+          </span>
         </h1>
-        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+        <p className="mx-auto max-w-2xl text-base text-muted-foreground md:text-lg">
           Explore virtual experiments across 5 disciplines. Hands-on learning
-          aligned with AP, NGSS, and K-12 standards — completely free to start.
+          aligned with AP, NGSS, and K-12 standards &mdash; completely free to
+          start.
+        </p>
+        <p className="mt-4 font-mono text-xs text-muted-foreground md:text-sm">
+          {totalCount} experiments · 5 disciplines · NGSS / AP aligned
         </p>
       </section>
 
-      {/* Grade Level Filter */}
-      <section className="mb-10">
+      <section className="mb-12">
         <div className="flex flex-wrap items-center justify-center gap-2">
           {GRADE_LEVELS.map(({ value, label }) => {
             const isActive =
-              value === "all" ? !activeGrade : activeGrade === value;
+              value === "all" ? !activeGradeInput : activeGradeInput === value;
             const href =
               value === "all"
-                ? `/${locale}/labs`
-                : `/${locale}/labs?grade=${value}`;
+                ? getLocalizedPath("/labs", locale)
+                : getLocalizedPath(`/labs?grade=${value}`, locale);
 
             return (
               <Link
@@ -91,7 +158,7 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
                 href={href}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary text-primary-foreground shadow-[0_0_0_4px_oklch(0.82_0.17_75/0.18)]"
                     : "border-primary/20 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 }`}
               >
@@ -99,102 +166,49 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
               </Link>
             );
           })}
-          <span className="ml-2 text-sm text-muted-foreground">
-            {totalCount} experiments
-          </span>
         </div>
       </section>
 
-      {/* Subject Cards Grid */}
       <section className="mb-16">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {subjectKeys.map((key) => {
             const subject = SUBJECTS[key];
             const count = countsMap.get(key) ?? 0;
 
-            if (activeGrade && count === 0) return null;
+            if (activeGradeInput && count === 0) return null;
 
-            const href = activeGrade
-              ? `/${locale}/labs/${key}?grade=${activeGrade}`
-              : `/${locale}/labs/${key}`;
+            const href = activeGradeInput
+              ? getLocalizedPath(
+                  `/labs/${key}?grade=${activeGradeInput}`,
+                  locale
+                )
+              : getLocalizedPath(`/labs/${key}`, locale);
+
+            const Signature = SUBJECT_SIGNATURES[key];
 
             return (
               <Link
                 key={key}
                 href={href}
-                className="group relative overflow-hidden rounded-2xl border border-primary/10 bg-card p-6 transition-all hover:border-primary/30 hover:shadow-lg"
+                data-subject={key}
+                className="group relative overflow-hidden rounded-2xl border border-primary/10 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-[0_0_0_1px_oklch(0.45_0.12_192/0.25),0_12px_32px_-16px_oklch(0.45_0.12_192/0.5)]"
               >
-                <div className="mb-4 text-4xl">{SUBJECT_ICONS[key]}</div>
-                <h2 className="font-heading mb-1 text-xl font-bold text-foreground group-hover:text-primary">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-xl bg-primary/5 text-primary transition-colors group-hover:bg-primary/10">
+                  <Signature className="h-10 w-10" />
+                </div>
+                <h2 className="mb-1 font-serif text-2xl font-semibold italic text-foreground group-hover:text-primary">
                   {subject.label}
                 </h2>
-                <p className="mb-4 text-sm text-muted-foreground">
+                <p className="mb-4 font-mono text-xs text-muted-foreground">
                   {count} {count === 1 ? "experiment" : "experiments"} available
                 </p>
                 <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
                   Browse Labs
-                  <svg
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                  <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
                 </span>
               </Link>
             );
           })}
-        </div>
-      </section>
-
-      {/* Why Scivra */}
-      <section className="rounded-2xl border border-primary/10 bg-card p-8 md:p-12">
-        <h2 className="font-heading mb-6 text-center text-2xl font-bold text-foreground md:text-3xl">
-          Why Scivra?
-        </h2>
-        <div className="grid gap-8 md:grid-cols-3">
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl">
-              🎯
-            </div>
-            <h3 className="font-heading mb-2 text-lg font-semibold text-foreground">
-              Standards-Aligned
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Every experiment maps to AP, NGSS, or K-12 curriculum standards.
-              Built for real classrooms.
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl">
-              🧪
-            </div>
-            <h3 className="font-heading mb-2 text-lg font-semibold text-foreground">
-              Interactive & Visual
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Adjust parameters in real-time. See physics, chemistry, and
-              biology come alive with 3D visualizations.
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl">
-              🆓
-            </div>
-            <h3 className="font-heading mb-2 text-lg font-semibold text-foreground">
-              Free to Start
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Access 3 full experiments for free. No credit card required.
-              Upgrade anytime for unlimited access.
-            </p>
-          </div>
         </div>
       </section>
     </div>

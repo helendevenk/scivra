@@ -4,8 +4,13 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { requireAdminAccess } from '@/core/rbac/permission';
 import { LocaleDetector } from '@/shared/blocks/common';
 import { DashboardLayout } from '@/shared/blocks/dashboard/layout';
+import { getMetadata } from '@/shared/lib/seo';
 import { getAllConfigs } from '@/shared/models/config';
 import { Sidebar as SidebarType } from '@/shared/types/blocks/dashboard';
+
+export const generateMetadata = getMetadata({
+  noIndex: true,
+});
 
 /**
  * Admin layout to manage datas

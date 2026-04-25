@@ -59,8 +59,8 @@ export async function GET(
       },
       locked: false,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Learning path node failed:', e);
-    return respErr(e.message || 'Failed to get node');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get node');
   }
 }

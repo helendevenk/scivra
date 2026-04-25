@@ -45,7 +45,7 @@ export default async function UpgViewPage({
       htmlContent={generation.htmlContent}
       isPublic={generation.isPublic ?? false}
       isOwner={isOwner}
-      language={(generation.language as 'zh' | 'en') || 'en'}
+      language="en"
       isLoggedIn={!!user}
     />
   );

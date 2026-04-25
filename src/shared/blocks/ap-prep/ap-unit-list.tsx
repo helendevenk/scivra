@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { Button } from '@/shared/components/ui/button';
@@ -40,7 +40,6 @@ interface ApUnitListProps {
 
 export function ApUnitList({ examSlug }: ApUnitListProps) {
   const t = useTranslations('ap-prep');
-  const locale = useLocale();
   const [exam, setExam] = useState<ExamInfo | null>(null);
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [progress, setProgress] = useState<ProgressInfo | null>(null);
@@ -85,8 +84,8 @@ export function ApUnitList({ examSlug }: ApUnitListProps) {
     );
   }
 
-  const examTitle = locale === 'zh' ? exam.titleZh : exam.titleEn;
-  const examDesc = locale === 'zh' ? exam.descriptionZh : exam.descriptionEn;
+  const examTitle = exam.titleEn;
+  const examDesc = exam.descriptionEn;
 
   const accuracy =
     progress && progress.totalAttempted > 0
@@ -138,9 +137,8 @@ export function ApUnitList({ examSlug }: ApUnitListProps) {
       {/* Units Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {units.map((unit) => {
-          const unitTitle = locale === 'zh' ? unit.titleZh : unit.titleEn;
-          const unitDesc =
-            locale === 'zh' ? unit.descriptionZh : unit.descriptionEn;
+          const unitTitle = unit.titleEn;
+          const unitDesc = unit.descriptionEn;
 
           return (
             <Link

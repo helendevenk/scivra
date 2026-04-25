@@ -32,3 +32,17 @@ export const envConfigs = {
   auth_secret: process.env.AUTH_SECRET ?? '', // openssl rand -base64 32
   version: packageJson.version,
 };
+
+/**
+ * Validate critical env vars at first use (called from db/auth init).
+ * Throws immediately if a required variable is missing, preventing
+ * silent misconfiguration in production.
+ */
+export function validateCriticalEnv(): void {
+  if (!envConfigs.database_url) {
+    throw new Error('❌ DATABASE_URL is required. Check your .env file.');
+  }
+  if (!envConfigs.auth_secret) {
+    throw new Error('❌ AUTH_SECRET is required. Run: openssl rand -base64 32');
+  }
+}

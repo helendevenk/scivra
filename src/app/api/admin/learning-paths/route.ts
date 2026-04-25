@@ -18,9 +18,9 @@ export async function GET() {
 
     const paths = await getAdminLearningPaths();
     return respData(paths);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin get learning paths failed:', e);
-    return respErr(e.message || 'Failed to get learning paths');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to get learning paths');
   }
 }
 
@@ -67,8 +67,8 @@ export async function POST(request: Request) {
     });
 
     return respData(path);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Admin create learning path failed:', e);
-    return respErr(e.message || 'Failed to create learning path');
+    return respErr((e instanceof Error ? e.message : String(e)) || 'Failed to create learning path');
   }
 }

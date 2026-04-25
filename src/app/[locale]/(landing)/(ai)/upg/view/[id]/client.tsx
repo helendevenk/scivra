@@ -26,7 +26,7 @@ interface UpgViewClientProps {
   htmlContent: string;
   isPublic: boolean;
   isOwner: boolean;
-  language: 'zh' | 'en';
+  language: 'en';
   isLoggedIn: boolean;
 }
 
@@ -104,8 +104,8 @@ export function UpgViewClient({
       const { code, message } = await resp.json();
       if (code !== 0) throw new Error(message);
       toast.success(t('errors.report_success'));
-    } catch (e: any) {
-      toast.error(e.message || t('errors.report_failed'));
+    } catch (e: unknown) {
+      toast.error((e instanceof Error ? e.message : String(e)) || t('errors.report_failed'));
     }
   };
 

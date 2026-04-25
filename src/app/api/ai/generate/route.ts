@@ -113,8 +113,8 @@ export async function POST(request: Request) {
     await createAITask(newAITask);
 
     return respData(newAITask);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('generate failed', e);
-    return respErr(e.message);
+    return respErr((e instanceof Error ? e.message : String(e)));
   }
 }

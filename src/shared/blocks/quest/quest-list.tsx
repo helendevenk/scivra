@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/shared/components/ui/button';
@@ -69,7 +69,6 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function QuestList() {
   const t = useTranslations('quest');
-  const locale = useLocale();
   const router = useRouter();
   const [quests, setQuests] = useState<QuestItem[]>([]);
   const [attempts, setAttempts] = useState<AttemptItem[]>([]);
@@ -108,10 +107,10 @@ export function QuestList() {
   );
 
   function getTitle(q: QuestItem) {
-    return locale === 'zh' ? q.titleZh : q.titleEn;
+    return q.titleEn;
   }
   function getDesc(q: QuestItem) {
-    return locale === 'zh' ? q.descriptionZh : q.descriptionEn;
+    return q.descriptionEn;
   }
 
   function getStatus(q: QuestItem) {

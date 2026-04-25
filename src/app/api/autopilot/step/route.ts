@@ -106,8 +106,8 @@ export async function POST(request: NextRequest) {
       baseUrl,
     });
     rawText = result.html; // callAnthropic returns content in .html field
-  } catch (err: any) {
-    return respErr(`AI call failed: ${err?.message ?? 'unknown error'}`);
+  } catch (err: unknown) {
+    return respErr(`AI call failed: ${(err instanceof Error ? err.message : String(err)) ?? 'unknown error'}`);
   }
 
   // Parse LLM JSON output

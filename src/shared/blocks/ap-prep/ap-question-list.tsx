@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { Button } from '@/shared/components/ui/button';
@@ -45,7 +45,6 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export function ApQuestionList({ examSlug, unitSlug }: ApQuestionListProps) {
   const t = useTranslations('ap-prep');
-  const locale = useLocale();
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
   const [unit, setUnit] = useState<UnitInfo | null>(null);
   const [exam, setExam] = useState<ExamBrief | null>(null);
@@ -88,11 +87,7 @@ export function ApQuestionList({ examSlug, unitSlug }: ApQuestionListProps) {
     load();
   }, [load]);
 
-  const unitTitle = unit
-    ? locale === 'zh'
-      ? unit.titleZh
-      : unit.titleEn
-    : '';
+  const unitTitle = unit ? unit.titleEn : '';
 
   return (
     <div>
@@ -106,11 +101,7 @@ export function ApQuestionList({ examSlug, unitSlug }: ApQuestionListProps) {
           href={`/ap-prep/${examSlug}`}
           className="hover:text-foreground"
         >
-          {exam
-            ? locale === 'zh'
-              ? exam.titleZh
-              : exam.titleEn
-            : examSlug}
+          {exam ? exam.titleEn : examSlug}
         </Link>
         <span>/</span>
         <span className="text-foreground">{unitTitle}</span>
@@ -173,7 +164,7 @@ export function ApQuestionList({ examSlug, unitSlug }: ApQuestionListProps) {
         <>
           <div className="space-y-3">
             {questions.map((q) => {
-              const stem = locale === 'zh' && q.stemZh ? q.stemZh : q.stemEn;
+              const stem = q.stemEn;
               const diffColor =
                 DIFFICULTY_COLORS[q.difficulty] || DIFFICULTY_COLORS.medium;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/shared/components/ui/badge';
 import {
@@ -40,7 +40,6 @@ const RARITY_BG: Record<string, string> = {
 
 export function AchievementWall() {
   const t = useTranslations('quest');
-  const locale = useLocale();
   const [achievements, setAchievements] = useState<AchievementItem[]>([]);
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -64,10 +63,10 @@ export function AchievementWall() {
   }, []);
 
   function getTitle(a: AchievementItem) {
-    return locale === 'zh' ? a.titleZh : a.titleEn;
+    return a.titleEn;
   }
   function getDesc(a: AchievementItem) {
-    return locale === 'zh' ? a.descriptionZh : a.descriptionEn;
+    return a.descriptionEn;
   }
 
   if (loading) {

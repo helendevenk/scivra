@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { UpgGenerator } from '@/shared/blocks/upg';
+import { UpgGenerator, UpgHero } from '@/shared/blocks/upg';
 import { getMetadata } from '@/shared/lib/seo';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
@@ -26,13 +26,11 @@ export default async function UpgPage({
 
   const page: DynamicPage = {
     sections: {
-      hero: {
-        title: t('hero.title'),
-        description: t('hero.description'),
-        background_image: {
-          src: '/imgs/bg/physics-hero.jpg',
-          alt: 'Physics visualization background',
-        },
+      // key deliberately not "hero" — dynamic-page.tsx has a dedicated `case 'hero'`
+      // that renders the default Hero block and ignores section.component.
+      // Using a non-reserved key routes through the `default` case which honors component.
+      upg_hero: {
+        component: <UpgHero />,
       },
       generator: {
         component: (

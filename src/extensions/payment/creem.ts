@@ -263,8 +263,8 @@ export class CreemProvider implements PaymentProvider {
       return Array.from(signatureArray)
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
-    } catch (error: any) {
-      throw new Error(`Failed to generate signature: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Failed to generate signature: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

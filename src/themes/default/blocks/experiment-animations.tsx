@@ -215,6 +215,9 @@ export function ChemEquilibriumAnim() {
 /** Map experiment slug to animation component */
 export const experimentAnimations: Record<string, () => React.JSX.Element> = {
   'projectile-motion': ProjectileMotionAnim,
+  // Real experiment file is dna-double-helix.html; dna-structure kept as alias
+  // for backward-compat (older URLs may still use it).
+  'dna-double-helix': DnaHelixAnim,
   'dna-structure': DnaHelixAnim,
   'chemical-equilibrium': ChemEquilibriumAnim,
 };

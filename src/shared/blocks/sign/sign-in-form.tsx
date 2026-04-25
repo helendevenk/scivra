@@ -79,8 +79,8 @@ export function SignInForm({
           },
         }
       );
-    } catch (e: any) {
-      toast.error(e.message || 'sign in failed');
+    } catch (e: unknown) {
+      toast.error((e instanceof Error ? e.message : String(e)) || 'sign in failed');
     } finally {
       setLoading(false);
     }

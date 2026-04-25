@@ -4,6 +4,11 @@ import { Empty } from '@/shared/blocks/common';
 import { getUserInfo } from '@/shared/models/user';
 import { findLabNotebookById } from '@/shared/models/lab_notebook';
 import { NotebookEditor } from '@/shared/blocks/notebook/NotebookEditor';
+import { getMetadata } from '@/shared/lib/seo';
+
+export const generateMetadata = getMetadata({
+  noIndex: true,
+});
 
 export default async function NotebookEditorPage({
   params,

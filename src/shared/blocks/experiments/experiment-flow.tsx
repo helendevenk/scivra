@@ -8,6 +8,7 @@ import { ExperimentHook } from "./experiment-hook";
 import { LearningCardList } from "./learning-card";
 import { ChallengeCard } from "./challenge-card";
 import { ExperimentSummary } from "./experiment-summary";
+import { InlineProPaywall } from "./inline-pro-paywall";
 import { useIframeInteraction } from "@/shared/hooks/useIframeInteraction";
 import { useSimulation } from "@/shared/hooks/useSimulation";
 import { canAccessTier } from "@/shared/lib/experiments/access";
@@ -118,7 +119,7 @@ export function ExperimentFlow({ experiment, userTier, canAccess, locale }: Expe
       standard: experiment.primaryStandard,
     }));
 
-  const shareUrl = `https://neonphysics.com/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://scivra.com"}/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
@@ -215,9 +216,7 @@ export function ExperimentFlow({ experiment, userTier, canAccess, locale }: Expe
                 </div>
               )
             ) : (
-              <div className="flex aspect-video items-center justify-center rounded-xl border border-primary/20 bg-card text-muted-foreground">
-                <p className="text-sm">Upgrade to Pro to access this experiment</p>
-              </div>
+              <InlineProPaywall experimentTitle={experiment.title} locale={locale} />
             )}
 
             {/* Advance button */}

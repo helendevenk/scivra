@@ -1,4 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// buildExperimentJsonLd derives the canonical URL via getAbsoluteUrl(),
+// which itself reads envConfigs.app_url — captured at module load time.
+// vi.stubEnv comes too late to influence it. Mock the seo module's URL
+// helpers directly so the URL assertions are stable and don't depend on
+// .env contents or the module-load timing of envConfigs.
+vi.mock('@/shared/lib/seo', async () => {
+  const actual = await vi.importActual<typeof import('@/shared/lib/seo')>(
+    '@/shared/lib/seo'
+  );
+  return {
+    ...actual,
+    getAbsoluteUrl: (path: string) => `https://www.scivra.com${path}`,
+    getLocalizedPath: (path: string) => path,
+  };
+});
+
 import {
   buildExperimentJsonLd,
   buildWebsiteJsonLd,
@@ -8,10 +25,12 @@ import type { Experiment } from '@/shared/types/experiment';
 const mockExperiment: Experiment = {
   id: 'newtons-laws',
   slug: 'newtons-laws',
+  subject: 'physics',
+  primaryStandard: 'ngss-hs',
   title: "Newton's Laws of Motion",
   seoTitle: "Newton's Laws Interactive Simulation",
   seoKeywords: ['physics', 'newton'],
-  description: 'Explore Newton\'s three laws of motion.',
+  description: "Explore Newton's three laws of motion.",
   category: 'mechanics',
   difficulty: 'beginner',
   tier: 'free',
@@ -33,7 +52,10 @@ describe('buildExperimentJsonLd', () => {
     expect(result['@context']).toBe('https://schema.org');
     expect(result['@type']).toBe('LearningResource');
     expect(result.name).toBe("Newton's Laws Interactive Simulation");
-    expect(result.url).toBe('https://www.scivra.com/experiments/newtons-laws');
+    // URL shape today is /labs/{subject}/{primaryStandard}/{slug}.
+    expect(result.url).toBe(
+      'https://www.scivra.com/labs/physics/ngss-hs/newtons-laws'
+    );
     expect(result.isAccessibleForFree).toBe(true);
     expect(result.educationalLevel).toBe('Beginner');
   });
@@ -75,12 +97,14 @@ describe('buildExperimentJsonLd', () => {
     ).toBe('Advanced');
   });
 
-  it('strips trailing slash from siteUrl', () => {
+  it('produces a stable URL using {subject}/{primaryStandard}/{slug} path', () => {
     const result = buildExperimentJsonLd({
       experiment: mockExperiment,
       siteUrl: 'https://www.scivra.com/',
     });
-    expect(result.url).toBe('https://www.scivra.com/experiments/newtons-laws');
+    expect(result.url).toBe(
+      'https://www.scivra.com/labs/physics/ngss-hs/newtons-laws'
+    );
   });
 });
 

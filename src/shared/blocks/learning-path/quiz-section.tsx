@@ -25,7 +25,6 @@ interface QuizSectionProps {
   quizQuestion: string;
   slug: string;
   orderIndex: number;
-  locale: string;
   isLast: boolean;
 }
 
@@ -33,7 +32,6 @@ export function QuizSection({
   quizQuestion,
   slug,
   orderIndex,
-  locale,
   isLast,
 }: QuizSectionProps) {
   const t = useTranslations('learn');
@@ -49,8 +47,8 @@ export function QuizSection({
     return null;
   }
 
-  const question = locale === 'zh' ? quiz.question_zh : quiz.question_en;
-  const options = locale === 'zh' ? quiz.options_zh : quiz.options_en;
+  const question = quiz.question_en;
+  const options = quiz.options_en;
 
   async function handleSubmit() {
     if (selected === null) return;
@@ -63,7 +61,7 @@ export function QuizSection({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept-Language': locale,
+            'Accept-Language': 'en',
           },
           body: JSON.stringify({ answer: selected }),
         }

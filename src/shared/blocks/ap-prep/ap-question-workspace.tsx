@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { Button } from '@/shared/components/ui/button';
@@ -74,7 +74,6 @@ export function ApQuestionWorkspace({
   unitSlug,
 }: ApQuestionWorkspaceProps) {
   const t = useTranslations('ap-prep');
-  const locale = useLocale();
 
   const [question, setQuestion] = useState<QuestionData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -165,20 +164,13 @@ export function ApQuestionWorkspace({
     );
   }
 
-  const stem =
-    locale === 'zh' && question.stemZh ? question.stemZh : question.stemEn;
-  const choicesRaw =
-    locale === 'zh' && question.choicesZh
-      ? question.choicesZh
-      : question.choicesEn;
+  const stem = question.stemEn;
+  const choicesRaw = question.choicesEn;
   const choices = parseChoices(choicesRaw);
   const diffColor =
     DIFFICULTY_COLORS[question.difficulty] || DIFFICULTY_COLORS.medium;
 
-  const explanation =
-    result && locale === 'zh' && result.explanationZh
-      ? result.explanationZh
-      : result?.explanationEn;
+  const explanation = result?.explanationEn;
 
   return (
     <div className="mx-auto max-w-3xl">

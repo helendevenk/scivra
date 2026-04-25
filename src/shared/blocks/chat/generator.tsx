@@ -59,7 +59,7 @@ export function ChatGenerator() {
       });
       // setStatus(undefined);
       // setError(null);
-    } catch (e: any) {
+    } catch (e: unknown) {
       const message =
         e instanceof Error ? e.message : 'request failed, please try again';
       setStatus('error');
