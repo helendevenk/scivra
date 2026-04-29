@@ -1,6 +1,16 @@
 import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 
+import {
+  getAbsoluteUrl,
+  getLocalizedPath,
+  getSiteUrl,
+} from "@/shared/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildWebPageJsonLd,
+} from "@/shared/lib/seo/json-ld";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | Scivra",
   description:
@@ -15,8 +25,34 @@ export default async function PrivacyPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
+  const siteUrl = getSiteUrl();
+  const pageUrl = getAbsoluteUrl(getLocalizedPath("/privacy", locale));
+
+  const webPageJsonLd = buildWebPageJsonLd({
+    name: "Privacy Policy",
+    description:
+      "Scivra's privacy policy explains how we collect, use, and protect your personal information.",
+    url: pageUrl,
+    siteUrl,
+    siteName: "Scivra",
+    locale,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: siteUrl },
+    { name: "Privacy Policy", url: pageUrl },
+  ]);
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <h1 className="mb-4 text-3xl font-bold">Privacy Policy</h1>
       <p className="mb-8 text-muted-foreground">Last updated: April 1, 2026</p>
 
