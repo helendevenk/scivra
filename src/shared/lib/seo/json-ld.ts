@@ -115,6 +115,128 @@ export function buildOrganizationJsonLd(input: {
 }
 
 /**
+ * Build a BreadcrumbList JSON-LD blob.
+ * Pass an ordered list of {name, url} starting from the site root.
+ */
+export function buildBreadcrumbJsonLd(
+  items: Array<{ name: string; url: string }>
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+}
+
+/**
+ * Build a generic WebPage JSON-LD for content pages that don't fit a more
+ * specific type (Article/Product/Course/etc).
+ */
+export function buildWebPageJsonLd(input: {
+  name: string;
+  description: string;
+  url: string;
+  siteUrl: string;
+  siteName: string;
+  locale: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    inLanguage: input.locale,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: input.siteName,
+      url: input.siteUrl,
+    },
+  };
+}
+
+/**
+ * Build a SoftwareApplication JSON-LD for product/tool pages (UPG etc).
+ */
+export function buildSoftwareApplicationJsonLd(input: {
+  name: string;
+  description: string;
+  url: string;
+  applicationCategory?: string;
+  priceRange?: string;
+  operatingSystem?: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    applicationCategory: input.applicationCategory ?? 'EducationalApplication',
+    operatingSystem: input.operatingSystem ?? 'Web',
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'USD',
+      price: '0',
+      availability: 'https://schema.org/InStock',
+    },
+    ...(input.priceRange && {
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'USD',
+        priceRange: input.priceRange,
+      },
+    }),
+  };
+}
+
+/**
+ * Build a BlogPosting JSON-LD for individual blog post pages.
+ */
+export function buildBlogPostingJsonLd(input: {
+  headline: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  author?: string;
+  image?: string;
+  siteUrl: string;
+  siteName: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: input.headline,
+    description: input.description,
+    url: input.url,
+    datePublished: input.datePublished,
+    author: {
+      '@type': input.author ? 'Person' : 'Organization',
+      name: input.author ?? input.siteName,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: input.siteName,
+      url: input.siteUrl,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${input.siteUrl}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': input.url,
+    },
+    ...(input.image && { image: input.image }),
+  };
+}
+
+/**
  * Build a FAQPage JSON-LD blob from a list of question/answer pairs.
  * Returns null when there are no items so callers can conditionally render.
  */

@@ -1,7 +1,13 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { getMetadata } from '@/shared/lib/seo';
+import {
+  getAbsoluteUrl,
+  getLocalizedPath,
+  getMetadata,
+  getSiteUrl,
+} from '@/shared/lib/seo';
+import { buildBreadcrumbJsonLd } from '@/shared/lib/seo/json-ld';
 import { getPostsAndCategories } from '@/shared/models/post';
 import {
   Blog as BlogType,
@@ -84,5 +90,48 @@ export default async function BlogPage({
   // load page component
   const Page = await getThemePage('dynamic-page');
 
-  return <Page locale={locale} page={page} />;
+  const siteUrl = getSiteUrl();
+  const blogUrl = getAbsoluteUrl(getLocalizedPath('/blog', locale));
+
+  const blogJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Scivra Blog',
+    url: blogUrl,
+    description:
+      'Physics, chemistry, and biology articles paired with interactive Scivra labs.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'Scivra',
+      url: siteUrl,
+    },
+    blogPost: posts
+      .filter((post) => post.slug && post.title)
+      .slice(0, 20)
+      .map((post) => ({
+        '@type': 'BlogPosting',
+        headline: post.title,
+        url: getAbsoluteUrl(getLocalizedPath(`/blog/${post.slug}`, locale)),
+        ...(post.created_at && { datePublished: post.created_at }),
+      })),
+  };
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: siteUrl },
+    { name: 'Blog', url: blogUrl },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <Page locale={locale} page={page} />
+    </>
+  );
 }
