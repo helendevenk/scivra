@@ -815,6 +815,61 @@ codex exec --model gpt-5.1-codex -s workspace-write \
 
 ---
 
+### Task 16: 修复首页 hero 移动端文字溢出（Phase 1 实测发现）
+
+**负责人：** [Claude-Main / 前端]
+
+**Files:**
+- Inspect: `src/themes/default/blocks/hero/index.tsx` 或对应 hero block
+- 可能 modify: 该 hero block 的 className 或字体 sizing
+
+**Why:** 2026-04-30 用 playwright 在 390x844（iPhone 13）视口实测：
+
+- H1 "Your next A in AP Physics..." 被裁切（仅显示 "Your next A in AP Ph..."）
+- 副文案 "Stop rereading the textbook..." 被裁切
+- 副 CTA "See AP Prep path" 按钮越界出可视区
+- desktop 1440 视口正常
+
+不是 Phase 1 改动引入（hero 文案、字号、布局都是 i18n + 现有组件，本次 Phase 1 没动）。但属于这条分支 `fix/ui-consistency-remaining` 的修复范畴。截图存在仓库根 `phase1-home-mobile.png`。
+
+- [ ] **Step 1: 复现**
+
+```bash
+pnpm dev
+playwright-cli -s=mobile-hero navigate http://localhost:3000/
+playwright-cli -s=mobile-hero screenshot --viewport=390x844 hero-bug.png
+```
+
+- [ ] **Step 2: 定位 hero 组件文件**
+
+```bash
+rg "Your next A in AP" src/ --type tsx --type ts
+rg "starts with one experiment" src/
+```
+
+- [ ] **Step 3: 修复方向（人工选）**
+
+候选方案：
+
+- **A.** H1 在 `< sm` 减小字号（`text-3xl sm:text-4xl md:text-6xl` 或更激进）+ `break-words`
+- **B.** Hero 整体 padding 在移动端缩窄（`px-4` 已经是最小，可能需要修 max-width）
+- **C.** CTA 按钮组改 `flex-wrap` 或在 `< sm` 改 `flex-col`
+
+推荐 A + C。先看 hero block 现状再定。
+
+- [ ] **Step 4: 修后回归 Playwright 截图**
+
+期望：390x844 视口下 H1 完全显示、副文案完整、两个 CTA 按钮都在可视区内。
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/themes/default/blocks/hero/...
+git commit -m "fix(hero): clamp H1 size and wrap CTA buttons on mobile (<sm)"
+```
+
+---
+
 ### Task 15: 首页 hero 区加学段卡片（如果已有则不动）
 
 **负责人：** [Claude-Main]（设计判断）

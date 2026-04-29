@@ -101,6 +101,23 @@ export interface Standards {
   ap: string[];
 }
 
+/** Plain teaching content surfaced below the simulation. Drives both visible
+ *  text sections and the FAQPage JSON-LD. All fields optional so legacy
+ *  experiments without filled content keep working. */
+export interface ExperimentContentSection {
+  /** 100-150 words: definition + a real-world example. */
+  whatIsIt?: string;
+  /** Map of parameter id (matching parameters[].id) to a 1-2 sentence
+   *  explanation of what changing that parameter does and why it matters. */
+  parameterExplanations?: Record<string, string>;
+  /** 3-5 common student misconceptions paired with the correct framing. */
+  misconceptions?: { wrong: string; correct: string }[];
+  /** 3-5 strings describing concrete classroom or self-study uses. */
+  teacherUseCases?: string[];
+  /** 4-6 Q/A pairs targeting student search intent. Drives FAQPage schema. */
+  faq?: { question: string; answer: string }[];
+}
+
 /** Complete experiment definition */
 export interface Experiment {
   // Identity
@@ -145,6 +162,9 @@ export interface Experiment {
   seoTitle: string;
   seoKeywords: string[];
   jsonLd: Record<string, unknown>;
+
+  /** Optional educational content sections rendered below the simulation. */
+  contentSections?: ExperimentContentSection;
 }
 
 /** Blog post frontmatter */
