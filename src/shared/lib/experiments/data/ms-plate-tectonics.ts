@@ -113,7 +113,7 @@ export const msPlateTectonics: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["k5-day-night-seasons", "k5-water-cycle"],
 
-  seoTitle: "Plate Tectonics Simulation Middle School | NeonPhysics Earth Science",
+  seoTitle: "Plate Tectonics Simulation Middle School | Scivra Earth Science",
   seoKeywords: [
     "plate tectonics middle school simulation",
     "continental drift interactive",

@@ -182,7 +182,7 @@ export const workEnergyTheorem: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["roller-coaster", "momentum-collisions", "newtons-laws"],
 
-  seoTitle: "Work-Energy Theorem — Interactive Incline Lab | NeonPhysics",
+  seoTitle: "Work-Energy Theorem — Interactive Incline Lab | Scivra",
   seoKeywords: [
     "work energy theorem simulation",
     "kinetic energy incline",

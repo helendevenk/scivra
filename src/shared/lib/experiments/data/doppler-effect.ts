@@ -176,7 +176,7 @@ export const dopplerEffect: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["wave-interference", "simple-harmonic-motion", "em-spectrum"],
 
-  seoTitle: "Doppler Effect — Sound Wave Frequency Shift Simulation | NeonPhysics",
+  seoTitle: "Doppler Effect — Sound Wave Frequency Shift Simulation | Scivra",
   seoKeywords: [
     "doppler effect simulation",
     "sound frequency shift",

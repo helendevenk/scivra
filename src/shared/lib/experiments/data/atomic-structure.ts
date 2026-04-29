@@ -117,7 +117,7 @@ export const atomicStructure: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["molecular-bonding", "acid-base-ph"],
 
-  seoTitle: "Atomic Structure Electron Configuration 3D | NeonPhysics AP Chemistry",
+  seoTitle: "Atomic Structure Electron Configuration 3D | Scivra AP Chemistry",
   seoKeywords: [
     "atomic structure simulation",
     "electron configuration interactive",

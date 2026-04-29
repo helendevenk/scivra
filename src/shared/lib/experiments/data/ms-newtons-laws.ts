@@ -117,7 +117,7 @@ export const msNewtonsLaws: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["ms-energy-conservation", "momentum-collisions", "newtons-laws"],
 
-  seoTitle: "Newton's Three Laws of Motion | NeonPhysics Middle School Physics",
+  seoTitle: "Newton's Three Laws of Motion | Scivra Middle School Physics",
   seoKeywords: [
     "Newton's laws simulation middle school",
     "F=ma interactive",

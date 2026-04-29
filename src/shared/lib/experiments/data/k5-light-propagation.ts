@@ -113,7 +113,7 @@ export const k5LightPropagation: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-sound-waves", "em-spectrum", "wave-interference"],
 
-  seoTitle: "Light and Optics for Kids | NeonPhysics Elementary Science",
+  seoTitle: "Light and Optics for Kids | Scivra Elementary Science",
   seoKeywords: [
     "light reflection refraction kids",
     "optics simulation elementary",

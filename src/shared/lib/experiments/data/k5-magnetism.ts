@@ -113,7 +113,7 @@ export const k5Magnetism: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-force-motion", "lorentz-force", "electric-field-lines"],
 
-  seoTitle: "Magnetism for Kids | Magnetic Field Interactive | NeonPhysics Elementary",
+  seoTitle: "Magnetism for Kids | Magnetic Field Interactive | Scivra Elementary",
   seoKeywords: [
     "magnetism kids simulation",
     "magnetic field lines interactive",

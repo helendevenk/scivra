@@ -117,7 +117,7 @@ export const dnaDoubleHelix: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["protein-synthesis", "natural-selection"],
 
-  seoTitle: "DNA Double Helix & Base Pairing — 3D Interactive | NeonPhysics AP Biology",
+  seoTitle: "DNA Double Helix & Base Pairing — 3D Interactive | Scivra AP Biology",
   seoKeywords: [
     "DNA double helix simulation",
     "base pairing interactive",

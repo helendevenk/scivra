@@ -117,7 +117,7 @@ export const molecularBonding: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["reaction-kinetics", "thermochemistry"],
 
-  seoTitle: "Molecular Structure & VSEPR Theory — 3D Interactive | NeonPhysics AP Chemistry",
+  seoTitle: "Molecular Structure & VSEPR Theory — 3D Interactive | Scivra AP Chemistry",
   seoKeywords: [
     "VSEPR theory 3D",
     "molecular geometry simulation",

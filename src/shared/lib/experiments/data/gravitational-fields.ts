@@ -115,7 +115,7 @@ export const gravitationalFields: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["circular-motion", "projectile-motion"],
 
-  seoTitle: "Gravitational Fields & Orbital Mechanics — 3D Simulation | NeonPhysics",
+  seoTitle: "Gravitational Fields & Orbital Mechanics — 3D Simulation | Scivra",
   seoKeywords: [
     "orbital mechanics simulation",
     "Kepler's laws interactive",

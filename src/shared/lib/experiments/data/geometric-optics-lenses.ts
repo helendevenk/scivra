@@ -110,7 +110,7 @@ export const geometricOpticsLenses: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["wave-interference", "em-spectrum", "simple-harmonic-motion"],
 
-  seoTitle: "Geometric Optics Lenses & Mirrors — Interactive Ray Tracing | NeonPhysics",
+  seoTitle: "Geometric Optics Lenses & Mirrors — Interactive Ray Tracing | Scivra",
   seoKeywords: [
     "geometric optics",
     "thin lens equation",

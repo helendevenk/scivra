@@ -109,7 +109,7 @@ export const k5DayNightSeasons: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-moon-phases", "k5-water-cycle", "gravitational-fields"],
 
-  seoTitle: "Day Night Seasons Earth Simulation for Kids | NeonPhysics Elementary",
+  seoTitle: "Day Night Seasons Earth Simulation for Kids | Scivra Elementary",
   seoKeywords: [
     "day night seasons kids simulation",
     "Earth rotation revolution interactive",

@@ -117,7 +117,7 @@ export const photosynthesis: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["cellular-respiration", "enzyme-kinetics"],
 
-  seoTitle: "Photosynthesis Light & Calvin Cycle — Interactive 3D | NeonPhysics AP Biology",
+  seoTitle: "Photosynthesis Light & Calvin Cycle — Interactive 3D | Scivra AP Biology",
   seoKeywords: [
     "photosynthesis simulation",
     "Calvin cycle interactive",

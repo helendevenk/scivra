@@ -117,7 +117,7 @@ export const naturalSelection: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["meiosis", "dna-double-helix"],
 
-  seoTitle: "Natural Selection Evolution Simulation | NeonPhysics AP Biology",
+  seoTitle: "Natural Selection Evolution Simulation | Scivra AP Biology",
   seoKeywords: [
     "natural selection simulation",
     "evolution population genetics",

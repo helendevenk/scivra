@@ -115,7 +115,7 @@ export const nuclearDecay: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["atomic-structure", "em-spectrum"],
 
-  seoTitle: "Nuclear Decay & Radioactivity — Half-Life Simulation | NeonPhysics",
+  seoTitle: "Nuclear Decay & Radioactivity — Half-Life Simulation | Scivra",
   seoKeywords: [
     "nuclear decay simulation",
     "radioactive half-life",
