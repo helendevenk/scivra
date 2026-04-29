@@ -1,7 +1,11 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { buildWebsiteJsonLd } from '@/shared/lib/seo/json-ld';
+import {
+  buildFaqPageJsonLd,
+  buildOrganizationJsonLd,
+  buildWebsiteSearchActionJsonLd,
+} from '@/shared/lib/seo/json-ld';
 import { getSiteUrl } from '@/shared/lib/seo';
 import { DynamicPage, Section } from '@/shared/types/blocks/landing';
 
@@ -42,10 +46,16 @@ export default async function LandingPage({
   // load page component
   const Page = await getThemePage('dynamic-page');
 
-  const websiteJsonLd = buildWebsiteJsonLd({
-    siteUrl: getSiteUrl(),
-    siteName: 'Scivra',
-  });
+  const siteUrl = getSiteUrl();
+  const siteName = 'Scivra';
+
+  const websiteJsonLd = buildWebsiteSearchActionJsonLd({ siteUrl, siteName });
+  const organizationJsonLd = buildOrganizationJsonLd({ siteUrl, siteName });
+
+  const faqSection = t.raw('faq') as
+    | { items?: Array<{ question: string; answer: string }> }
+    | null;
+  const faqJsonLd = buildFaqPageJsonLd(faqSection?.items);
 
   return (
     <>
@@ -53,6 +63,16 @@ export default async function LandingPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Page locale={locale} page={page} />
     </>
   );

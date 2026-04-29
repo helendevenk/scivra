@@ -72,6 +72,74 @@ export function buildWebsiteJsonLd(input: {
 }
 
 /**
+ * Build JSON-LD for the website with a SearchAction potential action.
+ * Used on the homepage so Google knows how to deep-link search queries.
+ */
+export function buildWebsiteSearchActionJsonLd(input: {
+  siteUrl: string;
+  siteName: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: input.siteName,
+    url: input.siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${input.siteUrl}/labs?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+/**
+ * Build JSON-LD for the publishing Organization (Scivra).
+ */
+export function buildOrganizationJsonLd(input: {
+  siteUrl: string;
+  siteName: string;
+  logoPath?: string;
+}): Record<string, unknown> {
+  const logoPath = input.logoPath ?? '/logo.png';
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: input.siteName,
+    url: input.siteUrl,
+    logo: `${input.siteUrl}${logoPath}`,
+    sameAs: [],
+  };
+}
+
+/**
+ * Build a FAQPage JSON-LD blob from a list of question/answer pairs.
+ * Returns null when there are no items so callers can conditionally render.
+ */
+export function buildFaqPageJsonLd(
+  items: Array<{ question: string; answer: string }> | undefined | null
+): Record<string, unknown> | null {
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+/**
  * Build JSON-LD structured data for a learning path detail page.
  */
 export function buildLearningPathJsonLd(input: {
