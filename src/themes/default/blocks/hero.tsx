@@ -223,7 +223,7 @@ export function Hero({
         <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:gap-12 md:text-left">
           <div>
             {texts && texts.length > 0 ? (
-              <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
+              <h1 className="font-serif text-foreground text-3xl font-bold tracking-tight text-balance break-words sm:mt-12 sm:text-5xl md:text-6xl">
                 {texts[0]}
                 <em
                   className="text-primary not-italic"
@@ -240,7 +240,7 @@ export function Hero({
                 {texts[1]}
               </h1>
             ) : (
-              <h1 className="font-serif text-foreground text-4xl font-bold tracking-tight text-balance sm:mt-12 sm:text-6xl">
+              <h1 className="font-serif text-foreground text-3xl font-bold tracking-tight text-balance break-words sm:mt-12 sm:text-5xl md:text-6xl">
                 {section.title}
               </h1>
             )}
@@ -251,13 +251,13 @@ export function Hero({
             />
 
             {section.buttons && (
-              <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 md:justify-start">
                 {section.buttons.map((button, idx) => (
                   <Button
                     asChild
                     size={button.size || 'default'}
                     variant={button.variant || 'default'}
-                    className="px-4 text-sm"
+                    className="w-full px-4 text-sm sm:w-auto"
                     key={idx}
                   >
                     <Link
