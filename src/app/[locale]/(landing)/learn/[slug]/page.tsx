@@ -11,7 +11,7 @@ import {
 } from '@/shared/models/learning_path';
 import { getUserInfo } from '@/shared/models/user';
 import { LearningPathDetail } from '@/shared/blocks/learning-path';
-import { buildLearningPathJsonLd } from '@/shared/lib/seo/json-ld';
+import { buildLearningPathBasicJsonLd } from '@/shared/lib/seo/json-ld';
 import { getPageAlternates, getSiteUrl } from '@/shared/lib/seo';
 
 interface Props {
@@ -74,13 +74,13 @@ export default async function LearnDetailPage({ params }: Props) {
   const siteUrl = getSiteUrl();
   const title = locale === 'zh' ? path.titleZh : path.titleEn;
   const description = locale === 'zh' ? path.descriptionZh : path.descriptionEn;
-  const jsonLd = buildLearningPathJsonLd({
+  // Downgraded from Course/CourseInstance to WebPage + BreadcrumbList until
+  // path detail pages carry enough body content (learning outcomes, lessons,
+  // time required) to satisfy Google's Course schema bar.
+  const [webPageJsonLd, breadcrumbJsonLd] = buildLearningPathBasicJsonLd({
     title,
     description,
     slug: path.slug,
-    level: path.level,
-    category: path.category,
-    nodeCount: path.nodeCount ?? 0,
     siteUrl,
     locale,
   });
@@ -89,7 +89,11 @@ export default async function LearnDetailPage({ params }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <LearningPathDetail path={path} nodes={safeNodes} progress={progress} />
     </div>

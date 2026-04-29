@@ -141,6 +141,11 @@ export function buildFaqPageJsonLd(
 
 /**
  * Build JSON-LD structured data for a learning path detail page.
+ *
+ * Note: emits Course + CourseInstance. Only safe for paths whose body content
+ * actually meets Google's Course schema bar (clear learning outcomes, multiple
+ * lessons, time required). For thin paths use buildLearningPathBasicJsonLd
+ * to avoid schema-content mismatch warnings.
  */
 export function buildLearningPathJsonLd(input: {
   title: string;
@@ -178,4 +183,50 @@ export function buildLearningPathJsonLd(input: {
       courseWorkload: `${nodeCount} lessons`,
     },
   };
+}
+
+/**
+ * Build a lightweight WebPage + BreadcrumbList pair for learning paths whose
+ * body content is too thin to justify the full Course schema.
+ *
+ * Returns a tuple so callers can render two <script> tags. Use this until
+ * the path's on-page content (learning outcomes, lessons, time) catches up
+ * with Google's Course schema expectations.
+ */
+export function buildLearningPathBasicJsonLd(input: {
+  title: string;
+  description: string;
+  slug: string;
+  siteUrl: string;
+  locale: string;
+}): [Record<string, unknown>, Record<string, unknown>] {
+  const { title, description, slug, siteUrl, locale } = input;
+  const url = getAbsoluteUrl(getLocalizedPath(`/learn/${slug}`, locale));
+  const learnHubUrl = getAbsoluteUrl(getLocalizedPath('/learn', locale));
+
+  const webPage = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url,
+    inLanguage: locale,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: siteUrl,
+    },
+  };
+
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Learn', item: learnHubUrl },
+      { '@type': 'ListItem', position: 3, name: title, item: url },
+    ],
+  };
+
+  return [webPage, breadcrumb];
 }
