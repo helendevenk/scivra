@@ -141,7 +141,7 @@ export const lorentzForce: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["em-spectrum", "electric-field-lines"],
 
-  seoTitle: "Lorentz Force & Magnetic Force — Interactive 3D Simulation | NeonPhysics",
+  seoTitle: "Lorentz Force & Magnetic Force — Interactive 3D Simulation | Scivra",
   seoKeywords: [
     "Lorentz force simulation",
     "magnetic force on charge",

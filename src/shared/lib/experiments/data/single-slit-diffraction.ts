@@ -111,7 +111,7 @@ export const singleSlitDiffraction: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["wave-interference", "geometric-optics-lenses", "em-spectrum"],
 
-  seoTitle: "Single-Slit Diffraction — Light Pattern Simulation | NeonPhysics",
+  seoTitle: "Single-Slit Diffraction — Light Pattern Simulation | Scivra",
   seoKeywords: [
     "single slit diffraction simulation",
     "diffraction pattern",

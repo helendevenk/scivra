@@ -122,7 +122,7 @@ export const electricPotentialVoltage: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["electric-field-lines", "dc-circuits-basic", "capacitors-rc-circuits"],
 
-  seoTitle: "Electric Potential & Voltage — Equipotential Lines Simulation | NeonPhysics",
+  seoTitle: "Electric Potential & Voltage — Equipotential Lines Simulation | Scivra",
   seoKeywords: [
     "electric potential",
     "voltage",

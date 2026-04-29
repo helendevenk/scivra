@@ -223,7 +223,7 @@ export const waveInterference: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["em-spectrum", "simple-harmonic-motion"],
 
-  seoTitle: "Wave Interference — Interactive 3D Simulation | NeonPhysics",
+  seoTitle: "Wave Interference — Interactive 3D Simulation | Scivra",
   seoKeywords: [
     "wave interference simulation",
     "standing waves interactive",

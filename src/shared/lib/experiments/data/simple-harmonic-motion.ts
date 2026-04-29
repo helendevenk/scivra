@@ -198,7 +198,7 @@ export const simpleHarmonicMotion: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["newtons-laws", "roller-coaster", "wave-interference"],
 
-  seoTitle: "Simple Harmonic Motion — Interactive 3D Spring Simulation | NeonPhysics",
+  seoTitle: "Simple Harmonic Motion — Interactive 3D Spring Simulation | Scivra",
   seoKeywords: [
     "simple harmonic motion",
     "SHM simulation",

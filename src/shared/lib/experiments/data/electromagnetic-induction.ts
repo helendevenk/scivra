@@ -123,7 +123,7 @@ export const electromagneticInduction: Experiment = {
   estimatedTime: 30,
   relatedExperiments: ["lorentz-force", "dc-circuits-basic", "electric-field-lines"],
 
-  seoTitle: "Electromagnetic Induction — Faraday's Law & Lenz's Law Simulation | NeonPhysics",
+  seoTitle: "Electromagnetic Induction — Faraday's Law & Lenz's Law Simulation | Scivra",
   seoKeywords: [
     "electromagnetic induction",
     "Faraday's law",

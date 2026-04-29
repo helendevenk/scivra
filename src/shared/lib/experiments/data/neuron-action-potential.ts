@@ -117,7 +117,7 @@ export const neuronActionPotential: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["membrane-transport", "cellular-respiration"],
 
-  seoTitle: "Neuron Action Potential Interactive Animation | NeonPhysics AP Biology",
+  seoTitle: "Neuron Action Potential Interactive Animation | Scivra AP Biology",
   seoKeywords: [
     "action potential simulation",
     "neuron animation",

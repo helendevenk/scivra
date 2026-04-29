@@ -113,7 +113,7 @@ export const msEcosystems: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["k5-food-chain", "natural-selection", "ms-photosynthesis-respiration"],
 
-  seoTitle: "Ecosystems Food Web Middle School | NeonPhysics Biology Simulation",
+  seoTitle: "Ecosystems Food Web Middle School | Scivra Biology Simulation",
   seoKeywords: [
     "ecosystems food web middle school simulation",
     "predator prey population dynamics 6-8",

@@ -113,7 +113,7 @@ export const k5EnergyConversion: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-force-motion", "k5-simple-machines", "roller-coaster"],
 
-  seoTitle: "Energy Conversion for Kids | NeonPhysics Elementary Science",
+  seoTitle: "Energy Conversion for Kids | Scivra Elementary Science",
   seoKeywords: [
     "energy conversion kids simulation",
     "kinetic potential energy interactive",

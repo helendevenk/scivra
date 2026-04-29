@@ -174,7 +174,7 @@ export const circularMotion: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["newtons-laws", "gravitational-fields"],
 
-  seoTitle: "Circular Motion & Centripetal Force — Interactive 3D | NeonPhysics",
+  seoTitle: "Circular Motion & Centripetal Force — Interactive 3D | Scivra",
   seoKeywords: [
     "circular motion simulation",
     "centripetal force",

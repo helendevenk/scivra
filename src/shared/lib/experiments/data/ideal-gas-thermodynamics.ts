@@ -123,7 +123,7 @@ export const idealGasThermodynamics: Experiment = {
   estimatedTime: 30,
   relatedExperiments: ["roller-coaster", "simple-harmonic-motion", "fluid-statics"],
 
-  seoTitle: "Ideal Gas Law & PV Diagrams — Interactive Thermodynamics Simulation | NeonPhysics",
+  seoTitle: "Ideal Gas Law & PV Diagrams — Interactive Thermodynamics Simulation | Scivra",
   seoKeywords: [
     "ideal gas law",
     "PV diagram",

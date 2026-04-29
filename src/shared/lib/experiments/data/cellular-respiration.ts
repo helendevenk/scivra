@@ -117,7 +117,7 @@ export const cellularRespiration: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["photosynthesis", "enzyme-kinetics"],
 
-  seoTitle: "Cellular Respiration ATP Synthesis — Interactive 3D | NeonPhysics AP Biology",
+  seoTitle: "Cellular Respiration ATP Synthesis — Interactive 3D | Scivra AP Biology",
   seoKeywords: [
     "cellular respiration animation",
     "ATP synthesis simulation",

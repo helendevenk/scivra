@@ -109,7 +109,7 @@ export const k5WaterCycle: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-day-night-seasons", "k5-food-chain"],
 
-  seoTitle: "Water Cycle Simulation for Kids | NeonPhysics Elementary Earth Science",
+  seoTitle: "Water Cycle Simulation for Kids | Scivra Elementary Earth Science",
   seoKeywords: [
     "water cycle kids simulation",
     "evaporation condensation interactive",

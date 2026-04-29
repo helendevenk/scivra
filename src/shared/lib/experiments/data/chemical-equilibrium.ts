@@ -117,7 +117,7 @@ export const chemicalEquilibrium: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["reaction-kinetics", "acid-base-ph"],
 
-  seoTitle: "Chemical Equilibrium Le Chatelier's Principle | NeonPhysics AP Chemistry",
+  seoTitle: "Chemical Equilibrium Le Chatelier's Principle | Scivra AP Chemistry",
   seoKeywords: [
     "chemical equilibrium simulation",
     "Le Chatelier's principle interactive",

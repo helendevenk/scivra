@@ -113,7 +113,7 @@ export const msWeatherSystems: Experiment = {
   estimatedTime: 13,
   relatedExperiments: ["k5-water-cycle", "ms-plate-tectonics"],
 
-  seoTitle: "Weather Systems Middle School | NeonPhysics Earth Science Simulation",
+  seoTitle: "Weather Systems Middle School | Scivra Earth Science Simulation",
   seoKeywords: [
     "weather systems middle school simulation",
     "air pressure fronts interactive 6-8",

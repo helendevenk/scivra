@@ -113,7 +113,7 @@ export const k5FoodChain: Experiment = {
   estimatedTime: 12,
   relatedExperiments: ["k5-water-cycle", "natural-selection", "photosynthesis"],
 
-  seoTitle: "Food Chain Ecosystem Simulation for Kids | NeonPhysics Elementary",
+  seoTitle: "Food Chain Ecosystem Simulation for Kids | Scivra Elementary",
   seoKeywords: [
     "food chain kids simulation",
     "ecosystem interactive elementary",

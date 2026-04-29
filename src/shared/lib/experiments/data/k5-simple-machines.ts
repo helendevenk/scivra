@@ -113,7 +113,7 @@ export const k5SimpleMachines: Experiment = {
   estimatedTime: 12,
   relatedExperiments: ["k5-force-motion", "k5-energy-conversion"],
 
-  seoTitle: "Simple Machines for Kids | Lever Pulley Interactive | NeonPhysics",
+  seoTitle: "Simple Machines for Kids | Lever Pulley Interactive | Scivra",
   seoKeywords: [
     "simple machines kids simulation",
     "lever pulley inclined plane interactive",

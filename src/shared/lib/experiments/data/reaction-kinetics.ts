@@ -117,7 +117,7 @@ export const reactionKinetics: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["chemical-equilibrium", "thermochemistry"],
 
-  seoTitle: "Chemical Reaction Kinetics — Interactive Arrhenius | NeonPhysics AP Chemistry",
+  seoTitle: "Chemical Reaction Kinetics — Interactive Arrhenius | Scivra AP Chemistry",
   seoKeywords: [
     "reaction kinetics simulation",
     "Arrhenius equation interactive",

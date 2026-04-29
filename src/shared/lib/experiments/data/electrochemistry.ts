@@ -117,7 +117,7 @@ export const electrochemistry: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["thermochemistry", "acid-base-ph"],
 
-  seoTitle: "Electrochemistry Galvanic Electrolytic Cell | NeonPhysics AP Chemistry",
+  seoTitle: "Electrochemistry Galvanic Electrolytic Cell | Scivra AP Chemistry",
   seoKeywords: [
     "electrochemistry simulation",
     "galvanic cell interactive",

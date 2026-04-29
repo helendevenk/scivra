@@ -190,7 +190,7 @@ export const kinematicsGraphs: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["projectile-motion", "newtons-laws", "circular-motion"],
 
-  seoTitle: "Kinematics Graphs — Position & Velocity Time Graphs | NeonPhysics",
+  seoTitle: "Kinematics Graphs — Position & Velocity Time Graphs | Scivra",
   seoKeywords: [
     "kinematics graphs simulation",
     "position time graph",

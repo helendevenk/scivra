@@ -113,7 +113,7 @@ export const msChemicalReactions: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["ms-atoms-molecules", "thermochemistry", "reaction-kinetics"],
 
-  seoTitle: "Chemical Reactions Middle School | NeonPhysics Interactive Chemistry",
+  seoTitle: "Chemical Reactions Middle School | Scivra Interactive Chemistry",
   seoKeywords: [
     "chemical reactions middle school simulation",
     "conservation of mass interactive",

@@ -117,7 +117,7 @@ export const acidBasePh: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["chemical-equilibrium", "electrochemistry"],
 
-  seoTitle: "Acid-Base pH Titration Interactive | NeonPhysics AP Chemistry",
+  seoTitle: "Acid-Base pH Titration Interactive | Scivra AP Chemistry",
   seoKeywords: [
     "acid base pH simulation",
     "titration curve interactive",

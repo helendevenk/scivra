@@ -115,7 +115,7 @@ export const heatEngines: Experiment = {
   estimatedTime: 35,
   relatedExperiments: ["fluid-statics", "simple-harmonic-motion"],
 
-  seoTitle: "Heat Engines & Carnot Cycle — Thermodynamics Efficiency Lab | NeonPhysics",
+  seoTitle: "Heat Engines & Carnot Cycle — Thermodynamics Efficiency Lab | Scivra",
   seoKeywords: [
     "heat engine simulation",
     "Carnot cycle",

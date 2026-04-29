@@ -117,7 +117,7 @@ export const thermochemistry: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["reaction-kinetics", "chemical-equilibrium"],
 
-  seoTitle: "Thermochemistry Hess's Law Interactive | NeonPhysics AP Chemistry",
+  seoTitle: "Thermochemistry Hess's Law Interactive | Scivra AP Chemistry",
   seoKeywords: [
     "thermochemistry simulation",
     "Hess's law interactive",

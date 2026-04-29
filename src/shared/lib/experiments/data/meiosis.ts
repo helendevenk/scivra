@@ -117,7 +117,7 @@ export const meiosis: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["mitosis", "natural-selection"],
 
-  seoTitle: "Meiosis & Genetic Variation — Interactive Animation | NeonPhysics AP Biology",
+  seoTitle: "Meiosis & Genetic Variation — Interactive Animation | Scivra AP Biology",
   seoKeywords: [
     "meiosis animation",
     "crossing over simulation",

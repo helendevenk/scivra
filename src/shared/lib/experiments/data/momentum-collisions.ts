@@ -239,7 +239,7 @@ export const momentumCollisions: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["newtons-laws", "simple-harmonic-motion"],
 
-  seoTitle: "Momentum & Collisions — Interactive Physics Simulation | NeonPhysics",
+  seoTitle: "Momentum & Collisions — Interactive Physics Simulation | Scivra",
   seoKeywords: [
     "momentum conservation simulation",
     "elastic collision",

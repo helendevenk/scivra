@@ -113,7 +113,7 @@ export const msPhotosynthesisRespiration: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["photosynthesis", "cellular-respiration", "ms-ecosystems"],
 
-  seoTitle: "Photosynthesis Respiration Middle School | NeonPhysics Biology",
+  seoTitle: "Photosynthesis Respiration Middle School | Scivra Biology",
   seoKeywords: [
     "photosynthesis respiration middle school simulation",
     "chloroplast mitochondria interactive",

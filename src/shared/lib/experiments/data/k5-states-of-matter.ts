@@ -103,7 +103,7 @@ export const k5StatesOfMatter: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-energy-conversion", "thermochemistry"],
 
-  seoTitle: "States of Matter Simulation for Kids | NeonPhysics Elementary",
+  seoTitle: "States of Matter Simulation for Kids | Scivra Elementary",
   seoKeywords: [
     "states of matter kids",
     "solid liquid gas simulation",
