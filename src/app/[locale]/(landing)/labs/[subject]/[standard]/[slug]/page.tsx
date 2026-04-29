@@ -8,6 +8,8 @@ import {
 import { getExperimentBySlug } from "@/shared/lib/experiments/registry";
 import { SUBJECTS, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
 import { ExperimentFlow } from "@/shared/blocks/experiments/experiment-flow";
+import ExperimentContentSections from "@/shared/blocks/experiments/experiment-content-sections";
+import ExperimentFaq from "@/shared/blocks/experiments/experiment-faq";
 import { getSignUser } from "@/shared/models/user";
 import { getCurrentSubscription } from "@/shared/models/subscription";
 import { subscriptionToTier, canAccessExperiment } from "@/shared/lib/experiments/access";
@@ -237,6 +239,14 @@ export default async function ExperimentDetailPage({ params }: Props) {
           canAccess={canAccess}
           locale={locale}
         />
+
+        <ExperimentContentSections
+          sections={experiment.contentSections}
+          experimentTitle={experiment.title}
+          parameters={experiment.parameters}
+        />
+
+        <ExperimentFaq faq={experiment.contentSections?.faq} />
 
         {experiment.relatedExperiments.length > 0 && (
           <aside className="mt-12 border-t border-border pt-8">
