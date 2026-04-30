@@ -212,4 +212,85 @@ export const simpleHarmonicMotion: Experiment = {
     educationalLevel: "High School",
     teaches: "Simple Harmonic Motion",
   },
+
+  contentSections: {
+    whatIsIt:
+      "Pluck a guitar string, push a kid on a swing, watch a tuning fork hum after you tap it on a desk — all of them trace out the same mathematical shape: a smooth sine wave moving back and forth around a balance point. Simple harmonic motion is the physics of any system where the force pulling you back toward equilibrium grows in proportion to how far you've strayed (F = -kx). That single rule produces the cleanest motion in physics: the position is sinusoidal, the period is independent of amplitude, and energy sloshes between kinetic and potential without ever leaking out (in the ideal case). This lab gives you a spring-mass system with sliders for k, m, amplitude A, and an optional damping coefficient. Watch the energy bar split between Ek and Ep as the mass races through equilibrium and freezes at the turning points, and try to break the period formula by changing amplitude — you can't.",
+    parameterExplanations: {
+      springConstant:
+        "Spring stiffness k in newtons per meter. A bigger k means a sharper restoring pull for the same displacement, which raises the angular frequency ω = √(k/m) and shrinks the period. Stiff springs oscillate fast; soft springs oscillate slowly.",
+      mass:
+        "The oscillating mass m in kilograms. Mass adds inertia, so the same spring takes longer to whip a heavier block back and forth. Period grows as √m: doubling the mass multiplies the period by √2 ≈ 1.41, not by 2.",
+      amplitude:
+        "The maximum displacement A from equilibrium in meters. Crucially, amplitude does NOT affect the period — that's the punchline of SHM. It does set the total energy (E = ½kA²) and the maximum speed (v_max = Aω), so larger A means a faster zip through the middle but the same round-trip time.",
+      damping:
+        "The damping coefficient b in kg/s (Pro). Damping converts mechanical energy to heat at a rate proportional to velocity, so the amplitude envelope decays exponentially as A(t) = A₀ e^(−bt/2m). Critical damping (b² = 4mk) is the fastest return to equilibrium without overshoot.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "If I double the amplitude, the oscillation takes twice as long because the mass has farther to travel.",
+        correct:
+          "The mass does travel farther, but it also moves faster — its maximum speed scales with A. The two effects cancel exactly. Period stays at T = 2π√(m/k) for any amplitude, which is why a clock pendulum keeps the same time even as its swing shrinks.",
+      },
+      {
+        wrong:
+          "The mass is moving fastest at the extreme positions because the spring is pulling hardest there.",
+        correct:
+          "At the extreme positions the mass is momentarily at rest — that's where it turns around. Force is largest there, but velocity is zero. Maximum speed happens at the equilibrium point, where force is zero but kinetic energy is at its peak.",
+      },
+      {
+        wrong:
+          "When damping kicks in, the energy is destroyed.",
+        correct:
+          "Energy is conserved — it just leaves the visible oscillation. Damping converts kinetic and elastic potential energy into thermal energy in the spring, the surrounding air, and any bearings. Total energy of the universe is unchanged; the oscillator just gives up its share to heat.",
+      },
+      {
+        wrong:
+          "A heavier mass on the same spring oscillates faster because gravity pulls it harder.",
+        correct:
+          "Heavier mass means slower oscillation. The gravitational pull just shifts the equilibrium position lower; it doesn't enter the period. The dynamics around equilibrium follow T = 2π√(m/k), so more mass means a longer period — even though gravity is pulling harder.",
+      },
+      {
+        wrong:
+          "Energy is greatest when the mass is moving fastest.",
+        correct:
+          "Total mechanical energy is constant in undamped SHM (E = ½kA² = ½mv²_max). What changes is the split: at equilibrium, energy is 100% kinetic; at maximum displacement, it's 100% potential; everywhere else, it's a mix that adds to the same total.",
+      },
+    ],
+    teacherUseCases: [
+      "Amplitude-independence test: have pairs predict whether doubling A changes the period, then run two trials at A and 2A and time 10 cycles each. Same period. Many students need to see this with their own measurements before they trust it.",
+      "Energy split lab: pause the simulation at five positions (x = 0, ±A/2, ±A) and ask students to compute Ek and Ep at each point. The two should always sum to ½kA². This makes E_total = constant tactile rather than a textbook claim.",
+      "Critical damping demo (Pro): vary the damping coefficient and watch the response. Have students hunt for the b that returns the system to equilibrium fastest without oscillating. Connect to car suspensions, where engineers tune dampers near critical for the best ride.",
+      "Misconception probe — ask 'when in the cycle is the mass moving fastest?' before they touch the controls. Most students point to the turning points because that's where the spring is most stretched. The velocity readout settles the argument.",
+      "Cross-system bridge: this is the abstract version of masses-springs-basics and pendulum-lab. Run it after both physical labs to show that the same equations describe systems that look completely different in the real world. That's the deep point of SHM.",
+    ],
+    faq: [
+      {
+        question: "Why is the period independent of amplitude in SHM?",
+        answer:
+          "Because the restoring force is exactly linear in displacement (F = -kx). When you double the amplitude, you double both the maximum force and the maximum distance to travel. Larger force gives larger acceleration; larger distance demands more travel time. The two effects scale identically and cancel out in the equations of motion. This linear restoring force is the defining property of SHM, and it's what makes the period formula T = 2π√(m/k) so clean — no A in sight.",
+      },
+      {
+        question: "How are kinetic and potential energy related in SHM?",
+        answer:
+          "Total mechanical energy E = ½kA² is conserved (in the absence of damping). At maximum displacement, all of E sits as elastic potential energy ½kx² with x = A; the mass is momentarily at rest. At equilibrium (x = 0), all of E sits as kinetic energy ½mv², and v = v_max = Aω. Everywhere in between, the two add to the same total. Watching the energy bar at the bottom of the simulation cycle between blue and red as the mass moves makes this visible in real time.",
+      },
+      {
+        question: "What does damping actually do to the motion?",
+        answer:
+          "Damping is a velocity-dependent force F_d = -bv that opposes motion and drains mechanical energy into heat. Three regimes: underdamped (b² < 4mk) gives an oscillation with an exponentially decaying amplitude envelope A(t) = A₀ e^(−bt/2m); critically damped (b² = 4mk) returns to equilibrium fastest without overshooting; overdamped (b² > 4mk) returns slowly without oscillating. Real systems are always somewhere on this scale — only the ideal SHM bounces forever.",
+      },
+      {
+        question: "How does this connect to AP Physics 1 standards 3.B.3 and 5.B.3?",
+        answer:
+          "AP Physics 1 standard 3.B.3 expects students to predict the motion of an object under a restoring force proportional to displacement — exactly the F = -kx setup here. Standard 5.B.3 layers in energy conservation, expecting students to track the kinetic-potential exchange and recognize total mechanical energy is preserved in undamped SHM. NGSS HS-PS3-2 reinforces the energy side: explain that visible oscillation is a transformation between two energy stores, with damping converting orderly motion into thermal energy.",
+      },
+      {
+        question: "Why does the same equation describe springs, pendulums, and atoms in a crystal?",
+        answer:
+          "All three have a stable equilibrium and a smooth potential energy curve near that equilibrium. Whenever you zoom in close enough to a smooth U(x) minimum, it looks parabolic — and a parabolic potential energy gives a linear restoring force, which is the SHM equation. Springs are designed parabolic, pendulums approach parabolic for small angles, and the bonds between atoms in a crystal lattice are parabolic for small displacements. That's why SHM is one of the most reused models in all of physics, from clocks to acoustic waves to phonons to molecular vibrations.",
+      },
+    ],
+  },
 };

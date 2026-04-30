@@ -52,4 +52,79 @@ export const forcesMotionBasics: Experiment = {
   seoTitle: "Forces and Motion Basics | Newton's Laws Simulation | AP Physics 1",
   seoKeywords: ["forces and motion", "Newton's laws", "friction", "net force", "AP Physics 1", "free body diagram"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Newton's Laws, Net Force, Friction" },
+
+  contentSections: {
+    whatIsIt:
+      "Push a shopping cart on a smooth supermarket floor and it rolls easily; push the same cart across a gravel parking lot and it fights you the whole way. Newton's laws are the rulebook for that everyday experience. The first law says an object keeps doing whatever it's doing — sitting still or sliding at constant velocity — until a net force acts on it. The second law puts a number on the result: net force equals mass times acceleration. The third law says forces always come in equal-and-opposite pairs. Friction is the everyday opponent that makes the cart eventually stop, and its strength depends on the surface and how hard the cart presses down. In this lab you choose an object's mass, dial in an applied force, set the friction coefficient and surface, and watch the free-body diagram and the resulting motion update together.",
+    parameterExplanations: {
+      applied_force:
+        "The pushing force you apply to the object in newtons. A typical adult push is about 100–200 N. Net force determines acceleration, but only the part of your push that exceeds friction actually accelerates the object — the rest is canceled by friction.",
+      mass:
+        "The object's mass in kilograms. From F_net = ma, the same net force gives a heavier object less acceleration. A 100 N net force accelerates a 10 kg crate at 10 m/s² but a 100 kg crate at only 1 m/s².",
+      friction_coeff:
+        "The kinetic friction coefficient (μ_k), a unitless number that captures how rough the contact is. Polished ice is around 0.03, wood on wood about 0.3, rubber on dry asphalt as high as 0.8. Bigger μ_k means a bigger friction force opposing motion at the same weight.",
+      surface:
+        "A preset surface type (ice, wood, carpet, asphalt) that locks the friction coefficient to a realistic value. Switching surfaces is the fastest way to see how the same applied force produces wildly different accelerations on different floors.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "An object needs a continuous force on it to keep moving at constant velocity.",
+        correct:
+          "Newton's first law says no — an object in motion stays in motion at constant velocity unless a net force acts. In real life you have to keep pushing because friction is fighting you back. Remove friction (think of a hockey puck on ideal ice) and a single push keeps the puck moving forever.",
+      },
+      {
+        wrong:
+          "If you push a heavy object and a light object with the same force, they accelerate the same.",
+        correct:
+          "F_net = ma, so the same net force gives the heavier object a smaller acceleration in inverse proportion to mass. Doubling the mass halves the acceleration. This is why pushing a stalled car takes much longer to get rolling than pushing a bicycle.",
+      },
+      {
+        wrong:
+          "Friction always works against you and slows things down.",
+        correct:
+          "Friction opposes relative sliding, not motion in general. Friction is what lets your shoes push you forward when you walk and what gives car tires the grip needed to accelerate. Without friction you couldn't start, stop, or turn.",
+      },
+      {
+        wrong:
+          "If two objects collide, the heavier one pushes harder on the lighter one than it gets pushed back.",
+        correct:
+          "Newton's third law says forces between two objects are always equal in magnitude and opposite in direction, regardless of mass. The lighter object accelerates more because it has less mass, but the force it experiences is identical to the force on the heavier object.",
+      },
+    ],
+    teacherUseCases: [
+      "Acceleration data run: have students hold mass constant at 20 kg and record the resulting acceleration for applied forces of 50, 100, 150, and 200 N. Plot a versus F and confirm the slope equals 1/m.",
+      "Predict-the-net-force: with a known mass and friction coefficient, ask students to predict the minimum applied force needed to start the box moving before they touch the slider. Compare predictions with the actual threshold.",
+      "Surface tour: ask students to keep mass and applied force fixed and switch through ice, wood, and asphalt. Have them measure acceleration on each surface and rank them, then look up real-world μ values to check.",
+      "Misconception probe: pause the sim with the box moving at constant velocity and ask 'is there a net force on the box right now?' Students who say yes are showing the classic 'force is needed to maintain motion' confusion.",
+      "Free-body diagram practice: have pairs sketch the free-body diagram before each run and compare with the simulation's diagram, focusing on force directions and magnitudes.",
+    ],
+    faq: [
+      {
+        question: "Why does a heavier box need a bigger push to start moving even on the same floor?",
+        answer:
+          "Static friction is proportional to the normal force, which is proportional to weight (mg). A heavier box presses down harder on the floor, so the maximum static friction is larger and the applied force needed to overcome it grows with mass. The friction coefficient itself doesn't change — only the available friction force does.",
+      },
+      {
+        question: "What is the difference between static and kinetic friction?",
+        answer:
+          "Static friction acts on a stationary object and adjusts itself up to a maximum value to prevent motion. Kinetic friction acts on a sliding object and is roughly constant. Static friction's max is usually slightly larger than kinetic friction, which is why getting a stuck box to slide takes a sharper push than keeping it sliding.",
+      },
+      {
+        question: "Does mass affect acceleration if I keep applied force the same?",
+        answer:
+          "Yes — directly. F = ma rearranges to a = F/m, so doubling the mass halves the acceleration at the same applied force. Increase mass enough and the same push that easily accelerated a small object barely moves a big one. Try it with the mass slider to feel the inverse relationship.",
+      },
+      {
+        question: "Why do objects on ice slide so much farther than on carpet?",
+        answer:
+          "Ice has a very low kinetic friction coefficient (around 0.03), while carpet is closer to 0.5. Friction force scales linearly with μ, so an object on ice feels roughly fifteen times less stopping force than the same object on carpet. Less stopping force means much smaller deceleration and a much longer slide.",
+      },
+      {
+        question: "How does this lab connect to AP Physics 1?",
+        answer:
+          "AP Physics 1 standard 3.A.1 expects students to recognize that forces are interactions between objects, and 3.B.1 expects them to apply Newton's second law to predict motion from a free-body diagram. This sim lets you isolate every term in F_net = ma and watch the resulting acceleration directly, which is exactly what the AP exam asks you to reason about on paper.",
+      },
+    ],
+  },
 };

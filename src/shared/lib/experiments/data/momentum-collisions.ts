@@ -253,4 +253,92 @@ export const momentumCollisions: Experiment = {
     educationalLevel: "High School",
     teaches: "Conservation of Momentum",
   },
+
+  contentSections: {
+    whatIsIt:
+      "Slide a billiard ball straight at a stationary one of equal mass. The cue ball stops dead and the target ball rolls off with the original speed. That weird, almost magical exchange is conservation of momentum doing exactly what the math says it must. Now imagine the same hit but with a lump of clay instead — the moving ball plows into it, they stick together, and the combined blob continues at half the original speed. Different outcome, same conservation law: total momentum before equals total momentum after, every time, in any isolated collision. The difference between the two cases is what happens to kinetic energy: conserved in the elastic case, partly dumped into heat and deformation in the inelastic one. This lab launches two carts at each other with adjustable masses, velocities, and a coefficient of restitution slider so you can blend smoothly from perfectly bouncy to perfectly sticky.",
+    parameterExplanations: {
+      mass1:
+        "Mass of the first cart in kilograms. Heavier carts carry more momentum at the same speed and are harder to deflect. In an elastic head-on hit with a much lighter target, a heavy cart barely changes velocity while the target rebounds at nearly twice the cart's incoming speed.",
+      mass2:
+        "Mass of the second cart in kilograms. The mass ratio m₁/m₂ controls how the post-collision velocities split. Equal masses produce a clean swap (in elastic 1D collisions); unequal masses produce a partial transfer governed by (m_1 - m_2)/(m_1 + m_2).",
+      velocity1:
+        "Initial velocity of cart 1 in meters per second. Sign matters: positive is rightward, negative is leftward. Momentum p_1 = m_1·v_1 is a vector, so a fast leftward cart has the same magnitude but opposite sign as a fast rightward one — and that sign survives all the way through the collision math.",
+      velocity2:
+        "Initial velocity of cart 2 in meters per second, with the same sign convention as v_1. Setting v_2 = 0 reproduces the classic 'cue ball into rack' scenario; setting v_2 negative gives a head-on closing collision; setting it positive but smaller than v_1 makes cart 1 catch up and rear-end cart 2.",
+      restitution:
+        "The coefficient of restitution e, dimensionless, ranging 0 to 1. It's the ratio of the relative speed of separation after to the relative speed of approach before. e = 1 is perfectly elastic (KE conserved); e = 0 is perfectly inelastic (carts stick); intermediate values model real-world collisions like rubber balls (~0.8) or steel-on-clay (~0.2).",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "If two objects collide and stick together, momentum is lost because they slow down.",
+        correct:
+          "Momentum is conserved in every collision, sticky or bouncy, as long as no external forces act. What changes in a sticky collision is kinetic energy — some of it converts to heat and deformation. The combined mass moves more slowly precisely because momentum (m·v) has to add up to the original total: more m means less v.",
+      },
+      {
+        wrong:
+          "Momentum and kinetic energy are basically the same thing — both measure motion.",
+        correct:
+          "They're related but distinct. Momentum p = mv is a vector, conserved in every collision. Kinetic energy KE = ½mv² is a scalar, conserved only in elastic ones. Doubling speed doubles momentum but quadruples KE. The two concepts answer different questions: momentum tells you how hard something is to stop; KE tells you how much damage it can do.",
+      },
+      {
+        wrong:
+          "When a moving object hits a stationary one, the moving object always loses speed and the stationary one always speeds up by the same amount.",
+        correct:
+          "Only true for equal masses in 1D elastic collisions. With unequal masses or inelastic conditions, the velocity changes are not equal and opposite. What is always equal and opposite — for any isolated collision — is the impulse (Δp) on each object. The forces during contact are equal and opposite by Newton's third law, but the resulting velocity changes depend on the masses.",
+      },
+      {
+        wrong:
+          "Cars in a head-on crash come to a sudden stop because the airbag absorbs all the energy.",
+        correct:
+          "Airbags don't reduce the energy you have to dissipate — they reduce the peak force by extending the time over which it acts. The impulse-momentum theorem F·Δt = Δp says the same momentum change can be delivered with a small force over a long time or a huge force over a short time. Airbags choose the gentle option, which is why they save lives.",
+      },
+      {
+        wrong:
+          "A heavy truck has more momentum than a fast bullet because trucks weigh more.",
+        correct:
+          "Momentum is mass times velocity, so a slow truck and a fast bullet can have the same momentum if mv lines up. A 10,000 kg truck at 1 m/s carries the same momentum as a 0.01 kg bullet at 1,000 m/s: 10,000 kg·m/s. The bullet wins on KE (½mv² scales with v²) which is why it does more damage despite the lighter mass.",
+      },
+    ],
+    teacherUseCases: [
+      "Momentum bookkeeping: have students record p_1, p_2, and p_total before and after for at least four different mass and velocity combinations in elastic mode. Verify p_total stays constant to within rounding. Then repeat in perfectly inelastic mode and confirm the same. Goal: make conservation feel like a verified experimental fact, not just a slogan.",
+      "Equal-mass surprise: predict the outcome of a 3 kg cart at 4 m/s hitting a stationary 3 kg cart elastically. Most students guess both carts move forward at 2 m/s. The correct answer (cart 1 stops, cart 2 takes off at 4 m/s) is a powerful misconception breaker. Use it to motivate careful application of both conservation laws together.",
+      "Restitution slider study: have student pairs sweep e from 0 to 1 in steps of 0.1 with fixed initial conditions, and record the post-collision KE. Plot KE_after/KE_before vs. e. Discuss why the curve isn't linear — the algebra forces a quadratic relationship.",
+      "Real-world collision audit: assign each group a video of a real collision (Newton's cradle, billiards, car crash test, two pucks on an air table). Ask them to estimate e and classify the collision. The exercise sharpens the link between the slider and physical reality.",
+      "Misconception probe — sticky momentum: pause the simulation immediately after a perfectly inelastic collision and ask 'where did the momentum go?' Many students will say it disappeared. Walk them through the m_total·v_final calculation showing it didn't. Then ask 'where did the energy go?' and let them realize that's the actual question.",
+    ],
+    faq: [
+      {
+        question: "What is the difference between an elastic and an inelastic collision?",
+        answer:
+          "Both conserve momentum, but they differ in what happens to kinetic energy. In an elastic collision, KE is also conserved — the objects bounce off without energy loss. In an inelastic collision, some KE converts to heat, sound, or deformation; the objects might still separate but with less combined KE than they started with. A perfectly inelastic collision is the extreme case where the objects stick together, maximizing the KE loss subject to momentum conservation.",
+      },
+      {
+        question: "Why is momentum conserved in every collision but kinetic energy isn't?",
+        answer:
+          "Momentum conservation comes from Newton's third law: the forces between two colliding objects are equal and opposite, so the impulses they deliver to each other cancel exactly, leaving total momentum unchanged. Kinetic energy doesn't have that protection. Internal forces during a collision can do work that converts KE into other forms — heat, sound, internal vibration, permanent deformation. Those losses aren't visible at the level of total momentum but they show up clearly in the KE balance.",
+      },
+      {
+        question: "What does the coefficient of restitution actually measure?",
+        answer:
+          "It's the ratio of the relative speed of separation to the relative speed of approach: e = (v_2' - v_1') / (v_1 - v_2). For e = 1 the objects separate as fast as they came together (perfectly elastic). For e = 0 they don't separate at all (perfectly inelastic — they stick). Real-world collisions live in between: a basketball on a hardwood floor has e ≈ 0.75; a ball of putty on concrete has e ≈ 0. The coefficient is empirical and depends on both materials and impact speed.",
+      },
+      {
+        question: "Why does a heavy truck barely slow down when it hits a small car?",
+        answer:
+          "Because momentum conservation distributes the impulse based on mass. The truck and car receive equal and opposite impulses (Newton's third law), but the same Δp produces a velocity change Δv = Δp/m that is much smaller for the heavy truck. The car's velocity changes dramatically; the truck's barely shifts. Same momentum transfer, very different velocity outcomes — and very different consequences for the people inside.",
+      },
+      {
+        question: "What is impulse and how does it relate to airbags and crumple zones?",
+        answer:
+          "Impulse J is the integral of force over time, J = F·Δt, and it equals the change in momentum: J = Δp. For a given crash, your momentum change is fixed — you go from cruising speed to zero. The only variable is how long the deceleration lasts. Airbags and crumple zones extend Δt by allowing controlled deformation, which proportionally reduces the peak force F that your body has to absorb. Same impulse, much lower force, far less injury.",
+      },
+      {
+        question: "How does this lab map to AP Physics 1 standard 5.D.1?",
+        answer:
+          "AP Physics 1 standard 5.D.1 expects students to apply conservation of linear momentum to collisions and explosions, distinguish elastic from inelastic outcomes, and use the impulse-momentum theorem. This lab is essentially a controlled laboratory version of every textbook problem under that standard: students set masses and velocities, predict post-collision states, verify conservation, and explore how the coefficient of restitution shifts kinetic energy out of the system. NGSS HS-PS2-2 covers the same ground from a slightly different angle.",
+      },
+    ],
+  },
 };
