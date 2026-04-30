@@ -238,4 +238,81 @@ export const waveInterference: Experiment = {
     educationalLevel: "High School",
     teaches: "Wave Interference and Superposition",
   },
+
+  contentSections: {
+    whatIsIt:
+      "Wave interference is what happens when two or more waves overlap in the same place at the same time. The principle of superposition says you just add the displacements together — peak meets peak, you get a bigger peak (constructive); peak meets trough, they cancel (destructive). It's how noise-canceling headphones work, how thin-film soap bubbles paint themselves with rainbows, and how the double-slit experiment proved light is a wave. In this lab two coherent sources emit ripples; change wavelength, separation, or phase difference and watch the interference pattern morph in real time.",
+    parameterExplanations: {
+      wavelength:
+        "Distance between consecutive peaks. Shorter wavelength means closer fringes; longer wavelength spreads them out. With two slits, fringe spacing is approximately wavelength × distance / slit separation.",
+      amplitude:
+        "Height of each wave's peaks. Doesn't change where bright/dark fringes land — only how bright the bright fringes are. Doubling amplitude quadruples intensity (intensity scales as amplitude squared).",
+      sourceSeparation:
+        "Distance between the two emitting points. Smaller separation spreads the interference pattern out; larger separation packs fringes closer. This is the 'd' in the double-slit equation d sin θ = mλ.",
+      phaseDiff:
+        "Phase offset between the two sources. Zero phase difference (in phase) gives a central bright fringe. A π phase difference (out of phase) flips bright and dark, giving a central dark fringe.",
+      mode:
+        "Switches between two-source interference, single-slit diffraction, and standing-wave modes so you can compare patterns side by side.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "Destructive interference destroys the wave's energy.",
+        correct:
+          "Energy is conserved. Where two waves cancel destructively, their energy reappears as extra constructive intensity elsewhere in the pattern. The total energy doesn't disappear, it just redistributes.",
+      },
+      {
+        wrong:
+          "Two waves can only interfere if they're at the exact same frequency.",
+        correct:
+          "Interference happens whenever waves overlap. Same-frequency coherent sources produce stable, easy-to-see patterns. Different frequencies produce 'beats' — interference patterns that change with time. Both are interference.",
+      },
+      {
+        wrong:
+          "The double-slit experiment shows that light is a particle.",
+        correct:
+          "It shows the opposite: light makes a wave-like interference pattern even when sent through one photon at a time. The single-photon interference pattern is one of the central pieces of evidence for wave-particle duality.",
+      },
+      {
+        wrong:
+          "Bright fringes are where the two waves have the same amplitude.",
+        correct:
+          "Bright fringes are where the two waves arrive in phase, no matter what their individual amplitudes are. Dark fringes are where they arrive out of phase. Phase relationship — not amplitude — determines bright vs. dark.",
+      },
+    ],
+    teacherUseCases: [
+      "Phase prediction: ask students to predict the central fringe (bright or dark) for phase differences of 0, π/2, π, 3π/2 before running the lab. Verify each.",
+      "Wavelength scan: hold all parameters fixed except wavelength, and have students measure fringe spacing at three different wavelengths. Plot spacing vs. wavelength and discover the linear relationship.",
+      "Beat phenomenon: switch one source to a slightly different frequency and ask students to explain the slowly-varying envelope. Connect to musical instrument tuning.",
+      "Real-world application: discuss how anti-reflective lens coatings use destructive interference at thin-film boundaries to reduce glare.",
+      "Single-source comparison: switch to single-slit diffraction mode and ask students how the pattern differs from two-slit interference. Highlight that single-slit also has minima but with different spacing.",
+    ],
+    faq: [
+      {
+        question: "What is the principle of superposition?",
+        answer:
+          "When two or more waves occupy the same space at the same time, the resulting displacement at each point is the algebraic sum of the displacements from each wave. After the waves pass through each other, they continue unchanged — superposition is temporary, not destructive.",
+      },
+      {
+        question: "Why do we need coherent sources for stable interference?",
+        answer:
+          "Coherent means the sources have a constant phase relationship. If phases drifted randomly, bright fringes would appear and disappear too fast for our eyes (or the camera) to see. Lasers are great for double-slit experiments because their light is highly coherent.",
+      },
+      {
+        question: "What's the difference between interference and diffraction?",
+        answer:
+          "Interference is the result of overlapping waves from two or more sources. Diffraction is the spreading of a single wave around an obstacle or through an aperture. The double-slit pattern is technically interference modulated by single-slit diffraction — the envelope you see comes from diffraction at each slit.",
+      },
+      {
+        question: "How does this connect to AP Physics 1 and 2?",
+        answer:
+          "AP Physics 1 covers superposition, standing waves, and beats. AP Physics 2 extends to two-source interference and the double-slit experiment. Both expect students to use d sin θ = mλ for path-difference reasoning. This lab supports both courses by letting students change variables and see consequences.",
+      },
+      {
+        question: "Why are the bright fringes evenly spaced (for small angles)?",
+        answer:
+          "Path-difference math. The condition for bright fringe m is d sin θ = mλ. For small angles, sin θ ≈ tan θ ≈ y/L (where y is fringe distance from center, L is screen distance). That gives evenly spaced fringes at y_m = mλL/d. Beyond small angles the spacing stretches, but in most teaching setups the small-angle approximation holds.",
+      },
+    ],
+  },
 };
