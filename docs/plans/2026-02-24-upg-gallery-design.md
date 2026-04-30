@@ -1,9 +1,13 @@
 ---
 name: upg-gallery-design
-status: complete
-created: 2026-02-24T00:00:00Z
-updated: 2026-03-26T03:18:04Z
+status: historical-plan
+snapshot_date: '2026-02-24'
+created: '2026-02-24T00:00:00Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-02-24. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # UPG Gallery 设计文档
 

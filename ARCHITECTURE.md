@@ -1,6 +1,6 @@
 # Scivra v2 — Architecture Guide
 
-> **Last verified:** 2026-04-13 | **Quarterly review:** update this date after verifying accuracy
+> **Last verified:** 2026-04-23 | **Quarterly review:** update this date after verifying accuracy
 
 This document is for **human developers**. For AI assistant instructions, see `CLAUDE.md`.
 For coding standards and rules, see `.claude/rules/`.
@@ -21,12 +21,12 @@ For coding standards and rules, see `.claude/rules/`.
 
 ## 1. System Overview
 
-Scivra is an **AI-powered science education SaaS** targeting North American high school students and teachers. Two business lines:
+Scivra is an **AI-powered science education SaaS** targeting North American high school students and teachers. Two current business lines:
 
-- **Curated Labs** — Human-designed 3D interactive experiments (React Three Fiber), aligned to NGSS/AP Physics standards
-- **UPG (Universal Principle Generator)** — AI generates standalone HTML interactive visualizations from any science prompt in 30-60 seconds
+- **Curated Labs** — a public catalog of **175** HTML labs under `public/experiments/`, backed by a registry that currently contains **179** experiment definitions
+- **UPG (Universal Principle Generator)** — AI-generated interactive visualizations exposed today through `src/app/[locale]/(landing)/(ai)/upg/`; only the `physics` discipline is currently enabled
 
-**Revenue:** Freemium subscriptions (Free / Pro $4.99/mo / Max $9.99/mo) + UPG credit consumption.
+**Revenue model:** subscriptions + UPG credit consumption. Exact pricing and quota numbers should be confirmed against current product configuration before citation.
 
 ```mermaid
 graph TB
@@ -67,12 +67,12 @@ graph TB
 | Layer | Technology | Version |
 |-------|-----------|---------|
 | Framework | Next.js (App Router, Turbopack) | 16.0.7 |
-| Language | TypeScript (strict, zero `any`) | 5.x |
+| Language | TypeScript (strict mode enabled) | 5.x |
 | UI | Tailwind CSS + shadcn/ui (new-york) | v4 |
-| Theme | edu-academic (Academic Blue 250°, Merriweather serif) | — |
+| Theme | edu-academic (see `docs/design/brand-spec.md` and `src/config/style/theme.css`) | — |
 | Database | PostgreSQL + Drizzle ORM | 0.44.2 |
 | Auth | Better Auth + RBAC | 1.3.7 |
-| i18n | next-intl (en/zh, prefix: as-needed) | 4.3.4 |
+| i18n | next-intl, English-only (`locales: ['en']`, `localePrefix: 'never'`, `localeDetection: false`) | 4.3.4 |
 | 3D | React Three Fiber + Drei (app) / standalone Three.js in generated UPG HTML | 9.5.0 |
 | AI | Anthropic-compatible chat client with env/DB-configurable base URL | — |
 | Cache | Upstash Redis (rate limiting + distributed locks) | REST |
@@ -128,8 +128,8 @@ pnpm dev              # Turbopack dev server at localhost:3000
 
 **Add a new page:**
 1. Create route at `src/app/[locale]/(landing)/your-page/page.tsx`
-2. Add i18n translations: `src/config/locale/messages/en/your-page.json` + `zh/`
-3. Register namespace in locale config
+2. If the page needs a new copy namespace, add English messages under `src/config/locale/messages/en/`
+3. Register the namespace in `src/config/locale/index.ts`
 
 **Add a new API route:**
 1. Create `src/app/api/your-domain/route.ts`
@@ -161,17 +161,17 @@ pnpm dev              # Turbopack dev server at localhost:3000
 ```
 src/
 ├── app/              # Routes & pages (layout + data orchestration only)
-│   ├── [locale]/     # i18n-wrapped pages (en default, zh at /zh/...)
+│   ├── [locale]/     # Routing wrapper; current app surface is English-only with no locale prefix
 │   │   ├── (landing)/   # Public pages + user features
 │   │   ├── (admin)/     # Admin dashboard
 │   │   ├── (auth)/      # Sign in/up
 │   │   ├── (chat)/      # AI chat
 │   │   ├── (docs)/      # Fumadocs documentation
-│   │   └── (ai)/        # AI tools (UPG, image, music, video generators)
+│   │   └── (ai)/        # AI tools currently exposed in-app (UPG)
 │   └── api/          # API route handlers
 ├── config/           # Configuration (schema, i18n messages, styles, env)
 │   ├── db/schema.ts  # Central Drizzle schema definitions
-│   ├── locale/       # en/zh translation JSON files
+│   ├── locale/       # Locale config and message namespaces; routed app is currently English-only
 │   └── style/        # Tailwind + edu-academic theme CSS
 ├── core/             # Infrastructure (no business logic)
 │   ├── auth/         # Better Auth configuration
@@ -238,8 +238,8 @@ Violations will cause circular dependencies and break the build.
 
 | Domain | Directory | Core Models | Status | Description |
 |--------|-----------|-------------|--------|-------------|
-| **UPG** | `shared/lib/upg/`, `shared/blocks/upg/` | `upg_generation`, `upg_like`, `upg_report`, `upg_daily_quota`, `content_moderation` | Active | AI-generated interactive HTML visualizations |
-| **Experiments** | `shared/blocks/experiments/`, `shared/lib/experiments/` | `experiment_progress` | Active | Curated 3D lab experiments with progress tracking |
+| **UPG** | `shared/lib/upg/`, `shared/blocks/upg/` | `upg_generation`, `upg_like`, `upg_report`, `upg_daily_quota`, `content_moderation` | Active | AI-generated interactive HTML visualizations; current user-facing discipline enablement is physics-only |
+| **Experiments** | `shared/blocks/experiments/`, `shared/lib/experiments/` | `experiment_progress` | Active | **175** public HTML labs plus Wave 1 React/R3F experiments tracked in the registry |
 | **Learning Paths** | `shared/blocks/learning-path/` | `learning_path`, `learning_path_node`, `learning_path_progress`, `learning_stats` | Active | Structured course sequences |
 | **Gallery** | `shared/blocks/gallery/` | `upg_generation` (shared), `upg_like` | Active | Social discovery: like, fork, publish UPGs |
 | **AP Prep** | `shared/blocks/ap-prep/` | `ap_exam`, `ap_unit`, `ap_question`, `ap_attempt`, `ap_user_progress` | Active | AP Physics exam practice system |
@@ -259,10 +259,23 @@ The UPG domain is the most complex. Key files:
 | `shared/lib/upg/quality-checker.ts` | Validates generated HTML: canvas/WebGL renderer, scene/camera creation, no infinite loops, responsive |
 | `shared/lib/upg/anthropic-client.ts` | Primary Anthropic-compatible HTTP client used by generate/refine flows; can target Anthropic directly or a compatible gateway via base URL. |
 | `shared/lib/upg/openrouter-client.ts` | Auxiliary OpenRouter client retained in the codebase for provider-specific use cases. |
-| `shared/lib/upg/disciplines/` | Per-subject configuration (Physics, Chemistry, Biology, Earth Science, Math) |
+| `shared/lib/upg/disciplines/` | Per-subject configuration; `physics` is enabled, while `chemistry`, `biology`, `earth-science`, and `math` are present but disabled |
 | `shared/lib/upg/validation/` | Full validation pipeline and technical/physics validators |
 | `shared/lib/moderation/` | Input/output content moderation (sensitive word lists, HTML pattern checks) |
 | `shared/lib/performance/` | Injected into generated HTML: FPS counter, adaptive quality, mobile optimization |
+
+### Experiment Inventory
+
+- **Public HTML surface:** `public/experiments/**/*.html` currently contains **175** publicly served labs
+- **Registry surface:** `src/shared/lib/experiments/data/` currently contains **179** `Experiment` definitions
+- **Why the numbers differ:** the registry total is **175** public HTML labs plus **4** Wave 1 React/R3F experiments
+- **R3F scene location:** related scene components live under `src/shared/components/experiments/three/`
+
+### UPG Discipline Enablement
+
+- `physics` is the only discipline currently enabled in config
+- `chemistry`, `biology`, `math`, and `earth-science` remain disabled configuration entries
+- Treat non-physics disciplines as **planned / not implemented** in the current routed product surface
 
 ### Domain Dependencies
 
@@ -377,23 +390,17 @@ Located in `src/core/compliance/`. Key flows:
 
 ## 9. Payment & Credit System
 
-### Subscription Tiers
+### Subscription Model
 
-| Tier | Price | Daily UPG Limit | Credits/Month | Experiment Access |
-|------|-------|----------------|---------------|-------------------|
-| **Free** | $0 | 3 generations | — | 4 experiments lifetime |
-| **Pro** | $4.99/mo | 10 generations | 30 credits | Full access |
-| **Max** | $9.99/mo | Unlimited | 100 credits | Full access + priority |
+- Scivra supports free and paid plans
+- Pricing, credit grants, and per-plan limits are product-configuration concerns and should be verified from the current billing surface before citation
+- This document focuses on architecture and flow boundaries rather than plan marketing details
 
 ### Rate Limiting
 
-| User Type | Limit | Mechanism | Redis Key Pattern |
-|-----------|-------|-----------|-------------------|
-| Anonymous | 1 generation/day | IP hash + sliding window | `upg:anon:{ipHash}` |
-| Free tier | 3 generations/day | DB daily quota table | `upg_daily_quota` |
-| Pro tier | 10 generations/day | DB daily quota table | `upg_daily_quota` |
-| Max tier | Unlimited | No limit | — |
-| Concurrency | 1 at a time per user | Redis distributed lock | `upg:lock:{userId}` |
+- Anonymous UPG access uses IP-based Redis throttling
+- Signed-in generation checks daily quota and credit state in the database
+- Concurrency control uses a per-user Redis distributed lock
 
 ### Payment Flow
 
@@ -456,17 +463,17 @@ flowchart LR
 | Environment | URL | Deploy Trigger | Database |
 |-------------|-----|----------------|----------|
 | Local | `localhost:3000` | Manual (`pnpm dev`) | Local PostgreSQL |
-| Preview | `*.vercel.app` | PR push (auto) | Preview DB |
-| Production | Custom domain | Merge to `main` (auto) | Production DB |
+| Preview | `*.vercel.app` | Vercel preview workflow | Preview DB |
+| Production | Custom domain | Production deployment workflow | Production DB |
 
 ### External Service Topology
 
 | Service | Provider | Connection | Purpose |
 |---------|----------|-----------|---------|
-| PostgreSQL | Configurable | Direct TCP, pool 1-5 connections, singleton mode | Primary data store |
+| PostgreSQL | Configurable | Direct TCP, singleton-aware pool | Primary data store |
 | Redis | Upstash | REST API (serverless-friendly) | Rate limiting, distributed locks |
-| AI | OpenRouter | HTTPS | UPG generation, chat |
-| Storage | Cloudflare R2 | AWS4 Fetch (S3-compatible) | HTML storage (V0.2), images |
+| AI | Anthropic-compatible provider / OpenRouter | HTTPS | UPG generation, chat |
+| Storage | Cloudflare R2 | AWS4 Fetch (S3-compatible) | HTML storage, images |
 | Email | Resend | HTTPS | Transactional emails |
 | Monitoring | Sentry | HTTPS | Error tracking |
 | Analytics | GA / Plausible / Vercel Analytics | Client-side | Usage analytics |
@@ -502,7 +509,7 @@ Defined in `vercel.json`:
 | `api/ai/**` | 60s | Chat streaming |
 | `api/payment/**` | 30s | Payment callbacks |
 
-**Cron job:** `/api/cron/data-retention` runs daily at 03:00 UTC for GDPR data cleanup.
+There is currently no implemented `src/app/api/cron` route handler in the app tree. Treat scheduled retention work as planned until an actual route exists.
 
 ### Docker (Backup Deployment)
 
@@ -519,8 +526,8 @@ Multi-stage build (`Dockerfile`): deps → builder → runner. Node 20 Alpine, n
 | Safety red lines | `.claude/rules/safety.md` | Before touching auth, payment, compliance, or deployment |
 | Testing rules | `.claude/rules/testing.md` | Before writing tests |
 | Git workflow | `.claude/rules/git-workflow.md` | Before committing |
-| Design documents | `docs/plans/` (24+ files) | Deep dive into specific features |
-| Completion reports | `docs/reports/` (9+ files) | Understanding what was built and why |
+| Design documents | `docs/plans/` | Deep dive into specific features and planned work; not a current fact source |
+| Completion reports | `docs/reports/` | Historical completion context; not a current fact source |
 | CTO review | `../UPG-CTO-REVIEW.md` | Understanding UPG architectural decisions |
 | Competitive research | `../docs/research/phet-competitive-analysis.md` | Product positioning context |
 

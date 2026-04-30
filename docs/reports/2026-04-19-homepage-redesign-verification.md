@@ -1,9 +1,13 @@
 ---
 name: homepage-redesign-verification
-status: complete
-created: 2026-04-19T12:50:00Z
-updated: 2026-04-19T12:55:00Z
+status: historical-report
+snapshot_date: '2026-04-19'
+created: '2026-04-19T12:50:00Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time report from 2026-04-19. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # Homepage Redesign — Verification Report (2026-04-19)
 

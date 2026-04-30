@@ -1,9 +1,13 @@
 ---
 name: test-coverage-100-cto-review
-status: complete
-created: 2026-03-23T01:51:43Z
-updated: 2026-03-26T03:18:04Z
+status: historical-plan
+snapshot_date: '2026-03-23'
+created: '2026-03-23T01:51:43Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-23. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # Test Coverage 100% — CTO Review Document
 

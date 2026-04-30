@@ -1,3 +1,12 @@
+---
+name: upg-transaction-flow
+status: historical-plan
+snapshot_date: '2026-03-09'
+---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-09. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
+
 # UPG Generation Transaction Flow
 
 ## 问题

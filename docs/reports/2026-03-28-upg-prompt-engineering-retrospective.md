@@ -1,9 +1,13 @@
 ---
 name: upg-prompt-engineering-retrospective
-status: complete
-created: 2026-03-28T08:39:55Z
-updated: 2026-03-28T08:39:55Z
+status: historical-report
+snapshot_date: '2026-03-28'
+created: '2026-03-28T08:39:55Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time report from 2026-03-28. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # UPG Prompt Engineering 探索复盘
 

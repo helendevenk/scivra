@@ -1,9 +1,13 @@
 ---
 name: upg-batch-generation-pipeline
-status: complete
-created: 2026-03-22T10:06:49Z
-updated: 2026-03-26T03:18:04Z
+status: historical-plan
+snapshot_date: '2026-03-22'
+created: '2026-03-22T10:06:49Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # UPG 批量生成管线 — 对标 PhET 66 个物理模拟
 

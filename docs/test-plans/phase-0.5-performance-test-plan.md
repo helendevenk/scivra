@@ -1,3 +1,12 @@
+---
+name: phase-0.5-performance-test-plan
+status: historical-plan
+snapshot_date: '2026-03-22'
+---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
+
 # Phase 0.5 性能优化测试计划
 
 > **测试目标**: 验证移动端性能优化功能在各种设备上的效果

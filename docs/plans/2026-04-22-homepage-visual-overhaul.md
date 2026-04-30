@@ -1,9 +1,13 @@
 ---
 name: homepage-visual-overhaul
-status: phase-1-complete-awaiting-visual-review
-created: 2026-04-22T03:37:27Z
-updated: 2026-04-23T04:15:00Z
+status: historical-plan
+snapshot_date: '2026-04-22'
+created: '2026-04-22T03:37:27Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-04-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # Scivra Homepage Visual Overhaul（v3 · 双审后最终版）
 
