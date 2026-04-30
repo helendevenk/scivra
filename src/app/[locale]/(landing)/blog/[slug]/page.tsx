@@ -11,6 +11,7 @@ import {
 import {
   buildBlogPostingJsonLd,
   buildBreadcrumbJsonLd,
+  serializeJsonLd,
 } from '@/shared/lib/seo/json-ld';
 import { getPost } from '@/shared/models/post';
 import { DynamicPage } from '@/shared/types/blocks/landing';
@@ -98,11 +99,11 @@ export default async function BlogDetailPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(blogPostingJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <Page locale={locale} page={page} />
     </>

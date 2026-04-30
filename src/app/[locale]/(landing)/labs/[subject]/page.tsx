@@ -23,6 +23,7 @@ import {
 import {
   buildBreadcrumbJsonLd,
   buildFaqPageJsonLd,
+  serializeJsonLd,
 } from "@/shared/lib/seo/json-ld";
 
 const SUBJECT_FAQ: Record<string, Array<{ question: string; answer: string }>> = {
@@ -209,16 +210,16 @@ export default async function SubjectPage({ params, searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(collectionPageJsonLd) }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
         />
       )}
       <nav className="mb-6 text-sm text-muted-foreground">
