@@ -131,4 +131,79 @@ export const chemicalEquilibrium: Experiment = {
     educationalLevel: "High School",
     teaches: "Chemical Equilibrium and Le Chatelier's Principle",
   },
+
+  contentSections: {
+    whatIsIt:
+      "Chemical equilibrium is the state where the forward and reverse reactions of a reversible process happen at the same rate. The concentrations of reactants and products stop changing — but the reactions don't stop. Both directions keep going at equal speed, like two escalators moving people up and down at the same rate. Le Chatelier's principle predicts what happens when you disturb the balance: the system shifts to undo the change. Add more reactant, products grow. Heat an exothermic reaction, equilibrium shifts toward reactants. Tune temperature, pressure, and concentration in this lab and watch the system rebalance in real time.",
+    parameterExplanations: {
+      initialA:
+        "Starting concentration of reactant A. Higher initial values let the reaction proceed further toward products before equilibrium is reached, but the equilibrium constant K stays the same.",
+      temperature:
+        "Temperature is the only stress that actually changes K. For an endothermic reaction, raising T shifts equilibrium toward products (heat acts as a 'reactant'). For exothermic, the opposite.",
+      pressure:
+        "Increasing pressure shifts gaseous equilibria toward whichever side has fewer moles of gas. If both sides have equal moles, pressure has no effect on the position of equilibrium.",
+      addReactant:
+        "Stresses the system by injecting more reactant. Watch the forward rate spike, products climb, then both rates equalize again at a new equilibrium position. The textbook 'shift right' visualized.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "At equilibrium, the forward reaction stops because everything has converted to products.",
+        correct:
+          "Both reactions keep happening at equilibrium — they're just happening at the same rate. Concentrations stay constant, but molecules are constantly converting in both directions. That's why we call it dynamic equilibrium.",
+      },
+      {
+        wrong:
+          "Adding more reactant increases the equilibrium constant K.",
+        correct:
+          "K only changes with temperature. Adding reactant shifts the position of equilibrium (more product forms) but K is the same. The reaction quotient Q is what changes — the system shifts until Q matches K again.",
+      },
+      {
+        wrong:
+          "A catalyst shifts equilibrium toward more products.",
+        correct:
+          "Catalysts speed up both forward and reverse reactions equally. They reduce the time to reach equilibrium, but the final concentrations of reactants and products are unchanged.",
+      },
+      {
+        wrong:
+          "Le Chatelier's principle works because the system 'wants' to maintain the original conditions.",
+        correct:
+          "It's not about wanting. The principle is a consequence of rate kinetics: when you raise a concentration, you raise the rate of the reaction that consumes it. The system shifts because rates change, not because of any preference.",
+      },
+    ],
+    teacherUseCases: [
+      "Stress-test ladder: start at equilibrium, then apply one stress at a time (add A, raise T, raise P). After each, ask students to predict the direction of shift, then use the lab to verify.",
+      "Q vs. K: pause mid-shift and have students calculate Q from current concentrations. Compare to K and explain why the reaction is still moving.",
+      "Endo vs. exo discovery: don't tell students the sign of ΔH. Have them raise and lower temperature and deduce whether the reaction is exothermic or endothermic from the direction of shift.",
+      "Industrial chemistry tie-in: discuss how the Haber process for ammonia picks temperature and pressure to maximize yield, then have students reproduce the conditions.",
+      "AP free-response practice: turn the simulation result into a predict/explain pair, e.g. 'When pressure is doubled at constant T, in which direction does equilibrium shift, and why?'",
+    ],
+    faq: [
+      {
+        question: "What is Le Chatelier's principle?",
+        answer:
+          "When a system at equilibrium is disturbed by a change in concentration, temperature, or pressure, the system shifts to partially counteract the disturbance. It's a quick way to predict the direction of shift; it doesn't tell you exactly how much.",
+      },
+      {
+        question: "Why doesn't pressure affect equilibria with equal moles of gas on each side?",
+        answer:
+          "Pressure only matters when the total moles of gas differ between reactants and products. If both sides have the same number of gas moles, raising pressure compresses both equally and there's no preferred direction.",
+      },
+      {
+        question: "How do I tell if a reaction is exothermic from K?",
+        answer:
+          "Run the reaction at two different temperatures and see how K changes. If K rises as T rises, the reaction is endothermic (treat heat as a reactant). If K falls as T rises, it's exothermic (heat is a product).",
+      },
+      {
+        question: "What's the difference between Q and K?",
+        answer:
+          "K is the equilibrium constant — fixed at a given temperature. Q has the same form as K but uses current (not equilibrium) concentrations. If Q < K the reaction shifts right; if Q > K it shifts left; if Q = K the system is at equilibrium.",
+      },
+      {
+        question: "How does this connect to AP Chemistry?",
+        answer:
+          "AP Chem Unit 7 (Equilibrium) expects students to write equilibrium expressions, use Q to predict shift direction, apply Le Chatelier qualitatively, and reason about why only temperature changes K. Every shift in this lab should be explainable in those terms.",
+      },
+    ],
+  },
 };
