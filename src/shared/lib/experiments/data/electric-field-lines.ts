@@ -239,4 +239,98 @@ export const electricFieldLines: Experiment = {
     educationalLevel: "High School",
     teaches: "Electric Fields and Coulomb's Law",
   },
+
+  contentSections: {
+    whatIsIt:
+      "Run a comb through dry hair and the comb can pick up bits of paper from across the desk without touching them. The mechanism is an electric field — an invisible structure that surrounds every charged object and pushes or pulls on other charges nearby. This lab makes that field visible. Place one or two point charges in 3D space, dial each one positive or negative with the slider, and watch field lines stream out of positives and dive into negatives. The denser the lines, the stronger the field. Toggle equipotential surfaces on and you see the perpendicular partner of the field: shells where moving a test charge costs no work. The math behind it all is Coulomb's law and the superposition principle, both treated qualitatively here.",
+    parameterExplanations: {
+      charge1:
+        "The size and sign of the first point charge in nanocoulombs. Positive values send field lines outward; negative values pull them inward. Larger magnitudes pack more lines into the surrounding space.",
+      charge2:
+        "The size and sign of the second point charge. Pair it with charge1 to see classic configurations: equal and opposite makes a dipole, equal and same-sign makes a repulsive pair with a field-free midpoint.",
+      separation:
+        "The distance in meters between charges 1 and 2. Because the field of each charge falls as 1/r², shrinking separation makes the local fields and forces grow extremely quickly — halving distance nearly quadruples the force.",
+      charge3:
+        "An optional third charge for building triangular configurations and exploring superposition with three sources at once. Set it to zero to deactivate; otherwise it contributes another field that vector-adds with the first two.",
+      showEquipotential:
+        "Toggle that overlays equipotential surfaces — the places where electric potential is constant. They are always perpendicular to the field lines, and no work is done when a charge moves along one. Useful for connecting field geometry to energy.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "A bigger charge has a stronger field everywhere — anywhere in space the larger charge dominates.",
+        correct:
+          "Field strength falls off as 1/r². A small charge sitting right next to a point can produce a stronger local field than a big charge far away. 'Stronger' is always a question of where you are measuring.",
+      },
+      {
+        wrong:
+          "Field lines are real, physical strings that the charge actually emits.",
+        correct:
+          "Field lines are a drawing convention. The field exists everywhere in the surrounding space; the lines just show direction and approximate strength through their density. Two valid drawings can use different numbers of lines for the same physical field.",
+      },
+      {
+        wrong:
+          "Two field lines can cross at a point if the fields from two charges are strong enough.",
+        correct:
+          "Field lines never cross. At any point in space the net field has one definite direction (the vector sum of all source contributions), and a single line can only follow that one direction. Crossings would mean a test charge has two directions to move at once, which is impossible.",
+      },
+      {
+        wrong:
+          "At the midpoint between two equal positive charges the field is large because both charges contribute.",
+        correct:
+          "Both charges do contribute, but their fields point in opposite directions along the line joining them and cancel exactly. The field at the midpoint is zero — a classic symmetry result you can verify in the simulation.",
+      },
+      {
+        wrong:
+          "Equipotential surfaces are the same thing as field lines.",
+        correct:
+          "They are perpendicular partners. Field lines show the direction a positive test charge feels a push; equipotentials show surfaces where potential is constant. Moving along a field line costs work; moving along an equipotential costs none.",
+      },
+    ],
+    teacherUseCases: [
+      "Symmetry hunt — predict before you click: students set q₁ = q₂ = +5 nC and predict where the field is zero before enabling the visualization. Then verify the midpoint cancellation directly.",
+      "Data collection on Coulomb's law: hold q₁ and q₂ fixed, vary separation from 0.5 m to 5 m in steps, record the simulation's force readout, plot F vs 1/r² and check linearity.",
+      "Misconception probe at a dipole midpoint: ask students to vote on the field direction at the center of a +5 / -5 dipole. Many will pick zero by analogy with the equal-positive case — use the simulation to surface and correct the error.",
+      "Equipotential / field-line orthogonality: with the equipotential toggle on, ask students to trace a path from one surface to the next and explain in writing why the path must cross every line at right angles.",
+      "Three-charge configurations: pro-tier students set up an equilateral triangle of charges and predict the net field at the centroid using vector decomposition, then confirm against the simulation.",
+    ],
+    faq: [
+      {
+        question:
+          "Why does the electric field from a point charge fall off as 1/r² instead of 1/r?",
+        answer:
+          "Imagine the charge sitting at the center of a sphere of radius r. The flux of field lines through the sphere is fixed (proportional to the enclosed charge), and that total flux is spread over the sphere's surface area, which grows as 4πr². Field strength is flux per area, so it must scale as 1/r². This is the geometric heart of both Coulomb's law and Newton's gravity — same inverse-square reason.",
+      },
+      {
+        question:
+          "What does the superposition principle mean for the field around several charges?",
+        answer:
+          "It means you can compute each charge's contribution independently, as if the others were not there, then add the results as vectors at every point in space. There is no interaction term between source fields. This makes complicated multi-charge configurations tractable: the simulation is literally summing the per-charge contributions at every grid point and drawing the resultant field.",
+      },
+      {
+        question:
+          "Are equipotential surfaces always perpendicular to field lines, even for weird charge arrangements?",
+        answer:
+          "Yes, always — it is a geometric consequence of the definition. Moving a test charge along an equipotential by definition does no work, since potential does not change. Work equals qE·d, so for arbitrary motion along the surface E must be perpendicular to d. That has to hold at every point on every equipotential, regardless of how complicated the source distribution is.",
+      },
+      {
+        question:
+          "Why can two field lines never cross?",
+        answer:
+          "At any location in space the net electric field has a single, well-defined direction — the vector sum of contributions from every source charge. A field line is a curve that follows that direction. If two lines crossed at a point, the field would need two directions there at once, which is contradictory. So the rule 'lines never cross' is not a stylistic choice but a logical consequence of fields being vectors.",
+      },
+      {
+        question:
+          "How does this lab connect to AP Physics 1 standards 2.C.1–2.C.4 and 3.A.2?",
+        answer:
+          "Standards 2.C.1–2.C.4 ask students to describe electric fields produced by point charges, apply the inverse-square law qualitatively, and use superposition to combine fields from multiple sources. 3.A.2 deals with the vector nature of forces, which is exactly what you are doing when you add per-charge field contributions at a point. The lab gives a direct, manipulable visualization of all five standards in one place.",
+      },
+      {
+        question:
+          "Is this AP Physics 1 or AP Physics 2 material?",
+        answer:
+          "Electric fields, Coulomb's law, and equipotentials are formally part of the AP Physics 2 curriculum, but introductory treatments are common in AP Physics 1 courses too — and they map onto NGSS HS-PS2-4 and HS-PS3-5 at the high-school level. The simulation deliberately stays qualitative (no calculus, no Gauss's law surface integrals) so it works as a first exposure for AP Physics 1 students and a refresher for AP Physics 2.",
+      },
+    ],
+  },
 };

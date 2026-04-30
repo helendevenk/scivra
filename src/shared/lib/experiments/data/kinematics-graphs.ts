@@ -204,4 +204,96 @@ export const kinematicsGraphs: Experiment = {
     educationalLevel: "High School",
     teaches: "Kinematics and Motion Graphs",
   },
+
+  contentSections: {
+    whatIsIt:
+      "Glance at the speedometer of a car as it merges onto a highway. Look up at the road signs. The reading on the speedometer is your velocity; the markers on the highway tell you your position. Both change over time, and the way they change tells you the acceleration. Kinematics graphs are how physicists chart that story. This lab gives you sliders for initial velocity and constant acceleration, then plots the resulting position-time and velocity-time curves side by side while a ball animates the same motion on a track. Click any moment to read exact x and v values. The big payoff is the slope rule: the slope of the x-t curve equals the velocity at that instant, and the slope of the v-t line equals the acceleration. Master those two relationships and most of AP Physics 1 kinematics falls into place.",
+    parameterExplanations: {
+      initial_velocity:
+        "The velocity at t = 0 in meters per second, with sign showing direction. Positive means motion to the right; negative means motion to the left. This sets the y-intercept of the v-t line.",
+      acceleration:
+        "The constant rate of change of velocity in meters per second squared. Positive acceleration tilts the v-t line upward; negative tilts it downward. The slope of the v-t line equals this value exactly.",
+      time_scale:
+        "Stretches or compresses the time axis on both graphs. Useful for zooming in on a short, fast motion or zooming out to see a long, slow one without changing the underlying physics.",
+      show_graph:
+        "Picks which graph to display: 0 for position-time only, 1 for velocity-time only, or 2 for both side by side. Use single-graph modes to focus students on one slope rule at a time before introducing the connections.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "An x-t graph and a v-t graph for the same motion look basically the same — both slope upward when something speeds up.",
+        correct:
+          "They have different shapes. For constant acceleration, the x-t graph is a parabola (a curve) while the v-t graph is a straight line. Confusing them is the single most common error on AP Physics 1 graph problems. The v-t graph is the slope of the x-t graph at every instant.",
+      },
+      {
+        wrong:
+          "If the velocity is zero, the object must also have zero acceleration.",
+        correct:
+          "Velocity and acceleration are independent at any instant. A ball at the very top of its toss has zero velocity but acceleration equal to -9.8 m/s² (still pulled down by gravity). The simulation lets you reproduce this exactly: set v₀ = 5, a = -2, and at the moment v hits zero the ball is still accelerating.",
+      },
+      {
+        wrong:
+          "The area under a v-t graph equals the total distance traveled, regardless of sign.",
+        correct:
+          "Signed area equals displacement; unsigned area (treating dips below zero as positive) equals distance. If the velocity is negative for part of the motion, that contributes negative area and the displacement comes out smaller than the distance traveled.",
+      },
+      {
+        wrong:
+          "Negative velocity means the object is slowing down.",
+        correct:
+          "Negative velocity means the object is moving in the negative direction (e.g., backward or leftward). 'Slowing down' is when velocity and acceleration have opposite signs, regardless of which sign is which. An object with v = -10 m/s and a = -2 m/s² is actually speeding up in the negative direction.",
+      },
+      {
+        wrong:
+          "If the position-time graph is a straight horizontal line, the object's position is undefined.",
+        correct:
+          "A horizontal x-t line means position is constant — the object is at rest. The slope is zero, so velocity is zero. There is nothing undefined; the motion is simply 'standing still' for that interval.",
+      },
+    ],
+    teacherUseCases: [
+      "Slope-of-slope drill: students set v₀ = 0, a = 2 to see a clean upward parabola on x-t and a straight line on v-t. Have them measure the slope of x-t at three different times and verify it matches the v-t reading exactly.",
+      "Misconception probe — top of the toss: ask students whether a ball thrown straight up has any acceleration at the apex. After the predictable wrong answer, run the lab with v₀ = 5, a = -2 and pause exactly at v = 0 to show that acceleration is still -2 there.",
+      "Sign convention bootcamp: have students sketch what happens when v₀ and a have the same sign vs. opposite signs, then verify all four combinations in the simulation. Tie this directly to the 'speeding up vs. slowing down' rule.",
+      "Data collection — area equals displacement: students choose a v-t configuration with positive and negative regions, count grid squares to estimate signed area, and compare with the simulation's exact displacement readout. Reinforces 'signed area = displacement.'",
+      "AP free-response simulation: project the lab during a graph-interpretation question. Have students predict the slope at a flagged point on x-t before reading the v-t value, then justify their prediction using calculus or the kinematic equations.",
+    ],
+    faq: [
+      {
+        question:
+          "Why is the x-t graph a parabola when acceleration is constant?",
+        answer:
+          "The kinematic equation x(t) = x₀ + v₀t + ½at² is a quadratic function of time, and the graph of any quadratic is a parabola. The half-at² term is what makes the curve bend. If acceleration were zero the equation would reduce to x = x₀ + v₀t, a straight line. So the curvature you see on the x-t plot is literally the acceleration showing itself.",
+      },
+      {
+        question:
+          "How do I find displacement from a velocity-time graph?",
+        answer:
+          "Compute the signed area between the v-t line and the time axis between your two times. Areas above the axis count positive; areas below count negative. For constant acceleration the shape is a trapezoid (or triangle), so use ½(v₀ + v_f) × Δt. The simulation reads displacement exactly so you can verify your hand calculation.",
+      },
+      {
+        question:
+          "Can an object have zero velocity and non-zero acceleration at the same time?",
+        answer:
+          "Yes — and this is one of AP Physics 1's favorite questions. A ball thrown straight up reaches the top of its arc with v = 0, but gravity is still pulling it down at -9.8 m/s². The acceleration is what flips the sign of the velocity from positive to negative through that instant. Zero velocity is a moment, not a state of zero forces. Try v₀ = 4, a = -2 in the simulation to see this exactly at t = 2 s.",
+      },
+      {
+        question:
+          "What is the difference between distance and displacement on these graphs?",
+        answer:
+          "Displacement is signed and depends only on start and end positions: x_f - x₀. Distance is unsigned and counts every meter traveled, including any backtracking. On a v-t graph, displacement is signed area; distance is the sum of absolute values of areas. If an object goes 10 m forward then 4 m back, displacement is +6 m but distance is 14 m. Mixing them up is a top-five AP Physics 1 error.",
+      },
+      {
+        question:
+          "How does this lab map onto AP Physics 1 standards CHA-1.A, CHA-1.B, and CHA-1.D?",
+        answer:
+          "CHA-1.A asks students to describe an object's motion using position, velocity, and acceleration; CHA-1.B requires interpreting motion graphs and the relationships among them (slope of x-t = v, slope of v-t = a, area under v-t = displacement); CHA-1.D extends this to predicting motion using kinematic equations under constant acceleration. The lab puts all three standards in one interactive view so students can move fluidly among them.",
+      },
+      {
+        question:
+          "Why is the slope of the v-t graph equal to acceleration?",
+        answer:
+          "Slope is rise over run, which on a v-t graph means change in velocity divided by change in time. That ratio is the definition of acceleration: a = Δv/Δt. So computing slope on a v-t graph is literally computing acceleration; they are the same quantity by definition. For constant acceleration the v-t graph is a straight line, so the slope is the same everywhere — and matches the slider value exactly.",
+      },
+    ],
+  },
 };

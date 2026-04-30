@@ -229,4 +229,90 @@ export const rotationalMotion: Experiment = {
     educationalLevel: "High School",
     teaches: "Rotational Motion and Angular Momentum",
   },
+
+  contentSections: {
+    whatIsIt:
+      "A figure skater starts a slow spin with arms wide, then pulls them tight against her chest — and visibly accelerates into a blur. Nobody pushed her. Her muscles only pulled inward, perpendicular to the spin. Yet her angular velocity tripled in a second. The reason is angular momentum conservation: when no external torque acts, the product L = Iω stays constant, so shrinking the moment of inertia I forces the angular velocity ω to grow in lockstep. The same physics governs a diver tucking for a flip, a neutron star spinning up as it collapses, and a wheel resisting being shoved off-axis. This lab lets you torque a disk to study τ = Iα directly, then switch to the skater mode to watch L = Iω hold its line as you pull her arms in and out — angular momentum, moment of inertia, and rotational kinetic energy all on display in real time.",
+    parameterExplanations: {
+      torque:
+        "The applied torque τ in N·m, the rotational analog of force. It produces angular acceleration through τ = Iα: doubling the torque doubles the angular acceleration if I is fixed. Like force, torque has a sign: positive spins one way, negative spins the other. The magnitude depends on both how hard you push and how far from the axis you push.",
+      inertia:
+        "The moment of inertia I in kg·m², measuring how hard it is to change the object's rotation. Unlike mass, I depends on the geometry: the same 2 kg packed close to the axis gives a smaller I than 2 kg spread out at the rim. Higher I means slower angular acceleration for the same torque, and slower angular velocity at the same angular momentum.",
+      armRadius:
+        "The skater's arm radius r in meters — how far her hands are from the spin axis. Because the arms' contribution to I scales as m·r², halving the radius cuts that contribution by a factor of four. This is the lever you push to demonstrate angular momentum conservation: change r, watch ω respond inversely to keep L = Iω constant.",
+      mass:
+        "The skater's mass m in kilograms. It scales the contribution of the arms to the moment of inertia (the m in m·r²), so a heavier skater with the same arm radius has a larger I and a slower spin at the same angular momentum. Mass also sets the rotational kinetic energy budget through KE_rot = ½Iω².",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "Torque is just rotational force — bigger force always means bigger torque.",
+        correct:
+          "Torque depends on force, lever arm, and angle: τ = rF·sinθ. The same force applied close to the pivot or in line with the lever produces little torque; far from the pivot and perpendicular, it produces a lot. That's why door handles are placed far from the hinge — the geometry is doing as much work as the force is.",
+      },
+      {
+        wrong:
+          "When a skater pulls her arms in and spins faster, her energy stays the same because no work was done.",
+        correct:
+          "Her rotational kinetic energy actually increases. KE_rot = ½Iω² and conservation of angular momentum (Iω = constant) together imply KE goes up by a factor equal to the ratio I_initial/I_final. Where does that extra energy come from? From the work her muscles did pulling her arms inward against the centripetal force needed to keep them on the smaller circle.",
+      },
+      {
+        wrong:
+          "Angular momentum is conserved in any system as long as the total energy stays constant.",
+        correct:
+          "Angular momentum is conserved when the net external TORQUE on the system is zero — that's the key requirement, and it's distinct from energy conservation. A skater on frictionless ice has no external horizontal torque, so L is conserved even when she does internal work that changes her KE. Conversely, energy can be conserved while L is not, if external torques are present.",
+      },
+      {
+        wrong:
+          "All objects with the same mass and radius have the same moment of inertia.",
+        correct:
+          "Moment of inertia depends on how the mass is distributed, not just the totals. A solid disk of mass M and radius R has I = ½MR²; a hollow ring with the same M and R has I = MR² — twice as much. The ring puts all its mass at the maximum radius, so it's harder to spin up. That's why hollow tubes resist twisting more than solid rods of equal mass.",
+      },
+      {
+        wrong:
+          "A solid disk and a hollow ring of equal mass and radius will tie when rolling down an incline.",
+        correct:
+          "The solid disk wins. Both convert the same gravitational PE, but the ring puts a larger fraction of its KE into rotation (because of its higher I) and less into translation. Less translational KE means less linear speed at the bottom. Lower I → faster roll. This is one of the cleanest demonstrations that geometry, not just mass, governs rotational behavior.",
+      },
+    ],
+    teacherUseCases: [
+      "Lever-arm hunt: have students apply the same 5 N force at three different distances from a pivot — say 0.1 m, 0.3 m, and 0.6 m — and record the resulting angular acceleration. Plot α vs. r. The straight line through the origin verifies τ = rF and the τ = Iα relationship in one stroke.",
+      "Angular momentum collection: in skater mode, record I and ω at five different arm radii from 0.2 m to 1.5 m. Compute L = Iω at each setting and check that it's constant to within rounding. Then plot ω vs. 1/I — should be a straight line whose slope is L.",
+      "Energy paradox probe: ask students whether the skater's rotational KE is conserved when she pulls her arms in. Most will say yes because 'no external work is done.' Have them compute KE_initial and KE_final — they'll find KE goes up. Use that to introduce the idea that the skater's muscles did internal work against the centripetal force.",
+      "Geometry-of-inertia race: give students three objects in the simulation (or as homework) — a solid disk, a hollow ring, and a solid sphere — all with equal mass and radius, and have them rank them by which rolls fastest down an incline. Run the prediction, then have them justify the order using the moment of inertia formulas.",
+      "Misconception probe — wrenches and torque: before the lab, ask 'why does a longer wrench make a stuck bolt easier to loosen?' Most will say something like 'more leverage' without specifying the physics. Use τ = rF to show that the longer wrench multiplies the lever arm, producing more torque from the same hand force.",
+    ],
+    faq: [
+      {
+        question: "What is angular momentum and why is it conserved?",
+        answer:
+          "Angular momentum L = Iω is the rotational analog of linear momentum. It's conserved when the net external torque on a system is zero, just as linear momentum is conserved when the net external force is zero. The reason is symmetry: the laws of physics don't change if you rotate the universe, and that rotational symmetry mathematically guarantees angular momentum conservation. It's why a freely spinning top keeps its axis pointed in the same direction and why planets keep orbiting on the same plane.",
+      },
+      {
+        question: "Why does a skater spin faster when she pulls her arms in?",
+        answer:
+          "Because L = Iω is constant when no external torque acts. The skater on smooth ice experiences no significant external torque about the spin axis. When she pulls her arms in, her moment of inertia I drops because mass is now closer to the rotation axis. To keep the product Iω constant, ω has to increase by exactly the same factor I shrank. Cut I in half and ω doubles. Cut it to a third and ω triples — without any external push.",
+      },
+      {
+        question: "What is moment of inertia and how is it different from mass?",
+        answer:
+          "Moment of inertia is the rotational analog of mass — it tells you how hard it is to change an object's rotational state. Unlike linear mass, it depends on how that mass is arranged relative to the rotation axis. The same 5 kg gathered near the axis has a small I; spread out at a large radius, it has a much larger I. The math is I = Σ m_i·r_i². For continuous bodies, geometry sets the formula: ½MR² for a solid disk, MR² for a hoop, ⅖MR² for a solid sphere.",
+      },
+      {
+        question: "Where does the extra rotational kinetic energy come from when the skater pulls in her arms?",
+        answer:
+          "From the work her muscles do pulling inward. Holding her arms out, the rotation requires a centripetal force directed inward to keep them on circular paths. When she pulls them in, her muscles supply additional force in the inward direction over a real distance, doing positive work. That work converts chemical energy in her muscles into the increased rotational kinetic energy you see. Angular momentum is conserved because no external torque acts; rotational KE rises because internal work is done.",
+      },
+      {
+        question: "Why does a longer wrench make it easier to loosen a stuck bolt?",
+        answer:
+          "Because torque depends on the lever arm, not just the force you apply. The relationship is τ = rF·sinθ. Doubling the wrench length doubles r, and at the same hand force you produce twice the torque on the bolt. The bolt only knows the torque, not the force, so the doubled torque is twice as effective at overcoming whatever holds it in place. The same logic explains why doors have handles far from the hinge and why steering wheels are wider than the steering column.",
+      },
+      {
+        question: "How does this lab connect to AP Physics 1 standards 4.D.1 through 4.D.3?",
+        answer:
+          "AP Physics 1 standards 4.D.1 through 4.D.3 expect students to analyze rotational motion using torque, moment of inertia, and angular momentum, and to apply conservation of angular momentum to systems with no net external torque. This lab is the canonical setup for those standards: students apply known torques to known moments of inertia, verify τ = Iα directly, and then use the spinning skater to confirm Iω constancy under self-imposed changes in I. NGSS HS-PS2-1 supports the same conceptual goals.",
+      },
+    ],
+  },
 };
