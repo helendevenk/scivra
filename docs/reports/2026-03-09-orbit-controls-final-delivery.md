@@ -1,3 +1,12 @@
+---
+name: 2026-03-09-orbit-controls-final-delivery
+status: historical-report
+snapshot_date: '2026-03-09'
+---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time report from 2026-03-09. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
+
 # OrbitControls 预编译方案 - 最终交付报告
 
 **任务**: Phase 0.1 - 修复 OrbitControls 不稳定问题

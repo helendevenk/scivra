@@ -1,3 +1,12 @@
+---
+name: 2026-03-09-phase-0-complete-retrospective
+status: historical-report
+snapshot_date: '2026-03-09'
+---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time report from 2026-03-09. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
+
 # Phase 0 完整复盘报告
 
 **项目**: NeonPhysics v2 SaaS 升级计划

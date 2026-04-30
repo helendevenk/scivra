@@ -1,10 +1,14 @@
 ---
 name: curriculum-wave9-12-cto-review
-status: in-progress
-created: 2026-03-26T03:47:02Z
-updated: 2026-03-26T09:00:00Z
+status: historical-plan
+snapshot_date: '2026-03-26'
+created: '2026-03-26T03:47:02Z'
+updated: '2026-04-23T00:00:00Z'
 version: v3.1（新增 Section 2.9 HTML 实验视觉一致性规范）
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-26. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # 课程扩展 Wave 9-12 — CTO Review Document
 

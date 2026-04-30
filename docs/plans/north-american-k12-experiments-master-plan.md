@@ -1,3 +1,12 @@
+---
+name: north-american-k12-experiments-master-plan
+status: historical-plan
+snapshot_date: '2026-03-22'
+---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
+
 # 北美 K-12 科学实验需求总规划文档
 
 **项目**: NeonPhysics v2 - UPG 万物原理生成器

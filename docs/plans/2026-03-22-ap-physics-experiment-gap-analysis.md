@@ -1,11 +1,15 @@
 ---
 name: ap-physics-experiment-gap-analysis
-status: complete
-created: 2026-03-22T06:03:31Z
-updated: 2026-03-26T03:18:04Z
-cto-reviewed: 2026-03-22T06:03:31Z
+status: historical-plan
+snapshot_date: '2026-03-22'
+created: '2026-03-22T06:03:31Z'
+updated: '2026-04-23T00:00:00Z'
+cto-reviewed: '2026-03-22T06:03:31Z'
 cto-status: approved-with-amendments
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # AP Physics 实验内容缺口分析与补全规划
 

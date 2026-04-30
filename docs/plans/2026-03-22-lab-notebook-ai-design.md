@@ -1,13 +1,17 @@
 ---
 name: lab-notebook-ai
-status: backlog
-created: 2026-03-22T09:08:47Z
-updated: 2026-03-22T09:08:47Z
+status: historical-plan
+snapshot_date: '2026-03-22'
+created: '2026-03-22T09:08:47Z'
+updated: '2026-04-23T00:00:00Z'
 title: Lab Notebook AI（AI 辅助实验报告）设计文档
 estimated_effort: 14d / ~112h
 complexity: 🔴 复杂（3 新表 + 8 API + 12 新组件 + PDF 生成）
 depends_on: UPG 生成管线、experimentProgress 表、Curated Labs
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # Lab Notebook AI -- AI 辅助实验报告系统
 

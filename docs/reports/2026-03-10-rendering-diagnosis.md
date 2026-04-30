@@ -1,3 +1,12 @@
+---
+name: 2026-03-10-rendering-diagnosis
+status: historical-report
+snapshot_date: '2026-03-10'
+---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time report from 2026-03-10. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
+
 # Phase 2 Day 6/7 渲染问题最终诊断报告
 
 **时间**: 2026-03-10 13:11

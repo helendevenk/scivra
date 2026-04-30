@@ -1,9 +1,13 @@
 ---
 name: ui-consistency-audit-2026-04-23
-status: in-progress
-created: 2026-04-23T00:30:43Z
-updated: 2026-04-23T00:57:00Z
+status: historical-plan
+snapshot_date: '2026-04-23'
+created: '2026-04-23T00:30:43Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-04-23. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # UI 一致性审查与改进清单
 

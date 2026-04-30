@@ -1,9 +1,13 @@
 ---
 name: phase1-feature-overview
-status: backlog
-created: 2026-03-22T09:12:49Z
-updated: 2026-03-22T09:12:49Z
+status: historical-plan
+snapshot_date: '2026-03-22'
+created: '2026-03-22T09:12:49Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-22. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # Phase 1 功能总览 — AP Prep + Physics Quest + Lab Notebook
 

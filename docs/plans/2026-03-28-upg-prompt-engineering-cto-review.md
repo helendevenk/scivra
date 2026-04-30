@@ -1,9 +1,13 @@
 ---
 name: upg-prompt-engineering-cto-review
-status: complete
-created: 2026-03-28T23:28:38Z
-updated: 2026-03-28T23:28:38Z
+status: historical-plan
+snapshot_date: '2026-03-28'
+created: '2026-03-28T23:28:38Z'
+updated: '2026-04-23T00:00:00Z'
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-28. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # CTO Review: UPG Prompt Engineering 升级方案
 

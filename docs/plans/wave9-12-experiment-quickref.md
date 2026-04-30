@@ -1,9 +1,14 @@
 ---
 name: wave9-12-experiment-quickref
+status: historical-plan
+snapshot_date: '2026-03-26'
+created: '2026-03-26T09:15:00Z'
+updated: '2026-04-23T00:00:00Z'
 type: reference
-created: 2026-03-26T09:15:00Z
-updated: 2026-03-26T09:15:00Z
 ---
+
+> **Historical document — not current SSOT.**
+> This file is a point-in-time plan from 2026-03-26. It may describe goals, intermediate counts, or decisions that no longer match the current repository. Verify anything you rely on against `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`, or the source tree.
 
 # Wave 9-12 单实验开发快速参考
 
