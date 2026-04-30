@@ -66,7 +66,7 @@ export default async function UpgPage({
       'Describe any science concept in plain English. Scivra UPG generates an interactive 3D visualization with formulas, knowledge cards, and quizzes.',
     url: upgUrl,
     applicationCategory: 'EducationalApplication',
-    priceRange: 'Free / Pro / Max',
+    priceRangeUSD: { low: '0', high: '9.99' },
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
