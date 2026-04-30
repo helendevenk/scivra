@@ -52,4 +52,79 @@ export const resistanceWire: Experiment = {
   seoTitle: "Resistance in a Wire Lab | R = ρL/A | AP Physics 2",
   seoKeywords: ["resistance wire", "resistivity", "R=rho*L/A", "wire resistance", "AP Physics 2"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Wire Resistance, Resistivity, R = ρL/A" },
+
+  contentSections: {
+    whatIsIt:
+      "Look inside a toaster and you see a coil of dull gray wire glowing red — that wire is engineered to resist current and dump energy as heat. Look inside the wall and you see fat bundles of shiny copper engineered to do the opposite: carry current with as little resistance as possible. Same physics, different design choices, all governed by R = ρL/A. The resistance of any wire is set by three things: the material's intrinsic resistivity ρ, how long the wire is, and how thick its cross-section is. Stretch a wire and resistance grows linearly; fatten it and resistance shrinks as 1/diameter²; swap copper for nichrome and resistance jumps by a factor of 60 even at the same shape. In the lab below, you control all three knobs plus temperature and watch the ohmmeter respond.",
+    parameterExplanations: {
+      length:
+        "The total length of the wire in meters. Resistance is directly proportional to length — twice the wire means twice as many electron collisions to fight through, so R doubles when L doubles at fixed thickness and material.",
+      diameter:
+        "The wire's diameter in millimeters. Cross-sectional area scales as d²/4, so resistance falls as 1/d². A 2 mm wire has a quarter the resistance of a 1 mm wire of the same length and material — that is why thick gauges are used for high-current loads.",
+      material:
+        "Selects which metal the wire is made from. Each material has its own resistivity ρ in Ω·m: copper and silver are excellent conductors, aluminum is decent, iron is mediocre, and nichrome is intentionally bad — perfect for heating elements where you want resistance, not conduction.",
+      temperature:
+        "The wire's temperature in degrees Celsius (Pro tier). For metals, resistivity rises roughly linearly with temperature: ρ(T) = ρ₀[1 + α(T − T₀)]. Heat a copper wire from 20°C to 200°C and its resistance climbs around 70%, which matters for incandescent bulbs and motor windings.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "Resistance is a property of the wire's material, so once you pick copper you know R.",
+        correct:
+          "Material gives you resistivity ρ, not resistance R. To get R you also need length and area: R = ρL/A. A 1 cm copper wire and a 1 km copper wire have wildly different resistances, even though their resistivity is identical.",
+      },
+      {
+        wrong:
+          "A thicker wire has more resistance because there's more metal in the way.",
+        correct:
+          "Thicker wire has lower resistance because it gives electrons more parallel lanes to drift through. Cross-sectional area sits in the denominator: R = ρL/A. Doubling the diameter quadruples A and quarters R.",
+      },
+      {
+        wrong:
+          "Resistivity and resistance are just two words for the same thing.",
+        correct:
+          "Resistivity ρ is an intrinsic material property in Ω·m and doesn't depend on shape. Resistance R is the property of a specific wire and depends on ρ, length, and area. You can change R by cutting the wire shorter; you can't change ρ without changing materials.",
+      },
+      {
+        wrong:
+          "Heating a metal wire lowers its resistance because the electrons move faster.",
+        correct:
+          "For ordinary metals, heating raises resistance. Electrons do gain thermal energy, but the lattice atoms vibrate more violently and scatter the drifting electrons more often. The net effect is that resistivity climbs roughly linearly with temperature for copper, aluminum, and most metals — the opposite is true for semiconductors.",
+      },
+    ],
+    teacherUseCases: [
+      "Have students record resistance at five lengths with material and diameter fixed, then plot R vs L and extract ρ from the slope using R = (ρ/A)·L.",
+      "Pair experiment: one student varies diameter at fixed length, the other varies length at fixed diameter. Combine results to verify R ∝ L and R ∝ 1/A independently.",
+      "Materials comparison: students measure R for the same length and diameter across all five metals, rank them, and predict which would work as a toaster element vs a power line.",
+      "Misconception probe: ask 'will doubling the wire's diameter cut R in half?' before they move the slider — the 1/d² answer surprises a lot of students.",
+      "Engineering tie-in: give students a target heater resistance (say, 11 Ω at 20°C) and have them choose material, length, and diameter to hit it within 5% in the simulation.",
+    ],
+    faq: [
+      {
+        question: "Why does length matter for resistance but not for the speed of electrons?",
+        answer:
+          "Drift speed depends on the electric field, which is voltage per length: E = V/L. In a longer wire at the same voltage the field is weaker, electrons drift slower, and the same current squeezes through. The ohmmeter sees that as more resistance: R = ρL/A. Make the wire longer and either current drops or voltage must rise to keep current the same.",
+      },
+      {
+        question: "Why is nichrome used for heater elements instead of copper?",
+        answer:
+          "Nichrome's resistivity is about 60 times copper's, so a short, thin nichrome wire can have meaningful resistance and dissipate serious power as heat. Copper would either need to be impossibly long and thin to reach the same R, or would carry so much current at low resistance that the rest of the circuit would overheat. Nichrome also tolerates red-hot temperatures without oxidizing badly.",
+      },
+      {
+        question: "Does the resistance equation R = ρL/A work for non-cylindrical wires?",
+        answer:
+          "Yes, as long as the cross-section is uniform along the length and current flows straight through. A rectangular bus bar uses A = width × thickness; a cylindrical wire uses A = π(d/2)². For tapered or irregular shapes you have to integrate, but AP Physics 2 sticks to uniform cylinders where R = ρL/(π·d²/4).",
+      },
+      {
+        question: "How does this lab map to AP Physics 2 standard CHA-2.C?",
+        answer:
+          "CHA-2.C asks students to relate the resistance of a wire to its length, cross-sectional area, and resistivity. Sliding length, diameter, and material in this lab while watching the ohmmeter respond is the exact reasoning the AP exam tests when it asks 'how does R change if you halve the diameter and double the length?' on quantitative free-response questions.",
+      },
+      {
+        question: "Why do the lights in a house flicker when a big appliance turns on?",
+        answer:
+          "House wiring has small but nonzero resistance, set by R = ρL/A for the runs from the panel to your outlet. When a big load (vacuum, AC compressor) suddenly draws lots of current, the I·R drop across that wire eats into the voltage delivered to nearby outlets, dimming the lights for a moment. Thicker wire and shorter runs reduce the effect.",
+      },
+    ],
+  },
 };

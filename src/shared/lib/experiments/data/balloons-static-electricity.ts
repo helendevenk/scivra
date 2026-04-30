@@ -49,4 +49,75 @@ export const balloonsStaticElectricity: Experiment = {
   seoTitle: "Balloons and Static Electricity Simulation | AP Physics 2 Virtual Lab",
   seoKeywords: ["static electricity", "electrostatics", "balloon charge", "Coulomb's law", "AP Physics 2"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Static Electricity, Electrostatics" },
+
+  contentSections: {
+    whatIsIt:
+      "Drag a balloon across your hair on a dry day, peel it off, and stick it to the wall — that quiet trick is centuries-old physics. Rubbing transfers electrons between two materials with different appetites for them; rubber loves electrons more than wool does, so the balloon ends up with a slight excess of negative charge and the sweater ends up with the same amount of positive charge. The total charge in the room hasn't changed, just been redistributed. Bring the negatively charged balloon near a neutral wall and the wall's own electrons shuffle slightly away from the surface, leaving a thin positive layer on the side facing the balloon. The two opposite charges, separated by a tiny gap, pull harder than the more distant negatives push, and the balloon clings. In the lab below, you control how much charge is on the balloon and how far the wall sits, and the visualization tracks every plus and minus sign.",
+    parameterExplanations: {
+      charge_amount:
+        "The net charge transferred to the balloon, measured in nanocoulombs. Larger values mean more electrons were stripped from the sweater, so the balloon's electric force on nearby objects scales linearly with this number — double the charge and the attractive force on the wall doubles.",
+      wall_present:
+        "The distance between the balloon and the wall, in centimeters. Coulomb's law makes attraction fall as 1/r², so moving from 10 cm to 20 cm cuts the force to one-quarter; bring the balloon closer and the force shoots up fast as the gap shrinks.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "Rubbing the balloon creates new charge out of nowhere.",
+        correct:
+          "Charge is conserved. The balloon gains exactly as many electrons as the sweater loses. If you measured both right after the rub, the balloon's negative charge would equal the sweater's positive charge to the last electron — nothing was created, only moved.",
+      },
+      {
+        wrong:
+          "The wall has to be charged for the balloon to stick to it.",
+        correct:
+          "The wall is neutral, but a charged balloon polarizes it. Electrons in the wall drift slightly away from the balloon's negative surface, leaving the near-side molecules positive and the far-side negative. The closer positive layer wins by 1/r², so the balloon feels net attraction even though the wall has no net charge.",
+      },
+      {
+        wrong:
+          "Static electricity is just sparks and zaps — that's the whole phenomenon.",
+        correct:
+          "Sparks are the discharge, not the charge itself. Static electricity is the silent accumulation of charge imbalance — the balloon clinging to the wall, dust gathering on a TV screen, hair standing up after a hat. The spark only appears when stored charge finds a sudden path back to ground.",
+      },
+      {
+        wrong:
+          "Two balloons rubbed on the same sweater will attract each other because they're charged.",
+        correct:
+          "They will repel. Both end up with the same sign of charge (negative) from the same kind of rubbing, and like charges repel. You can verify this by hanging two balloons from threads and rubbing both on a sweater — they swing apart, not together.",
+      },
+    ],
+    teacherUseCases: [
+      "Pre-lab demo: rub a real balloon on hair, stick it to a wall, then have students predict on paper what will happen if you double the charge before they touch the simulation.",
+      "Have students record the wall-attraction force at five different distances at fixed charge, plot F vs 1/r², and confirm the inverse-square law graphically.",
+      "Pair experiment: one student varies charge with distance fixed, the other varies distance with charge fixed; combine results to show F ∝ q · (1/r²).",
+      "Misconception probe: ask 'why doesn't the wall need to be charged for the balloon to stick?' before showing the polarization animation in the simulation.",
+      "Real-world tie-in: discuss why touching a TV screen makes dust jump to your finger, then have students explain it using the balloon-and-wall mechanism.",
+    ],
+    faq: [
+      {
+        question: "Why does the balloon become negative and the sweater become positive?",
+        answer:
+          "Different materials hold onto their outermost electrons with different strengths, ranked on the triboelectric series. Wool holds them loosely; rubber holds them tightly. When the two surfaces rub, electrons hop from wool to rubber, leaving the balloon negative and the sweater positive. Swap to a glass rod on silk and the direction reverses, because glass loses electrons to silk.",
+      },
+      {
+        question: "Why does a charged balloon eventually fall off the wall?",
+        answer:
+          "Air carries water vapor, especially indoors at typical humidity, and water molecules conduct charge slowly off the balloon. Over minutes the excess electrons drift away to ground through the moist air, the polarization in the wall fades, and the attractive force becomes too weak to support the balloon's weight. In dry winter air the balloon sticks much longer.",
+      },
+      {
+        question: "Can two neutral objects attract each other through charge polarization?",
+        answer:
+          "Two truly neutral objects with no charged neighbor cannot attract each other electrostatically — there's nothing to polarize them. But a charged third object can polarize both, and the two then experience forces from it. That is why a charged balloon picks up small bits of paper that were sitting next to each other, even though the bits weren't attracting before.",
+      },
+      {
+        question: "How does this lab map to AP Physics 2 standard CHA-1.A?",
+        answer:
+          "CHA-1.A asks students to describe how objects acquire net charge and how charged and neutral objects exert forces on each other. Rubbing the balloon, watching its plus/minus tally update, and predicting wall attraction at varying distances is the exact reasoning the AP exam tests when it asks about conservation of charge, polarization, and Coulomb's law in qualitative scenarios.",
+      },
+      {
+        question: "Is the force on the wall the same as the force on the balloon?",
+        answer:
+          "Yes — Newton's third law applies. The balloon pulls on the wall's polarized layer with exactly the same force the wall's polarized layer pulls back on the balloon. The wall doesn't visibly move because it is attached to the building, but in principle a free-floating wall would accelerate toward the balloon at the same rate the balloon accelerates toward it (scaled by their mass ratio).",
+      },
+    ],
+  },
 };
