@@ -93,7 +93,7 @@ export const atomicInteractions: Experiment = {
       "Force-from-potential calculus check: have students differentiate U(r) = 4ε[(σ/r)¹² − (σ/r)⁶] to get F(r) and verify with the simulation that the equilibrium separation matches r = σ × 2^(1/6). Great calculus-meets-physics moment.",
       "Surface tension story: with 20 atoms, observe that surface atoms have fewer neighbors than interior atoms. Use this to introduce surface tension as the energy cost of unsatisfied bonds at a boundary — exactly why water beads up on wax.",
       "Compare to ideal gas: at very high T, atoms barely interact and behave like an ideal gas (PV=nRT). At low T, attractive interactions matter and you need a real gas equation. Students can see when the ideal-gas approximation breaks.",
-      "Real-world geckos and adhesion: tie the r⁻⁶ van der Waals tail to gecko-foot adhesion, dust sticking to surfaces, and biological membranes. Same physics, different scales.",
+      "Equilibrium-distance probe: pause the simulation with a pair of atoms held at the bottom of the potential well and ask students to predict whether the net force on either atom is attractive, repulsive, or zero before revealing the force vector. Many will say 'attractive because they're close' — the zero-force reveal anchors the idea that equilibrium means F = 0, not 'no interaction.'",
     ],
     faq: [
       {

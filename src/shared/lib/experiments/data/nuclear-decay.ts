@@ -173,7 +173,7 @@ export const nuclearDecay: Experiment = {
       "Radiocarbon dating problem set: have students compute the age of a sample given fraction of C-14 remaining (e.g., 25% left → 2 half-lives → 11,460 years). The simulation lets them verify by setting time_elapsed and reading the curve.",
       "Decay-mode prediction: pair this with the Build a Nucleus experiment — students propose what kind of decay an unstable isotope should undergo (alpha for heavy, beta-minus for neutron-rich, etc.), then run nuclear-decay to see the equation balanced.",
       "Activity vs. dose discussion: a kilogram of uranium-238 has tiny activity because of its 4.5-billion-year half-life. A microgram of polonium-210 (138-day half-life) has huge activity. Students compare the two and connect activity to half-life via A = λN.",
-      "Statistical vs. deterministic randomness: with small samples (10 atoms) the curve is jagged; with huge samples (10²⁰ atoms) it's smooth. Use this to discuss law of large numbers — quantum mechanics is fundamentally random per atom but statistically rigid in bulk.",
+      "Half-life data table: have students record the number of remaining nuclei at t = 1, 2, 3, and 4 half-lives, plot the (t, N) pairs on semi-log paper, and verify both the exponential decay curve and that the slope corresponds to λ = ln(2)/T½. With small samples (10 atoms) the curve is jagged; with huge samples (10²⁰ atoms) it's smooth — connect that contrast to the law of large numbers.",
       "Medical isotope walkthrough: technetium-99m (6 hours) is used in 30 million scans per year. Iodine-131 (8 days) treats thyroid disease. Discuss why short half-lives are wanted for medical use (no long-term contamination) and long ones for dating (slow ticking clock).",
     ],
     faq: [

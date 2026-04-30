@@ -63,9 +63,9 @@ export const bendingLight: Experiment = {
     misconceptions: [
       {
         wrong:
-          "Light bends because it gets tired or loses energy when it enters glass.",
+          "Light bends because the boundary itself pushes or repels it, like a wall deflecting a ball.",
         correct:
-          "Light doesn't get tired and the photon energy doesn't change at a transparent boundary. The wave slows down because it is repeatedly absorbed and re-emitted by the atoms in the new material, and that speed change forces the wavefront to tilt — that tilt is what we see as bending.",
+          "There's no surface force kicking the ray sideways. Light slows down inside the denser medium because it is repeatedly absorbed and re-emitted by the atoms there, and when one side of an obliquely incident wavefront enters first it slows before the rest, forcing the whole front to tilt. That tilt is what we see as bending — pure wave geometry, no shove from the boundary.",
       },
       {
         wrong:

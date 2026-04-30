@@ -183,7 +183,7 @@ export const bernoulliFluidDynamics: Experiment = {
     ],
     teacherUseCases: [
       "Continuity-first lab: have students fix the inlet velocity and predict the outlet velocity for area ratios of 1.5, 2.0, 3.0, and 4.0 before running the simulation. Check answers and use the result to anchor A₁v₁ = A₂v₂ in their heads.",
-      "Pressure-drop calculation: with v₁ = 5 m/s and area ratio 2, walk students through computing v₂, then Δ(½ρv²), then ΔP. Compare with the simulation's numerical readout to validate Bernoulli quantitatively.",
+      "Pressure-drop measurement lab: with v₁ = 5 m/s, have students record the simulated fluid speed at five points along the pipe (two upstream, the throat, and two downstream), measure the static pressure at each point, then plot the Bernoulli-predicted pressure against the measured pressure and report the percent difference at the throat.",
       "Airfoil bridge: after the Venturi exercise, have students sketch how the curved upper surface of a wing acts like a half-Venturi, accelerating air over the top and dropping its pressure. Connect to lift = ΔP × wing area.",
       "Curveball or banana kick: assign students to research how a spinning ball creates a velocity asymmetry on its two sides (Magnus effect) and use Bernoulli to predict which way the ball curves. Real video clips of curveballs make this memorable.",
       "Misconception probe: ask the class 'is high-speed air pulling on objects or is something else pushing?' before running the simulation. Use the pressure-gradient readout to drive home that net force always points from high to low pressure — there is no 'pulling'.",

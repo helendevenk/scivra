@@ -116,9 +116,9 @@ export const circuitDcVirtualLab: Experiment = {
           "Ohm's Law is local — it relates V, I, and R at a single resistor (and only for ohmic materials at fixed T). Kirchhoff's laws are global — they enforce energy and charge conservation across the whole network. To solve a circuit you need both: KVL and KCL set up the system, V = IR fills in each individual element.",
       },
       {
-        question: "How does this map to AP Physics 2 standard CHA-2.B?",
+        question: "How does this map to AP Physics 2 standard CHA-2.A?",
         answer:
-          "CHA-2.B asks students to use Kirchhoff's laws to analyze multi-loop DC circuits. The virtual breadboard is the simulation analog of the lab AP graders expect students to have done — wiring components, choosing measurement points, and explaining how readings confirm KVL and KCL. Free-response questions on circuits routinely ask exactly this measurement-and-explanation pattern.",
+          "CHA-2.A asks students to model current and resistance in DC circuits, applying Ohm's Law (V = IR) at every component while using Kirchhoff's voltage and current laws to constrain the network. The virtual breadboard is the simulation analog of the lab AP graders expect students to have done — wiring components, choosing measurement points, and explaining how readings confirm V = IR alongside KVL and KCL. Free-response questions on circuits routinely ask exactly this measurement-and-explanation pattern.",
       },
       {
         question: "Why does adding a wire across two points sometimes drop a resistor's current to zero?",

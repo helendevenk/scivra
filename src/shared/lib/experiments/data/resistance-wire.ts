@@ -116,9 +116,9 @@ export const resistanceWire: Experiment = {
           "Yes, as long as the cross-section is uniform along the length and current flows straight through. A rectangular bus bar uses A = width × thickness; a cylindrical wire uses A = π(d/2)². For tapered or irregular shapes you have to integrate, but AP Physics 2 sticks to uniform cylinders where R = ρL/(π·d²/4).",
       },
       {
-        question: "How does this lab map to AP Physics 2 standard CHA-2.C?",
+        question: "How does this lab map to AP Physics 2 standards CHA-2.A and CHA-2.C?",
         answer:
-          "CHA-2.C asks students to relate the resistance of a wire to its length, cross-sectional area, and resistivity. Sliding length, diameter, and material in this lab while watching the ohmmeter respond is the exact reasoning the AP exam tests when it asks 'how does R change if you halve the diameter and double the length?' on quantitative free-response questions.",
+          "CHA-2.A asks students to model current and resistance in DC circuits, including how a resistor's value combines with voltage to set the current via V = IR. CHA-2.C extends that to relate the resistance of a wire to its length, cross-sectional area, and resistivity. Sliding length, diameter, and material in this lab while watching the ohmmeter respond is the exact reasoning the AP exam tests when it asks 'how does R change if you halve the diameter and double the length?' on quantitative free-response questions.",
       },
       {
         question: "Why do the lights in a house flicker when a big appliance turns on?",
