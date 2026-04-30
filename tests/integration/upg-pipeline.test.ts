@@ -1,291 +1,253 @@
 /**
  * UPG Pipeline Integration Tests
  *
- * Tests the UPG generation pipeline end-to-end:
- * service (payment/ai) → model (ai_task/credit) → DB mock
- *
- * Since the codebase uses a generic AI generation route (not a dedicated UPG pipeline),
- * we test the ai_task creation + credit consumption flow which IS the generation pipeline.
+ * Covers the current UPG orchestration path:
+ * request parsing -> auth/quota/rate-limit -> lock -> generateCore ->
+ * credit consumption / refund -> API response.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ─── DB Mock ───────────────────────────────────────────────────────
-
-vi.mock('@/core/db', () => {
-  let _creditRows: Record<string, unknown>[] = [];
-
-  function _chain(op: string) {
-    const ctx: any = { op, insertRow: null, updateSet: null };
-    const self: any = {};
-    self.values = (r: any) => { ctx.insertRow = r; return self; };
-    self.set = (s: any) => { ctx.updateSet = s; return self; };
-    self.where = (pred: any) => { ctx.pred = pred; return self; };
-    self.orderBy = () => self;
-    self.limit = () => self;
-    self.offset = () => self;
-    self.for = () => self;
-    self.onConflictDoUpdate = () => self;
-    self.from = () => self;
-    self.returning = () => {
-      if (op === 'insert' && ctx.insertRow) {
-        _creditRows.push({ ...ctx.insertRow });
-        return Promise.resolve([{ ...ctx.insertRow }]);
-      }
-      if (op === 'update') {
-        // Return the first credit row with updates applied
-        if (_creditRows.length > 0) {
-          Object.assign(_creditRows[0], ctx.updateSet || {});
-          return Promise.resolve([{ ..._creditRows[0] }]);
-        }
-        return Promise.resolve([]);
-      }
-      return Promise.resolve([]);
-    };
-    // For select: resolve with stored rows based on operation context
-    self.then = (resolve: any) => {
-      if (op === 'select') {
-        // For sum queries (credit balance check), return total
-        return Promise.resolve([{ total: '0', count: 0 }]).then(resolve);
-      }
-      resolve([]);
-    };
-    return self;
-  }
-
-  function _db() {
-    return {
-      insert: () => _chain('insert'),
-      select: () => {
-        const c = _chain('select');
-        c.from = () => c;
-        return c;
-      },
-      update: () => _chain('update'),
-      transaction: async (fn: any) => fn(_db()),
-    };
-  }
-
-  return {
-    db: () => _db(),
-    __resetCreditRows: () => { _creditRows = []; },
-    __getCreditRows: () => _creditRows,
-  };
-});
-
-vi.mock('@/config/db/schema', () => ({
-  credit: { _: 'credit' },
-  config: { _: 'config' },
-  aiTask: { _: 'aiTask' },
-}));
-
-vi.mock('@/shared/lib/hash', () => ({
-  getUuid: () => `uuid-${Math.random().toString(36).slice(2, 8)}`,
-  getSnowId: () => `snow-${Date.now()}`,
-}));
-
-vi.mock('next/cache', () => ({
-  revalidateTag: vi.fn(),
-  unstable_cache: (fn: any) => fn,
-}));
-
-vi.mock('@/config', () => ({
-  envConfigs: { database_url: 'postgres://test', app_url: 'http://localhost:3000' },
-}));
-
-vi.mock('@/shared/services/settings', () => ({
-  getAllSettingNames: () => [],
-  publicSettingNames: [],
-}));
-
-vi.mock('@/shared/lib/env', () => ({
-  isCloudflareWorker: false,
-}));
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/shared/models/user', () => ({
-  appendUserToResult: (rows: any[]) => rows,
   getUserInfo: vi.fn(),
 }));
 
-vi.mock('@/extensions/ai', () => ({
-  AIMediaType: { IMAGE: 'image', VIDEO: 'video', MUSIC: 'music' },
-  AITaskStatus: { PENDING: 'pending', COMPLETED: 'completed', FAILED: 'failed' },
+vi.mock('@/shared/models/credit', () => ({
+  getRemainingCredits: vi.fn(),
+  consumeCredits: vi.fn(),
+  refundCredits: vi.fn(),
 }));
 
-// ─── Imports ───────────────────────────────────────────────────────
+vi.mock('@/shared/models/upg_daily_quota', () => ({
+  getDailyQuotaCount: vi.fn(),
+  incrementDailyQuota: vi.fn(),
+}));
 
-import { createAITask, findAITaskById, updateAITaskById } from '@/shared/models/ai_task';
-import { createCredit, CreditStatus, CreditTransactionType, CreditTransactionScene } from '@/shared/models/credit';
-import { AITaskStatus } from '@/extensions/ai';
+vi.mock('@/shared/models/subscription', () => ({
+  getCurrentSubscription: vi.fn(),
+}));
 
-// ─── Tests ─────────────────────────────────────────────────────────
+vi.mock('@/shared/lib/experiments/access', () => ({
+  subscriptionToTier: vi.fn(),
+}));
+
+vi.mock('@/shared/lib/upg/generate-core', () => ({
+  generateCore: vi.fn(),
+}));
+
+vi.mock('@/shared/lib/upg/disciplines', () => ({
+  isValidDiscipline: vi.fn(),
+  getDisciplineConfig: vi.fn(),
+}));
+
+vi.mock('@/shared/lib/redis', () => ({
+  checkRateLimit: vi.fn(),
+  acquireLock: vi.fn(),
+  releaseLock: vi.fn(),
+}));
+
+import { POST } from '@/app/api/upg/generate/route';
+import {
+  consumeCredits,
+  getRemainingCredits,
+  refundCredits,
+} from '@/shared/models/credit';
+import { getCurrentSubscription } from '@/shared/models/subscription';
+import {
+  getDailyQuotaCount,
+  incrementDailyQuota,
+} from '@/shared/models/upg_daily_quota';
+import { getUserInfo } from '@/shared/models/user';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
+import { generateCore } from '@/shared/lib/upg/generate-core';
+import {
+  getDisciplineConfig,
+  isValidDiscipline,
+} from '@/shared/lib/upg/disciplines';
+import {
+  acquireLock,
+  checkRateLimit,
+  releaseLock,
+} from '@/shared/lib/redis';
+
+function makeRequest(
+  body: Record<string, unknown> = {
+    prompt: 'simulate a pendulum',
+    discipline: 'physics',
+    language: 'en',
+  },
+  headers: Record<string, string> = {}
+) {
+  return new Request('http://localhost/api/upg/generate', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-forwarded-for': '1.2.3.4',
+      ...headers,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+function setupAuthenticatedUser() {
+  vi.mocked(getUserInfo).mockResolvedValue({
+    id: 'user-1',
+    email: 'student@example.com',
+  } as never);
+  vi.mocked(getCurrentSubscription).mockResolvedValue(undefined as never);
+  vi.mocked(subscriptionToTier).mockReturnValue('free' as never);
+  vi.mocked(getDailyQuotaCount).mockResolvedValue(0);
+  vi.mocked(getRemainingCredits).mockResolvedValue(20);
+}
+
+function setupAnonymousUser() {
+  vi.mocked(getUserInfo).mockResolvedValue(undefined);
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(isValidDiscipline).mockReturnValue(true);
+  vi.mocked(getDisciplineConfig).mockReturnValue({
+    id: 'physics',
+    name: { en: 'Physics', zh: '物理' },
+    enabled: true,
+  } as never);
+  vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true } as never);
+  vi.mocked(acquireLock).mockResolvedValue(true);
+  vi.mocked(releaseLock).mockResolvedValue(undefined);
+  vi.mocked(generateCore).mockResolvedValue({
+    id: 'gen-1',
+    status: 'completed',
+    htmlContent: '<html>ok</html>',
+    inputTokens: 100,
+    outputTokens: 400,
+  } as never);
+  vi.mocked(consumeCredits).mockResolvedValue({ id: 'credit-1' } as never);
+  vi.mocked(incrementDailyQuota).mockResolvedValue(undefined as never);
+  vi.mocked(refundCredits).mockResolvedValue({ id: 'refund-1' } as never);
 });
 
-describe('UPG Pipeline Integration', () => {
-  it('should create AI task and consume credits in a transaction', async () => {
-    // createAITask calls consumeCredits inside a transaction.
-    // With our mock returning total='0', consumeCredits will throw insufficient.
-    // This verifies the transactional flow: task + credit deduction are atomic.
-    await expect(
-      createAITask({
-        id: 'task-1',
+describe('UPG pipeline orchestration', () => {
+  it('runs the authenticated generation flow end-to-end', async () => {
+    setupAuthenticatedUser();
+
+    const res = await POST(makeRequest());
+    const json = await res.json();
+
+    expect(json).toEqual({
+      code: 0,
+      message: 'ok',
+      data: {
+        id: 'gen-1',
+        status: 'completed',
+        htmlContent: '<html>ok</html>',
+      },
+    });
+    expect(generateCore).toHaveBeenCalledWith({
+      prompt: 'simulate a pendulum',
+      language: 'en',
+      userId: 'user-1',
+      discipline: 'physics',
+    });
+    expect(consumeCredits).toHaveBeenCalledWith(
+      expect.objectContaining({
         userId: 'user-1',
-        mediaType: 'image',
-        provider: 'fal',
-        model: 'flux',
-        prompt: 'a cat',
-        scene: 'text-to-image',
-        status: 'pending',
-        costCredits: 2,
+        credits: 10,
+        scene: 'upg-generate',
       })
-    ).rejects.toThrow(/Insufficient credits/i);
+    );
+    expect(incrementDailyQuota).toHaveBeenCalledWith(
+      'user-1',
+      expect.any(String)
+    );
+    expect(releaseLock).toHaveBeenCalledTimes(1);
   });
 
-  it('should create AI task without consuming credits when costCredits is 0', async () => {
-    const result = await createAITask({
-      id: 'task-2',
-      userId: 'user-1',
-      mediaType: 'image',
-      provider: 'fal',
-      model: 'flux',
-      prompt: 'a dog',
-      scene: 'text-to-image',
-      status: 'pending',
-      costCredits: 0,
-    });
+  it('uses the anonymous path without credit consumption', async () => {
+    setupAnonymousUser();
 
-    expect(result).toBeDefined();
-    expect(result.id).toBe('task-2');
-    expect(result.costCredits).toBe(0);
+    const res = await POST(makeRequest());
+    const json = await res.json();
+
+    expect(json.code).toBe(0);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      expect.stringContaining('upg:anon:'),
+      1,
+      86400
+    );
+    expect(generateCore).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: null })
+    );
+    expect(consumeCredits).not.toHaveBeenCalled();
+    expect(incrementDailyQuota).not.toHaveBeenCalled();
   });
 
-  it('should reject when LLM provider returns no taskId', async () => {
-    // This tests the route-level check: if (!result?.taskId) throw
-    const result = { taskId: null, taskStatus: 'failed' };
-    expect(result.taskId).toBeFalsy();
+  it('short-circuits without charging when generation fails', async () => {
+    setupAuthenticatedUser();
+    vi.mocked(generateCore).mockResolvedValue({
+      id: 'gen-failed',
+      status: 'failed',
+      htmlContent: null,
+      errorMessage: 'Quality check failed',
+      inputTokens: 120,
+      outputTokens: 0,
+    } as never);
 
-    const shouldThrow = !result?.taskId;
-    expect(shouldThrow).toBe(true);
+    const res = await POST(makeRequest());
+    const json = await res.json();
+
+    expect(json.code).toBe(-1);
+    expect(json.message).toContain('Quality check failed');
+    expect(consumeCredits).not.toHaveBeenCalled();
+    expect(refundCredits).not.toHaveBeenCalled();
+    expect(releaseLock).toHaveBeenCalledTimes(1);
   });
 
-  it('should store generation with low quality flag when sanitizer rejects', async () => {
-    // In the pipeline: sanitizer rejection -> task still stored but marked
-    // updateAITaskById sets status to FAILED when quality check fails
-    const updateData = {
-      status: AITaskStatus.FAILED,
-      creditId: 'credit-123',
-    };
+  it('refunds credits if post-generation persistence fails', async () => {
+    setupAuthenticatedUser();
+    vi.mocked(incrementDailyQuota).mockRejectedValueOnce(
+      new Error('quota write failed')
+    );
 
-    // updateAITaskById will attempt to revoke credits on FAILED status
-    const result = await updateAITaskById('task-x', updateData);
-    // Verify the function completes (credit revocation runs in transaction)
-    expect(result).toBeDefined();
+    const res = await POST(makeRequest());
+    const json = await res.json();
+
+    expect(json.code).toBe(-1);
+    expect(json.message).toContain('quota write failed');
+    expect(consumeCredits).toHaveBeenCalledTimes(1);
+    expect(refundCredits).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        credits: 10,
+        scene: 'upg-refund',
+        relatedCreditId: 'credit-1',
+      })
+    );
   });
 
-  it('should store quality check failure with correct status', async () => {
-    // Quality check failure -> update task to FAILED
-    const taskUpdate = {
-      status: AITaskStatus.FAILED,
-      taskResult: JSON.stringify({ error: 'quality check failed' }),
-    };
+  it('rejects invalid disciplines before orchestration continues', async () => {
+    setupAuthenticatedUser();
+    vi.mocked(isValidDiscipline).mockReturnValue(false);
 
-    expect(taskUpdate.status).toBe('failed');
-    expect(JSON.parse(taskUpdate.taskResult!).error).toBe('quality check failed');
+    const res = await POST(
+      makeRequest({ prompt: 'simulate a pendulum', discipline: 'alchemy' })
+    );
+    const json = await res.json();
+
+    expect(json.code).toBe(-1);
+    expect(json.message).toContain('Invalid discipline');
+    expect(generateCore).not.toHaveBeenCalled();
+    expect(acquireLock).not.toHaveBeenCalled();
   });
 
-  it('should create refinement as new task with reference to parent', async () => {
-    // Refinement creates a new AI task. The prompt references the parent.
-    const parentTaskId = 'task-parent-1';
-    const refinementTask = await createAITask({
-      id: 'task-refine-1',
-      userId: 'user-1',
-      mediaType: 'image',
-      provider: 'fal',
-      model: 'flux',
-      prompt: `Refine: improve lighting. Parent: ${parentTaskId}`,
-      scene: 'text-to-image',
-      status: 'pending',
-      costCredits: 0,
-      options: JSON.stringify({ parentId: parentTaskId }),
-    });
+  it('releases the lock even when a request is rejected after lock allocation', async () => {
+    setupAuthenticatedUser();
+    vi.mocked(acquireLock).mockResolvedValue(false);
 
-    expect(refinementTask.id).toBe('task-refine-1');
-    const opts = JSON.parse(refinementTask.options as string);
-    expect(opts.parentId).toBe(parentTaskId);
-  });
+    const res = await POST(makeRequest());
+    const json = await res.json();
 
-  it('should store anonymous user generation without userId', async () => {
-    // Anonymous users have no userId
-    const task = await createAITask({
-      id: 'task-anon-1',
-      userId: '',
-      mediaType: 'image',
-      provider: 'fal',
-      model: 'flux',
-      prompt: 'anonymous generation',
-      scene: 'text-to-image',
-      status: 'pending',
-      costCredits: 0,
-    });
-
-    expect(task.userId).toBe('');
-  });
-
-  it('should store authenticated user generation with userId', async () => {
-    const task = await createAITask({
-      id: 'task-auth-1',
-      userId: 'user-authenticated-42',
-      mediaType: 'image',
-      provider: 'fal',
-      model: 'flux',
-      prompt: 'authenticated generation',
-      scene: 'text-to-image',
-      status: 'pending',
-      costCredits: 0,
-    });
-
-    expect(task.userId).toBe('user-authenticated-42');
-  });
-
-  it('should route to correct scene based on mediaType', () => {
-    // Discipline/scene routing logic from the generate route
-    const getScene = (mediaType: string, inputScene: string) => {
-      if (mediaType === 'image') {
-        if (!['text-to-image', 'image-to-image'].includes(inputScene)) {
-          throw new Error('invalid scene');
-        }
-        return inputScene;
-      }
-      if (mediaType === 'video') {
-        if (!['text-to-video', 'image-to-video', 'video-to-video'].includes(inputScene)) {
-          throw new Error('invalid scene');
-        }
-        return inputScene;
-      }
-      if (mediaType === 'music') {
-        return 'text-to-music';
-      }
-      throw new Error('invalid mediaType');
-    };
-
-    expect(getScene('image', 'text-to-image')).toBe('text-to-image');
-    expect(getScene('music', '')).toBe('text-to-music');
-    expect(() => getScene('image', 'bad-scene')).toThrow('invalid scene');
-  });
-
-  it('should reject before processing when credits are insufficient', async () => {
-    // The route checks remaining credits before calling aiProvider.generate
-    // This verifies the guard: if (remainingCredits < costCredits) throw
-    const remainingCredits = 1;
-    const costCredits = 10;
-
-    const shouldReject = remainingCredits < costCredits;
-    expect(shouldReject).toBe(true);
-
-    // And the opposite
-    const enoughCredits = 10;
-    expect(enoughCredits < costCredits).toBe(false);
+    expect(json.code).toBe(-1);
+    expect(json.message).toContain('already in progress');
+    expect(releaseLock).toHaveBeenCalledTimes(1);
   });
 });
