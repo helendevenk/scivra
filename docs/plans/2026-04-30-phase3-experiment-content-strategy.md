@@ -159,14 +159,38 @@ The test file is `tests/unit/content/experiment-content-sections.test.ts`; it im
 
 These four belong in the post-wave review gate (§9 below).
 
-## 8. Subagent dispatch strategy
+## 8. Subagent dispatch strategy (LLM-leveraged parallel execution)
 
-Per CLAUDE.md "子代理只做信息收集，不做最终产出": content writing for educational pages is a **judgment task with subject-matter accuracy stakes** and stays in the main session. Subagents are reserved for the support functions:
+Per D6 above (revised 2026-04-30), sonnet 4.6 subagents are first-class content drafters. The full dispatch pattern per wave:
 
-- **Pre-wave research subagent** (`Explore` or `general-purpose`): "For these N experiments in Wave X, scrape the existing `theory`, `formulas`, `parameters`, `challenges` fields and produce a one-pager per experiment summarizing the physics/biology context I should anchor the writing to." Output: `_phase3-research/wave-N.md` (gitignored), used as writer reference.
-- **Post-wave review subagent** (`code-review-expert` for content review): "Diff the N new contentSections blocks against the projectile-motion canonical template; flag any missing field, any FAQ with answer < 100 chars, any misconception that strawmans the wrong claim, any parameterExplanations key that doesn't match a parameter id." Run between Step "Run tests" and Step "Commit".
+### 8.1 Three-layer pipeline
 
-Codex is **explicitly NOT used** for Phase 3 content writing per retrospective §4.4 (subject accuracy + xhigh-reasoning stalls on multi-file content tasks).
+**Layer A — Pre-wave research (1 codex call, gpt-5.5 medium):** Extract `theory`, `formulas`, `parameters`, `challenges`, `standards` from each wave's experiment data files. Output piped to `_phase3-research/wave-N.md` as writer briefing. Scoped, mechanical, fast (3-5 min).
+
+**Layer B — Parallel content drafting (3-5 sonnet 4.6 subagents):** Each subagent receives:
+1. The compressed §6.2 rubric (inline in the prompt — no cross-doc references).
+2. The wave's voice notes from execution plan (e.g., "AP Bio misconceptions skew toward Lamarckism").
+3. The Layer A research briefing for its slugs.
+4. The canonical `projectile-motion.ts:120-191` reference inline.
+5. A batch of 5-10 slugs to draft.
+
+Subagents return contentSections blocks for their slugs as TypeScript-formatted text. Main session merges into the data files. Parallel dispatch turns a 33-experiment wave from ~6 hours sequential to ~45 min concurrent.
+
+**Layer C — Post-wave review (codex gpt-5.5 xhigh, chunked):** Run codex review on 5-file batches, not 29-file blasts (this avoids the retrospective §5.1 stall pattern). 8-dimension audit per batch. Output piped to `_phase3-research/wave-N-review.md`.
+
+### 8.2 What stays in the main session
+
+- **Voice consistency review** across the parallel subagent outputs before commit.
+- **Sensitive-subject overrides:** if a subagent draft mishandles a topic with cultural/scientific edge cases (evolution, climate, religion-adjacent astronomy), main session rewrites that fill manually.
+- **Final polish:** trim to ~1100 word target, harmonize cross-experiment cross-references, fix any `parameterExplanations` key mismatches the validation gate flags.
+
+### 8.3 What stays out
+
+Codex is **explicitly NOT used for content writing** per retrospective §4.4 — subject accuracy + xhigh stall risk. Codex roles in Phase 3: research extraction (Layer A) and review audit (Layer C) only.
+
+### 8.4 Parallel dispatch concurrency
+
+Maximum 5 parallel subagents per wave to keep token spend bounded and merge complexity manageable. For waves under 15 slugs (Wave 5 / 6 / 9), dispatch 2 subagents; for waves over 25 slugs (Waves 1 / 2 / 7 / 8), dispatch 5.
 
 ## 9. Quality gates
 
@@ -194,28 +218,33 @@ print('How teachers use this lab section:', 'YES' if 'How teachers use this lab'
 
 **Gate C — Content review (manual sampling):** Random 5/N experiments per wave reviewed by a human reader (or a `code-review-expert` subagent with the §8 review prompt) against the §6.2 rubric. Reject if any: misconception strawmans, FAQ answers shorter than 100 chars, parameterExplanations key mismatch, or word count below 800.
 
-## 10. Schedule & cadence
+## 10. Schedule & cadence (LLM-leveraged sprint)
 
-Two cadence options; the executor picks one and sticks to it.
+Per D6 + D8, the chosen cadence is **2-3 waves/day via parallel sonnet 4.6 subagent dispatch**, not the original "1 wave/day single-session writing".
 
-**Option A — Sprint (6–7 working days):** Waves 1+2 day 1–4, Waves 3+4 day 5, Waves 5+6 day 6, Waves 7+8 day 7, Wave 9 + final verification trailing. Risk: writing fatigue on days 4–7 affects content quality. Mitigation: enforce a maximum of 25 fills per day, take a break between subjects.
+**Target: 3-4 calendar days, ~24 wall-clock hours of orchestration.** Subagent compute runs concurrent so wall-clock stays bounded even at 169 fills.
 
-**Option B — Marathon (10–12 working days):** One wave per day except Waves 1, 2, 7, 8 which take 1.5–2 days. Allows polish iterations within each wave; better suits a side-project cadence. Risk: extended timeline gives the indexing risk more time to bite.
+### 10.1 Per-wave delivery rhythm (revised for parallel)
 
-**Recommendation:** Option A unless the user has a hard parallel project. The retrospective §10.1 ranked thin-content risk as "high probability, medium impact" — six days of compressed work beats two weeks of paced work for SEO-impact compounding.
+For each wave (1-3 hours wall-clock, depending on wave size):
 
-### 10.1 Per-wave delivery rhythm
+1. **Setup (5 min):** Branch from fresh main; run pre-flight `git remote get-url $REMOTE`, `codex --version`, `pnpm tsc --noEmit`.
+2. **Layer A research (3-5 min):** Single codex call extracts theory/formulas/standards for all wave slugs to `_phase3-research/wave-N.md`.
+3. **Manifest + failing test (5 min):** Append wave slugs; run validation test → expect N new failures.
+4. **Layer B parallel drafting (30-60 min wall-clock):** Dispatch 2-5 sonnet 4.6 subagents in a single multi-tool message. Each gets a slug batch + inline rubric + voice notes + research briefing + projectile-motion reference. They run concurrently.
+5. **Merge + main-session polish (20-40 min):** Insert subagent outputs into data files, run validation test, fix any structural failures, harmonize voice across batches, manually rewrite any sensitive-subject draft.
+6. **Layer C codex review (10-15 min, chunked):** Codex xhigh review in 5-file batches; output to `_phase3-research/wave-N-review.md`. Patch any P1/P2 finding.
+7. **Typecheck, commit, push, PR (5 min):** Single commit per wave, branch `feat/phase3-wave-N-<standard>`.
+8. **Gate B (5 min):** Full automated curl across all wave slugs on Vercel preview (not 3-sample). Assert 4-section markers + FAQPage schema on every URL.
+9. **Squash merge; refresh local main; next wave.**
 
-For each wave:
+### 10.2 Multi-wave-per-day guidance
 
-1. Morning: setup branch, run the Phase 2 reference + research subagent for that wave's experiments.
-2. First half: write all N experiments' `contentSections` blocks.
-3. Late afternoon: run validation test, fix any failures, re-run.
-4. Pre-commit: run review subagent (§8), patch any flagged issues.
-5. Commit (one commit per wave; subject prefix `feat(content)` per Phase 2 convention).
-6. Push to a wave-specific branch (`feat/phase3-wave-N-<standard>`); open PR; wait for Vercel preview.
-7. Run Gate B curl checks; sample Gate C 5/N pages; merge.
-8. Tomorrow: next wave from a fresh branch off the new main.
+Two waves can run back-to-back the same day if Layer B subagent results merge cleanly. Three is realistic for small waves (5, 6, 9). Keep ≥ 30-min cooldown between merges to give Vercel preview rate-limits room.
+
+### 10.3 Stop-loss criterion
+
+If any wave's Gate B fails (broken render on Vercel preview), pause the next wave and root-cause first. Don't queue 3 wave PRs and discover a systemic break only at Gate B of the third.
 
 ## 11. KPI / measurement plan
 
@@ -268,9 +297,11 @@ Re-measurement cadence: GSC dashboards monthly; record snapshots in `docs/report
 
 **D5 — No new schema work in Phase 3.** Resist the temptation to add `EducationalLevel` or `LearningResource` `assesses` properties. Phase 3 is content; Phase 4 (separate plan) handles schema enrichment if KPIs justify.
 
-**D6 — Subagents handle research + review, not writing.** Per CLAUDE.md "子代理只做信息收集"; per retrospective §4.4, codex is unfit for the writing itself. Subagents serve the writer, they don't replace the writer.
+**D6 — Subagents handle research + review + content drafting in parallel.** Original draft of this plan reserved subagents for "research and review only" per CLAUDE.md "子代理只做信息收集". **Revised 2026-04-30 by user override:** sonnet 4.6 subagents are now first-class content drafters too. The constraint that mattered was *codex is unfit for educational writing* (still true per retrospective §4.4 — codex stays out of writing). sonnet 4.6 in a subagent is the same model as in the main session and produces the same quality of educational prose. Parallel dispatch turns "1 wave/day sequential" into "2-3 waves/day concurrent" without trading off accuracy. Main session retains: orchestration, voice consistency review, sensitive-subject manual write, final polish.
 
-**D7 — Vitest content validation gates each wave.** New test file added in Task 0; each wave Task adds its slugs to the manifest and runs the test. Failure blocks commit.
+**D7 — Vitest content validation gates each wave.** New test file added in Task 0; each wave Task adds its slugs to the manifest and runs the test. Failure blocks commit. Validation also gates: full `parameterExplanations` coverage, `whatIsIt` ≥ 100 words, total fill ≥ 800 words, FAQ strings free of `</script>` / `<!--` / U+2028 / U+2029.
+
+**D8 — User override of /autoplan User Challenge (2026-04-30).** /autoplan multi-voice review (3 Claude subagents + 3 codex gpt-5.5 medium across CEO/Eng/DX phases) flagged a strategic User Challenge: both CEO voices independently recommended converting Phase 3 from full 169 backfill to a 2-week growth experiment (40 full / 40 schema-only / 40 internal-link / 49 control). User overrode after considering tradeoffs: (a) belief in LLM throughput at sprint cadence, (b) preference for shipping fast over measure-then-decide, (c) willingness to accept "wrote 186K words for the wrong reason" downside risk. **Decision:** proceed with full sprint, capture GSC baseline as a parallel deliverable (not a gate), and apply all P0/P1 plan fixes from the autoplan review. Full review at `docs/reports/2026-04-30-phase3-plan-autoplan-review.md`.
 
 ## 14. Success criteria
 

@@ -53,9 +53,141 @@ Never use Variant B on multi-file reasoning content tasks (will stall, see retro
 Before starting Task 0:
 
 - [ ] PR #4 (`chore: GSC verification + working tree cleanup`) is merged to main. If still open, merge it first — Task 0 branches off the new main.
-- [ ] `git fetch deploy && git checkout main && git reset --hard deploy/main` — local main matches remote.
+- [ ] **Detect git remote** — this codebase uses `deploy` as the GitHub remote name. Fresh clones may use `origin`. Set once and reuse:
+      ```bash
+      REMOTE=$(git remote | grep -E '^(deploy|origin)$' | head -1)
+      [ -z "$REMOTE" ] && { echo "No deploy/origin remote found"; exit 1; }
+      git remote get-url "$REMOTE" | grep -q 'helendevenk/scivra' || { echo "Remote $REMOTE does not point to helendevenk/scivra"; exit 1; }
+      echo "Using remote: $REMOTE"
+      ```
+- [ ] `git fetch $REMOTE && git checkout main && git reset --hard $REMOTE/main` — local main matches remote.
 - [ ] `pnpm install` clean.
 - [ ] `pnpm tsc --noEmit` passes on a clean tree.
+- [ ] **Codex CLI precheck** — Task 1+ depend on `codex exec` with model `gpt-5.5`. Verify before sprint:
+      ```bash
+      codex --version | grep -E 'codex-cli (0\.12[5-9]|0\.1[3-9]|[1-9])' || { echo "codex CLI version too old"; exit 1; }
+      codex models list 2>/dev/null | grep -q '^gpt-5\.5' || { echo "gpt-5.5 model alias not available"; exit 1; }
+      # Smoke test: 10-second sandbox call
+      timeout 30 codex exec -s read-only --skip-git-repo-check \
+        -c 'model="gpt-5.5"' -c 'model_reasoning_effort="medium"' \
+        "Print OK" < /dev/null | grep -q OK || { echo "codex smoke test failed"; exit 1; }
+      ```
+- [ ] **Sub-agent dispatch path** — confirm Claude Code's Agent tool can dispatch `general-purpose` subagents (or your platform's equivalent) for the parallel content drafting in Layer B (strategy §8.1). If your platform does not support multi-tool dispatch in a single message, fall back to sequential subagent calls (waves take 2-3× longer but still work).
+
+## Cross-task patterns (apply to every wave)
+
+These patterns are defined once and referenced from every wave Task. Do not duplicate the substance into each Task — just call out which pattern is in play.
+
+### Pattern A — Codex research call (Layer A, every wave Step 2)
+
+Stdout must be redirected at the shell level because `--sandbox read-only` cannot create files. The pattern:
+
+```bash
+codex exec --sandbox read-only --skip-git-repo-check \
+  -c 'model="gpt-5.5"' \
+  -c 'model_reasoning_effort="medium"' \
+  "$RESEARCH_PROMPT" < /dev/null \
+  | tee "_phase3-research/wave-${N}.md"
+```
+
+If `tee` is missing the file silently never gets written. Always include it. (This was the original Task 1 Step 2 bug surfaced by /autoplan — the pattern below replaces the original.)
+
+### Pattern B — Compressed §6.2 rubric (every wave Step 5)
+
+Inline this checklist into every parallel subagent prompt and into the writer's mental model. Self-contained tasks must not rely on cross-doc loading.
+
+```
+RUBRIC CHECKLIST (mirror projectile-motion.ts:120-191):
+[whatIsIt]            100-150 words; concrete opener (not "In this experiment"); ends pointing at the simulation
+[parameterExplanations] one entry per parameters[].id (validation enforces full coverage); 1-2 sentences each
+[misconceptions]      3-5 wrong/correct pairs; "wrong" is real student-voice, not strawman; "correct" engages the wrong claim directly
+[teacherUseCases]     3-5 strings ≥30 chars each; at least one references data collection (record/plot/measure); at least one references a misconception probe
+[faq]                 4-6 Q/A pairs; questions in student-search voice ending in "?"; answers ≥100 chars; at least one cites standards.ap[0] or standards.ngss[0]
+[total]               word count ≥800 across all five sections; target ~1100
+[forbidden]           no "</script>", "<!--", "]]>", U+2028, U+2029 anywhere in FAQ strings; no NeonPhysics residue; no "In this experiment"/"Welcome to"/"This simulation" openings
+```
+
+### Pattern C — Layer B parallel subagent dispatch (every wave Step 5)
+
+In a single multi-tool-call message, dispatch 2-5 sonnet 4.6 subagents (`general-purpose`). Each gets a slug batch + the §6.2 rubric inline + voice notes for the wave + projectile-motion canonical reference + Layer A research briefing. Subagents return contentSections blocks; main session merges into the data files.
+
+Per-subagent prompt template (copy + customize per wave):
+
+```
+You are a senior science educator drafting contentSections blocks for Scivra's
+educational experiment pages. You receive N slug briefings and produce N
+TypeScript-formatted contentSections objects following the rubric exactly.
+
+CONTEXT:
+- Reference: src/shared/lib/experiments/data/projectile-motion.ts:120-191 (canonical)
+- Type: src/shared/types/experiment.ts:107-119 (ExperimentContentSection)
+- Render: src/shared/blocks/experiments/experiment-content-sections.tsx
+- Rubric: <PASTE PATTERN B HERE VERBATIM>
+- Voice notes (this wave): <PASTE wave-N voice notes from the Task>
+- Research briefing: <PASTE _phase3-research/wave-N.md sections for this batch>
+
+SLUGS (this batch): <list 5-10 slugs with their parameter ids>
+
+OUTPUT FORMAT (one block per slug, in the order given):
+=== <slug> ===
+contentSections: {
+  whatIsIt: "…",
+  parameterExplanations: { … },
+  misconceptions: [ … ],
+  teacherUseCases: [ … ],
+  faq: [ … ],
+},
+=== END <slug> ===
+
+Do not edit any files. Do not add commentary outside the === blocks. Word
+budget per block: ~1100 words.
+```
+
+Concurrency cap: 5 parallel per message. For Waves 5/6/9 (≤13 slugs), 2 subagents are enough.
+
+### Pattern D — Codex review chunking (every wave Step 8)
+
+Codex `xhigh` with multi-file reasoning > 10 files is the exact pattern that stalled in Phase 2 retrospective §5.1. Always chunk to 5-8 files per call. For a 33-slug wave, that means 5-7 separate codex calls (each scoped to a slug subset), then concatenate outputs.
+
+Per-chunk codex command:
+
+```bash
+codex exec --sandbox read-only --skip-git-repo-check \
+  -c 'model="gpt-5.5"' \
+  -c 'model_reasoning_effort="xhigh"' \
+  "$REVIEW_PROMPT" < /dev/null \
+  | tee -a "_phase3-research/wave-${N}-review.md"
+```
+
+Wrap each chunk in `timeout 300` so a stall fails fast (5 min) rather than blocking 10. If 2 chunks in a row stall, fall back to medium reasoning.
+
+### Pattern E — Gate B full-wave verification (every wave Step 11)
+
+Replace the original "3 random samples" with a full curl loop over every wave slug. Mathematics: 3 samples on a 33-fill wave has ~91% chance of missing a single broken slug. 100% is just N HEAD requests + grep.
+
+```bash
+PREVIEW_URL="<vercel-preview-url-from-pr>"
+WAVE_SLUGS="$(awk '/Wave '"$N"' (.*ap-physics-1)/{p=1;next} /^[A-Za-z]/{p=0} p && /^"/' tests/unit/content/phase3-manifest.ts | tr -d '",')"
+for slug in $WAVE_SLUGS; do
+  # Look up subject + standard from the experiment file
+  data="src/shared/lib/experiments/data/${slug}.ts"
+  subject=$(grep 'subject:' "$data" | head -1 | grep -oE '"[^"]+"' | tr -d '"')
+  standard=$(grep 'primaryStandard:' "$data" | head -1 | grep -oE '"[^"]+"' | tr -d '"')
+  url="${PREVIEW_URL}/labs/${subject}/${standard}/${slug}"
+  out=$(curl -s "$url")
+  faq=$(echo "$out" | grep -c '"FAQPage"')
+  misc=$(echo "$out" | grep -c 'Common misconceptions')
+  teach=$(echo "$out" | grep -c 'How teachers use this lab')
+  params=$(echo "$out" | grep -c 'Parameters explained')
+  if [ "$faq" -ge 1 ] && [ "$misc" -ge 1 ] && [ "$teach" -ge 1 ] && [ "$params" -ge 1 ]; then
+    echo "PASS $slug"
+  else
+    echo "FAIL $slug faq=$faq misc=$misc teach=$teach params=$params"
+  fi
+done | tee "_phase3-research/wave-${N}-gate-b.log"
+```
+
+Any FAIL line blocks merge.
 
 ## Task 0: Setup — validation test infrastructure + research helper
 
@@ -114,26 +246,46 @@ export const PHASE3_FILLED_SLUGS = new Set<string>([
 ]);
 ```
 
-- [ ] **Step 3: Write the failing validation test**
+- [ ] **Step 3: Write the failing validation test (P0 hardened version)**
 
-Create `tests/unit/content/experiment-content-sections.test.ts`:
+Create `tests/unit/content/experiment-content-sections.test.ts`. This version closes the gaps surfaced by /autoplan: correct registry import, full parameter coverage, total word count floor, FAQ JSON-LD injection guard, inverse-manifest assertion.
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { experiments } from "@/shared/lib/experiments/registry";
+import { getAllExperiments } from "@/shared/lib/experiments/registry";
 import { PHASE3_FILLED_SLUGS } from "./phase3-manifest";
 
-const wordCount = (s: string) => s.trim().split(/\s+/).length;
+const experiments = getAllExperiments();
+
+const wordCount = (s: string) =>
+  s.trim().split(/\s+/).filter(Boolean).length;
+
+const FORBIDDEN_FAQ_PATTERNS: { name: string; re: RegExp }[] = [
+  { name: "</script>", re: /<\/script/i },
+  { name: "<!--", re: /<!--/ },
+  { name: "]]>", re: /\]\]>/ },
+  { name: "U+2028", re: /\u2028/ },
+  { name: "U+2029", re: /\u2029/ },
+];
 
 describe("Phase 3 contentSections quality gate", () => {
   const filledExperiments = experiments.filter((e) =>
     PHASE3_FILLED_SLUGS.has(e.slug),
   );
 
-  it("manifest matches actual filled experiments", () => {
-    const manifestCount = PHASE3_FILLED_SLUGS.size;
-    const filledCount = filledExperiments.length;
-    expect(filledCount).toBe(manifestCount);
+  it("manifest matches actual filled experiments (forward)", () => {
+    expect(filledExperiments.length).toBe(PHASE3_FILLED_SLUGS.size);
+  });
+
+  it("every experiment with contentSections is in manifest (inverse)", () => {
+    const orphans = experiments
+      .filter((e) => e.contentSections)
+      .map((e) => e.slug)
+      .filter((slug) => !PHASE3_FILLED_SLUGS.has(slug));
+    expect(
+      orphans,
+      `Filled-but-unregistered slugs: ${orphans.join(", ") || "(none)"}`,
+    ).toEqual([]);
   });
 
   describe.each(filledExperiments)("$slug", (exp) => {
@@ -143,55 +295,112 @@ describe("Phase 3 contentSections quality gate", () => {
       expect(cs).toBeDefined();
     });
 
-    it("whatIsIt has at least 80 words", () => {
+    it("whatIsIt has at least 100 words", () => {
       expect(cs?.whatIsIt).toBeTruthy();
-      expect(wordCount(cs!.whatIsIt!)).toBeGreaterThanOrEqual(80);
+      const wc = wordCount(cs!.whatIsIt!);
+      expect(
+        wc,
+        `${exp.slug}.whatIsIt has ${wc} words (need >=100)`,
+      ).toBeGreaterThanOrEqual(100);
     });
 
-    it("parameterExplanations keys all match a parameter id", () => {
-      const paramIds = new Set(exp.parameters.map((p) => p.id));
-      const explanationKeys = Object.keys(cs?.parameterExplanations ?? {});
-      for (const k of explanationKeys) {
-        expect(paramIds.has(k)).toBe(true);
-      }
-    });
-
-    it("parameterExplanations has at least one entry", () => {
+    it("parameterExplanations covers every parameter id", () => {
+      const paramIds = exp.parameters.map((p) => p.id);
       const keys = Object.keys(cs?.parameterExplanations ?? {});
-      expect(keys.length).toBeGreaterThanOrEqual(1);
+      const missing = paramIds.filter((id) => !keys.includes(id));
+      const orphaned = keys.filter((k) => !paramIds.includes(k));
+      expect(
+        missing,
+        `${exp.slug} missing parameterExplanations for: ${missing.join(", ") || "(none)"}`,
+      ).toEqual([]);
+      expect(
+        orphaned,
+        `${exp.slug} parameterExplanations has unmatched keys: ${orphaned.join(", ") || "(none)"}`,
+      ).toEqual([]);
     });
 
-    it("misconceptions has 3 to 5 entries with non-empty wrong+correct", () => {
+    it("misconceptions has 3-5 non-empty entries", () => {
       expect(cs?.misconceptions).toBeDefined();
-      expect(cs!.misconceptions!.length).toBeGreaterThanOrEqual(3);
-      expect(cs!.misconceptions!.length).toBeLessThanOrEqual(5);
-      for (const m of cs!.misconceptions!) {
-        expect(m.wrong.trim().length).toBeGreaterThan(0);
-        expect(m.correct.trim().length).toBeGreaterThan(0);
+      const len = cs!.misconceptions!.length;
+      expect(len, `${exp.slug} misconceptions count is ${len}`).toBeGreaterThanOrEqual(3);
+      expect(len, `${exp.slug} misconceptions count is ${len}`).toBeLessThanOrEqual(5);
+      for (const [i, m] of cs!.misconceptions!.entries()) {
+        expect(m.wrong.trim().length, `${exp.slug} misconceptions[${i}].wrong empty`).toBeGreaterThan(0);
+        expect(m.correct.trim().length, `${exp.slug} misconceptions[${i}].correct empty`).toBeGreaterThan(0);
       }
     });
 
-    it("teacherUseCases has 3 to 5 entries each at least 30 chars", () => {
+    it("teacherUseCases has 3-5 entries each >=30 chars", () => {
       expect(cs?.teacherUseCases).toBeDefined();
-      expect(cs!.teacherUseCases!.length).toBeGreaterThanOrEqual(3);
-      expect(cs!.teacherUseCases!.length).toBeLessThanOrEqual(5);
-      for (const u of cs!.teacherUseCases!) {
-        expect(u.trim().length).toBeGreaterThanOrEqual(30);
+      const len = cs!.teacherUseCases!.length;
+      expect(len).toBeGreaterThanOrEqual(3);
+      expect(len).toBeLessThanOrEqual(5);
+      for (const [i, u] of cs!.teacherUseCases!.entries()) {
+        expect(
+          u.trim().length,
+          `${exp.slug} teacherUseCases[${i}] has ${u.length} chars (need >=30)`,
+        ).toBeGreaterThanOrEqual(30);
       }
     });
 
-    it("faq has 4 to 6 Q/A pairs; questions end in ?, answers >= 100 chars", () => {
+    it("faq has 4-6 Q/A pairs; questions end in ?, answers >=100 chars", () => {
       expect(cs?.faq).toBeDefined();
-      expect(cs!.faq!.length).toBeGreaterThanOrEqual(4);
-      expect(cs!.faq!.length).toBeLessThanOrEqual(6);
-      for (const f of cs!.faq!) {
-        expect(f.question.trim().endsWith("?")).toBe(true);
-        expect(f.answer.trim().length).toBeGreaterThanOrEqual(100);
+      const len = cs!.faq!.length;
+      expect(len).toBeGreaterThanOrEqual(4);
+      expect(len).toBeLessThanOrEqual(6);
+      for (const [i, f] of cs!.faq!.entries()) {
+        expect(
+          f.question.trim().endsWith("?"),
+          `${exp.slug} faq[${i}] question must end in ?`,
+        ).toBe(true);
+        expect(
+          f.answer.trim().length,
+          `${exp.slug} faq[${i}] answer has ${f.answer.length} chars (need >=100)`,
+        ).toBeGreaterThanOrEqual(100);
       }
+    });
+
+    it("FAQ strings free of script-injection / JSON-LD breakers", () => {
+      for (const [i, f] of (cs?.faq ?? []).entries()) {
+        for (const { name, re } of FORBIDDEN_FAQ_PATTERNS) {
+          expect(
+            re.test(f.question),
+            `${exp.slug} faq[${i}].question contains ${name}`,
+          ).toBe(false);
+          expect(
+            re.test(f.answer),
+            `${exp.slug} faq[${i}].answer contains ${name}`,
+          ).toBe(false);
+        }
+      }
+    });
+
+    it("total word count >= 800 across all five sections", () => {
+      const total =
+        wordCount(cs?.whatIsIt ?? "") +
+        Object.values(cs?.parameterExplanations ?? {}).reduce(
+          (sum, t) => sum + wordCount(t),
+          0,
+        ) +
+        (cs?.misconceptions ?? []).reduce(
+          (sum, m) => sum + wordCount(m.wrong) + wordCount(m.correct),
+          0,
+        ) +
+        (cs?.teacherUseCases ?? []).reduce((sum, u) => sum + wordCount(u), 0) +
+        (cs?.faq ?? []).reduce(
+          (sum, f) => sum + wordCount(f.question) + wordCount(f.answer),
+          0,
+        );
+      expect(
+        total,
+        `${exp.slug} total contentSections word count is ${total} (need >=800)`,
+      ).toBeGreaterThanOrEqual(800);
     });
   });
 });
 ```
+
+**P0 anchor verification note:** The 10 Phase 2 P0 fills were written before this gate existed. If any P0 fails one of these tightened assertions in Step 4, patch the offending P0 contentSections directly — do NOT loosen the gate. P0 fills carrying forward into Phase 3 must meet the same bar as new fills.
 
 - [ ] **Step 4: Run the test to confirm baseline (10 P0 fills) pass**
 
@@ -199,7 +408,14 @@ describe("Phase 3 contentSections quality gate", () => {
 pnpm test tests/unit/content/experiment-content-sections.test.ts
 ```
 
-Expected: All 10 P0 experiments pass every assertion. If any fail, the P0 fills regressed — investigate `git diff` against `fa94f20` for the failing slug.
+Expected: All 10 P0 experiments pass every assertion in the tightened gate (whatIsIt ≥100, full parameter coverage, FAQ free of script-injection patterns, total word count ≥800). If any fail, the P0 fill that pre-dates this gate is below bar — patch the offending P0 contentSections directly to meet the gate. Do NOT loosen the gate.
+
+Most likely failure modes for P0 anchors:
+- `parameterExplanations` missing a key for a `pro`-tier parameter that the original writer skipped — add the entry.
+- `whatIsIt` written at 80-99 words — extend to 100-150 with one more example sentence.
+- A FAQ answer mentioning HTML or shell snippets containing `</script>` — escape it.
+
+Patch in place, re-run, confirm green before continuing.
 
 - [ ] **Step 5: Add research scratch dir**
 
@@ -278,9 +494,9 @@ git pull deploy main
 git checkout -b feat/phase3-wave1-ap-physics-1
 ```
 
-- [ ] **Step 2: Run research subagent (gpt-5.5 + medium) — produces writer briefing**
+- [ ] **Step 2: Run research subagent (Pattern A — gpt-5.5 + medium)**
 
-Run:
+Following Pattern A (Cross-task patterns above): codex stdout must pipe to `tee` because read-only sandbox cannot create files.
 
 ```bash
 codex exec --sandbox read-only --skip-git-repo-check \
@@ -297,7 +513,7 @@ pendulum-lab.ts, pressure-lab.ts, projectile-data-lab.ts, rotational-motion.ts,
 simple-harmonic-motion.ts, vector-addition.ts, wave-on-string.ts, waves-intro.ts,
 work-energy-theorem.ts
 
-Extract and produce a markdown briefing per file with these fields:
+Extract and PRINT TO STDOUT a markdown briefing per file with these fields:
   ## <slug>
   - title: <Experiment.title>
   - subtitle: <Experiment.subtitle>
@@ -309,12 +525,13 @@ Extract and produce a markdown briefing per file with these fields:
   - 3 candidate misconceptions a 9th-12th grade student commonly holds about this topic (your judgment, but stay on safe educational consensus)
   - 1 candidate FAQ tying the topic to standards.ap[0] or standards.ngss[0]
 
-Write the output to _phase3-research/wave-1.md. Do not modify any source files.
+Do not modify any source files. Print all output to stdout — the calling shell pipes it to the briefing file.
 EOF
-)"
+)" < /dev/null \
+  | tee _phase3-research/wave-1.md
 ```
 
-Expected runtime: 3–5 minutes. Output: `_phase3-research/wave-1.md` with 29 sections.
+Expected runtime: 3–5 minutes. Output: `_phase3-research/wave-1.md` populated with 29 sections.
 
 - [ ] **Step 3: Append Wave 1 slugs to the manifest**
 
@@ -361,11 +578,27 @@ pnpm test tests/unit/content/experiment-content-sections.test.ts
 
 Expected: 10 P0 still pass; 29 Wave 1 slugs FAIL with `expect(cs).toBeDefined()` errors. This is the red phase.
 
-- [ ] **Step 5: Fill all 29 contentSections (sonnet 4.6, main session)**
+- [ ] **Step 5: Fill all 29 contentSections (Pattern C parallel dispatch — sonnet 4.6 subagents)**
 
-For each slug, open `src/shared/lib/experiments/data/<slug>.ts`, locate the closing `}` of the experiment object, and insert a `contentSections: { … }` block before it.
+Following Pattern C (Cross-task patterns above): dispatch 5 sonnet 4.6 subagents in a single multi-tool message. Split 29 slugs into 5 batches of ~6 each. Each subagent prompt MUST inline:
+- Pattern B rubric checklist verbatim.
+- The Wave 1 voice notes (mechanics-first openings; AP Physics 1 standards 3.A through 4.C citations preferred in FAQ).
+- The relevant slice of `_phase3-research/wave-1.md` for that batch.
+- The full `projectile-motion.ts:120-191` text.
 
-Reference template: `src/shared/lib/experiments/data/projectile-motion.ts:120-191`. Apply the rubric in §6 of the strategy doc. Use the Wave 1 briefing in `_phase3-research/wave-1.md` as topical anchor.
+Wait for all 5 subagents to return. Each returns 5-7 contentSections blocks in the `=== <slug> ===` format. Main session merges:
+
+1. Open `src/shared/lib/experiments/data/<slug>.ts`.
+2. Locate the closing `};` of the experiment object.
+3. Insert the subagent's `contentSections: { … }` block immediately before the closing `};`.
+4. Run `pnpm tsc --noEmit` after every 5-10 files to catch syntax errors early.
+
+**Voice consistency review (main session, 15-20 min):** After all 29 are merged, scan for:
+- Repeated openers across slugs ("Imagine…", "When you…") — vary them.
+- `whatIsIt` paragraphs that read like the same template with names swapped.
+- FAQ #1 questions that all use the identical phrasing pattern.
+
+**Reference template (main-session canonical fallback):** `src/shared/lib/experiments/data/projectile-motion.ts:120-191`. The next code block is the single canonical Wave 1 sample (`circular-motion`); use it to calibrate subagent output before merging.
 
 **Sample fill for `circular-motion` (canonical Wave 1 example — replicate this shape for the other 28):**
 
@@ -462,14 +695,22 @@ pnpm tsc --noEmit
 
 Expected: clean exit.
 
-- [ ] **Step 8: Run review subagent (gpt-5.5 + xhigh) — Gate C structured audit**
+- [ ] **Step 8: Run review subagent (Pattern D — gpt-5.5 + xhigh, chunked 5-8 files per call)**
+
+Following Pattern D (Cross-task patterns above): chunking is non-negotiable. Single 29-file xhigh call risks the retrospective §5.1 stall. Split 29 slugs into 5 chunks of ~6 files; run codex per chunk; concatenate output to `_phase3-research/wave-1-review.md`. Each chunk wrapped in `timeout 300`.
+
+Per-chunk command (example for first chunk of 6):
 
 ```bash
-codex exec --sandbox read-only --skip-git-repo-check \
+CHUNK_FILES="balancing-act.ts buoyancy.ts buoyancy-basics.ts circular-motion.ts density-lab.ts electric-field-lines.ts"
+timeout 300 codex exec --sandbox read-only --skip-git-repo-check \
   -c 'model="gpt-5.5"' \
   -c 'model_reasoning_effort="xhigh"' \
-  "$(cat <<'EOF'
-You are a content quality reviewer. Audit every contentSections block added in this branch (run git diff main..HEAD -- src/shared/lib/experiments/data/ to see them).
+  "$(cat <<EOF
+You are a content quality reviewer. Audit the contentSections blocks for these files only:
+$CHUNK_FILES
+
+Run \`git diff main..HEAD -- $(echo $CHUNK_FILES | sed 's# # src/shared/lib/experiments/data/#g; s#^#src/shared/lib/experiments/data/#')\` to see them.
 
 For each experiment file, audit on these 8 dimensions:
   1. whatIsIt: 100-150 words, opens concretely (not 'In this experiment', 'Welcome to', 'This simulation'). PASS or FAIL.
@@ -515,10 +756,10 @@ wave-on-string, waves-intro, work-energy-theorem.
 Phase 3 progress: 39/179 (22%). Next: Wave 2 ap-physics-2 (33)."
 ```
 
-- [ ] **Step 10: Push + open PR**
+- [ ] **Step 10: Push + open PR (use `$REMOTE` from Pre-flight)**
 
 ```bash
-git push -u deploy feat/phase3-wave1-ap-physics-1
+git push -u "$REMOTE" feat/phase3-wave1-ap-physics-1
 
 gh pr create --repo helendevenk/scivra --base main \
   --head feat/phase3-wave1-ap-physics-1 \
@@ -528,51 +769,38 @@ gh pr create --repo helendevenk/scivra --base main \
 ## What's in this PR
 - 29 contentSections fills (~31K new words of educational content)
 - Manifest updated; validation test green for 39/179
-- Gate C audit clean (0 P1/P2 from gpt-5.5 xhigh review)
+- Gate C audit clean (0 P1/P2 from gpt-5.5 xhigh review, chunked)
 
 ## Verification
 - Local: pnpm test tests/unit/content/experiment-content-sections.test.ts → 39/39 pass
 - Local: pnpm tsc --noEmit → clean
-- After merge: spot-check 3 random Wave 1 experiments on production for FAQPage schema (Gate B)
+- After merge: full Gate B curl over all 29 Wave 1 slugs on Vercel preview (Pattern E)
 
 ## Next
 Wave 2 ap-physics-2 (33 labs)."
 ```
 
-- [ ] **Step 11: After Vercel preview, run Gate B production sampling**
+- [ ] **Step 11: Gate B full-wave production verification (Pattern E)**
 
-Pick 3 random Wave 1 slugs (e.g., `circular-motion`, `pendulum-lab`, `momentum-collisions`). For each:
+Run the Pattern E curl loop (defined in Cross-task patterns) over ALL 29 Wave 1 slugs against the Vercel preview URL. 3-random sampling is not used — full-wave is automated, takes ~60 seconds, and catches the cases sampling misses.
 
-```bash
-SLUG="circular-motion"
-# Subject + standard come from the experiment data file's subject + primaryStandard.
-# For ap-physics-1 with subject=physics: subject=physics, standard=ap-physics-1
-curl -s "https://<preview-url>.vercel.app/labs/physics/ap-physics-1/$SLUG" \
-  | python3 -c "
-import sys, re
-html = sys.stdin.read()
-print('FAQPage schema:', 'YES' if '\"FAQPage\"' in html else 'NO')
-print('Common misconceptions:', 'YES' if 'Common misconceptions' in html else 'NO')
-print('How teachers use this lab:', 'YES' if 'How teachers use this lab' in html else 'NO')
-print('Parameters explained:', 'YES' if 'Parameters explained' in html else 'NO')
-"
-```
-
-Expected: 4× YES on every sample. If any NO, do not merge — diagnose first.
+Expected: every line prints `PASS <slug>`. Any `FAIL <slug> faq=… misc=… teach=… params=…` blocks merge — diagnose the failing slug first.
 
 - [ ] **Step 12: Squash merge; refresh local main**
 
 ```bash
 gh pr merge <PR-number> --squash --delete-branch
 git checkout main
-git pull deploy main
+git pull "$REMOTE" main
 ```
 
 ## Task 2: Wave 2 — AP Physics 2 (33 experiments)
 
-**Model:** sonnet 4.6 (writing) + gpt-5.5 medium (research) + gpt-5.5 xhigh (review)
-**Estimated time:** 2 days
+**Model:** sonnet 4.6 subagents x5 parallel (Pattern C drafting) + gpt-5.5 medium (Pattern A research) + gpt-5.5 xhigh chunked (Pattern D review)
+**Estimated time:** ~2 hours wall-clock with parallel dispatch (was 2 days sequential)
 **Branch:** `feat/phase3-wave2-ap-physics-2`
+
+**Pattern references (every wave inherits these):** Step 2 = Pattern A. Step 5 = Pattern B rubric + Pattern C parallel dispatch (5 subagents × ~6-7 slugs each). Step 8 = Pattern D chunked review (5 chunks of ~6 files). Step 10 = `git push -u "$REMOTE"`. Step 11 = Pattern E full curl. Step 12 = `git pull "$REMOTE" main`.
 
 **Slugs to fill (33):**
 
@@ -914,9 +1142,14 @@ URL pattern: `/labs/math/general/<slug>`.
 
 - [ ] **Step 1: Branch + run full registry validation**
 
+Define `DATE` once at the start of Task 10 — every report path below uses `$DATE`, never the literal string `<DATE>`.
+
 ```bash
+DATE=$(date -u +%F)
+echo "Phase 3 completion gate running on $DATE"
+
 git checkout main
-git pull deploy main
+git pull "$REMOTE" main
 git checkout -b chore/phase3-completion-gate
 
 # Full registry should pass the validation test.
@@ -1082,18 +1315,20 @@ This becomes the input to a possible Phase 4 (schema enrichment / `/learn/*` con
 
 ## Total scope summary
 
-| Task | Wave | Standard | N | Cum. progress | Days | Branch |
-|---|---|---|---:|---:|---:|---|
-| 0 | — | Setup | — | 10/179 (anchor) | 0.25 | feat/phase3-task0-validation-test |
-| 1 | 1 | ap-physics-1 | 29 | 39/179 (22%) | 1.5–2 | feat/phase3-wave1-ap-physics-1 |
-| 2 | 2 | ap-physics-2 | 33 | 72/179 (40%) | 2 | feat/phase3-wave2-ap-physics-2 |
-| 3 | 3 | ap-biology | 17 | 89/179 (50%) | 1 | feat/phase3-wave3-ap-biology |
-| 4 | 4 | ap-chemistry | 15 | 104/179 (58%) | 1 | feat/phase3-wave4-ap-chemistry |
-| 5 | 5 | ap-physics-c | 10 | 114/179 (64%) | 0.5 | feat/phase3-wave5-ap-physics-c |
-| 6 | 6 | ngss-hs | 13 | 127/179 (71%) | 0.5 | feat/phase3-wave6-ngss-hs |
-| 7 | 7 | ngss-ms | 26 | 153/179 (85%) | 1.5 | feat/phase3-wave7-ngss-ms |
-| 8 | 8 | elementary-k5 | 23 | 176/179 (98%) | 1.5 | feat/phase3-wave8-elementary-k5 |
-| 9 | 9 | general | 3 | 179/179 (100%) | 0.25 | feat/phase3-wave9-math-general |
-| 10 | — | Verification | — | 179 verified | 0.25 | chore/phase3-completion-gate |
+Estimates revised for the LLM-leveraged sprint (D6 / strategy §10): wall-clock per wave is dominated by parallel sonnet 4.6 subagent compute + chunked codex review + Vercel preview turnaround, NOT by sequential single-session writing.
 
-**Total: 11 tasks, 11 PRs, ~10 working days at quality bar / 6–7 days at compressed cadence.**
+| Task | Wave | Standard | N | Cum. progress | Wall-clock | Subagents | Branch |
+|---|---|---|---:|---:|---:|---:|---|
+| 0 | — | Setup | — | 10/179 (anchor) | 45 min | 0 | feat/phase3-task0-validation-test |
+| 1 | 1 | ap-physics-1 | 29 | 39/179 (22%) | ~2 h | 5 | feat/phase3-wave1-ap-physics-1 |
+| 2 | 2 | ap-physics-2 | 33 | 72/179 (40%) | ~2.5 h | 5 | feat/phase3-wave2-ap-physics-2 |
+| 3 | 3 | ap-biology | 17 | 89/179 (50%) | ~1.5 h | 3 | feat/phase3-wave3-ap-biology |
+| 4 | 4 | ap-chemistry | 15 | 104/179 (58%) | ~1.5 h | 3 | feat/phase3-wave4-ap-chemistry |
+| 5 | 5 | ap-physics-c | 10 | 114/179 (64%) | ~1 h | 2 | feat/phase3-wave5-ap-physics-c |
+| 6 | 6 | ngss-hs | 13 | 127/179 (71%) | ~1.25 h | 2 | feat/phase3-wave6-ngss-hs |
+| 7 | 7 | ngss-ms | 26 | 153/179 (85%) | ~2 h | 5 | feat/phase3-wave7-ngss-ms |
+| 8 | 8 | elementary-k5 | 23 | 176/179 (98%) | ~2 h | 5 | feat/phase3-wave8-elementary-k5 |
+| 9 | 9 | general | 3 | 179/179 (100%) | ~30 min | 1 | feat/phase3-wave9-math-general |
+| 10 | — | Verification | — | 179 verified | ~1 h | 0 | chore/phase3-completion-gate |
+
+**Total: 11 tasks, 11 PRs, ~16 hours wall-clock orchestration over 3-4 calendar days at sprint cadence.** Subagent compute runs concurrent within each wave; calendar days are bounded by Vercel preview rate-limits (≥30 min cooldown between merges) and human review turnaround between waves, not by writing time.
