@@ -3,6 +3,18 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { envConfigs } from '@/config';
 import { defaultLocale, locales } from '@/config/locale';
 
+/**
+ * Search engine site verification tokens. These render as
+ * `<meta name="<provider>-site-verification" content="..."/>` in <head>.
+ *
+ * Add new providers here as we onboard them (Bing uses `msvalidate.01`,
+ * Yandex uses `yandex-verification`, etc.). Tokens are public — they only
+ * prove ownership when paired with the actual provider's check.
+ */
+const SITE_VERIFICATION = {
+  google: 'QsGYpRa4AU-LG4G1xaPiBLVB2t9I_nF8-50h3hr3g_Q',
+} as const;
+
 function normalizePath(path: string) {
   if (!path) {
     return '/';
@@ -164,6 +176,9 @@ export function getMetadata(
       robots: {
         index: options.noIndex ? false : true,
         follow: options.noIndex ? false : true,
+      },
+      verification: {
+        google: SITE_VERIFICATION.google,
       },
     };
   };
