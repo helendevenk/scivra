@@ -103,7 +103,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: "Free Interactive Science Labs | Scivra",
     description:
-      "Explore 179+ free interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Aligned with AP, NGSS, and K-12 standards.",
+      "Explore 179 interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Three free, no sign-up. Aligned with AP, NGSS, and K-12 standards.",
     keywords:
       "virtual labs, science experiments, physics simulations, chemistry labs, biology labs, interactive learning, AP Physics, NGSS",
     alternates: getPageAlternates('/labs', locale),
@@ -142,7 +142,7 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
     "@type": "CollectionPage",
     name: "Interactive Science Labs",
     description:
-      "Browse 179+ free interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Aligned with AP, NGSS, and K-12 standards.",
+      "Browse 179 interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Three free, no sign-up. Aligned with AP, NGSS, and K-12 standards.",
     url: labsUrl,
     inLanguage: locale,
     isPartOf: {

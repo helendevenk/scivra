@@ -138,6 +138,8 @@ export const photosynthesis: Experiment = {
     parameterExplanations: {
       lightIntensity:
         "Photons per second hitting the leaf. Low light is the limiting factor — rate climbs linearly. Past a saturation point, other steps (CO2 fixation, enzyme speed) become limiting and rate plateaus.",
+      co2Concentration:
+        "Substrate for the Calvin cycle. Atmospheric CO2 today is ~420 ppm. Below this, the rate is CO2-limited even with bright light; well above ~1000 ppm, RuBisCO saturates. Greenhouse growers boost CO2 to ~1200 ppm to push the rate up.",
       temperature:
         "Affects the enzymes of the Calvin cycle. Below ~10°C, RuBisCO is sluggish; around 25-35°C is optimal; above ~40°C enzymes start to denature and rate falls. Classic enzyme-temperature curve.",
       wavelength:

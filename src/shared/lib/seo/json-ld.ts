@@ -182,15 +182,38 @@ export function buildWebPageJsonLd(input: {
 
 /**
  * Build a SoftwareApplication JSON-LD for product/tool pages (UPG etc).
+ *
+ * `offers` is always emitted as an AggregateOffer when `priceRange` is given,
+ * with concrete `lowPrice`/`highPrice`. AggregateOffer with only a free-form
+ * priceRange string is not a valid Schema.org AggregateOffer (Google ignores
+ * it), so we either emit a single Offer (free) or an AggregateOffer with the
+ * required price bounds.
  */
 export function buildSoftwareApplicationJsonLd(input: {
   name: string;
   description: string;
   url: string;
   applicationCategory?: string;
-  priceRange?: string;
+  /** Pair of [lowPriceUSD, highPriceUSD] when offering a paid plan range. */
+  priceRangeUSD?: { low: string; high: string };
   operatingSystem?: string;
 }): Record<string, unknown> {
+  const offers: Record<string, unknown> = input.priceRangeUSD
+    ? {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'USD',
+        lowPrice: input.priceRangeUSD.low,
+        highPrice: input.priceRangeUSD.high,
+        offerCount: 3,
+        availability: 'https://schema.org/InStock',
+      }
+    : {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        price: '0',
+        availability: 'https://schema.org/InStock',
+      };
+
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -199,19 +222,7 @@ export function buildSoftwareApplicationJsonLd(input: {
     url: input.url,
     applicationCategory: input.applicationCategory ?? 'EducationalApplication',
     operatingSystem: input.operatingSystem ?? 'Web',
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'USD',
-      price: '0',
-      availability: 'https://schema.org/InStock',
-    },
-    ...(input.priceRange && {
-      offers: {
-        '@type': 'AggregateOffer',
-        priceCurrency: 'USD',
-        priceRange: input.priceRange,
-      },
-    }),
+    offers,
   };
 }
 

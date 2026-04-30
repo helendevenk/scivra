@@ -4,7 +4,7 @@ import { getThemePage } from '@/core/theme';
 import {
   buildFaqPageJsonLd,
   buildOrganizationJsonLd,
-  buildWebsiteSearchActionJsonLd,
+  buildWebsiteJsonLd,
   serializeJsonLd,
 } from '@/shared/lib/seo/json-ld';
 import { getSiteUrl } from '@/shared/lib/seo';
@@ -50,7 +50,11 @@ export default async function LandingPage({
   const siteUrl = getSiteUrl();
   const siteName = 'Scivra';
 
-  const websiteJsonLd = buildWebsiteSearchActionJsonLd({ siteUrl, siteName });
+  // Note: SearchAction was removed because Scivra has no free-text search route
+  // wired up yet. Re-enable buildWebsiteSearchActionJsonLd() when /search or
+  // /labs?q= is functional. Pointing at a non-existent search target is a
+  // schema-content drift Google can flag.
+  const websiteJsonLd = buildWebsiteJsonLd({ siteUrl, siteName });
   const organizationJsonLd = buildOrganizationJsonLd({ siteUrl, siteName });
 
   const faqSection = t.raw('faq') as

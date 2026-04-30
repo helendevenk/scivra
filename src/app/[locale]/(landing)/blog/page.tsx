@@ -16,6 +16,20 @@ import {
 } from '@/shared/types/blocks/blog';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
+/**
+ * Best-effort ISO 8601 conversion for blog post dates that may arrive as
+ * display strings ("Mar 28, 2026") from the post model. Returns undefined
+ * when the input is missing or unparseable so we omit datePublished rather
+ * than emit an inaccurate value.
+ */
+function toIsoDate(input: string | undefined): string | undefined {
+  if (!input) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(input)) return input;
+  const ms = Date.parse(input);
+  if (Number.isNaN(ms)) return undefined;
+  return new Date(ms).toISOString();
+}
+
 export const revalidate = 3600;
 
 export const generateMetadata = getMetadata({
@@ -108,12 +122,15 @@ export default async function BlogPage({
     blogPost: posts
       .filter((post) => post.slug && post.title)
       .slice(0, 20)
-      .map((post) => ({
-        '@type': 'BlogPosting',
-        headline: post.title,
-        url: getAbsoluteUrl(getLocalizedPath(`/blog/${post.slug}`, locale)),
-        ...(post.created_at && { datePublished: post.created_at }),
-      })),
+      .map((post) => {
+        const isoDate = toIsoDate(post.created_at) ?? toIsoDate(post.date);
+        return {
+          '@type': 'BlogPosting',
+          headline: post.title,
+          url: getAbsoluteUrl(getLocalizedPath(`/blog/${post.slug}`, locale)),
+          ...(isoDate && { datePublished: isoDate }),
+        };
+      }),
   };
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
