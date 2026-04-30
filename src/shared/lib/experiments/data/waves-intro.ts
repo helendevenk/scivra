@@ -61,7 +61,7 @@ export const wavesIntro: Experiment = {
       amplitude:
         "The maximum displacement of the medium from its rest position, in centimeters. Larger amplitude means a louder sound or a taller water crest, but it does not change the wavelength or the speed of the wave.",
       wave_type:
-        "Switches the visualization between a transverse water wave (the surface oscillates up and down while the wave travels sideways) and a longitudinal sound wave (air molecules compress and rarefy along the direction of travel). Use this control to compare the two wave geometries side by side.",
+        "Switches the visualization between an intro transverse surface-wave model (the surface marker oscillates up and down while the wave travels sideways) and a longitudinal sound wave (air molecules compress and rarefy along the direction of travel). Use this control to compare the two wave geometries side by side.",
     },
     misconceptions: [
       {
@@ -74,7 +74,7 @@ export const wavesIntro: Experiment = {
         wrong:
           "Sound waves are like water waves — both are transverse, with the medium moving up and down.",
         correct:
-          "Sound waves in air are longitudinal: the air molecules oscillate back and forth along the direction the wave travels, creating compressions and rarefactions. Water surface waves are transverse. The wave_type control lets you see the difference directly.",
+          "Sound waves in air are longitudinal: the air molecules oscillate back and forth along the direction the wave travels, creating compressions and rarefactions. This intro surface-wave model shows transverse motion, while real water waves can include both vertical and horizontal particle motion. The wave_type control lets you compare the simplified geometries directly.",
       },
       {
         wrong:
@@ -86,7 +86,7 @@ export const wavesIntro: Experiment = {
         wrong:
           "Higher frequency waves travel faster than lower frequency waves.",
         correct:
-          "In a single medium, all frequencies travel at the same speed. Sound at 100 Hz and 8000 Hz both travel through 20°C air at about 343 m/s — that is why a band on stage stays in sync no matter where you sit.",
+          "In a non-dispersive medium, different frequencies travel at the same speed. Sound at 100 Hz and 8000 Hz both travel through 20°C air at about 343 m/s — that is why a band on stage stays in sync no matter where you sit. Some media, including water-surface waves, are dispersive, so this rule has limits.",
       },
       {
         wrong:

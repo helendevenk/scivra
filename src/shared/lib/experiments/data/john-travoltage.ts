@@ -106,7 +106,7 @@ export const johnTravoltage: Experiment = {
       {
         question: "Why are electronics so sensitive to static when humans barely feel it?",
         answer:
-          "Modern semiconductor gates are nanometers thick and break down at fields well below air's 3 MV/m. A human-imperceptible 100 V discharge — far too small to feel — can punch through a transistor's oxide layer and ruin a chip. That's why every chip-handling environment is grounded, humidified, and ESD-controlled.",
+          "Modern semiconductor gates are nanometers thick, so even modest voltages can create enormous electric fields across the oxide. Gate oxides can tolerate fields far above air's 3 MV/m, but the tiny thickness means a human-imperceptible discharge can still exceed the oxide limit and ruin a chip. That's why every chip-handling environment is grounded, humidified, and ESD-controlled.",
       },
       {
         question: "How does this lab map to AP Physics 2 standard CHA-1.A?",

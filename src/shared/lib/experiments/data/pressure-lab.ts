@@ -30,7 +30,7 @@ export const pressureLab: Experiment = {
 
   formulas: [
     { latex: "P = P_0 + \\rho g h", description: "Fluid pressure at depth h" },
-    { latex: "P_1 A_1 = P_2 A_2", description: "Pascal's Principle (hydraulic lever)" },
+    { latex: "\\frac{F_1}{A_1}=\\frac{F_2}{A_2}", description: "Pascal's Principle (hydraulic lever)" },
     { latex: "P + \\frac{1}{2}\\rho v^2 + \\rho g h = \\text{const}", description: "Bernoulli's Equation" },
   ],
 
@@ -60,7 +60,7 @@ export const pressureLab: Experiment = {
       fluid_density:
         "How tightly packed the fluid is, in kg/m³. Pressure at a given depth scales linearly with density: water (1000) gives 9800 Pa per meter, while mercury (13,600) gives 133,000 Pa per meter — which is why barometers use mercury instead of water.",
       depth:
-        "How far below the fluid surface the probe sits, in meters. Pressure rises linearly with depth at exactly ρg per meter, regardless of container shape, fluid volume, or what's above the surface.",
+        "How far below the fluid surface the probe sits, in meters. Gauge pressure rises linearly with depth at exactly ρg per meter, regardless of container shape or fluid volume; absolute pressure also includes the pressure applied at the surface.",
       atm_pressure:
         "Pressure at the fluid surface, in atmospheres. This adds on top of the depth term to give absolute pressure. Standard atmosphere is 1 atm ≈ 101,325 Pa; on Mt. Everest it drops to about 0.33 atm.",
       area:

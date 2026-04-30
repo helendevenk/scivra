@@ -38,7 +38,7 @@ export const quantumCoinToss: Experiment = {
   challenges: [
     { id: "qct-c1", question: "At θ=90°, what is P(heads)? Why is this the 'most quantum' state?", hint: "P = cos²(45°) = 0.5; equal superposition is maximally indeterminate", tier: "free" },
     { id: "qct-c2", question: "At θ=0°, what happens before and after measurement?", hint: "θ=0° → state is |0⟩; P(0)=1, P(1)=0; measurement always gives 0", tier: "free" },
-    { id: "qct-c3", question: "Why can't quantum randomness be predicted even with perfect knowledge of the state?", hint: "The Copenhagen interpretation: superposition is real; there is no hidden variable determining the outcome", tier: "pro" },
+    { id: "qct-c3", question: "Why can't quantum randomness be predicted even with perfect knowledge of the state?", hint: "Superposition is real; local hidden-variable models cannot preassign all measurement outcomes", tier: "pro" },
   ],
 
   wave: 8,
@@ -52,7 +52,7 @@ export const quantumCoinToss: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "Schrödinger's cat is the famous teaching trick: a cat in a box that's somehow both alive and dead until you peek. Behind the metaphor is a concrete fact about quantum systems — they can occupy multiple states simultaneously, with definite probabilities for each, until something interacts with them. This simulation gives you a controllable version of that strangeness: a quantum coin whose 'heads' and 'tails' probabilities you set with a dial called the superposition angle θ. At θ=0° the coin is definitely heads, at θ=180° definitely tails, at θ=90° an equal mixture — a real superposition with no defined value until you measure. Toss it once and watch the wavefunction collapse. Toss it a thousand times and watch P(0) = cos²(θ/2) emerge. The Bloch sphere gives you the geometric picture used by every quantum computer scientist: every qubit state is a point on a unit sphere.",
+      "Schrödinger's cat is the famous teaching trick: a cat in a box that's somehow both alive and dead until you peek. Behind the metaphor is a concrete fact about quantum systems — they can occupy multiple states simultaneously, with definite probabilities for each, until something interacts with them. This simulation gives you a controllable version of that strangeness: a quantum coin whose 'heads' and 'tails' probabilities you set with a dial called the superposition angle θ. At θ=0° the coin is definitely heads, at θ=180° definitely tails, at θ=90° an equal superposition — not a classical mixture — with no defined value until you measure. Toss it once and watch the wavefunction collapse. Toss it a thousand times and watch P(0) = cos²(θ/2) emerge. The Bloch sphere gives you the geometric picture used in quantum information: every qubit state is a point on a unit sphere.",
     parameterExplanations: {
       superposition_angle:
         "The angle θ on the Bloch sphere that controls the qubit state |ψ⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩. This sets the probability of measuring 0 versus 1: P(0) = cos²(θ/2), P(1) = sin²(θ/2). At θ=0° you get P(0)=1 (always heads). At θ=180° you get P(1)=1 (always tails). At θ=90° both probabilities are 0.5 — the maximally indeterminate equal superposition. Sweeping θ across the slider continuously biases the coin between certain heads and certain tails, with everything in between being a real quantum superposition.",
@@ -70,7 +70,7 @@ export const quantumCoinToss: Experiment = {
         wrong:
           "Quantum superposition is just classical probability — we don't know the answer until we look, like a covered die.",
         correct:
-          "It's deeper than that. A covered die already has a value; we just don't know it. A qubit at θ=90° genuinely has no defined value until measurement — and that's testable. Bell-inequality experiments show that quantum systems violate the predictions any classical hidden-variable model would make. So 'we just haven't checked yet' is wrong; the absence of a defined value is a real, physical fact about quantum systems.",
+          "It's deeper than that. A covered die already has a value; we just don't know it. A qubit at θ=90° genuinely has no defined value until measurement — and that's testable. Bell-inequality experiments show that quantum systems violate the predictions local hidden-variable models would make. So 'we just haven't checked yet' is wrong; the absence of a defined value is a real, physical fact about quantum systems.",
       },
       {
         wrong:
@@ -116,7 +116,7 @@ export const quantumCoinToss: Experiment = {
       {
         question: "How does this connect to AP Physics 2 MOD-4.A?",
         answer:
-          "MOD-4.A covers the basics of quantum behavior: superposition, measurement, and probabilistic outcomes. The quantum coin is the cleanest possible illustration of all three. Students see that a system can occupy a non-classical mixture of two states, that measurement produces one definite result, and that the predicted probabilities match the observed frequencies after many tosses. That trio is exactly what AP Physics 2 expects students to articulate qualitatively.",
+          "MOD-4.A covers the basics of quantum behavior: superposition, measurement, and probabilistic outcomes. The quantum coin is the cleanest possible illustration of all three. Students see that a system can occupy a non-classical superposition of two states, that measurement produces one definite result, and that the predicted probabilities match the observed frequencies after many tosses. That trio is exactly what AP Physics 2 expects students to articulate qualitatively.",
       },
     ],
   },

@@ -104,7 +104,7 @@ export const coulombsLaw: Experiment = {
       {
         question: "How is Coulomb's law different from Newton's law of gravity?",
         answer:
-          "The shape is identical: F = (constant)(source 1)(source 2)/r². The differences are charge has two signs (so the force can attract or repel) while mass has only one (gravity always attracts), and the Coulomb constant is roughly 10³⁹ times larger than the gravitational constant per unit charge versus mass. Between two electrons, electricity beats gravity by that same astronomical factor.",
+          "The shape is identical: F = (constant)(source 1)(source 2)/r². The differences are charge has two signs (so the force can attract or repel) while mass has only one (gravity always attracts). For two electrons, the dimensionless force ratio k e²/(G m_e²) is about 10⁴², so electric repulsion overwhelms gravitational attraction.",
       },
       {
         question: "Does Coulomb's law work for objects that aren't point charges?",

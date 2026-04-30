@@ -80,7 +80,7 @@ export const buoyancyBasics: Experiment = {
       },
       {
         wrong:
-          "An apple floats because apples have seeds and skin that hold them up.",
+          "An apple floats because its shape traps air pockets, so the whole apple has a lower average density than water.",
         correct:
           "An apple is mostly water with some sugars and air pockets, giving it a density slightly less than water. Drop a peeled, seeded apple into water and it still floats. The skin and seeds don't change the rule.",
       },

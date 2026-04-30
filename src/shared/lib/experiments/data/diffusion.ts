@@ -38,7 +38,7 @@ export const diffusion: Experiment = {
   instructions:
     "The simulation starts with high concentration on the left and low on the right. Watch particles drift across the membrane. Increase temperature to speed up diffusion. Change pore size to limit which particles cross. Plot concentration vs. time to see exponential equilibration.",
   challenges: [
-    { id: "di-c1", question: "How does doubling the temperature affect diffusion rate?", hint: "D ∝ √T, so doubling T increases D by √2 ≈ 1.41", tier: "free" },
+    { id: "di-c1", question: "How does doubling the temperature affect diffusion rate?", hint: "In the Stokes-Einstein liquid model, D ∝ T, so doubling T doubles D if viscosity and particle radius stay fixed", tier: "free" },
     { id: "di-c2", question: "At equilibrium, do particles stop moving? Why?", hint: "Particles continue moving randomly but net flux = 0", tier: "free" },
     { id: "di-c3", question: "Why does a larger pore size increase diffusion flux proportionally but larger molecules diffuse more slowly?", hint: "Pore size sets the cross-sectional area; molecular mass affects D via √(1/m)", tier: "pro" },
   ],
@@ -57,7 +57,7 @@ export const diffusion: Experiment = {
       "Open a bottle of perfume across the room and the scent reaches you in a few minutes. Drop ink into still water and the color spreads outward without stirring. Every such observation is diffusion: net movement of particles from high to low concentration, driven entirely by random thermal motion. No pumping — every molecule wanders independently, but because there are more on the high-concentration side, statistically more cross to the low side. Fick's First Law captures it: J = −D · ΔC/Δx, where flux is proportional to the gradient and D depends on temperature, mass, and medium. Add a semi-permeable membrane and you get osmosis — the case where the diffusing species is the solvent crossing in response to solute concentration. This lab puts a two-chamber box on screen with a tunable membrane, lets you set temperature and concentrations, and shows the molecular dance plus the concentration-vs-time curve.",
     parameterExplanations: {
       temp:
-        "Absolute temperature in kelvin. Temperature controls how fast molecules move; KE_avg = (3/2)k_B T. Higher T means faster molecules, which means more frequent membrane crossings, which means a larger diffusion coefficient (D ∝ √T from the kinetic-theory derivation). Doubling T from 300 K to 600 K speeds diffusion by a factor of √2 ≈ 1.41 — a significant boost, which is why warm tea brews faster than iced tea.",
+        "Absolute temperature in kelvin. Temperature controls molecular kinetic energy; KE_avg = (3/2)k_B T. In the liquid Brownian-motion model used here, the Stokes-Einstein relation gives D = k_B T/(6πηr), so doubling T from 300 K to 600 K doubles D if viscosity η and particle radius r stay fixed. Real liquids also change viscosity with temperature, which is why warm tea brews much faster than iced tea.",
       conc_left:
         "Particle concentration in the left chamber, in mol/L. Sets the high-concentration side at start. Fick's First Law J = −D · ΔC/Δx says the flux is proportional to the difference between left and right; bigger gradient means faster initial flow. As particles diffuse rightward, conc_left drops and the gradient shrinks, so the diffusion rate slows over time — that's why concentration vs. time curves bend toward equilibrium exponentially.",
       conc_right:

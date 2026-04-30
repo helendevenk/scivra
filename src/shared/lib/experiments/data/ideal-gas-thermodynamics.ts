@@ -148,7 +148,7 @@ export const idealGasThermodynamics: Experiment = {
       pressure:
         "Pressure of the gas in atmospheres (1 atm ≈ 101 kPa). On the PV diagram, pressure is the vertical axis. In an isobaric process P is constant — the path is a horizontal line, and the work done is just W = PΔV. Isothermal and adiabatic curves both bend, but the adiabatic is steeper because the gas's temperature drops as it expands.",
       process_type:
-        "Selects which thermodynamic process you're running: 0 = isothermal (T constant, the curve is a hyperbola PV = const), 1 = isobaric (P constant, horizontal line, W = PΔV), 2 = isochoric (V constant, vertical line, W = 0), 3 = adiabatic (no heat exchange, Q = 0, the curve PV^γ = const is steeper than the isotherm). For the same start-and-end states, each process encloses a different area, so each delivers a different amount of work.",
+        "Selects which thermodynamic process you're running: 0 = isothermal (T constant, the curve is a hyperbola PV = const), 1 = isobaric (P constant, horizontal line, W = PΔV), 2 = isochoric (V constant, vertical line, W = 0), 3 = adiabatic (no heat exchange, Q = 0, the curve PV^γ = const is steeper than the isotherm). Each constraint creates a different path on the PV diagram, and work depends on the area under that path.",
       moles:
         "Amount of gas in moles, scaling the entire diagram through PV = nRT. Doubling n at fixed T and P doubles V; the PV curve shifts outward without changing shape. Useful for comparing how a 1 mol cylinder behaves vs. a 0.1 mol research sample — the physics is identical, only the scale changes.",
     },
@@ -185,7 +185,7 @@ export const idealGasThermodynamics: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Process derby: assign each lab group one process (isothermal, isobaric, isochoric, adiabatic) starting and ending at the same two states. Have them compute the work done by reading the area off the PV diagram and compare answers. Students rediscover that work depends on path, not on endpoints.",
+      "Process derby: assign each lab group one process (isothermal, isobaric, isochoric, adiabatic) from the same initial state. Have them compute the work done by reading the area off the PV diagram and compare how the different constraints lead to different final states and different work values.",
       "First-law accounting: at each step of the simulation, have students fill in a 4-column table — Q, W, ΔU, ΔT — for each process. Use the entries to discover that for isochoric W = 0, for adiabatic Q = 0, for isothermal ΔU = 0, and for isobaric every term can be nonzero.",
       "Bike pump demo: set the simulation to adiabatic compression, then have students hand-hold a bike pump and feel the barrel warm up after a few fast strokes. Connect the felt experience to the simulation's temperature readout.",
       "Pre-engine introduction: run a closed cycle of two isobaric and two isochoric segments to show students a 'rectangular' engine cycle. Ask them to compute the area enclosed and use it as the bridge into the heat-engine lab.",
@@ -205,7 +205,7 @@ export const idealGasThermodynamics: Experiment = {
       {
         question: "Why is PV = nRT called the 'ideal' gas law? When does it fail?",
         answer:
-          "It assumes molecules have zero volume and don't attract or repel each other. Both assumptions break at high pressure (molecules get crowded) and low temperature (intermolecular forces become comparable to kinetic energy). Real gases obey corrections like the van der Waals equation (P + a/V²)(V − b) = nRT under those conditions. For typical AP problems near room temperature and 1 atm, the deviations are under a few percent.",
+          "It assumes molecules have zero volume and don't attract or repel each other. Both assumptions break at high pressure (molecules get crowded) and low temperature (intermolecular forces become comparable to kinetic energy). Real gases obey corrections like the van der Waals equation (P + an²/V²)(V − nb) = nRT for n moles under those conditions. For typical AP problems near room temperature and 1 atm, the deviations are under a few percent.",
       },
       {
         question: "What is the difference between isothermal and adiabatic compression?",

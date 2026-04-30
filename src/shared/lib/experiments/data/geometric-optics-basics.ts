@@ -110,7 +110,7 @@ export const geometricOpticsBasics: Experiment = {
       {
         question: "How do I know if a focal length should be positive or negative?",
         answer:
-          "By convention, converging optics (convex lens, concave mirror) have positive f and diverging optics (concave lens, convex mirror) have negative f. The sign just tells you which side of the lens the focal point sits on. Plug in with the right sign and the thin lens equation will give you a correctly signed image distance — positive d_i means a real image on the far side, negative d_i means a virtual image on the same side as the object.",
+          "By convention, converging optics (convex lens, concave mirror) have positive f and diverging optics (concave lens, convex mirror) have negative f. For a thin lens, positive d_i means a real image on the far side of the lens, while negative d_i means a virtual image on the same side as the object. Mirror sign conventions use the reflective side instead, so keep the lens and mirror cases separate when you plug into the equation.",
       },
       {
         question: "What does the thin-lens approximation actually assume?",

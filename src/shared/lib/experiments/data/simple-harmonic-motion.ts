@@ -94,8 +94,8 @@ export const simpleHarmonicMotion: Experiment = {
     "Adjust the spring constant k and mass m to observe how period changes. Notice that changing amplitude does NOT affect the period — try it. Watch the energy bar at the bottom show Ek and Ep cycling. Use the damping slider (Pro) to explore energy dissipation.",
 
   hook: {
-    question: "If you double the amplitude of a pendulum, does it take longer to swing?",
-    context: "Most people guess yes, but the answer is no — period is completely independent of amplitude in simple harmonic motion.",
+    question: "If you double the amplitude of an ideal spring oscillator, does it take longer to complete a cycle?",
+    context: "Most people guess yes, but the answer is no for ideal simple harmonic motion — the period is independent of amplitude when the restoring force is exactly linear.",
     actionPrompt: "Test it yourself — drag the amplitude slider and watch the period stay constant",
   },
 
@@ -224,7 +224,7 @@ export const simpleHarmonicMotion: Experiment = {
       amplitude:
         "The maximum displacement A from equilibrium in meters. Crucially, amplitude does NOT affect the period — that's the punchline of SHM. It does set the total energy (E = ½kA²) and the maximum speed (v_max = Aω), so larger A means a faster zip through the middle but the same round-trip time.",
       damping:
-        "The damping coefficient b in kg/s (Pro). Damping converts mechanical energy to heat at a rate proportional to velocity, so the amplitude envelope decays exponentially as A(t) = A₀ e^(−bt/2m). Critical damping (b² = 4mk) is the fastest return to equilibrium without overshoot.",
+        "The damping coefficient b in kg/s (Pro). Linear damping uses a force proportional to velocity, F_d = -bv; the instantaneous power loss is proportional to v². The amplitude envelope decays exponentially as A(t) = A₀ e^(−bt/2m). Critical damping (b² = 4mk) is the fastest return to equilibrium without overshoot.",
     },
     misconceptions: [
       {

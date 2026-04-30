@@ -33,13 +33,13 @@ export const buildANucleus: Experiment = {
   ],
 
   theory:
-    "Atomic nuclei are held together by the strong nuclear force, which overcomes electromagnetic repulsion between protons. Stability depends on the neutron-to-proton ratio. Too many or too few neutrons lead to radioactive decay. Binding energy per nucleon peaks near iron-56, explaining why fusion releases energy for light elements and fission releases energy for heavy elements.",
+    "Atomic nuclei are held together by the strong nuclear force, which overcomes electromagnetic repulsion between protons. Stability depends on the neutron-to-proton ratio. Too many or too few neutrons lead to radioactive decay. Binding energy per nucleon peaks in the iron-nickel region (with Ni-62 slightly highest), explaining why fusion releases energy for light elements and fission releases energy for heavy elements.",
   instructions:
     "Click to add protons (red) and neutrons (blue) to the nucleus. Watch the stability indicator and binding energy chart. Unstable nuclei show the predicted decay mode (alpha, beta+, beta−, or gamma).",
   challenges: [
     { id: "bn-c1", question: "How many neutrons does carbon-12 have? Is it stable?", hint: "Z=6 for carbon; neutrons = 12−6 = 6", tier: "free" },
     { id: "bn-c2", question: "What happens when you add a neutron to make carbon-13 vs carbon-14?", hint: "Carbon-13 is stable; carbon-14 undergoes beta decay", tier: "free" },
-    { id: "bn-c3", question: "Why does iron-56 have the highest binding energy per nucleon?", hint: "It sits at the optimal balance of nuclear force vs. Coulomb repulsion", tier: "pro" },
+    { id: "bn-c3", question: "Why is the binding-energy peak near iron and nickel so important?", hint: "That region sits near the optimal balance of nuclear force vs. Coulomb repulsion", tier: "pro" },
   ],
 
   wave: 8,
@@ -71,7 +71,7 @@ export const buildANucleus: Experiment = {
         wrong:
           "Adding more protons always makes the nucleus more stable because more particles means more strong-force binding.",
         correct:
-          "Strong-force binding is short-range — each nucleon only interacts with its neighbors. Coulomb repulsion is long-range — every proton pushes on every other proton through the entire nucleus. So as Z grows, repulsion grows faster than binding. That's why binding energy per nucleon peaks near iron-56 and falls off afterward, and why every element heavier than lead is unstable.",
+          "Strong-force binding is short-range — each nucleon only interacts with its neighbors. Coulomb repulsion is long-range — every proton pushes on every other proton through the entire nucleus. So as Z grows, repulsion grows faster than binding. That's why binding energy per nucleon peaks in the iron-nickel region and falls off afterward, and why every element heavier than lead is unstable.",
       },
       {
         wrong:
@@ -89,15 +89,15 @@ export const buildANucleus: Experiment = {
     teacherUseCases: [
       "Valley-of-stability mapping: students build every stable isotope they can find, plot N vs. Z, and connect the dots. They should discover the curving band that separates stable from unstable nuclei — and notice that beyond Z=82 the band ends.",
       "Carbon trio investigation: build carbon-11, carbon-12, carbon-13, and carbon-14. Students predict which are stable and which decay, then check. This sets up radiocarbon dating and PET imaging in one exercise.",
-      "Binding-energy-per-nucleon plot: walk through binding energy from hydrogen up to uranium. The peak at iron-56 is the most important graph in nuclear physics because it explains why fusion releases energy below iron and fission releases energy above it.",
+      "Binding-energy-per-nucleon plot: walk through binding energy from hydrogen up to uranium. The peak in the iron-nickel region is the most important graph in nuclear physics because it explains why fusion releases energy below that region and fission releases energy above it.",
       "Magic numbers exploration: have students try to assemble nuclei with 2, 8, 20, 28, 50, 82, or 126 of either nucleon and observe extra stability. This connects to the nuclear shell model the way noble gases connect to electron shells.",
       "Predict-then-check decay modes: students propose what kind of decay they expect for unstable nuclei (alpha for big nuclei, beta-minus for neutron-heavy, beta-plus for proton-heavy) and verify against the simulation's predicted decay mode display.",
     ],
     faq: [
       {
-        question: "Why does iron-56 have the highest binding energy per nucleon?",
+        question: "Why is the binding-energy-per-nucleon peak near iron and nickel?",
         answer:
-          "It's the optimum balance point. Below iron, nuclei aren't fully exploiting the short-range strong force — adding more nucleons gains you binding faster than repulsion grows. Above iron, Coulomb repulsion between the many protons starts to dominate, so adding more nucleons costs you binding. Iron-56 sits exactly where those two curves cross, which is why fusion releases energy below it (powering stars) and fission releases energy above it (powering reactors and bombs).",
+          "It's the optimum balance region. Below the iron-nickel peak, nuclei gain binding faster than Coulomb repulsion grows; above it, repulsion among many protons starts to dominate, so adding more nucleons costs binding. Ni-62 has the slightly highest binding energy per nucleon, while Fe-56 is a common stellar endpoint shorthand. That peak explains why fusion releases energy below the region and fission releases energy above it.",
       },
       {
         question: "What's the difference between mass number and atomic number?",

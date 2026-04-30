@@ -142,9 +142,9 @@ export const singleSlitDiffraction: Experiment = {
     misconceptions: [
       {
         wrong:
-          "Diffraction proves light is a particle.",
+          "Diffraction proves light is only a wave and has no particle behavior.",
         correct:
-          "The opposite — diffraction is a wave phenomenon. Particles fired through a slit would just make a single bright stripe matching the slit shape. The bands you see only make sense if you treat light as a wave whose components can interfere constructively and destructively. (The photoelectric effect is what later forced light to also behave like particles.)",
+          "Diffraction is wave behavior, but it does not erase photon evidence. A beam of many photons builds the same diffraction pattern one detection at a time, while the photoelectric effect shows that light energy arrives in quanta. The modern picture needs both: wave amplitudes set probabilities, and photons arrive as discrete events.",
       },
       {
         wrong:
@@ -162,7 +162,7 @@ export const singleSlitDiffraction: Experiment = {
         wrong:
           "If I cover half the slit, the pattern just gets dimmer by half.",
         correct:
-          "Reducing the slit width a doesn't merely halve brightness — it changes the geometry. The central maximum gets wider, the angles of the minima shift, and the total transmitted power drops more than linearly. You don't get half a pattern; you get a different pattern.",
+          "Reducing the slit width a doesn't merely dim the same image — it changes the geometry. The central maximum gets wider, the angles of the minima shift, and for uniform illumination through a fixed-height slit the transmitted power drops roughly in proportion to the slit width. You don't get half a pattern; you get a different pattern.",
       },
       {
         wrong:

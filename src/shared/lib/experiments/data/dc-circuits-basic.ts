@@ -6,7 +6,7 @@ export const dcCircuitsBasic: Experiment = {
   title: "DC Circuits — Ohm's Law",
   subtitle: "Series and parallel resistors with live current visualization",
   description:
-    "Watch electrons flow through glowing circuit paths. Adjust voltage and resistance to verify Ohm's Law, then switch between series and parallel configurations to see how equivalent resistance and current distribution change in real time.",
+    "Watch conventional current flow through glowing circuit paths. Adjust voltage and resistance to verify Ohm's Law, then switch between series and parallel configurations to see how equivalent resistance and current distribution change in real time.",
   thumbnail: "/imgs/experiments/dc-circuits.png",
 
   standards: {
@@ -102,7 +102,7 @@ export const dcCircuitsBasic: Experiment = {
   theory:
     "Ohm's Law states that the current through a conductor is directly proportional to the voltage and inversely proportional to the resistance. In series circuits, resistors share the same current but split the voltage; the equivalent resistance is the sum of individual resistances. In parallel circuits, resistors share the same voltage but split the current; the reciprocal of equivalent resistance equals the sum of reciprocals. Understanding these two configurations is fundamental to analyzing any real-world circuit.",
   instructions:
-    "Use the Series / Parallel toggle to switch circuit configurations. Adjust voltage and resistors to observe how current (particle flow speed) and equivalent resistance change. The glowing dots represent electrons — faster movement means higher current. Blue particles flow through R₁, amber through R₂ in parallel mode.",
+    "Use the Series / Parallel toggle to switch circuit configurations. Adjust voltage and resistors to observe how current (particle flow speed) and equivalent resistance change. The glowing dots represent conventional charge flow — faster movement means higher current. Blue particles flow through R₁, amber through R₂ in parallel mode.",
   challenges: [
     {
       id: "dc-c1",
@@ -153,7 +153,7 @@ export const dcCircuitsBasic: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "Open a flashlight and you see the bare bones of a DC circuit: a battery, a switch, a bulb, two wires. Stack two bulbs end-to-end and they share the current; clip them side-by-side instead and they share the voltage. That single choice — series or parallel — changes how bright each bulb glows, how long the battery lasts, and what happens if one bulb burns out. Behind the choice are two conservation laws: charge cannot pile up at a junction (Kirchhoff's current rule) and energy gained going around a loop must equal energy lost (Kirchhoff's voltage rule). Together with V = IR, those rules let you solve any DC network on paper. In the lab below, glowing particles trace the actual electron flow as you toggle topologies, change resistor values, and watch the equivalent resistance update live.",
+      "Open a flashlight and you see the bare bones of a DC circuit: a battery, a switch, a bulb, two wires. Stack two bulbs end-to-end and they share the current; clip them side-by-side instead and they share the voltage. That single choice — series or parallel — changes how bright each bulb glows, how long the battery lasts, and what happens if one bulb burns out. Behind the choice are two conservation laws: charge cannot pile up at a junction (Kirchhoff's current rule) and energy gained going around a loop must equal energy lost (Kirchhoff's voltage rule). Together with V = IR, those rules let you solve any DC network on paper. In the lab below, glowing particles trace conventional current as you toggle topologies, change resistor values, and watch the equivalent resistance update live.",
     parameterExplanations: {
       voltage:
         "The battery's electromotive force in volts. This is the energy the battery hands to each coulomb of charge as it pushes them around the loop. Doubling the voltage doubles the current everywhere when resistors stay fixed.",

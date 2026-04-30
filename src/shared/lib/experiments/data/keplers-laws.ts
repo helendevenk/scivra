@@ -86,7 +86,7 @@ export const keplersLaws: Experiment = {
         wrong:
           "An orbit with eccentricity 0.9 is barely different from one with eccentricity 0.5.",
         correct:
-          "Eccentricity is highly nonlinear in shape. e = 0.5 looks oval; e = 0.9 looks like a long needle, with perihelion ten times closer than aphelion. Run both in the simulator and the difference is dramatic, even though the numbers seem close.",
+          "Eccentricity is highly nonlinear in shape. e = 0.5 looks oval; e = 0.9 looks like a long needle, with aphelion about 19 times farther from the focus than perihelion. Run both in the simulator and the difference is dramatic, even though the numbers seem close.",
       },
     ],
     teacherUseCases: [

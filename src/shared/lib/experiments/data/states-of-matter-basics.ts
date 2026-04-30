@@ -52,7 +52,7 @@ export const statesOfMatterBasics: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "An ice cube on the counter, water boiling in a kettle, dry ice fogging on a stage — three demonstrations of one idea: matter exists in different phases depending on how much kinetic energy its molecules have versus the bonds holding them. In a solid, molecules vibrate around fixed lattice positions. Add heat and average kinetic energy climbs (KE_avg = (3/2)k_B T) until molecules break loose — that's melting, and temperature pauses while bonds rearrange. Keep heating and molecules eventually escape the surface — that's boiling, with another plateau. The energy spent on rearrangements is latent heat, why boiling water stays at 100 °C until every drop vaporizes. This lab lets you pick a substance, drag a temperature slider from frozen-solid to gas-phase chaos, and watch the molecular level in real time. The temperature-time graph shows the characteristic plateau during phase transitions.",
+      "An ice cube on the counter, water boiling in a kettle, dry ice fogging on a stage — three demonstrations of one idea: matter exists in different phases depending on how much kinetic energy its molecules have versus the bonds holding them. In a solid, molecules vibrate around fixed lattice positions. Add heat and average kinetic energy climbs (KE_avg = (3/2)k_B T) until molecules break loose — that's melting, and temperature pauses while bonds rearrange. Keep heating a liquid and vapor bubbles form throughout the liquid once its vapor pressure matches the surrounding pressure — that's boiling, with another plateau. The energy spent on rearrangements is latent heat, why boiling water stays at 100 °C until every drop vaporizes. This lab lets you pick a substance, drag a temperature slider from frozen-solid to gas-phase chaos, and watch the molecular level in real time. The temperature-time graph shows the characteristic plateau during phase transitions.",
     parameterExplanations: {
       temperature:
         "Absolute temperature in kelvin. Kelvin is required because molecular kinetic energy is proportional to T (KE_avg = (3/2)k_B T), and that proportionality only makes sense from absolute zero. Drag the slider through the substance's melting and boiling points to watch phase transitions; notice how temperature pauses at each transition even as energy keeps flowing in — the latent heat going into bond breaking.",
@@ -82,13 +82,13 @@ export const statesOfMatterBasics: Experiment = {
         wrong:
           "Water freezes at exactly 0 °C everywhere — pressure doesn't matter.",
         correct:
-          "Water's freezing point depends on pressure. Increasing pressure lowers water's melting point slightly (a quirky property of water — most substances do the opposite). At 100 atm pressure, water freezes around -1 °C. This is also why ice skating works on a real rink: the blade locally raises pressure, helping create a thin liquid film. At very low pressure (top of Mount Everest, ~0.3 atm), water boils around 70 °C.",
+          "Water's freezing point depends on pressure. Increasing pressure lowers water's melting point slightly (a quirky property of water — most substances do the opposite). At 100 atm pressure, water freezes around -1 °C. Ice skating depends mainly on a thin lubricating layer created by frictional heating and surface effects, with pressure playing only a limited role. At very low pressure (top of Mount Everest, ~0.3 atm), water boils around 70 °C.",
       },
       {
         wrong:
           "Sublimation only happens to dry ice — water can't go directly from solid to gas.",
         correct:
-          "Water sublimates whenever its vapor pressure exceeds its solid surface vapor pressure — which happens at low pressure and low temperature. That's how snow disappears in cold dry weather without melting first, how freeze-drying works, and why ice cubes shrink in a cold freezer over months. Dry ice is just the most dramatic example because CO₂ has no liquid phase at atmospheric pressure.",
+          "Water can sublimate when molecules leave the solid directly into vapor and the surrounding air stays dry enough to carry them away. Low pressure and low humidity make that path easier, which is how snow disappears in cold dry weather without melting first, how freeze-drying works, and why ice cubes shrink in a cold freezer over months. Dry ice is the dramatic example because CO₂ has no liquid phase at atmospheric pressure.",
       },
     ],
     teacherUseCases: [

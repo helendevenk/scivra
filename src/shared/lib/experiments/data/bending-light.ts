@@ -65,7 +65,7 @@ export const bendingLight: Experiment = {
         wrong:
           "Light bends because the boundary itself pushes or repels it, like a wall deflecting a ball.",
         correct:
-          "There's no surface force kicking the ray sideways. Light slows down inside the denser medium because it is repeatedly absorbed and re-emitted by the atoms there, and when one side of an obliquely incident wavefront enters first it slows before the rest, forcing the whole front to tilt. That tilt is what we see as bending — pure wave geometry, no shove from the boundary.",
+          "There's no surface force kicking the ray sideways. Light's phase speed changes inside the denser medium because the electromagnetic wave interacts with bound charges in the material, and when one side of an obliquely incident wavefront enters first it slows before the rest, forcing the whole front to tilt. That tilt is what we see as bending — wave geometry, no shove from the boundary.",
       },
       {
         wrong:
@@ -77,7 +77,7 @@ export const bendingLight: Experiment = {
         wrong:
           "Total internal reflection is just regular reflection that happens when the surface is shiny enough.",
         correct:
-          "Total internal reflection is a wave-optics effect, not a coating effect. Above the critical angle Snell's Law has no solution (sinθ₂ would exceed 1), so 100% of the energy reflects back inside the denser medium. No mirror, no metal, no losses — that's why fiber optic signals can travel kilometers.",
+          "Total internal reflection is a wave-optics effect, not a coating effect. Above the critical angle Snell's Law has no transmitted-ray solution (sinθ₂ would exceed 1), so an ideal boundary reflects the energy back inside the denser medium while an evanescent field exists just beyond the surface. Real fibers still have small absorption and scattering losses, but the reflection can be efficient enough for signals to travel kilometers.",
       },
       {
         wrong:
@@ -103,7 +103,7 @@ export const bendingLight: Experiment = {
       {
         question: "Why does light bend when it enters a different material?",
         answer:
-          "Light slows down in denser materials because it interacts with the atoms — it is constantly being absorbed and re-emitted, and the net effect is a lower phase speed. When part of a wavefront enters the new material before the rest, that side slows first and the whole front pivots, which we see as bending. Snell's Law gives the exact geometry.",
+          "Light slows down in denser materials because the electromagnetic field drives bound charges in the material, and that collective response lowers the wave's phase speed. When part of a wavefront enters the new material before the rest, that side slows first and the whole front pivots, which we see as bending. Snell's Law gives the exact geometry.",
       },
       {
         question: "What is the critical angle and how do I calculate it?",

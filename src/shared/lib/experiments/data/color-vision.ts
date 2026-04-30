@@ -93,7 +93,7 @@ export const colorVision: Experiment = {
     ],
     teacherUseCases: [
       "RGB primary discovery: have students predict what red+green, red+blue, and green+blue will produce before they touch the sliders. Most expect brown, purple, and teal — the actual results (yellow, magenta, cyan) are a productive surprise that motivates additive vs subtractive mixing.",
-      "Cone-cell mapping: after the white-light reveal, ask students to explain why three primary intensities are enough to produce every color a human can see. Connect this to the three cone types and the response curves.",
+      "Cone-cell mapping: after the white-light reveal, ask students to explain why three primary intensities can produce a large display gamut, but not every physically visible color. Connect this to the three cone types, response curves, and the limits of RGB displays.",
       "Metamer challenge: tell students 'find at least two different RGB settings that look like the same yellow.' This is concretely possible (e.g., R=80 G=80 B=0 vs R=100 G=70 B=10) and lets them feel metamerism with their own eyes.",
       "Real-world tie-in — phone screens and color blindness: pull up a magnifying app and look at the actual RGB subpixels of a phone screen, then discuss why a person with red-green colorblindness sees a different color from the same RGB setting.",
       "Hue sweep data table: have pairs record the perceived color when red and green are both at 100%, then sweep blue from 0% to 100% in 10% increments and tabulate the apparent hue at each step. Plot the resulting hue track and discuss why equal R+G reads as yellow and how added blue desaturates it toward white.",

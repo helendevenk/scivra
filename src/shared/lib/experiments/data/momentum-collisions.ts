@@ -298,7 +298,7 @@ export const momentumCollisions: Experiment = {
         wrong:
           "A heavy truck has more momentum than a fast bullet because trucks weigh more.",
         correct:
-          "Momentum is mass times velocity, so a slow truck and a fast bullet can have the same momentum if mv lines up. A 10,000 kg truck at 1 m/s carries the same momentum as a 0.01 kg bullet at 1,000 m/s: 10,000 kg·m/s. The bullet wins on KE (½mv² scales with v²) which is why it does more damage despite the lighter mass.",
+          "Momentum is mass times velocity, so a slow massive object and a fast light object can have the same momentum if mv lines up. A 0.01 kg bullet at 1,000 m/s carries 10 kg·m/s of momentum, the same as a 10 kg cart at 1 m/s. The bullet wins on KE (½mv² scales with v²), which is why it does more damage despite the lighter mass.",
       },
     ],
     teacherUseCases: [

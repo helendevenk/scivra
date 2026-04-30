@@ -98,7 +98,7 @@ export const energySkateParkBasics: Experiment = {
     teacherUseCases: [
       "Pre-lab prediction round: ask students to rank three skaters released from the same height but with different masses by their bottom speed. Most will incorrectly pick the heaviest. Run the sim with friction off to settle the bet, then derive v = √(2gh) on the board.",
       "Energy bar collection: have pairs record KE, PE, and total energy at the top, midpoint, and bottom of the ramp for three different starting heights. Plot total energy vs. position — it should be a horizontal line. Discuss what a non-flat line would mean.",
-      "Friction worksheet: turn friction up to 0.3 and have students measure the maximum height reached on the rebound for five passes. Plot height vs. pass number and fit a curve. Use this to introduce the idea of mechanical energy decaying exponentially when drag is roughly proportional to speed.",
+      "Friction worksheet: turn friction up to 0.3 and have students measure the maximum height reached on the rebound for five passes. Plot height vs. pass number and connect the drop in height to mechanical energy lost to thermal energy each pass.",
       "Misconception probe: pause the simulation at the apex of a swing and ask students whether the skater is currently 'storing' energy or 'using' it. Listen for the word 'used up' — that's your entry point to the conservation discussion.",
       "Cross-experiment connection: pair this with the pendulum or roller coaster lab and ask students to identify what stays constant in each. Goal is generalizing energy conservation beyond the specific apparatus.",
     ],
@@ -121,7 +121,7 @@ export const energySkateParkBasics: Experiment = {
       {
         question: "Why does the skater slow down a tiny bit on each pass when friction is on?",
         answer:
-          "Each time the skater traverses the track, kinetic friction does negative work on her: W_friction = -μNd. That work removes kinetic energy and dumps it into thermal energy in the wheels and track. Because she has less mechanical energy after each pass, she can't reach the same height on the rebound, so the swing amplitude shrinks until eventually she stops at the lowest point.",
+          "Each time the skater traverses the track, kinetic friction does negative work. On a flat segment with constant normal force, W_friction = -μN d; on a curved track the general form is W_friction = -∫ μN ds along the path. That work removes mechanical energy and dumps it into thermal energy in the wheels and track, so she can't reach the same height on the rebound.",
       },
       {
         question: "How does this connect to AP Physics 1 standard 5.B.3?",

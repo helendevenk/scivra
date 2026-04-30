@@ -61,7 +61,7 @@ export const mySolarSystem: Experiment = {
       body1_mass:
         "Mass of the central body in solar masses. Larger central mass tightens orbits (v_orbit ∝ √M) and stabilizes the system against perturbations from smaller bodies.",
       body2_vel:
-        "Initial speed of the orbiting planet in km/s, applied perpendicular to its radius. Around a 1 M☉ star at 1 AU, ~30 km/s makes a circle; below 21 km/s the orbit collapses; above 42 km/s the planet escapes.",
+        "Initial speed of the orbiting planet in km/s, applied perpendicular to its radius. Around a 1 M☉ star at 1 AU, ~30 km/s makes a circle; slower launches make eccentric ellipses that dip closer to the star; above about 42 km/s the planet escapes.",
       time_scale:
         "Simulation speed multiplier. Real orbital periods are years, so a ×10 to ×100 speedup lets you watch full orbits and long-term perturbations without waiting in real time.",
     },

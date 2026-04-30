@@ -74,7 +74,7 @@ export const moleculesAndLight: Experiment = {
       },
       {
         wrong:
-          "The greenhouse effect is bad because greenhouse gases were invented by humans.",
+          "The greenhouse effect is entirely artificial and only harmful.",
         correct:
           "The natural greenhouse effect from H₂O and CO₂ keeps Earth roughly 33 K warmer than it would otherwise be — without it, the surface would freeze. The climate problem is the extra CO₂ and CH₄ humans have added since the industrial revolution, which strengthens IR absorption and shifts the equilibrium temperature upward.",
       },
@@ -88,7 +88,7 @@ export const moleculesAndLight: Experiment = {
         wrong:
           "A microwave oven heats food by sending out heat waves.",
         correct:
-          "Microwave photons match the rotational energy levels of water molecules. They twist water molecules, which then collide with neighboring molecules and convert that rotational energy into thermal motion. The microwave itself is not hot — the food heats because water absorbs the photons.",
+          "A 2.45 GHz microwave oven does not work by matching one discrete rotational energy level of water. Its alternating electric field drives polar molecules and ions in the food, and dielectric relaxation plus collisions convert that driven motion into thermal energy. The microwave field itself is not hot — the food heats because the material absorbs electromagnetic energy.",
       },
     ],
     teacherUseCases: [
