@@ -9,6 +9,7 @@ import {
 import {
   buildBreadcrumbJsonLd,
   buildWebPageJsonLd,
+  serializeJsonLd,
 } from "@/shared/lib/seo/json-ld";
 
 export const metadata: Metadata = {
@@ -47,11 +48,11 @@ export default async function TermsPage({
     <div className="mx-auto max-w-4xl px-4 py-16">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <h1 className="mb-4 text-3xl font-bold">Terms of Service</h1>
       <p className="mb-8 text-muted-foreground">Last updated: April 1, 2026</p>

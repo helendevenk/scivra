@@ -15,7 +15,7 @@ import {
   getPageAlternates,
   getSiteUrl,
 } from "@/shared/lib/seo";
-import { buildFaqPageJsonLd } from "@/shared/lib/seo/json-ld";
+import { buildFaqPageJsonLd, serializeJsonLd } from "@/shared/lib/seo/json-ld";
 
 export const revalidate = 3600;
 
@@ -345,16 +345,16 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(collectionPageJsonLd) }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
         />
       )}
     </div>

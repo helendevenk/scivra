@@ -11,7 +11,7 @@ import {
 } from '@/shared/models/learning_path';
 import { getUserInfo } from '@/shared/models/user';
 import { LearningPathDetail } from '@/shared/blocks/learning-path';
-import { buildLearningPathBasicJsonLd } from '@/shared/lib/seo/json-ld';
+import { buildLearningPathBasicJsonLd, serializeJsonLd } from '@/shared/lib/seo/json-ld';
 import { getPageAlternates, getSiteUrl } from '@/shared/lib/seo';
 
 interface Props {
@@ -89,11 +89,11 @@ export default async function LearnDetailPage({ params }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <LearningPathDetail path={path} nodes={safeNodes} progress={progress} />
     </div>

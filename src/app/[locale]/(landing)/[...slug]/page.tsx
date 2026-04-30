@@ -7,6 +7,7 @@ import { getAbsoluteUrl, getLocalizedPath, getSiteUrl } from '@/shared/lib/seo';
 import {
   buildBreadcrumbJsonLd,
   buildWebPageJsonLd,
+  serializeJsonLd,
 } from '@/shared/lib/seo/json-ld';
 import { getLocalPage } from '@/shared/models/post';
 
@@ -218,11 +219,11 @@ export default async function DynamicPage({
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
         />
         <Page locale={locale} post={staticPage} />
       </>
@@ -275,11 +276,11 @@ export default async function DynamicPage({
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
         />
         <Page locale={locale} page={pageData} />
       </>

@@ -10,6 +10,7 @@ import {
 import {
   buildBreadcrumbJsonLd,
   buildWebPageJsonLd,
+  serializeJsonLd,
 } from '@/shared/lib/seo/json-ld';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
@@ -66,11 +67,11 @@ export default async function ShowcasesPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <Page locale={locale} page={page} />
     </>

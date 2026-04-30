@@ -1,4 +1,4 @@
-import { buildFaqPageJsonLd } from "@/shared/lib/seo/json-ld";
+import { buildFaqPageJsonLd, serializeJsonLd } from "@/shared/lib/seo/json-ld";
 
 interface Props {
   faq: { question: string; answer: string }[] | undefined;
@@ -38,7 +38,7 @@ export default function ExperimentFaq({ faq }: Props) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
       )}
     </section>

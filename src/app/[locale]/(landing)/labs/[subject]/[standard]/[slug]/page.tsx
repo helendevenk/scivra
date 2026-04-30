@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { serializeJsonLd } from '@/shared/lib/seo/json-ld';
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import {
@@ -159,11 +160,11 @@ export default async function ExperimentDetailPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(learningResourceJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(learningResourceJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
 
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">

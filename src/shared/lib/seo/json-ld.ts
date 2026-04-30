@@ -5,6 +5,26 @@ import { getAbsoluteUrl, getLocalizedPath, normalizeSeoText } from '@/shared/lib
 const SITE_NAME = 'Scivra';
 
 /**
+ * HTML-safe JSON serializer for embedding JSON-LD payloads inside <script>
+ * tags via dangerouslySetInnerHTML. JSON.stringify alone is NOT safe for
+ * inline script bodies — a payload that contains '</script>' (or unescaped
+ * '<', '&', U+2028, U+2029) lets attacker-controlled content (DB rows, MDX
+ * frontmatter, user-edited admin posts) break out of the script and execute
+ * arbitrary code. Always use this instead of bare JSON.stringify when the
+ * payload is going into innerHTML.
+ *
+ * See https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+ */
+export function serializeJsonLd(payload: unknown): string {
+  return JSON.stringify(payload)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+/**
  * Build JSON-LD structured data for an experiment page.
  * Returns a plain object ready to be serialized into a <script type="application/ld+json"> tag.
  */

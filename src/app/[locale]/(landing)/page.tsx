@@ -5,6 +5,7 @@ import {
   buildFaqPageJsonLd,
   buildOrganizationJsonLd,
   buildWebsiteSearchActionJsonLd,
+  serializeJsonLd,
 } from '@/shared/lib/seo/json-ld';
 import { getSiteUrl } from '@/shared/lib/seo';
 import { DynamicPage, Section } from '@/shared/types/blocks/landing';
@@ -61,16 +62,16 @@ export default async function LandingPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
         />
       )}
       <Page locale={locale} page={page} />

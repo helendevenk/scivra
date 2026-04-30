@@ -16,7 +16,7 @@ import {
   getPageAlternates,
   getSiteUrl,
 } from "@/shared/lib/seo";
-import { buildBreadcrumbJsonLd } from "@/shared/lib/seo/json-ld";
+import { buildBreadcrumbJsonLd, serializeJsonLd } from "@/shared/lib/seo/json-ld";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -90,11 +90,11 @@ export default async function StandardPage({ params }: Props) {
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(collectionPageJsonLd) }}
       />
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href={getLocalizedPath("/labs", locale)} className="hover:text-primary">Labs</Link>

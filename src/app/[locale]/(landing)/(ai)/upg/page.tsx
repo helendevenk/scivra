@@ -12,6 +12,7 @@ import {
   buildBreadcrumbJsonLd,
   buildFaqPageJsonLd,
   buildSoftwareApplicationJsonLd,
+  serializeJsonLd,
 } from '@/shared/lib/seo/json-ld';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
@@ -83,17 +84,17 @@ export default async function UpgPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(softwareApplicationJsonLd),
+          __html: serializeJsonLd(softwareApplicationJsonLd),
         }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
         />
       )}
       <Page locale={locale} page={page} />

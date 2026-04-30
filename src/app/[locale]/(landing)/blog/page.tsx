@@ -7,7 +7,7 @@ import {
   getMetadata,
   getSiteUrl,
 } from '@/shared/lib/seo';
-import { buildBreadcrumbJsonLd } from '@/shared/lib/seo/json-ld';
+import { buildBreadcrumbJsonLd, serializeJsonLd } from '@/shared/lib/seo/json-ld';
 import { getPostsAndCategories } from '@/shared/models/post';
 import {
   Blog as BlogType,
@@ -125,11 +125,11 @@ export default async function BlogPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(blogJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <Page locale={locale} page={page} />
     </>
