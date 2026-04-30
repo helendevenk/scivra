@@ -119,7 +119,7 @@ export const projectileMotion: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "Projectile motion describes any object thrown into the air and then left to gravity — a basketball heading for the rim, a fountain arcing over a courtyard, a long jumper flying off the board. Once the object leaves the launcher, only gravity pulls on it (we ignore air resistance for now). The horizontal motion stays constant while the vertical motion accelerates downward, and the two combine into a parabolic path. Tweak the launch angle, change the speed, or swap planets in the lab and watch the same physics produce wildly different trajectories.",
+      "Projectile motion describes any object thrown into the air and then left to gravity — a basketball heading for the rim, a fountain arcing over a courtyard, a long jumper flying off the board. Once the object leaves the launcher, only gravity pulls on it (we ignore air resistance for now). The horizontal motion stays constant while the vertical motion accelerates downward at the same rate gravity pulls every object on the planet, and the two combine into a parabolic path. The shape of that parabola is set entirely by three numbers: how fast the object leaves, the angle it leaves at, and how strong gravity is. Tweak the launch angle, change the speed, or swap planets in the lab and watch the same physics produce wildly different trajectories on Earth, the Moon, or Mars.",
     parameterExplanations: {
       velocity:
         "The speed at the moment of launch. Doubling it roughly quadruples the range, because both how long the projectile stays airborne and how fast it travels horizontally grow with v.",
