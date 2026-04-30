@@ -113,7 +113,7 @@ export const k5SoundWaves: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-light-propagation", "wave-interference", "em-spectrum"],
 
-  seoTitle: "Sound Waves for Kids | NeonPhysics Elementary Science",
+  seoTitle: "Sound Waves for Kids | Scivra Elementary Science",
   seoKeywords: [
     "sound waves kids simulation",
     "pitch frequency amplitude interactive",

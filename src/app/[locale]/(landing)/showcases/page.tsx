@@ -1,7 +1,17 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { getMetadata } from '@/shared/lib/seo';
+import {
+  getAbsoluteUrl,
+  getLocalizedPath,
+  getMetadata,
+  getSiteUrl,
+} from '@/shared/lib/seo';
+import {
+  buildBreadcrumbJsonLd,
+  buildWebPageJsonLd,
+  serializeJsonLd,
+} from '@/shared/lib/seo/json-ld';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
 export const revalidate = 3600;
@@ -35,5 +45,35 @@ export default async function ShowcasesPage({
   // load page component
   const Page = await getThemePage('dynamic-page');
 
-  return <Page locale={locale} page={page} />;
+  const siteUrl = getSiteUrl();
+  const showcasesUrl = getAbsoluteUrl(getLocalizedPath('/showcases', locale));
+  const tMeta = await getTranslations('showcases.metadata');
+
+  const webPageJsonLd = buildWebPageJsonLd({
+    name: tMeta('title'),
+    description: tMeta('description'),
+    url: showcasesUrl,
+    siteUrl,
+    siteName: 'Scivra',
+    locale,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: siteUrl },
+    { name: 'Showcases', url: showcasesUrl },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
+      />
+      <Page locale={locale} page={page} />
+    </>
+  );
 }

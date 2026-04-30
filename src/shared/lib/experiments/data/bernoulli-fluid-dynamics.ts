@@ -120,7 +120,7 @@ export const bernoulliFluidDynamics: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["fluid-statics", "newtons-laws", "circular-motion"],
 
-  seoTitle: "Bernoulli's Principle & Fluid Dynamics — Venturi & Airfoil Simulation | NeonPhysics",
+  seoTitle: "Bernoulli's Principle & Fluid Dynamics — Venturi & Airfoil Simulation | Scivra",
   seoKeywords: [
     "Bernoulli's principle",
     "fluid dynamics",

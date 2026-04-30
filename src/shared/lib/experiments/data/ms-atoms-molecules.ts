@@ -113,7 +113,7 @@ export const msAtomsMolecules: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["ms-chemical-reactions", "atomic-structure"],
 
-  seoTitle: "Atoms and Periodic Table Middle School | NeonPhysics Interactive",
+  seoTitle: "Atoms and Periodic Table Middle School | Scivra Interactive",
   seoKeywords: [
     "atoms periodic table middle school simulation",
     "protons neutrons electrons interactive",

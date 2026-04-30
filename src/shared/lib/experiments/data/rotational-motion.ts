@@ -215,7 +215,7 @@ export const rotationalMotion: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["circular-motion", "newtons-laws"],
 
-  seoTitle: "Rotational Motion & Torque — Interactive 3D Simulation | NeonPhysics",
+  seoTitle: "Rotational Motion & Torque — Interactive 3D Simulation | Scivra",
   seoKeywords: [
     "rotational motion simulation",
     "torque angular momentum",

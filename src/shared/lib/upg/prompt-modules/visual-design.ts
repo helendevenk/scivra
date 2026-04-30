@@ -3,7 +3,7 @@
  *
  * Sources:
  * - AetherViz SKILL.md (392 lines): Complete CSS variable system, layout blueprint, glassmorphism
- * - NeonPhysics np-academic theme: Subject color palette
+ * - Scivra np-academic theme: Subject color palette
  */
 
 export function getVisualDesignPrompt(): string {

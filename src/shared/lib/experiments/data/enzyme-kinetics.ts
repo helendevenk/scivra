@@ -117,7 +117,7 @@ export const enzymeKinetics: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["cellular-respiration", "photosynthesis"],
 
-  seoTitle: "Enzyme Kinetics Michaelis-Menten Interactive | NeonPhysics AP Biology",
+  seoTitle: "Enzyme Kinetics Michaelis-Menten Interactive | Scivra AP Biology",
   seoKeywords: [
     "enzyme kinetics simulation",
     "Michaelis-Menten interactive",

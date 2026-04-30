@@ -176,7 +176,7 @@ export const dopplerEffect: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["wave-interference", "simple-harmonic-motion", "em-spectrum"],
 
-  seoTitle: "Doppler Effect — Sound Wave Frequency Shift Simulation | NeonPhysics",
+  seoTitle: "Doppler Effect — Sound Wave Frequency Shift Simulation | Scivra",
   seoKeywords: [
     "doppler effect simulation",
     "sound frequency shift",
@@ -189,5 +189,80 @@ export const dopplerEffect: Experiment = {
     "@type": "LearningResource",
     educationalLevel: "High School",
     teaches: "Doppler Effect and Wave Frequency Shifts",
+  },
+
+  contentSections: {
+    whatIsIt:
+      "The Doppler effect is the change in observed frequency when a source and observer move relative to each other. An ambulance siren rises in pitch as it speeds toward you and drops as it passes — same source frequency, different observed frequency. Waves get bunched up ahead of a moving source and stretched out behind it. The same physics works for light: galaxies moving away from us look redshifted, ones moving toward us look blueshifted, and that's how astronomers know the universe is expanding. In this lab, change the source's speed, the observer's position, and the medium, and watch the wavelength compress and stretch.",
+    parameterExplanations: {
+      source_frequency:
+        "The frequency emitted by the source, measured in the source's own frame. Doesn't change — only the observed frequency changes with relative motion. A 440 Hz tuning fork is always 440 Hz from the fork's perspective.",
+      source_speed:
+        "How fast the source moves relative to the medium. Higher speed means more wave compression in front and more stretching behind. When source speed reaches the wave speed, you get a sonic boom — that's the cone where waves stack on top of each other.",
+      observer_position:
+        "Where the observer is relative to the source's motion. In front (waves compressed): observed frequency is higher than source. Behind (waves stretched): observed frequency is lower. To the side: observer hears the source frequency only at the instant of closest approach.",
+      medium:
+        "What the waves travel through. Sound moves at 343 m/s in air, ~1480 m/s in water, ~5000 m/s in steel. Same source speed produces a much smaller Doppler shift in faster mediums because the waves outrun the source more easily.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "The pitch suddenly drops the moment the ambulance passes you.",
+        correct:
+          "The change is continuous, not sudden. The observed frequency depends on the angle between the source's velocity and the line of sight. Approaching directly: maximum upshift. Passing perpendicular: no shift (you hear the true frequency). Receding directly: maximum downshift. The pitch slides smoothly between these extremes.",
+      },
+      {
+        wrong:
+          "The Doppler effect changes the wave's actual frequency.",
+        correct:
+          "The source emits at the same frequency. What changes is how often wave crests reach the observer because the source moves between emissions. The actual wave's properties (wavelength, frequency) depend on whose frame you measure from.",
+      },
+      {
+        wrong:
+          "Doppler effect only happens with sound waves.",
+        correct:
+          "It happens with any wave: sound, light, water waves, radio. Astronomers use the Doppler shift of starlight to measure the radial velocity of stars and galaxies. Police radar uses the Doppler shift of microwaves bounced off cars.",
+      },
+      {
+        wrong:
+          "If the source isn't moving, there's no Doppler effect.",
+        correct:
+          "Relative motion is what matters. If the source is stationary and the observer moves, you still get Doppler shift. The math is slightly different (observer-moving formula vs. source-moving formula) but the effect is real.",
+      },
+    ],
+    teacherUseCases: [
+      "Pre-lab thought experiment: ask 'What does a stationary observer hear from a stationary fire engine?' (no shift). Then 'What about a moving observer next to a stationary fire engine?' (shifted!). Use the lab to verify.",
+      "Pitch prediction: have students predict whether observed frequency will go up or down for combinations of source/observer motion. Run the lab to confirm.",
+      "Sonic boom build-up: gradually increase source speed past the speed of sound and let students see waves stack into a cone. Connect to supersonic flight.",
+      "Astronomy connection: discuss how galaxy redshift was measured by Edwin Hubble in the 1920s and led to the Big Bang model.",
+      "Real-world numbers: have students calculate the frequency shift for a 100 km/h car horn. Compare their math to the lab's readout.",
+    ],
+    faq: [
+      {
+        question: "What is the Doppler effect formula?",
+        answer:
+          "For sound: f_observed = f_source × (v_sound + v_observer) / (v_sound − v_source) where positive v_observer means moving toward the source and positive v_source means moving away. The signs flip the other way around. AP Physics 1 expects students to use this formula and reason about which speeds get added.",
+      },
+      {
+        question: "Why does the pitch change when an ambulance passes me?",
+        answer:
+          "As the ambulance approaches, sound waves get compressed into a shorter wavelength (higher frequency) and your ears hear a higher pitch. As it passes and recedes, the waves stretch (longer wavelength, lower frequency) and you hear a lower pitch. The siren itself never changes frequency.",
+      },
+      {
+        question: "What's a sonic boom?",
+        answer:
+          "When the source moves at the speed of sound, all the waves it emits in the forward direction stack up at the same place. That's a 'shock wave' — extreme pressure jump that we hear as a boom. Past the speed of sound, this shock wave forms a cone trailing the source (the Mach cone).",
+      },
+      {
+        question: "How is the Doppler effect used in astronomy?",
+        answer:
+          "Light from receding galaxies has its wavelength stretched (redshifted). Astronomers measure this redshift to figure out how fast distant galaxies are moving away. Hubble showed that more distant galaxies recede faster — the foundational evidence for an expanding universe.",
+      },
+      {
+        question: "How does this connect to AP Physics?",
+        answer:
+          "AP Physics 1 expects students to qualitatively reason about Doppler shift for sound. AP Physics 2 extends to electromagnetic waves and the relativistic Doppler effect (high-speed light source). This lab supports the qualitative reasoning AP wants for free-response 'explain' questions.",
+      },
+    ],
   },
 };

@@ -1,8 +1,17 @@
-import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, cleanup } from "@testing-library/react";
 import { ExperimentSummary } from "@/shared/blocks/experiments/experiment-summary";
 
 describe("ExperimentSummary", () => {
+  // Without explicit cleanup, mounted ExperimentSummary instances leak
+  // between tests; a deferred React 19 commit can fire on an unmounted
+  // tree at vitest teardown and produce 'ReferenceError: window is not
+  // defined' from React's scheduler. Same root cause + fix as gallery
+  // (commit e42790d).
+  afterEach(() => {
+    cleanup();
+  });
+
   const defaultProps = {
     title: "Projectile Motion",
     description: "You explored how angle and velocity affect projectile range.",

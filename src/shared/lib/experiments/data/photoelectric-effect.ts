@@ -125,7 +125,7 @@ export const photoelectricEffect: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["atomic-structure", "em-spectrum", "wave-interference"],
 
-  seoTitle: "Photoelectric Effect — Photon Energy & Work Function Simulation | NeonPhysics",
+  seoTitle: "Photoelectric Effect — Photon Energy & Work Function Simulation | Scivra",
   seoKeywords: [
     "photoelectric effect",
     "photon energy",

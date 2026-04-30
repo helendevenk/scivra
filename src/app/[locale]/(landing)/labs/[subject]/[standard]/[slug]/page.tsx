@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { serializeJsonLd } from '@/shared/lib/seo/json-ld';
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import {
@@ -8,6 +9,8 @@ import {
 import { getExperimentBySlug } from "@/shared/lib/experiments/registry";
 import { SUBJECTS, STANDARD_LABELS, ALL_STANDARDS } from "@/shared/lib/experiments/subjects";
 import { ExperimentFlow } from "@/shared/blocks/experiments/experiment-flow";
+import ExperimentContentSections from "@/shared/blocks/experiments/experiment-content-sections";
+import ExperimentFaq from "@/shared/blocks/experiments/experiment-faq";
 import { getSignUser } from "@/shared/models/user";
 import { getCurrentSubscription } from "@/shared/models/subscription";
 import { subscriptionToTier, canAccessExperiment } from "@/shared/lib/experiments/access";
@@ -157,11 +160,11 @@ export default async function ExperimentDetailPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(learningResourceJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(learningResourceJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
 
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
@@ -237,6 +240,14 @@ export default async function ExperimentDetailPage({ params }: Props) {
           canAccess={canAccess}
           locale={locale}
         />
+
+        <ExperimentContentSections
+          sections={experiment.contentSections}
+          experimentTitle={experiment.title}
+          parameters={experiment.parameters}
+        />
+
+        <ExperimentFaq faq={experiment.contentSections?.faq} />
 
         {experiment.relatedExperiments.length > 0 && (
           <aside className="mt-12 border-t border-border pt-8">

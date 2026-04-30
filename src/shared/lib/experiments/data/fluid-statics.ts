@@ -121,7 +121,7 @@ export const fluidStatics: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["newtons-laws"],
 
-  seoTitle: "Fluid Statics & Bernoulli's Principle — Interactive 3D | NeonPhysics",
+  seoTitle: "Fluid Statics & Bernoulli's Principle — Interactive 3D | Scivra",
   seoKeywords: [
     "Archimedes principle simulation",
     "buoyancy interactive",

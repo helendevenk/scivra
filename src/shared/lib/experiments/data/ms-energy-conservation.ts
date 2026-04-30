@@ -113,7 +113,7 @@ export const msEnergyConservation: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["ms-newtons-laws", "k5-energy-conversion", "roller-coaster"],
 
-  seoTitle: "Energy Conservation Middle School | NeonPhysics Interactive Physics",
+  seoTitle: "Energy Conservation Middle School | Scivra Interactive Physics",
   seoKeywords: [
     "energy conservation middle school simulation",
     "kinetic potential energy interactive",

@@ -224,7 +224,7 @@ export const electricFieldLines: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["em-spectrum", "lorentz-force"],
 
-  seoTitle: "Electric Field Lines — Interactive 3D Visualization | NeonPhysics",
+  seoTitle: "Electric Field Lines — Interactive 3D Visualization | Scivra",
   seoKeywords: [
     "electric field lines simulation",
     "Coulomb's law interactive",

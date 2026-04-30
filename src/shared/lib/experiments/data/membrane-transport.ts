@@ -117,7 +117,7 @@ export const membraneTransport: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["neuron-action-potential", "cellular-respiration"],
 
-  seoTitle: "Cell Membrane Transport Osmosis Diffusion Interactive | NeonPhysics AP Biology",
+  seoTitle: "Cell Membrane Transport Osmosis Diffusion Interactive | Scivra AP Biology",
   seoKeywords: [
     "cell membrane transport simulation",
     "osmosis diffusion interactive",

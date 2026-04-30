@@ -9,7 +9,13 @@ import {
 import { GRADE_CONFIGS } from "@/shared/lib/experiments/grade-constants";
 import type { Subject } from "@/shared/types/experiment";
 import type { Metadata } from "next";
-import { getLocalizedPath, getPageAlternates } from "@/shared/lib/seo";
+import {
+  getAbsoluteUrl,
+  getLocalizedPath,
+  getPageAlternates,
+  getSiteUrl,
+} from "@/shared/lib/seo";
+import { buildFaqPageJsonLd, serializeJsonLd } from "@/shared/lib/seo/json-ld";
 
 export const revalidate = 3600;
 
@@ -97,7 +103,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: "Free Interactive Science Labs | Scivra",
     description:
-      "Explore 179+ free interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Aligned with AP, NGSS, and K-12 standards.",
+      "Explore 179 interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Three free, no sign-up. Aligned with AP, NGSS, and K-12 standards.",
     keywords:
       "virtual labs, science experiments, physics simulations, chemistry labs, biology labs, interactive learning, AP Physics, NGSS",
     alternates: getPageAlternates('/labs', locale),
@@ -118,6 +124,39 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
 
   const subjectKeys = Object.keys(SUBJECTS) as Subject[];
   const totalCount = subjectsWithCounts.reduce((sum, s) => sum + s.count, 0);
+
+  const siteUrl = getSiteUrl();
+  const labsUrl = getAbsoluteUrl(getLocalizedPath("/labs", locale));
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Labs", item: labsUrl },
+    ],
+  };
+
+  const collectionPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Interactive Science Labs",
+    description:
+      "Browse 179 interactive virtual science labs covering Physics, Chemistry, Biology, Earth Science, and Math. Three free, no sign-up. Aligned with AP, NGSS, and K-12 standards.",
+    url: labsUrl,
+    inLanguage: locale,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Scivra",
+      url: siteUrl,
+    },
+    about: subjectKeys.map((key) => ({
+      "@type": "Thing",
+      name: SUBJECTS[key].label,
+    })),
+  };
+
+  const faqJsonLd = buildFaqPageJsonLd(LABS_FAQ);
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-20 lg:pt-24">
@@ -211,6 +250,141 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
           })}
         </div>
       </section>
+
+      <section className="mx-auto mb-16 max-w-3xl space-y-4">
+        <h2 className="font-serif text-3xl font-semibold italic text-foreground">
+          What is a virtual lab?
+        </h2>
+        <p className="text-base text-muted-foreground md:text-lg">
+          A virtual lab is an interactive science simulation that runs in your browser. You change real
+          parameters (velocity, temperature, gene expression, voltage), watch the system respond in 3D, and
+          read the data live. Nothing to install. No safety risk. No expensive equipment.
+        </p>
+        <p className="text-base text-muted-foreground md:text-lg">
+          Scivra ships {totalCount} virtual labs across physics, chemistry, biology, earth science, and math,
+          built around the same concepts you&apos;ll meet on AP exams, in NGSS classrooms, and across the GCSE
+          curriculum.
+        </p>
+      </section>
+
+      <section className="mx-auto mb-16 max-w-3xl space-y-6">
+        <h2 className="font-serif text-3xl font-semibold italic text-foreground">
+          Standards alignment
+        </h2>
+        <div className="space-y-5">
+          <div>
+            <h3 className="mb-1 font-mono text-sm uppercase tracking-wider text-primary">NGSS</h3>
+            <p className="text-base text-muted-foreground">
+              Every Scivra lab tags the NGSS performance expectations it supports, from elementary K-5 force
+              and motion through high school biology and chemistry. Teachers can filter by grade band and
+              know which lab fits which expectation.
+            </p>
+          </div>
+          <div>
+            <h3 className="mb-1 font-mono text-sm uppercase tracking-wider text-primary">AP</h3>
+            <p className="text-base text-muted-foreground">
+              AP Physics 1, AP Physics 2, AP Physics C, AP Chemistry, and AP Biology each have a dedicated
+              path. Labs map to College Board learning objectives and free-response question patterns so
+              students get exam-style practice, not just demonstrations.
+            </p>
+          </div>
+          <div>
+            <h3 className="mb-1 font-mono text-sm uppercase tracking-wider text-primary">GCSE</h3>
+            <p className="text-base text-muted-foreground">
+              UK GCSE physics topics — required practicals, waves, electricity, forces — are tagged so UK
+              teachers can plug Scivra labs into existing schemes of work without re-mapping content.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto mb-16 max-w-3xl space-y-4">
+        <h2 className="font-serif text-3xl font-semibold italic text-foreground">
+          How teachers use Scivra
+        </h2>
+        <ul className="space-y-3 text-base text-muted-foreground md:text-lg">
+          <li>
+            <strong className="text-foreground">Pre-lab demonstrations.</strong> Project a Scivra lab during
+            the warm-up so students see the phenomenon before they touch a worksheet.
+          </li>
+          <li>
+            <strong className="text-foreground">Group exploration.</strong> Pairs adjust parameters and predict
+            outcomes; the lab gives instant feedback so misconceptions surface in five minutes, not five days.
+          </li>
+          <li>
+            <strong className="text-foreground">Post-lab review.</strong> Students who missed a hands-on day
+            replay the simulation, change conditions, and rebuild intuition without rerunning the whole
+            experiment.
+          </li>
+          <li>
+            <strong className="text-foreground">AP / GCSE exam prep.</strong> Map each Scivra lab to the
+            specific learning objective or exam topic so revision is targeted, not general.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mx-auto mb-16 max-w-3xl">
+        <h2 className="mb-6 font-serif text-3xl font-semibold italic text-foreground">
+          Frequently asked questions
+        </h2>
+        <div className="space-y-4">
+          {LABS_FAQ.map((item) => (
+            <details
+              key={item.question}
+              className="group rounded-xl border border-primary/10 bg-card p-5 transition-colors hover:border-primary/30"
+            >
+              <summary className="cursor-pointer list-none font-semibold text-foreground">
+                <span className="float-right ml-2 text-primary transition-transform group-open:rotate-45">+</span>
+                {item.question}
+              </summary>
+              <p className="mt-3 text-base text-muted-foreground">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(collectionPageJsonLd) }}
+      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
+        />
+      )}
     </div>
   );
 }
+
+const LABS_FAQ: Array<{ question: string; answer: string }> = [
+  {
+    question: "Are these virtual labs free?",
+    answer:
+      "Three labs are free, no sign-up. Pro and Max plans unlock all 179 labs. Schools and districts can request seat-based pricing.",
+  },
+  {
+    question: "Do students need an account?",
+    answer:
+      "Not for the three free labs. To save progress, unlock all labs, or use the AI Lab Partner, students sign up with an email or single sign-on.",
+  },
+  {
+    question: "Which devices do these labs work on?",
+    answer:
+      "Any modern browser — laptops, Chromebooks, iPads, and most Android tablets. The 3D scenes use WebGL and run smoothly on hardware from the last five years.",
+  },
+  {
+    question: "How are these labs aligned with curriculum?",
+    answer:
+      "Each lab is tagged with NGSS performance expectations, AP learning objectives, and GCSE specification points where applicable. Filter the catalog by grade or open a subject hub to see the mapping.",
+  },
+  {
+    question: "Can teachers track student progress?",
+    answer:
+      "Pro and Max accounts include a dashboard for seeing which labs each student completed and how their parameter choices changed over time. Roster import is available to schools on request.",
+  },
+];

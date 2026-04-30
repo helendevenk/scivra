@@ -113,7 +113,7 @@ export const msGenetics: Experiment = {
   estimatedTime: 14,
   relatedExperiments: ["dna-double-helix", "natural-selection", "meiosis"],
 
-  seoTitle: "Genetics Heredity Middle School | Punnett Square Interactive | NeonPhysics",
+  seoTitle: "Genetics Heredity Middle School | Punnett Square Interactive | Scivra",
   seoKeywords: [
     "genetics middle school simulation",
     "Punnett square interactive 6-8",

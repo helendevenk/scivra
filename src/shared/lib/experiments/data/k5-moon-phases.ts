@@ -103,7 +103,7 @@ export const k5MoonPhases: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-day-night-seasons", "gravitational-fields"],
 
-  seoTitle: "Moon Phases Simulation for Kids | NeonPhysics Elementary Earth Science",
+  seoTitle: "Moon Phases Simulation for Kids | Scivra Elementary Earth Science",
   seoKeywords: [
     "moon phases kids simulation",
     "lunar cycle interactive elementary",

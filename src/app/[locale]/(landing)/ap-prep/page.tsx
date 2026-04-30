@@ -2,7 +2,17 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
 import { ApExamList, ApPrepHero } from '@/shared/blocks/ap-prep';
-import { getMetadata } from '@/shared/lib/seo';
+import {
+  getAbsoluteUrl,
+  getLocalizedPath,
+  getMetadata,
+  getSiteUrl,
+} from '@/shared/lib/seo';
+import {
+  buildBreadcrumbJsonLd,
+  buildWebPageJsonLd,
+  serializeJsonLd,
+} from '@/shared/lib/seo/json-ld';
 import { DynamicPage } from '@/shared/types/blocks/landing';
 
 export const revalidate = 60;
@@ -39,5 +49,35 @@ export default async function ApPrepPage({
 
   const Page = await getThemePage('dynamic-page');
 
-  return <Page locale={locale} page={page} />;
+  const siteUrl = getSiteUrl();
+  const apPrepUrl = getAbsoluteUrl(getLocalizedPath('/ap-prep', locale));
+  const tMeta = await getTranslations('ap-prep.metadata');
+
+  const webPageJsonLd = buildWebPageJsonLd({
+    name: tMeta('title'),
+    description: tMeta('description'),
+    url: apPrepUrl,
+    siteUrl,
+    siteName: 'Scivra',
+    locale,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: siteUrl },
+    { name: 'AP Exam Prep', url: apPrepUrl },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(webPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
+      />
+      <Page locale={locale} page={page} />
+    </>
+  );
 }

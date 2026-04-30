@@ -1,7 +1,12 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getThemePage } from '@/core/theme';
-import { buildWebsiteJsonLd } from '@/shared/lib/seo/json-ld';
+import {
+  buildFaqPageJsonLd,
+  buildOrganizationJsonLd,
+  buildWebsiteJsonLd,
+  serializeJsonLd,
+} from '@/shared/lib/seo/json-ld';
 import { getSiteUrl } from '@/shared/lib/seo';
 import { DynamicPage, Section } from '@/shared/types/blocks/landing';
 
@@ -42,17 +47,37 @@ export default async function LandingPage({
   // load page component
   const Page = await getThemePage('dynamic-page');
 
-  const websiteJsonLd = buildWebsiteJsonLd({
-    siteUrl: getSiteUrl(),
-    siteName: 'Scivra',
-  });
+  const siteUrl = getSiteUrl();
+  const siteName = 'Scivra';
+
+  // Note: SearchAction was removed because Scivra has no free-text search route
+  // wired up yet. Re-enable buildWebsiteSearchActionJsonLd() when /search or
+  // /labs?q= is functional. Pointing at a non-existent search target is a
+  // schema-content drift Google can flag.
+  const websiteJsonLd = buildWebsiteJsonLd({ siteUrl, siteName });
+  const organizationJsonLd = buildOrganizationJsonLd({ siteUrl, siteName });
+
+  const faqSection = t.raw('faq') as
+    | { items?: Array<{ question: string; answer: string }> }
+    | null;
+  const faqJsonLd = buildFaqPageJsonLd(faqSection?.items);
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }}
+      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
+        />
+      )}
       <Page locale={locale} page={page} />
     </>
   );

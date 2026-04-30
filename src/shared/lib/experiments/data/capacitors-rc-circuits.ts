@@ -138,7 +138,7 @@ export const capacitorsRcCircuits: Experiment = {
   estimatedTime: 30,
   relatedExperiments: ["electric-potential-voltage", "dc-circuits-basic", "electromagnetic-induction"],
 
-  seoTitle: "Capacitors & RC Circuits — Charging Discharging Simulation | NeonPhysics",
+  seoTitle: "Capacitors & RC Circuits — Charging Discharging Simulation | Scivra",
   seoKeywords: [
     "capacitor",
     "RC circuit",

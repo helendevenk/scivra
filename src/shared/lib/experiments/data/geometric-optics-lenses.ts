@@ -110,7 +110,7 @@ export const geometricOpticsLenses: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["wave-interference", "em-spectrum", "simple-harmonic-motion"],
 
-  seoTitle: "Geometric Optics Lenses & Mirrors — Interactive Ray Tracing | NeonPhysics",
+  seoTitle: "Geometric Optics Lenses & Mirrors — Interactive Ray Tracing | Scivra",
   seoKeywords: [
     "geometric optics",
     "thin lens equation",
@@ -124,5 +124,80 @@ export const geometricOpticsLenses: Experiment = {
     "@type": "LearningResource",
     educationalLevel: "High School",
     teaches: "Geometric Optics — Thin Lens Equation and Ray Tracing",
+  },
+
+  contentSections: {
+    whatIsIt:
+      "Geometric optics treats light as straight rays that bend at lens surfaces. The thin-lens equation, 1/f = 1/d_o + 1/d_i, links the focal length f, object distance d_o, and image distance d_i, and the magnification M = −d_i/d_o tells you whether the image is bigger, smaller, upright, or inverted. Converging lenses (positive f) bend parallel rays to a point and form real, inverted images of distant objects (your eye, a camera). Diverging lenses (negative f) spread rays out and always form virtual, upright, smaller images (a peephole). Slide the object in this lab and watch the image flip, grow, and travel to and from infinity exactly as the equation predicts.",
+    parameterExplanations: {
+      focal_length:
+        "How strongly the lens bends light. Smaller |f| means a more powerful lens. Sign matters: positive for converging, negative for diverging.",
+      object_distance:
+        "Distance from object to lens. The object's location relative to the focal point determines whether the image is real or virtual: beyond f means real, inside f means virtual.",
+      lens_type:
+        "Switches between converging (biconvex) and diverging (biconcave). Same equations, but f flips sign and the image behavior changes accordingly.",
+      object_height:
+        "Size of the object. Doesn't change image position — only the image size, scaled by the magnification factor M = −d_i/d_o.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "If you cover half a lens, you'll get half the image.",
+        correct:
+          "Each point of the object sends rays through the entire lens. Covering half just dims the image (less light), it doesn't cut off half the picture. Counter-intuitive but easy to verify experimentally.",
+      },
+      {
+        wrong:
+          "A converging lens always makes a smaller image.",
+        correct:
+          "Depends on object distance. Beyond 2f: smaller and inverted. At 2f: same size. Between f and 2f: larger and inverted. Inside f: larger, upright, virtual (a magnifying glass).",
+      },
+      {
+        wrong:
+          "Real images are 'real' and virtual images are imaginary or fake.",
+        correct:
+          "Real images form where light rays actually converge — you can put a screen there. Virtual images form where rays appear to diverge from — your eye sees them through the lens but no light actually arrives at that location. Both are physically meaningful.",
+      },
+      {
+        wrong:
+          "Diverging lenses can never form a real image.",
+        correct:
+          "True for single diverging lenses with real objects. In a multi-lens system (binoculars, microscopes), a diverging lens can act on a virtual object (the image of a previous lens) and produce a real image. Be careful what counts as 'object'.",
+      },
+    ],
+    teacherUseCases: [
+      "Image table drill: complete a table of (d_o, d_i, M, real/virtual, upright/inverted) for d_o = 3f, 2f, 1.5f, 0.5f. Use the lab to verify each entry.",
+      "Camera vs. eye: discuss how a camera lens forms a real, inverted image on the sensor — exactly what students see when d_o > f. Connect to the human retina.",
+      "Magnifying glass discovery: place the object inside the focal length and ask why the image is larger, upright, and virtual (rays diverge after the lens).",
+      "Sign convention practice: work a diverging-lens problem and emphasize f < 0. Have students predict the signs of d_i and M before computing.",
+      "Two-lens combo homework: combine two lenses where the image of the first is the object of the second. Apply the thin-lens equation twice.",
+    ],
+    faq: [
+      {
+        question: "What is the thin-lens equation?",
+        answer:
+          "1/f = 1/d_o + 1/d_i where f is focal length (positive for converging, negative for diverging), d_o is object distance, d_i is image distance (positive if on the outgoing side). Magnification is M = −d_i/d_o.",
+      },
+      {
+        question: "Why is the image inverted in a camera?",
+        answer:
+          "Rays from the top of the object cross the optical axis as they bend through the lens and end up at the bottom of the image. Same for left-right. The camera sensor (or your retina) captures the inverted image, and your brain or software flips it back upright.",
+      },
+      {
+        question: "What's the difference between real and virtual images?",
+        answer:
+          "Real images form where rays physically converge — you can project them onto a screen. Virtual images form where rays appear to come from after passing through the lens, but no light actually reaches that point. A magnifying glass shows you a virtual image; a movie projector shows a real one.",
+      },
+      {
+        question: "When does a converging lens make an upright image?",
+        answer:
+          "When the object is inside the focal length (d_o < f). The lens can't bend rays enough to converge them, so they exit diverging. Your eye traces them back to a virtual, upright, magnified image. That's the magnifying-glass mode.",
+      },
+      {
+        question: "How does this connect to AP Physics 2?",
+        answer:
+          "AP Physics 2 expects students to apply the thin-lens equation, compute magnification, and reason about real vs. virtual images. They should also do ray-tracing diagrams (parallel ray, central ray, focal ray) for both lens types. This lab supports both the algebra and the geometry.",
+      },
+    ],
   },
 };

@@ -113,7 +113,7 @@ export const k5ForceMotion: Experiment = {
   estimatedTime: 10,
   relatedExperiments: ["k5-simple-machines", "k5-energy-conversion", "newtons-laws"],
 
-  seoTitle: "Force and Motion for Kids | NeonPhysics Elementary Science",
+  seoTitle: "Force and Motion for Kids | Scivra Elementary Science",
   seoKeywords: [
     "force and motion elementary",
     "push pull simulation",

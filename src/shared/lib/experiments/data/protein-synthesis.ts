@@ -117,7 +117,7 @@ export const proteinSynthesis: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["dna-double-helix", "enzyme-kinetics"],
 
-  seoTitle: "Protein Synthesis Transcription & Translation — Interactive 3D | NeonPhysics",
+  seoTitle: "Protein Synthesis Transcription & Translation — Interactive 3D | Scivra",
   seoKeywords: [
     "protein synthesis animation",
     "transcription translation interactive",

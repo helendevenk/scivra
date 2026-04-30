@@ -117,7 +117,7 @@ export const mitosis: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["meiosis", "dna-double-helix"],
 
-  seoTitle: "Mitosis Cell Division Interactive — 3D Phases Animation | NeonPhysics AP Biology",
+  seoTitle: "Mitosis Cell Division Interactive — 3D Phases Animation | Scivra AP Biology",
   seoKeywords: [
     "mitosis animation",
     "cell division interactive",
