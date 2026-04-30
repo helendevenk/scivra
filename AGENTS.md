@@ -1,4 +1,4 @@
-# Scivra — Project Guide for Claude
+# Scivra — Project Guide for Codex
 
 > 当前文档定位：AI 协作约束与工程约定
 > 最后核对：2026-04-23
@@ -52,7 +52,7 @@ Scivra 是面向北美 K12 科学教育场景的 AI SaaS。当前对外有两条
 scivra/
 ├── README.md
 ├── ARCHITECTURE.md
-├── CLAUDE.md
+├── AGENTS.md
 ├── docs/
 │   ├── archive/
 │   ├── plans/
@@ -256,7 +256,7 @@ pnpm rbac:init
 
 - `README.md`
 - `ARCHITECTURE.md`
-- `CLAUDE.md`
+- `AGENTS.md`
 - `src/`、`public/`、`tests/`
 
 ### 历史与规划材料
