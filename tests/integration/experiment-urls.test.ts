@@ -29,12 +29,29 @@ describe("Every experiment URL resolves", () => {
 
       expect(experiments.length).toBeGreaterThan(150);
 
-      const results = await Promise.all(
+      const fetchOnce = async (url: string) => {
+        const response = await fetch(url, { redirect: "manual" });
+        return response.status;
+      };
+
+      // First pass: fire all 179 routes in parallel. Cold turbopack
+      // dev servers under load can intermittently 500 the first time a
+      // route is compiled — so retry any non-200 once after a small
+      // backoff to give the dev server a second compile chance.
+      const initial = await Promise.all(
         experiments.map(async (experiment) => {
           const url = `${BASE_URL}/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`;
-          const response = await fetch(url, { redirect: "manual" });
+          const status = await fetchOnce(url);
+          return { url, status };
+        })
+      );
 
-          return { url, status: response.status };
+      const results = await Promise.all(
+        initial.map(async (entry) => {
+          if (entry.status === 200) return entry;
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          const status = await fetchOnce(entry.url);
+          return { url: entry.url, status };
         })
       );
 

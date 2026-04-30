@@ -262,7 +262,7 @@ export default async function LabsIndexPage({ params, searchParams }: Props) {
         </p>
         <p className="text-base text-muted-foreground md:text-lg">
           Scivra ships {totalCount} virtual labs across physics, chemistry, biology, earth science, and math,
-          built around the same concepts you'll meet on AP exams, in NGSS classrooms, and across the GCSE
+          built around the same concepts you&apos;ll meet on AP exams, in NGSS classrooms, and across the GCSE
           curriculum.
         </p>
       </section>
