@@ -157,7 +157,7 @@ export const rlcCircuit: Experiment = {
       resistance:
         "R in ohms sets the resistive loss in the circuit and is the sole term remaining in Z at resonance. Higher R broadens the resonance peak (lower Q = ω₀L/R) and damps transient oscillations faster.",
       inductance:
-        "L in mH determines inductive reactance X_L = ωL, which grows with frequency. It also sets the resonant frequency ω₀ = 1/√(LC) and Q = ω₀L/R — larger L raises both the resonant frequency (if C is fixed) and sharpens the peak.",
+        "L in mH determines inductive reactance X_L = ωL, which grows with frequency. It also affects the resonant frequency ω₀ = 1/√(LC) and quality factor Q = (1/R)√(L/C) — larger L lowers ω₀ (since ω₀ = 1/√(LC)) while sharpening the resonance peak (Q = (1/R)√(L/C) grows with L).",
       capacitance:
         "C in μF determines capacitive reactance X_C = 1/(ωC), which shrinks as frequency rises. Together with L it fixes ω₀ = 1/√(LC); a larger C lowers the resonant frequency and, for fixed L and R, lowers Q.",
       drivingFreq:
@@ -202,7 +202,7 @@ export const rlcCircuit: Experiment = {
       "Impedance vs. frequency sweep: have pairs record |Z| at drivingFreq = 100, 200, 300, 400, 500, 600, 700, 800 Hz and plot Z(f). Students identify the minimum Z = R at f₀, note the asymmetry above and below resonance, and connect the shape to Z = √(R² + (ωL − 1/(ωC))²).",
       "Q-factor investigation: keep L and C fixed; vary resistance to produce underdamped (R = 10 Ω), moderately damped (R = 50 Ω), and overdamped (R = 500 Ω) responses. Have students measure the bandwidth Δf (the frequency range where I ≥ I₀/√2) and verify Q = f₀/Δf.",
       "Phase angle misconception probe: pause the simulation at a frequency below resonance and ask students whether current leads or lags voltage. Many will guess lag (because inductors lag), but at sub-resonance the capacitive reactance dominates and current leads. Use the phasor display to correct the intuition.",
-      "Transient decay comparison: switch to transient mode at fixed L and C; vary only resistance and observe how the oscillation envelope collapses faster at higher R. Ask students to extract the exponential decay time constant τ = 2L/R from the simulation and compare to the analytic value using their recorded R and L values.",
+      "Transient decay comparison: switch to transient mode at fixed L and C; vary only resistance and observe how the oscillation envelope collapses faster at higher R. Restrict this activity to the underdamped regime (R < R_c = 2√(L/C) ≈ 63 Ω for the default L and C) where the envelope follows e^(−Rt/(2L)); ask students to extract τ = 2L/R from the simulation. For critically or overdamped responses, have students instead describe the qualitative shape change (no oscillation, slower approach to zero).",
     ],
     faq: [
       {

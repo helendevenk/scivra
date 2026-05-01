@@ -159,7 +159,7 @@ export const gaussLaw: Experiment = {
       chargeDistribution:
         "Selects the source geometry: 0 = point charge (spherical symmetry, Gaussian sphere), 1 = infinite line charge (cylindrical symmetry, Gaussian cylinder), 2 = infinite plane (planar symmetry, Gaussian pillbox), 3 = uniformly charged sphere (field inside differs from outside). Each geometry calls for a different Gaussian surface shape to exploit symmetry.",
       chargeAmount:
-        "The total enclosed charge Q in microcoulombs (μC). Positive Q produces outward flux; negative Q produces inward flux. The total flux through the Gaussian surface equals Q/(ε₀) = Q / (8.854 × 10⁻¹² C²/(N·m²)), so doubling Q doubles the flux regardless of surface size or shape.",
+        "Controls the charge strength in microcoulombs (μC). For point-charge and uniform-sphere modes this is the total enclosed charge Q; for line-charge mode it represents an effective linear charge density λ (charge per unit length) used by the simulation; for plane mode it represents an effective surface charge density σ. Positive values produce outward flux; negative values produce inward flux.",
       surfaceRadius:
         "The radius of the Gaussian surface in meters. For a point charge, changing this radius does not change the enclosed charge or total flux — only the field magnitude at the surface (E ∝ 1/r²) and the surface area (A ∝ r²) change, with the product E·A staying constant. For the charged-sphere distribution (option 3), moving the radius inside versus outside the sphere changes Q_enc and hence the flux.",
       fieldDensity:
@@ -178,7 +178,7 @@ export const gaussLaw: Experiment = {
         wrong:
           "A larger Gaussian surface encloses more field lines and therefore has more flux.",
         correct:
-          "Flux through a closed surface depends only on Q_enc, not surface size or shape. Doubling the sphere's radius quadruples A but halves E (since E ∝ 1/r²); the product E·4πr² = Q/ε₀ remains constant. Verify this by dragging surfaceRadius in the simulation while watching the flux readout stay fixed.",
+          "Flux through a closed surface depends only on Q_enc, not surface size or shape. Doubling the sphere's radius quadruples A but reduces E to one-quarter (since E ∝ 1/r²); the product E·4πr² = Q/ε₀ remains constant. Verify this by dragging surfaceRadius in the simulation while watching the flux readout stay fixed.",
       },
       {
         wrong:
@@ -190,7 +190,7 @@ export const gaussLaw: Experiment = {
         wrong:
           "Inside a conductor, the electric field is zero because there are no charges there.",
         correct:
-          "The field is zero inside a conductor in electrostatic equilibrium, but for a different reason: free charges redistribute to the surface until the internal field is cancelled. Gauss's Law confirms this — a Gaussian surface just inside the conductor encloses no net charge (all charge is on the outer surface), so the flux and hence E inside equals zero.",
+          "The field is zero inside a conductor in electrostatic equilibrium because free charges redistribute to the surface until the internal field is cancelled — this is a separate electrostatic-equilibrium fact. Gauss's Law applied to a surface just inside the conductor is consistent with it: zero enclosed charge gives zero net flux. However, zero flux from a Gaussian surface alone does not prove E = 0 pointwise without the symmetry and equilibrium argument; the two must work together.",
       },
       {
         wrong:
@@ -201,10 +201,10 @@ export const gaussLaw: Experiment = {
     ],
     teacherUseCases: [
       "Flux vs. surface radius data collection: set chargeDistribution = 0 (point charge) and chargeAmount = 5 μC. Have students record the total flux displayed for surfaceRadius = 0.5, 1, 2, 3, and 4 m. They should find Φ ≈ 5.65 × 10⁵ N·m²/C at every radius, confirming Q_enc/ε₀ is independent of surface size. Directly addresses AP standard 2.B.1.",
-      "Field extraction with symmetry: switch to chargeDistribution = 3 (uniform sphere) and vary surfaceRadius from just inside to just outside the sphere's boundary. Students observe the flux jump when the surface crosses the sphere edge and use Gauss's Law to derive the expression for E inside (E = kQr/R³) and outside (E = kQ/r²) the sphere. Addresses standard 2.C.1.",
+      "Field extraction with symmetry: switch to chargeDistribution = 3 (uniform sphere) and vary surfaceRadius from just inside to just outside the sphere's boundary. Students observe the flux rising smoothly inside the sphere and flattening once the surface fully encloses the charge — the slope changes at the boundary — and use Gauss's Law to derive the expression for E inside (E = kQr/R³) and outside (E = kQ/r²) the sphere. Addresses standard 2.C.1.",
       "Misconception probe — does surface size matter?: before touching the simulation, ask students to predict whether doubling the Gaussian surface radius will double, halve, or leave unchanged the total flux. Most predict it doubles. Run the simulation with showFluxArrows = 1 to reveal the constant flux, then derive why E·4πr² = Q/ε₀ is scale-invariant. Addresses standard 2.A.1.",
       "Sign of flux and charge sign: set chargeAmount to +5 μC, record the displayed flux sign and direction of arrows. Then set chargeAmount to −5 μC and repeat. Students observe that flux reverses sign and arrows point inward, connecting the mathematical sign convention (outward normal positive) to the physical picture of field lines originating on positive and terminating on negative charges.",
-      "Line charge field strength: switch to chargeDistribution = 1 and record the field magnitude at the surface for surfaceRadius = 0.5, 1.0, 1.5, and 2.0 m. Students compute E = λ/(2πε₀r) analytically (using effective λ = Q/L for the simulated finite segment) and check whether E · r is approximately constant, verifying the cylindrical Gauss's Law result.",
+      "Line charge field strength: switch to chargeDistribution = 1 and record the field magnitude at the surface for surfaceRadius = 0.5, 1.0, 1.5, and 2.0 m. Students compute E = λ/(2πε₀r) analytically using the effective linear charge density displayed by the simulation in line-charge mode, and check whether E · r is approximately constant, verifying the cylindrical Gauss's Law result.",
     ],
     faq: [
       {

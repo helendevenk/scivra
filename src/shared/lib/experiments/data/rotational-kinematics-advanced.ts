@@ -171,7 +171,7 @@ export const rotationalKinematicsAdvanced: Experiment = {
         wrong:
           "All round objects roll at the same speed down a ramp because they have the same shape — round.",
         correct:
-          "The acceleration down a frictionless ramp is a = g sinθ / (1 + I/(MR²)). A solid sphere (I/(MR²) = 2/5) always beats a ring (I/(MR²) = 1) because the sphere stores less energy in rotation relative to translation. Shape coefficient c, not just geometry, determines the race outcome.",
+          "On an incline with enough friction to roll without slipping, acceleration is a = g sinθ / (1 + I/(MR²)). A solid sphere (I/(MR²) = 2/5) always beats a ring (I/(MR²) = 1) because the sphere stores less energy in rotation relative to translation. Shape coefficient c, not just geometry, determines the race outcome.",
       },
       {
         wrong:
@@ -199,7 +199,7 @@ export const rotationalKinematicsAdvanced: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Rolling race data collection: set shape to each of the four options (0–3) with identical mass = 2 kg and radius = 0.5 m, apply angAccel = 2 rad/s², and record ω at t = 5 s for each shape. Students compute τ = Iα for each geometry, verify that the same angular acceleration requires different torques, and rank the shapes by I. Directly addresses AP standard 5.B.1.",
+      "Required-torque comparison: set shape to each of the four options (0–3) with identical mass = 2 kg, radius = 0.5 m, and angAccel = 2 rad/s². Because α is held constant, all shapes reach the same ω(t); students compute the required torque τ = Iα for each geometry — which differs because I differs — and rank the shapes by I. This shows that achieving the same angular acceleration demands more torque for shapes with larger moment of inertia. Directly addresses AP standard 5.B.1.",
       "Torque–acceleration verification: fix shape = 0 (solid disk) and radius = 0.5 m; vary mass across 1, 2, 5, and 10 kg while holding angAccel constant. Have students compute I = ½MR² and the required torque τ = Iα for each mass, then plot τ vs. I and confirm the linear relationship. Addresses standard 5.C.1.",
       "Misconception probe — the rolling race: before running the simulation, ask students which of the four shapes reaches a given ω first if the same constant torque is applied. Most predict the heaviest or the largest. Reveal the result with the simulation, then guide students to derive α = τ/I and identify why the shape coefficient (½, 1, ⅖) is the deciding factor.",
       "Kinematic equation audit: set initialOmega = 0, angAccel = 2 rad/s², run for 10 s, then pause the simulation. Have students use θ = ½αt² to predict θ at t = 3, 5, and 8 s and compare to the simulation's θ(t) graph. Discrepancies prompt discussion of constant-α assumptions. Addresses standard 5.A.1.",

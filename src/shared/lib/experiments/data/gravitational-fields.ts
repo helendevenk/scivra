@@ -134,9 +134,9 @@ export const gravitationalFields: Experiment = {
       "Gravitational fields obey an inverse-square law — g = GM/r² pointing toward the source mass — and this single relationship generates all of orbital mechanics. A satellite launched horizontally at exactly v_circ = √(GM/r) stays in a circular orbit; faster launches produce ellipses or escape trajectories; slower ones curve back into the planet. Kepler's three laws all follow from Newton's law of gravitation: elliptical orbits with the planet at one focus, equal areas swept in equal times (a consequence of angular momentum conservation), and T² ∝ a³. This simulation lets you set launch speed, launch angle, and planet mass to trace circular, elliptical, and hyperbolic trajectories in real time, while swept-area triangles verify Kepler's second law as the satellite races through periapsis and crawls through apoapsis.",
     parameterExplanations: {
       launchSpeed:
-        "Initial speed in km/s at the moment of launch from the planet surface. At approximately 7.9 km/s (for Earth-mass planet) the orbit becomes circular. Below that value the satellite arcs back down; above it the orbit stretches into an ellipse with a higher apoapsis; at ~11.2 km/s (= √2 × v_circ) the satellite reaches escape velocity and exits on a hyperbolic path.",
+        "Initial speed in km/s at the moment of launch from the planet surface. At approximately 7.9 km/s (for Earth-mass planet) the orbit becomes circular. Below that value the satellite arcs back down; above it the orbit stretches into an ellipse with a higher apoapsis; at ~11.2 km/s (= √2 × v_circ) the satellite reaches escape velocity and follows a parabolic escape trajectory; above v_esc the path becomes hyperbolic.",
       launchAngle:
-        "Angle in degrees above horizontal at launch. A purely horizontal launch (0°) at circular speed produces a circular orbit. Non-zero angles inject a radial velocity component that shifts the orbit's apse line, converting a circular trajectory into an ellipse with the launch point at periapsis or apoapsis depending on the angle and speed combination.",
+        "Angle in degrees above horizontal at launch. A purely horizontal launch (0°) at circular speed produces a circular orbit. Non-zero angles introduce a radial velocity component, which shifts the apse line so that periapsis and apoapsis appear elsewhere along the orbit; the launch point is generally not an apsis because apsides require zero radial velocity.",
       planetMass:
         "Planet mass expressed as a multiple of Earth's mass (M⊕ ≈ 5.97 × 10²⁴ kg). Increasing the planet mass scales both the circular orbital speed (v_circ ∝ √M) and escape velocity (v_esc ∝ √M) proportionally, while also tightening orbital periods via Kepler's third law T² = (4π²/GM)a³.",
     },
@@ -151,7 +151,7 @@ export const gravitationalFields: Experiment = {
         wrong:
           "Orbital mechanics requires constant velocity — satellites travel at the same speed around their orbit.",
         correct:
-          "Only circular orbits have constant speed. In an elliptical orbit, the satellite moves fastest at periapsis and slowest at apoapsis. This follows from conservation of angular momentum: L = mvr is constant, so v must increase as r decreases. Kepler's second law (equal areas in equal times) is a geometric restatement of this fact.",
+          "Only circular orbits have constant speed. In an elliptical orbit, the satellite moves fastest at periapsis and slowest at apoapsis. This follows from conservation of angular momentum: L = m r v_t (the tangential component) is constant, so v must increase as r decreases. Kepler's second law (equal areas in equal times) is a geometric restatement of this fact.",
       },
       {
         wrong:
@@ -177,7 +177,7 @@ export const gravitationalFields: Experiment = {
       "Kepler's second law verification: launch an elliptical orbit (launchSpeed ≈ 9 km/s, launchAngle = 0°). Pause the simulation at four equally-spaced time intervals and estimate the swept-area triangles using the on-screen indicators. Students verify that all four areas are approximately equal, linking area conservation to angular momentum conservation. Addresses standard 3.G.1.",
       "Escape velocity ratio lab: have students record v_circ (the circular orbital speed found in the first activity) and then find v_esc by increasing launchSpeed until the satellite no longer returns. Students compute the ratio v_esc/v_circ and check whether it matches √2 ≈ 1.414. Addresses standard 3.C.2.",
       "Misconception probe — does a faster orbit always stay higher?: set launchAngle = 0° and ask students to predict what happens to the orbit shape as launchSpeed increases from 7.9 to 11 km/s. After their predictions, run the simulation and discuss the asymmetric stretching of the ellipse — only apoapsis rises while periapsis stays at the launch radius.",
-      "Planet mass scaling: vary planetMass from 0.5 to 2.0 × M⊕ while holding launchSpeed fixed. Have students measure the orbital period T from the simulation and plot T² vs. planetMass⁻¹. The linear trend confirms the Kepler third-law constant 4π²/GM and lets students extract an experimental value of G·M. Addresses standard 3.C.2.",
+      "Planet mass scaling: vary planetMass from 0.5 to 2.0 × M⊕ while keeping the orbit circular by adjusting launchSpeed = √(GM/r) for each M (so the orbit radius stays fixed). Have students measure the orbital period T and verify T² = (4π²/GM)a³ with a held constant, confirming that T² ∝ 1/M at fixed radius. Addresses standard 3.C.2.",
     ],
     faq: [
       {

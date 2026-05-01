@@ -160,7 +160,7 @@ export const angularMomentum3d: Experiment = {
       spinRate:
         "The angular velocity ω of the spinning object in rad/s at the start of the simulation. Higher spin rates increase |L| = Iω and, for the gyroscope, slow the precession rate Ω = Mgd/(Iω) — a larger denominator means a lazier cone sweep.",
       tiltAngle:
-        "The angle in degrees between the gyroscope's spin axis and the vertical. The gravitational torque that drives precession is τ = Mgd·sinθ; larger tilt angles produce stronger torques and a faster precession rate, visible as the L vector tracing a wider cone.",
+        "The angle in degrees between the gyroscope's spin axis and the vertical. The gravitational torque that drives precession is τ = Mgd·sinθ, so larger tilt angles produce a wider precession cone; however, the steady-state precession rate Ω = Mgd/(Iω) is independent of θ — only when θ → 0 does the gravitational torque vanish and precession stop.",
       armExtension:
         "Controls how far the skater's arms are extended, expressed as a percentage of maximum reach. Fully extended (100 %) maximizes I; pulling in to 20 % shrinks I dramatically. Because L = Iω is conserved, ω rises in proportion as I falls — watch the spin rate readout jump.",
       showVectors:
@@ -209,7 +209,7 @@ export const angularMomentum3d: Experiment = {
       {
         question: "Why does a gyroscope precess instead of just tipping over?",
         answer:
-          "The gravitational torque τ = Mgd·sinθ acts perpendicular to the angular momentum vector L, not parallel to it. Since dL/dt = τ, this perpendicular torque rotates L rather than changing its magnitude — the axis circles the vertical at precession rate Ω = Mgd/(Iω) rad/s. Tipping over would require a torque parallel to L.",
+          "The gravitational torque τ = Mgd·sinθ acts perpendicular to the angular momentum vector L, not parallel to it. Since dL/dt = τ, this perpendicular torque rotates L rather than changing its magnitude — the axis circles the vertical at precession rate Ω = Mgd/(Iω) rad/s. Changing the tilt angle (tipping) would require a torque component in the tilt-change plane; gravity's torque is perpendicular to L and produces precession instead.",
       },
       {
         question: "What AP Physics C standard covers angular momentum conservation?",

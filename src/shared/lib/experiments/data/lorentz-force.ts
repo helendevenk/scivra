@@ -163,11 +163,11 @@ export const lorentzForce: Experiment = {
       fieldStrength:
         "Magnitude of the uniform magnetic field B in tesla. The cyclotron radius r = mv/(|q|B) is inversely proportional to B, so increasing fieldStrength tightens the orbit and increases cyclotron frequency ω_c = |q|B/m.",
       charge:
-        "Charge q in units of 10⁻¹⁹ C, ranging from −5 to +5. Sign determines the rotation sense via the cross product: flipping from +q to −q reverses the circular orbit direction. Magnitude scales the force F = qvB sin θ and therefore also the cyclotron radius r = mv/(|q|B).",
+        "Charge q in units of 10⁻¹⁹ C, ranging from −5 to +5. The sign determines the rotation sense via the cross product: flipping from +q to −q reverses the circular orbit direction. |F| = |q|vB sin θ — the sign of q determines direction, not force magnitude; larger |q| also tightens the cyclotron radius r = mv/(|q|B).",
       velocityMag:
         "Initial speed of the particle in units of 10⁶ m/s, in the plane perpendicular to B. Larger velocityMag increases the cyclotron radius linearly (r = mv/(|q|B)) while leaving the period T = 2πm/(|q|B) unchanged — the orbit simply gets bigger at the same rotation rate.",
       fieldDirection:
-        "Orientation of B in degrees around the z-axis. Rotating B away from the z-axis changes which velocity components are perpendicular to B and which are parallel, altering the orbital plane and helix axis.",
+        "Polar angle of B measured from the +z axis, in degrees. At 0° B points along +z (and v_z is parallel to B); larger angles tip B away from the z-axis, so the v_z component is no longer parallel to B and contributes to v × B, altering the orbital plane and helix axis.",
       vzComponent:
         "Velocity component along the z-axis (parallel to the default B direction) in units of 10⁶ m/s. This component experiences zero magnetic force since F = qv_∥ × B = 0 for parallel vectors. Adding v_z produces helical motion: the circular orbit in the xy-plane is combined with uniform drift along z.",
     },
@@ -182,7 +182,7 @@ export const lorentzForce: Experiment = {
         wrong:
           "The magnetic force does work on the charged particle, so it speeds up as it spirals.",
         correct:
-          "The magnetic force is always perpendicular to velocity, so F·v = 0 and no work is done. The particle's speed stays constant — only its direction changes. To accelerate particles, a separate electric field is needed (as in a cyclotron, where E accelerates while B curves).",
+          "The magnetic force is always perpendicular to velocity, so F·v = 0 and no work is done. The particle's speed stays constant — only its direction changes. To speed up or slow down particles, a separate electric field is needed (as in a cyclotron, where E accelerates while B curves).",
       },
       {
         wrong:
@@ -192,9 +192,9 @@ export const lorentzForce: Experiment = {
       },
       {
         wrong:
-          "Reversing the charge sign reverses the direction of the magnetic force but leaves the orbit radius the same.",
+          "A negative charge has a smaller cyclotron radius than a positive charge of equal magnitude in the same magnetic field.",
         correct:
-          "The radius r = mv/(|q|B) depends on |q|, so the orbit radius is the same magnitude for +q and −q of equal absolute charge. What reverses is the rotation sense — a positive charge and a negative charge entering with the same velocity in the same field circle in opposite directions.",
+          "Cyclotron radius r = mv/(|q|B) depends on |q|, so equal-magnitude positive and negative charges trace circles of the same radius. What differs is the rotational sense — a positive charge and a negative charge entering with the same velocity in the same field circle in opposite directions.",
       },
       {
         wrong:
@@ -208,13 +208,13 @@ export const lorentzForce: Experiment = {
       "Cyclotron radius data collection: hold fieldStrength = 1 T and charge = 1 fixed; sweep velocityMag from 0.5 to 3.0 (×10⁶ m/s) in 0.5-unit steps and measure the orbit radius from the display. Plot r vs. velocityMag and confirm the linear relationship r = mv/(|q|B), extracting m/|q| from the slope.",
       "Period independence demonstration: change velocityMag over a wide range while keeping fieldStrength and charge fixed, and time one full orbit in the simulation. Students observe that the period T = 2πm/(|q|B) does not change with speed — a counterintuitive result that underlies how cyclotrons work and directly addresses AP standard 3.C.3.",
       "Helix construction: set vzComponent to a nonzero value and increase fieldStrength to observe the helix pitch tighten. Ask students to predict which parameter controls the helix radius (v_⊥ and B) vs. which controls the pitch (v_z and the period T). This separates the two independent motions cleanly.",
-      "Misconception probe — stationary charge: set velocityMag = 0 and observe zero force. Ask students to explain the result using F = qv × B and contrast it with what would happen if an electric field were present instead, connecting to the full Lorentz force F = q(E + v × B).",
+      "Misconception probe — stationary charge: set velocityMag to its minimum value and discuss the v → 0 limit, where F = qv × B → 0. Ask students to explain the result using F = qv × B and contrast it with what would happen if an electric field were present instead, connecting to the full Lorentz force F = q(E + v × B).",
     ],
     faq: [
       {
         question: "Why does the magnetic force never do work on a moving charge?",
         answer:
-          "Work requires a force component along the displacement: dW = F·ds = F·v dt. Since F = qv × B is always perpendicular to v by the definition of the cross product, F·v = 0 at every instant. No work is done, so kinetic energy — and therefore speed — is constant. The field can only redirect the particle, never accelerate or decelerate it.",
+          "Work requires a force component along the displacement: dW = F·ds = F·v dt. Since F = qv × B is always perpendicular to v by the definition of the cross product, F·v = 0 at every instant. No work is done, so kinetic energy — and therefore speed — is constant. The field can only redirect the particle, never speed it up or slow it down (centripetal acceleration changes velocity direction but not magnitude).",
       },
       {
         question: "What AP Physics C standards does this simulation address?",

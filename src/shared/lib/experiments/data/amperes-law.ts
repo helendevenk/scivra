@@ -154,7 +154,7 @@ export const amperesLaw: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Ampère's Law — one of Maxwell's four equations — states that the line integral of B around any closed Amperian loop equals μ₀ times the current threading that loop: ∮B·dl = μ₀I_enc. The power of the law lies in symmetry: for a long straight wire the integrand is constant around a circle of radius r, giving B(2πr) = μ₀I and therefore B = μ₀I/(2πr). Inside an ideal solenoid with n turns per meter, a rectangular Amperian loop yields B = μ₀nI (uniform, axially directed) while outside B ≈ 0. The simulation lets you switch between a bare wire, a coaxial cable, and a solenoid, position the Amperian loop with loopRadius, and watch ∮B·dl update numerically as the enclosed current changes.",
+      "In magnetostatics, Ampère's Law states that the line integral of B around any closed Amperian loop equals μ₀ times the current threading that loop: ∮B·dl = μ₀I_enc; the full Maxwell-Ampère version adds a displacement-current term μ₀ε₀ dΦ_E/dt for time-varying fields. The power of the magnetostatic form lies in symmetry: for a long straight wire the integrand is constant around a circle of radius r, giving B(2πr) = μ₀I and therefore B = μ₀I/(2πr). Inside an ideal solenoid with n turns per meter, a rectangular Amperian loop yields B = μ₀nI (uniform, axially directed) while outside B ≈ 0. The simulation lets you switch between a bare wire, a coaxial cable, and a solenoid, position the Amperian loop with loopRadius, and watch ∮B·dl update numerically as the enclosed current changes.",
     parameterExplanations: {
       currentConfig:
         "Selects the geometry: 0 = infinite straight wire, 1 = coaxial cable (inner +I, outer −I), 2 = solenoid. Each geometry has a different enclosed-current rule, so the same Amperian loop radius gives a different B depending on which configuration is active.",
@@ -184,7 +184,7 @@ export const amperesLaw: Experiment = {
         wrong:
           "The magnetic field outside a solenoid is just weaker, not zero.",
         correct:
-          "For an ideal infinite solenoid, B outside is exactly zero. An Amperian rectangle straddling the wall with one leg outside and one inside encloses zero net current (current flows up on one side and down on the other), so ∮B·dl = 0. With B_outside = 0 along the exterior leg and B_inside = μ₀nI pulling the other way, consistency requires B_outside = 0.",
+          "For an ideal infinite solenoid, B outside is zero by a symmetry argument: the field must be uniform and vanish at infinity for an infinite uniform solenoid. An Amperian rectangle straddling the wall with one long side inside and one outside gives B_inside − B_outside = μ₀nI (the loop encloses surface current nIℓ), consistent with B_inside = μ₀nI when B_outside = 0. Real finite solenoids have a small but nonzero exterior field.",
       },
       {
         wrong:
@@ -204,7 +204,7 @@ export const amperesLaw: Experiment = {
       "Wire field data collection: set currentConfig = 0, sweep loopRadius from 0.3 m to 3.0 m in 0.1 m steps, record the displayed B at each step, and plot B vs. 1/r. Students should obtain a straight line through the origin with slope μ₀I/(2π). Verify by computing the slope and comparing to μ₀ = 4π × 10⁻⁷ T·m/A.",
       "Solenoid interior vs. exterior probe: set currentConfig = 2 and solenoidTurns = 100 turns/m. Place loopRadius inside the solenoid and record B = μ₀nI; then move it outside and observe B ≈ 0. Ask students why the same Amperian rectangle argument that gives B_inside also forces B_outside = 0 rather than just 'small.'",
       "Coaxial cable misconception challenge: set currentConfig = 1 and increase loopRadius past the outer conductor radius. Students who expect B to diminish gradually are surprised to see it drop to zero. Have them draw the Amperian loop, label I_enc, and write ∮B·dl = μ₀(0) explicitly.",
-      "Right-hand rule 3D practice: with currentConfig = 0, increase current to 10 A and use the fieldDensity slider to display a dense vector field. Ask students to verify the rotational direction of B vectors using the right-hand rule with thumb along the current direction, then predict what happens when current is reversed and observe the simulation.",
+      "Right-hand rule 3D practice: with currentConfig = 0, increase current to 10 A and use the fieldDensity slider to display a dense vector field. Ask students to verify the rotational direction of B vectors using the right-hand rule with thumb along the current direction, then predict how doubling current changes the B vector magnitude and observe the simulation.",
     ],
     faq: [
       {
@@ -220,7 +220,7 @@ export const amperesLaw: Experiment = {
       {
         question: "Why does the magnetic field outside an ideal solenoid equal zero?",
         answer:
-          "Apply a rectangular Amperian loop with one long side inside the solenoid (parallel to the axis) and one outside. The two short sides contribute nothing by symmetry. Inside, B·l gives a nonzero term; outside it gives zero only if B_outside = 0, which is required because the loop encloses zero net current (currents circulate but cancel for an infinite solenoid). Real solenoids are finite, so B outside is small but not exactly zero.",
+          "For an ideal infinite solenoid, B outside is zero by a symmetry argument: the field must be uniform and, for an infinite solenoid extending to infinity in both directions, it must also vanish at infinity — so B_outside = 0. An Amperian rectangle straddling the solenoid wall gives B_inside − B_outside = μ₀nI, which is consistent with B_inside = μ₀nI once we set B_outside = 0 from the symmetry argument. Real finite solenoids have a small but nonzero exterior field (magnetic field lines must close).",
       },
       {
         question: "What is μ₀ and what are its units?",

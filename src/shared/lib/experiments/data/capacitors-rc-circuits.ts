@@ -155,7 +155,7 @@ export const capacitorsRcCircuits: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "A capacitor stores energy in the electric field between two parallel conducting plates separated by a dielectric. Capacitance C = ε₀A/d relates plate geometry directly to charge-storage ability. Connect a capacitor and resistor in series with a battery and the charging voltage climbs as V_C(t) = V₀(1 − e^(−t/RC)) — an exponential approach, not a straight line. The time constant τ = RC sets the pace: after one τ the capacitor has reached ~63% of V₀; after five τ it is effectively full. Energy stored at full charge is U = ½CV². The simulation lets you sweep capacitance (μF), resistance (kΩ), and battery voltage, and you can alter plate geometry to watch how C = ε₀A/d shifts the curve in real time.",
+      "A capacitor stores energy in the electric field between two parallel conducting plates separated by an insulating gap (vacuum or dielectric of permittivity κε₀). Capacitance C = κε₀A/d (κ = 1 for vacuum) relates plate geometry directly to charge-storage ability. Connect a capacitor and resistor in series with a battery and the charging voltage climbs as V_C(t) = V₀(1 − e^(−t/RC)) — an exponential approach, not a straight line. The time constant τ = RC sets the pace: after one τ the capacitor has reached ~63% of V₀; after five τ it is effectively full. Energy stored at full charge is U = ½CV². The simulation lets you sweep capacitance (μF), resistance (kΩ), and battery voltage, and you can alter plate geometry to watch how C = κε₀A/d shifts the curve in real time.",
     parameterExplanations: {
       capacitance:
         "Sets C in μF, which directly sets the time constant τ = RC and the total charge Q = CV₀ the capacitor can hold. Larger C means slower charging and more stored energy at full voltage.",
@@ -166,7 +166,7 @@ export const capacitorsRcCircuits: Experiment = {
       plate_area:
         "Physical area A of each plate in cm². Capacitance scales as C = ε₀A/d, so doubling A doubles C, which lengthens the RC time constant and increases maximum stored energy U = ½CV².",
       plate_separation:
-        "Gap d between the plates in mm. Because C = ε₀A/d, increasing d reduces capacitance — the plates are farther apart, so the electric field for a given charge is weaker and Q/V drops.",
+        "Gap d between the plates in mm. For a given charge Q, the electric field E = Q/(ε₀A) is independent of d, but the voltage V = Ed grows linearly with d, so C = Q/V = ε₀A/d decreases as d increases.",
     },
     misconceptions: [
       {
@@ -197,7 +197,7 @@ export const capacitorsRcCircuits: Experiment = {
         wrong:
           "Increasing plate separation increases capacitance because the plates are farther apart and can hold more charge.",
         correct:
-          "Capacitance C = ε₀A/d decreases as d increases. A larger gap weakens the electric field per unit charge, reducing the capacitor's ability to store charge at a given voltage.",
+          "Capacitance C = ε₀A/d decreases as d increases. For a given charge per unit area, the electric field E is unchanged, but the voltage V = Ed grows with d, so C = Q/V decreases.",
       },
     ],
     teacherUseCases: [

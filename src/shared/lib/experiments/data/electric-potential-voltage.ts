@@ -155,7 +155,7 @@ export const electricPotentialVoltage: Experiment = {
         wrong:
           "Voltage and electric field are the same thing — a high-voltage region has a strong electric field.",
         correct:
-          "V (volts, J/C) is potential energy per unit charge at a point; E (N/C or V/m) is force per unit charge. The two are related by E = −dV/dr (or more generally E = −∇V). A region can have high potential but weak field — for example, inside a large charged sphere where V is large but E = 0.",
+          "V (volts, J/C) is potential energy per unit charge at a point; E (N/C or V/m) is force per unit charge. The two are related by E = −dV/dr (or more generally E = −∇V). A region can have high potential but weak field — for example, inside a large hollow conductor (or a conducting sphere in electrostatic equilibrium) where V is large but E = 0.",
       },
       {
         wrong:
@@ -167,7 +167,7 @@ export const electricPotentialVoltage: Experiment = {
         wrong:
           "Moving a charge along an equipotential line requires work because you are moving against the electric field.",
         correct:
-          "By definition, all points on an equipotential surface have the same V, so ΔV = 0. The work done by the electric field is W = qΔV = 0. An external agent moving the charge along the surface does no net work against the field, although the force from the field has a component along the path that must be balanced by the agent.",
+          "By definition, all points on an equipotential surface have the same V, so ΔV = 0. The electric field E is perpendicular to the equipotential by construction, so it exerts no tangential force on a charge moving along the surface. Therefore W = qΔV = 0: no work is done by the field (or against it) for any path that stays on a single equipotential.",
       },
       {
         wrong:
@@ -184,10 +184,10 @@ export const electricPotentialVoltage: Experiment = {
     ],
     teacherUseCases: [
       "Potential vs. distance data collection: set charge_count = 1, charge_value = 5 μC. Have students click the canvas at radii of 0.5, 1.0, 1.5, 2.0, and 2.5 m from the charge to read V at each point. They compute kq/r analytically and compare. Plotting V vs. 1/r should yield a straight line, confirming the 1/r dependence. Addresses AP standard CHA-2.C.",
-      "Superposition demonstration: set charge_count = 2, charge_value = +5 μC, and slide charge2_x from −2 m to +2 m. Have students identify the saddle point in the potential (where V = 0 between two like charges) and trace how it shifts with separation. Connecting V_total = k(q₁/r₁ + q₂/r₂) to the visual makes superposition concrete. Addresses standard CHA-2.D.",
+      "Superposition demonstration: set charge_count = 2, charge_value = +5 μC, and slide charge2_x from −2 m to +2 m. Have students identify the stationary point where E = 0 between the two like charges (V reaches a local minimum along the line between them, but never equals zero for two positive charges) and trace how it shifts with separation. Connecting V_total = k(q₁/r₁ + q₂/r₂) to the visual makes superposition concrete. Addresses standard CHA-2.D.",
       "Perpendicularity of E and equipotentials: after setting charge_count = 1, have students draw freehand arrows on a printed screenshot of the equipotential map representing their guess for the E field direction at five points. Then overlay the actual E vectors from the simulation and measure the angle between E and the nearest equipotential. Students discover the 90° relationship and connect it to E = −∇V. Addresses standard CHA-3.A.",
-      "Misconception probe — does voltage equal field strength?: set charge_value to +10 μC and identify a point very close to the charge (high V and high E) and a point on a large-radius equipotential (lower V but compare E values). Ask students whether the higher-V region always has higher E. Use the simulation's V and E readouts to show that inside a region of constant potential, E = 0 regardless of V magnitude.",
-      "Work calculation from ΔV: set charge_count = 1 and charge_value = 5 μC. Ask students to compute the work W = q_test · ΔV to move a +1 nC test charge from V₁ (at r = 2 m) to V₂ (at r = 0.5 m). They calculate W = (1 × 10⁻⁹)(V₂ − V₁) in joules and confirm the sign — positive work is done by an external agent moving a positive charge toward a higher-V region against the field. Addresses standard CHA-2.D.",
+      "Misconception probe — does voltage equal field strength?: set charge_value to +10 μC and identify a point very close to the charge (high V and high E) and a point on a large-radius equipotential (lower V but compare E values). Ask students whether the higher-V region always has higher E. Use the simulation's V and E readouts to show that inside a 3D region where V is uniform — for example the interior of a conductor in electrostatic equilibrium — E = 0; on a 2D equipotential surface around an isolated charge, V is constant along the surface but E is nonzero and perpendicular to it.",
+      "Work calculation from ΔV: set charge_count = 1 and charge_value = 5 μC. Ask students to compute the work for a +1 nC test charge moved from V_i (at r = 2 m) to V_f (at r = 0.5 m). Use the unified convention: ΔU = qΔV = q(V_f − V_i); work done by the field W_field = −ΔU = q(V_i − V_f); work done by an external agent quasi-statically W_ext = +ΔU = q(V_f − V_i). Students confirm that moving a positive charge toward higher V requires positive external work. Addresses standard CHA-2.D.",
     ],
     faq: [
       {
@@ -208,7 +208,7 @@ export const electricPotentialVoltage: Experiment = {
       {
         question: "How do I calculate the work done moving a charge between two equipotentials in this simulation?",
         answer:
-          "Click two points on the canvas to read V₁ and V₂, then use W = q(V₁ − V₂) where q is the charge being moved. If you are moving a positive charge from low-V to high-V, the electric field does negative work (W < 0), meaning an external agent must supply energy. Set test_charge_sign to match the sign of the charge you are analyzing.",
+          "Click two points on the canvas to read V_i and V_f. Use the convention: ΔU = q(V_f − V_i); work done by the field W_field = −ΔU = q(V_i − V_f); work done by an external agent quasi-statically W_ext = +ΔU = q(V_f − V_i). Moving a positive charge from low-V to high-V means V_f > V_i, so ΔU > 0: the field does negative work and the external agent does positive work. Set test_charge_sign to match the sign of q.",
       },
       {
         question: "What happens to the equipotential pattern when two opposite charges are placed close together?",

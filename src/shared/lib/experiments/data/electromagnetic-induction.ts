@@ -145,7 +145,7 @@ export const electromagneticInduction: Experiment = {
       B_field:
         "Magnetic field strength in tesla. Peak EMF scales as ε_peak = NBAω, so doubling B_field doubles the amplitude of the sinusoidal EMF output. This also doubles dΦ/dt at every instant, which you can observe as the waveform's amplitude stretching vertically.",
       rotation_speed:
-        "Angular velocity ω in rad/s. Increasing ω does two things simultaneously: it increases the rate of flux change dΦ/dt = NBAω cos(ωt) (raising peak EMF linearly) and it compresses the sinusoidal waveform horizontally, so the oscillation frequency and amplitude both rise together.",
+        "Angular velocity ω in rad/s. Increasing ω does two things simultaneously: it increases the rate of flux change — dΦ_B/dt = −BAω sin(ωt) per turn, so |ε| = N|dΦ_B/dt| has peak NBAω — and it compresses the sinusoidal waveform horizontally, so the oscillation frequency and amplitude both rise together.",
       coil_turns:
         "Number of turns N in the coil. Faraday's Law sums contributions from all N loops: ε = −N dΦ_B/dt, so peak EMF scales exactly linearly with coil_turns. Doubling N from 50 to 100 doubles the output voltage without changing the waveform shape or frequency.",
       coil_area:
