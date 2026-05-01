@@ -131,4 +131,84 @@ export const atomicStructure: Experiment = {
     educationalLevel: "High School",
     teaches: "Atomic Structure and Electron Configuration",
   },
+  contentSections: {
+    whatIsIt:
+      "Atomic structure describes how protons and neutrons pack into a nucleus while electrons occupy discrete quantum orbitals — regions of space defined by four quantum numbers rather than fixed circular paths. A neon sign glows red-orange because electrons in neon atoms absorb electrical energy, jump to higher orbitals, and release photons of specific wavelengths when they fall back. This simulation lets you dial in any element from hydrogen (Z=1) to krypton (Z=36), watch the Aufbau filling sequence populate s, p, and d subshells, excite electrons to higher energy levels and observe the emitted photon color, and overlay periodic trend data to see how atomic radius, ionization energy, and electronegativity shift across the table. AP Chem 1.A.1, 1.B.1, and 1.C.1 all converge here.",
+    parameterExplanations: {
+      atomicNumber:
+        "The number of protons in the nucleus, which also equals the number of electrons in a neutral atom (Z = 1 to 36). Increasing Z by one adds a proton and an electron, advancing the Aufbau filling sequence one step — the simulation rebuilds the ground-state configuration and redraws the orbital diagram instantly.",
+      energyLevel:
+        "The principal quantum number (n = 1 to 6) to which the outermost electron is excited. Raising this value moves that electron farther from the nucleus; when it relaxes back to the ground state the simulation fires a photon whose color corresponds to the wavelength calculated from ΔE = hf. Set n = 2 for hydrogen to reproduce the Balmer Hα line at 656 nm (red).",
+      orbitalType:
+        "Selects which subshell shape to render in the 3D viewer: 0 = spherical s orbital, 1 = dumbbell-shaped p orbital (three orientations), 2 = cloverleaf d orbital (five orientations). Switching between them illustrates why p orbitals have directional bonding and d orbitals produce the split energy levels central to transition-metal color.",
+      showTrends:
+        "Overlays a periodic-trend heat map: 0 = atomic radius (pm), 1 = first ionization energy (kJ/mol), 2 = electronegativity (Pauling scale). The three maps form mirror images of each other across the table — atomic radius increases down and to the left, while IE and EN increase up and to the right.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "Atomic radius increases as you move left to right across a period because more electrons are being added.",
+        correct:
+          "Atomic radius actually decreases across a period. Each additional proton raises the effective nuclear charge (Z_eff), pulling the entire electron cloud inward. Sodium (~186 pm) is nearly twice the radius of chlorine (~99 pm) despite sitting in the same period.",
+      },
+      {
+        wrong:
+          "Electrons travel in fixed circular orbits around the nucleus, like planets around the sun.",
+        correct:
+          "The Bohr model works numerically for hydrogen but is physically wrong for all multi-electron atoms. Electrons exist as probability density clouds described by wave functions. An s orbital is a sphere of probability, not a circular track.",
+      },
+      {
+        wrong:
+          "Electronegativity and electron affinity mean the same thing — both measure how strongly an atom attracts electrons.",
+        correct:
+          "They measure different things. Electron affinity is the energy change (in kJ/mol) when a gas-phase atom gains one electron. Electronegativity is a dimensionless relative index of how strongly a bonded atom pulls shared electrons toward itself. Fluorine tops both scales, but the numerical values and units are entirely different.",
+      },
+      {
+        wrong:
+          "Hund's rule says electrons pair up in orbitals as soon as possible to minimize energy.",
+        correct:
+          "Hund's rule says the opposite: electrons occupy each degenerate orbital singly with parallel spins before any pairing occurs. This minimizes electron-electron repulsion. Nitrogen's three 2p electrons each sit in a separate 2p orbital, not two in one and one in another.",
+      },
+      {
+        wrong:
+          "The 4s orbital always has higher energy than the 3d orbital.",
+        correct:
+          "For neutral atoms, 4s fills before 3d because it is lower in energy at that point. But in transition-metal ions, 3d drops below 4s — which is why Fe²⁺ loses its 4s electrons first, giving [Ar]3d⁶, not [Ar]3d⁴4s².",
+      },
+    ],
+    teacherUseCases: [
+      "Trend prediction before reveal: cover the showTrends overlay, have students sketch their predicted atomic radius heat map for Z=1 to 18, then uncover the simulation to compare — targets AP Chem 1.C.1 periodic trend reasoning.",
+      "Emission spectrum lab: set Z=1 (hydrogen), sweep energyLevel from 2 to 6, record each photon color and estimated wavelength, then use ΔE = hc/λ to calculate transition energies and compare to the Balmer series values — reinforces AP Chem 1.B.1.",
+      "Misconception probe on atomic radius: ask students which is larger, Na or Cl, before opening the simulation. After revealing the trend overlay, follow up with 'why does adding protons shrink the atom?' to surface the Z_eff argument.",
+      "Aufbau data collection: students record ground-state configurations for Z=21 through Z=30 and flag every exception to the expected filling order (Cr at Z=24, Cu at Z=29) — connects to AP Chem 1.B.1 anomalies.",
+      "Comparative ionization probe: examine a high-Z element like Kr (Z=36) and have students explain why its first ionization energy (1351 kJ/mol) is so much higher than potassium's (419 kJ/mol) despite being one period away.",
+    ],
+    faq: [
+      {
+        question: "Why does the simulation only go up to Z = 36 (krypton)?",
+        answer:
+          "Elements up to Z=36 cover the full 1s through 4p filling sequence, which includes all the Aufbau rules, both notable d-block exceptions (Cr and Cu), and the complete set of AP Chem 1.B.1 configurations. Heavier elements require f-orbital treatment that exceeds the AP curriculum scope.",
+      },
+      {
+        question: "How does this simulation connect to AP Chem standards 1.A.1, 1.B.1, and 1.C.1?",
+        answer:
+          "AP Chem 1.A.1 covers the nuclear model and subatomic particles — the Z slider and nucleus display address that directly. AP Chem 1.B.1 requires writing electron configurations and identifying periodic trends, which the Aufbau animation and showTrends overlay practice. AP Chem 1.C.1 connects electron configuration to periodic trends like ionization energy and atomic radius.",
+      },
+      {
+        question: "What is effective nuclear charge and why does it matter for periodic trends?",
+        answer:
+          "Effective nuclear charge (Z_eff) is the net positive charge an outermost electron experiences after inner electrons partially screen the nucleus. Across period 2, Z_eff rises from about +1.3 for Li to about +5.1 for F, shrinking the atomic radius from 152 pm to 64 pm and raising the first ionization energy from 520 to 1681 kJ/mol.",
+      },
+      {
+        question: "Why do the emission lines for hydrogen appear at specific colors rather than a continuous rainbow?",
+        answer:
+          "Electrons can only occupy discrete energy levels, so transitions between them release photons of fixed energies. The visible Balmer series shows n=3→2 (red, 656 nm), n=4→2 (blue-green, 486 nm), n=5→2 (violet, 434 nm), and n=6→2 (violet, 410 nm). No other wavelengths are emitted because no intermediate energy values exist in the quantum model.",
+      },
+      {
+        question: "Does the NGSS standard HS-PS4-3 connect to what I see in the emission spectrum section?",
+        answer:
+          "Yes. NGSS HS-PS4-3 asks students to evaluate emission and absorption spectra as evidence of atomic energy levels. The photon-color output in this simulation is direct evidence — each spectral line corresponds to a quantized ΔE = hf transition, which is exactly the model HS-PS4-3 asks students to use as a diagnostic tool for identifying elements.",
+      },
+    ],
+  },
 };
