@@ -128,6 +128,19 @@ export const PHASE3_FILLED_SLUGS = new Set<string>([
   "rlc-circuit",
   "rotational-kinematics-advanced",
   // Wave 6 (ngss-hs) — added in Task 6
+  "atmosphere-layers",
+  "climate-change-modeling",
+  "electromagnetic-spectrum",
+  "energy-conservation-roller-coaster",
+  "glaciers-ice-ages",
+  "greenhouse-effect",
+  "plate-tectonics-advanced",
+  "radiometric-dating",
+  "rock-cycle",
+  "seismic-waves",
+  "solar-system-scale",
+  "star-life-cycle",
+  "tides-lunar-gravity",
   // Wave 7 (ngss-ms) — added in Task 7
   // Wave 8 (elementary-k5) — added in Task 8
   // Wave 9 (general) — added in Task 9
