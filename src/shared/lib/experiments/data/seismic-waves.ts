@@ -122,4 +122,76 @@ export const seismicWaves: Experiment = {
     educationalLevel: "High School",
     teaches: "Seismic Wave Types and Earthquake Detection",
   },
+  contentSections: {
+    whatIsIt:
+      "Every earthquake sends three distinct types of waves radiating outward through Earth. Primary (P) waves are compressional: rock alternately squeezes and expands in the direction of travel, much like sound moving through air — they travel at roughly 6–8 km/s through the crust and can pass through both solid rock and liquid. Secondary (S) waves shear rock perpendicular to their path; they are slower (~3.5–4.5 km/s) and cannot travel through liquid at all. Surface waves (Love and Rayleigh) travel along Earth's outer shell; they are slowest but carry the most destructive energy — the rolling and sideways ground motion that topples buildings. The fact that S-waves disappear on the far side of Earth was the first evidence that the outer core is liquid. The simulation shows all three wave types leaving an epicenter, arriving at a seismograph, and how wave speed and frequency affect propagation.",
+    parameterExplanations: {
+      waveSpeed:
+        "A multiplier on baseline wave speeds (range 0.5–3×, default 1×). At 1×, P-waves propagate at realistic crustal speeds (~6 km/s) and S-waves at ~3.5 km/s. Increasing the multiplier compresses the animation timescale to observe wave arrival sequences without waiting for realistic Earth-crossing times of 20+ minutes.",
+      frequency:
+        "Oscillation frequency in Hz (range 0.5–5 Hz, default 2 Hz). Real seismic waves span 0.001–20 Hz depending on earthquake magnitude and depth. Higher frequency produces shorter wavelengths and more visible cycles per wave train in the display; lower frequency produces the long-period waves associated with the most distant and deepest earthquakes.",
+      amplitude:
+        "Wave displacement amplitude in arbitrary display units (range 10–60, default 30). Larger amplitude represents greater ground displacement — analogous to earthquake magnitude. At high amplitude, the seismograph trace shows larger swings that would correspond to stronger shaking at the recording station.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "All seismic waves are the same — they just travel at different speeds.",
+        correct:
+          "P-waves, S-waves, and surface waves differ fundamentally in how they deform rock. P-waves compress and expand rock in the direction of travel; S-waves shear rock side-to-side perpendicular to travel; surface waves combine motions in complex patterns confined to the near-surface layer. These different deformation modes explain why only P-waves travel through liquids and why surface waves are most destructive despite being slowest.",
+      },
+      {
+        wrong:
+          "The most dangerous seismic waves are the P-waves because they arrive first.",
+        correct:
+          "Arriving first does not mean most destructive. P-waves cause relatively small ground motion. Surface waves arrive last but have the largest amplitudes and longest duration at the surface where structures stand. Most building damage in major earthquakes is caused by surface waves, particularly Love waves (horizontal shearing) and Rayleigh waves (elliptical rolling motion).",
+      },
+      {
+        wrong:
+          "Seismic waves slow down as they travel farther from the earthquake because they lose energy.",
+        correct:
+          "Wave speed depends on the elastic properties and density of the rock the wave is passing through, not on distance traveled. Waves do lose amplitude with distance (geometric spreading and absorption), but their propagation speed is a property of the medium. In fact, seismic waves often speed up as they travel deeper where rock is denser and more rigid.",
+      },
+      {
+        wrong:
+          "Earthquakes happen only at plate boundaries.",
+        correct:
+          "Most large earthquakes occur at plate boundaries, but intraplate earthquakes happen in the interior of plates along ancient fault zones. The 1811–1812 New Madrid earthquakes in the central United States were magnitude ~7.5 events far from any active boundary. The simulation's epicenter represents any location where rock fractures suddenly under stress, not exclusively a plate boundary.",
+      },
+    ],
+    teacherUseCases: [
+      "Wave identification race: trigger a quake at the default settings (waveSpeed 1×, frequency 2 Hz, amplitude 30). Students watch the seismograph trace and mark the moment each wave type arrives (P first, S second, surface last), then calculate the S-P time interval to estimate epicenter distance using the 8 km/s and 4 km/s rule of thumb.",
+      "Frequency and wavelength relationship: hold waveSpeed at 1× and amplitude at 30, then sweep frequency from 0.5 Hz to 5 Hz. Students measure the visible wavelength on screen at each frequency setting, confirming the inverse relationship (wavelength = speed / frequency) without calculus — just the wave equation at HS algebra level.",
+      "Liquid core evidence thought experiment: set waveSpeed to 1×, trigger a quake, and ask students to predict what would happen to S-waves if they encountered a liquid region deep in Earth. After discussion, explain the S-wave shadow zone (105°–140° from epicenter) as the historical evidence for the liquid outer core — directly connecting to HS-ESS2-1 on interpreting Earth's interior structure.",
+      "Amplitude and damage scale: sweep amplitude from 10 to 60 while watching the seismograph trace. Students sketch the trace at each extreme and discuss why higher-amplitude surface waves cause more structural damage — connecting wave physics to built-environment consequences and addressing HS-ESS2-3.",
+      "Triangulation exercise: using the S-P interval method, give students seismograph arrival data from three fictitious stations and have them triangulate an epicenter on a map using circles of calculated radius from each station. This data-collection and geometric reasoning activity supports HS-ESS2-1 without requiring any simulation parameter changes beyond the default.",
+    ],
+    faq: [
+      {
+        question: "Why can't S-waves travel through Earth's outer core?",
+        answer:
+          "S-waves are shear waves: they deform rock sideways, perpendicular to the direction of travel. This requires the medium to have shear strength — the ability to resist being sheared. Liquids have no shear strength (shear modulus μ = 0), so the S-wave velocity equation v_S = √(μ/ρ) gives zero. Earth's outer core is liquid iron-nickel, so S-waves are stopped completely there, creating the S-wave shadow zone that seismologists used to map the core's liquid state.",
+      },
+      {
+        question: "How do seismologists find the epicenter of an earthquake?",
+        answer:
+          "Each seismograph station records the time gap between P-wave and S-wave arrivals (S-P interval). Since P-waves travel faster, the gap grows with distance — roughly 1 second per 8 km between station and epicenter. Three stations each produce a circle of possible epicenter locations; the circles' intersection point is the epicenter. This triangulation works because all stations record the same earthquake at the same moment.",
+      },
+      {
+        question: "Which NGSS standards does this simulation address?",
+        answer:
+          "The simulation supports HS-ESS2-1 (develop a model to illustrate how Earth's internal and surface processes operate at different spatial and temporal scales — seismic waves as a tool for probing Earth's interior) and HS-ESS2-3 (develop a model based on evidence of Earth's interior to describe the cycling of matter by thermal convection — the liquid outer core inferred from S-wave shadow zones is directly relevant).",
+      },
+      {
+        question: "What is the difference between earthquake magnitude and intensity?",
+        answer:
+          "Magnitude measures the energy released at the source — a single number per earthquake on the moment magnitude scale (Mw). Intensity measures the shaking experienced at a specific location, which decreases with distance and depends on local geology. A magnitude 7.0 earthquake can cause intensity IX shaking near the epicenter but only intensity III shaking 500 km away. The amplitude parameter in the simulation scales with magnitude, while observed shaking corresponds to intensity.",
+      },
+      {
+        question: "Why do surface waves cause more damage than body waves if they are slower?",
+        answer:
+          "Surface waves travel along the 2D shell of Earth's surface rather than spreading in 3D, so their energy decays more slowly with distance (amplitude decreases as roughly 1/√r vs. 1/r for body waves). They also have longer periods and larger displacements that match the natural resonance frequencies of buildings (0.5–2 Hz for multi-story structures). The combination of larger amplitude, longer duration, and resonance matching makes them far more destructive despite arriving last.",
+      },
+    ],
+  },
 };
