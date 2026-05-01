@@ -54,14 +54,14 @@ export const mySolarSystem: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "Real solar systems are messy. The Sun pulls Earth, Earth pulls the Moon, Jupiter pulls Earth a little, and the whole apparatus has been wobbling for 4.6 billion years. This lab lets you build that mess from scratch. Drop in a central star, add a planet, give it a velocity, and watch a clean two-body ellipse form. Now add a third body and everything changes — the orbits start to wobble, slowly drift, or in extreme cases fling one body away entirely. The two-body problem has an exact, closed-form solution; the three-body problem doesn't, and never will. That's not a limitation of computers; it's a deep mathematical fact proved by Poincaré in the 1880s. By tuning masses, separations, and initial velocities you'll see chaos appear, watch binary stars trade angular momentum, and discover why our own Solar System looks so orderly: huge mass ratios (Sun ≫ planets) and wide orbital spacing keep perturbations small.",
+      "Real solar systems are messy. The Sun pulls Earth, Earth pulls the Moon, Jupiter pulls Earth a little, and the whole apparatus has been wobbling for 4.6 billion years. This lab lets you build that mess from scratch. Drop in a central star, add a planet, give it a velocity, and watch a clean two-body ellipse form. Now add a third body and everything changes — orbits start to wobble, drift, or in extreme cases fling one body away entirely. The two-body problem has a closed-form solution; the three-body problem doesn't, and never will — a deep mathematical fact proved by Poincaré. By tuning masses, separations, and initial velocities you'll see chaos appear, watch binary stars trade angular momentum, and discover why our own Solar System looks so orderly: huge mass ratios and wide orbital spacing keep perturbations small.",
     parameterExplanations: {
       num_bodies:
         "How many gravitating objects share the simulation. Two bodies always give a clean ellipse; three or more give the chaotic N-body problem with no analytical solution and exponential sensitivity to initial conditions.",
       body1_mass:
         "Mass of the central body in solar masses. Larger central mass tightens orbits (v_orbit ∝ √M) and stabilizes the system against perturbations from smaller bodies.",
       body2_vel:
-        "Initial speed of the orbiting planet in km/s, applied perpendicular to its radius. Around a 1 M☉ star at 1 AU, ~30 km/s makes a circle; below 21 km/s the orbit collapses; above 42 km/s the planet escapes.",
+        "Initial speed of the orbiting planet in km/s, applied perpendicular to its radius. Around a 1 M☉ star at 1 AU, ~30 km/s makes a circle; slower launches make eccentric ellipses that dip closer to the star; above about 42 km/s the planet escapes.",
       time_scale:
         "Simulation speed multiplier. Real orbital periods are years, so a ×10 to ×100 speedup lets you watch full orbits and long-term perturbations without waiting in real time.",
     },

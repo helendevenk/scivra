@@ -55,7 +55,7 @@ export const gravityOrbits: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "Earth doesn't fall into the Sun for the same reason a satellite doesn't fall into Earth: it is falling, but it's also moving sideways fast enough to keep missing. That sideways motion is the secret of every orbit, and this lab puts it directly under your control. Set the mass of the central star, drop a planet at some orbital radius, and give it an initial speed perpendicular to the line to the star. If you pick the speed exactly right — v = √(GM/r) — you get a perfect circle. A little less, and the orbit collapses into an ellipse with the planet swooping in close. A little more, and it stretches outward. Push past escape velocity (√2 times circular speed) and the planet flies off forever. By the end, you should be able to predict orbital periods using Kepler's Third Law and explain why astronauts in low Earth orbit are not actually weightless — they are in continuous free-fall.",
+      "Earth doesn't fall into the Sun for the same reason a satellite doesn't fall into Earth: it is falling, but it's also moving sideways fast enough to keep missing. That sideways motion is the secret of every orbit, and this lab puts it directly under your control. Set the mass of the central star, drop a planet at some orbital radius, and give it an initial speed perpendicular to the line to the star. Pick the speed exactly right — v = √(GM/r) — and you get a perfect circle. A little less, the orbit collapses into an ellipse with the planet swooping in close. A little more, it stretches outward. Push past escape velocity and the planet flies off forever. By the end you should be able to predict orbital periods using Kepler's Third Law and explain why astronauts in low Earth orbit are in continuous free-fall.",
     parameterExplanations: {
       star_mass:
         "The central body's mass in solar masses (M☉ = 1.989×10³⁰ kg). Doubling star mass increases circular orbit speed by √2 at the same radius, and shortens orbital periods by the same factor.",
@@ -96,7 +96,7 @@ export const gravityOrbits: Experiment = {
       "Kepler III data collection: have students measure orbital period at radii of 1, 2, 3, and 4 AU around a 1 M☉ star, plot log(T) vs. log(r), and confirm the slope is 1.5.",
       "Misconception probe — 'is the ISS in zero gravity?': run a circular orbit, label the gravitational force vector at every point, and ask whether gravity is ever zero. Use the answer to debunk 'space has no gravity'.",
       "Escape velocity experiment: with the planet at 1 AU around a 1 M☉ star, increase initial speed from circular (30 km/s) toward 42.4 km/s and have students record where the orbit transitions from ellipse to parabola to hyperbola.",
-      "Compare Solar System reality: load star_mass = 1, run planets at 1 AU (Earth), 1.52 AU (Mars), 5.2 AU (Jupiter) and check that periods match the textbook 1, 1.88, and 11.86 years.",
+      "Compare Solar System reality: load star_mass = 1, run planets at 1 AU (Earth), 1.52 AU (Mars), and 5.0 AU (just inside Jupiter's orbit) and check that the measured periods are close to the textbook 1, 1.88, and ~11.2 years (Jupiter's true 11.86 yr is at 5.20 AU, slightly beyond the slider's 5 AU max).",
       "Off-axis launch: pick a circular speed but tilt the velocity vector 10–20° off perpendicular and ask students to predict and explain the resulting ellipse, reinforcing that energy stays the same but angular momentum changes.",
     ],
     faq: [

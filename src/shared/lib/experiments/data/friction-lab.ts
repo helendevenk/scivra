@@ -93,7 +93,7 @@ export const frictionLab: Experiment = {
       },
       {
         wrong:
-          "Heavier objects fall faster, so heavier objects also slide faster against friction.",
+          "A heavier block feels more friction, so it must slow down faster than a lighter block on the same surface.",
         correct:
           "Both claims fail. In free fall, all masses accelerate at g. In sliding, mass increases the friction force AND the inertia in equal proportion, so mg cancels out and the deceleration is just μ_k g — the same for any mass on the same surface.",
       },

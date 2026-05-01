@@ -74,7 +74,7 @@ export const balancingAct: Experiment = {
         wrong:
           "If both sides have the same mass, the beam is balanced no matter where you put them.",
         correct:
-          "Torque is mass times distance from the pivot, not just mass. Two equal masses balance only when their distances to the pivot are equal — slide one out farther and that side wins.",
+          "Torque is force times perpendicular distance from the pivot: τ = rF. In this lab the force is each weight mg, so equal masses balance only when their distances to the pivot are equal — slide one out farther and that side wins.",
       },
       {
         wrong:

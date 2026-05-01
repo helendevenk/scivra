@@ -74,7 +74,7 @@ export const hookesLaw: Experiment = {
         wrong:
           "When the spring is stretched to its maximum, the mass on the end is moving fastest.",
         correct:
-          "It's the opposite. At maximum stretch the mass is momentarily at rest — that's a turning point. Kinetic energy is zero there because all the energy is stored as elastic PE. Maximum speed happens at the equilibrium position, where the spring is at its natural length and stored PE is minimum.",
+          "It's the opposite. At maximum stretch the mass is momentarily at rest — that's a turning point. Kinetic energy is zero there because the oscillator is at maximum displacement. Maximum speed happens at the equilibrium position, where the spring force balances the weight; for a vertical spring this is below the natural length.",
       },
       {
         wrong:

@@ -94,8 +94,8 @@ export const simpleHarmonicMotion: Experiment = {
     "Adjust the spring constant k and mass m to observe how period changes. Notice that changing amplitude does NOT affect the period — try it. Watch the energy bar at the bottom show Ek and Ep cycling. Use the damping slider (Pro) to explore energy dissipation.",
 
   hook: {
-    question: "If you double the amplitude of a pendulum, does it take longer to swing?",
-    context: "Most people guess yes, but the answer is no — period is completely independent of amplitude in simple harmonic motion.",
+    question: "If you double the amplitude of an ideal spring oscillator, does it take longer to complete a cycle?",
+    context: "Most people guess yes, but the answer is no for ideal simple harmonic motion — the period is independent of amplitude when the restoring force is exactly linear.",
     actionPrompt: "Test it yourself — drag the amplitude slider and watch the period stay constant",
   },
 
@@ -215,7 +215,7 @@ export const simpleHarmonicMotion: Experiment = {
 
   contentSections: {
     whatIsIt:
-      "Pluck a guitar string, push a kid on a swing, watch a tuning fork hum after you tap it on a desk — all of them trace out the same mathematical shape: a smooth sine wave moving back and forth around a balance point. Simple harmonic motion is the physics of any system where the force pulling you back toward equilibrium grows in proportion to how far you've strayed (F = -kx). That single rule produces the cleanest motion in physics: the position is sinusoidal, the period is independent of amplitude, and energy sloshes between kinetic and potential without ever leaking out (in the ideal case). This lab gives you a spring-mass system with sliders for k, m, amplitude A, and an optional damping coefficient. Watch the energy bar split between Ek and Ep as the mass races through equilibrium and freezes at the turning points, and try to break the period formula by changing amplitude — you can't.",
+      "Pluck a guitar string, push a kid on a swing, watch a tuning fork hum after you tap it on a desk — all of them trace out the same mathematical shape: a smooth sine wave moving back and forth around a balance point. Simple harmonic motion is the physics of any system where the force pulling you back toward equilibrium grows in proportion to how far you've strayed (F = -kx). That single rule produces the cleanest motion in physics: position is sinusoidal, the period is independent of amplitude, and energy sloshes between kinetic and potential without leaking out. This lab gives you a spring-mass system with sliders for k, m, amplitude, and optional damping. Watch the energy bar split between Ek and Ep as the mass races through equilibrium and freezes at the turning points, and try to break the period formula by changing amplitude — you can't.",
     parameterExplanations: {
       springConstant:
         "Spring stiffness k in newtons per meter. A bigger k means a sharper restoring pull for the same displacement, which raises the angular frequency ω = √(k/m) and shrinks the period. Stiff springs oscillate fast; soft springs oscillate slowly.",
@@ -224,7 +224,7 @@ export const simpleHarmonicMotion: Experiment = {
       amplitude:
         "The maximum displacement A from equilibrium in meters. Crucially, amplitude does NOT affect the period — that's the punchline of SHM. It does set the total energy (E = ½kA²) and the maximum speed (v_max = Aω), so larger A means a faster zip through the middle but the same round-trip time.",
       damping:
-        "The damping coefficient b in kg/s (Pro). Damping converts mechanical energy to heat at a rate proportional to velocity, so the amplitude envelope decays exponentially as A(t) = A₀ e^(−bt/2m). Critical damping (b² = 4mk) is the fastest return to equilibrium without overshoot.",
+        "The damping coefficient b in kg/s (Pro). Linear damping uses a force proportional to velocity, F_d = -bv; the instantaneous power loss is proportional to v². The amplitude envelope decays exponentially as A(t) = A₀ e^(−bt/2m). Critical damping (b² = 4mk) is the fastest return to equilibrium without overshoot.",
     },
     misconceptions: [
       {

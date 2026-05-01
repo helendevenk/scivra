@@ -77,7 +77,7 @@ export const buoyancy: Experiment = {
         wrong:
           "The buoyant force on a fully submerged object grows the deeper you push it down.",
         correct:
-          "Once the object is fully submerged, it displaces the same volume regardless of depth, so the buoyant force is constant. Pressure does increase with depth, but it presses equally on all sides of the object — only the displaced volume sets the net upward force.",
+          "Once the object is fully submerged, it displaces the same volume regardless of depth, so the buoyant force is constant. Pressure increases with depth, so the bottom of the object feels more pressure than the top; that pressure difference creates the net upward force while displaced volume sets its size.",
       },
       {
         wrong:

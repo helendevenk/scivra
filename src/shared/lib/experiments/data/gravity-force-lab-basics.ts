@@ -90,7 +90,7 @@ export const gravityForceLabBasics: Experiment = {
     teacherUseCases: [
       "Inverse-square discovery: have students record force at r = 1, 2, 3, 4 m with masses fixed, then plot F vs. 1/r². The straight line through the origin is the proof.",
       "Misconception probe: ask the class to predict whether doubling m1 or halving distance gives a bigger force change, then run both in the simulator. Students who say 'doubling mass' are revealing the linear-vs-quadratic gap.",
-      "Earth-Moon estimation: set m1 to Earth's mass scale and m2 to the Moon's, with a realistic distance, and have students compute the force, comparing to the textbook value of about 2×10²⁰ N.",
+      "Verify F ∝ m1·m2: have students set m1 = 1000 kg, m2 = 500 kg at distance 2 m and record the force, then double m2 to 1000 kg and confirm the force exactly doubles. Repeat at m1 = 200 kg to show the symmetry. Off-scale Earth-Moon numbers can then be computed with pencil and paper using the same equation, and compared to the textbook value of about 2×10²⁰ N.",
       "Pair lab with a written derivation showing how surface gravity g = GM_Earth / R_Earth² emerges directly from F = GMm/r², connecting the lab to the constant they already know.",
       "Use as a pre-lab for orbits: once students see how force depends on mass and distance, the centripetal-force version of orbital motion becomes much less mysterious.",
     ],

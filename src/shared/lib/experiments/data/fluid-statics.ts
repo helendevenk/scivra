@@ -135,4 +135,90 @@ export const fluidStatics: Experiment = {
     educationalLevel: "High School",
     teaches: "Fluid Statics and Bernoulli's Principle",
   },
+
+  contentSections: {
+    whatIsIt:
+      "A 250,000-ton oil tanker rides high in the harbor. A scuba diver feels different pressure at every depth. A hydraulic lift turns a foot tap into a multi-ton hoist. All three rely on a tiny set of rules for fluids at rest. Archimedes figured out the first in a bathtub: any immersed object feels a buoyant force equal to the weight of fluid it displaces. Less-dense objects float; denser ones sink while still feeling that upward push. Pascal added: pressure applied to an enclosed fluid transmits equally in all directions, so a small piston can lift a car balanced on a large one. The third rule is hydrostatic pressure: every meter of depth adds ρgh, which is why ears pop in the deep end. This lab lets you drop objects of different densities into different fluids and watch them float, sink, or settle.",
+    parameterExplanations: {
+      objectDensity:
+        "Density of the dropped object in kg/m³. This is the deciding number for buoyancy. If ρ_obj < ρ_fluid the object floats with submerged fraction = ρ_obj/ρ_fluid (a 600 kg/m³ wood block in water sits 60% submerged). If ρ_obj > ρ_fluid it sinks. If they're equal the object hovers neutrally — divers achieve this with their buoyancy compensator vests.",
+      fluidDensity:
+        "Density of the surrounding fluid in kg/m³. Fresh water is 1000, sea water about 1025 (which is why you float higher in the ocean), light oil about 800, mercury 13,600. The buoyant force F_b = ρ_fluid · g · V_submerged scales linearly with fluid density, so the same boat floats higher in the saltier Dead Sea than in a freshwater lake.",
+      objectVolume:
+        "Total object volume in units of 10⁻³ m³ (i.e., liters). Buoyant force is ρ_fluid · g · V_submerged, so volume sets the maximum possible upward push when the object is fully submerged. Doubling the volume of a fully submerged object doubles the buoyant force — which is exactly the design trick a steel ship uses to float despite being made of dense steel.",
+      pipeRatio:
+        "Ratio of pipe areas (A₁/A₂) used in the Bernoulli flow mode. Larger ratio means the narrow section is much tighter, the fluid speeds up more drastically, and the pressure drop deepens. This is the same continuity-plus-Bernoulli logic from the Venturi lab — the fluid trades static pressure for kinetic energy as it accelerates through the constriction.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "Heavy things sink, light things float.",
+        correct:
+          "Density wins, not weight. A 250,000-ton ship floats; a 50-gram steel marble sinks. What matters is the average density of the object compared to the fluid's density. Hollow objects effectively lower their average density by enclosing air, which is the trick steel ships use.",
+      },
+      {
+        wrong:
+          "A fully submerged object feels more buoyant force the deeper it goes.",
+        correct:
+          "Buoyant force depends only on the volume of fluid displaced, not on depth. Once the object is fully submerged, F_b = ρ_fluid · g · V is the same at 1 m or 100 m down. What does change with depth is the surrounding pressure (P = P₀ + ρgh) — but that pressure squeezes the object equally from all sides and the net upward push (buoyancy) stays the same.",
+      },
+      {
+        wrong:
+          "Bernoulli's principle says fast-moving fluid pulls objects in.",
+        correct:
+          "Pressure drops where speed increases, but the net force on a nearby object always points from high pressure to low pressure. The fast region pushes back less, so surrounding fluid pushes objects toward it. There's no 'pulling' — just a pressure imbalance.",
+      },
+      {
+        wrong:
+          "Heat and temperature mean the same thing in fluids.",
+        correct:
+          "Temperature is the average kinetic energy per molecule (intensive); heat is energy transferred between systems (extensive). Two pools of water at the same temperature can hold very different total thermal energy depending on their volume. In the basic fluid statics here we treat density and pressure at fixed temperature, but if you heat a fluid, ρ drops and buoyancy changes — that's why hot air rises.",
+      },
+      {
+        wrong:
+          "Pressure inside a hydraulic press is the same as the input force, just transmitted.",
+        correct:
+          "Pressure is force per area. Pascal's law says the pressure transmits through the fluid uniformly — but the force on a piston equals pressure times that piston's area. Push 1 N on a 1 cm² piston (P = 10,000 Pa) and the fluid pushes 100 N on a 100 cm² piston. You traded distance for force, not magic — the small piston has to move 100 times farther.",
+      },
+    ],
+    teacherUseCases: [
+      "Float-fraction prediction: have students predict the submerged fraction of wood blocks of various densities (300, 500, 700, 900 kg/m³) in fresh water before running the simulation. Anchor the rule fraction = ρ_obj/ρ_fluid and discuss why ice (ρ ≈ 917) sits so high in liquid water.",
+      "Why ships float: assign students to compute the buoyant force on a 1 m³ block of solid steel (ρ ≈ 7800) and show it sinks. Then have them imagine the steel hammered into a thin-walled boat hull enclosing 100 m³ of air. Compare the average density and watch the same mass of steel float comfortably.",
+      "Salt vs. fresh: have students float identical wooden blocks in fresh water (1000 kg/m³) and sea water (1025 kg/m³) and measure the change in submerged depth. Connect to why people float more easily in the Dead Sea (1240 kg/m³).",
+      "Hydraulic-lift sketch: walk students through a 1:100 piston ratio. Calculate the input distance required to raise a car by 10 cm. Use the energy bookkeeping to show no work is created — input distance × input force = output distance × output force.",
+      "Bernoulli bridge: switch into flow mode after the buoyancy section, run a constriction at ratio 2, and ask students to predict the pressure change. Connect the static-fluid Pascal/Archimedes arguments to the moving-fluid Bernoulli framework.",
+    ],
+    faq: [
+      {
+        question: "Why does a steel ship float when a steel ball sinks?",
+        answer:
+          "Average density. A solid steel ball is 7800 kg/m³ — denser than water (1000 kg/m³) — so it sinks. A hollow steel hull encloses a huge volume of air, dropping the ship's average density (mass/total volume including air space) below 1000 kg/m³. The total buoyant force from displacing 250,000 m³ of water is enough to support the ship's weight even when each individual steel plate alone would sink.",
+      },
+      {
+        question: "Why do objects feel lighter underwater?",
+        answer:
+          "Because they really are pushed upward by the buoyant force. Apparent weight = true weight − buoyant force. A 10 kg rock has a true weight of 98 N in air. Submerge it in water and water displaces equal to its volume (say 4 L = 0.004 m³), giving F_b = 1000 × 9.8 × 0.004 = 39.2 N upward. Apparent weight underwater is only 58.8 N — about 60% of its weight in air.",
+      },
+      {
+        question: "How does a hydraulic car lift work?",
+        answer:
+          "Pascal's law: pressure applied to an enclosed fluid transmits equally everywhere. Push down with force F₁ on a small piston of area A₁ — the fluid pressure P = F₁/A₁ acts on the larger piston of area A₂, producing output force F₂ = P · A₂ = F₁ · (A₂/A₁). With a 100:1 area ratio, a 100 N foot push can lift a 10,000 N car. Energy is still conserved: the small piston has to move 100 cm to lift the big piston by 1 cm.",
+      },
+      {
+        question: "Why does pressure increase with depth in a fluid?",
+        answer:
+          "Because every layer of fluid above you has to be supported, and the only thing supporting it is the pressure of the fluid below. The hydrostatic formula P = P₀ + ρgh captures it: at depth h below the surface, the extra pressure is the weight per unit area of the column of fluid sitting on top. In water that's about 10⁴ Pa per meter, which is why ear-popping starts after just a meter or two of swimming pool depth.",
+      },
+      {
+        question: "What's the connection between Pascal's law and Archimedes' principle?",
+        answer:
+          "Both come from hydrostatic pressure. Archimedes' principle is what you get when you integrate the depth-dependent pressure over an object's surface — the net upward push equals the weight of fluid displaced. Pascal's law is the statement that any extra pressure applied to an enclosed fluid adds uniformly everywhere. Together they cover most of static-fluid physics: buoyancy, hydraulics, dam design, and submarine ballast.",
+      },
+      {
+        question: "How does this connect to AP Physics 2 standard 3.C.4 and to Bernoulli flow?",
+        answer:
+          "AP Physics 2 3.C.4 asks students to apply Newton's laws to fluid systems — including buoyancy, hydrostatic pressure, and the connection to flowing fluids via Bernoulli. NGSS HS-PS2-1 also expects students to use Newton's second law in fluid contexts. This lab pairs the static-fluid framework (Archimedes, Pascal, hydrostatic pressure) with a Bernoulli flow demo so students can see the full progression — from sitting fluids to moving ones — without switching apps.",
+      },
+    ],
+  },
 };

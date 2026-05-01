@@ -109,7 +109,7 @@ export const massesSprings: Experiment = {
       {
         question: "Why doesn't gravity show up in the period formula?",
         answer:
-          "Gravity does pull the block down, but its only job is to shift the equilibrium position to a new spot where the spring's pull balances gravity. Once the block oscillates around that new equilibrium, the restoring force depends only on displacement from equilibrium, which is set by k. Move the same setup to the Moon and the block hangs lower, but the period is identical. The pendulum behaves differently because gravity is the restoring force itself, not just a position offset.",
+          "Gravity does pull the block down, but its only job is to shift the equilibrium position to a new spot where the spring's pull balances gravity. Once the block oscillates around that new equilibrium, the restoring force depends only on displacement from equilibrium, which is set by k. Move the same setup to the Moon and the block hangs less far below the spring's natural length, but the period is identical. The pendulum behaves differently because gravity is the restoring force itself, not just a position offset.",
       },
       {
         question: "What is resonance and why does it matter outside this lab?",

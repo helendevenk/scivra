@@ -98,7 +98,7 @@ export const vectorAddition: Experiment = {
     teacherUseCases: [
       "Predict-then-check: have students compute the resultant of a 10 N east plus 8 N north vector by hand using components, then verify against the simulation reading. Stress that they should match exactly, not roughly.",
       "Misconception probe — the '5 + 5 = 10' trap: ask the class for the magnitude of two equal vectors at 90°. Many will say 10. Show the simulation result of about 7.07 N and use it as an entry to component arithmetic.",
-      "Data collection lab: students fix v1_magnitude = 10 N at 0° and sweep v2_angle from 0° to 180° with v2_magnitude = 10 N, recording the resultant magnitude every 30°. They plot R vs angle and discover the cosine curve.",
+      "Data collection lab: students fix v1_magnitude = 10 N at 0° and sweep v2_angle from 0° to 180° with v2_magnitude = 10 N, recording the resultant magnitude every 30°. They plot R² vs cosθ to get a straight line, or compare R directly to 20cos(θ/2).",
       "Three-force equilibrium: pro tier students try to find magnitudes and angles of three vectors that produce a zero resultant. Connects directly to free-body diagrams and AP standard 3.E.1 systems analysis.",
       "Relative motion application: pose the river-crossing problem (boat plus current) as a vector sum, have students set up the simulation with the boat and current vectors, and read off the ground-frame velocity directly.",
     ],

@@ -64,7 +64,7 @@ export const buoyancyBasics: Experiment = {
         wrong:
           "Heavy objects sink and light objects float.",
         correct:
-          "A bowling ball weighs more than an apple, but they're both denser than water and both sink. A whole oak log weighs hundreds of pounds and still floats. The deciding factor is density (mass per volume), not raw weight.",
+          "A bowling ball weighs only a few pounds yet sinks because it's denser than water, while a whole oak log weighs hundreds of pounds and still floats. An apple is heavier than a thumbtack but its density (~850 kg/m³) is below water's, so it floats while the steel tack sinks. The deciding factor is density (mass per volume), not raw weight.",
       },
       {
         wrong:
@@ -80,7 +80,7 @@ export const buoyancyBasics: Experiment = {
       },
       {
         wrong:
-          "An apple floats because apples have seeds and skin that hold them up.",
+          "An apple floats because its shape traps air pockets, so the whole apple has a lower average density than water.",
         correct:
           "An apple is mostly water with some sugars and air pockets, giving it a density slightly less than water. Drop a peeled, seeded apple into water and it still floats. The skin and seeds don't change the rule.",
       },
