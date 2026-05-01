@@ -35,4 +35,76 @@ export const dnaReplicationDetail: Experiment = {
   seoTitle: "DNA Replication Detailed Simulation | Scivra AP Biology",
   seoKeywords: ["DNA replication simulation", "helicase polymerase interactive", "leading lagging strand", "AP Biology"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "DNA Replication" },
+  contentSections: {
+    whatIsIt:
+      "DNA replication is the molecular process your cells run every time one cell divides into two — copying all 3.2 billion base pairs of your genome in roughly 8 hours. The process is semi-conservative: each new DNA double helix contains one original strand and one freshly built strand, a fact proven by the Meselson-Stahl density-gradient experiment in 1958. Helicase unzips the double helix at the replication fork; primase drops short RNA primers to give polymerase a foothold; DNA polymerase III races along, adding nucleotides only in the 5'→3' direction. That directionality constraint is why the lagging strand is built in reverse chunks called Okazaki fragments — each about 1,000–2,000 base pairs in prokaryotes. Press Play and toggle showDirection to see the fork advance on both strands simultaneously.",
+    parameterExplanations: {
+      speed:
+        "A playback multiplier from 0.5× (half speed) to 3× (triple speed), controlling how fast the replication fork animation advances. Set speed to 0.5× to count individual nucleotide additions on both strands; set it to 3× for a quick overview of the whole-fork architecture.",
+      showEnzymes:
+        "Toggles floating name labels for each enzyme in the animation (0 = hidden, 1 = visible). With labels on, helicase, primase, DNA polymerase III, DNA polymerase I, and ligase each display their name at their current position. Hiding labels and asking students to identify each enzyme by behavior makes a quick formative assessment.",
+      showDirection:
+        "Overlays arrows indicating the 5'→3' synthesis direction on both strands (0 = off, 1 = on). Enabling this makes immediately visible why the leading strand synthesis is continuous toward the fork while lagging strand synthesis must flip away from it in each Okazaki fragment.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "DNA replication is conservative — the original double helix stays intact and a brand-new copy is made from scratch.",
+        correct:
+          "Replication is semi-conservative, not conservative. Meselson and Stahl (1958) grew E. coli in heavy nitrogen (¹⁵N) then switched to ¹⁴N and spun DNA in a density gradient after each generation. After one replication, all DNA settled at an intermediate density — proving each new helix is one old strand plus one new strand. AP Bio 3.A.1 and HS-LS1-1 both reference this mechanistic evidence.",
+      },
+      {
+        wrong:
+          "Both strands of DNA are replicated the same way — polymerase just runs along each template in the same direction.",
+        correct:
+          "DNA polymerase can only add nucleotides in the 5'→3' direction. Because the two template strands run antiparallel, polymerase moves toward the fork on the leading strand (continuous synthesis) but must synthesize away from the fork in short bursts on the lagging strand, producing Okazaki fragments that are later joined by ligase.",
+      },
+      {
+        wrong:
+          "Primase and DNA polymerase do the same job — they both build the new strand.",
+        correct:
+          "Primase synthesizes a short RNA primer (~10 nucleotides) that gives DNA polymerase III a free 3'-OH end to extend. DNA polymerase cannot start a new chain from scratch — it can only add to an existing strand. After synthesis, DNA polymerase I removes the RNA primer and replaces it with DNA; then ligase seals the nick.",
+      },
+      {
+        wrong:
+          "Students often think DNA polymerase works alone and there is just one enzyme involved in replication.",
+        correct:
+          "At least five enzymes cooperate at each replication fork: helicase (unwinds), primase (primes), DNA polymerase III (synthesizes), DNA polymerase I (primer replacement), and ligase (seals nicks). Single-strand binding proteins and topoisomerases also participate. The replisome is a multiprotein machine, not a single enzyme.",
+      },
+    ],
+    teacherUseCases: [
+      "Leading vs. lagging strand comparison: enable showDirection (1) and pause the animation at several time points — ask students to record the direction of each polymerase relative to the fork and explain why they differ, generating written justification for the 5'→3' rule.",
+      "Enzyme identification quiz: set showEnzymes to 0 and run the simulation, then stop at a moment when all enzymes are visible and ask students to label each one on a screenshot — probes retention of the multi-enzyme misconception.",
+      "Meselson-Stahl reconstruction: before showing the simulation, have students predict what density-gradient results would look like after 1, 2, and 3 rounds of replication for conservative, semi-conservative, and dispersive models; then use the simulation to confirm semi-conservative behavior, connecting AP Bio 3.A.1 evidence to mechanism.",
+      "Okazaki fragment data collection: run at speed = 0.5× and count how many Okazaki fragments form on the lagging strand per complete fork advance; compare to the biological value (~1,000–2,000 bp per fragment in E. coli at ~1,000 nt/s) and discuss what variables affect fragment length.",
+      "Ligase knockout thought experiment: after watching a full replication cycle, ask students to predict what would accumulate in the nucleus if ligase were inhibited — grounds the abstract enzyme function in observable consequences.",
+    ],
+    faq: [
+      {
+        question: "Why can DNA polymerase only build in the 5' to 3' direction?",
+        answer:
+          "DNA polymerase catalyzes a nucleophilic attack by the 3'-OH of the last nucleotide on the alpha-phosphate of an incoming dNTP. The reaction requires a free 3'-OH and releases pyrophosphate, which hydrolysis drives thermodynamically. There is no analogous chemistry at the 5' end, so 3'→5' synthesis is chemically impossible for this enzyme family.",
+      },
+      {
+        question: "What exactly is an Okazaki fragment and how long is it?",
+        answer:
+          "An Okazaki fragment is a short piece of newly synthesized DNA on the lagging strand, each starting with an RNA primer and extending until the polymerase runs into the previous fragment's primer. In E. coli they are approximately 1,000–2,000 base pairs; in eukaryotes they are shorter, around 100–200 base pairs, because eukaryotic DNA is wrapped around nucleosomes that interrupt synthesis more frequently.",
+      },
+      {
+        question: "How does this simulation relate to AP Bio 3.A.1 and HS-LS1-1?",
+        answer:
+          "AP Bio 3.A.1 requires students to explain how DNA is replicated with high fidelity and why the semi-conservative mechanism ensures faithful transmission of genetic information. HS-LS1-1 requires students to ask questions about DNA replication and its role in inheritance. The enzyme-by-enzyme animation directly maps to the molecular evidence that both standards require students to analyze.",
+      },
+      {
+        question: "What happens if helicase stops working?",
+        answer:
+          "Without helicase, the double helix cannot be unwound at the replication fork and synthesis halts entirely. Many antifungal and antiviral drugs target the helicase of the pathogen specifically, halting its genome replication without affecting the human replisome. A helicase mutation in humans causes syndromes like Werner syndrome (accelerated aging), because DNA repair pathways that also use helicase activity fail.",
+      },
+      {
+        question: "How fast does DNA replication actually happen?",
+        answer:
+          "E. coli DNA polymerase III adds approximately 1,000 nucleotides per second. Human DNA polymerase delta is slower, around 50 nucleotides per second, but humans compensate by firing thousands of replication origins simultaneously across the genome. The entire 3.2-billion-bp human genome replicates in roughly 6–8 hours.",
+      },
+    ],
+  },
 };
