@@ -99,7 +99,7 @@ export const rollerCoaster: Experiment = {
     },
     {
       id: "rc-c3",
-      question: "How much energy is lost to friction over one full loop?",
+      question: "How much energy is lost to friction after the cart completes one full pass along the track?",
       hint: "Compare total energy at start and end",
       tier: "pro",
     },
@@ -126,12 +126,12 @@ export const rollerCoaster: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "At the top of a roller coaster's first hill, nearly all the car's mechanical energy sits as gravitational potential energy: PE = mgh. The instant the car crests and plunges downward, potential energy converts to kinetic energy: KE = ½mv². At the bottom of the valley, potential energy reaches its minimum and speed reaches its maximum. As the car climbs the next hill, kinetic energy converts back to potential energy — and on the cycle continues, over and over. In a frictionless system the total mechanical energy (KE + PE) never changes: every joule lost in height is gained in speed. Real coasters have friction, which converts some mechanical energy to thermal energy in the wheels and rails — that energy is not destroyed, just no longer useful for moving the car, which is why each subsequent peak must be shorter than the one before it. This simulation lets you set the initial height (5–100 m), cart mass (0.5–50 kg), and friction (0–0.5) and watch the real-time energy bar chart verify conservation at every point on the track.",
+      "At the top of a roller coaster's first hill, nearly all the car's mechanical energy sits as gravitational potential energy: PE = mgh. The instant the car crests and plunges downward, potential energy converts to kinetic energy: KE = ½mv². At the bottom of the valley, potential energy reaches its minimum and speed reaches its maximum. As the car climbs the next hill, kinetic energy converts back to potential energy — and on the cycle continues, over and over. In a frictionless system the total mechanical energy (KE + PE) never changes: every joule lost in height is gained in speed. Real coasters have friction, which converts some mechanical energy to thermal energy in the wheels and rails — that energy is not destroyed, just no longer useful for moving the car, which is why each subsequent peak must be shorter than the one before it. This simulation lets you set the initial height (5–100 m), cart mass (0.5–50 kg), and friction (0–0.5) and watch the real-time energy bar chart. With friction = 0, KE + PE is conserved at every point. With friction on, KE + PE alone decreases — but KE + PE + thermal energy is still conserved across the whole system.",
     parameterExplanations: {
       initialHeight:
         "The starting height of the cart above the lowest point on the track, in meters (5–100 m). This directly sets the total mechanical energy available: E_total = mgh₀. Doubling the height doubles the total energy and increases the maximum speed at the bottom by a factor of √2, since v_max = √(2gh₀).",
       mass:
-        "The cart mass in kilograms (0.5–50 kg). In a frictionless system, mass cancels out of the energy conservation equation and has no effect on speed or height reached — a 1 kg cart and a 50 kg cart released from the same height hit the bottom at the same speed. With friction enabled, heavier carts lose proportionally more energy to thermal dissipation per unit distance.",
+        "The cart mass in kilograms (0.5–50 kg). In a frictionless system, mass cancels out of the energy conservation equation and has no effect on speed or height reached — a 1 kg cart and a 50 kg cart released from the same height hit the bottom at the same speed. With Coulomb-type friction, the friction force scales with the normal force (proportional to mass), and energy loss per meter also scales with mass, so the mass again cancels from the equations of motion — heavier carts do not reach lower heights unless the simulation models non-mass-scaling drag.",
       friction:
         "A dimensionless friction coefficient (0–0.5) representing resistance between wheels and track. At friction = 0 the total mechanical energy is perfectly conserved. Increasing friction causes the cart to lose energy to heat, reducing the height the cart can reach on subsequent hills. The energy bar chart will show the thermal energy component growing with each pass.",
     },
@@ -168,9 +168,9 @@ export const rollerCoaster: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Frictionless energy verification: set initialHeight to 50 m, mass to 5 kg, and friction to 0. Pause the simulation at multiple track positions and have students read KE and PE from the bar chart, calculate their sum each time, and verify that KE + PE remains constant at mgh₀ = 5 × 9.8 × 50 = 2,450 J.",
+      "Frictionless energy verification: set initialHeight to 50 m, mass to 5 kg, and friction to 0. Pause the simulation at multiple track positions and have students observe the KE and PE bar heights, verify that when one bar grows the other shrinks by the same amount, and confirm that the combined bar length (KE + PE) stays constant throughout the run. If numeric readouts are available in the simulation, students may also verify the sum matches the predicted mgh₀.",
       "Mass independence demonstration: run two trials at initialHeight 30 m — one at mass 1 kg and one at mass 50 kg, both with friction 0. Record the speed at the bottom for each. Students should find v = √(2 × 9.8 × 30) ≈ 24.2 m/s in both cases. Confront the intuition that heavier means faster.",
-      "Friction energy audit: set initialHeight to 60 m, mass to 10 kg, and friction to 0.2. Pause after one full loop and record the thermal energy shown. Ask: 'Where did that energy go, and can we get it back to lift the cart?' Reinforce HS-PS3-2's focus on energy transfer and degradation.",
+      "Friction energy audit: set initialHeight to 60 m, mass to 10 kg, and friction to 0.2. Pause after the cart traverses the track once and record the thermal energy shown. Ask: 'Where did that energy go, and can we get it back to lift the cart?' Reinforce HS-PS3-2's focus on energy transfer and degradation.",
       "Maximum reachable height prediction: set initialHeight to 40 m and friction to 0. Ask students to predict the maximum height the cart can reach on a subsequent hill. They should predict 40 m. Then set friction to 0.1 and predict what happens. Run and compare prediction to simulation. Connects to HS-PS3-1.",
       "Height-speed relationship: keep mass at 5 kg and friction at 0. Sweep initialHeight through 10, 20, 40, and 80 m. Have students record the bottom speed each time and check whether speed doubles when height quadruples (it should: v ∝ √h). Plot v² vs. h and verify the linear relationship predicted by KE = mgh.",
     ],
@@ -188,7 +188,7 @@ export const rollerCoaster: Experiment = {
       {
         question: "Does mass ever matter in this experiment?",
         answer:
-          "In a frictionless simulation, mass cancels from the energy equations and has no effect on speed or height reached — set mass anywhere from 0.5 to 50 kg and v_max is identical. With friction enabled (friction greater than 0), mass does matter: the friction force is typically proportional to the normal force, which depends on mass, so heavier carts lose more energy per meter traveled and reach lower heights on subsequent peaks.",
+          "In a frictionless simulation, mass cancels from the energy equations and has no effect on speed or height reached — set mass anywhere from 0.5 to 50 kg and v_max is identical. With Coulomb-type friction enabled, the friction force scales with mass, but so does the cart's inertia and gravitational energy, so mass still cancels from the equations of motion — heavier carts lose more absolute joules to friction per meter but carry proportionally more energy, reaching the same heights. Mass affects outcome only if the simulation models non-mass-scaling drag such as air resistance.",
       },
       {
         question: "What happens to the 'lost' energy when friction is on?",

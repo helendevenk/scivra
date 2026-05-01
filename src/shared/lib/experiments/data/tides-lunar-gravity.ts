@@ -145,7 +145,7 @@ export const tidesLunarGravity: Experiment = {
         wrong:
           "High tide always occurs when the Moon is directly overhead.",
         correct:
-          "The tidal bulge is slightly ahead of the Moon's position because Earth rotates faster than the Moon orbits, and friction between the ocean and the seafloor drags the bulge forward. Additionally, local geography — bay shape, ocean basin resonance, and coastline geometry — can shift high tide by several hours from the Moon's overhead transit.",
+          "In the real ocean, beyond this simplified model, the tidal bulge is slightly ahead of the Moon's position because Earth rotates faster than the Moon orbits and friction between the ocean and seafloor drags the bulge forward. Additionally, local geography — bay shape, ocean basin resonance, and coastline geometry — can shift high tide by several hours from the Moon's overhead transit. This simulation aligns bulges directly with the Moon for conceptual clarity; the phase lag and geographic variation are real-world complications not represented here.",
       },
       {
         wrong:
@@ -162,9 +162,9 @@ export const tidesLunarGravity: Experiment = {
     ],
     teacherUseCases: [
       "Spring and neap tide comparison: set playbackSpeed to 0 and manually sweep moonAngle from 0° to 180° while keeping sunAngle at 90°. Ask students to sketch the tide gauge reading at 0°, 45°, 90°, 135°, and 180°, then identify which positions produce spring versus neap tides and explain why.",
-      "Two-bulge demonstration: pause playbackSpeed at 0, set moonAngle to 0°, and rotate Earth (advance time slowly). Ask students to count how many times the coastal gauge spike occurs per full rotation and explain why the answer is two, not one, using the gravity-difference concept.",
+      "Two-bulge demonstration: set moonAngle to 0° and playbackSpeed to 0.5× to advance time slowly. Ask students to count how many times the coastal gauge spike occurs per full Earth rotation and explain why the answer is two, not one, using the gravity-difference concept.",
       "Sun-Moon alignment lab: set sunAngle to 0° and sweep moonAngle through 0°, 90°, 180°, and 270°. Have students predict which moonAngle values will produce the highest and lowest tidal range before running, then verify. Connects to HS-ESS1-4.",
-      "Quantitative tidal force ratio: after observing that spring tides are larger than neap tides, have students use the ratio F_Moon / F_Sun ≈ 2.2 to predict the approximate height ratio of spring to neap tides and compare to the gauge display. Emphasizes that the Moon's proximity outweighs the Sun's mass for this force.",
+      "Quantitative tidal force ratio: after observing that spring tides are larger than neap tides, have students use F_Sun ≈ 0.46 × F_Moon to reason about amplitudes. At spring tide the forces add (amplitude ≈ 1.46 M), at neap tide they partially cancel (amplitude ≈ 0.54 M), giving an idealized spring-to-neap ratio of about 1.46 / 0.54 ≈ 2.7. Compare this prediction to the gauge display and discuss why real ratios vary with local geography.",
       "Orbital period and tidal cycle: set playbackSpeed to 5 and let the simulation run through a full 29.5-day lunar cycle. Ask students to count the number of spring and neap tide events and connect this to the real-world coastal flooding calendar published by NOAA.",
     ],
     faq: [

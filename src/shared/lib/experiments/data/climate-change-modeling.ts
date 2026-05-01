@@ -124,10 +124,10 @@ export const climateChangeModeling: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Climate change modeling uses historical data and physics to project how Earth's average temperature responds to changes in greenhouse gases. Ice cores drilled in Antarctica preserve trapped air bubbles reaching back 800,000 years, recording both CO₂ concentration and temperature proxy data — and the two curves track each other almost perfectly through dozens of glacial cycles. Since pre-industrial times (~1750), CO₂ has risen from 280 ppm to over 420 ppm, a level not seen in at least 800,000 years of natural cycles. The simulation lets you explore that full record, switch between four SSP emission scenarios with different assumed societal choices, and watch how the projected temperature curve for 2100 changes depending on which path humanity takes.",
+      "Climate change modeling uses historical data and physics to project how Earth's average temperature responds to changes in greenhouse gases. Ice cores drilled in Antarctica preserve trapped air bubbles reaching back 800,000 years, recording both CO₂ concentration and temperature proxy data — and the two curves track each other almost perfectly through about eight major glacial-interglacial cycles. Since pre-industrial times (~1750), CO₂ has risen from 280 ppm to over 420 ppm, a level not seen in at least 800,000 years of natural cycles. The simulation lets you explore that full record, switch between four SSP emission scenarios with different assumed societal choices, and watch how the projected temperature curve for 2100 changes depending on which path humanity takes.",
     parameterExplanations: {
       timeRange:
-        "How many years of history to display, from 100 years (recent instrumental record) up to 800,000 years (full ice-core archive). At 800,000 years the glacial-interglacial CO₂ cycles are visible; at 100 years the industrial-era rise from 280 ppm to 420+ ppm dominates the graph.",
+        "How many years of history to display, from 100 years (recent instrumental record) up to 800,000 years (full ice-core archive). At 800,000 years the glacial-interglacial CO₂ cycles are visible; at 100 years the recent rise from roughly 300+ ppm to 420+ ppm dominates the graph.",
       scenario:
         "Emission scenario mapped to the IPCC Shared Socioeconomic Pathways (SSP): 1 = SSP1-2.6 (strong mitigation, ~1.8°C by 2100), 2 = SSP2-4.5 (moderate action, ~2.7°C), 3 = SSP3-7.0 (fragmented effort, ~3.6°C), 4 = SSP5-8.5 (fossil-fuel intensive, ~4.4°C).",
       showCO2:
@@ -150,7 +150,7 @@ export const climateChangeModeling: Experiment = {
         wrong:
           "Climate has always changed naturally, so current warming is just a natural cycle.",
         correct:
-          "Natural cycles — Milankovitch, solar variation — do cause climate change, but they operate on timescales of tens of thousands of years and are well-tracked in ice-core data. Current warming of ~1.1°C in 150 years is 10–100× faster than natural transitions, and CO₂ is already 50% above any natural peak in 800,000 years.",
+          "Natural cycles — Milankovitch, solar variation — do cause climate change, but they operate on timescales of tens of thousands of years and are well-tracked in ice-core data. Current warming of ~1.1°C in 150 years is several to tens of times faster than typical post-glacial natural warming rates (depending on the baseline used), and CO₂ is already 50% above any natural peak in 800,000 years.",
       },
       {
         wrong:
@@ -162,7 +162,7 @@ export const climateChangeModeling: Experiment = {
         wrong:
           "Ocean warming is just a side effect of air temperature rising.",
         correct:
-          "The ocean absorbs over 90% of the excess heat in the climate system and acts as a thermal buffer, delaying surface warming. Because of this ocean thermal mass, even if all CO₂ emissions stopped today, temperatures would continue rising slightly for decades — this is called 'committed warming.'",
+          "The ocean absorbs over 90% of the excess heat in the climate system and acts as a thermal buffer, delaying surface warming. Because of this ocean thermal mass, if CO₂ concentrations were held fixed, some additional committed warming would occur over decades. Under near-zero emissions scenarios where concentrations can gradually decline, global temperature is expected to roughly stabilize — though uncertainty remains across model projections.",
       },
     ],
     teacherUseCases: [

@@ -124,7 +124,7 @@ export const solarSystemScale: Experiment = {
         wrong:
           "All the planets are roughly evenly spaced from each other.",
         correct:
-          "Distances grow dramatically with distance from the Sun. The gap between Jupiter (5.2 AU) and Saturn (9.6 AU) is larger than the entire span from Mercury to Jupiter. The outer solar system is far emptier than most diagrams suggest.",
+          "Distances grow dramatically with distance from the Sun. The gap from Saturn (9.6 AU) to Uranus (19.2 AU) is nearly as large as the entire span from Mercury to Jupiter. The outer solar system is far emptier than most diagrams suggest.",
       },
       {
         wrong:
@@ -155,7 +155,7 @@ export const solarSystemScale: Experiment = {
       "Scale sense-making: set scaleMode to 1 and zoom to 1. Ask students to count how many Earth-Sun gaps fit between Earth and Neptune. Record the answer (about 29), then compare that to the textbook diagram in their notes and discuss why diagrams mislead.",
       "Basketball model calculation: before running the simulation, have students compute — if the Sun is a 24 cm basketball, where would a 2 mm Earth-peppercorn sit? (Answer: ~26 m.) Then set scaleMode 1 and verify their calculation against the proportional display.",
       "Light-travel time: set scaleMode to 1. Ask students to use the formula light-time = d/c to calculate how long a signal takes to reach each planet from the Sun. Then compare to the simulation's data panel. Reinforces HS-ESS1-4 crosscutting scale thinking.",
-      "Inner versus outer solar system contrast: set scaleMode 0 and zoom to 100 to compare Mercury, Venus, Earth, and Mars diameters; then set zoom to 1 and scaleMode 1 to see how tiny those rocky worlds are in the full distance view. Discuss why inner planets are rocky and outer planets are gaseous.",
+      "Inner versus outer solar system contrast: set scaleMode 0 and zoom to 100 to compare Mercury, Venus, Earth, and Mars diameters; then set zoom to 1 and scaleMode 1 to see how tiny those rocky worlds are in the full distance view. Discuss why inner planets are rocky while the outer planets are giant worlds rich in gas and ices (Jupiter and Saturn are gas giants; Uranus and Neptune are ice giants).",
       "Kuiper Belt edge estimation: set scaleMode 1 and zoom to 1. Ask students to estimate where 30 AU falls on the display relative to Neptune and mark where the Kuiper Belt ends (~50 AU). This connects to the Crosscutting Concept of Scale, Proportion, and Quantity.",
     ],
     faq: [

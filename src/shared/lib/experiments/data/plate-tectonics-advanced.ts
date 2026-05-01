@@ -125,14 +125,14 @@ export const plateTectonicsAdvanced: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Plate tectonics is the unifying theory of Earth science: Earth's rigid outer shell (the lithosphere) is broken into roughly 15 major plates that move relative to one another at rates of 1–10 cm/yr — about as fast as a fingernail grows. Where plates pull apart, magma fills the gap and builds new ocean floor at mid-ocean ridges. Where plates converge, the denser oceanic plate dives beneath its neighbor in a subduction zone, forming deep trenches and volcanic arcs. Where plates grind sideways, transform faults like the San Andreas produce frequent earthquakes without volcanism. The simulation shows a 3D cross-section of each boundary type, with adjustable plate speed and mantle temperature to connect surface features — mountains, trenches, volcanoes — to the forces driving them.",
+      "Plate tectonics is the unifying theory of Earth science: Earth's rigid outer shell (the lithosphere) is broken into about a dozen major and minor plates — including seven commonly classified as major plates — that move relative to one another at rates of 1–10 cm/yr — about as fast as a fingernail grows. Where plates pull apart, magma fills the gap and builds new ocean floor at mid-ocean ridges. Where plates converge, the denser oceanic plate dives beneath its neighbor in a subduction zone, forming deep trenches and volcanic arcs. Where plates grind sideways, transform faults like the San Andreas produce frequent earthquakes without volcanism. The simulation shows a 3D cross-section of each boundary type, with adjustable plate speed and mantle temperature to connect surface features — mountains, trenches, volcanoes — to the forces driving them.",
     parameterExplanations: {
       plateSpeed:
         "Rate at which the simulated plate moves, in cm/yr (range 1–20 cm/yr). Real plates move 1–10 cm/yr: slow plates like the Eurasian at ~2 cm/yr, fast plates like the Pacific at ~7–10 cm/yr. Higher speeds accelerate subduction, ridge spreading, and fault offset in the animation.",
       boundaryType:
         "Selects the boundary geometry: 1 = convergent (subduction zone), 2 = divergent (mid-ocean ridge or rift valley), 3 = transform (strike-slip fault). Each setting changes the 3D cross-section, the surface features shown, and the type of seismic and volcanic activity displayed.",
       mantleTemp:
-        "Temperature of the simulated upper mantle in °C (range 1000–4000°C; default 2500°C). Higher mantle temperatures increase convection vigor and magma generation rate. At convergent boundaries it affects how far the subducting slab must descend before it melts to feed arc volcanoes.",
+        "Temperature of the simulated upper mantle in °C (range 1000–4000°C; default 2500°C). Higher mantle temperatures increase convection vigor and magma generation rate. At convergent boundaries it affects how far the subducting slab must descend before fluids released from the slab lower the melting point of the overlying mantle wedge, producing the magma that feeds arc volcanoes.",
     },
     misconceptions: [
       {
@@ -151,7 +151,7 @@ export const plateTectonicsAdvanced: Experiment = {
         wrong:
           "Subduction happens wherever two plates meet.",
         correct:
-          "Subduction requires that one plate be denser than the other. Oceanic lithosphere (density ~3.0 g/cm³) is denser than both continental crust (~2.7 g/cm³) and the asthenosphere when it is old and cold, so it subducts. When two continental plates collide, neither is dense enough to subduct — they crumple and stack, forming fold mountain ranges like the Himalayas.",
+          "Subduction requires that one plate be denser than the asthenosphere. Oceanic crust itself is ~3.0 g/cm³, but when the full oceanic lithosphere — crust plus underlying mantle lithosphere — is old and cold, its average density can exceed the asthenosphere (~3.2–3.3 g/cm³), allowing it to sink. Continental crust (~2.7 g/cm³) remains too buoyant — when two continental plates collide, neither can subduct and both crumple into fold mountain ranges like the Himalayas.",
       },
       {
         wrong:
@@ -163,15 +163,15 @@ export const plateTectonicsAdvanced: Experiment = {
     teacherUseCases: [
       "Boundary type survey: run the simulation at all three boundaryType settings (1, 2, 3) at plateSpeed 5 cm/yr and have students sketch the cross-section for each. They label surface features (trench, ridge, fault), earthquake depth, and presence or absence of volcanism — building a comparison table that supports HS-ESS2-1.",
       "Speed vs. feature intensity: at boundaryType 1 (convergent), sweep plateSpeed from 1 to 20 cm/yr. Students record how trench depth, volcanic arc activity, and earthquake frequency change. Ask: does doubling the plate speed double all these features, or do some saturate? Introduce the concept of nonlinear system responses.",
-      "Mantle temperature exploration: fix boundaryType to 2 (divergent) and sweep mantleTemp from 1000 to 4000°C. Students describe how spreading rate and magma production change and explain using the concept of thermal convection in a fluid — linking to HS-ESS2-3 on how internal and external sources of energy drive Earth's surface processes.",
+      "Mantle temperature exploration: fix boundaryType to 2 (divergent) and sweep mantleTemp from 1000 to 4000°C. Students describe how magma production and convection vigor change and explain using the concept of thermal convection in a fluid — linking to HS-ESS2-3 on how internal and external sources of energy drive Earth's surface processes. (To study spreading rate specifically, use the plateSpeed parameter instead.)",
       "Slab pull vs. ridge push misconception probe: before running the simulation, ask students to vote: 'Is it mantle convection or slab pull that drives most plate motion?' After observing the convergent boundary at high plateSpeed with the slab visualization, discuss the force diagram and address the common 'conveyor belt' model.",
-      "Real-world boundary matching: assign each group a real boundary (Nazca-South American convergent, Mid-Atlantic divergent, Pacific-North American transform). They set boundaryType and plateSpeed to match the real rate (~7 cm/yr for Nazca, ~2.5 cm/yr for Mid-Atlantic, ~5 cm/yr for San Andreas) and describe which surface features in the sim correspond to known geographic features — connecting to HS-ESS1-5.",
+      "Real-world boundary matching: assign each group a real boundary (Nazca-South American convergent, Mid-Atlantic divergent, Pacific-North American transform). They set boundaryType and plateSpeed to the nearest available value matching the real rate (~7 cm/yr for Nazca, ~3 cm/yr for Mid-Atlantic — the closest step to the actual ~2.5 cm/yr, ~5 cm/yr for San Andreas) and describe which surface features in the sim correspond to known geographic features — connecting to HS-ESS1-5.",
     ],
     faq: [
       {
         question: "What drives tectonic plates — is it mantle convection, slab pull, or ridge push?",
         answer:
-          "All three contribute, but slab pull dominates. Cold, dense subducting oceanic lithosphere (density ~3.3 g/cm³ vs. ~3.2 g/cm³ asthenosphere) sinks under gravity and pulls the rest of the plate behind it, accounting for roughly 90% of total driving force. Ridge push adds a smaller gravitational contribution. Mantle convection drives the heat transfer that ultimately produces these density differences, making it the planetary-scale engine underneath the more direct forces.",
+          "All three contribute, but slab pull is the dominant driver for many plates with active subduction. Cold, dense subducting oceanic lithosphere sinks under gravity and pulls the rest of the plate behind it. Ridge push adds a gravitational contribution as plates slide away from elevated mid-ocean ridges. Mantle flow also plays a role. The relative contributions vary by plate and remain an active area of research.",
       },
       {
         question: "Why do some plate boundaries have volcanoes and others don't?",

@@ -135,7 +135,7 @@ export const rockCycle: Experiment = {
       temperature:
         "Temperature in °C, ranging 0–1400°C. Sedimentary and igneous rocks begin metamorphic transformation above ~200°C. Above ~700–1200°C (depending on composition), rock melts into magma and re-enters the igneous pathway. The default value of 200°C sits at the low-grade metamorphic threshold.",
       pressure:
-        "Confining pressure in GPa, ranging 0–4 GPa. A pressure of 0.3 GPa corresponds roughly to burial at 10 km depth. Metamorphism begins above ~0.3 GPa combined with elevated temperature; pressures above 1 GPa at moderate temperatures produce high-pressure minerals like garnet and indicate deep subduction environments.",
+        "Confining pressure in GPa, ranging 0–4 GPa. A pressure of 0.3 GPa corresponds roughly to burial at 10 km depth. Metamorphism begins above ~0.3 GPa combined with elevated temperature; high-pressure subduction environments (>1 GPa) can produce minerals such as glaucophane, lawsonite, or omphacite. Garnet occurs across a broader range of metamorphic grades and is not exclusive to high-pressure subduction.",
       timescale:
         "Geological time in millions of years (My), ranging 1–500 My. Sediment compaction into sedimentary rock requires tens of millions of years. Metamorphic reactions accelerate with temperature but still require millions of years at geological scales. The default 50 My spans a typical sedimentary basin filling timescale.",
     },
@@ -191,7 +191,7 @@ export const rockCycle: Experiment = {
       {
         question: "Can sedimentary rock become igneous rock without first becoming metamorphic?",
         answer:
-          "Yes. If sedimentary rock is subducted or buried deep enough that temperature exceeds its melting point (~700°C for granite-like composition, higher for basaltic), it melts directly into magma without passing through a metamorphic stage. Set temperature above 800°C and pressure above 1 GPa in the simulation to activate this direct pathway.",
+          "In simplified rock-cycle diagrams a direct arrow from sedimentary to magma is sometimes shown, but in nature, burial heating typically passes through metamorphic conditions before reaching melting temperatures. The distinction matters: sedimentary rock usually becomes metamorphic rock first, then melts into magma if temperatures climb high enough. Set temperature above 800°C and pressure above 1 GPa in the simulation to see the melting pathway — but treat the 'skip metamorphism' route as a diagram simplification rather than a common geological process.",
       },
       {
         question: "What makes granite different from basalt if both are igneous?",

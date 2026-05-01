@@ -143,13 +143,13 @@ export const atmosphereLayers: Experiment = {
         wrong:
           "The thermosphere is the hottest layer, so objects there should feel extremely hot.",
         correct:
-          "Temperature measures the average kinetic energy per molecule, but the thermosphere has so few molecules that almost no heat is transferred to a surface. Satellites there actually lose heat by radiation faster than they absorb it.",
+          "Temperature measures the average kinetic energy per molecule, but the thermosphere has so few molecules that almost no heat is transferred to a surface. Heat exchange there is dominated by radiation, while collisions with the thin thermospheric gas transfer very little heat to or from a satellite.",
       },
     ],
     teacherUseCases: [
       "Pre-lab sketch: before touching the simulation, have students draw a graph of expected temperature vs. altitude from 0 to 100 km. After running the altitude slider from 0 to 100, compare their predictions to the actual non-linear profile and discuss where their intuition broke down.",
-      "Layer boundary identification: set altitude to 0 and advance in 5 km increments. Students record temperature at each step and identify the four layer boundaries by spotting direction reversals. Compile class data into a shared table comparing measured vs. textbook values.",
-      "Ozone misconception probe: toggle showOzone between 0 and 1 at altitudes of 10 km, 25 km, and 40 km. Ask students to explain in writing why temperature rises in the stratosphere only when showOzone is on. Use responses to address the 'ozone as shield' model.",
+      "Layer boundary identification: set altitude to 0 and advance in 5 km increments. Students record temperature at each step and identify the three main temperature-defined boundaries (tropopause, stratopause, mesopause) by spotting direction reversals, then discuss how the gradual thermosphere-to-exosphere transition differs from these sharp reversals. Compile class data into a shared table comparing measured vs. textbook values.",
+      "Ozone misconception probe: toggle showOzone between 0 and 1 at altitudes of 10 km, 25 km, and 40 km. The temperature profile is determined by ozone physics and does not change with the overlay toggle; ask students instead to use showOzone on to connect the stratospheric temperature inversion they observe to the ozone concentration peak shown in the overlay. Use responses to address the 'ozone as shield' model.",
       "Pressure halving activity: have students advance altitude from 0 to 50 km in steps of ~5.5 km and record pressure at each stop. They should observe pressure approximately halving at each step, confirming the barometric formula without using the equation directly.",
       "Weather boundary discussion: set altitude to 12 km and ask why weather 'stops' at the tropopause. Connect the temperature inversion to the stability of air layers — warm over cold prevents vertical convection, linking to HS-ESS2-4 on how Earth's systems interact.",
     ],
@@ -157,7 +157,7 @@ export const atmosphereLayers: Experiment = {
       {
         question: "Why does the stratosphere get warmer as you go higher?",
         answer:
-          "Ozone (O₃) concentrated between 15–35 km absorbs UV radiation from the Sun and converts it to heat. The highest ozone concentrations sit at the top of this band, so upper stratosphere air is heated more directly. This creates a temperature inversion that stops tropospheric weather from mixing into the stratosphere.",
+          "Ozone (O₃) is distributed through the stratosphere with peak concentration near 20–25 km, where it absorbs UV radiation from the Sun and converts it to heat. This creates a temperature inversion that stops tropospheric weather from mixing into the stratosphere.",
       },
       {
         question: "How is atmospheric pressure related to altitude?",
@@ -177,7 +177,7 @@ export const atmosphereLayers: Experiment = {
       {
         question: "What is the Kármán line and why does it matter?",
         answer:
-          "The Kármán line at 100 km is the internationally recognized boundary between Earth's atmosphere and outer space. Below it, aerodynamic lift is possible; above it, orbital mechanics dominate. It sits in the upper mesosphere/lower thermosphere where air density is roughly 2.2 × 10⁻⁷ kg/m³ — about 10 million times less dense than at sea level.",
+          "The Kármán line at 100 km is a commonly used boundary for space, adopted by the FAI (Fédération Aéronautique Internationale) and others, but it is a legal and engineering convention — not a sharp physical edge of the atmosphere. It sits in the upper mesosphere/lower thermosphere where air density is roughly 5.6 × 10⁻⁷ kg/m³ — about 2 million times less dense than at sea level.",
       },
     ],
   },

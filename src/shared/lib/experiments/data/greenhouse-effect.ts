@@ -128,7 +128,7 @@ export const greenhouseEffect: Experiment = {
       co2Level:
         "Atmospheric CO₂ concentration in parts per million (ppm), adjustable from 200 to 1000 ppm. Pre-industrial baseline was ~280 ppm; today it is ~420 ppm. Each doubling — e.g., 280 → 560 ppm — adds approximately 3.7 W/m² of radiative forcing and roughly 3°C of eventual warming.",
       methaneLevel:
-        "Atmospheric CH₄ concentration in parts per billion (ppb), adjustable from 500 to 5000 ppb. Pre-industrial level was ~722 ppb; today it is ~1900 ppb. Methane is ~80× more potent than CO₂ per molecule on a 20-year timescale but persists only ~12 years in the atmosphere before oxidizing.",
+        "Atmospheric CH₄ concentration in parts per billion (ppb), adjustable from 500 to 5000 ppb. Pre-industrial level was ~722 ppb; today it is ~1900 ppb. Methane has a GWP20 of about 80× CO₂ per unit mass over a 20-year time horizon; molecule-for-molecule comparisons differ and depend on the metric and time horizon chosen. CH₄ persists only ~12 years in the atmosphere before oxidizing.",
       solarIntensity:
         "Incoming solar energy as a percentage of the present-day solar constant (1361 W/m²). At 100% the simulation matches current conditions; at 80% it approximates a dimmer early Sun; at 120% it tests the effect of solar variation on surface temperature independent of greenhouse gases.",
     },
@@ -155,7 +155,7 @@ export const greenhouseEffect: Experiment = {
         wrong:
           "Methane is more important to fight than CO₂ because it's a more potent greenhouse gas.",
         correct:
-          "Methane is ~80× more potent per molecule on a 20-year basis, but atmospheric CH₄ concentration (~1900 ppb) is roughly 220× lower than CO₂ (~420,000 ppb = 420 ppm). Methane also breaks down in about 12 years, while CO₂ persists for centuries. Both matter, but CO₂ dominates the long-term forcing.",
+          "Methane has a GWP20 of about 80× CO₂ per unit mass over a 20-year horizon (the value varies by metric and time horizon), but atmospheric CH₄ concentration (~1900 ppb) is roughly 220× lower than CO₂ (~420,000 ppb = 420 ppm). Methane also breaks down in about 12 years, while CO₂ persists for centuries. Both matter, but CO₂ dominates the long-term forcing.",
       },
       {
         wrong:
@@ -165,17 +165,17 @@ export const greenhouseEffect: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Baseline before enhancement: set co2Level to 280 ppm (pre-industrial) and solarIntensity to 100%, then record the equilibrium temperature shown. Increase co2Level to 420 ppm and record again. Students calculate the warming delta and compare to the observed ~1.1°C of real-world warming since industrialization.",
-      "Doubling experiment: have pairs increase co2Level from 280 to 560 ppm and record temperature change. Then increase from 560 to 1120 ppm and compare. The logarithmic relationship means both doublings produce roughly the same warming increment, challenging the assumption that twice as much CO₂ means twice the warming.",
+      "CO₂-only baseline: set co2Level to 280 ppm (pre-industrial CO₂ baseline) and solarIntensity to 100%, then record the equilibrium temperature shown. Increase co2Level to 420 ppm and record again. Students calculate the warming delta and compare to the observed ~1.1°C of real-world warming since industrialization. Note: for a fully preindustrial scenario also set methaneLevel to ~700–800 ppb; leaving methane at the modern default isolates the CO₂ contribution only.",
+      "Doubling experiment: have pairs increase co2Level from 250 to 500 ppm and record the temperature change. Then increase from 500 to 1000 ppm and compare. The logarithmic relationship means both doublings produce roughly the same warming increment, challenging the assumption that twice as much CO₂ means twice the warming.",
       "Methane vs. CO₂ potency: set co2Level to 420 ppm and methaneLevel to 1900 ppb (baseline). Hold CO₂ constant and raise methaneLevel to 5000 ppb. Then restore methane and instead raise co2Level by the equivalent forcing. Students compare which lever moves temperature more per unit slider change.",
       "Solar vs. greenhouse comparison: set solarIntensity to 80% with co2Level at 1000 ppm, then reverse to solarIntensity 120% with co2Level at 200 ppm. Ask students which scenario produces a warmer surface and why — demonstrating that the greenhouse side and solar side affect temperature through different physical mechanisms.",
-      "Misconception probe — 'greenhouse effect is all bad': before running the simulation, survey whether students think Earth would be warmer or colder without any greenhouse gases. After setting co2Level to 200 ppm and methaneLevel to 500 ppb (near-zero baseline), students observe the temperature drop toward -18°C and revise their claim using HS-ESS3-5 evidence language.",
+      "Misconception probe — 'greenhouse effect is all bad': before running the simulation, survey whether students think Earth would be warmer or colder without any greenhouse gases. After setting co2Level to 200 ppm and methaneLevel to 500 ppb (the lowest-GHG scenario available in this simulation), students observe the temperature drop and revise their claim using HS-ESS3-5 evidence language. Note: water vapor, the dominant greenhouse gas, is not parameterized here, so the simulation represents a partial reduction, not a true zero-greenhouse baseline.",
     ],
     faq: [
       {
         question: "What would Earth's temperature be without any greenhouse gases?",
         answer:
-          "Earth's effective radiating temperature — the temperature needed to emit enough infrared to balance incoming solar energy — is about 255 K (-18°C). The natural greenhouse effect adds approximately 33°C on top of that, bringing the average surface temperature to ~288 K (+15°C). Set co2Level to 200 ppm and methaneLevel to 500 ppb in the simulation to approach this hypothetical baseline.",
+          "Earth's effective radiating temperature — the temperature needed to emit enough infrared to balance incoming solar energy — is about 255 K (-18°C). The natural greenhouse effect adds approximately 33°C on top of that, bringing the average surface temperature to ~288 K (+15°C). Setting co2Level to 200 ppm and methaneLevel to 500 ppb represents the lowest-GHG scenario in this simulation; it does not replicate a true zero-greenhouse baseline, since water vapor (not parameterized here) is the dominant greenhouse gas.",
       },
       {
         question: "Why does CO₂ absorb infrared but not visible light?",

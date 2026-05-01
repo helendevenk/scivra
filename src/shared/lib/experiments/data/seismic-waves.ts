@@ -131,7 +131,7 @@ export const seismicWaves: Experiment = {
       frequency:
         "Oscillation frequency in Hz (range 0.5–5 Hz, default 2 Hz). Real seismic waves span 0.001–20 Hz depending on earthquake magnitude and depth. Higher frequency produces shorter wavelengths and more visible cycles per wave train in the display; lower frequency produces the long-period waves associated with the most distant and deepest earthquakes.",
       amplitude:
-        "Wave displacement amplitude in arbitrary display units (range 10–60, default 30). Larger amplitude represents greater ground displacement — analogous to earthquake magnitude. At high amplitude, the seismograph trace shows larger swings that would correspond to stronger shaking at the recording station.",
+        "Wave displacement amplitude in arbitrary display units (range 10–60, default 30). Larger amplitude represents greater ground displacement and shaking intensity at the recording station. If relating this to earthquake magnitude, note that magnitude uses a logarithmic scale and is derived from recorded amplitudes corrected for distance and instrument response — it is not a simple linear measure of shaking.",
     },
     misconceptions: [
       {
@@ -160,9 +160,9 @@ export const seismicWaves: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Wave identification race: trigger a quake at the default settings (waveSpeed 1×, frequency 2 Hz, amplitude 30). Students watch the seismograph trace and mark the moment each wave type arrives (P first, S second, surface last), then calculate the S-P time interval to estimate epicenter distance using the 8 km/s and 4 km/s rule of thumb.",
+      "Wave identification race: trigger a quake at the default settings (waveSpeed 1×, frequency 2 Hz, amplitude 30). Students watch the seismograph trace and mark the moment each wave type arrives (P first, S second, surface last), then calculate the S-P time interval to estimate epicenter distance using the simulation's crustal speeds (~6 km/s for P-waves, ~3.5 km/s for S-waves at 1×).",
       "Frequency and wavelength relationship: hold waveSpeed at 1× and amplitude at 30, then sweep frequency from 0.5 Hz to 5 Hz. Students measure the visible wavelength on screen at each frequency setting, confirming the inverse relationship (wavelength = speed / frequency) without calculus — just the wave equation at HS algebra level.",
-      "Liquid core evidence thought experiment: set waveSpeed to 1×, trigger a quake, and ask students to predict what would happen to S-waves if they encountered a liquid region deep in Earth. After discussion, explain the S-wave shadow zone (105°–140° from epicenter) as the historical evidence for the liquid outer core — directly connecting to HS-ESS2-1 on interpreting Earth's interior structure.",
+      "Liquid core evidence thought experiment: set waveSpeed to 1×, trigger a quake, and ask students to predict what would happen to S-waves if they encountered a liquid region deep in Earth. After discussion, explain that S-waves are absent beyond about 103° from the epicenter — the S-wave shadow zone — as the historical evidence for the liquid outer core. (The P-wave shadow zone, where P-waves are also absent, spans roughly 103°–142° due to refraction.) This connects directly to HS-ESS2-1 on interpreting Earth's interior structure.",
       "Amplitude and damage scale: sweep amplitude from 10 to 60 while watching the seismograph trace. Students sketch the trace at each extreme and discuss why higher-amplitude surface waves cause more structural damage — connecting wave physics to built-environment consequences and addressing HS-ESS2-3.",
       "Triangulation exercise: using the S-P interval method, give students seismograph arrival data from three fictitious stations and have them triangulate an epicenter on a map using circles of calculated radius from each station. This data-collection and geometric reasoning activity supports HS-ESS2-1 without requiring any simulation parameter changes beyond the default.",
     ],
@@ -185,7 +185,7 @@ export const seismicWaves: Experiment = {
       {
         question: "What is the difference between earthquake magnitude and intensity?",
         answer:
-          "Magnitude measures the energy released at the source — a single number per earthquake on the moment magnitude scale (Mw). Intensity measures the shaking experienced at a specific location, which decreases with distance and depends on local geology. A magnitude 7.0 earthquake can cause intensity IX shaking near the epicenter but only intensity III shaking 500 km away. The amplitude parameter in the simulation scales with magnitude, while observed shaking corresponds to intensity.",
+          "Magnitude measures the energy released at the source — a single number per earthquake on the moment magnitude scale (Mw). Intensity measures the shaking experienced at a specific location, which decreases with distance and depends on local geology. A magnitude 7.0 earthquake can cause intensity IX shaking near the epicenter but only intensity III shaking 500 km away. The amplitude parameter in this simulation is a display proxy for ground displacement and shaking intensity; it does not map directly to the logarithmic magnitude scale, which is derived from recorded amplitudes corrected for distance and instrument response.",
       },
       {
         question: "Why do surface waves cause more damage than body waves if they are slower?",

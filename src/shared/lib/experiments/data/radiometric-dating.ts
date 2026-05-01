@@ -126,7 +126,7 @@ export const radiometricDating: Experiment = {
       "Radioactive decay is the process by which unstable atomic nuclei shed energy and transform into a different element at a rate set entirely by nuclear physics — not temperature, pressure, or chemistry. The time for exactly half the parent atoms in any sample to convert to daughter atoms is called the half-life, and it is a fixed constant for each isotope. Carbon-14 (half-life 5,730 years) works for organic remains up to about 50,000 years old; potassium-40 (1.25 billion years) dates ancient volcanic rocks; uranium-238 (4.47 billion years) reaches the oldest minerals on Earth and in meteorites. By measuring the parent-to-daughter ratio in a sample, geologists calculate age using the equation N(t) = N₀(1/2)^(t/T½). This simulation lets you choose an isotope, set the starting atom count, and watch the exponential decay curve build in real time.",
     parameterExplanations: {
       isotopeIndex:
-        "Selects among C-14, K-40, and U-238 (indices 0–2). Each has a different half-life spanning from thousands to billions of years, making each isotope useful for a specific age range of samples.",
+        "Selects among three named isotopes (indices 0–2): C-14 (half-life 5,730 yr), K-40 (1.25 Gyr), and U-238 (4.47 Gyr). A fourth position (index 3) exists in the UI but corresponds to an unspecified isotope; content activities use only indices 0–2. Each isotope is useful for a specific age range of samples.",
       initialAtoms:
         "The number of parent atoms present at time zero, ranging from 50 to 500. A larger starting population shows the exponential curve more smoothly; a smaller one makes individual decay events more visible on the scatter display.",
       speed:
@@ -159,7 +159,7 @@ export const radiometricDating: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Isotope selection comparison: have students set initialAtoms to 200 and run all three isotopeIndex values (0, 1, 2) at speed 5. Ask them to record how many simulation steps pass before less than 10% of parent atoms remain and translate each result into real years.",
+      "Isotope selection comparison: have students set initialAtoms to 200 and run isotopeIndex values 0, 1, and 2 (C-14, K-40, U-238) at speed 5. Ask them to record how many simulation steps pass before less than 10% of parent atoms remain and translate each result into real years.",
       "Curve-shape prediction: before running, ask students to sketch what they expect the decay graph to look like at isotopeIndex 0. After running, compare the prediction to the exponential curve and discuss why it is never a straight line.",
       "Age calculation challenge: set isotopeIndex to 0 (C-14) and initialAtoms to 400. Pause when roughly 50 parent atoms remain and ask students to calculate the approximate age in years using N(t) = N₀(1/2)^(t/T½).",
       "Real-world tie-in: set isotopeIndex to 2 (U-238) and speed to 10. Tell students this isotope dated the oldest known Earth mineral (zircon crystal, ~4.4 Gyr). Discuss what it means for Earth's history that scientists can measure this.",

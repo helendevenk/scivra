@@ -116,10 +116,10 @@ export const emSpectrum: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "The light you see with your eyes is a narrow slice of a much broader family of waves called the electromagnetic spectrum. Radio waves longer than a meter carry your Wi-Fi signal; microwaves heat your lunch; infrared radiation is the warmth you feel from a campfire without touching it; visible light spans 380–750 nm; ultraviolet light causes sunburns; X-rays pass through soft tissue; gamma rays, shorter than 0.01 nm, are released by radioactive nuclei. All of them are the same physical phenomenon — oscillating electric and magnetic fields propagating through space — and all travel at exactly c = 3 × 10⁸ m/s in a vacuum. What differs is wavelength, frequency (related by c = fλ), and photon energy (E = hf, where h = 6.63 × 10⁻³⁴ J·s). This simulation lets you drag a wavelength slider from radio to gamma and watch the wave visualization, band label, and photon energy update together in real time.",
+      "The light you see with your eyes is a narrow slice of a much broader family of waves called the electromagnetic spectrum. Broadcast radio waves span meters to kilometers; Wi-Fi uses centimeter-scale microwave/radio waves (~12.5 cm at 2.4 GHz, ~6 cm at 5 GHz); microwaves heat your lunch; infrared radiation is the warmth you feel from a campfire without touching it; visible light spans 380–750 nm; ultraviolet light causes sunburns; X-rays pass through soft tissue; gamma rays, shorter than 0.01 nm, are released by radioactive nuclei. All of them are the same physical phenomenon — oscillating electric and magnetic fields propagating through space — and all travel at exactly c = 3 × 10⁸ m/s in a vacuum. What differs is wavelength, frequency (related by c = fλ), and photon energy (E = hf, where h = 6.63 × 10⁻³⁴ J·s). This simulation lets you drag a wavelength slider from radio to gamma and watch the wave visualization, band label, and photon energy update together in real time.",
     parameterExplanations: {
       wavelength:
-        "The distance between successive wave crests, in nanometers (nm), adjustable from 0.001 nm (hard gamma) to 10,000 nm (near-infrared/microwave boundary). As wavelength decreases, frequency and photon energy both increase. Visible light occupies the narrow range of 380–750 nm.",
+        "The distance between successive wave crests, in nanometers (nm), adjustable from 0.001 nm (hard gamma) to 10,000 nm (mid-infrared). This slider spans gamma through mid-infrared — not the full radio-to-gamma spectrum. As wavelength decreases, frequency and photon energy both increase. Visible light occupies the narrow range of 380–750 nm.",
       amplitude:
         "The peak displacement of the wave oscillation, adjustable from 0.1 to 2 (dimensionless display units). Amplitude is related to wave intensity — a higher-amplitude wave carries more energy per unit area per unit time — but it does not change the wavelength, frequency, or individual photon energy shown in the panel.",
       showPhoton:
@@ -148,7 +148,7 @@ export const emSpectrum: Experiment = {
         wrong:
           "UV light is just really bright visible light — the same thing, just more intense.",
         correct:
-          "UV light (wavelengths roughly 10–380 nm) has shorter wavelengths and higher photon energy than visible light. At 300 nm, each photon carries about 4.1 eV — enough to break chemical bonds in DNA, causing mutations. Intensity (amplitude) describes how many photons arrive; photon energy determines whether each photon can trigger a chemical reaction.",
+          "UV light (wavelengths roughly 10–380 nm) has shorter wavelengths and higher photon energy than visible light. At 300 nm, each photon carries about 4.1 eV — enough to drive photochemical reactions in DNA, including the formation of pyrimidine dimers (e.g., thymine-thymine links) that can cause mutations if not repaired. Intensity (amplitude) describes how many photons arrive; photon energy determines whether each photon can trigger such a reaction.",
       },
       {
         wrong:
@@ -161,7 +161,7 @@ export const emSpectrum: Experiment = {
       "Speed-constancy emphasis: while the wavelength slider is set to three very different values (e.g., 10,000 nm, 500 nm, 0.01 nm), ask students to record the speed displayed for each band. All three should read c = 3 × 10⁸ m/s. Use this to directly confront the misconception that lower-energy waves travel slower. Connects to HS-PS4-1.",
       "E = hf calculation practice: set wavelength to 500 nm (green visible) with showPhoton enabled. Have students manually calculate f = c/λ and E = hf, then compare to the photon energy panel. Repeat at wavelength = 100 nm (UV) and wavelength = 10,000 nm (infrared) to build intuition for the energy range across the spectrum.",
       "Blackbody radiation tie-in: set wavelength to ~500 nm and explain that Wien's displacement law predicts the Sun's peak emission near 500 nm given its surface temperature of ~5,800 K. Ask students to predict which wavelength a cooler star (~3,500 K) would peak at, then verify using the formula λ_peak = 2.9 × 10⁶ nm·K / T.",
-      "Application matching: give students a list of technologies (MRI, microwave oven, sunscreen, airport X-ray, gamma-knife surgery) and ask them to match each to a spectral band using the wavelength slider and band label. Reinforces HS-PS4-3's focus on technology applications of EM waves.",
+      "Application matching: give students a list of technologies that fall within the simulation's range — gamma: 0.001–0.01 nm (cancer radiation therapy); X-ray: 0.01–10 nm (airport imaging); UV: 10–380 nm (sunscreen, UV sterilization); visible: 380–750 nm (photography, solar cells); near-infrared: 750–2500 nm (TV remote, night vision); mid-infrared: 2500–10,000 nm (thermal cameras, infrared heaters) — and ask them to match each to a spectral band using the wavelength slider and band label. Reinforces HS-PS4-3's focus on technology applications of EM waves.",
       "Amplitude vs. frequency energy: set wavelength to 600 nm and sweep amplitude from 0.1 to 2 while watching the photon energy readout (showPhoton = 1). Confirm that photon energy does not change. Then set amplitude to 1 and sweep wavelength from 700 to 400 nm to show that shortening the wavelength raises photon energy. Clarifies the amplitude/frequency independence directly.",
     ],
     faq: [
@@ -178,7 +178,7 @@ export const emSpectrum: Experiment = {
       {
         question: "What does photon energy in eV actually mean, and is 1 eV a lot?",
         answer:
-          "One electron-volt (eV) is the energy gained by a single electron accelerating through a 1-volt potential difference — equal to 1.6 × 10⁻¹⁹ J. It is a tiny amount by everyday standards but perfectly sized for atomic physics. Visible light photons carry about 1.7–3.1 eV each — enough to excite electrons in retinal molecules to trigger vision. UV photons above ~3.4 eV can break the DNA hydrogen bonds that hold the double helix together, which is why high-SPF sunscreen matters.",
+          "One electron-volt (eV) is the energy gained by a single electron accelerating through a 1-volt potential difference — equal to 1.6 × 10⁻¹⁹ J. It is a tiny amount by everyday standards but perfectly sized for atomic physics. Visible light photons carry about 1.7–3.1 eV each — enough to excite electrons in retinal molecules to trigger vision. UV photons above ~3.4 eV can drive photochemical reactions in DNA — such as forming pyrimidine dimers — that can cause mutations, which is why high-SPF sunscreen matters.",
       },
       {
         question: "Why is the visible range so narrow — only 380 to 750 nm?",

@@ -182,7 +182,7 @@ export const glaciersIceAges: Experiment = {
       {
         question: "What are the three Milankovitch cycles and what are their periods?",
         answer:
-          "Eccentricity (~100,000 years) describes how circular or elliptical Earth's orbit is. Obliquity (~41,000 years) describes how much Earth's axis is tilted. Precession (~26,000 years) describes the direction Earth's axis points, which shifts when seasons occur relative to closest approach to the Sun. All three interact to produce the insolation pattern that triggers glacial cycles.",
+          "Eccentricity (~100,000 years) describes how circular or elliptical Earth's orbit is. Obliquity (~41,000 years) describes how much Earth's axis is tilted. Axial precession (~26,000 years) describes the slow wobble of Earth's rotation axis; the climatic precession signal that shifts which season coincides with perihelion is commonly expressed as ~19–23 kyr cycles. All three interact to produce the insolation pattern that triggers glacial cycles.",
       },
       {
         question: "How do we know what the climate was like 800,000 years ago?",
