@@ -212,7 +212,7 @@ export const thermochemistry: Experiment = {
       {
         question: "How much energy does burning 1 mol of methane release, and where does it go?",
         answer:
-          "CH₄ + 2O₂ → CO₂ + 2H₂O releases ΔH° ≈ −890 kJ/mol. That energy transfers as heat to the surroundings — warming air, water, or a calorimeter. The products CO₂ and H₂O have lower enthalpy than the reactants; that stored chemical energy is converted to thermal energy. About 890 kJ can raise roughly 2 kg of water from 25°C to 131°C.",
+          "CH₄ + 2O₂ → CO₂ + 2H₂O releases ΔH° ≈ −890 kJ/mol. That energy transfers as heat to the surroundings — warming air, water, or a calorimeter. The products CO₂ and H₂O have lower enthalpy than the reactants; that stored chemical energy is converted to thermal energy. About 890 kJ can heat roughly 2.8 kg of water from 25°C to 100°C (without including the latent heat of vaporization).",
       },
     ],
   },

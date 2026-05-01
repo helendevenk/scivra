@@ -136,7 +136,7 @@ export const beersLawLab: Experiment = {
       "Beer's Law (the Beer-Lambert Law) states that the absorbance of a solution is directly proportional to both its molar concentration and the distance light travels through it: A = ε × b × c. A colorimeter or spectrophotometer in a real lab exploits this relationship to determine unknown concentrations — the same principle that medical analyzers use to measure glucose, hemoglobin, or bilirubin in blood. AP Chem 3.C.1 requires quantitative understanding of this proportionality and the construction of calibration curves. In this simulation, you control solution concentration, cuvette path length, and wavelength, while a virtual spectrophotometer reports absorbance in real time and plots the A-vs-c calibration curve as you adjust each parameter.",
     parameterExplanations: {
       concentration:
-        "The molar concentration of the solution in the cuvette, in mol/L (range 0–1.0 M, default 0.1 M). Absorbance increases linearly with concentration within Beer's Law range (typically 0.01–0.1 M for most species; deviations appear above ~0.1 M as the calibration curve begins to bend). This parameter is the primary variable when constructing a calibration curve.",
+        "The molar concentration of the solution in the cuvette, in mol/L (range 0–1.0 M, default 0.1 M). Absorbance increases linearly with concentration within the Beer's Law range; the actual usable range depends on the species, wavelength, path length, and instrument absorbance ceiling, so always verify linearity from the calibration curve before reporting a concentration. This parameter is the primary variable when constructing that curve.",
       pathLength:
         "The distance the light beam travels through the solution, in cm (range 0.5–5.0 cm, default 1.0 cm). By A = εbc, doubling path length doubles absorbance at constant concentration — the same mathematical relationship as doubling concentration. Standard laboratory cuvettes have a 1.0 cm path length; the simulation lets you explore how deviating from this default changes the measured absorbance.",
       wavelength:
@@ -149,7 +149,7 @@ export const beersLawLab: Experiment = {
         wrong:
           "Beer's Law works at any concentration — just measure absorbance and divide by εb to get concentration.",
         correct:
-          "Beer's Law is linear only within a limited concentration range (roughly 0.01–0.1 M for most species). At higher concentrations, intermolecular interactions alter ε, and the refractive index of the solution changes, causing the calibration curve to bend downward. The simulation shows this curvature above about 0.1 M. Always verify linearity before reporting a concentration from the calibration curve.",
+          "Beer's Law is linear only within a limited concentration range that depends on species, wavelength, path length, and instrument range. For many AP-level colored species the linear range falls in dilute aqueous concentrations, and the simulation shows a noticeable bend at higher values. Always verify linearity from your calibration curve before reporting a concentration from a measured absorbance.",
       },
       {
         wrong:
@@ -167,7 +167,7 @@ export const beersLawLab: Experiment = {
         wrong:
           "Doubling the path length has no effect if you recalibrate with the same cuvette.",
         correct:
-          "Path length is a direct multiplicative factor in A = εbc. If b doubles, absorbance doubles at the same concentration. If you built a calibration curve with a 1 cm cuvette and then measure an unknown with a 2 cm cuvette, every concentration you read off the curve will be half the true value. Path length must be identical for both calibration and unknown measurement.",
+          "Path length is a direct multiplicative factor in A = εbc. If b doubles, absorbance doubles at the same concentration. If you built a calibration curve with a 1 cm cuvette and then measure an unknown with a 2 cm cuvette, A_measured = ε(2)c_true, so reading the calibration curve (which assumes 1 cm) gives c_read = 2 × c_true — twice the true value. Path length must be identical for both calibration and unknown measurement.",
       },
       {
         wrong:
@@ -181,7 +181,7 @@ export const beersLawLab: Experiment = {
       "Unknown concentration determination: after building a calibration curve, provide a target absorbance value (e.g., A = 0.42) and ask students to read the corresponding concentration from their graph and verify by setting that concentration in the simulation. Connects the analytical method to the underlying Beer-Lambert equation.",
       "Wavelength selection investigation: for CuSO₄, have students record absorbance at 10 nm intervals from 400 to 700 nm at a fixed concentration (0.05 M, 1 cm), plot absorbance vs. wavelength (an absorption spectrum), and identify λ_max. Reinforces why selecting λ_max maximizes measurement sensitivity.",
       "Beer's Law deviation probe: have students extend the calibration curve data collection to concentrations of 0.2, 0.5, and 1.0 M and observe where the curve departs from linearity. Discuss the intermolecular-interaction explanation and the practical implication — dilute the sample before measuring if concentrations exceed the linear range.",
-      "Misconception probe — color vs. measurement wavelength: ask students which wavelength gives the best absorbance for a blue solution before they touch the sliders. After collecting predictions, sweep wavelength from 400–700 nm at constant concentration and observe the absorbance peak. The visual contrast between blue appearance and red-region peak is memorable.",
+      "Misconception probe — color vs. measurement wavelength: ask students which wavelength gives the best absorbance for a blue solution before they touch the sliders. After collecting predictions, sweep wavelength from 400–700 nm at constant concentration and observe the absorbance peak. The contrast — blue solution appearance, red-region absorbance peak — helps students connect the observed solution color with the absorbed wavelength.",
     ],
     faq: [
       {
@@ -195,9 +195,9 @@ export const beersLawLab: Experiment = {
           "Build a calibration curve: measure absorbance for several known concentrations at fixed λ and b, plot A vs. c, and fit a straight line (slope = εb). For the unknown, measure its absorbance under the same conditions, then solve c = A / (εb) or read c directly from the calibration curve. Verify the unknown's absorbance falls within the linear range of the curve (A ≤ ~0.8 for most compounds). AP Chem 3.C.1 requires this procedure.",
       },
       {
-        question: "Why does absorbance decrease at concentrations above about 0.1 M in the simulation?",
+        question: "Why does absorbance deviate from linearity at high concentrations in the simulation?",
         answer:
-          "At high solute concentrations, molecules are close enough to interact with each other, altering their electronic environment and changing the effective ε. Additionally, the refractive index of the solution differs from pure solvent, changing how light propagates. Both effects cause the calibration curve to flatten (negative deviation from Beer's Law). The practical fix is to dilute samples into the linear range before measurement.",
+          "At high solute concentrations, molecules are close enough to interact with each other, altering their electronic environment and changing the effective ε. The refractive index of the solution also differs from pure solvent, changing how light propagates. Both effects cause the calibration curve to flatten — measured A grows less than εbc would predict (negative deviation from Beer's Law). The practical fix is to dilute samples into the linear range before measurement.",
       },
       {
         question: "What is the relationship between transmittance and absorbance?",

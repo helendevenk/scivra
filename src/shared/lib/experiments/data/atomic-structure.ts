@@ -138,7 +138,7 @@ export const atomicStructure: Experiment = {
       atomicNumber:
         "The number of protons in the nucleus, which also equals the number of electrons in a neutral atom (Z = 1 to 36). Increasing Z by one adds a proton and an electron, advancing the Aufbau filling sequence one step — the simulation rebuilds the ground-state configuration and redraws the orbital diagram instantly.",
       energyLevel:
-        "The principal quantum number (n = 1 to 6) to which the outermost electron is excited. Raising this value moves that electron farther from the nucleus; when it relaxes back to the ground state the simulation fires a photon whose color corresponds to the wavelength calculated from ΔE = hf. Set n = 2 for hydrogen to reproduce the Balmer Hα line at 656 nm (red).",
+        "The principal quantum number (n = 1 to 6) to which the outermost electron is excited. Raising this value moves that electron farther from the nucleus; when it relaxes the simulation fires a photon whose color corresponds to ΔE = hf. The visible Balmer series comes from transitions ending at n = 2 (e.g., n = 3 → 2 gives Hα at 656 nm); transitions ending at n = 1 fall in the UV Lyman series.",
       orbitalType:
         "Selects which subshell shape to render in the 3D viewer: 0 = spherical s orbital, 1 = dumbbell-shaped p orbital (three orientations), 2 = cloverleaf d orbital (five orientations). Switching between them illustrates why p orbitals have directional bonding and d orbitals produce the split energy levels central to transition-metal color.",
       showTrends:
@@ -161,7 +161,7 @@ export const atomicStructure: Experiment = {
         wrong:
           "Electronegativity and electron affinity mean the same thing — both measure how strongly an atom attracts electrons.",
         correct:
-          "They measure different things. Electron affinity is the energy change (in kJ/mol) when a gas-phase atom gains one electron. Electronegativity is a dimensionless relative index of how strongly a bonded atom pulls shared electrons toward itself. Fluorine tops both scales, but the numerical values and units are entirely different.",
+          "They measure different things. Electron affinity is the energy change (in kJ/mol) when a gas-phase atom gains one electron. Electronegativity is a dimensionless relative index of how strongly a bonded atom pulls shared electrons toward itself. Fluorine has the highest Pauling electronegativity, but chlorine actually has a more exothermic first electron affinity than fluorine — the two scales rank elements differently and use different units.",
       },
       {
         wrong:

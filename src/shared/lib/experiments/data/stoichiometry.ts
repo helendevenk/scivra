@@ -130,7 +130,7 @@ export const stoichiometry: Experiment = {
       molesB:
         "The initial moles of Reactant B (range 0–10 mol, default 3 mol). To determine the limiting reagent manually, compute molesA / coeffA and molesB / coeffB; the smaller quotient identifies the limiting reagent. The simulation uses this same logic and colors excess reagent molecules gray after the reaction completes.",
       reaction:
-        "Selects the reaction type: 0 = synthesis (A + B → AB), 1 = decomposition (AB → A + B), 2 = combustion (hydrocarbon + O₂ → CO₂ + H₂O). Each reaction type has distinct stoichiometric coefficients, so the limiting-reagent outcome changes even for the same molesA and molesB inputs. Try the same mole inputs across all three reactions to see how coefficient ratios shift which reagent limits.",
+        "Selects the reaction type: 0 = synthesis (e.g., 2A + B → A₂B with the actual coefficients shown in the simulation), 1 = decomposition (AB → A + B, single reactant — limiting-reagent comparison does not apply because only molesA matters), 2 = combustion (hydrocarbon + O₂ → CO₂ + H₂O, where molesA = hydrocarbon and molesB = O₂). For the two-reactant reactions, the limiting-reagent outcome changes with coefficient ratios; for decomposition, change molesA only and ignore molesB.",
     },
     misconceptions: [
       {
@@ -143,7 +143,7 @@ export const stoichiometry: Experiment = {
         wrong:
           "Stoichiometry is just multiplying the given mass by a ratio — you don't need to convert to moles.",
         correct:
-          "The balanced equation gives ratios in moles, not in grams. You must convert grams to moles using molar mass (g/mol) first, apply the mole ratio, then convert back to grams if a mass answer is required. Skipping the gram-to-mole conversion is the single most common stoichiometry error on the AP exam.",
+          "The balanced equation gives ratios in moles, not in grams. You must convert grams to moles using molar mass (g/mol) first, apply the mole ratio, then convert back to grams if a mass answer is required. Skipping the gram-to-mole conversion is one of the most common stoichiometry errors on the AP exam.",
       },
       {
         wrong:
@@ -165,7 +165,7 @@ export const stoichiometry: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Limiting-reagent identification drill: set molesA = 3, molesB = 3, reaction = synthesis (2A + B → products). Ask students to predict limiting reagent by hand (divide each by its coefficient), then confirm with the simulation. Repeat with molesA = 1, molesB = 3 to flip the answer.",
+      "Limiting-reagent identification drill: select reaction = synthesis and read the actual coefficients shown in the simulation (e.g., 2A + B → A₂B). Set molesA = 3, molesB = 3, ask students to predict the limiting reagent by hand (divide each by its coefficient), then confirm with the simulation. Repeat with molesA = 1, molesB = 3 to flip the answer.",
       "Theoretical yield calculation then verification: for the combustion reaction, give students the moles of each reactant, have them calculate theoretical yield of CO₂ on paper, then check against the simulation readout. Any discrepancy forces re-examination of the coefficient ratios used.",
       "Percent yield lab connection: pair this simulation with a physical experiment (e.g., copper displacement or magnesium combustion) where students record actual yield, then use stoichiometry to compute theoretical yield and calculate percent yield. The simulation provides the ideal benchmark.",
       "Misconception probe — 'limiting reagent = smaller mass': give students a scenario where the smaller-mass reactant is actually the excess reagent (e.g., 4 g Fe vs. 3 g S in Fe + S → FeS; Fe moles: 4/55.85 = 0.072, S moles: 3/32.06 = 0.094 — Fe is limiting despite having more grams). Use the simulation to confirm.",
@@ -190,7 +190,7 @@ export const stoichiometry: Experiment = {
       {
         question: "Can percent yield ever exceed 100%?",
         answer:
-          "In a properly run experiment, no — that would violate conservation of mass. If a reported percent yield exceeds 100%, the product contains impurities (moisture, unreacted starting material) that inflate the measured mass, or there is a calculation error in the theoretical yield. An impure product appearing to give >100% yield is a signal to re-purify, not celebrate.",
+          "For a pure dry product, no — true yield should not exceed 100%. If a reported percent yield exceeds 100%, the most common explanations are an impure or wet product (residual moisture or unreacted starting material that inflates the measured mass), an incorrect theoretical yield calculation, or weighing errors. An apparent >100% yield is a signal to re-purify and re-measure, not celebrate — atoms aren't being created, but mass is being mismeasured.",
       },
       {
         question: "How does AP Chem 4.A.1 connect to this simulation?",

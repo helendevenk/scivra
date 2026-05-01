@@ -196,10 +196,10 @@ export const calorimetry: Experiment = {
     ],
     teacherUseCases: [
       "Mixing-law verification: have students predict T_final for three different mass-ratio combinations (1:1, 2:1, 3:1) before running the simulation, then compare to measured values. This builds quantitative intuition for the weighted-average formula before introducing reactive scenarios.",
-      "Enthalpy of neutralization determination: set reactionType = 1 (acid-base), record q_solution at several mole quantities, and compute ΔH per mole each time. Students should converge on ≈ −57 kJ/mol and discuss why the value is consistent across dilutions — addressing AP 6.B.1 directly.",
+      "Enthalpy of neutralization determination: set reactionType = 1 (acid-base), vary massA/massB to change total solution mass, record q_solution = mcΔT, then compute q_rxn = −q_solution and divide by moles of acid (estimated from massA assuming 1.0 M HCl) to get ΔH ≈ −57 kJ/mol. Discuss why the per-mole value is consistent across mass changes — addressing AP 6.B.1 directly.",
       "Specific-heat misconception probe: ask students which scenario produces a larger temperature spike — adding 2000 J to 200 g or to 50 g of water — before touching the controls. Use the result to drive home that ΔT = q/(mc) and that ΔT is not a proxy for q.",
       "Error analysis activity: introduce a 'leaky calorimeter' scenario by comparing ideal calculated T_f to a slightly lower observed T_f, asking students to quantify percent heat loss. This mimics real lab conditions and addresses systematic error, a recurring AP exam theme.",
-      "Hess's Law extension: run three separate reaction steps (combustion of C → CO₂, combustion of CO → CO₂, and the target formation of CO) and sum the enthalpies, then verify the result matches the direct measurement. Connects calorimetry data to AP 5.C.1 pathway-independence.",
+      "Mass-ratio thermal mixing: hold reactionType = 0 (mixing) and tempA = 25°C, tempB = 75°C, then vary the massA / massB ratio across 1:1, 2:1, and 1:2. Record T_final at each ratio and verify against T_f = (m_A T_A + m_B T_B) / (m_A + m_B). Hess's Law pathway construction is better suited to the thermochemistry experiment.",
     ],
     faq: [
       {

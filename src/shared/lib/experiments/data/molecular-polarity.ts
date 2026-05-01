@@ -147,13 +147,13 @@ export const molecularPolarity: Experiment = {
         wrong:
           "The atom with the higher electronegativity always ends up on the negative end of the molecule's net dipole.",
         correct:
-          "The net dipole is a vector sum of all bond dipoles, so the negative pole of the molecule depends on the 3D arrangement. In water, the oxygen end is negative — consistent with O being more electronegative. But in CHCl₃, the three Cl atoms pull toward one side while the single H pulls the other way; you must add all four vectors to find which end is negative.",
+          "The net dipole is a vector sum of all bond dipoles, so the negative pole of the molecule depends on the 3D arrangement. In water, the oxygen end is negative — consistent with O being more electronegative. In CHCl₃, the three C-Cl bond dipoles all point toward chlorine while the C-H dipole points toward carbon; the asymmetric tetrahedron means the four bond vectors do not cancel and the resulting net dipole points toward the Cl₃ side.",
       },
       {
         wrong:
           "BF₃ is polar because fluorine is the most electronegative element and there are three polar B–F bonds.",
         correct:
-          "BF₃ is trigonal planar — all three B–F dipoles are arranged symmetrically at 120° in the same plane and cancel exactly, giving net μ = 0. Adding a lone pair to boron (as in NF₃, which is pyramidal) would break that symmetry and produce a polar molecule.",
+          "BF₃ is trigonal planar — all three B–F dipoles are arranged symmetrically at 120° in the same plane and cancel exactly, giving net μ = 0. The analogous AX₃E molecule NF₃ is trigonal pyramidal because the central nitrogen carries a lone pair; that lone pair breaks the planar symmetry, the three N–F bond dipoles no longer cancel, and the result is a polar molecule (μ ≈ 0.24 D).",
       },
       {
         wrong:
@@ -165,7 +165,7 @@ export const molecularPolarity: Experiment = {
         wrong:
           "Polarity only matters for solubility; it has no effect on boiling point.",
         correct:
-          "Molecular polarity directly governs intermolecular forces. Polar molecules experience dipole–dipole attractions and (in the case of O–H, N–H, F–H bonds) hydrogen bonding, both of which raise boiling points. Water boils at 100°C; the similarly sized but nonpolar CO₂ sublimes at −78°C at 1 atm.",
+          "Molecular polarity directly governs intermolecular forces. Polar molecules experience dipole–dipole attractions and (in the case of O–H, N–H, F–H bonds) hydrogen bonding, both of which raise boiling points. Water (M ≈ 18 g/mol) boils at 100°C; the heavier nonpolar CO₂ (M ≈ 44 g/mol) sublimes at −78°C at 1 atm — polarity and hydrogen bonding outweigh the molar-mass difference.",
       },
     ],
     teacherUseCases: [
@@ -184,7 +184,7 @@ export const molecularPolarity: Experiment = {
       {
         question: "How do I find the direction of the net dipole arrow?",
         answer:
-          "Treat each bond dipole as a vector starting at the electropositive atom and pointing toward the electronegative one. Add all vectors tip-to-tail (or using components). The resultant vector is the net molecular dipole. For water, both O–H vectors point roughly toward oxygen and add to a net vector pointing away from the H–O–H bisector toward oxygen, which is why the oxygen end is the negative pole.",
+          "Treat each bond dipole as a vector starting at the electropositive atom and pointing toward the electronegative one. Add all vectors tip-to-tail (or using components). The resultant vector is the net molecular dipole. For water, both O–H vectors point toward oxygen, and their vector sum lies along the H–O–H angle bisector pointing toward oxygen — which is why the oxygen end of the molecule is the negative pole.",
       },
       {
         question: "What does the electron-density cloud color coding mean?",
@@ -194,7 +194,7 @@ export const molecularPolarity: Experiment = {
       {
         question: "Does a molecule need polar bonds to be polar overall?",
         answer:
-          "Yes — you cannot have a polar molecule without at least one polar bond (or a lone pair contributing to asymmetry). However, having polar bonds is necessary but not sufficient. The geometry must also be asymmetric so the bond dipoles do not cancel. This two-part check — (1) are any bonds polar? (2) does the geometry prevent cancellation? — is the core reasoning AP Chem 2.C.1 tests.",
+          "In essence, a polar molecule needs a permanently asymmetric distribution of charge. For the AP-level molecules tested in 2.C.1, that almost always comes from polar bonds AND a geometry that prevents cancellation, so the practical two-part check is (1) are any bonds polar? (2) does the geometry prevent cancellation? Strictly speaking, asymmetric lone-pair distributions can also contribute to a small dipole even when bonds are similar, but those edge cases are rare in introductory examples.",
       },
       {
         question: "Which molecules in the simulation are polar, and which are nonpolar?",

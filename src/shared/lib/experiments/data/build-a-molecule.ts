@@ -152,7 +152,7 @@ export const buildAMolecule: Experiment = {
     ],
     teacherUseCases: [
       "Pre-lab geometry sketch: before loading any molecule, ask students to sketch the predicted 3D shape and bond angle for water, ammonia, and methane using only the VSEPR domain-counting rule. Open the simulation to check — discrepancies reveal whether students are correctly counting lone pairs.",
-      "Lone-pair compression data table: run moleculeIndex through CH₄ (4 bonding, 0 lone), NH₃ (3 bonding, 1 lone), and H₂O (2 bonding, 2 lone), recording bond angles at each step. Students plot lone-pair count vs. bond angle and quantify the compression (~2.5° per lone pair), connecting AP Chem 2.C.4 to a measurable trend.",
+      "Lone-pair compression data table: run moleculeIndex through CH₄ (4 bonding, 0 lone), NH₃ (3 bonding, 1 lone), and H₂O (2 bonding, 2 lone), recording bond angles at each step. Students compare the three values, describe the direction of compression as lone-pair count rises, and connect to AP Chem 2.C.4 — without quoting a single 'per-lone-pair' constant, which over-generalizes from this small sample.",
       "Misconception probe on linear molecules: load CO₂ and H₂O back to back. Ask students 'both oxygen atoms form two bonds — why is one linear and one bent?' Use the electron-domain count to resolve the conflict and reinforce that lone pairs are the decisive factor.",
       "Polarity prediction connect: after establishing geometry, ask students to predict whether each molecule has a net dipole before toggling dipole arrows in the molecular-bonding simulation. CH₄ (tetrahedral, no net dipole) vs. H₂O (bent, net dipole pointing toward O) makes the geometry-polarity link concrete.",
       "VSEPR geometry gallery challenge: students match a list of electron-domain counts (2, 3, 4, 5, 6) to the five geometry names and ideal angles without the simulation, then verify each one by loading the corresponding molecule — a timed retrieval practice that reinforces AP Chem 2.B.1.",
@@ -166,7 +166,7 @@ export const buildAMolecule: Experiment = {
       {
         question: "What are the five main VSEPR geometries and their ideal bond angles?",
         answer:
-          "Two electron domains: linear, 180° (CO₂). Three domains: trigonal planar, 120° (BF₃). Four domains: tetrahedral, 109.5° (CH₄). Five domains: trigonal bipyramidal, 90° and 120° axial/equatorial (PCl₅). Six domains: octahedral, 90° (SF₆). Lone pairs reduce these to bent, trigonal pyramidal, see-saw, T-shape, and square planar variants. AP Chem 2.B.1 covers all five parent geometries.",
+          "Two electron domains: linear, 180° (CO₂). Three domains: trigonal planar, 120° (BF₃). Four domains: tetrahedral, 109.5° (CH₄). Five domains: trigonal bipyramidal — equatorial-equatorial 120°, equatorial-axial 90°, and axial-axial 180° (PCl₅). Six domains: octahedral — adjacent F-S-F angles 90°, opposite F-S-F angles 180° (SF₆). Lone pairs reduce these to bent, trigonal pyramidal, see-saw, T-shape, and square planar variants. AP Chem 2.B.1 covers all five parent geometries.",
       },
       {
         question: "How does the number of lone pairs change the molecular geometry name?",
@@ -181,7 +181,7 @@ export const buildAMolecule: Experiment = {
       {
         question: "What is the bond angle in SF₆ and why is it different from the 109.5° in CH₄?",
         answer:
-          "SF₆ has six bonding pairs arranged octahedrally around sulfur (a period-3 element that can expand its octet). All bond angles are 90°. This is not a violation of the octet rule for sulfur — period-3 and heavier elements have access to d orbitals that allow more than four bonds. CH₄'s 109.5° arises specifically from four domains, not from any general tetrahedral rule.",
+          "SF₆ has six bonding pairs arranged octahedrally around sulfur. Adjacent F-S-F bond angles are 90° and opposite F-S-F angles are 180°. Sulfur is drawn here as an expanded-octet (hypervalent) center — the standard AP-level Lewis representation for period-3+ atoms that show more than four bonds, even though modern bonding theories no longer rely on d-orbital participation as the explanation. CH₄'s 109.5° arises specifically from four domains around carbon, not from any general tetrahedral rule.",
       },
     ],
   },

@@ -129,7 +129,7 @@ export const electronConfiguration: Experiment = {
         wrong:
           "Chromium's configuration is [Ar]3d⁴4s² because you just keep filling in order.",
         correct:
-          "Chromium is [Ar]3d⁵4s¹. A half-filled d subshell has extra stabilization from exchange energy — the six electrons minimize repulsion by spreading across all five d orbitals with parallel spins. The energy gained by reaching 3d⁵ exceeds the cost of demoting one 4s electron.",
+          "Chromium is [Ar]3d⁵4s¹. A half-filled d subshell has extra stabilization from exchange energy — the five 3d electrons singly occupy the five d orbitals with parallel spins, while the sixth valence electron sits alone in 4s. The energy gained by reaching 3d⁵ outweighs the cost of moving one electron from the otherwise filled 4s to the 3d set.",
       },
       {
         wrong:
@@ -154,7 +154,7 @@ export const electronConfiguration: Experiment = {
       "Prediction-then-reveal: students write configurations for Z=21 through Z=30 on paper, then step through the simulation one element at a time, pausing at Cr (Z=24) and Cu (Z=29) to identify where their predictions differ and why — directly addresses AP Chem 1.B.1 exceptions.",
       "Orbital diagram Hund's rule check: set Z=7 (nitrogen) with showOrbitalDiagram=1 and ask students to count unpaired electrons. Then move to Z=8 (oxygen) and ask why one 2p box shows two arrows — this probes whether students understand pairing vs. spin alignment.",
       "Ion configuration data collection: students record the neutral configuration for Fe, Co, Ni, Cu (Z=26-29), then predict the ion configurations for each 2+ ion by removing 4s electrons first — challenges the common misconception that d electrons are removed first.",
-      "Misconception probe on filling order: before opening the simulation, ask 'does 4s or 3d fill first?' Most students say 3d. Run the simulation through K (Z=19) to Sc (Z=21) to show the 4s-before-3d sequence, then discuss the (n+l) rule quantitatively.",
+      "Misconception probe on filling order: before opening the simulation, ask 'does 4s or 3d fill first?' Collect both answers, then run the simulation through K (Z=19) to Sc (Z=21) to show the 4s-before-3d sequence and discuss the (n+l) rule quantitatively to address whichever direction students were uncertain.",
       "Valence electron connect: after determining the configuration, ask students to identify the valence electrons and predict the likely ion charge. Compare Cl ([Ne]3s²3p⁵, gains 1e⁻ → Cl⁻) to Ca ([Ar]4s², loses 2e⁻ → Ca²⁺) to reinforce how configuration predicts reactivity.",
     ],
     faq: [

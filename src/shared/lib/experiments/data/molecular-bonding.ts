@@ -136,7 +136,7 @@ export const molecularBonding: Experiment = {
       "Chemical bonding describes how atoms join by transferring or sharing valence electrons to reach lower-energy, more stable arrangements. Table salt (NaCl) forms when sodium transfers one electron to chlorine — an ionic bond held together by ~787 kJ/mol of lattice energy. Water forms when two hydrogen atoms each share an electron pair with oxygen — a polar covalent bond where the higher electronegativity of oxygen (3.44 vs. H at 2.20) pulls electron density toward itself, creating partial charges. This simulation builds six molecules (H₂O, CH₄, NH₃, CO₂, BF₃, SF₆) in 3D, lets you switch between stick, ball-and-stick, and spacefill rendering, and overlays individual bond dipole arrows whose vector sum reveals whether the molecule carries a net dipole moment. Lone pairs can be toggled visible to see their role in distorting geometry. AP Chem 2.A.1, 2.A.2, and 2.B.1 are all addressed here.",
     parameterExplanations: {
       molecule:
-        "Selects the molecule to display: 0=H₂O, 1=CH₄, 2=NH₃, 3=CO₂, 4=BF₃, 5=SF₆. Each choice rebuilds the 3D model with correct bond lengths (O-H ~96 pm, C-H ~109 pm, C=O ~116 pm), bond angles, and lone-pair positions. Cycling through all six covers ionic vs. covalent examples, polar vs. nonpolar molecules, and every major VSEPR geometry from bent to octahedral.",
+        "Selects the molecule to display: 0=H₂O, 1=CH₄, 2=NH₃, 3=CO₂, 4=BF₃, 5=SF₆. Each choice rebuilds the 3D model with correct bond lengths (O-H ~96 pm, C-H ~109 pm, C=O ~116 pm), bond angles, and lone-pair positions. The six selections are all covalent and span polar vs. nonpolar examples plus several VSEPR geometries (bent, tetrahedral, trigonal pyramidal, linear, trigonal planar, octahedral); ionic structures and trigonal bipyramidal geometry are not included in this library.",
       bondType:
         "Controls the rendering style: 0=stick (lines only), 1=ball-and-stick (atoms as spheres, bonds as cylinders), 2=spacefill (CPK spheres scaled to van der Waals radii). Spacefill mode makes molecular size and shape tangible — students can see why two water molecules can hydrogen-bond at close range while a bulky nonpolar molecule cannot approach as easily.",
       showDipoles:
@@ -149,7 +149,7 @@ export const molecularBonding: Experiment = {
         wrong:
           "Polar molecules must have polar bonds, and molecules with polar bonds are always polar.",
         correct:
-          "The first part is true — a polar molecule requires at least one polar bond. The second part is false. CO₂ has two polar C=O bonds (ΔEN ≈ 1.0) but its linear geometry makes the dipoles cancel exactly, giving zero net dipole. Symmetry can erase polarity entirely. Toggle showDipoles=1 on CO₂ and watch the arrows neutralize each other.",
+          "Molecular polarity comes from a nonzero net charge separation; in most AP-level examples, that requires both polar bonds AND a geometry that prevents cancellation. CO₂ has two polar C=O bonds (ΔEN ≈ 1.0) but its linear geometry makes the dipoles cancel exactly, giving zero net dipole. Symmetry can erase polarity entirely. Toggle showDipoles=1 on CO₂ and watch the arrows neutralize each other.",
       },
       {
         wrong:
@@ -159,9 +159,9 @@ export const molecularBonding: Experiment = {
       },
       {
         wrong:
-          "The difference in electronegativity between two atoms tells you the bond type as a binary switch: same EN = nonpolar covalent, different EN = ionic.",
+          "Any large electronegativity difference must mean a 100% ionic bond with full charges on each atom.",
         correct:
-          "Electronegativity difference gives a continuous spectrum, not a binary switch. ΔEN below ~0.4 is nonpolar covalent (H₂, Cl₂). ΔEN 0.4 to ~1.7 is polar covalent (H₂O, HCl). ΔEN above ~1.7 is predominantly ionic (NaCl, ΔEN = 2.1). The boundaries are approximate; bond character changes gradually along the spectrum. AP Chem 2.A.1 covers this spectrum explicitly.",
+          "Electronegativity difference gives a continuous spectrum, not a step function. ΔEN below ~0.4 is treated as nonpolar covalent (H₂, Cl₂). ΔEN 0.4 to ~1.7 is polar covalent (H₂O, HCl). ΔEN above ~1.7 is described as predominantly ionic (NaCl, ΔEN = 2.1), but even those bonds retain some covalent character. The boundaries are approximate; bond character changes gradually along the spectrum. AP Chem 2.A.1 covers this spectrum explicitly.",
       },
       {
         wrong:

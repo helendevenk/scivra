@@ -133,7 +133,7 @@ export const reactionKinetics: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Chemical reaction kinetics quantifies how fast reactants convert to products and identifies the variables that control that speed. The rate constant k is governed by the Arrhenius equation k = A·exp(−Eₐ/RT): raising the temperature from 300 K to 310 K roughly doubles the rate for a reaction with Eₐ ≈ 50 kJ/mol. Catalysts lower Eₐ without being consumed, accelerating forward and reverse reactions equally so equilibrium position is unchanged. The rate law rate = k[A]^m[B]^n must be determined experimentally — reaction orders m and n are not readable from a balanced equation. The simulation lets you manipulate temperature, concentration, activation energy, and catalysts while watching the Maxwell-Boltzmann distribution shift and live concentration-time graphs update in real time.",
+      "Chemical reaction kinetics quantifies how fast reactants convert to products and identifies the variables that control that speed. The rate constant k is governed by the Arrhenius equation k = A·exp(−Eₐ/RT): raising the temperature from 300 K to 310 K roughly doubles the rate for a reaction with Eₐ ≈ 50 kJ/mol. Catalysts lower Eₐ without being consumed, accelerating forward and reverse reactions equally so equilibrium position is unchanged. For an overall reaction, the rate law rate = k[A]^m[B]^n must be determined experimentally — reaction orders m and n are not readable from a balanced equation (elementary-step rate laws are an exception, where exponents follow molecularity). The simulation lets you manipulate temperature, concentration, activation energy, and catalysts while watching the Maxwell-Boltzmann distribution shift and live concentration-time graphs update in real time.",
     parameterExplanations: {
       temperature:
         "The absolute temperature of the reaction vessel in kelvins. Higher temperature shifts the Maxwell-Boltzmann distribution to the right, increasing the fraction of molecules with energy above Eₐ and raising k exponentially. Range 200–800 K; the default 300 K corresponds to roughly room temperature.",
@@ -179,7 +179,7 @@ export const reactionKinetics: Experiment = {
     teacherUseCases: [
       "Activation energy probe: ask students to predict whether doubling temperature from 300 K to 600 K doubles or more-than-doubles the rate, then verify with the simulation. Use the result to illustrate the exponential nature of the Arrhenius equation versus linear intuition.",
       "Maxwell-Boltzmann data collection: students record the fraction of molecules above Eₐ at five temperatures (200, 300, 400, 500, 600 K) and plot fraction vs. T. This makes AP 4.A.2 observable — the qualitative shift in the distribution becoming a quantitative graph.",
-      "Rate law determination lab: present two pre-configured runs (different [A], same T) and have students calculate the ratio of rates to determine reaction order. Then add a third run with different [B] to deduce the full rate law, mirroring AP free-response methodology.",
+      "Rate law determination lab: hold T fixed and run the simulation at three different starting concentrations of [A] (e.g., 0.5, 1.0, 2.0 mol/L), then compute the ratio of rates between runs to determine the reaction order in A. Connect the technique to AP free-response method-of-initial-rates problems where multiple reactants are varied independently.",
       "Catalyst misconception probe: run the reaction to equilibrium with and without catalyst and challenge students to explain why final concentrations are identical despite the faster approach. Targets the persistent 'catalysts increase yield' error cited in AP 4.B.1 commentary.",
       "Arrhenius graphing: students collect k values (from the simulation readout) at six temperatures, then plot ln k vs. 1/T. The slope equals −Eₐ/R, letting them extract Eₐ graphically — a skill directly tested in AP exam free-response.",
     ],
@@ -187,7 +187,7 @@ export const reactionKinetics: Experiment = {
       {
         question: "What exactly is the Arrhenius equation and why is the temperature dependence exponential?",
         answer:
-          "The Arrhenius equation k = A·exp(−Eₐ/RT) states that only the fraction of collisions with energy ≥ Eₐ lead to reaction; that fraction follows a Boltzmann distribution, which is inherently exponential. At 300 K with Eₐ = 50 kJ/mol, raising T to 310 K changes the exponent by about −0.65, so k nearly doubles — a small absolute temperature change produces a large rate change.",
+          "The Arrhenius equation k = A·exp(−Eₐ/RT) states that only the fraction of collisions with energy ≥ Eₐ lead to reaction; that fraction follows a Boltzmann distribution, which is inherently exponential. At 300 K with Eₐ = 50 kJ/mol, raising T to 310 K shifts the exponent (−Eₐ/RT) upward by ~0.65, so k₂/k₁ ≈ e^0.65 ≈ 1.9 — a small absolute temperature change produces a large rate change.",
       },
       {
         question: "How do I identify reaction order from concentration-time graphs?",

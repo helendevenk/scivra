@@ -114,7 +114,7 @@ export const lewisStructures: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "A Lewis structure is a 2D map of where the valence electrons sit in a molecule — bonding pairs shown as lines between atoms and lone pairs shown as dots. Draw the structure of water correctly and it immediately tells you that oxygen holds two lone pairs, which is what bends the molecule to 104.5° and makes it polar enough to dissolve table salt. The procedure is systematic: count all valence electrons, connect atoms with single bonds, complete octets on terminal atoms with lone pairs, place leftovers on the central atom, and convert lone pairs to double or triple bonds if the center still needs electrons. This simulation provides an interactive canvas where you place bonds and lone pairs one click at a time, calculates formal charges on demand, and shows resonance structures for ions like NO₃⁻ where the true electron distribution is an average of multiple valid drawings. Governed by AP Chem 2.C.1 and 2.C.2.",
+      "A Lewis structure is a 2D map of where the valence electrons sit in a molecule — bonding pairs shown as lines between atoms and lone pairs shown as dots. Draw the structure of water correctly and it immediately tells you that oxygen holds two lone pairs, which is what bends the molecule to 104.5° and makes it polar enough to dissolve table salt. The procedure is systematic: count all valence electrons, connect atoms with single bonds, complete octets on terminal atoms, place leftovers on the central atom, and convert lone pairs to double or triple bonds if the center still needs electrons. This simulation provides an interactive canvas where you place bonds and lone pairs one click at a time, calculates formal charges on demand, and shows resonance structures for ions like NO₃⁻ where the true electron distribution averages multiple valid drawings.",
     parameterExplanations: {
       moleculeIndex:
         "Selects the target molecule from the library (index 0 through 9, including H₂O, CO₂, NH₃, HCN, PCl₅, and NO₃⁻ among others). Each molecule loads with atoms pre-positioned at correct connectivity; your task is to add the correct bonds and lone pairs until the electron counter reaches zero and all octets are satisfied.",
@@ -126,7 +126,7 @@ export const lewisStructures: Experiment = {
         wrong:
           "Every atom in a Lewis structure must have exactly 8 electrons to be a valid structure.",
         correct:
-          "The octet rule has well-known exceptions. Hydrogen is satisfied with 2 electrons. Boron and beryllium commonly form stable compounds with 6 and 4 electrons respectively (BF₃, BeCl₂). Period-3 and heavier elements like phosphorus and sulfur can expand their octets using available d orbitals — PCl₅ has 10 electrons around phosphorus and SO₄²⁻ can be drawn with 12.",
+          "The octet rule has well-known exceptions. Hydrogen is satisfied with 2 electrons. Boron and beryllium commonly form stable compounds with 6 and 4 electrons respectively (BF₃, BeCl₂). Period-3 and heavier elements like phosphorus and sulfur are routinely drawn with expanded-octet Lewis structures — PCl₅ shows 10 electrons around phosphorus and SO₄²⁻ can be drawn with 12. (Modern bonding analyses dispute the once-common 'd-orbital participation' rationale, but the expanded-octet representation remains the standard for AP-level Lewis drawing.)",
       },
       {
         wrong:
@@ -179,7 +179,7 @@ export const lewisStructures: Experiment = {
       {
         question: "Why do some molecules have multiple valid Lewis structures (resonance)?",
         answer:
-          "When a molecule has lone pairs adjacent to a bond, those electrons can be delocalized — spread over more than one bond position while still satisfying the octet rule. Ozone (O₃) and nitrate (NO₃⁻) each have three valid single/double bond arrangements. None of them alone is the real structure; the electron density is smeared evenly, which is why all equivalent bonds in a resonance hybrid have the same measured length.",
+          "When a molecule has lone pairs adjacent to a bond, those electrons can be delocalized — spread over more than one bond position while still satisfying the octet rule. Ozone (O₃) has two equivalent major resonance contributors (single + double bond, with the double bond on either side); nitrate (NO₃⁻) has three. None of these drawings alone is the real structure; the electron density is smeared evenly, which is why all equivalent bonds in a resonance hybrid have the same measured length.",
       },
       {
         question: "How do I know when to use a double or triple bond?",

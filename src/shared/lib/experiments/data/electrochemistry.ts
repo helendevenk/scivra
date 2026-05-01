@@ -138,9 +138,9 @@ export const electrochemistry: Experiment = {
       anodeMetal:
         "Selects the anode electrode: 0 = Zn (E° = −0.76 V), 1 = Fe (E° = −0.44 V), 2 = Cu (E° = +0.34 V). The anode undergoes oxidation — metal atoms lose electrons and dissolve into solution as cations (M → M²⁺ + 2e⁻). Metals with more negative E° are stronger reducing agents and dissolve more readily.",
       cathodeMetal:
-        "Selects the cathode electrode: 0 = Cu (E° = +0.34 V), 1 = Ag (E° = +0.80 V), 2 = Au (E° = +1.50 V). The cathode undergoes reduction — metal cations gain electrons and deposit as solid metal (M²⁺ + 2e⁻ → M). Metals with more positive E° are stronger oxidizing agents; pairing a very negative anode with a very positive cathode maximizes E°cell.",
+        "Selects the cathode electrode: 0 = Cu (Cu²⁺ + 2e⁻ → Cu, E° = +0.34 V), 1 = Ag (Ag⁺ + e⁻ → Ag, E° = +0.80 V), 2 = Au (Au³⁺ + 3e⁻ → Au, E° = +1.50 V). The cathode undergoes reduction — metal cations gain electrons and deposit as solid metal. Note that the electron count (n) varies by metal: 2 for Cu, 1 for Ag, 3 for Au, which matters in ΔG = −nFE° calculations. Metals with more positive E° are stronger oxidizing agents.",
       concentration:
-        "The molar concentration of metal ions in both half-cells (0.01–2.0 mol/L, default 1.0 mol/L). At 1.0 mol/L the Nernst equation gives E = E° (standard conditions). Lowering concentration changes the reaction quotient Q, which shifts E according to E = E° − (RT/nF)·ln Q. Try 0.01 mol/L to see E drop noticeably below E°.",
+        "The molar concentration of metal ions in both half-cells (0.01–2.0 mol/L, default 1.0 mol/L). For a 1:1 metal/ion cell with both half-cells at the same concentration, Q = [Anode_ion]/[Cathode_ion] = 1, so E = E° at any matched value. To produce a Nernst shift, the two half-cell concentrations must differ — change one electrode's surroundings (or add a separate cathode-concentration parameter in your scenario) to see E deviate from E°.",
       cellMode:
         "Toggles between galvanic mode (0, spontaneous — acts like a battery, E°cell > 0) and electrolytic mode (1, non-spontaneous — requires external voltage greater than E°cell). In electrolytic mode the anode polarity reverses: the external source forces oxidation at the positive terminal and reduction at the negative terminal.",
     },

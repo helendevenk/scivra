@@ -133,7 +133,7 @@ export const solutionsDilutions: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Molarity quantifies the concentration of a solution as moles of solute per liter of solution (mol/L, abbreviated M). When a nurse prepares a 0.9% saline IV bag from a concentrated stock, she is performing a dilution: adding solvent increases the total volume while the moles of NaCl stay exactly the same. The governing relationship is C₁V₁ = C₂V₂ — the product of concentration and volume is conserved before and after dilution. AP Chem 3.A.1 requires quantitative facility with this equation in both directions: solving for an unknown final concentration and solving for the volume of water needed to reach a target molarity. This simulation lets you set an initial molarity and volume, add water in real time, and watch the color intensity of the solution fade as concentration drops.",
+      "Molarity quantifies the concentration of a solution as moles of solute per liter of solution (mol/L, abbreviated M). When a lab technician prepares a 0.9% saline IV bag from a concentrated stock, the procedure is a dilution: adding solvent increases the total volume while the moles of NaCl stay exactly the same. The governing relationship is C₁V₁ = C₂V₂ — the product of concentration and volume is conserved before and after dilution. AP Chem 3.A.1 requires quantitative facility with this equation in both directions: solving for an unknown final concentration and solving for the volume of water needed to reach a target molarity. This simulation lets you set an initial molarity and volume, add water in real time, and watch the color intensity of the solution fade as concentration drops.",
     parameterExplanations: {
       initialConcentration:
         "The starting molarity (C₁) of the solution before any water is added, in mol/L (range 0.01–2.0 M, default 1.0 M). Higher values produce a more deeply colored solution in the beaker. Increasing C₁ proportionally increases the moles of solute present; adding the same volume of water from a higher starting concentration still gives a proportionally lower final concentration.",
@@ -142,7 +142,7 @@ export const solutionsDilutions: Experiment = {
       addedWater:
         "The volume of pure water added to the solution, in mL (range 0–500 mL, default 0). Final volume V₂ = V₁ + addedWater; the simulation computes C₂ = C₁V₁ / V₂ in real time. Adding 9 × V₁ of water produces a 10-fold dilution (one log unit decrease in concentration).",
       soluteType:
-        "Selects the dissolved compound: 0 = CuSO₄ (blue), 1 = KMnO₄ (deep purple), 2 = NaCl (colorless, concentration shown numerically only). Each solute has a characteristic color whose intensity tracks with Beer-Lambert law, so the visual fade on dilution is most dramatic for CuSO₄ and KMnO₄.",
+        "Selects the dissolved compound: 0 = CuSO₄ (blue), 1 = KMnO₄ (deep purple), 2 = NaCl (colorless in visible light). For the colored solutes (CuSO₄, KMnO₄), color intensity tracks with concentration via the Beer-Lambert law, so the visual fade on dilution is most dramatic; for NaCl, concentration is shown numerically only.",
     },
     misconceptions: [
       {
@@ -178,7 +178,7 @@ export const solutionsDilutions: Experiment = {
     ],
     teacherUseCases: [
       "Qualitative color prediction before calculation: have students predict which direction the beaker color changes and approximately how intense it will be after a stated dilution, then verify with the slider. Connects Beer-Lambert visual feedback to quantitative reasoning.",
-      "Quantitative data collection — calibration curve: fix the solute type (CuSO₄) and path length, record the color-intensity reading at 5–6 different concentrations, and plot intensity vs. concentration. Use this as a lead-in to the Beer's Law Lab experiment.",
+      "Quantitative data collection — color vs. concentration: fix soluteType to CuSO₄, perform a sequence of controlled dilutions by adding water in measured increments, and record qualitative color intensity at 5–6 resulting concentrations. Use this as a lead-in to the dedicated Beer's Law Lab experiment, which adds path length and quantitative absorbance measurement.",
       "Misconception probe — 'dilution removes solute': set C₁ = 1.0 M, V₁ = 10 mL; ask students to state the moles of solute before and after adding 90 mL water. Most predict moles decrease; the real-time mole readout corrects the error immediately.",
       "Serial dilution exercise: starting from 1.0 M, perform three sequential 1:10 dilutions using the simulation, recording C₂ each time. Students verify the pattern 1.0 → 0.1 → 0.01 → 0.001 M and connect to log-scale concentration used in pH problems.",
       "Exam-style problem solving: give students a target concentration and final volume, and have them calculate the required initial volume and amount of water to add before touching the sliders. Verify answers against the simulation readout; address discrepancies in the debrief.",

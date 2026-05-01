@@ -124,7 +124,7 @@ export const gasProperties: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Gas properties describes the macroscopic behavior — pressure, volume, temperature, and amount — of gases at the molecular level using kinetic molecular theory and the ideal gas law PV = nRT. Pressure arises from particles colliding with container walls; temperature is proportional to average kinetic energy (KE_avg = 3/2 k_B T). The four classical gas laws — Boyle's (P∝1/V at constant T,n), Charles's (V∝T at constant P,n), Gay-Lussac's (P∝T at constant V,n), and Avogadro's (V∝n at constant P,T) — are all special cases of PV = nRT with specific variables held constant. At STP (273 K, 1 atm), 1 mol of an ideal gas occupies 22.4 L. Real gases deviate from ideal behavior at high pressure or low temperature, where intermolecular forces and particle volume are no longer negligible. This simulation lets you vary temperature, volume, and particle count while watching molecular motion and live pressure data update simultaneously.",
+      "Gas properties describes the macroscopic behavior — pressure, volume, temperature, and amount — of gases at the molecular level using kinetic molecular theory and the ideal gas law PV = nRT. Pressure arises from particles colliding with container walls; temperature is proportional to average kinetic energy (KE_avg = 3/2 k_B T). The four classical gas laws — Boyle's (P∝1/V), Charles's (V∝T), Gay-Lussac's (P∝T), and Avogadro's (V∝n) — are all special cases of PV = nRT, each obtained by holding the appropriate variables constant. At STP (273 K, 1 atm), 1 mol of an ideal gas occupies 22.4 L. This simulation lets you vary temperature, volume, and particle count while watching molecular motion and live pressure data update simultaneously.",
     parameterExplanations: {
       temperature:
         "Absolute temperature in kelvins (100–800 K, default 300 K). Temperature sets the average kinetic energy of particles: KE_avg = 3/2 k_B T, so doubling T doubles average KE and increases average speed by √2. At constant V and n, pressure is proportional to T (Gay-Lussac's Law). Always use kelvins — Charles's Law and PV = nRT are undefined in Celsius.",
@@ -160,14 +160,14 @@ export const gasProperties: Experiment = {
       },
       {
         wrong:
-          "Pressure doubles when you add twice as many gas molecules because there are twice as many molecules bumping around.",
+          "Doubling the number of gas molecules always doubles the pressure, regardless of what else changes.",
         correct:
-          "This is actually correct at constant T and V — it is Avogadro's contribution to PV = nRT. The confusion arises when students also change T or V simultaneously. The simulation isolates this: with the volume and temperature sliders fixed, doubling the particle count does double the pressure readout.",
+          "Doubling n doubles P only if both T and V stay constant — that is Avogadro's contribution to PV = nRT. If you also halve V at the same time, P quadruples; if you also halve T, P is unchanged. The simulation isolates this: with the volume and temperature sliders held fixed, doubling the particle count does double the pressure readout, but changing the other sliders simultaneously breaks the simple proportionality.",
       },
     ],
     teacherUseCases: [
       "Boyle's Law data collection: hold temperature and particles fixed while stepping volume from 100% to 20% in increments. Students record P and V, compute P×V at each point, and verify the product stays constant. Plotting P vs. 1/V gives a straight line through the origin — direct evidence of PV = constant for AP 9.A.1.",
-      "Charles's Law graphing: fix particles and volume, vary temperature from 200 to 800 K in 100 K steps, and plot V (or the pressure surrogate if volume is fixed) vs. T. Students extrapolate to find where V → 0 (at 0 K, absolute zero), connecting kinetic theory to the concept of an absolute temperature scale.",
+      "Gay-Lussac graphing: fix particles and volume, vary temperature from 200 to 800 K in 100 K steps, and plot P vs. T. The line passes through the origin in K — extrapolating it confirms that P → 0 at 0 K (absolute zero), connecting kinetic theory to the concept of an absolute temperature scale. (At constant volume the relationship is P/T = const, which is Gay-Lussac's, not Charles's.)",
       "Ideal vs. real gas misconception probe: ask students to predict whether a real gas at 700 K and high pressure obeys PV = nRT exactly, then discuss what corrections the van der Waals equation adds. The simulation models ideal behavior; comparing to known real-gas data tables provides the discrepancy for discussion.",
       "Avogadro's Law verification: fix T and volume, then double the particle count from 40 to 80 and record the pressure ratio. Students confirm P doubles, then write the proportional relationship P ∝ n, connecting to the insight that equal volumes of different ideal gases at the same T and P contain equal numbers of molecules.",
       "STP calculation bridge: set T = 273 K, particles to represent 1 mol, and adjust volume until P = 1 atm. Read off the volume and confirm 22.4 L/mol. This grounds the abstract STP molar volume in an observable simulation result and directly supports PV = nRT quantitative calculations on the AP exam.",
@@ -181,7 +181,7 @@ export const gasProperties: Experiment = {
       {
         question: "What is the difference between an ideal gas and a real gas?",
         answer:
-          "An ideal gas is modeled as point particles with no volume and no intermolecular forces; PV = nRT holds exactly. Real gas molecules have finite volume and attract each other. At low pressure and high temperature, intermolecular distances are large and particle volume is a tiny fraction of container volume, so real gases approach ideal behavior. At high pressure (above ~10 atm) or near the boiling point, van der Waals corrections (P + a/V²)(V − b) = nRT become necessary.",
+          "An ideal gas is modeled as point particles with no volume and no intermolecular forces; PV = nRT holds exactly. Real gas molecules have finite volume and attract each other. At low pressure and high temperature, intermolecular distances are large and particle volume is a tiny fraction of container volume, so real gases approach ideal behavior. At high pressure (above ~10 atm) or near the boiling point, the van der Waals correction [P + a(n/V)²](V − nb) = nRT becomes necessary, with a and b tabulated per-substance.",
       },
       {
         question: "How is pressure related to molecular motion at the microscopic level?",
