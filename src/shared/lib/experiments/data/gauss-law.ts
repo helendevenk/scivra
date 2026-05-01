@@ -184,7 +184,7 @@ export const gaussLaw: Experiment = {
         wrong:
           "Charges outside the Gaussian surface contribute to the flux through it.",
         correct:
-          "An external charge produces field lines that enter and exit the closed surface in equal numbers, giving zero net flux from that charge. Only charges inside the surface — Q_enc — contribute net flux. You can confirm this by placing chargeAmount at a value and then moving the surfaceRadius to exclude the charge: watch flux drop to zero.",
+          "An external charge produces field lines that enter and exit the closed surface in equal numbers, giving zero net flux from that charge. Only charges inside the surface — Q_enc — contribute net flux. Conceptually, this means moving a charge from inside to outside any closed surface drops its flux contribution to zero, regardless of how the field lines weave through space.",
       },
       {
         wrong:

@@ -219,7 +219,7 @@ export const lorentzForce: Experiment = {
       {
         question: "What AP Physics C standards does this simulation address?",
         answer:
-          "The simulation covers 3.C.3 (forces on moving charges in magnetic fields, including magnitude F = qvB sin θ and the cross-product direction), 2.D.1 (electric and magnetic forces on charged particles), and 2.D.2 (motion of charged particles in uniform fields). These codes are listed in the experiment's standards.ap[] array.",
+          "The simulation covers 3.C.3 (forces on moving charges in magnetic fields, including magnitude |F| = |q|vB sin θ and the cross-product direction F = q(v × B)), 2.D.1 (electric and magnetic forces on charged particles), and 2.D.2 (motion of charged particles in uniform fields). These codes are listed in the experiment's standards.ap[] array.",
       },
       {
         question: "What is the cyclotron radius and what does it depend on?",

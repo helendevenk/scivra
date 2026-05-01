@@ -199,7 +199,7 @@ export const angularMomentum3d: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Precession rate vs. spin rate data collection: set scenario = 0, record the observed precession period T_prec for spinRate values of 10, 20, 30, and 40 rad/s at a fixed tiltAngle of 30°. Have students plot T_prec vs. 1/ω and verify the linear relationship predicted by Ω = Mgd/(Iω). This directly addresses AP standard 5.E.1.",
+      "Precession rate vs. spin rate data collection: set scenario = 0, record the observed precession period T_prec for spinRate values of 10, 20, 30, and 40 rad/s at a fixed tiltAngle of 30°. Since Ω = Mgd/(Iω), T_prec = 2π/Ω = 2πIω/(Mgd) is proportional to ω. Have students plot T_prec vs. spinRate (linear, slope 2πI/(Mgd)) or Ω = 2π/T_prec vs. 1/spinRate (linear). This directly addresses AP standard 5.E.1.",
       "Skater conservation lab: set scenario = 1, record ω at armExtension = 100 %, 80 %, 60 %, 40 %, and 20 %. Have students compute I·ω at each step using I ∝ armExtension² (moment of inertia scales as r²) and verify that L = Iω remains constant to within experimental noise. Addresses standard 5.D.1.",
       "Misconception probe — does the gyroscope fall?: pause the simulation at tiltAngle = 45° with showVectors = 1. Ask students to predict, before pressing Play, which direction the top will move. Most predict it topples; the precession result challenges that intuition and opens a vector-torque discussion.",
       "Collision energy audit: set scenario = 2, record the initial and final angular speeds, compute K_i = ½I₁ω₁² and K_f = ½(I₁+I₂)ω_f². Students calculate the energy lost as a percentage of K_i and discuss where it goes, paralleling the linear-collision energy analysis they did in AP Physics 1.",

@@ -198,7 +198,7 @@ export const electricPotentialVoltage: Experiment = {
       {
         question: "Which AP Physics C E&M standards does this simulation address?",
         answer:
-          "Standards CHA-2.C (electric potential from point charges, V = kq/r), CHA-2.D (potential energy and work in electric fields, W = qΔV), and CHA-3.A (relationship between E and V, including equipotential lines perpendicular to field lines) are all directly exercised by this experiment's parameters and measurements.",
+          "Standards CHA-2.C (electric potential from point charges, V = kq/r), CHA-2.D (potential energy ΔU = qΔV; work done by the field W_field = −qΔV; quasi-static external work W_ext = qΔV), and CHA-3.A (relationship between E and V, including equipotential lines perpendicular to field lines) are all directly exercised by this experiment's parameters and measurements.",
       },
       {
         question: "Why are equipotential lines always perpendicular to electric field lines?",

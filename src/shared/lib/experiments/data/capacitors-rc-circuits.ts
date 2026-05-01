@@ -164,7 +164,7 @@ export const capacitorsRcCircuits: Experiment = {
       voltage:
         "The battery EMF in volts — sets the asymptote V₀ that V_C(t) approaches during charging and the starting voltage V₀ during discharging. Changing voltage rescales the curve vertically without affecting the time constant.",
       plate_area:
-        "Physical area A of each plate in cm². Capacitance scales as C = ε₀A/d, so doubling A doubles C, which lengthens the RC time constant and increases maximum stored energy U = ½CV².",
+        "Physical area A of each plate in cm². Capacitance scales as C = κε₀A/d (with κ = 1 for the vacuum/air gap modeled here), so doubling A doubles C, which lengthens the RC time constant and increases maximum stored energy U = ½CV².",
       plate_separation:
         "Gap d between the plates in mm. For a given charge Q, the electric field E = Q/(ε₀A) is independent of d, but the voltage V = Ed grows linearly with d, so C = Q/V = ε₀A/d decreases as d increases.",
     },
@@ -204,7 +204,7 @@ export const capacitorsRcCircuits: Experiment = {
       "Conceptual entry: before touching the simulation, ask students to sketch V_C vs. time for charging and predict whether the curve is linear, exponential-rising, or exponential-falling. After running the simulation, overlay their sketches on the actual output and discuss why the exponential shape arises from Kirchhoff's voltage law dV/dt = (V₀ − V_C)/(RC).",
       "Time-constant measurement lab: set a specific capacitance and resistance, run the charge cycle, pause at t = τ = RC, and have students read V_C off the graph. They should find ≈63% of V₀ every time regardless of R or C individually — only τ = RC matters. Record (R, C, τ_measured) triples and verify the linear relationship.",
       "Energy audit: charge the capacitor to V₀, record U = ½CV², then discharge through a different resistance and compare the energy released. Use this to open a discussion about what happened to the energy delivered by the battery — half was dissipated in R during charging regardless of R's value.",
-      "Geometry probe: vary plate_area and plate_separation, then challenge students to find two different (A, d) combinations that produce the same C. This forces them to work with C = ε₀A/d quantitatively rather than as a formula to memorize.",
+      "Geometry probe: vary plate_area and plate_separation, then challenge students to find two different (A, d) combinations that produce the same C. This forces them to work with C = κε₀A/d (κ = 1 for vacuum/air) quantitatively rather than as a formula to memorize.",
       "Misconception probe: set resistance to 1 kΩ, charge fully, then ask 'if I double the resistance to 2 kΩ and charge again, will the final voltage be higher, lower, or the same?' Reveal the result and connect back to the independence of V_final from R.",
     ],
     faq: [
@@ -221,7 +221,7 @@ export const capacitorsRcCircuits: Experiment = {
       {
         question: "What AP Physics C standards does this simulation address?",
         answer:
-          "The simulation targets CHA-2.E (relating charge, voltage, and capacitance), CHA-2.F (parallel-plate geometry and C = ε₀A/d), and CHA-4.A (RC circuit transient analysis including the time-constant τ = RC and exponential charging/discharging). These codes are listed directly in the experiment's standards block.",
+          "The simulation targets CHA-2.E (relating charge, voltage, and capacitance), CHA-2.F (parallel-plate geometry and C = κε₀A/d, with κ = 1 for the vacuum/air gap modeled here), and CHA-4.A (RC circuit transient analysis including the time-constant τ = RC and exponential charging/discharging). These codes are listed directly in the experiment's standards block.",
       },
       {
         question: "How is energy stored in a capacitor, and where does the other half of the battery's energy go?",

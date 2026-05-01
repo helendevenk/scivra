@@ -160,9 +160,9 @@ export const electromagneticInduction: Experiment = {
       },
       {
         wrong:
-          "The induced EMF is largest when the coil plane is perpendicular to B (the coil face is parallel to the field lines).",
+          "The induced EMF is largest when the magnetic flux through the coil is largest (coil face perpendicular to B).",
         correct:
-          "EMF = −dΦ/dt is maximum when flux is changing fastest, not when flux itself is maximum. Φ = BA cos(ωt) is maximum when the coil face is perpendicular to B (θ = 0), but its rate of change — NBAω sin(ωt) — is maximum when θ = 90°, i.e., when the coil plane is parallel to B.",
+          "EMF = −dΦ/dt is maximum when flux is CHANGING fastest, not when flux itself is maximum. Φ = BA cos(ωt) is largest when the coil face is perpendicular to B (θ = 0), but its rate of change — NBAω sin(ωt) — is largest a quarter-turn later when θ = 90° (the coil face is parallel to B and the coil plane contains B). Maximum flux and maximum EMF are 90° out of phase.",
       },
       {
         wrong:

@@ -134,7 +134,7 @@ export const gravitationalFields: Experiment = {
       "Gravitational fields obey an inverse-square law — g = GM/r² pointing toward the source mass — and this single relationship generates all of orbital mechanics. A satellite launched horizontally at exactly v_circ = √(GM/r) stays in a circular orbit; faster launches produce ellipses or escape trajectories; slower ones curve back into the planet. Kepler's three laws all follow from Newton's law of gravitation: elliptical orbits with the planet at one focus, equal areas swept in equal times (a consequence of angular momentum conservation), and T² ∝ a³. This simulation lets you set launch speed, launch angle, and planet mass to trace circular, elliptical, and hyperbolic trajectories in real time, while swept-area triangles verify Kepler's second law as the satellite races through periapsis and crawls through apoapsis.",
     parameterExplanations: {
       launchSpeed:
-        "Initial speed in km/s at the moment of launch from the planet surface. At approximately 7.9 km/s (for Earth-mass planet) the orbit becomes circular. Below that value the satellite arcs back down; above it the orbit stretches into an ellipse with a higher apoapsis; at ~11.2 km/s (= √2 × v_circ) the satellite reaches escape velocity and follows a parabolic escape trajectory; above v_esc the path becomes hyperbolic.",
+        "Initial speed in km/s at the moment of launch from the planet surface. For planetMass = 1 (Earth-mass) and launchAngle = 0° at the planet's surface radius, ~7.9 km/s gives a circular orbit; below that the satellite arcs back down; above it the orbit stretches into an ellipse with a higher apoapsis; at ~11.2 km/s (= √2 × v_circ) the trajectory becomes a parabolic escape; above that it is hyperbolic. Different planetMass or nonzero launchAngle shifts these thresholds.",
       launchAngle:
         "Angle in degrees above horizontal at launch. A purely horizontal launch (0°) at circular speed produces a circular orbit. Non-zero angles introduce a radial velocity component, which shifts the apse line so that periapsis and apoapsis appear elsewhere along the orbit; the launch point is generally not an apsis because apsides require zero radial velocity.",
       planetMass:
@@ -193,7 +193,7 @@ export const gravitationalFields: Experiment = {
       {
         question: "What determines whether an orbit is circular, elliptical, or a hyperbola?",
         answer:
-          "Total orbital energy E = ½mv² − GMm/r. If E is negative the orbit is bound (circle or ellipse); if E = 0 it is a parabolic escape; if E is positive it is a hyperbola. The dividing line between circle and ellipse is whether the velocity vector is exactly perpendicular to the radius vector at every point.",
+          "Total orbital energy E = ½mv² − GMm/r. If E is negative the orbit is bound (circle or ellipse); if E = 0 it is a parabolic escape; if E is positive it is a hyperbola. The circle case requires both v_r = 0 (purely tangential velocity) AND v_t = √(GM/r) at the launch radius; any bound orbit failing either condition is an ellipse.",
       },
       {
         question: "Why does Kepler's second law (equal areas in equal times) hold?",
