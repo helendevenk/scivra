@@ -175,7 +175,7 @@ export const membraneTransport: Experiment = {
       "Aquaporin ablation: drag channelDensity to 0 and measure (by counting animation frames) how long water equilibration takes vs. channelDensity at 80 — introduces the concept that protein channels can accelerate passive processes without adding energy.",
       "Data collection — temperature vs. rate: record diffusion arrow speed at 10 °C, 25 °C, and 37 °C and plot a graph; students extrapolate to 45 °C and discuss why high temperatures eventually denature membrane proteins and stop transport.",
       "Active vs. passive classification: display each transport protein (channel, carrier, pump) one at a time and ask students to classify it as AP Bio 2.B.1 passive or 2.B.2 active before revealing the answer — connects classification to mechanistic reasoning.",
-      "Misconception probe: ask students to explain in writing why the Na+/K+ ATPase must use ATP even when Na+ is more concentrated inside — those who say 'because it moves fast' are confusing speed with energy; use this to anchor the correct definition.",
+      "Misconception probe: ask students to explain in writing why the Na+/K+ ATPase must use ATP even though diffusion alone would push Na+ into the cell and K+ out — those who say 'because it moves fast' are confusing speed with energy; use this to anchor the correct definition.",
     ],
     faq: [
       {
@@ -196,7 +196,7 @@ export const membraneTransport: Experiment = {
       {
         question: "What happens to a red blood cell placed in pure water?",
         answer:
-          "Pure water is hypotonic — solute concentration outside is effectively 0 mM while red blood cells contain roughly 280 mOsm of solutes. Water rushes in by osmosis, the cell swells, and within seconds it lyses (bursts) — a process called hemolysis. This is why IV fluids are always isotonic (0.9 % NaCl, ~308 mOsm).",
+          "Pure water is hypotonic — solute concentration outside is effectively 0 mM while red blood cells contain roughly 280 mOsm of solutes. Water rushes in by osmosis, the cell swells, and within seconds it lyses (bursts) — a process called hemolysis. This is why pure water is never used as an IV fluid; routine maintenance IV fluids like 0.9 % NaCl (~308 mOsm) are formulated to be isotonic, though hypotonic and hypertonic solutions exist for specific clinical indications.",
       },
       {
         question: "Why does the Na+/K+ pump create an electrical imbalance, not just a chemical one?",

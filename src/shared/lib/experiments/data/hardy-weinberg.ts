@@ -173,7 +173,7 @@ export const hardyWeinberg: Experiment = {
         wrong:
           "A dominant allele automatically becomes more common over time.",
         correct:
-          "Dominance describes how an allele is expressed, not how common it is. A dominant allele that reduces fitness will decline in frequency just as quickly as a recessive one would. Hardy-Weinberg equilibrium holds allele frequencies constant regardless of dominance — frequency change only happens when one of the five equilibrium conditions is violated.",
+          "Dominance describes how an allele is expressed, not how common it is. Hardy-Weinberg equilibrium holds allele frequencies constant regardless of dominance — frequency change only happens when one of the five equilibrium conditions is violated. Note that under selection, dominance does affect dynamics: a deleterious dominant allele is exposed to selection in every heterozygote, whereas a deleterious recessive can persist hidden in carriers, so the two decline at very different rates.",
       },
       {
         wrong:
@@ -198,8 +198,8 @@ export const hardyWeinberg: Experiment = {
       "Baseline calculation exercise: set selectionCoeff = 0, mutationRate = 0, and popSize = 10000, then run 100 generations. Confirm with students that p stays constant — this establishes what true equilibrium looks like before any forces are introduced.",
       "Selection force experiment: hold all else constant and vary selectionCoeff from 0.05 to 1.0 in separate runs, plotting how many generations it takes for q to fall below 0.05. Students discover that selection against a recessive allele becomes progressively less efficient as q decreases — because most 'a' alleles are hidden in Aa heterozygotes.",
       "Genetic drift vs. selection comparison: run popSize = 50 with selectionCoeff = 0 versus popSize = 5000 with selectionCoeff = 0.05, asking which scenario changes allele frequency faster. Results challenge the intuition that selection is always the dominant force.",
-      "Carrier frequency calculation: set q² = 0.04 (4% affected), pause, and ask students to compute q, p, and 2pq before revealing the simulation output — directly practicing AP standard 7.A.1 problem-solving.",
-      "Deviation-as-evidence probe: introduce mutation or migration mid-run and ask students to identify, from the graph alone, at which generation an evolutionary force was introduced — building the core AP Bio reasoning skill of using H-W deviation as evidence of evolution.",
+      "Carrier frequency calculation: set pFreq = 0.8 (so q = 0.2 and q² = 0.04, i.e. 4% affected), pause, and ask students to compute q, p, and 2pq before revealing the simulation output — directly practicing AP standard 7.A.1 problem-solving.",
+      "Deviation-as-evidence probe: introduce mutation or selection mid-run by toggling mutationRate or selectionCoeff and ask students to identify, from the graph alone, at which generation an evolutionary force was introduced — building the core AP Bio reasoning skill of using H-W deviation as evidence of evolution.",
     ],
     faq: [
       {
@@ -220,12 +220,12 @@ export const hardyWeinberg: Experiment = {
       {
         question: "Why does selection against a recessive allele slow down as the allele becomes rare?",
         answer:
-          "When q is small, nearly all copies of the recessive allele are carried in heterozygotes (Aa), not in the homozygotes (aa) that selection can actually see. The proportion of 'a' alleles exposed to selection is approximately 2pq / (2pq + 2q²) = p / (p + q) ≈ p when q is small. As q approaches zero, almost none of the remaining 'a' alleles are in aa individuals, so selection has almost nothing to act on.",
+          "When q is small, nearly all copies of the recessive allele are carried in heterozygotes (Aa), not in the homozygotes (aa) that selection can actually see. The fraction of 'a' alleles exposed to selection (those sitting in aa homozygotes) is 2q² / (2pq + 2q²) = q / (p + q) ≈ q when q is small. The remaining fraction p ≈ 1 is hidden in heterozygotes. As q approaches zero, almost none of the remaining 'a' alleles are in aa individuals, so selection has almost nothing to act on.",
       },
       {
         question: "What is the difference between allele frequency and phenotype frequency?",
         answer:
-          "Allele frequency is the proportion of a specific allele among all allele copies in a gene pool (p for A, q for a). Phenotype frequency is the proportion of individuals showing a given trait — which depends on dominance. A recessive phenotype frequency equals q², not q. A dominant allele at q = 0.01 still produces a dominant phenotype in p² + 2pq = 0.9999 of the population — 99.99% show the dominant phenotype even though the recessive allele is only 1% of the gene pool.",
+          "Allele frequency is the proportion of a specific allele among all allele copies in a gene pool (p for A, q for a). Phenotype frequency is the proportion of individuals showing a given trait — which depends on dominance. A recessive phenotype frequency equals q², not q. If the recessive allele has q = 0.01, the recessive phenotype frequency is q² = 0.0001 (0.01% of the population), while p² + 2pq = 0.9999 of the population shows the dominant phenotype — even though the recessive allele still makes up 1% of the gene pool.",
       },
     ],
   },

@@ -94,7 +94,7 @@ export const proteinSynthesis3d: Experiment = {
       {
         question: "Why are deletions of 3 nucleotides less damaging than deletions of 1 or 2?",
         answer:
-          "Deleting exactly 3 nucleotides removes one complete codon without shifting the reading frame for the rest of the sequence — the protein is one amino acid shorter but otherwise intact. Deleting 1 or 2 nucleotides shifts the reading frame, garbling every downstream codon. AP Bio 3.C.1 and HS-LS1-1 both require students to predict the consequences of these insertion-deletion (indel) mutations.",
+          "Deleting exactly 3 nucleotides preserves the reading frame for every codon downstream — no frameshift. If the deletion is codon-aligned, one full codon disappears and the protein is one amino acid shorter but otherwise intact; if the 3-nt span straddles two codons, the two flanking codons fuse into a new codon while everything further downstream stays in frame. Deleting 1 or 2 nucleotides shifts the reading frame and garbles every downstream codon. AP Bio 3.C.1 and HS-LS1-1 both require students to predict the consequences of these insertion-deletion (indel) mutations.",
       },
       {
         question: "How does this simulation address AP Bio 3.A.1 and 3.C.1?",

@@ -203,7 +203,7 @@ export const immuneSystem: Experiment = {
       {
         question: "What is the difference between innate and adaptive immunity?",
         answer:
-          "Innate immunity is immediate (minutes to hours), non-specific, and does not improve with repeated exposure. It includes physical barriers, phagocytes, complement proteins, and inflammation. Adaptive immunity takes 7–14 days to mount initially, is antigen-specific (each B or T cell targets one antigen), and generates immunological memory that makes subsequent responses 10–100× faster and stronger.",
+          "Innate immunity is immediate (minutes to hours), non-specific, and does not improve with repeated exposure. It includes physical barriers, phagocytes, complement proteins, and inflammation. Adaptive immunity takes 7–14 days to mount its first (primary) response, is antigen-specific (each B or T cell targets one antigen), and generates immunological memory. On re-exposure, secondary responses peak much faster — roughly 1–3 days vs. 7–14 — and antibody titers can be 10–100× higher than the primary response.",
       },
       {
         question: "How does vaccination produce immunity without causing disease?",

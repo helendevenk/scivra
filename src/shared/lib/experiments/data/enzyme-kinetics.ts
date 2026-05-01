@@ -173,7 +173,7 @@ export const enzymeKinetics: Experiment = {
         wrong:
           "All inhibitors reduce Vmax on a Michaelis-Menten plot.",
         correct:
-          "Only noncompetitive and uncompetitive inhibitors lower Vmax. Competitive inhibitors leave Vmax identical — they only shift the apparent Km. On a Lineweaver-Burk plot, a competitive inhibitor rotates the line around the y-intercept (unchanged 1/Vmax), while a noncompetitive inhibitor shifts the line upward parallel to the original (same x-intercept, higher y-intercept).",
+          "Only noncompetitive and uncompetitive inhibitors lower Vmax. Competitive inhibitors leave Vmax identical — they only shift the apparent Km. On a Lineweaver-Burk plot, a competitive inhibitor rotates the line around the y-intercept (unchanged 1/Vmax). A pure noncompetitive inhibitor pivots the line steeper around the same x-intercept (unchanged Km, higher 1/Vmax). Uncompetitive inhibitors shift the line upward in parallel to the original (decreased Km AND decreased Vmax).",
       },
     ],
     teacherUseCases: [

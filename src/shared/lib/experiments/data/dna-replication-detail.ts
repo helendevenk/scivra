@@ -37,7 +37,7 @@ export const dnaReplicationDetail: Experiment = {
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "DNA Replication" },
   contentSections: {
     whatIsIt:
-      "DNA replication is the molecular process your cells run every time one cell divides into two — copying all 3.2 billion base pairs of your genome in roughly 8 hours. The process is semi-conservative: each new DNA double helix contains one original strand and one freshly built strand, a fact proven by the Meselson-Stahl density-gradient experiment in 1958. Helicase unzips the double helix at the replication fork; primase drops short RNA primers to give polymerase a foothold; DNA polymerase III races along, adding nucleotides only in the 5'→3' direction. That directionality constraint is why the lagging strand is built in reverse chunks called Okazaki fragments — each about 1,000–2,000 base pairs in prokaryotes. Press Play and toggle showDirection to see the fork advance on both strands simultaneously.",
+      "DNA replication is the molecular process every dividing cell runs to copy its genome — humans copy all 3.2 billion base pairs in roughly 8 hours by firing thousands of origins at once. The process is semi-conservative: each new DNA double helix contains one original strand and one freshly built strand, evidence Meselson and Stahl built up in 1958. Helicase unzips the double helix at the replication fork; primase drops short RNA primers to give polymerase a foothold; the replicative DNA polymerase races along, adding nucleotides only in the 5'→3' direction. (This simulation uses the well-characterized E. coli replisome with DNA polymerase III as its model; eukaryotes use polymerases α, δ, and ε for the same logic.) That directionality constraint is why the lagging strand is built in reverse chunks called Okazaki fragments — each about 1,000–2,000 base pairs in prokaryotes.",
     parameterExplanations: {
       speed:
         "A playback multiplier from 0.5× (half speed) to 3× (triple speed), controlling how fast the replication fork animation advances. Set speed to 0.5× to count individual nucleotide additions on both strands; set it to 3× for a quick overview of the whole-fork architecture.",
@@ -51,7 +51,7 @@ export const dnaReplicationDetail: Experiment = {
         wrong:
           "DNA replication is conservative — the original double helix stays intact and a brand-new copy is made from scratch.",
         correct:
-          "Replication is semi-conservative, not conservative. Meselson and Stahl (1958) grew E. coli in heavy nitrogen (¹⁵N) then switched to ¹⁴N and spun DNA in a density gradient after each generation. After one replication, all DNA settled at an intermediate density — proving each new helix is one old strand plus one new strand. AP Bio 3.A.1 and HS-LS1-1 both reference this mechanistic evidence.",
+          "Replication is semi-conservative, not conservative. Meselson and Stahl (1958) grew E. coli in heavy nitrogen (¹⁵N) then switched to ¹⁴N and spun DNA in a density gradient after each generation. After one replication, all DNA settled at a single intermediate-density band — which ruled out conservative replication. After two replications, half the DNA stayed at intermediate density and half shifted to light, which then ruled out dispersive replication and confirmed semi-conservative. AP Bio 3.A.1 and HS-LS1-1 both reference this mechanistic evidence.",
       },
       {
         wrong:
@@ -98,7 +98,7 @@ export const dnaReplicationDetail: Experiment = {
       {
         question: "What happens if helicase stops working?",
         answer:
-          "Without helicase, the double helix cannot be unwound at the replication fork and synthesis halts entirely. Many antifungal and antiviral drugs target the helicase of the pathogen specifically, halting its genome replication without affecting the human replisome. A helicase mutation in humans causes syndromes like Werner syndrome (accelerated aging), because DNA repair pathways that also use helicase activity fail.",
+          "Without helicase, the double helix cannot be unwound at the replication fork and synthesis halts entirely. Some antiviral drugs target a viral helicase or helicase-primase complex specifically (the herpesvirus drug pritelivir is one example), halting viral genome replication without affecting the human replisome. Mutations in human helicases cause syndromes like Werner syndrome (accelerated aging), because DNA repair pathways that also use helicase activity fail.",
       },
       {
         question: "How fast does DNA replication actually happen?",

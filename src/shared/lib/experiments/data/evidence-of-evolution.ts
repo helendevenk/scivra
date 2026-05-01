@@ -129,7 +129,7 @@ export const evidenceOfEvolution: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "Evolution is the change in inherited traits across generations, and four independent lines of evidence converge to support it: comparative anatomy, the fossil record, molecular biology, and biogeography. A whale flipper and a human arm share the same bone arrangement — humerus, radius, ulna, carpals — because they descended from the same ancestor, not because flippers are useful. Molecular evidence is even more precise: cytochrome c protein sequences differ by just 1 amino acid between humans and chimpanzees but by 14 between humans and yeast, mirroring the pattern the fossil record already suggested. This simulation lets you toggle between all four evidence types, adjust how many species you compare, and stretch the time axis to 500 million years to watch sequence divergence accumulate on a phylogenetic tree.",
+      "Evolution is the change in inherited traits across generations, and four converging lines of evidence support it: comparative anatomy, the fossil record, molecular biology, and phylogenetic trees built from those data. A whale flipper and a human arm share the same bone arrangement — humerus, radius, ulna, carpals — because they descended from the same ancestor, not because flippers are useful. Molecular evidence is even more precise: human and chimpanzee cytochrome c are identical (0 differences out of 104 residues), while humans and yeast differ at roughly 44 of 104 — a gap that mirrors the deep evolutionary distance the fossil record already suggested. This simulation lets you toggle between four evidence modes, adjust how many species you compare, and stretch the time axis to 500 million years to watch sequence divergence accumulate on a phylogenetic tree.",
     parameterExplanations: {
       evidenceType:
         "Selects which line of evidence the visualization displays: 0 = comparative anatomy (limb homology across vertebrates), 1 = fossil record (stratigraphic timeline of transitional forms), 2 = molecular data (DNA/protein sequence alignment and percent divergence), 3 = phylogenetic tree (cladogram built from shared derived characters). Switching between modes lets you verify that each independent dataset points to the same branching pattern.",
@@ -191,7 +191,7 @@ export const evidenceOfEvolution: Experiment = {
       {
         question: "Why does the simulation show ribosomal RNA as a molecular evidence type?",
         answer:
-          "Ribosomal RNA (rRNA) is nearly universal across life and evolves slowly, making it ideal for comparing distantly related organisms — Carl Woese used 16S rRNA to establish the three-domain tree of life. Cytochrome c, another option in the simulation, is a respiratory protein conserved across eukaryotes; humans and chimpanzees differ at 0 positions, while humans and yeast differ at 14 out of 104, quantifying the depth of the split.",
+          "Ribosomal RNA (rRNA) is nearly universal across life and evolves slowly, making it ideal for comparing distantly related organisms — Carl Woese used 16S rRNA to establish the three-domain tree of life. Cytochrome c, another option in the simulation, is a respiratory protein conserved across eukaryotes; humans and chimpanzees differ at 0 positions, while humans and yeast differ at roughly 44 of 104 residues, quantifying the depth of the split.",
       },
       {
         question: "How does this lab connect to AP Biology standard 7.A.1?",

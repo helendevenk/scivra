@@ -140,7 +140,7 @@ export const cellStructure3d: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "A eukaryotic cell is a microscopic city — every organelle is a department with a specific job, all enclosed within a phospholipid membrane wall. Your liver cells, muscle cells, and the plant cells in a spinach leaf all share this compartmentalized design. The nucleus acts as city hall, housing DNA and issuing instructions via mRNA. The mitochondria are the power plants, converting glucose into 36–38 ATP molecules per cycle. The endomembrane system — rough ER, Golgi, and lysosomes — handles manufacturing, shipping, and waste disposal. Plant cells add a chloroplast solar panel and a central vacuole that inflates like a water balloon to keep stems upright. Toggle the highlightSystem control to isolate each subsystem and watch how organelles cluster by function.",
+      "A eukaryotic cell is a microscopic city — every organelle is a department with a specific job, all enclosed within a phospholipid membrane wall. Your liver cells, muscle cells, and the plant cells in a spinach leaf all share this compartmentalized design. The nucleus acts as city hall, housing DNA and issuing instructions via mRNA. The mitochondria are the power plants, oxidizing pyruvate and feeding electron carriers into the electron transport chain to produce most of the ~30–32 ATP per glucose. The endomembrane system — rough ER, Golgi, and lysosomes — handles manufacturing, shipping, and waste disposal. Plant cells add a chloroplast solar panel and a central vacuole that inflates like a water balloon to keep stems upright. Toggle the highlightSystem control to isolate each subsystem and watch how organelles cluster by function.",
     parameterExplanations: {
       cellType:
         "Switches the rendered model between an animal cell (0) and a plant cell (1). Plant cells gain a rigid cell wall, chloroplasts, and a large central vacuole; animal cells retain centrioles for cell division. Use this toggle to run side-by-side structural comparisons.",
@@ -208,7 +208,7 @@ export const cellStructure3d: Experiment = {
       {
         question: "What does the Golgi apparatus actually do to proteins?",
         answer:
-          "The Golgi receives proteins from the ER and chemically modifies them — adding or trimming sugar chains (glycosylation), adding phosphate groups, or clipping signal peptides. It then sorts proteins into vesicles headed to lysosomes, the plasma membrane, or secretion. Think of it as the post office that addresses and stamps every package before shipping.",
+          "The Golgi receives proteins from the ER and chemically modifies them — adding or trimming sugar chains (glycosylation), adding phosphate groups, and proteolytically processing some cargo. (Signal peptides themselves are typically cleaved earlier by signal peptidase in the ER.) The Golgi then sorts proteins into vesicles headed to lysosomes, the plasma membrane, or secretion. Think of it as the post office that addresses and stamps every package before shipping.",
       },
     ],
   },

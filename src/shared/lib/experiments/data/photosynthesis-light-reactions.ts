@@ -84,12 +84,12 @@ export const photosynthesisLightReactions: Experiment = {
       {
         question: "Why does green light produce so little photosynthesis?",
         answer:
-          "Chlorophyll a and b absorb most efficiently in the red (~680 nm) and blue (~430 nm) regions of the spectrum. Green wavelengths (~500–560 nm) are reflected, which is why plants appear green. Without photon absorption, P680 cannot be excited, so no electrons are released from water and neither ATP nor NADPH are generated at that wavelength.",
+          "Chlorophyll a and b absorb most efficiently in the red (~680 nm) and blue (~430 nm) regions of the spectrum. Green wavelengths (~500–560 nm) are absorbed much less efficiently — most green light is reflected or transmitted, which is why plants appear green. Photosynthesis still proceeds in pure green light because accessory pigments and partial chlorophyll absorption capture some photons, but electron flow, O₂ output, and ATP/NADPH production all drop sharply compared to red or blue light.",
       },
       {
         question: "What is the Z-scheme?",
         answer:
-          "The Z-scheme describes the energy pathway of electrons through the two photosystems, named for the Z-shape the diagram makes when energy is plotted against redox potential. Electrons start at a low energy state in water, jump to high energy at P680 (PSII), lose energy through the ETC while pumping H⁺, jump again to high energy at P700 (PSI), and finally reduce NADP⁺ to NADPH. Each photon absorption event boosts electron energy twice.",
+          "The Z-scheme describes the energy pathway of electrons through the two photosystems, named for the Z-shape the diagram makes when energy is plotted against redox potential. Electrons start at a low energy state in water, jump to high energy at P680 (PSII), lose energy through the ETC while pumping H⁺, jump again to high energy at P700 (PSI), and finally reduce NADP⁺ to NADPH. Each electron is boosted twice — once at PSII and once at PSI — by absorbing two photons in total.",
       },
       {
         question: "How does the proton gradient in chloroplasts compare to the one in mitochondria?",

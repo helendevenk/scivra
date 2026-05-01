@@ -38,7 +38,7 @@ export const cellularRespirationDetail: Experiment = {
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Cellular Respiration" },
   contentSections: {
     whatIsIt:
-      "Cellular respiration is the metabolic process cells use to extract energy from glucose and store it as ATP — the currency that powers muscle contraction, active transport, and protein synthesis. Most of the yield comes not from glycolysis, but from the electron transport chain (ETC) embedded in the inner mitochondrial membrane, where NADH and FADH₂ donate electrons that drive proton pumping, creating a gradient that spins ATP synthase like a molecular turbine. One glucose molecule processed through glycolysis, the Krebs cycle, and oxidative phosphorylation generates roughly 32 ATP under aerobic conditions — compared to just 2 ATP from fermentation. The simulation lets you feed glucose molecules through all three stages and toggle oxygen availability to contrast aerobic efficiency against anaerobic fallback pathways.",
+      "Cellular respiration is the metabolic process cells use to extract energy from glucose and store it as ATP — the currency that powers muscle contraction, active transport, and protein synthesis. Most of the yield comes not from glycolysis, but from the electron transport chain (ETC) embedded in the inner mitochondrial membrane, where NADH and FADH₂ donate electrons that drive proton pumping, creating a gradient that spins ATP synthase like a molecular turbine. One glucose molecule processed through glycolysis, the Krebs cycle, and oxidative phosphorylation generates roughly 30–32 ATP under aerobic conditions — of which oxidative phosphorylation contributes ~26–28 — compared to just 2 ATP from fermentation. The simulation lets you feed glucose molecules through all three stages and toggle oxygen availability to contrast aerobic efficiency against anaerobic fallback pathways.",
     parameterExplanations: {
       glucoseAmount:
         "The number of glucose molecules fed into the pathway at once, from 1 to 10. More glucose increases the throughput of all three stages simultaneously — watch the ATP, NADH, and FADH₂ counters scale proportionally as each molecule completes glycolysis, the Krebs cycle, and oxidative phosphorylation.",
@@ -58,7 +58,7 @@ export const cellularRespirationDetail: Experiment = {
         wrong:
           "Most ATP comes from glycolysis, so the rest of the pathway is not that important.",
         correct:
-          "Glycolysis yields only 2 ATP per glucose net. The electron transport chain and chemiosmosis account for ~32 of the ~34 ATP produced aerobically — roughly 94% of the total yield. Glycolysis matters mainly because it feeds pyruvate into the Krebs cycle.",
+          "Glycolysis yields only 2 ATP per glucose net. The electron transport chain and chemiosmosis account for roughly 26–28 of the ~30–32 ATP produced aerobically — about 85–90% of the total yield. Glycolysis matters mainly because it feeds pyruvate into the Krebs cycle.",
       },
       {
         wrong:
@@ -84,7 +84,7 @@ export const cellularRespirationDetail: Experiment = {
       {
         question: "Why does aerobic respiration produce so many more ATP than fermentation?",
         answer:
-          "The electron transport chain oxidizes NADH and FADH₂, pumping H⁺ across the inner mitochondrial membrane to drive ATP synthase. This chemiosmotic mechanism accounts for ~32 of the ~34 ATP produced per glucose aerobically. Fermentation cannot use the ETC, so only the 2 ATP from substrate-level phosphorylation in glycolysis are available.",
+          "The electron transport chain oxidizes NADH and FADH₂, pumping H⁺ across the inner mitochondrial membrane to drive ATP synthase. This chemiosmotic mechanism contributes roughly 26–28 of the ~30–32 ATP produced per glucose aerobically. Fermentation cannot use the ETC, so only the 2 ATP from substrate-level phosphorylation in glycolysis are available.",
       },
       {
         question: "What exactly does ATP synthase do, and why is the proton gradient important?",
@@ -94,7 +94,7 @@ export const cellularRespirationDetail: Experiment = {
       {
         question: "How many ATP does one glucose actually produce — why do textbooks give different numbers?",
         answer:
-          "Textbooks historically cited 36–38 ATP; current measurements put the aerobic yield closer to 30–32 ATP per glucose in intact cells, because the cost of shuttling NADH into mitochondria and running the ATP-ADP translocase is factored in. For AP exams, ~36 is the accepted answer; the simulation uses ~32–34 for the ETC stage alone.",
+          "Textbooks historically cited 36–38 ATP per glucose; current measurements put the aerobic yield closer to 30–32 ATP in intact cells, because the cost of shuttling NADH into mitochondria and running the ATP-ADP translocase is factored in. For AP exams, ~36 is still widely accepted; this simulation uses the modern ~30–32 figure, with oxidative phosphorylation contributing ~26–28 of that total.",
       },
       {
         question: "Does this connect to AP Bio standard 2.A.2?",

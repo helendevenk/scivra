@@ -172,7 +172,7 @@ export const ecologicalSuccession: Experiment = {
         wrong:
           "Biodiversity is highest in the climax community because more species have had time to arrive.",
         correct:
-          "The intermediate disturbance hypothesis predicts that biodiversity peaks at moderate disturbance levels, not at the undisturbed climax. At climax, competitive dominants often exclude early-successional species; at high disturbance frequency, only pioneers persist. Moderate disturbance maintains a patchwork of stages with the highest total species richness — the disturbanceProb slider can demonstrate this U-shaped pattern.",
+          "The intermediate disturbance hypothesis predicts that biodiversity peaks at moderate disturbance levels, not at the undisturbed climax. At climax, competitive dominants often exclude early-successional species; at high disturbance frequency, only pioneers persist. Moderate disturbance maintains a patchwork of stages with the highest total species richness — the disturbanceProb slider can demonstrate this hump-shaped (unimodal) pattern.",
       },
       {
         wrong:

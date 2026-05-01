@@ -140,7 +140,7 @@ export const meiosis: Experiment = {
       chromosomePairs:
         "Sets how many homologous pairs participate in the simulation (2 to 6). The number of independent assortment combinations scales as 2^n — so 2 pairs give 4 possible gamete types, 3 pairs give 8, and 6 pairs give 64. Use this parameter to demonstrate the exponential relationship between chromosome number and genetic diversity.",
       nondisjunctionProb:
-        "Sets the probability (0–30%) that a chromosome pair fails to separate correctly during either Meiosis I or Meiosis II. When non-disjunction occurs, gametes are aneuploid — carrying an extra chromosome (n+1) or missing one (n-1). Fertilization of an n+1 egg with a normal sperm produces a trisomic zygote; trisomy 21 causes Down syndrome.",
+        "Sets the probability (0–30%) that homologous chromosomes fail to separate during Meiosis I, or that sister chromatids fail to separate during Meiosis II. When non-disjunction occurs, gametes are aneuploid — carrying an extra chromosome (n+1) or missing one (n-1). Fertilization of an n+1 egg with a normal sperm produces a trisomic zygote; trisomy 21 causes Down syndrome.",
       showCombinations:
         "When enabled (1), displays the gamete combination counter after each round of meiosis, making the 2^n independent assortment formula visible as a live count. Toggle it off to have students predict the number before the simulation reveals it — an effective formative assessment move.",
     },
@@ -187,7 +187,7 @@ export const meiosis: Experiment = {
       {
         question: "Why does meiosis require two divisions instead of one?",
         answer:
-          "Meiosis I separates homologous chromosomes, reducing the cell from 2n to n. But after Meiosis I, each chromosome still consists of two sister chromatids. Meiosis II is required to separate those sisters — just as mitosis does in somatic cells. Skipping Meiosis II would leave gametes with sister-chromatid pairs rather than individual chromosomes, producing diploid gametes instead of haploid ones.",
+          "Meiosis I separates homologous chromosomes, reducing the cell from 2n to n. But after Meiosis I, each chromosome still consists of two sister chromatids. Meiosis II is required to separate those sisters — just as mitosis does in somatic cells. Skipping Meiosis II would leave haploid cells whose chromosomes still carry two chromatids each — not the mature haploid gametes (one chromatid per chromosome) that fertilization requires.",
       },
       {
         question: "How does AP standard 3.A.4 relate to crossing over?",
