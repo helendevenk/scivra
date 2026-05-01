@@ -83,6 +83,23 @@ export const PHASE3_FILLED_SLUGS = new Set<string>([
   "single-slit-diffraction-pattern",
   "states-of-matter-basics-phase-transitions",
   // Wave 3 (ap-biology) — added in Task 3
+  "cell-structure-3d",
+  "cellular-respiration-detail",
+  "dna-replication-detail",
+  "ecological-succession",
+  "enzyme-kinetics",
+  "evidence-of-evolution",
+  "hardy-weinberg",
+  "immune-system",
+  "meiosis",
+  "membrane-transport",
+  "mitosis",
+  "natural-selection",
+  "neuron-action-potential",
+  "photosynthesis-light-reactions",
+  "population-dynamics",
+  "protein-synthesis",
+  "protein-synthesis-3d",
   // Wave 4 (ap-chemistry) — added in Task 4
   // Wave 5 (ap-physics-c) — added in Task 5
   // Wave 6 (ngss-hs) — added in Task 6

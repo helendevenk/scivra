@@ -131,4 +131,78 @@ export const neuronActionPotential: Experiment = {
     educationalLevel: "High School",
     teaches: "Neuron Structure and Action Potential",
   },
+  contentSections: {
+    whatIsIt:
+      "A neuron fires an action potential by rapidly reversing its membrane voltage — from a resting −70 mV to a peak of roughly +30 mV — in about 1–2 milliseconds. The resting potential is maintained by the Na⁺/K⁺ ATPase pump (3 Na⁺ out, 2 K⁺ in) and selective membrane permeability. When a stimulus pushes the membrane past the threshold of approximately −55 mV, voltage-gated Na⁺ channels snap open, flooding the cell with Na⁺ (depolarization). Na⁺ channels then inactivate while K⁺ channels open, driving the membrane back negative (repolarization) through a brief hyperpolarization that marks the refractory period. Critically, this response is all-or-none: a sub-threshold stimulus produces only a decaying graded potential, never a full spike. The simulation lets you adjust stimulus strength, extracellular Na⁺, myelination, and channel blockers to explore every phase of this electrical event.",
+    parameterExplanations: {
+      stimulusStrength:
+        "The magnitude of the applied depolarizing current in mV equivalent, from 5 to 60 mV. Stimuli below the threshold value (~15–20 mV above resting, reaching approximately −55 mV) produce only a graded potential that decays without firing. Once stimulus strength crosses threshold, the full action potential fires — increasing strength beyond that point changes nothing about the spike shape, only how reliably threshold is reached (all-or-none principle).",
+      sodiumConc:
+        "Extracellular Na⁺ concentration in mM, normally ~145 mM in the human body. Reducing extracellular Na⁺ decreases the electrochemical driving force for Na⁺ influx, lowering the peak depolarization voltage (normally ~+30 mV). Raising it above 145 mM increases the Na⁺ equilibrium potential, pushing the peak higher. This slider directly demonstrates why extracellular Na⁺ determines action potential amplitude.",
+      myelination:
+        "The percentage of axon length covered by myelin sheath, from 0% (bare unmyelinated axon) to 100% (fully myelinated). Myelin is an electrical insulator that forces ionic current to jump between exposed nodes of Ranvier — saltatory conduction. Full myelination increases conduction velocity from roughly 0.5 m/s to over 100 m/s. Dragging this slider from 0 to 100% shows the dramatic acceleration in signal propagation visible in the simulation timeline.",
+      channelBlocker:
+        "The percentage of voltage-gated Na⁺ channels blocked by tetrodotoxin (TTX), a neurotoxin from puffer fish, from 0% to 100%. As blockade increases, fewer Na⁺ channels can open during a stimulus, reducing depolarization amplitude until, near 100% block, no action potential can fire at all. This slider recreates the pharmacological experiment that proved Na⁺ channels are essential for action potential generation.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "A stronger stimulus produces a larger action potential — the size of the spike depends on how hard you push.",
+        correct:
+          "The action potential is all-or-none: once threshold is crossed (~−55 mV), the spike always rises to the same peak (~+30 mV) regardless of how much additional stimulus is applied. Stimulus strength determines whether the neuron fires, not how large the resulting spike is. Signal intensity in the nervous system is encoded by firing frequency, not spike height.",
+      },
+      {
+        wrong:
+          "During repolarization, Na⁺ is actively pumped back out to restore the resting potential.",
+        correct:
+          "Repolarization is driven by K⁺ efflux through voltage-gated K⁺ channels opening — not by active Na⁺ pumping. The Na⁺/K⁺ ATPase pump does eventually restore the original ion distributions, but it operates slowly over many action potentials, not during the sub-millisecond repolarization phase itself.",
+      },
+      {
+        wrong:
+          "After an action potential fires, the neuron can immediately fire again.",
+        correct:
+          "The absolute refractory period follows every action potential: Na⁺ channels are inactivated and cannot reopen regardless of stimulus strength. During the subsequent relative refractory period, the membrane is hyperpolarized below −70 mV, requiring a stronger-than-normal stimulus to reach threshold. This prevents backward signal propagation and sets a maximum firing frequency.",
+      },
+      {
+        wrong:
+          "Myelin speeds up conduction by making ions flow faster through the membrane.",
+        correct:
+          "Myelin insulates the axon membrane, preventing ion leakage between nodes of Ranvier. This does not speed up ion flow; it forces the electrical signal to jump from node to node (saltatory conduction) rather than regenerating continuously along the entire membrane. The effect on speed is dramatic: myelinated axons conduct at 70–120 m/s versus 0.5–2 m/s for unmyelinated axons.",
+      },
+    ],
+    teacherUseCases: [
+      "Threshold demonstration: have students increase stimulus strength in 5 mV steps from minimum and record whether an action potential fires at each level. Plot binary fire/no-fire data against stimulus, identify threshold, and use this as the entry point for all-or-none discussion — directly addresses AP Bio 3.D.2.",
+      "Na⁺ concentration experiment: set channelBlocker to 0%, then have students lower sodiumConc from 145 mM to 70 mM in 15 mM steps, recording peak depolarization voltage each time. Graph peak vs. Na⁺ concentration to observe the Nernst relationship — ties to the Nernst equation formula shown in the simulation.",
+      "Myelination disease modeling: drag myelination from 100% to 0% and ask students to predict what neurological symptoms would result from this loss. Connect to multiple sclerosis and use it as a misconception probe — students often think MS destroys neurons rather than their insulating sheath.",
+      "TTX channel blocker pharmacology: have students apply channelBlocker in 20% increments and record the minimum stimulus needed to fire an action potential (or confirm it cannot fire). Discuss how this models the mechanism of local anesthetics and puffer fish toxin, addressing AP Bio 3.E.2.",
+      "Data collection on conduction velocity: at 0%, 50%, and 100% myelination, record the time between stimulus application and signal arrival at the axon terminal in the simulation. Calculate relative conduction velocity ratios and compare to published values (myelinated ~100 m/s, unmyelinated ~0.5 m/s).",
+    ],
+    faq: [
+      {
+        question: "What is the threshold potential and why does it matter?",
+        answer:
+          "Threshold is the membrane voltage (~−55 mV) at which enough voltage-gated Na⁺ channels open to create a self-amplifying Na⁺ influx. Below threshold, the few channels that open are insufficient to outpace K⁺ leak channels, and the depolarization fades. Above threshold, Na⁺ influx accelerates in a positive feedback loop, driving the membrane to peak depolarization of approximately +30 mV within about 0.5 ms.",
+      },
+      {
+        question: "How does the all-or-none principle connect to AP Bio standards?",
+        answer:
+          "AP Bio 3.D.2 requires students to explain how neurons transmit information using action potentials, including the all-or-none nature of the response. Students must be able to describe why sub-threshold stimuli fail to fire and explain that information is encoded in firing frequency rather than spike amplitude. NGSS HS-LS1-2 addresses the broader cell communication context.",
+      },
+      {
+        question: "Why do Na⁺ channels inactivate instead of just closing?",
+        answer:
+          "Voltage-gated Na⁺ channels have two gates: an activation gate that opens rapidly when the membrane depolarizes, and an inactivation gate (the 'ball and chain') that plugs the channel from the intracellular side within 1–2 ms. This dual-gate design ensures that Na⁺ influx is self-terminating regardless of whether voltage stays high, creating the absolute refractory period and preventing runaway depolarization.",
+      },
+      {
+        question: "What happens if tetrodotoxin blocks all Na⁺ channels?",
+        answer:
+          "At 100% channel blockade in the simulation, no action potential can fire regardless of stimulus strength, because the Na⁺ influx required to cross threshold is absent. In biological systems, TTX poisoning paralyzes voluntary muscles and can stop breathing by blocking motor neuron firing. The lethal dose for humans is roughly 1–2 mg, making TTX one of the most potent non-protein toxins known.",
+      },
+      {
+        question: "Does the Na⁺/K⁺ pump fire during every action potential to restore ion balance?",
+        answer:
+          "The pump runs continuously but is too slow to restore ion balance during any single action potential. Each spike moves only a tiny fraction of intracellular Na⁺ and K⁺ — a neuron can fire hundreds of times before ion gradients deplete measurably. The pump maintains the resting gradient over the long term, not on a spike-by-spike basis.",
+      },
+    ],
+  },
 };
