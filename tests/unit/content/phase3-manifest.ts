@@ -117,6 +117,16 @@ export const PHASE3_FILLED_SLUGS = new Set<string>([
   "stoichiometry",
   "thermochemistry",
   // Wave 5 (ap-physics-c) — added in Task 5
+  "amperes-law",
+  "angular-momentum-3d",
+  "capacitors-charging-discharging-rc-circuits",
+  "electric-potential-voltage-equipotential-lines",
+  "electromagnetic-induction-faradays-law-lenz",
+  "gauss-law",
+  "gravitational-fields",
+  "lorentz-force",
+  "rlc-circuit",
+  "rotational-kinematics-advanced",
   // Wave 6 (ngss-hs) — added in Task 6
   // Wave 7 (ngss-ms) — added in Task 7
   // Wave 8 (elementary-k5) — added in Task 8
