@@ -147,4 +147,91 @@ export const calorimetry: Experiment = {
     educationalLevel: "High School",
     teaches: "Calorimetry and Heat Transfer",
   },
+  contentSections: {
+    whatIsIt:
+      "Calorimetry is the experimental technique of measuring heat flow during physical or chemical processes by tracking temperature changes in a known mass of surroundings. The core equation is q = mcΔT: multiply the mass of solution (g) by its specific heat capacity (4.184 J/(g·°C) for dilute aqueous solutions) and by the observed temperature change to get heat in joules. In a coffee-cup calorimeter at constant pressure, heat released by the reaction warms the solution; conservation of energy gives q_rxn = −q_solution. Dividing by moles of limiting reagent yields ΔH in kJ/mol. Bomb calorimetry operates at constant volume and measures ΔE instead. This simulation models both simple thermal mixing and reactive scenarios so you can see how mass, initial temperature, and reaction type affect the measured enthalpy.",
+    parameterExplanations: {
+      massA:
+        "The mass of Solution A in grams, ranging from 10 to 200 g (default 50 g). A larger mass has more thermal energy to exchange; doubling mass doubles the heat transferred at the same ΔT. In the calculation, m_A appears in q_A = m_A · c · ΔT_A.",
+      tempA:
+        "The initial temperature of Solution A in degrees Celsius (0–100°C, default 25°C). Combined with tempB, this sets the direction and magnitude of heat flow: the hotter solution loses heat, the cooler one gains it. Raising tempA increases the driving force for heat transfer.",
+      massB:
+        "The mass of Solution B in grams (10–200 g, default 50 g). When massB differs from massA, the mixture's final temperature shifts toward the temperature of the heavier solution because it contains proportionally more thermal energy. This illustrates the weighted-average nature of T_final.",
+      tempB:
+        "The initial temperature of Solution B in degrees Celsius (0–100°C, default 75°C). Setting tempB above tempA makes Solution B the heat source; below tempA it becomes the heat sink. For reactive modes, tempB also sets starting conditions for the enthalpy calculation.",
+      reactionType:
+        "Selects the type of process: 0 = simple thermal mixing (no reaction, only heat transfer), 1 = acid-base neutralization (exothermic, ΔH ≈ −57 kJ/mol for strong acid + strong base), 2 = dissolution (endothermic or exothermic depending on solute). Each mode applies the appropriate ΔH_rxn on top of the mixing calculation.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "The heat released by the reaction (q_rxn) is the same number as q_solution, just with a negative sign added.",
+        correct:
+          "By conservation of energy, q_rxn + q_solution = 0, so q_rxn = −q_solution. If the solution temperature rises (q_solution > 0, heat gained by solution), the reaction released heat (q_rxn < 0, exothermic). The sign convention is: negative ΔH means the system (reactants → products) lost energy to the surroundings.",
+      },
+      {
+        wrong:
+          "Specific heat capacity is the same for all liquids — just use 4.18 J/(g·°C) for everything.",
+        correct:
+          "4.184 J/(g·°C) is the specific heat of pure water. Organic solvents, oils, and metals differ substantially (ethanol ≈ 2.44, aluminum ≈ 0.90 J/(g·°C)). Dilute aqueous solutions approximate water, but concentrated solutions or non-aqueous media require the correct c value or the calculated q will be wrong.",
+      },
+      {
+        wrong:
+          "A larger temperature change always means more heat was transferred.",
+        correct:
+          "ΔT alone does not tell you how much heat moved — you also need mass and specific heat. Adding 1 kJ to 10 g of water raises it by 23.9°C, but adding the same 1 kJ to 1000 g raises it only 0.24°C. Always use q = mcΔT, not ΔT in isolation.",
+      },
+      {
+        wrong:
+          "Coffee-cup and bomb calorimetry measure the same quantity.",
+        correct:
+          "Coffee-cup calorimetry is done at constant pressure and measures ΔH (enthalpy change). Bomb calorimetry is done at constant volume and measures ΔE (internal energy change). For most reactions involving only solutions, the difference is small, but for reactions with gases the PΔV term can be significant.",
+      },
+      {
+        wrong:
+          "The final temperature of a mixture is always halfway between the two starting temperatures.",
+        correct:
+          "That is only true when both masses and specific heats are equal. The correct formula is T_f = (m₁c₁T₁ + m₂c₂T₂)/(m₁c₁ + m₂c₂). Use the simulation to mix 100 g at 80°C with 50 g at 20°C and confirm T_f ≈ 60°C, not 50°C.",
+      },
+    ],
+    teacherUseCases: [
+      "Mixing-law verification: have students predict T_final for three different mass-ratio combinations (1:1, 2:1, 3:1) before running the simulation, then compare to measured values. This builds quantitative intuition for the weighted-average formula before introducing reactive scenarios.",
+      "Enthalpy of neutralization determination: set reactionType = 1 (acid-base), vary massA/massB to change total solution mass, record q_solution = mcΔT, then compute q_rxn = −q_solution and divide by moles of acid (estimated from massA assuming 1.0 M HCl) to get ΔH ≈ −57 kJ/mol. Discuss why the per-mole value is consistent across mass changes — addressing AP 6.B.1 directly.",
+      "Specific-heat misconception probe: ask students which scenario produces a larger temperature spike — adding 2000 J to 200 g or to 50 g of water — before touching the controls. Use the result to drive home that ΔT = q/(mc) and that ΔT is not a proxy for q.",
+      "Error analysis activity: introduce a 'leaky calorimeter' scenario by comparing ideal calculated T_f to a slightly lower observed T_f, asking students to quantify percent heat loss. This mimics real lab conditions and addresses systematic error, a recurring AP exam theme.",
+      "Mass-ratio thermal mixing: hold reactionType = 0 (mixing) and tempA = 25°C, tempB = 75°C, then vary the massA / massB ratio across 1:1, 2:1, and 1:2. Record T_final at each ratio and verify against T_f = (m_A T_A + m_B T_B) / (m_A + m_B). Hess's Law pathway construction is better suited to the thermochemistry experiment.",
+    ],
+    faq: [
+      {
+        question: "Why do we use 4.184 J/(g·°C) instead of a round number?",
+        answer:
+          "4.184 J/(g·°C) is the precisely measured specific heat of liquid water at 15°C and 1 atm. The 'calorie' was originally defined as the heat to raise 1 g of water by 1°C, so 1 cal = 4.184 J. On AP Chemistry problems you will sometimes see 4.18 J/(g·°C) as a rounded value; either is acceptable unless the problem specifies.",
+      },
+      {
+        question: "What does ΔH = −57 kJ/mol mean for a neutralization reaction?",
+        answer:
+          "It means the system (reactants H⁺ + OH⁻ → H₂O) releases 57 kJ of energy for every mole of water formed, transferring that energy as heat to the surrounding solution. The negative sign signals exothermic: the solution temperature rises, and the surroundings (calorimeter + solution) absorb the energy the system lost.",
+      },
+      {
+        question: "How is ΔH calculated from calorimetry data?",
+        answer:
+          "Measure m (mass of solution in grams), c (specific heat, ≈ 4.184 J/(g·°C) for aqueous solutions), and ΔT (final minus initial temperature in °C). Calculate q_solution = mcΔT, then q_rxn = −q_solution. Finally ΔH_rxn = q_rxn / n, where n is moles of limiting reagent. Units: joules → divide by 1000 for kJ/mol.",
+      },
+      {
+        question: "Does the mass of the calorimeter itself affect the result?",
+        answer:
+          "In an ideal coffee-cup calorimeter, the cup is assumed to absorb negligible heat. In reality, the calorimeter has a heat capacity C_cal (J/°C) that must be measured and subtracted: q_rxn = −(q_solution + q_calorimeter). Real lab calorimeters with non-negligible heat capacity require this correction.",
+      },
+      {
+        question: "How does this connect to AP Chemistry standards 6.A.1 and 6.B.1?",
+        answer:
+          "AP 6.A.1 requires students to explain energy diagrams and heat transfer at constant pressure using ΔH. AP 6.B.1 requires calculating ΔH from calorimetry data using q = mcΔT and identifying the system versus surroundings. Both are directly practiced in this simulation's mixing and reactive modes.",
+      },
+      {
+        question: "Can I use this simulation to understand Hess's Law?",
+        answer:
+          "Yes — run two or three reactions separately, record each q and compute each partial ΔH, then algebraically sum them. Because enthalpy is a state function, the sum must equal the ΔH of the overall combined reaction. This matches the AP 5.C.1 Hess's Law skill and is the same calculation used on multi-step calorimetry free-response questions.",
+      },
+    ],
+  },
 };

@@ -121,4 +121,82 @@ export const stoichiometry: Experiment = {
     educationalLevel: "High School",
     teaches: "Stoichiometry and Limiting Reagents",
   },
+  contentSections: {
+    whatIsIt:
+      "Stoichiometry is the quantitative accounting of atoms and moles in a chemical reaction. The coefficients in a balanced equation are mole ratios: in 2 H₂ + O₂ → 2 H₂O, two moles of hydrogen react with exactly one mole of oxygen, no more. The limiting reagent is whichever reactant runs out first based on those ratios — it determines the theoretical yield, the maximum product obtainable. Covered under AP Chem 4.A.1 and 4.A.2, stoichiometry underpins every quantitative chemistry problem from percent yield in industrial synthesis to dosing calculations in medicine. This simulation displays reactions at the molecular level: adjust the moles of each reactant, watch molecules combine, and observe which reactant is exhausted first and how many moles of excess remain.",
+    parameterExplanations: {
+      molesA:
+        "The initial moles of Reactant A loaded into the virtual reaction vessel (range 0–10 mol, default 2 mol). Reactant A maps to the first species on the left side of the selected balanced equation. Increasing molesA beyond the stoichiometric ratio relative to molesB will shift the limiting reagent from A to B; the simulation identifies and labels the limiting reagent in real time.",
+      molesB:
+        "The initial moles of Reactant B (range 0–10 mol, default 3 mol). To determine the limiting reagent manually, compute molesA / coeffA and molesB / coeffB; the smaller quotient identifies the limiting reagent. The simulation uses this same logic and colors excess reagent molecules gray after the reaction completes.",
+      reaction:
+        "Selects the reaction type: 0 = synthesis (e.g., 2A + B → A₂B with the actual coefficients shown in the simulation), 1 = decomposition (AB → A + B, single reactant — limiting-reagent comparison does not apply because only molesA matters), 2 = combustion (hydrocarbon + O₂ → CO₂ + H₂O, where molesA = hydrocarbon and molesB = O₂). For the two-reactant reactions, the limiting-reagent outcome changes with coefficient ratios; for decomposition, change molesA only and ignore molesB.",
+    },
+    misconceptions: [
+      {
+        wrong:
+          "The limiting reagent is whichever reactant has the smaller mass (or smaller number of moles).",
+        correct:
+          "Limiting reagent is determined by mole ratio relative to stoichiometric coefficients, not by raw mass or raw moles. For N₂ + 3 H₂ → 2 NH₃, with 1 mol N₂ and 2 mol H₂: divide each by its coefficient — N₂: 1/1 = 1.0, H₂: 2/3 = 0.67. H₂ is limiting even though N₂ has fewer moles. Always divide moles by the coefficient from the balanced equation before comparing.",
+      },
+      {
+        wrong:
+          "Stoichiometry is just multiplying the given mass by a ratio — you don't need to convert to moles.",
+        correct:
+          "The balanced equation gives ratios in moles, not in grams. You must convert grams to moles using molar mass (g/mol) first, apply the mole ratio, then convert back to grams if a mass answer is required. Skipping the gram-to-mole conversion is one of the most common stoichiometry errors on the AP exam.",
+      },
+      {
+        wrong:
+          "All of the excess reagent gets used up once you add more of the limiting reagent.",
+        correct:
+          "Adding more limiting reagent consumes more of the excess reagent, but only up to the point where the new limiting reagent runs out. The role of limiting vs. excess can flip if you add enough. The simulation shows leftover gray molecules updating in real time as you move the sliders to illustrate this.",
+      },
+      {
+        wrong:
+          "Theoretical yield is the amount you actually get from a reaction in the lab.",
+        correct:
+          "Theoretical yield is the calculated maximum based on the limiting reagent and stoichiometric coefficients — it assumes 100% efficient conversion with no side reactions or product loss. Actual yield is what you physically collect. Percent yield = (actual / theoretical) × 100%; values below 100% reflect real-world losses, competing reactions, or incomplete reactions.",
+      },
+      {
+        wrong:
+          "If percent yield is below 100%, atoms were destroyed in the reaction.",
+        correct:
+          "Conservation of mass is never violated — atoms are neither created nor destroyed. Low percent yield means product was lost in transfer, stayed in solution, reacted further in a side reaction, or the reaction did not go to completion. The atoms are accounted for; they just ended up somewhere other than the isolated product.",
+      },
+    ],
+    teacherUseCases: [
+      "Limiting-reagent identification drill: select reaction = synthesis and read the actual coefficients shown in the simulation (e.g., 2A + B → A₂B). Set molesA = 3, molesB = 3, ask students to predict the limiting reagent by hand (divide each by its coefficient), then confirm with the simulation. Repeat with molesA = 1, molesB = 3 to flip the answer.",
+      "Theoretical yield calculation then verification: for the combustion reaction, give students the moles of each reactant, have them calculate theoretical yield of CO₂ on paper, then check against the simulation readout. Any discrepancy forces re-examination of the coefficient ratios used.",
+      "Percent yield lab connection: pair this simulation with a physical experiment (e.g., copper displacement or magnesium combustion) where students record actual yield, then use stoichiometry to compute theoretical yield and calculate percent yield. The simulation provides the ideal benchmark.",
+      "Misconception probe — 'limiting reagent = smaller mass': give students a scenario where the smaller-mass reactant is actually the excess reagent (e.g., 4 g Fe vs. 3 g S in Fe + S → FeS; Fe moles: 4/55.85 = 0.072, S moles: 3/32.06 = 0.094 — Fe is limiting despite having more grams). Use the simulation to confirm.",
+      "Excess reagent calculation challenge: after identifying the limiting reagent in the simulation, have students calculate the moles of excess reagent remaining and verify against the leftover count displayed. Connect to real-world scenarios where excess reagent recovery or disposal matters (industrial scale).",
+    ],
+    faq: [
+      {
+        question: "How do I identify the limiting reagent step by step?",
+        answer:
+          "Step 1: Convert all reactant masses to moles using molar mass. Step 2: Divide each reactant's moles by its stoichiometric coefficient in the balanced equation. Step 3: The reactant with the smallest quotient is the limiting reagent. For 2 H₂ + O₂ → 2 H₂O with 3 mol H₂ and 2 mol O₂: H₂ gives 3/2 = 1.5, O₂ gives 2/1 = 2.0; H₂ is limiting. This procedure works for any number of reactants.",
+      },
+      {
+        question: "What is theoretical yield and how do I calculate it?",
+        answer:
+          "Theoretical yield is the maximum mass of product obtainable, calculated from the limiting reagent using the balanced equation mole ratio. Formula: moles of product = moles of limiting reagent × (product coefficient / limiting reagent coefficient). Then multiply by the product's molar mass to get grams. AP Chem 4.A.2 requires this calculation; practice it until the unit-conversion chain (g → mol → mol product → g product) is automatic.",
+      },
+      {
+        question: "Why must I convert grams to moles before using the mole ratio?",
+        answer:
+          "Stoichiometric coefficients represent mole ratios, not mass ratios. 2 H₂ + O₂ → 2 H₂O means 2 mol H₂ reacts with 1 mol O₂, which is 4 g H₂ and 32 g O₂ — a 1:8 mass ratio, not 2:1. The only universal language the balanced equation speaks is moles. Converting to moles first is the mandatory gateway step.",
+      },
+      {
+        question: "Can percent yield ever exceed 100%?",
+        answer:
+          "For a pure dry product, no — true yield should not exceed 100%. If a reported percent yield exceeds 100%, the most common explanations are an impure or wet product (residual moisture or unreacted starting material that inflates the measured mass), an incorrect theoretical yield calculation, or weighing errors. An apparent >100% yield is a signal to re-purify and re-measure, not celebrate — atoms aren't being created, but mass is being mismeasured.",
+      },
+      {
+        question: "How does AP Chem 4.A.1 connect to this simulation?",
+        answer:
+          "AP Chem 4.A.1 states that the amounts of products and reactants in a chemical reaction are determined by the stoichiometry of the balanced equation. The simulation makes this concrete: each molecule displayed is one unit of the mole count you set, the leftover molecules are the excess reagent, and the product count is the theoretical yield in mole units. Work through at least one problem of each reaction type (synthesis, decomposition, combustion) to cover the coefficient variety the AP exam uses.",
+      },
+    ],
+  },
 };

@@ -101,6 +101,21 @@ export const PHASE3_FILLED_SLUGS = new Set<string>([
   "protein-synthesis",
   "protein-synthesis-3d",
   // Wave 4 (ap-chemistry) — added in Task 4
+  "atomic-structure",
+  "balancing-chemical-equations",
+  "beers-law-lab",
+  "build-a-molecule",
+  "calorimetry",
+  "electrochemistry",
+  "electron-configuration",
+  "gas-properties",
+  "lewis-structures",
+  "molecular-bonding",
+  "molecular-polarity",
+  "reaction-kinetics",
+  "solutions-dilutions",
+  "stoichiometry",
+  "thermochemistry",
   // Wave 5 (ap-physics-c) — added in Task 5
   // Wave 6 (ngss-hs) — added in Task 6
   // Wave 7 (ngss-ms) — added in Task 7
