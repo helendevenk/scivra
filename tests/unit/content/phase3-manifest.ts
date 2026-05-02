@@ -193,4 +193,7 @@ export const PHASE3_FILLED_SLUGS = new Set<string>([
   "k5-weather-measurement",
   "k5-weather-patterns",
   // Wave 9 (general) — added in Task 9
+  "calculus-grapher-derivatives-integrals",
+  "curve-fitting-data-analysis",
+  "plinko-probability-statistics",
 ]);
