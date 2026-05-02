@@ -2,7 +2,7 @@
 name: d4-ts-html-sync-plan
 status: backlog
 created: 2026-05-02T06:07:20Z
-updated: 2026-05-02T07:30:00Z
+updated: 2026-05-02T08:55:00Z
 ---
 
 # D4 — TS Metadata vs HTML Simulation Sync Plan
@@ -263,9 +263,9 @@ Total realistic timeline: **6-9 sessions** to ship Phases A-C cleanly.
 ## 8. Open questions
 
 1. **Is `parameters[].id` consumed by any external contract?** Specifically: gallery search/filter URL params, analytics events, SEO JSON-LD, saved sessions, embed iframe URLs. Resolution required before Phase A so the script knows whether semantic id renames are even on the table. **Action:** grep `src/`, `public/`, analytics configs for `parameters[].id` usage; document in `_phase3-research/d4-audit/external-contracts.md`.
-2. **For 🔴 hard cases without PM response within 14 days, is "default to Strategy A" acceptable?** The plan assumes yes. PM team to confirm or override.
+2. ~~**For 🔴 hard cases without PM response within 14 days, is "default to Strategy A" acceptable?**~~ **RESOLVED 2026-05-02 — yes, default to Option A (rewrite metadata).** Documented in `docs/reports/d4-hard-cases/README.md` SLA section. Each hard-case packet's `expires` field aligns with the 14-day deadline; once `expires < today`, the regression test fails CI with the packet path in the failure message. The next person to see the failure follows the packet's recommended default (typically Option A — keep HTML, rewrite metadata) and removes the entry from `KNOWN_DRIFT`. PM may override per-case via the `## Decision` section of each packet before the deadline.
 3. ~~**Should preset buttons enter `parameters[]`?**~~ **RESOLVED 2026-05-02 — Option (a):** added `presets?: ExperimentPreset[]` field to the Experiment type (`src/shared/types/experiment.ts`). Each preset has `{ id, label, description?, paramValues? }`. Audit script matches `presets[].id` against HTML preset button targets (last segment of `preset:<fn>:<value>` ids). Validated on ms-newtons-laws — went from 4+6 missing controls to clean diff. parameterExplanations stays focused on continuous params; teacherUseCases reference presets by label.
-4. **For React/R3F experiments (4 files) without `htmlPath`, how do we cover params-vs-actual-controls drift?** Their controls live in `src/shared/components/experiments/three/`. Either skip (current plan via `R3F_EXEMPT`) or extend the audit to parse R3F sidebar prop usage. Recommendation: skip in v1; track as Phase E if needed.
+4. ~~**For React/R3F experiments (4 files) without `htmlPath`, how do we cover params-vs-actual-controls drift?**~~ **RESOLVED 2026-05-02 — keep R3F_EXEMPT in v1.** The 4 R3F experiments (newtons-laws, projectile-motion, em-spectrum, roller-coaster) wire their controls via the React Three Fiber sidebar in `src/app/[locale]/(landing)/experiments/[slug]/ExperimentClient.tsx`, which uses literal string lookups for prop names (e.g., `parameters.mass`, `parameters.force`). Auditing these requires AST-level analysis of the R3F prop wiring rather than HTML parsing. Deferring to a future Phase E if user-reported drift surfaces; until then, the R3F sidebar acts as direct visual ground truth (params and controls are in the same file). The `R3F_EXEMPT` set in `tests/unit/content/params-vs-html.test.ts` is the formal exemption mechanism.
 5. **Add `htmlControlAliases` to the Experiment type globally, or only in `parameters[]`?** This plan proposes top-level on the Experiment object. Alternative: `parameters[].alias?` per-param. The latter colocates the alias with the param but adds noise. Decision needed in Phase B.
 
 ## 9. Recommended first step
