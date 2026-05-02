@@ -47,13 +47,13 @@ export const msGeneticsPunnett: Experiment = {
       trialCount:
         "The number of offspring to simulate in the virtual breeding experiment, adjustable from 4 to 1000 in steps of 4. Small trial counts (4 to 20) often produce ratios that differ from the Punnett square prediction because random variation matters more in small samples. Large counts (hundreds to 1000) produce observed ratios that closely match the predicted ratios, illustrating why scientists use large sample sizes. Watching the ratio converge as you increase trialCount demonstrates the law of large numbers.",
       dominanceType:
-        "Controls the dominance pattern used to interpret heterozygous genotypes: 0 = Complete dominance (Aa shows the same phenotype as AA — the dominant allele fully masks the recessive), 1 = Incomplete dominance (Aa shows a blended intermediate phenotype, giving a 1:2:1 phenotype ratio instead of 3:1), 2 = Codominance (Aa shows both phenotypes simultaneously — neither allele masks the other, also giving a 1:2:1 phenotype ratio but with a distinct blended appearance versus two separate traits expressed together).",
+        "Controls the dominance pattern used to interpret heterozygous genotypes: 0 = Complete dominance (Aa shows the same phenotype as AA — the dominant allele fully masks the recessive), 1 = Incomplete dominance (Aa shows a truly blended intermediate phenotype — like pink flowers from red and white parents — giving a 1:2:1 phenotype ratio instead of 3:1), 2 = Codominance (Aa shows both parental traits expressed fully and separately at the same time — like roan cattle showing distinct red and white hairs together, not a blend — also giving a 1:2:1 phenotype ratio but through a different mechanism than incomplete dominance).",
     },
     misconceptions: [
       {
         wrong: "Incomplete dominance and codominance are the same thing because both give a 1:2:1 ratio.",
         correct:
-          "Both incomplete dominance and codominance produce a 1:2:1 phenotype ratio in heterozygotes, but the mechanism is different. In incomplete dominance, neither allele is fully expressed and the heterozygote shows a truly blended intermediate trait — like pink flowers from red and white parents. In codominance, both alleles are fully and separately expressed at the same time — like roan cattle that show both red and white hairs, not pink. The ratio looks the same mathematically, but the biological result is different.",
+          "Both produce a 1:2:1 phenotype ratio, but the biological outcome is different. Incomplete dominance produces a blended intermediate phenotype — the heterozygote shows a color or trait that is neither parental form (e.g., pink from red and white). Codominance means both traits are expressed fully and separately at the same time — the heterozygote shows both parental traits side by side (e.g., both red and white patches, not pink). The ratio looks the same numerically, but the visual result distinguishes them clearly.",
       },
       {
         wrong: "The Punnett square predicts which specific offspring will inherit which allele.",

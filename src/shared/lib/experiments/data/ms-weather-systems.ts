@@ -165,7 +165,7 @@ export const msWeatherSystems: Experiment = {
       "Set frontType to 0 (cold front), tempDiff to 20 degrees, and humidity to 80 percent — observe the storm pattern, then switch frontType to 1 (warm front) and compare the cloud distribution and rain intensity — students document the differences and connect them to real forecast maps (MS-ESS2-5).",
       "Hold frontType at 0 and humidity at 70 percent, then slide tempDiff from 5 to 25 degrees in increments of 5 — students record precipitation intensity at each setting and graph the relationship, practicing data analysis in an Earth science context.",
       "Set humidity to 100 percent and cycle through all three frontType values, having students predict the cloud and rain pattern before each switch — the predict-observe-explain cycle reinforces the mechanism rather than rote memorization of front types.",
-      "Use the oceanTemp Pro parameter: set tempDiff to 15, humidity to 90, and frontType to 0, then raise oceanTemp from 22 to 32 degrees in steps — students observe storm intensification and connect it to real-world discussions about how warming ocean temperatures relate to hurricane strength (MS-ESS3-5).",
+      "Use the oceanTemp Pro parameter: set humidity to 90, then raise oceanTemp from 22 to 32 degrees in steps — students observe tropical cyclone intensification and connect it to real-world discussions about how warming ocean temperatures relate to hurricane strength (MS-ESS3-5). Note: this scenario focuses on the ocean-temperature mechanism independently of the frontal system controls.",
     ],
     faq: [
       {

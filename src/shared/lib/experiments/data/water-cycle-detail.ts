@@ -60,7 +60,7 @@ export const waterCycleDetail: Experiment = {
       {
         wrong: "Groundwater is found in large underground lakes or rivers.",
         correct:
-          "Groundwater is not stored in caves or rivers underground. It fills the tiny pore spaces and cracks between rock and soil particles in a zone called an aquifer. Imagine squeezing water out of a wet sponge — that is closer to how groundwater is held. It moves slowly through these pore spaces, often taking decades or centuries to travel from a recharge area to a spring or well.",
+          "Groundwater is usually stored in tiny pore spaces and cracks between rock and soil particles in a zone called an aquifer — not in open caves or rivers underground. Imagine squeezing water out of a wet sponge — that is closer to how most groundwater is held. That said, caves and underground streams do occur in karst regions where soluble rock has dissolved away. Groundwater generally moves slowly through pore spaces, often taking decades or centuries to travel from a recharge area to a spring or well.",
       },
       {
         wrong: "Rain shadow deserts are dry because mountains block rain clouds.",
@@ -72,7 +72,7 @@ export const waterCycleDetail: Experiment = {
       "Evaporation rate investigation: set terrain to 0 (flat) and humidity to 60%. Compare evaporation rates at temperature -5°C, 20°C, and 40°C by counting water particles rising from the surface over the same time period. Students graph temperature vs. evaporation rate and describe the relationship (MS-ESS2-4).",
       "Mountain rain shadow demonstration: set terrain to 1 (mountain) and observe where precipitation is heaviest. Then set terrain to 0 (flat) with the same temperature and humidity settings and compare precipitation distribution. Students draw a labeled diagram of the orographic lift process and explain why deserts often form on the leeward side of mountain ranges.",
       "Climate change water cycle connection: start at temperature 20°C, run the cycle, and record total evaporation and precipitation. Increase temperature to 35°C and repeat. Students compare the two scenarios and explain how a warmer world intensifies the water cycle — more evaporation, more moisture in the air, and more intense precipitation events when it does rain.",
-      "Groundwater recharge: set terrain to 0 (flat) and observe how much water infiltrates vs. runs off at low humidity (30%) vs. high humidity (90%). Students explain why saturated soils during extended rain events lead to flooding — the ground cannot absorb more water when pore spaces are already full.",
+      "Groundwater recharge: set terrain to 0 (flat) and compare how much water infiltrates vs. runs off in a dry-cycle scenario (humidity 20%, temperature 10°C, slower evaporation and lighter rain) and a wet-cycle scenario (humidity 90%, temperature 30°C, faster evaporation and heavier rain). Students explain why saturated soils during extended rain events lead to flooding — the ground cannot absorb more water when pore spaces are already full.",
     ],
     faq: [
       {

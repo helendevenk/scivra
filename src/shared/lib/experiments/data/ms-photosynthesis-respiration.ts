@@ -158,7 +158,7 @@ export const msPhotosynthesisRespiration: Experiment = {
       {
         wrong: "ATP is a food molecule that plants make during photosynthesis.",
         correct:
-          "ATP (adenosine triphosphate) is the cell's energy currency — a molecule that carries and delivers energy to wherever it is needed inside a cell. It is produced primarily during cellular respiration, not photosynthesis. Photosynthesis produces glucose, which is more like a savings account — stable energy storage. Cellular respiration converts that stored glucose into spendable ATP that powers muscle movement, protein building, cell division, and every other energy-requiring process.",
+          "ATP (adenosine triphosphate) is the cell's energy currency — a molecule that carries and delivers energy to wherever it is needed inside a cell. Photosynthesis does produce ATP and NADPH in its light reactions, but that ATP is used internally to build glucose and is not exported to the rest of the cell. Cellular respiration then breaks glucose back down and produces the large amounts of ATP that power cell-wide processes — muscle movement, protein building, cell division, and everything else. Glucose from photosynthesis is the stable savings account; cellular respiration is what converts it into spendable ATP.",
       },
     ],
     teacherUseCases: [

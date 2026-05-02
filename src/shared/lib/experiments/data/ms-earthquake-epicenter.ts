@@ -115,7 +115,7 @@ export const msEarthquakeEpicenter: Experiment = {
       stationCount:
         "Controls how many seismic recording stations are active on the map, from a minimum of 2 up to 6. With only 2 stations the two circles intersect at two possible points, leaving the epicenter ambiguous. Adding a third station resolves the ambiguity to a single point. More stations improve accuracy by averaging out timing errors — real earthquake networks use hundreds or thousands of stations.",
       depth:
-        "Sets how deep below the surface the earthquake focus (hypocenter) is located, from 0 km (at the surface) to 300 km. Shallow earthquakes (0 to 70 km) typically cause the most ground shaking and damage at the surface. Intermediate and deep earthquakes release energy farther from the surface, which spreads the shaking over a wider area but with less intensity at any single point. Depth also affects travel times — waves from deeper quakes travel a longer path to reach surface stations.",
+        "Sets how deep below the surface the earthquake focus (hypocenter) is located, from 0 km (at the surface) to 300 km — covering shallow (0 to 70 km) and intermediate-depth (70 to 300 km) earthquakes. Truly deep earthquakes (greater than 300 km) sit beyond this slider's range. Shallow earthquakes typically cause the most ground shaking and damage at the surface. Intermediate-depth earthquakes release energy farther from the surface, which spreads the shaking over a wider area but with less intensity at any single point. Depth also affects travel times — waves from deeper quakes travel a longer path to reach surface stations.",
     },
     misconceptions: [
       {
@@ -149,7 +149,7 @@ export const msEarthquakeEpicenter: Experiment = {
       {
         question: "How do scientists detect earthquakes that happen far away or under the ocean?",
         answer:
-          "Seismic waves pass through the entire planet, not just the surface layer. A seismograph in Tokyo can detect an earthquake in Chile because P and S waves travel through Earth's mantle and core. Ocean-bottom seismometers can be placed on the seafloor to detect underwater earthquakes. Global networks of hundreds of stations continuously record ground motion, and computers process arrival times automatically to locate earthquakes within seconds of when they occur.",
+          "Seismic waves pass through the entire planet, not just the surface layer. A seismograph in Tokyo can detect an earthquake in Chile because P-waves can pass through mantle and core; S-waves travel through solid rock but are blocked by the liquid outer core. Ocean-bottom seismometers can be placed on the seafloor to detect underwater earthquakes. Global networks of hundreds of stations continuously record ground motion, and computers process arrival times automatically to locate earthquakes within seconds of when they occur.",
       },
       {
         question: "What is the difference between the Richter scale and the moment magnitude scale?",

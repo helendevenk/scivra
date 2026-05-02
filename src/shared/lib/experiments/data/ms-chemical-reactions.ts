@@ -148,7 +148,7 @@ export const msChemicalReactions: Experiment = {
       {
         wrong: "Exothermic reactions always make fire or explosions.",
         correct:
-          "Exothermic reactions release energy as heat, but only some of them are dramatic enough to produce visible flames or explosions. Hand warmers use an exothermic reaction (iron oxidation) that just produces warmth. Mixing baking soda and vinegar is mildly exothermic. Even dissolving some salts in water releases heat. The amount and rate of energy release — not just the sign (exo vs. endo) — determines how dramatic the reaction appears.",
+          "Exothermic reactions release energy as heat, but only some of them are dramatic enough to produce visible flames or explosions. Hand warmers use an exothermic reaction (iron oxidation) that just produces warmth. Even dissolving some salts in water releases heat. Note: mixing baking soda and vinegar is actually endothermic — the mixture gets slightly cooler, not warmer. The amount and rate of energy release or absorption — not just the sign (exo vs. endo) — determines how dramatic the reaction appears.",
       },
       {
         wrong: "A catalyst is consumed in the reaction and must be replaced each time.",

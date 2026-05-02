@@ -69,9 +69,9 @@ export const mineralIdentification: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set mineralSample to 1 (gypsum) and testType to 0 to run the scratch test, then set mineralSample to 6 (quartz) and compare results — students discover that gypsum can be scratched by a fingernail while quartz scratches glass, building intuition for the Mohs scale.",
-      "Cycle testType from 0 to 3 while keeping mineralSample fixed on sample 2 — students record all four properties and practice filling in a mineral identification table, mirroring real lab data collection.",
-      "Set mineralSample to 4 (pyrite) and testType to 2 for the streak test — compare the golden surface color with the dark streak to address the 'fool's gold' misconception before students encounter pyrite in a rock collection.",
+      "Select whichever mineralSample the simulation labels as gypsum and set testType to 0 to run the scratch test, then switch to the sample labeled quartz and compare results — students discover that gypsum can be scratched by a fingernail while quartz scratches glass, building intuition for the Mohs scale.",
+      "Cycle testType from 0 to 3 while keeping mineralSample fixed on one sample — students record all four properties and practice filling in a mineral identification table, mirroring real lab data collection.",
+      "Select the mineralSample labeled pyrite and set testType to 2 for the streak test — compare the golden surface color with the dark streak to address the 'fool's gold' misconception before students encounter pyrite in a rock collection.",
       "Have students guess the mineral using only testType 1 (luster), then reveal the full identity after running all tests — demonstrates why single-property identification is unreliable and why scientists use multiple lines of evidence (MS-ESS2-1).",
     ],
     faq: [

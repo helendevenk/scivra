@@ -38,7 +38,7 @@ export const msChemicalStoichiometry: Experiment = {
   jsonLd: { "@type": "LearningResource", educationalLevel: "Middle School", teaches: "Chemical Stoichiometry" },
   contentSections: {
     whatIsIt:
-      "Chemical stoichiometry is the science of counting particles in chemical reactions. When substances react, atoms rearrange — but atoms are never created or destroyed. A balanced equation shows the exact ratio of particles involved. Think of it like a recipe: to make one batch of cookies you need a specific ratio of flour to eggs. In chemistry, the coefficients in a balanced equation are that recipe. The 'mole ratio' tells you how many particles of one substance react with particles of another. When one ingredient runs out first — the limiting reagent — the reaction stops, just like running out of eggs stops cookie-making even if you have plenty of flour. The excess reagent is whatever is left over. This simulation lets you drag atom counters, watch balanced reactions unfold particle-by-particle, and discover firsthand why limiting reagents control how much product you can make. No complicated math required — just careful counting and pattern recognition.",
+      "Chemical stoichiometry is the science of counting particles in chemical reactions. When substances react, atoms rearrange — but atoms are never created or destroyed. A balanced equation shows the exact ratio of particles involved. Think of it like a recipe: to make one batch of cookies you need a specific ratio of flour to eggs. In chemistry, the coefficients in a balanced equation are that recipe — if the equation reads 2A + B → AB₂, you need two parts A for every one part B. When one ingredient runs out first — the limiting reagent — the reaction stops, just like running out of eggs stops cookie-making even if you have plenty of flour. The excess reagent is whatever is left over. This simulation lets you drag atom counters, watch balanced reactions unfold particle-by-particle, and discover firsthand why the coefficient ratio controls how much product you can make. The core skill is reading the balanced equation's ratio, not mole-level calculations.",
     parameterExplanations: {
       molesA:
         "Moles of Reactant A, adjustable from 0.5 to 10 mol in 0.5 mol steps. In the simulation each 'mol' represents a group of particles of the first substance entering the reaction. Increasing this value adds more of Reactant A. If A is in excess, raising it further beyond the limiting point will not produce more product — the extra particles remain unreacted.",
@@ -59,9 +59,9 @@ export const msChemicalStoichiometry: Experiment = {
           "Only the limiting reagent is completely consumed. The excess reagent still has leftover particles after the reaction stops. Real lab products often contain unreacted starting materials. The simulation shows these leftover particles explicitly so you can see which reactant had extra.",
       },
       {
-        wrong: "A higher percent yield means the equation was wrong.",
+        wrong: "Adding extra of one reactant always makes more product.",
         correct:
-          "Theoretical yield is the maximum product predicted by the balanced equation if everything reacts perfectly. Actual yield in a real experiment is usually less due to side reactions, incomplete reactions, or product lost during collection. A percent yield below 100% is normal and does not mean the equation is unbalanced.",
+          "If the other reactant is already the limiting one, dumping in more of the first reactant just leaves more leftover — it does not make more product. To get more product, you need more of the limiting reactant (or more of both, in the right ratio from the balanced equation). This is the same as adding more flour will not bake more cookies if you have run out of eggs.",
       },
       {
         wrong: "Balancing an equation changes the chemical formula of the substances.",
@@ -98,9 +98,9 @@ export const msChemicalStoichiometry: Experiment = {
           "Stoichiometry is used everywhere manufacturing happens. Pharmaceutical companies calculate exact reagent amounts to synthesize medicines efficiently. Fuel engineers calculate air-to-fuel ratios for complete combustion in engines. Food scientists balance ingredient ratios in industrial baking. Even your body uses stoichiometric principles — enzymes catalyze reactions in precise molecular ratios to keep cellular chemistry running correctly.",
       },
       {
-        question: "Can percent yield ever be higher than 100%?",
+        question: "How do I tell which reactant will run out first?",
         answer:
-          "In a correctly designed experiment, percent yield should never exceed 100%, because you cannot produce more product than the balanced equation allows. If a calculated yield appears above 100%, it typically means the product contains leftover solvent, moisture, or an impurity that inflated the measured mass. Scientists use purification steps to remove these impurities before calculating a final yield.",
+          "Look at the balanced equation to see how many of each particle are needed in the reaction's recipe. Compare that ratio to how much of each reactant you actually have. Whichever reactant runs out first when matching that recipe ratio is the limiting reactant. In the simulation, after pressing Play you can also count the leftover particles — the reactant that has none left was the limiting reactant. The other reactant, with leftovers, was in excess.",
       },
     ],
   },

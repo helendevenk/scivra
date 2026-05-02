@@ -105,7 +105,7 @@ export const msMoonPhasesDetailed: Experiment = {
       {
         wrong: "Moon phases are caused by Earth's shadow falling on the Moon.",
         correct:
-          "Earth's shadow on the Moon creates a lunar eclipse — a relatively rare event that only happens during certain full moons when the Sun, Earth, and Moon align almost perfectly. Phases happen every month regardless of eclipses, because they are simply the result of seeing different portions of the Moon's sunlit side as it orbits. During a crescent phase, you can often faintly see the dark part of the Moon glowing with earthshine — sunlight reflected off Earth — which confirms the dark portion is not in shadow.",
+          "Moon phases are not caused by Earth's shadow; the dark part is the Moon's own night side. Earth's shadow on the Moon creates a lunar eclipse — a relatively rare event that only happens during certain full moons when the Sun, Earth, and Moon align almost perfectly. Phases happen every month regardless of eclipses, because they are simply the result of seeing different portions of the Moon's sunlit side as it orbits. During a crescent phase, you can often faintly see the dark part of the Moon glowing with earthshine — sunlight reflected off Earth — which confirms the dark portion is not Earth's shadow.",
       },
       {
         wrong: "The Moon rises and sets only at night.",
@@ -124,7 +124,7 @@ export const msMoonPhasesDetailed: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Advance dayOfCycle from 0 to 29.5 in steps while students draw the Moon's shape at day 0, 7, 14, 21, and 29 — they build a visual record of all eight named phases and practice using the overhead orbit diagram to explain why each phase looks the way it does (MS-ESS1-1).",
+      "Advance dayOfCycle from 0 to 29.5 in steps while students draw the Moon's shape at day 0, 4, 7, 11, 15, 18, 22, and 26 — eight checkpoints that sample all eight named phases (new, waxing crescent, first quarter, waxing gibbous, full, waning gibbous, third quarter, waning crescent). Then practice using the overhead orbit diagram to explain why each phase looks the way it does (MS-ESS1-1).",
       "Set dayOfCycle to 14.8 (full moon) and then gradually adjust observerLatitude from 60 north to 60 south — students observe the Moon's sky-orientation flip and discuss how the same physical Moon can appear 'upside down' depending on where you stand on Earth.",
       "Present students with a mystery: set dayOfCycle to 7.4 and ask whether the Moon is currently waxing or waning, then have them use the orbital diagram (not just the Moon's appearance) to justify their answer — develops the skill of connecting visual evidence to geometric models.",
       "Set observerLatitude to 40 degrees (roughly central US) and cycle through the phases while students note on which side of the Moon the lit edge appears — they discover the lit side consistently faces the Sun's direction and can use that rule to tell waxing from waning without memorizing each phase name.",

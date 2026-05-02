@@ -154,9 +154,9 @@ export const msElectricCircuitsAdvanced: Experiment = {
           "Voltage is the 'push' or electrical pressure that drives current — measured in volts. Current is the actual flow of electrons — measured in amps. You can have high voltage with low current (like a static shock: high voltage, tiny current) or low voltage with high current (like a car battery starter: 12 V but hundreds of amps). Ohm's Law links them: V = I × R.",
       },
       {
-        wrong: "In a parallel circuit, the battery runs out faster because more current flows in total.",
+        wrong: "Parallel circuits waste energy or make each branch weaker because the current has to split.",
         correct:
-          "This is actually true in one sense: parallel circuits do draw more total current, so the battery does drain faster. But each individual branch gets the full voltage and works independently, which is why homes use parallel wiring — you want each outlet to operate at full power without affecting others, even if it means the source works harder.",
+          "Each branch in a parallel circuit receives the full source voltage independently, so each component operates at full power — no branch is weaker than it would be alone. The trade-off is that total current drawn from the battery increases with each added branch, so the battery does drain faster overall. But individual branches are not weakened; in fact, parallel wiring is used in homes precisely because each outlet delivers full voltage regardless of how many others are in use.",
       },
     ],
     teacherUseCases: [
