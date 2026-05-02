@@ -26,16 +26,6 @@ export const msNewtonsLaws: Experiment = {
       id: "appliedForce",
       label: "Applied Force",
       unit: "N",
-      min: 0,
-      max: 100,
-      default: 20,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "objectMass",
-      label: "Object Mass",
-      unit: "kg",
       min: 1,
       max: 50,
       default: 10,
@@ -43,13 +33,23 @@ export const msNewtonsLaws: Experiment = {
       tier: "free",
     },
     {
+      id: "objectMass",
+      label: "Object Mass",
+      unit: "kg",
+      min: 0.5,
+      max: 10,
+      default: 2,
+      step: 0.5,
+      tier: "free",
+    },
+    {
       id: "frictionCoeff",
-      label: "Friction Coefficient (μ)",
+      label: "Friction Level (0=none, 3=high)",
       unit: "",
       min: 0,
-      max: 0.8,
-      default: 0.2,
-      step: 0.05,
+      max: 3,
+      default: 0,
+      step: 1,
       tier: "free",
     },
     {
@@ -130,16 +130,21 @@ export const msNewtonsLaws: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Newton's Three Laws of Motion",
   },
+  htmlControlAliases: {
+    appliedForce: "sl-force",
+    objectMass: "sl-mass",
+    frictionCoeff: "sl-friction",
+  },
   contentSections: {
     whatIsIt:
       "Newton's three laws of motion are the foundation of all everyday physics — from sliding a book across a desk to launching a rocket into space. The First Law (inertia) says objects are lazy: they resist changing their state of motion. Something sitting still stays still, and something moving keeps moving in a straight line at constant speed, unless a net force acts on it. The Second Law (F = ma) says that when a net force does act, the result is acceleration — and heavier objects need more force to get the same acceleration. The Third Law (action-reaction) says forces always come in pairs: when you push on something, it pushes back on you with exactly the same strength in the opposite direction. These action-reaction forces always act on different objects — that is what makes rockets work and what lets you walk without sliding. This simulation brings all three laws to life in one place, letting you adjust force, mass, and friction while watching free body diagrams, motion animations, and collision pairs update in real time.",
     parameterExplanations: {
       appliedForce:
-        "The push force applied to the object in newtons (N), adjustable from 0 N to 100 N. A larger applied force produces greater acceleration for the same mass (Newton's Second Law: a = F/m). Setting this to 0 demonstrates Newton's First Law — with no applied force and no friction, a moving object keeps moving at constant velocity. In Law 3 mode, this value controls the thrust force displayed on the action-reaction diagram.",
+        "The push force applied to the object in newtons (N), adjustable from 1 N to 50 N (step 1 N). A larger applied force produces greater acceleration for the same mass (Newton's Second Law: a = F/m). Setting this to a small value demonstrates Newton's First Law — with little applied force and no friction, a moving object continues at nearly constant velocity. In Law 3 mode, this value controls the thrust force displayed on the action-reaction diagram.",
       objectMass:
-        "The mass of the object being pushed in kilograms (kg), adjustable from 1 kg to 50 kg. For a fixed applied force, doubling the mass halves the acceleration. This parameter directly demonstrates the inverse relationship between mass and acceleration in Newton's Second Law. Heavier objects have more inertia — they resist changes in motion more strongly — which is why a shopping cart full of groceries is harder to start moving than an empty one.",
+        "The mass of the object being pushed in kilograms (kg), adjustable from 0.5 kg to 10 kg (step 0.5 kg). For a fixed applied force, doubling the mass halves the acceleration. This parameter directly demonstrates the inverse relationship between mass and acceleration in Newton's Second Law. Heavier objects have more inertia — they resist changes in motion more strongly — which is why a heavier shopping cart is harder to start moving than a lighter one.",
       frictionCoeff:
-        "The friction coefficient (a dimensionless number, often written as Greek letter mu), adjustable from 0 to 0.8. Friction force equals the friction coefficient times the normal force (the object's weight on a flat surface). As this value increases, the friction force opposing motion grows and the net force on the object decreases. At high friction values the object may not accelerate at all if friction equals or exceeds the applied force. Setting this to 0 gives a frictionless surface, useful for isolating Newton's First Law.",
+        "A discrete friction level from 0 to 3 (None / Low / Medium / High). At level 0 the surface is frictionless, useful for isolating Newton's First Law. As the level increases, friction force grows and opposes motion, reducing the net force on the object. At the highest level the object may not accelerate at all if friction equals or exceeds the applied force. The simulation maps each level to a constant friction force; this is a simplified middle-school model rather than the continuous coefficient-of-friction (Greek letter mu) you may meet in high school physics.",
       lawDemo:
         "Selects which of Newton's three laws the simulation demonstrates (Pro tier). Setting 1 shows Newton's First Law — an object in motion with no net force, illustrating inertia. Setting 2 (default) shows Newton's Second Law with the Force and Mass sliders active and a live acceleration readout. Setting 3 shows Newton's Third Law through a collision or rocket scenario with paired force arrows of equal magnitude pointing in opposite directions on two different objects.",
     },
@@ -166,10 +171,10 @@ export const msNewtonsLaws: Experiment = {
       },
     ],
     teacherUseCases: [
-      "F = ma isolation: set lawDemo to 2 and frictionCoeff to 0. Run with objectMass at 10 kg and appliedForce at 20 N. Record the acceleration. Then double the force to 40 N and record again. Then return force to 20 N and double the mass to 20 kg. Students build the table F, m, a and derive the relationship a = F/m themselves before seeing the formula — supporting MS-PS2-2.",
-      "Inertia demo: set lawDemo to 1 and frictionCoeff to 0. Give the object an initial push (briefly raise appliedForce to 50 N then drop to 0). Students observe that the object continues moving at constant velocity with zero applied force. Then repeat with frictionCoeff at 0.4 to show that friction — not the absence of force — is what stops real objects.",
+      "F = ma isolation: set lawDemo to 2 and frictionCoeff to 0. Run with objectMass at 5 kg and appliedForce at 10 N. Record the acceleration. Then double the force to 20 N and record again. Then return force to 10 N and double the mass to 10 kg. Students build the table F, m, a and derive the relationship a = F/m themselves before seeing the formula — supporting MS-PS2-2.",
+      "Inertia demo: set lawDemo to 1 and frictionCoeff to 0. Give the object an initial push (briefly raise appliedForce to 30 N then drop to 1 N). Students observe that the object continues moving at nearly constant velocity with very little applied force. Then repeat with frictionCoeff at 2 (medium friction) to show that friction — not the absence of force — is what stops real objects.",
       "Action-reaction pairs: set lawDemo to 3 and walk students through the force arrows on both objects in the collision. Ask: which object experiences the larger force? (Neither — they are equal.) Which accelerates more? (The lighter one, because a = F/m.) This distinguishes the Third Law (equal forces) from the Second Law (unequal accelerations due to different masses), addressing a very common confusion.",
-      "Real-world scaling: keep lawDemo at 2 and set objectMass to 50 kg (a heavy student) vs 5 kg (a backpack). Apply the same appliedForce of 25 N. Students compare accelerations and connect to why you need more engine force to accelerate a loaded truck than an empty bicycle — directly linking F = ma to everyday transportation engineering.",
+      "Real-world scaling: keep lawDemo at 2 and set objectMass to 10 kg (a heavy backpack) vs 1 kg (a textbook). Apply the same appliedForce of 5 N. Students compare accelerations and connect to why you need more engine force to accelerate a loaded truck than an empty bicycle — directly linking F = ma to everyday transportation engineering.",
     ],
     faq: [
       {
