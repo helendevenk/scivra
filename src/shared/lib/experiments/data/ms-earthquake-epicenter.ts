@@ -23,23 +23,13 @@ export const msEarthquakeEpicenter: Experiment = {
 
   parameters: [
     {
-      id: "waveSpeed",
-      label: "P-Wave Speed",
-      unit: "km/s",
-      min: 4.0,
-      max: 8.0,
-      default: 6.0,
-      step: 0.5,
-      tier: "free",
-    },
-    {
-      id: "stationCount",
-      label: "Seismic Stations",
+      id: "magnitude",
+      label: "Magnitude",
       unit: "",
-      min: 2,
-      max: 6,
-      default: 3,
-      step: 1,
+      min: 1,
+      max: 9,
+      default: 6,
+      step: 0.1,
       tier: "free",
     },
     {
@@ -47,9 +37,9 @@ export const msEarthquakeEpicenter: Experiment = {
       label: "Earthquake Depth",
       unit: "km",
       min: 0,
-      max: 300,
+      max: 700,
       default: 10,
-      step: 5,
+      step: 10,
       tier: "free",
     },
   ],
@@ -69,7 +59,7 @@ export const msEarthquakeEpicenter: Experiment = {
     "Earthquakes generate two main types of body waves. P-waves (primary, compressional) travel fastest — about 6 km/s through Earth's crust — and arrive at seismic stations first. S-waves (secondary, shear) travel slower — about 3.5 km/s — and arrive after. The farther you are from the earthquake, the bigger the time gap between P and S arrivals. By measuring this time delay at a single station, you can calculate the distance to the epicenter, but not the direction. With two stations you narrow it to two possible points. With three or more stations, you can pinpoint the exact location — this is triangulation. Each station draws a circle on the map with radius equal to its calculated distance. The unique point where all circles intersect is the epicenter. Real seismological networks use hundreds of stations and computers to locate earthquakes within seconds. Earthquake depth (shallow vs. deep) also affects wave behavior and damage patterns — shallow quakes under 70 km cause the most surface damage.",
 
   instructions:
-    "The map shows seismic stations (triangles) and a hidden earthquake epicenter. When the quake occurs, watch P-waves and S-waves ripple outward at different speeds. Read the arrival time difference at each station and use the formula to calculate distance. The simulation draws a circle around each station — find where the circles intersect to locate the epicenter. Adjust depth to see how it changes wave travel times.",
+    "The map shows three fixed seismic stations and a hidden earthquake epicenter. Set the Magnitude (1-9) and Depth (0-700 km) of your simulated earthquake, then trigger it. Watch P-waves and S-waves ripple outward at different speeds; read the P-wave and S-wave arrival times shown for each station. The simulation automatically draws triangulation circles around each station — find where the three circles intersect to locate the epicenter. Increase depth to see how deeper quakes change wave travel times to the surface.",
 
   challenges: [
     {
@@ -106,16 +96,18 @@ export const msEarthquakeEpicenter: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Earthquake Epicenter Location Using Seismic Wave Triangulation",
   },
+  htmlControlAliases: {
+    magnitude: "sl-mag",
+    depth: "sl-depth",
+  },
   contentSections: {
     whatIsIt:
       "When an earthquake happens, it sends energy outward through the ground in the form of seismic waves — similar in idea to ripples spreading across a pond when you drop a stone. Two key types of waves travel through Earth's interior: P-waves (primary waves) move like a compressed spring, squeezing and stretching rock as they go. They travel the fastest, so they arrive at a recording station first. S-waves (secondary waves) shake the ground side-to-side and arrive later. The gap in arrival time between P and S at any single station tells a seismologist how far away the earthquake was — the bigger the gap, the farther the earthquake. But distance alone does not tell you the direction. By gathering arrival data from three or more stations spread across the map, scientists draw a circle around each station with a radius equal to the calculated distance. The point where all three circles meet is the earthquake's epicenter — the spot on Earth's surface directly above where the fault slipped. This method, called triangulation, is the same geometry you use when locating a phone signal from multiple cell towers.",
     parameterExplanations: {
-      waveSpeed:
-        "Sets the speed of P-waves through the crust in kilometers per second, adjustable from 4.0 to 8.0 km/s. Real P-wave speeds vary with rock type — waves travel faster through dense, hard rock like granite and slower through softer sedimentary rock. Changing this value shifts the calculated distance for each station and moves where the circles intersect on the map.",
-      stationCount:
-        "Controls how many seismic recording stations are active on the map, from a minimum of 2 up to 6. With only 2 stations the two circles intersect at two possible points, leaving the epicenter ambiguous. Adding a third station resolves the ambiguity to a single point. More stations improve accuracy by averaging out timing errors — real earthquake networks use hundreds or thousands of stations.",
+      magnitude:
+        "Sets the size of the simulated earthquake on a magnitude scale from 1.0 to 9.0 (step 0.1, default 6.0). Magnitude is logarithmic, so each whole-number increase represents about 10 times more shaking and roughly 32 times more energy released. Magnitude 1-3 quakes are barely felt; 4-5 are felt locally and may shake objects; 6-7 cause moderate to serious damage; 8-9 are catastrophic. Increasing magnitude in the simulation makes the wave amplitudes larger but does not change wave SPEED — P-waves still arrive before S-waves at the same intervals, because the time gap depends on distance and rock type, not on magnitude.",
       depth:
-        "Sets how deep below the surface the earthquake focus (hypocenter) is located, from 0 km (at the surface) to 300 km — covering shallow (0 to 70 km) and intermediate-depth (70 to 300 km) earthquakes. Truly deep earthquakes (greater than 300 km) sit beyond this slider's range. Shallow earthquakes typically cause the most ground shaking and damage at the surface. Intermediate-depth earthquakes release energy farther from the surface, which spreads the shaking over a wider area but with less intensity at any single point. Depth also affects travel times — waves from deeper quakes travel a longer path to reach surface stations.",
+        "Sets how deep below the surface the earthquake focus (hypocenter) is located, from 0 km (at the surface) to 700 km — covering the full range from shallow (0 to 70 km) through intermediate (70 to 300 km) and deep (300 to 700 km) earthquakes. Shallow earthquakes typically cause the most ground shaking and damage near the epicenter. Deeper earthquakes release their energy farther from the surface, so shaking spreads over a wider area but is less intense at any single point. Depth also affects travel times — waves from deeper quakes travel a longer slanted path to reach surface stations, increasing both P-wave and S-wave arrival times.",
     },
     misconceptions: [
       {
@@ -140,10 +132,10 @@ export const msEarthquakeEpicenter: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set stationCount to 2 and let students observe the two possible intersection points on the map, then increase stationCount to 3 and watch the ambiguity resolve — a concrete visual demonstration of why three stations are required for a definitive location (MS-ESS2-2).",
-      "Keep stationCount at 3 and vary waveSpeed from 4.0 to 8.0 km/s while holding everything else constant — students see the circles shift and the epicenter location change, illustrating how rock type uncertainty affects real seismological results.",
-      "Set depth to 0 km and record the wave travel times shown for each station, then increase depth to 200 km and compare — students discover that deeper earthquakes produce longer travel times and discuss why shallow earthquakes often cause more localized surface damage.",
-      "Have students predict where the epicenter will be before running the simulation by sketching circles on a printed map using calculated radii, then compare their sketch to the simulation output — practicing the actual method used by seismologists before computers did the geometry automatically.",
+      "Keep depth at 10 km and vary magnitude from 3.0 to 8.0; have students record the displayed P-wave and S-wave arrival times. They will discover that arrival times do NOT change with magnitude — only wave amplitude changes — reinforcing that timing depends on distance and rock type, not on energy released (MS-ESS2-2).",
+      "Set magnitude to 6.0 and step depth from 0 km to 500 km in increments of 100 km. Students record both arrival times at each step and graph the results, observing how deeper quakes produce longer travel times because waves take a longer slanted path to reach surface stations.",
+      "After exploring the simulation, ask students to predict where the epicenter circles will intersect on the map for a depth of 200 km. They sketch their prediction on a printed map using the displayed radii, then compare to the simulation output — practicing the manual triangulation method seismologists used before computers automated the geometry.",
+      "Compare a shallow magnitude-7 quake (depth 5 km) with a deep magnitude-7 quake (depth 600 km). Although both have the same magnitude, students discuss why the shallow one would likely cause more localized surface damage — connecting earthquake hazard analysis to NGSS MS-ESS3-2 (forecasting natural hazards).",
     ],
     faq: [
       {

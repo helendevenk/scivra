@@ -15,13 +15,12 @@ export const k5PlantNeeds: Experiment = {
   tags: ["plant needs", "photosynthesis basics", "sunlight water nutrients", "plant growth", "K-5 biology"],
   difficulty: "beginner",
   parameters: [
-    { id: "sunlight", label: "Sunlight", unit: "hours/day", min: 0, max: 16, default: 8, step: 1, tier: "free" },
-    { id: "water", label: "Water", unit: "mL/day", min: 0, max: 500, default: 200, step: 25, tier: "free" },
-    { id: "nutrients", label: "Soil Nutrients", unit: "%", min: 0, max: 100, default: 70, step: 10, tier: "free" },
+    { id: "sunlight", label: "Sunlight Intensity", unit: "%", min: 0, max: 100, default: 70, step: 1, tier: "free" },
+    { id: "water", label: "Water Level", unit: "%", min: 0, max: 100, default: 60, step: 1, tier: "free" },
   ],
   formulas: [],
   theory: "All plants need four things to grow: light (energy source for photosynthesis), water (used in photosynthesis and to transport nutrients), nutrients from soil (nitrogen, phosphorus, potassium for building cells), and carbon dioxide from air. Remove any one and the plant suffers. Too little light: pale, leggy growth. Too little water: wilting, then death. Too few nutrients: yellowing leaves, stunted growth. Too much water: root rot. Plants are like tiny factories that use sunlight as power to combine water and CO₂ into sugar (food) and oxygen.",
-  instructions: "Set the sunlight hours, water amount, and nutrient level for your virtual plant. Press 'Grow' and watch what happens over several days. Try removing one factor to see its effect. Compare side-by-side plants with different conditions.",
+  instructions: "Drag the Sunlight Intensity (0-100%) and Water Level (0-100%) sliders to set your plant's growing conditions, then watch how the plant grows or struggles over several days. Or click one of the three preset buttons — Ideal Growth, Drought Stress, or Low Light — to jump to a common scenario.",
   challenges: [
     { id: "kpn-c1", question: "What happens if a plant gets water and nutrients but no sunlight?", hint: "It can't photosynthesize — no energy to make food. It will grow pale and weak, then eventually die", tier: "free" },
     { id: "kpn-c2", question: "Why do plants in dark closets grow very tall and thin?", hint: "They stretch toward light — using stored energy to grow taller in search of sunlight. This stretching for light is sometimes called etiolation.", tier: "free" },
@@ -32,16 +31,40 @@ export const k5PlantNeeds: Experiment = {
   seoTitle: "What Do Plants Need? | Scivra K-5 Science",
   seoKeywords: ["plant needs for kids", "plant growth simulation", "sunlight water nutrients", "K-5 biology"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Plant Needs" },
+  htmlControlAliases: {
+    sunlight: "sliderSun",
+    water: "sliderWater",
+  },
+  presets: [
+    {
+      id: "ideal",
+      label: "Ideal Growth",
+      description:
+        "Sunlight 85% and Water 75% — a healthy combination where the plant has enough of both essentials to thrive.",
+      paramValues: { sunlight: 85, water: 75 },
+    },
+    {
+      id: "drought",
+      label: "Drought Stress",
+      description:
+        "Sunlight 80% and Water 5% — plenty of light but almost no water. Watch how the plant wilts even with strong sun.",
+      paramValues: { sunlight: 80, water: 5 },
+    },
+    {
+      id: "lowLight",
+      label: "Low Light",
+      description:
+        "Sunlight reduced and Water normal — illustrates that light alone limits growth even when water is present.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Plants cannot walk to the store to buy food. They have to make everything they need by themselves! To do that, plants need four things: sunlight, water, nutrients from the soil, and air. Sunlight gives plants energy, the same way food gives us energy. Water helps the plant drink up nutrients from the soil and move them to every part of its body. Nutrients are tiny minerals in the soil — like vitamins for plants — that help them build leaves, stems, and roots. Air has an invisible gas called carbon dioxide that plants use together with sunlight and water to make their own sugar. That sugar is the plant's food! Take away any one of these four things and the plant will struggle. In this simulation, you control how many hours of sunlight the plant gets, how much water it receives each day, and how rich the soil nutrients are. Watch a healthy plant grow when all three are right, and see what happens when one is missing.",
     parameterExplanations: {
       sunlight:
-        "This slider sets how many hours of sunlight the plant gets each day, from 0 hours (total darkness) to 16 hours (very long sunny day). Most plants do well with around 8 hours. At 0 hours the plant cannot make food and will weaken. At 16 hours the plant grows quickly but needs plenty of water to keep up.",
+        "Sunlight Intensity sets how strong the light is reaching the plant, on a scale of 0% (complete darkness) to 100% (very bright direct sun). Around 70% is a comfortable healthy level for most plants. At 0% the plant cannot make food through photosynthesis and will weaken — its leaves may turn pale and the stem may stretch desperately toward any light. At 100% the plant gets plenty of energy but uses water faster, so it needs the Water slider higher to stay healthy. Use the Ideal Growth preset to jump to a balanced setting.",
       water:
-        "This slider sets how much water the plant receives each day, from 0 mL (none at all) to 500 mL (a lot). Around 200 mL is a good amount for many plants. Too little water causes wilting. Too much water can drown the roots and cause them to rot, so the plant may still wilt even with wet soil.",
-      nutrients:
-        "This slider sets how rich the soil is in nutrients, from 0% (empty, exhausted soil) to 100% (rich healthy soil). Around 70% is a good level. Plants with too few nutrients often grow slowly and their leaves may turn yellow. Nutrients are like the vitamins in your food — plants need them to stay strong and green.",
+        "Water Level sets how much water is available to the plant's roots, on a scale of 0% (bone-dry soil) to 100% (very wet soil). Around 60% is a good middle ground. Too little water makes the plant wilt — leaves droop because there is not enough water inside the cells to keep them firm. Too much water can drown the roots, because roots also need air pockets in the soil to breathe; soaked soil cuts off that air and roots begin to rot. Use the Drought Stress preset (Water 5%) to see what happens when a plant runs out of water even with strong sun.",
     },
     misconceptions: [
       {
@@ -66,11 +89,11 @@ export const k5PlantNeeds: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set sunlight to 8 hours, water to 200 mL, and nutrients to 70% as the healthy baseline. Students observe strong, healthy growth, then remove one variable at a time to see which need matters most.",
-      "Run a zero-sunlight trial (sunlight = 0) with water at 200 mL and nutrients at 70%. Ask students: if water and nutrients are perfect, why is the plant still struggling?",
-      "Compare a zero-nutrient plant (nutrients = 0, sunlight = 8, water = 200 mL) with a full-nutrient plant. Have students look at leaf color and growth rate to connect nutrients to healthy appearance.",
-      "Model a drought by starting at water = 200 mL and reducing to 0 mL over several steps. Students predict and observe the wilting response, then restore water to see recovery.",
-      "Use side-by-side plants to run a controlled experiment: change only one slider at a time while keeping the other two the same. Introduce the idea of a fair test as a science practice skill.",
+      "Click the Ideal Growth preset (Sunlight 85%, Water 75%) as the healthy baseline. Have students observe strong, healthy growth, then drop the Sunlight slider to 0% to see how the plant struggles even when water is plentiful — directly supporting 2-LS2-1 (investigate whether plants need sunlight).",
+      "Click the Drought Stress preset (Sunlight 80%, Water 5%). Ask students: if sunlight is strong, why is the plant still wilting? Connect the answer to plant biology — water is needed to move nutrients and to keep cells firm, so no amount of sunlight makes up for missing water.",
+      "Click the Low Light preset and ask students to predict what will happen before pressing Grow. Then drag the Sunlight slider from 10% up to 90% in steps and watch how growth speeds up — connects light to photosynthesis (5-LS1-1).",
+      "Model a drought-and-recovery cycle: start at Water 70%, drag down to 5% and observe wilting, then drag back to 70% and watch recovery. Reinforces the idea that plants are resilient if conditions improve in time.",
+      "Use the two sliders to run a controlled experiment: keep Sunlight at 70% and vary only Water (10%, 50%, 90%); then keep Water at 60% and vary only Sunlight. Introduce the idea of a fair test — change one variable at a time — as a science practice skill.",
     ],
     faq: [
       {
@@ -86,12 +109,12 @@ export const k5PlantNeeds: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation supports 2-LS2-1 (plan and conduct an investigation to determine if plants need sunlight and water to grow) and 5-LS1-1 (support an argument that plants get the materials they need for growth chiefly from air and water). Students vary light, water, and nutrient levels and observe the results like real scientists.",
+          "This simulation supports 2-LS2-1 (plan and conduct an investigation to determine if plants need sunlight and water to grow) and 5-LS1-1 (support an argument that plants get the materials they need for growth chiefly from air and water). Students vary the Sunlight Intensity and Water Level sliders and observe the results like real scientists.",
       },
       {
-        question: "What are nutrients and where do they come from?",
+        question: "What about nutrients from the soil — do plants need those too?",
         answer:
-          "Nutrients are minerals that plants need to build healthy leaves, roots, and stems — like nitrogen, phosphorus, and potassium. They come from the soil. Dead plants and animals that decompose put nutrients back into the soil. Farmers and gardeners often add fertilizer to soil to replace nutrients that plants have used up. Without nutrients, plants often look yellow and grow slowly.",
+          "Yes, plants also need nutrients like nitrogen, phosphorus, and potassium from the soil to build healthy leaves, roots, and stems. This simulation focuses on the two needs students can vary directly — sunlight and water — but the plant graphic also assumes a normal level of soil nutrients in the background. In a real classroom, you can extend this lesson by having students discuss where soil nutrients come from (decomposing leaves and animals; fertilizer added by farmers) and what happens to plants in nutrient-poor soil (yellow leaves, slow growth).",
       },
       {
         question: "Can plants grow without soil?",

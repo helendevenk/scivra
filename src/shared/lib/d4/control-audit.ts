@@ -53,7 +53,8 @@ export function isExcludedId(id: string): boolean {
 
 const EXCLUDED_PRESET_FN_PATTERNS: RegExp[] = [
   /^(setSpeed|setSimSpeed|setPlaySpeed|setPlayback|setTimeSpeed|setRate|setFps)/,
-  /^(toggle|show|hide|open|close|reset|play|pause|step|fullscreen|focus)/i,
+  /^(toggle|show|hide|open|close|reset|step|fullscreen)/i,
+  /^(play|pause)(?![A-Z])/i,
 ];
 
 function isExcludedPresetFn(fn: string, _target: string): boolean {
@@ -139,9 +140,10 @@ export function extractHtmlControls(
 
     if (id && isExcludedId(id)) continue;
 
-    const idPresetMatch = id.match(/^preset-(.+)$/);
+    const idPresetMatch = id.match(/^preset(?:[-_](.+)|([A-Z].*))$/);
     if (idPresetMatch) {
-      const target = idPresetMatch[1];
+      const rawTarget = idPresetMatch[1] ?? idPresetMatch[2] ?? "";
+      const target = rawTarget.replace(/^([A-Z])/, (c) => c.toLowerCase());
       controls.push({
         id: `preset:id:${target}`,
         kind: "preset-button",
@@ -174,7 +176,7 @@ export function extractHtmlControls(
     }
     if (onclick) {
       const presetMatch = onclick.match(
-        /(applyPreset|setMode|setPreset|set[A-Z]\w*|select[A-Z]\w*|load[A-Z]\w*|choose[A-Z]\w*|pick[A-Z]\w*|jumpTo[A-Z]\w*|goTo[A-Z]\w*)\(\s*(?:['"`]([^'"`]+)['"`]|(-?\d+(?:\.\d+)?))/,
+        /(applyPreset|setMode|setPreset|set[A-Z]\w*|select[A-Z]\w*|load[A-Z]\w*|choose[A-Z]\w*|pick[A-Z]\w*|jumpTo[A-Z]\w*|goTo[A-Z]\w*|focus[A-Z]\w*|trigger[A-Z]\w*|launch[A-Z]\w*)\(\s*(?:['"`]([^'"`]+)['"`]|(-?\d+(?:\.\d+)?))/,
       );
       if (presetMatch) {
         const fn = presetMatch[1];
