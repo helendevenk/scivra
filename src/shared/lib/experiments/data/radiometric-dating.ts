@@ -30,33 +30,23 @@ export const radiometricDating: Experiment = {
 
   parameters: [
     {
-      id: "isotopeIndex",
-      label: "Isotope",
-      unit: "",
+      id: "parentRemaining",
+      label: "Parent Atoms Remaining",
+      unit: "%",
       min: 0,
-      max: 3,
-      default: 0,
+      max: 100,
+      default: 100,
       step: 1,
       tier: "free",
     },
     {
-      id: "initialAtoms",
-      label: "Initial Parent Atoms",
-      unit: "",
-      min: 50,
-      max: 500,
-      default: 200,
-      step: 50,
-      tier: "free",
-    },
-    {
-      id: "speed",
+      id: "simulationSpeed",
       label: "Simulation Speed",
-      unit: "x",
-      min: 1,
-      max: 10,
-      default: 3,
-      step: 1,
+      unit: "×",
+      min: 0.1,
+      max: 5,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
   ],
@@ -78,7 +68,7 @@ export const radiometricDating: Experiment = {
     "Radioactive isotopes decay at a constant rate characterized by their half-life — the time for half the parent atoms to convert to daughter atoms. After 1 half-life, 50% remain; after 2, 25%; after 3, 12.5%. This exponential decay follows N(t) = N₀ × (1/2)^(t/t₁/₂). Different isotopes have vastly different half-lives: C-14 (5,730 years, good for organic remains up to ~50,000 years), K-40 (1.25 billion years, for ancient rocks), U-238 (4.47 billion years, for the oldest rocks and meteorites). By measuring the ratio of parent to daughter isotopes in a sample, geologists calculate its age.",
 
   instructions:
-    "Select an isotope to see its half-life. Press 'Start Decay' to watch parent atoms (orange) transform into daughter atoms (blue). The decay curve plots the fraction remaining over time. Vertical dashed lines mark each half-life. Drag the time slider to jump to any point. The data panel calculates the age from the current parent/daughter ratio.",
+    "Pick an isotope preset (C-14, K-40, or U-238) to set the half-life of the simulated decay. Drag the Parent Atoms Remaining slider to jump to any point in the decay curve, or use Simulation Speed to fast-forward through many half-lives and watch the exponential drop in real time.",
 
   challenges: [
     {
@@ -121,16 +111,38 @@ export const radiometricDating: Experiment = {
     educationalLevel: "High School",
     teaches: "Radiometric Dating and Half-Life",
   },
+  htmlControlAliases: {
+    parentRemaining: "parentSlider",
+    simulationSpeed: "decaySlider",
+  },
+  presets: [
+    {
+      id: "c14",
+      label: "Carbon-14 (5,730 yr half-life)",
+      description:
+        "C-14 has a half-life of 5,730 years and is the standard tool for dating organic remains up to about 50,000 years old. Living organisms maintain a known atmospheric ratio of ¹⁴C/¹²C, so once they die, the steady drop in remaining C-14 reveals the time since death.",
+    },
+    {
+      id: "k40",
+      label: "Potassium-40 (1.25 Gyr half-life)",
+      description:
+        "K-40 has a half-life of 1.25 billion years and decays in part to argon-40 trapped in mineral crystals. It is the workhorse isotope for dating ancient volcanic rocks, layered ash beds, and many of the oldest hominin fossil sites.",
+    },
+    {
+      id: "u238",
+      label: "Uranium-238 (4.47 Gyr half-life)",
+      description:
+        "U-238 has a half-life of 4.47 billion years — comparable to the age of the Earth itself — and decays through a long chain ending in lead-206. It is used to date the oldest known terrestrial minerals and meteorites that record the early solar system.",
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Radioactive decay is the process by which unstable atomic nuclei shed energy and transform into a different element at a rate set entirely by nuclear physics — not temperature, pressure, or chemistry. The time for exactly half the parent atoms in any sample to convert to daughter atoms is called the half-life, and it is a fixed constant for each isotope. Carbon-14 (half-life 5,730 years) works for organic remains up to about 50,000 years old; potassium-40 (1.25 billion years) dates ancient volcanic rocks; uranium-238 (4.47 billion years) reaches the oldest minerals on Earth and in meteorites. By measuring the parent-to-daughter ratio in a sample, geologists calculate age using the equation N(t) = N₀(1/2)^(t/T½). This simulation lets you choose an isotope, set the starting atom count, and watch the exponential decay curve build in real time.",
+      "Radioactive decay is the process by which unstable atomic nuclei shed energy and transform into a different element at a rate set entirely by nuclear physics — not temperature, pressure, or chemistry. The time for exactly half the parent atoms in any sample to convert to daughter atoms is called the half-life, and it is a fixed constant for each isotope. Carbon-14 (half-life 5,730 years) works for organic remains up to about 50,000 years old; potassium-40 (1.25 billion years) dates ancient volcanic rocks; uranium-238 (4.47 billion years) reaches the oldest minerals on Earth and in meteorites. By measuring the parent-to-daughter ratio in a sample, geologists calculate age using the equation N(t) = N₀(1/2)^(t/T½). This simulation lets you choose an isotope preset, drag the Parent Atoms Remaining slider to any point in the decay curve, and adjust the Simulation Speed to fast-forward through many half-lives.",
     parameterExplanations: {
-      isotopeIndex:
-        "Selects among three named isotopes (indices 0–2): C-14 (half-life 5,730 yr), K-40 (1.25 Gyr), and U-238 (4.47 Gyr). A fourth position (index 3) exists in the UI but corresponds to an unspecified isotope; content activities use only indices 0–2. Each isotope is useful for a specific age range of samples.",
-      initialAtoms:
-        "The number of parent atoms present at time zero, ranging from 50 to 500. A larger starting population shows the exponential curve more smoothly; a smaller one makes individual decay events more visible on the scatter display.",
-      speed:
-        "Simulation playback speed from 1× to 10×. Raise it to fast-forward through many half-lives; lower it to study the curve's shape as each decay event registers.",
+      parentRemaining:
+        "Parent Atoms Remaining is the percentage of the original radioactive parent isotope that has NOT yet decayed, on a scale of 0% (fully decayed) to 100% (fresh sample, no decay yet). Each half-life cuts this value in half: 100% → 50% → 25% → 12.5% → 6.25%. Drag the slider to jump to any point in the decay curve — the simulation instantly shows the corresponding age in real years for the currently selected isotope preset. Combined with the C-14, K-40, and U-238 presets, this slider lets students explore how the same percentage maps to vastly different real ages depending on which isotope is being measured.",
+      simulationSpeed:
+        "Simulation Speed controls how fast time advances in the visual decay animation, from 0.1× (very slow, every individual decay event is visible) up to 5× (rapid, the curve fills out in seconds). Speed does NOT change the underlying half-life — that is a property of the isotope's nucleus and is set by the chosen preset. Use slow speeds to study the random nature of individual decay events on the scatter display, then raise the speed to watch the exponential curve build smoothly across multiple half-lives. This separation between visual playback rate and physical decay rate is a useful place to address the misconception that environment can change radioactive decay timing.",
     },
     misconceptions: [
       {
@@ -159,17 +171,17 @@ export const radiometricDating: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Isotope selection comparison: have students set initialAtoms to 200 and run isotopeIndex values 0, 1, and 2 (C-14, K-40, U-238) at speed 5. Ask them to record how many simulation steps pass before less than 10% of parent atoms remain and translate each result into real years.",
-      "Curve-shape prediction: before running, ask students to sketch what they expect the decay graph to look like at isotopeIndex 0. After running, compare the prediction to the exponential curve and discuss why it is never a straight line.",
-      "Age calculation challenge: set isotopeIndex to 0 (C-14) and initialAtoms to 400. Pause when roughly 50 parent atoms remain and ask students to calculate the approximate age in years using N(t) = N₀(1/2)^(t/T½).",
-      "Real-world tie-in: set isotopeIndex to 2 (U-238) and speed to 10. Tell students this isotope dated the oldest known Earth mineral (zircon crystal, ~4.4 Gyr). Discuss what it means for Earth's history that scientists can measure this.",
-      "Half-life independence demo: run isotopeIndex 0 and 2 side by side at the same initialAtoms setting. Ask: 'Same starting count, same equation — why do the curves look stretched so differently on the time axis?' Connect answer to the Crosscutting Concept of Scale.",
+      "Same percentage, different ages: have students set Parent Atoms Remaining to 50% and cycle through the C-14, K-40, and U-238 presets, recording the displayed real-world age for each. The same fraction maps to 5,730 yr / 1.25 Gyr / 4.47 Gyr — a powerful illustration of why isotope choice matters (HS-ESS1-6).",
+      "Curve-shape prediction: with the C-14 preset selected, ask students to sketch the expected decay curve before running. Drop Simulation Speed to 0.5× and let the simulation play through several half-lives; compare the prediction to the actual exponential and discuss why the curve is never linear.",
+      "Age calculation challenge: select the C-14 preset and drag Parent Atoms Remaining to 12.5%. Ask students to compute the age by recognizing 12.5% = (1/2)³, giving 3 half-lives × 5,730 yr ≈ 17,190 yr. Repeat with the K-40 preset to practice scaling the same calculation across nine orders of magnitude.",
+      "Real-world tie-in: select the U-238 preset and set Simulation Speed to 5×. Tell students this isotope dated the oldest known Earth mineral (zircon crystal, ~4.4 Gyr). Discuss what it means for Earth's history that scientists can directly measure this — supporting HS-PS1-8.",
+      "Independence of environment: with any preset selected, vary Simulation Speed and ask whether changing it would correspond to actually heating, pressurizing, or chemically treating the sample. Use the answer (no — visual speed is decoupled from physical decay rate) to confront the misconception that environment can accelerate radioactive decay.",
     ],
     faq: [
       {
         question: "What does the decay equation N(t) = N₀(1/2)^(t/T½) actually mean?",
         answer:
-          "N₀ is the number of parent atoms at the start, t is the time elapsed, and T½ is the half-life of the chosen isotope. Every time t increases by one half-life, the fraction remaining is multiplied by another 1/2. After 3 half-lives, (1/2)³ = 12.5% of the original atoms are left. The simulation plots this curve in real time.",
+          "N₀ is the number of parent atoms at the start, t is the time elapsed, and T½ is the half-life of the chosen isotope. Every time t increases by one half-life, the fraction remaining is multiplied by another 1/2. After 3 half-lives, (1/2)³ = 12.5% of the original atoms are left. The simulation plots this curve in real time and updates whenever you drag the Parent Atoms Remaining slider.",
       },
       {
         question: "How do geologists know how many parent atoms there were originally?",
@@ -187,9 +199,9 @@ export const radiometricDating: Experiment = {
           "The primary standard is HS-ESS1-6 (apply scientific reasoning and evidence from ancient Earth materials to construct an account of Earth's formation and early history) and HS-PS1-8 (develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay). The experiment targets both by quantifying decay with the half-life equation and tying measured ages to Earth's 4.54-billion-year history.",
       },
       {
-        question: "Does a larger initial atom count change the half-life?",
+        question: "Does the simulation speed change the half-life?",
         answer:
-          "No. The half-life is a property of the isotope's nucleus, not of sample size. A large sample just gives a smoother statistical curve. Whether you start with 50 or 500 atoms, half will decay per half-life — the curve's shape is the same, the scatter is different.",
+          "No. The half-life is a property of the isotope's nucleus and is set by the chosen preset, not by playback rate. Simulation Speed only changes how quickly time advances on screen — useful for watching slow isotopes like U-238 build a recognizable curve in seconds rather than billions of years. Whether you raise speed or slow it down, half the parent atoms still decay every half-life.",
       },
     ],
   },

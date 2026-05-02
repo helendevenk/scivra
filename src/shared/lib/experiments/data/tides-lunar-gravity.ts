@@ -32,33 +32,23 @@ export const tidesLunarGravity: Experiment = {
 
   parameters: [
     {
-      id: "moonAngle",
-      label: "Moon Position",
-      unit: "°",
-      min: 0,
-      max: 360,
-      default: 0,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "sunAngle",
-      label: "Sun Position",
-      unit: "°",
-      min: 0,
-      max: 360,
-      default: 90,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "playbackSpeed",
-      label: "Time Speed",
-      unit: "×",
-      min: 0,
+      id: "moonMass",
+      label: "Moon Mass",
+      unit: "×normal",
+      min: 0.1,
       max: 5,
       default: 1,
-      step: 0.5,
+      step: 0.1,
+      tier: "free",
+    },
+    {
+      id: "moonDistance",
+      label: "Moon Distance",
+      unit: "×normal",
+      min: 0.5,
+      max: 2,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
   ],
@@ -80,7 +70,7 @@ export const tidesLunarGravity: Experiment = {
     "Tides result from the differential gravitational pull across Earth's diameter. The Moon pulls the near side of Earth more strongly than the center, and the center more than the far side. This creates two tidal bulges: one facing the Moon (direct gravitational pull) and one on the opposite side (where the center is pulled away from the water). As Earth rotates, coastal locations pass through both bulges, experiencing two high tides per day (semidiurnal tide). When Sun and Moon align (new/full moon), their tidal forces add up — producing extra-large spring tides. When they're at 90° (quarter moons), forces partially cancel — producing smaller neap tides. The tidal range varies from ~1 m (open ocean) to >15 m in funnel-shaped bays (Bay of Fundy). Tidal friction is gradually slowing Earth's rotation (~2.3 ms/century) and pushing the Moon farther away (~3.8 cm/year).",
 
   instructions:
-    "Watch the Moon orbit Earth and observe the tidal bulges on the ocean surface. Adjust moon and sun positions manually, or let time advance automatically. The tide gauge at right shows water level at a coastal point. Notice how alignment creates spring tides and perpendicular positions create neap tides.",
+    "Use the Moon Mass and Moon Distance sliders to change the strength of the lunar tidal force. Compare the Spring Tide, Neap Tide, and Perigee presets to see how alignment and distance change tidal range.",
 
   challenges: [
     {
@@ -117,16 +107,35 @@ export const tidesLunarGravity: Experiment = {
     educationalLevel: "High School",
     teaches: "Tidal Forces and Lunar Gravitational Effects",
   },
+  htmlControlAliases: { moonMass: "moonSlider", moonDistance: "distSlider" },
+  presets: [
+    {
+      id: "spring",
+      label: "Spring Tide (Sun + Moon Aligned)",
+      description:
+        "Spring tides occur when the Sun, Earth, and Moon are aligned, so the solar and lunar tidal forces reinforce each other. The result is a larger tidal range with higher high tides and lower low tides.",
+    },
+    {
+      id: "neap",
+      label: "Neap Tide (Sun + Moon Perpendicular)",
+      description:
+        "Neap tides occur when the Sun and Moon pull at roughly right angles, so their tidal effects partially offset each other. This produces a smaller tidal range than a spring tide.",
+    },
+    {
+      id: "perigee",
+      label: "Perigee (Moon Closest to Earth)",
+      description:
+        "Perigee is the part of the Moon's orbit when it is closest to Earth. Because tidal force follows F ∝ M/d³, even a smaller distance can noticeably increase the lunar tide.",
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Stand at a beach and watch the waterline creep up the sand for six hours, then reverse for six hours — that rhythm is Earth responding to the Moon's gravity, and it has been running for 4.5 billion years. Tides are not caused by the Moon simply pulling the ocean toward it; they arise from the difference in gravitational pull across Earth's diameter. The Moon tugs the near-side ocean more strongly than Earth's center, and tugs Earth's center more strongly than the far-side ocean. The result is two tidal bulges — one facing the Moon and one on the opposite side — and as Earth rotates through them, most coastlines experience two high tides roughly every 25 hours. The Sun also contributes a tidal force about 46% as strong as the Moon's; when Sun, Earth, and Moon align at new or full moon, their forces add to produce spring tides, while a 90° arrangement at quarter moons produces smaller neap tides. This simulation lets you rotate the Moon and Sun to any position and watch the tidal bulges and coastal gauge respond in real time.",
+      "Stand at a beach and watch the waterline creep up the sand for six hours, then reverse for six hours — that rhythm is Earth responding to the Moon's gravity, and it has been running for 4.5 billion years. Tides are not caused by the Moon simply pulling the ocean toward it; they arise from the difference in gravitational pull across Earth's diameter. The Moon tugs the near-side ocean more strongly than Earth's center, and tugs Earth's center more strongly than the far-side ocean. The result is two tidal bulges — one facing the Moon and one on the opposite side — and as Earth rotates through them, most coastlines experience two high tides roughly every 25 hours. The Sun also contributes a tidal force about 46% as strong as the Moon's; when Sun, Earth, and Moon align at new or full moon, their forces add to produce spring tides, while a 90° arrangement at quarter moons produces smaller neap tides. This simulation lets you adjust the Moon's mass and distance and watch the tidal bulges and coastal gauge respond in real time.",
     parameterExplanations: {
-      moonAngle:
-        "The Moon's orbital position around Earth in degrees (0°–360°). Rotating this changes which side of Earth faces the Moon and therefore where the two tidal bulges sit. Setting moonAngle and sunAngle to the same value or 180° apart creates spring tides.",
-      sunAngle:
-        "The Sun's direction relative to Earth in degrees (0°–360°). When sunAngle is 90° or 270° away from moonAngle, the Sun and Moon are perpendicular and their tidal forces partially cancel, producing neap tides. When they align (0° or 180° difference), tidal forces add to form spring tides.",
-      playbackSpeed:
-        "Controls the rate at which the Moon orbits and Earth rotates in the animation, from 0× (paused) to 5×. At 0.5× you can watch the tidal bulge migrate slowly; at 5× you can observe a full spring-to-neap cycle over the Moon's ~29.5-day orbit.",
+      moonMass:
+        "Moon Mass changes the Moon's mass relative to its normal value, so 1×normal represents today's Moon and larger values represent a more massive Moon. In the tidal-force relationship F ∝ M/d³, mass is directly proportional to tidal force: doubling the Moon's mass roughly doubles the lunar tidal contribution when distance stays the same. Use this slider after trying the Spring Tide and Neap Tide presets to separate two ideas: alignment controls whether solar and lunar tides add or partially cancel, while Moon Mass controls how strong the lunar part is. This is a useful way to connect the visual tidal bulges to a mathematical model.",
+      moonDistance:
+        "Moon Distance changes the Earth-Moon distance relative to its normal value, so 1×normal represents today's average distance. Tidal force follows F ∝ M/d³, which means distance has a very strong effect: moving the Moon closer increases tides by the cube of the distance change, while moving it farther away weakens tides quickly. Try the Perigee preset first, then adjust Moon Distance while keeping Moon Mass at 1×normal. Compare that result with Spring Tide and Neap Tide presets to see that close distance and Sun-Moon alignment are different causes of larger or smaller tidal range.",
     },
     misconceptions: [
       {
@@ -161,11 +170,11 @@ export const tidesLunarGravity: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Spring and neap tide comparison: set playbackSpeed to 0 and manually sweep moonAngle from 0° to 180° while keeping sunAngle at 90°. Ask students to sketch the tide gauge reading at 0°, 45°, 90°, 135°, and 180°, then identify which positions produce spring versus neap tides and explain why.",
-      "Two-bulge demonstration: set moonAngle to 0° and playbackSpeed to 0.5× to advance time slowly. Ask students to count how many times the coastal gauge spike occurs per full Earth rotation and explain why the answer is two, not one, using the gravity-difference concept.",
-      "Sun-Moon alignment lab: set sunAngle to 0° and sweep moonAngle through 0°, 90°, 180°, and 270°. Have students predict which moonAngle values will produce the highest and lowest tidal range before running, then verify. Connects to HS-ESS1-4.",
-      "Quantitative tidal force ratio: after observing that spring tides are larger than neap tides, have students use F_Sun ≈ 0.46 × F_Moon to reason about amplitudes. At spring tide the forces add (amplitude ≈ 1.46 M), at neap tide they partially cancel (amplitude ≈ 0.54 M), giving an idealized spring-to-neap ratio of about 1.46 / 0.54 ≈ 2.7. Compare this prediction to the gauge display and discuss why real ratios vary with local geography.",
-      "Orbital period and tidal cycle: set playbackSpeed to 5 and let the simulation run through a full 29.5-day lunar cycle. Ask students to count the number of spring and neap tide events and connect this to the real-world coastal flooding calendar published by NOAA.",
+      "HS-ESS1-4 model comparison: have students select Spring Tide, Neap Tide, and Perigee presets, then record which setup creates the largest tidal range. Students explain whether the change comes from alignment, distance, or both.",
+      "MS-ESS1-2 gravity model: set the Neap Tide preset, then move only the Moon Mass slider from 0.5×normal to 2×normal. Ask students to describe how a stronger gravitational source changes the Earth-Moon tide model.",
+      "Quantitative proportionality lab: keep Moon Distance at 1×normal, compare Moon Mass at 1×normal and 2×normal, then connect the result to F ∝ M/d³. Use the Spring Tide preset afterward to show that solar alignment adds a separate effect.",
+      "Inverse-cube distance investigation: start with the Perigee preset and move the Moon Distance slider outward toward 2×normal while students predict how quickly tidal range should shrink. This supports HS-ESS1-4 by tying a computational representation to orbital distance.",
+      "CER discussion: groups choose one preset and one slider change, then make a claim about tidal range using slider values as evidence. Require students to reference either Sun-Moon alignment or the F ∝ M/d³ relationship in their reasoning.",
     ],
     faq: [
       {
@@ -176,7 +185,7 @@ export const tidesLunarGravity: Experiment = {
       {
         question: "Which NGSS standard is directly targeted by this experiment?",
         answer:
-          "HS-ESS1-4 asks students to use mathematical or computational representations to predict the motion of orbiting objects in the solar system, including using gravitational relationships to explain phenomena such as tides. MS-ESS1-2 (also listed) asks middle-level students to develop a model to describe the role of gravity in the motions of the solar system, making this simulation useful for both grade bands. Set moonAngle and sunAngle to explore all alignment configurations and directly verify the spring/neap pattern that HS-ESS1-4 describes.",
+          "HS-ESS1-4 asks students to use mathematical or computational representations to predict the motion of orbiting objects in the solar system, including using gravitational relationships to explain phenomena such as tides. MS-ESS1-2 (also listed) asks middle-level students to develop a model to describe the role of gravity in the motions of the solar system, making this simulation useful for both grade bands. Adjust Moon Mass and Moon Distance to explore how the F ∝ M/d³ relationship that HS-ESS1-4 describes plays out in the visible tidal range.",
       },
       {
         question: "Why does the Moon slow down Earth's rotation over geologic time?",
