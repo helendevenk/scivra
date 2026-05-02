@@ -52,16 +52,6 @@ export const msNewtonsLaws: Experiment = {
       step: 1,
       tier: "free",
     },
-    {
-      id: "lawDemo",
-      label: "Law Demonstration (1, 2, or 3)",
-      unit: "",
-      min: 1,
-      max: 3,
-      default: 2,
-      step: 1,
-      tier: "pro",
-    },
   ],
 
   formulas: [
@@ -83,7 +73,7 @@ export const msNewtonsLaws: Experiment = {
     "Newton's First Law (Inertia): An object at rest stays at rest; an object in motion stays in motion at constant velocity, unless acted upon by a net external force. Inertia is the resistance to change in motion. Newton's Second Law (F=ma): The net force on an object equals its mass times its acceleration. A larger force or smaller mass means greater acceleration. Newton's Third Law (Action-Reaction): When object A exerts a force on object B, object B simultaneously exerts an equal and opposite force on object A. Note: these forces act on DIFFERENT objects — they never cancel. Rocket engines work by Newton's Third Law: exhaust gas pushed backward → rocket pushed forward.",
 
   instructions:
-    "Select which law to demonstrate (Law selector, Pro). In Law 2 mode, adjust the Force and Mass sliders — watch acceleration (a = F/m) change. Add friction to see it oppose motion. In Law 3 mode, watch the collision force pairs — equal magnitude, opposite direction. Free body diagrams update in real time.",
+    "Click one of the three preset buttons to demonstrate a specific law (Inertia, F=ma, or Rocket Launch). In any preset, adjust the Force and Mass sliders — watch acceleration (a = F/m) change. Add friction to see it oppose motion. In the Rocket Launch preset, watch the collision force pairs — equal magnitude, opposite direction. Free body diagrams update in real time.",
 
   challenges: [
     {
@@ -135,6 +125,26 @@ export const msNewtonsLaws: Experiment = {
     objectMass: "sl-mass",
     frictionCoeff: "sl-friction",
   },
+  presets: [
+    {
+      id: "inertia",
+      label: "Law 1: Inertia (crash dummy)",
+      description:
+        "Newton's First Law — object in motion stays in motion until a net force (the seatbelt) acts on it.",
+    },
+    {
+      id: "fma",
+      label: "Law 2: Heavy vs Light (same force)",
+      description:
+        "Newton's Second Law — same applied force, different masses produce different accelerations (a = F/m).",
+    },
+    {
+      id: "rocket",
+      label: "Law 3: Rocket Launch",
+      description:
+        "Newton's Third Law — exhaust pushed backward, rocket pushed forward with equal and opposite force.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Newton's three laws of motion are the foundation of all everyday physics — from sliding a book across a desk to launching a rocket into space. The First Law (inertia) says objects are lazy: they resist changing their state of motion. Something sitting still stays still, and something moving keeps moving in a straight line at constant speed, unless a net force acts on it. The Second Law (F = ma) says that when a net force does act, the result is acceleration — and heavier objects need more force to get the same acceleration. The Third Law (action-reaction) says forces always come in pairs: when you push on something, it pushes back on you with exactly the same strength in the opposite direction. These action-reaction forces always act on different objects — that is what makes rockets work and what lets you walk without sliding. This simulation brings all three laws to life in one place, letting you adjust force, mass, and friction while watching free body diagrams, motion animations, and collision pairs update in real time.",
@@ -144,9 +154,7 @@ export const msNewtonsLaws: Experiment = {
       objectMass:
         "The mass of the object being pushed in kilograms (kg), adjustable from 0.5 kg to 10 kg (step 0.5 kg). For a fixed applied force, doubling the mass halves the acceleration. This parameter directly demonstrates the inverse relationship between mass and acceleration in Newton's Second Law. Heavier objects have more inertia — they resist changes in motion more strongly — which is why a heavier shopping cart is harder to start moving than a lighter one.",
       frictionCoeff:
-        "A discrete friction level from 0 to 3 (None / Low / Medium / High). At level 0 the surface is frictionless, useful for isolating Newton's First Law. As the level increases, friction force grows and opposes motion, reducing the net force on the object. At the highest level the object may not accelerate at all if friction equals or exceeds the applied force. The simulation maps each level to a constant friction force; this is a simplified middle-school model rather than the continuous coefficient-of-friction (Greek letter mu) you may meet in high school physics.",
-      lawDemo:
-        "Selects which of Newton's three laws the simulation demonstrates (Pro tier). Setting 1 shows Newton's First Law — an object in motion with no net force, illustrating inertia. Setting 2 (default) shows Newton's Second Law with the Force and Mass sliders active and a live acceleration readout. Setting 3 shows Newton's Third Law through a collision or rocket scenario with paired force arrows of equal magnitude pointing in opposite directions on two different objects.",
+        "A discrete friction level from 0 to 3 (None / Low / Medium / High). At level 0 the surface is frictionless, useful for isolating Newton's First Law. As the level increases, friction force grows and opposes motion, reducing the net force on the object. At the highest level the object may not accelerate at all if friction equals or exceeds the applied force. The simulation maps each level to a constant friction force; this is a simplified middle-school model rather than the continuous coefficient-of-friction (Greek letter mu) you may meet in high school physics. The simulation also exposes three preset scenario buttons — Inertia, Heavy vs Light (F=ma), and Rocket Launch — that switch the demo focus between Newton's three laws without changing the slider values directly.",
     },
     misconceptions: [
       {
@@ -171,10 +179,10 @@ export const msNewtonsLaws: Experiment = {
       },
     ],
     teacherUseCases: [
-      "F = ma isolation: set lawDemo to 2 and frictionCoeff to 0. Run with objectMass at 5 kg and appliedForce at 10 N. Record the acceleration. Then double the force to 20 N and record again. Then return force to 10 N and double the mass to 10 kg. Students build the table F, m, a and derive the relationship a = F/m themselves before seeing the formula — supporting MS-PS2-2.",
-      "Inertia demo: set lawDemo to 1 and frictionCoeff to 0. Give the object an initial push (briefly raise appliedForce to 30 N then drop to 1 N). Students observe that the object continues moving at nearly constant velocity with very little applied force. Then repeat with frictionCoeff at 2 (medium friction) to show that friction — not the absence of force — is what stops real objects.",
-      "Action-reaction pairs: set lawDemo to 3 and walk students through the force arrows on both objects in the collision. Ask: which object experiences the larger force? (Neither — they are equal.) Which accelerates more? (The lighter one, because a = F/m.) This distinguishes the Third Law (equal forces) from the Second Law (unequal accelerations due to different masses), addressing a very common confusion.",
-      "Real-world scaling: keep lawDemo at 2 and set objectMass to 10 kg (a heavy backpack) vs 1 kg (a textbook). Apply the same appliedForce of 5 N. Students compare accelerations and connect to why you need more engine force to accelerate a loaded truck than an empty bicycle — directly linking F = ma to everyday transportation engineering.",
+      "F = ma isolation: click the Heavy vs Light (F=ma) preset and set frictionCoeff to 0. Run with objectMass at 5 kg and appliedForce at 10 N. Record the acceleration. Then double the force to 20 N and record again. Then return force to 10 N and double the mass to 10 kg. Students build the table F, m, a and derive the relationship a = F/m themselves before seeing the formula — supporting MS-PS2-2.",
+      "Inertia demo: click the Inertia (crash dummy) preset and set frictionCoeff to 0. Give the object an initial push (briefly raise appliedForce to 30 N then drop to 1 N). Students observe that the object continues moving at nearly constant velocity with very little applied force. Then repeat with frictionCoeff at 2 (medium friction) to show that friction — not the absence of force — is what stops real objects.",
+      "Action-reaction pairs: click the Rocket Launch preset and walk students through the force arrows on both objects in the collision. Ask: which object experiences the larger force? (Neither — they are equal.) Which accelerates more? (The lighter one, because a = F/m.) This distinguishes the Third Law (equal forces) from the Second Law (unequal accelerations due to different masses), addressing a very common confusion.",
+      "Real-world scaling: with the Heavy vs Light (F=ma) preset selected, set objectMass to 10 kg (a heavy backpack) vs 1 kg (a textbook). Apply the same appliedForce of 5 N. Students compare accelerations and connect to why you need more engine force to accelerate a loaded truck than an empty bicycle — directly linking F = ma to everyday transportation engineering.",
     ],
     faq: [
       {
@@ -190,7 +198,7 @@ export const msNewtonsLaws: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "The simulation primarily supports MS-PS2-1 (apply Newton's Third Law to design a solution to a problem involving the motion of two colliding objects) and MS-PS2-2 (plan an investigation to provide evidence that the change in an object's motion depends on the sum of the forces and the mass of the object). The lawDemo parameter lets you switch between scenarios targeting each law specifically. HS-PS2-1 is also listed, making this a useful bridge for students beginning to formalize Newton's laws algebraically.",
+          "The simulation primarily supports MS-PS2-1 (apply Newton's Third Law to design a solution to a problem involving the motion of two colliding objects) and MS-PS2-2 (plan an investigation to provide evidence that the change in an object's motion depends on the sum of the forces and the mass of the object). The three preset scenario buttons — Inertia, Heavy vs Light (F=ma), and Rocket Launch — let you switch focus between each law specifically. HS-PS2-1 is also listed, making this a useful bridge for students beginning to formalize Newton's laws algebraically.",
       },
       {
         question: "Why does friction depend on a coefficient rather than just the surface area in contact?",

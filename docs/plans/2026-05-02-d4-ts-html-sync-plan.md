@@ -2,7 +2,7 @@
 name: d4-ts-html-sync-plan
 status: backlog
 created: 2026-05-02T06:07:20Z
-updated: 2026-05-02T06:55:00Z
+updated: 2026-05-02T07:30:00Z
 ---
 
 # D4 — TS Metadata vs HTML Simulation Sync Plan
@@ -264,7 +264,7 @@ Total realistic timeline: **6-9 sessions** to ship Phases A-C cleanly.
 
 1. **Is `parameters[].id` consumed by any external contract?** Specifically: gallery search/filter URL params, analytics events, SEO JSON-LD, saved sessions, embed iframe URLs. Resolution required before Phase A so the script knows whether semantic id renames are even on the table. **Action:** grep `src/`, `public/`, analytics configs for `parameters[].id` usage; document in `_phase3-research/d4-audit/external-contracts.md`.
 2. **For 🔴 hard cases without PM response within 14 days, is "default to Strategy A" acceptable?** The plan assumes yes. PM team to confirm or override.
-3. **Should preset buttons enter `parameters[]`?** Currently `.ts` only models continuous-valued params. Some HTML controls are preset buttons (e.g., `applyPreset(...)`) that map to combinations of underlying params. Three options: (a) model presets as separate `presets[]` field, (b) include them as a single param with discrete values, (c) leave them out of `parameters[]` entirely and document them only in `instructions`. Decision needed before Phase B.
+3. ~~**Should preset buttons enter `parameters[]`?**~~ **RESOLVED 2026-05-02 — Option (a):** added `presets?: ExperimentPreset[]` field to the Experiment type (`src/shared/types/experiment.ts`). Each preset has `{ id, label, description?, paramValues? }`. Audit script matches `presets[].id` against HTML preset button targets (last segment of `preset:<fn>:<value>` ids). Validated on ms-newtons-laws — went from 4+6 missing controls to clean diff. parameterExplanations stays focused on continuous params; teacherUseCases reference presets by label.
 4. **For React/R3F experiments (4 files) without `htmlPath`, how do we cover params-vs-actual-controls drift?** Their controls live in `src/shared/components/experiments/three/`. Either skip (current plan via `R3F_EXEMPT`) or extend the audit to parse R3F sidebar prop usage. Recommendation: skip in v1; track as Phase E if needed.
 5. **Add `htmlControlAliases` to the Experiment type globally, or only in `parameters[]`?** This plan proposes top-level on the Experiment object. Alternative: `parameters[].alias?` per-param. The latter colocates the alias with the param but adds noise. Decision needed in Phase B.
 
@@ -340,7 +340,24 @@ After Phase A.2 (manual review of 🔴 candidates) and Phase A.3 (pilot 2-3 slug
 
 **Revised timeline:** 8-12 sessions for D4 alone (Phases A complete; B requires the htmlControlAliases bulk-add workflow to be different than originally drafted).
 
-**Recommended next step:** Pilot Phase C2 (aliases-only) on a single slug — `ms-newtons-laws` is a good candidate since it's the canonical example with clear semantic-vs-DOM id mismatch (objectMass→sl-mass, appliedForce→sl-force). Time-box to 1 hour. If aliases reclassify the diff to "OK", scale to 5-10 more slugs. If not, redesign.
+**Recommended next step:** ~~Pilot Phase C2 (aliases-only) on a single slug~~ **DONE 2026-05-02.** Pilot on `ms-newtons-laws` succeeded:
+
+| Stage | Result |
+|---|---|
+| Add `htmlControlAliases` (C2) | 4 missingInHtml → 1 (lawDemo); 6 missingInTs → 3 (presets) |
+| Align ranges + parameterExplanations + teacherUseCases (C1) | rangeMismatch 3 → 0 |
+| Resolve Q3 — extract lawDemo discrete param into `presets[]` field | full diff → empty (CLEAN) |
+
+**Gold-standard workflow per slug** (validated end-to-end, ~30-40 min for ms-newtons-laws):
+
+1. Read `_phase3-research/d4-audit/audit.jsonl` row for the slug
+2. Add `htmlControlAliases` for slider semantic↔DOM id mappings
+3. Align `parameters[].min/max/step/default` to HTML control attributes
+4. If HTML has preset buttons, extract any "scenario selector" discrete param into `presets[]` and remove it from `parameters[]`
+5. Update `parameterExplanations` to reflect new ranges/semantics
+6. Update `teacherUseCases` parameter values to be in-range; replace "set lawDemo to N" wording with "click the X preset"
+7. Run validation: `pnpm test tests/unit/content/experiment-content-sections.test.ts` → 1434/1434
+8. Run `pnpm tsx scripts/audit-params-vs-html.ts` → confirm clean diff for that slug
 
 Artifacts:
 

@@ -275,6 +275,7 @@ function diffSlug(
   htmlControls: HtmlControl[],
 ): SlugAuditResult["diff"] {
   const aliases = exp.htmlControlAliases ?? {};
+  const presets = exp.presets ?? [];
   const tsSnapshots = exp.parameters.map((p) => snapshotParam(p, aliases));
 
   const missingInHtml: string[] = [];
@@ -320,7 +321,30 @@ function diffSlug(
     }
   }
 
-  // HTML controls not matched by any .ts param (after considering aliases)
+  // Match presets[].id against HTML preset buttons.
+  // HTML preset button id formats produced by extractHtmlControls:
+  //   - "preset:<value>"           (data-preset / data-param)
+  //   - "preset:<fn>:<value>"      (onclick="applyPreset('<value>')" etc.)
+  // Match if either format ends with ":<presetId>".
+  const matchedPresetTargets = new Set<string>();
+  for (const preset of presets) {
+    const target = preset.id;
+    const hit = htmlControls.find((c) => {
+      if (c.kind !== "preset-button") return false;
+      // c.id is "preset:<...>"; presetTarget is the last segment
+      if (c.presetTarget?.endsWith(`:${target}`)) return true;
+      if (c.presetTarget === target) return true;
+      return false;
+    });
+    if (hit) {
+      matchedDomIds.add(hit.id);
+      matchedPresetTargets.add(target);
+    } else {
+      missingInHtml.push(`preset:${target}`);
+    }
+  }
+
+  // HTML controls not matched by any .ts param or preset (after considering aliases)
   const aliasedDomIds = new Set(Object.values(aliases));
   const tsDirectIds = new Set(exp.parameters.map((p) => p.id));
   const missingInTs: string[] = [];

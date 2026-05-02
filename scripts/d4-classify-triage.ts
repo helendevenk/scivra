@@ -57,12 +57,16 @@ type Severity = "OK" | "trivial" | "easy" | "drop" | "add" | "mixed" | "hard" | 
 function classifySeverity(r: AuditRecord): Severity {
   if (r.classification === "react-r3f") return "exempt";
   if (r.classification === "html-missing") return "html-missing";
-  if (r.topicMismatch?.suspect) return "hard";
   const dInHtml = r.diff.missingInHtml.length;
   const dInTs = r.diff.missingInTs.length;
   const rng = r.diff.rangeMismatch.length;
   const tp = r.diff.typeMismatch.length;
+  // Empty diff = OK regardless of topicMismatch heuristic. The topic
+  // heuristic is an inflated signal; once params + presets are aligned
+  // and ranges match HTML, the slug is in good shape.
   if (dInHtml === 0 && dInTs === 0 && rng === 0 && tp === 0) return "OK";
+  // Topic mismatch with non-empty diff = likely a true hard case.
+  if (r.topicMismatch?.suspect) return "hard";
   // most TS params not in HTML AND many HTML controls not in TS → mixed (likely heavy redesign)
   if (dInHtml >= 2 && dInTs >= 2) return "mixed";
   // alias only: TS params ≤ 2 not matched, HTML controls ≤ 1 unmatched, no range diff
