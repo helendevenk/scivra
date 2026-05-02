@@ -23,23 +23,23 @@ export const msMoonPhasesDetailed: Experiment = {
 
   parameters: [
     {
-      id: "dayOfCycle",
-      label: "Day of Lunar Cycle",
-      unit: "days",
+      id: "moonAngle",
+      label: "Moon Position",
+      unit: "°",
       min: 0,
-      max: 29.5,
+      max: 360,
       default: 0,
-      step: 0.5,
+      step: 1,
       tier: "free",
     },
     {
-      id: "observerLatitude",
-      label: "Observer Latitude",
+      id: "orbitalTilt",
+      label: "Orbital Tilt",
       unit: "°",
-      min: -90,
-      max: 90,
-      default: 40,
-      step: 5,
+      min: 0,
+      max: 15,
+      default: 5,
+      step: 0.5,
       tier: "free",
     },
   ],
@@ -55,7 +55,7 @@ export const msMoonPhasesDetailed: Experiment = {
     "The Moon does not produce its own light — it reflects sunlight. As the Moon orbits Earth (taking about 29.5 days for a complete cycle), we see different portions of its sunlit half, creating the phases. At new moon (day 0), the Moon is between Earth and the Sun, so its sunlit side faces away from us and we see darkness. Over the next ~7 days, a growing sliver appears on the right side (waxing crescent). At first quarter (day ~7.4), we see exactly half the sunlit side. The illuminated area continues to grow (waxing gibbous) until full moon (day ~14.8), when Earth is between the Sun and Moon and we see the entire sunlit face. Then the process reverses: waning gibbous, third quarter (day ~22.1), waning crescent, and back to new moon. The Moon always keeps the same face toward Earth (tidal locking). Your latitude on Earth affects the Moon's apparent orientation and path across the sky — observers in the Southern Hemisphere see the Moon 'upside down' compared to Northern Hemisphere viewers.",
 
   instructions:
-    "Drag the Day of Lunar Cycle slider to move the Moon through its orbit. The top view shows the Sun-Earth-Moon geometry from space — notice how the angle between Sun and Moon determines what you see from Earth. The bottom panel shows the Moon's appearance from your location. Change your latitude to see how the Moon's orientation tilts. Try to identify each named phase as you scrub through the cycle.",
+    "Use the Moon Position slider to move the Moon through its orbit and watch the phase change from new to first quarter, full, last quarter, and back to new. Adjust Orbital Tilt to test eclipse geometry, then compare the Full Lunar Cycle, Solar Eclipse Geometry, and Lunar Eclipse Geometry presets.",
 
   challenges: [
     {
@@ -92,14 +92,32 @@ export const msMoonPhasesDetailed: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Moon Phases and the Lunar Cycle",
   },
+  htmlControlAliases: { moonAngle: "moonAngleSlider", orbitalTilt: "tiltSlider" },
+  presets: [
+    {
+      id: "cycle",
+      label: "Full Lunar Cycle",
+      description: "Animation through new → first quarter → full → last quarter → new (29.5-day cycle).",
+    },
+    {
+      id: "solar",
+      label: "Solar Eclipse Geometry",
+      description: "New moon aligned with Sun and Earth so the Moon shadow falls on Earth.",
+    },
+    {
+      id: "lunar",
+      label: "Lunar Eclipse Geometry",
+      description: "Full moon passes through Earth's shadow.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "The Moon does not make its own light — it shines by reflecting sunlight the same way a mirror reflects a flashlight beam. As the Moon travels around Earth each month, we see different portions of its sunlit half depending on where the Moon is in its orbit relative to the Sun and us. That changing view creates what we call moon phases. At new moon, the Moon sits between Earth and the Sun, so its lit side faces away from us and we see only darkness. Over the next two weeks, the Moon moves to the side and then behind Earth, gradually revealing more and more of its sunlit face. At full moon, Earth is between the Sun and Moon, and we see the entire lit hemisphere glowing in the sky. Then the cycle reverses as the lit portion shrinks back to nothing. The complete journey from one new moon to the next takes about 29.5 days — the original basis for the concept of a month in many ancient calendars. Your latitude on Earth also affects how the Moon's shape appears oriented in the sky, because observers in Australia see the Moon from a different angle than observers in Canada.",
     parameterExplanations: {
-      dayOfCycle:
-        "Sets the current day within the 29.5-day lunar cycle, from 0 (new moon) to 29.5 (back to new moon). Moving this slider forward in time shows the Moon progressing through waxing crescent, first quarter (day ~7.4), waxing gibbous, full moon (day ~14.8), waning gibbous, third quarter (day ~22.1), and waning crescent before returning to new moon. The overhead diagram shows the Moon's actual position in orbit around Earth at that day.",
-      observerLatitude:
-        "Sets your viewing location on Earth, from 90 degrees south (South Pole) through 0 degrees (equator) to 90 degrees north (North Pole). Latitude affects the angle at which the Moon crosses the sky and the apparent tilt of the crescent. Observers in the Southern Hemisphere typically see the Moon oriented the opposite way compared to Northern Hemisphere observers — the lit side appears on the left during waxing phases instead of the right.",
+      moonAngle:
+        "Moon Position sets where the Moon is in its orbit around Earth, measured as an angle from 0 to 360 degrees. At 0 degrees the Moon is near the new moon position, between Earth and the Sun, so the side facing Earth is mostly dark. Around 90 degrees, you see a quarter phase because half of the visible side is lit. Around 180 degrees, Earth is between the Sun and Moon, producing a full moon. Moving toward 270 degrees shows the waning side of the cycle. Use this slider to connect the overhead Earth-Sun-Moon model to the Moon shape an observer would see.",
+      orbitalTilt:
+        "Orbital Tilt changes how far the Moon's orbit is tilted compared with the Sun-Earth line used for eclipse geometry. The real Moon's orbit is tilted by about 5 degrees, which is why we do not get a solar eclipse every new moon or a lunar eclipse every full moon. When the tilt is small and the Moon lines up closely with the Sun and Earth, shadows can fall in the right place for an eclipse. When the tilt is larger, the Moon usually passes above or below the shadow path. Use this slider to test why phases are monthly but eclipses are special alignments.",
     },
     misconceptions: [
       {
@@ -124,10 +142,11 @@ export const msMoonPhasesDetailed: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Advance dayOfCycle from 0 to 29.5 in steps while students draw the Moon's shape at day 0, 4, 7, 11, 15, 18, 22, and 26 — eight checkpoints that sample all eight named phases (new, waxing crescent, first quarter, waxing gibbous, full, waning gibbous, third quarter, waning crescent). Then practice using the overhead orbit diagram to explain why each phase looks the way it does (MS-ESS1-1).",
-      "Set dayOfCycle to 14.8 (full moon) and then gradually adjust observerLatitude from 60 north to 60 south — students observe the Moon's sky-orientation flip and discuss how the same physical Moon can appear 'upside down' depending on where you stand on Earth.",
-      "Present students with a mystery: set dayOfCycle to 7.4 and ask whether the Moon is currently waxing or waning, then have them use the orbital diagram (not just the Moon's appearance) to justify their answer — develops the skill of connecting visual evidence to geometric models.",
-      "Set observerLatitude to 40 degrees (roughly central US) and cycle through the phases while students note on which side of the Moon the lit edge appears — they discover the lit side consistently faces the Sun's direction and can use that rule to tell waxing from waning without memorizing each phase name.",
+      "Start with the Full Lunar Cycle preset, then pause at several Moon Position values as students sketch the visible Moon shape and explain how the Sun-Earth-Moon model causes each phase. This directly supports MS-ESS1-1 by using a model to describe cyclic patterns.",
+      "Have students move only the Moon Position slider from 0 to 360 degrees while keeping Orbital Tilt at 5 degrees, then identify where new moon, first quarter, full moon, and last quarter occur. Ask them to describe the repeating pattern without relying only on memorized phase names.",
+      "Use the Solar Eclipse Geometry preset and ask students to explain why a solar eclipse must happen near new moon. Then change Orbital Tilt upward so the Moon shadow misses Earth, showing why new moons usually do not produce eclipses.",
+      "Use the Lunar Eclipse Geometry preset and ask students to explain why a lunar eclipse must happen near full moon. Students can adjust Orbital Tilt to compare a direct pass through Earth's shadow with a near miss, connecting alignment to MS-ESS1-1 eclipse evidence.",
+      "Run a compare-and-contrast discussion: students test Full Lunar Cycle, Solar Eclipse Geometry, and Lunar Eclipse Geometry presets, then write a claim explaining how Moon Position controls phases while Orbital Tilt helps determine whether an eclipse alignment actually occurs.",
     ],
     faq: [
       {

@@ -266,7 +266,13 @@ export function diffControls(
       continue;
     }
     matchedDomIds.add(match.id);
-    if (match.kind !== "range" && match.kind !== "number") {
+    const isBinaryParam =
+      ts.min === 0 && ts.max === 1 && Math.abs(ts.step - 1) < 1e-9;
+    if (
+      match.kind !== "range" &&
+      match.kind !== "number" &&
+      !(match.kind === "checkbox" && isBinaryParam)
+    ) {
       typeMismatch.push({
         paramId: ts.id,
         domId: match.id,
@@ -275,6 +281,7 @@ export function diffControls(
       });
       continue;
     }
+    if (match.kind === "checkbox") continue;
     const { min: tsMin, max: tsMax, step: tsStep } = ts;
     const { min: htmlMin, max: htmlMax, step: htmlStep } = match;
     if (

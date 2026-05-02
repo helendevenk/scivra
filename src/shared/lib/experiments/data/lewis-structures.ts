@@ -31,22 +31,12 @@ export const lewisStructures: Experiment = {
 
   parameters: [
     {
-      id: "moleculeIndex",
-      label: "Molecule",
-      unit: "",
-      min: 0,
-      max: 9,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "showFormalCharge",
-      label: "Show Formal Charges (0=Off, 1=On)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
+      id: "animationSpeed",
+      label: "Animation Speed",
+      unit: "×",
+      min: 1,
+      max: 4,
+      default: 2,
       step: 1,
       tier: "free",
     },
@@ -69,7 +59,7 @@ export const lewisStructures: Experiment = {
     "Lewis structures represent the valence electrons in a molecule as dots and lines. A single bond is one shared electron pair (2 e⁻), a double bond is two pairs (4 e⁻), and a triple bond is three pairs (6 e⁻). The octet rule states most atoms want 8 electrons in their valence shell (H wants 2). Steps: (1) Count total valence electrons, (2) Place single bonds between bonded atoms, (3) Complete octets on terminal atoms with lone pairs, (4) Use remaining electrons on the central atom, (5) If central atom lacks an octet, convert lone pairs to multiple bonds. Formal charge = valence e⁻ − lone pair e⁻ − ½(bonding e⁻). Structures with formal charges closest to zero are most stable. Some molecules have resonance structures — multiple valid Lewis structures that differ only in electron placement.",
 
   instructions:
-    "Select a molecule from the dropdown. The structure builder shows atoms positioned for you. Click between atoms to place bonds (single → double → triple → remove). Click on an atom to add/remove lone pairs. The electron counter tracks your progress. When the structure is valid (all octets satisfied, correct electron count), you'll see a green checkmark.",
+    "Use the four molecule presets — Water (H₂O), Carbon Dioxide (CO₂), Ammonia (NH₃), and Methane (CH₄) — to compare Lewis structures, bonding domains, and lone pairs. Adjust the Animation Speed slider to slow down or speed up the electron-pair and geometry transitions while you observe each structure.",
 
   challenges: [
     {
@@ -112,21 +102,42 @@ export const lewisStructures: Experiment = {
     educationalLevel: "High School",
     teaches: "Lewis Structures and Covalent Bonding",
   },
+  htmlControlAliases: { animationSpeed: "sl-spd" },
+  presets: [
+    {
+      id: "H2O",
+      label: "Water (H₂O)",
+      description: "Bent shape, lone pairs on oxygen.",
+    },
+    {
+      id: "CO2",
+      label: "Carbon Dioxide (CO₂)",
+      description: "Linear, double bonds.",
+    },
+    {
+      id: "NH3",
+      label: "Ammonia (NH₃)",
+      description: "Trigonal pyramidal, one lone pair on nitrogen.",
+    },
+    {
+      id: "CH4",
+      label: "Methane (CH₄)",
+      description: "Tetrahedral, no lone pairs.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "A Lewis structure is a 2D map of where the valence electrons sit in a molecule — bonding pairs shown as lines between atoms and lone pairs shown as dots. Draw the structure of water correctly and it immediately tells you that oxygen holds two lone pairs, which is what bends the molecule to 104.5° and makes it polar enough to dissolve table salt. The procedure is systematic: count all valence electrons, connect atoms with single bonds, complete octets on terminal atoms, place leftovers on the central atom, and convert lone pairs to double or triple bonds if the center still needs electrons. This simulation provides an interactive canvas where you place bonds and lone pairs one click at a time, calculates formal charges on demand, and shows resonance structures for ions like NO₃⁻ where the true electron distribution averages multiple valid drawings.",
     parameterExplanations: {
-      moleculeIndex:
-        "Selects the target molecule from the library (index 0 through 9, including H₂O, CO₂, NH₃, HCN, PCl₅, and NO₃⁻ among others). Each molecule loads with atoms pre-positioned at correct connectivity; your task is to add the correct bonds and lone pairs until the electron counter reaches zero and all octets are satisfied.",
-      showFormalCharge:
-        "Toggles the formal charge labels on each atom, calculated as FC = valence electrons − nonbonding electrons − ½(bonding electrons). Setting this to 1 reveals whether your current structure is the most stable arrangement — the preferred Lewis structure minimizes formal charges and avoids placing large positive charges on electronegative atoms like oxygen or fluorine.",
+      animationSpeed:
+        "Animation Speed controls how quickly the visualization moves through electron-pair placement, bonding-domain emphasis, and the resulting molecular geometry. In AP Chemistry, slowing the motion is useful when students are translating a Lewis structure into VSEPR language: count electron domains first, separate bonding pairs from lone pairs, then predict shape. At 1×, students can track why H₂O becomes bent and NH₃ becomes trigonal pyramidal even though both begin from tetrahedral electron-domain geometry. At higher speeds, the slider supports rapid comparison across CO₂, CH₄, NH₃, and H₂O, helping students see that multiple bonds count as one domain and lone pairs compress bond angles.",
     },
     misconceptions: [
       {
         wrong:
           "Every atom in a Lewis structure must have exactly 8 electrons to be a valid structure.",
         correct:
-          "The octet rule has well-known exceptions. Hydrogen is satisfied with 2 electrons. Boron and beryllium commonly form stable compounds with 6 and 4 electrons respectively (BF₃, BeCl₂). Period-3 and heavier elements like phosphorus and sulfur are routinely drawn with expanded-octet Lewis structures — PCl₅ shows 10 electrons around phosphorus and SO₄²⁻ can be drawn with 12. (Modern bonding analyses dispute the once-common 'd-orbital participation' rationale, but the expanded-octet representation remains the standard for AP-level Lewis drawing.)",
+          "The octet rule has well-known exceptions. Hydrogen is satisfied with 2 electrons. Boron and beryllium commonly form stable compounds with 6 and 4 electrons respectively (BF₃, BeCl₂). Period-3 and heavier elements like phosphorus and sulfur are routinely drawn with expanded-octet Lewis structures — PCl₅ shows 10 electrons around phosphorus and SO₄²⁻ can be drawn with 12.",
       },
       {
         wrong:
@@ -154,17 +165,17 @@ export const lewisStructures: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Electron counting before drawing: before opening the simulation, have students independently count total valence electrons for CO₂ (16), SO₃ (24), and NO₃⁻ (24) including the ionic charge — then verify with the counter in the simulation to catch arithmetic errors before structural errors propagate.",
-      "Formal charge audit: students draw two competing Lewis structures for SO₂ (one with single bonds only, one with a double bond) and use showFormalCharge=1 to compare formal charges on sulfur and oxygen in each — directly targets the AP Chem 2.C.2 stability criterion.",
-      "Resonance misconception probe: load NO₃⁻ (moleculeIndex for nitrate) and ask 'which N-O bond is shortest?' If students point to the double bond, use this to introduce the resonance hybrid concept and the experimentally equal bond lengths (~1.24 Å).",
-      "Octet-exception data collection: run through BF₃ (incomplete octet), PCl₅ (expanded octet), and SF₆ (expanded octet) in sequence, recording the electron count around the central atom for each — builds the rule that period-3+ central atoms can exceed 8 electrons.",
-      "Structure-to-geometry bridge: after completing a Lewis structure (e.g., H₂O, NH₃, CH₄), have students count bonding domains and lone pairs on the central atom and predict the VSEPR geometry before opening the build-a-molecule simulation to check in 3D.",
+      "Use the H₂O preset at 1× Animation Speed and have students pause after electron-domain counting to explain why two lone pairs on oxygen change tetrahedral electron geometry into a bent molecular shape, supporting AP Chemistry Lewis structure and VSEPR reasoning.",
+      "Compare the CO₂ preset at 2× and 4× Animation Speed, then ask students why two double bonds still produce only two electron domains around carbon and therefore a linear molecular geometry.",
+      "Run the NH₃ preset slowly and have students identify the three bonding pairs and one lone pair on nitrogen before predicting trigonal pyramidal shape and the bond-angle compression caused by lone-pair repulsion.",
+      "Use the CH₄ preset as the control case: no lone pairs on carbon, four equivalent bonding domains, and a tetrahedral shape; then switch to H₂O and NH₃ to isolate the effect of lone pairs.",
+      "Set up a rapid preset cycle through H₂O, CO₂, NH₃, and CH₄ with Animation Speed at 4×, then have students complete a table of central atom, total electron domains, lone pairs, bond type, and molecular geometry for AP Chemistry review.",
     ],
     faq: [
       {
         question: "What is formal charge and how do I calculate it?",
         answer:
-          "Formal charge (FC) = valence electrons − nonbonding electrons − ½(bonding electrons). For the oxygen in water: FC = 6 − 4 − ½(4) = 0. For a nitrogen with a double bond to oxygen in NO₂⁺: recalculate with the actual electron counts in that structure. The simulation computes this automatically when showFormalCharge=1; use it to verify your manual calculation.",
+          "Formal charge (FC) = valence electrons − nonbonding electrons − ½(bonding electrons). For the oxygen in water: FC = 6 − 4 − ½(4) = 0. For atoms in resonance structures, recalculate with the actual electron counts in each drawing. The simulation can compute this automatically as you build a structure; use it to verify your manual calculation against the formula.",
       },
       {
         question: "Why does the structure for BF₃ have only 6 electrons around boron even though the octet rule says 8?",
@@ -174,7 +185,7 @@ export const lewisStructures: Experiment = {
       {
         question: "How does this lab connect to AP Chem 2.C.1 and 2.C.2?",
         answer:
-          "AP Chem 2.C.1 requires students to draw Lewis structures for molecules and polyatomic ions, apply the octet rule, and identify exceptions. AP Chem 2.C.2 adds formal charge analysis and resonance. The interactive canvas here covers both: you build the structure (2.C.1), then toggle formal charges and cycle through resonance contributors (2.C.2). NGSS HS-PS1-1 and HS-PS1-3 are also addressed through the model of valence electrons determining bonding behavior.",
+          "AP Chem 2.C.1 requires students to draw Lewis structures for molecules and polyatomic ions, apply the octet rule, and identify exceptions. AP Chem 2.C.2 adds formal charge analysis and resonance. The interactive canvas here covers both: you build the structure (2.C.1), then analyze formal charges and cycle through resonance contributors (2.C.2). NGSS HS-PS1-1 and HS-PS1-3 are also addressed through the model of valence electrons determining bonding behavior.",
       },
       {
         question: "Why do some molecules have multiple valid Lewis structures (resonance)?",

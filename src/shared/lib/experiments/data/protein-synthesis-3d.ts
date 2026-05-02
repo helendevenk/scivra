@@ -16,15 +16,14 @@ export const proteinSynthesis3d: Experiment = {
   tags: ["protein synthesis", "transcription", "translation", "ribosome", "mRNA", "tRNA", "central dogma", "AP Biology"],
   difficulty: "advanced",
   parameters: [
-    { id: "sequence", label: "DNA Sequence Length", unit: "codons", min: 3, max: 20, default: 8, step: 1, tier: "free" },
-    { id: "mutationType", label: "Mutation (0=none, 1=substitution, 2=insertion, 3=deletion)", unit: "", min: 0, max: 3, default: 0, step: 1, tier: "free" },
-    { id: "speed", label: "Animation Speed", unit: "x", min: 0.5, max: 3, default: 1, step: 0.5, tier: "free" },
+    { id: "zoomLevel", label: "Camera Zoom", unit: "", min: 6, max: 30, default: 15, step: 1, tier: "free" },
+    { id: "showCodons", label: "Show Codon Labels", unit: "", min: 0, max: 1, default: 1, step: 1, tier: "free" },
   ],
   formulas: [
     { latex: "\\text{DNA} \\xrightarrow{\\text{transcription}} \\text{mRNA} \\xrightarrow{\\text{translation}} \\text{Protein}", description: "The central dogma of molecular biology" },
   ],
   theory: "Protein synthesis has two stages. Transcription occurs in the nucleus: RNA polymerase reads the DNA template strand 3'→5' and synthesizes mRNA 5'→3', using complementary base pairing (A→U, T→A, G→C, C→G). The mRNA is processed (5' cap, poly-A tail, intron removal) and exported to the cytoplasm. Translation occurs at ribosomes: mRNA codons (3-nucleotide sequences) are read 5'→3'. Each codon is matched by a tRNA anticodon carrying the specified amino acid. Peptide bonds form between adjacent amino acids. Translation starts at AUG (methionine) and ends at a stop codon (UAA, UAG, UGA). Mutations can alter the protein: substitution may change one amino acid (missense) or create a stop (nonsense), while insertion/deletion causes a frameshift affecting all downstream amino acids.",
-  instructions: "Watch the 3D animation of transcription and translation. Introduce different mutations to observe their effects on the final protein sequence. Compare normal vs mutant proteins.",
+  instructions: "Use Camera Zoom to move between a full pathway overview and a close molecular view, and use Show Codon Labels to reveal or hide codon text on the displayed mRNA strand. Try the Transcription Step, Translation Step, and Full Pathway presets to compare DNA to mRNA, mRNA to polypeptide, and the complete central dogma workflow.",
   challenges: [
     { id: "ps-c1", question: "What happens to the protein if the third codon is changed from GGC to GGU?", hint: "Both GGC and GGU code for glycine — this is a silent/synonymous mutation with no effect on the protein", tier: "free" },
     { id: "ps-c2", question: "Why are frameshift mutations usually more harmful than substitutions?", hint: "A frameshift changes every codon downstream of the mutation, altering the entire amino acid sequence from that point on", tier: "pro" },
@@ -35,16 +34,20 @@ export const proteinSynthesis3d: Experiment = {
   seoTitle: "Protein Synthesis 3D Simulation | Scivra AP Biology",
   seoKeywords: ["protein synthesis simulation", "transcription translation 3D", "central dogma interactive", "AP Biology"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Protein Synthesis" },
+  htmlControlAliases: { zoomLevel: "zoom-slider", showCodons: "codon-toggle" },
+  presets: [
+    { id: "transcription", label: "Transcription Step", description: "Focus on DNA → mRNA in nucleus." },
+    { id: "translation", label: "Translation Step", description: "Focus on ribosome reading mRNA → polypeptide chain." },
+    { id: "full", label: "Full Pathway (Both Steps)", description: "Complete DNA → mRNA → protein workflow end to end." },
+  ],
   contentSections: {
     whatIsIt:
-      "This simulation zooms into the molecular machinery of protein synthesis in three dimensions — rotating the ribosome so you can see the A, P, and E sites as physical chambers, watching tRNA molecules dock and release, and tracing the polypeptide chain as it threads out of the exit tunnel. Where the flat protein-synthesis experiment shows the whole gene-to-protein pathway end-to-end, this 3D view focuses on ribosome dynamics and mutation effects. Introduce a substitution, insertion, or deletion into the DNA sequence and compare the final protein to the unmutated version residue by residue. A substitution at one position might silently change nothing, swap one amino acid, or create an early stop codon — outcomes visible in the 3D folded structure. Set mutationType to insertion or deletion and watch the reading frame collapse downstream.",
+      "This simulation zooms into the molecular machinery of protein synthesis in three dimensions — rotating the ribosome so you can see the A, P, and E sites as physical chambers, watching tRNA molecules dock and release, and tracing the polypeptide chain as it threads out of the exit tunnel. Where the flat protein-synthesis experiment shows the whole gene-to-protein pathway end-to-end, this 3D view focuses on ribosome dynamics and the spatial relationships between transcription and translation. Use the Transcription Step preset to follow RNA polymerase reading the DNA template inside the nucleus, then switch to Translation Step to follow the ribosome reading mRNA codon by codon and adding amino acids to a growing polypeptide. The Full Pathway preset stitches both stages together so students can see how information moves from DNA to mRNA to protein in continuous 3D space.",
     parameterExplanations: {
-      sequence:
-        "The number of codons in the simulated DNA template, from 3 to 20. A longer sequence builds a longer polypeptide, making frameshift effects more dramatic and giving more surface area on the 3D folded protein to observe structural differences between normal and mutant versions. Start at the default 8 codons for a manageable overview.",
-      mutationType:
-        "Selects the type of mutation introduced into the sequence: 0 = none (wild-type reference), 1 = substitution (one base replaced — may be silent, missense, or nonsense), 2 = insertion (one extra base added, shifting the reading frame), 3 = deletion (one base removed, shifting the reading frame). Compare 1 vs. 2 or 3 to see why frameshifts are typically more damaging than point substitutions.",
-      speed:
-        "Controls animation playback from 0.5× (slow, to watch each tRNA docking event) to 3× (fast overview). At 0.5× you can pause and inspect which tRNA anticodon is currently in the A site; at 3× you can run through multiple mutation types quickly to compare outcomes side by side.",
+      zoomLevel:
+        "Camera Zoom changes the scale at which students inspect gene expression. At lower zoom values, the scene reads as a pathway model: DNA, mRNA, ribosome, tRNA, and polypeptide can be interpreted as connected parts of the central dogma. At higher zoom values, the same process becomes a molecular mechanism, letting students focus on where mRNA is read and where amino acids are added to the growing chain. For AP Biology, use zoom deliberately: begin wide to establish information flow from DNA to RNA to protein, then zoom closer to connect structure to function in transcription and translation.",
+      showCodons:
+        "Show Codon Labels controls whether the mRNA strand displays its triplet code directly. With labels on, students can track how the ribosome reads mRNA in codons and how each three-base unit corresponds to an amino acid decision during translation. With labels off, the model emphasizes spatial process: mRNA movement, ribosome position, tRNA delivery, and polypeptide growth. In an AP Biology lesson, switching between the two views helps students distinguish memorizing vocabulary from explaining mechanism. The codon labels make the genetic code visible; hiding them asks students to infer the same information flow from the molecular context.",
     },
     misconceptions: [
       {
@@ -57,7 +60,7 @@ export const proteinSynthesis3d: Experiment = {
         wrong:
           "Insertion and substitution mutations are roughly equally damaging to a protein.",
         correct:
-          "A single-nucleotide insertion causes a frameshift — every codon downstream is misread, typically producing a completely non-functional protein of wrong length with a random sequence of amino acids from the mutation site onward. A missense substitution changes at most one amino acid, which may be tolerable depending on where it falls. Frameshifts are almost always more destructive. Set mutationType = 1 then 2 in sequence to compare the 3D structure collapse directly.",
+          "A single-nucleotide insertion causes a frameshift — every codon downstream is misread, typically producing a completely non-functional protein of wrong length with a random sequence of amino acids from the mutation site onward. A missense substitution changes at most one amino acid, which may be tolerable depending on where it falls. Frameshifts are almost always more destructive.",
       },
       {
         wrong:
@@ -79,11 +82,11 @@ export const proteinSynthesis3d: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Mutation type comparison protocol: run the simulation four times with mutationType set to 0, 1, 2, and 3 in turn (all other settings fixed) and have students record the amino acid sequence each time in a data table — quantifies the difference in damage and directly addresses AP Bio 3.C.1.",
-      "Codon table navigation: with mutationType = 1 (substitution), have students predict whether the substitution is silent, missense, or nonsense by consulting their AP codon chart before running the animation — builds the skill of reading the genetic code table under exam conditions.",
-      "Frameshift visualization: set sequence = 12 and mutationType = 2 (insertion), then toggle speed from 3× to 0.5× as the mutation passes and count how many codons downstream are altered — makes the cascading effect of a frameshift concrete rather than abstract.",
-      "Misconception probe on tRNA vs. ribosome: after students watch a complete translation cycle, ask 'which component is actually forming the peptide bond?' — students who say tRNA are directed back to the 3D ribosome interior to observe the peptidyl transferase center in the large subunit.",
-      "3D structure comparison: run wild-type (mutationType = 0) then nonsense at mid-sequence (mutationType = 1 with a mid-chain stop) and ask students to draw or describe what a truncated protein looks like in 3D compared to the full-length version — connects mutation type to structural consequence for AP Bio 3.A.1 and 3.C.1.",
+      "Use the Transcription Step preset with codon labels on, then ask students to explain how information in DNA is represented in the mRNA product. This supports AP Biology central dogma reasoning by making gene expression visible as an information-transfer process.",
+      "Use the Translation Step preset and raise Camera Zoom so students can focus on the ribosome reading mRNA and building a polypeptide chain. Have students describe how codons, tRNA, and amino acids connect genotype information to protein structure.",
+      "Use the Full Pathway (Both Steps) preset as a beginning-to-end AP Biology review: students trace DNA → mRNA → protein, then identify which molecular structures participate in each stage. Toggle codon labels off for a second pass so they must explain the pathway without relying on text labels.",
+      "Run a zoom comparison activity: start wide to locate the nucleus, mRNA strand, ribosome, and polypeptide, then zoom in to discuss how molecular interactions produce gene expression outcomes. Students should connect scale changes to AP Biology expectations for structure-function explanations.",
+      "Use the codon toggle as a formative assessment tool: first show codon labels and have students predict how the ribosome groups bases into triplets, then hide labels and ask them to justify where one codon ends and the next begins. This targets central dogma standards without turning the activity into a vocabulary-only exercise.",
     ],
     faq: [
       {
@@ -99,7 +102,7 @@ export const proteinSynthesis3d: Experiment = {
       {
         question: "How does this simulation address AP Bio 3.A.1 and 3.C.1?",
         answer:
-          "AP Bio 3.A.1 requires students to explain how genetic information in DNA is converted into protein through transcription and translation. AP Bio 3.C.1 requires students to explain how mutations can alter protein structure and function. Setting mutationType to each option and observing the 3D protein outcome provides direct visual evidence for both standards; the 3D folded structure makes the structural consequence of each mutation type concrete.",
+          "AP Bio 3.A.1 requires students to explain how genetic information in DNA is converted into protein through transcription and translation. AP Bio 3.C.1 requires students to explain how mutations can alter protein structure and function. Cycling through the Transcription Step, Translation Step, and Full Pathway presets while toggling codon labels and zoom level provides direct visual evidence for both standards; the 3D structure makes the molecular consequence of each step concrete.",
       },
       {
         question: "What is a tRNA anticodon and how does it match the mRNA codon?",
