@@ -25,32 +25,12 @@ export const k5StatesOfMatter: Experiment = {
     {
       id: "temperature",
       label: "Temperature",
-      unit: "°C",
-      min: -50,
-      max: 200,
-      default: 20,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "substance",
-      label: "Substance (0=Water, 1=Iron, 2=Nitrogen)",
-      unit: "",
+      unit: "K",
       min: 0,
-      max: 2,
-      default: 0,
+      max: 500,
+      default: 100,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "pressure",
-      label: "Pressure",
-      unit: "atm",
-      min: 0.1,
-      max: 3,
-      default: 1,
-      step: 0.1,
-      tier: "pro",
     },
   ],
 
@@ -69,7 +49,7 @@ export const k5StatesOfMatter: Experiment = {
     "Matter exists in three main states: solid, liquid, and gas. In a solid, particles are packed tightly and vibrate in place — the substance has a definite shape and volume. In a liquid, particles can flow past each other — the substance has definite volume but takes the shape of its container. In a gas, particles move freely and fast — the substance has no definite shape or volume. Heating gives particles more energy; cooling takes it away. The temperature at which a solid becomes liquid is the melting point; the temperature at which liquid becomes gas is the boiling point. Different materials have different melting/boiling points.",
 
   instructions:
-    "Drag the temperature slider to heat or cool the substance. Watch the molecule animation change — particles vibrate slowly (solid), flow (liquid), or zoom around (gas). Switch substances to compare melting and boiling points. See water freeze at 0°C and boil at 100°C.",
+    "Drag the Temperature slider (0-500 K) to heat or cool a sample of water, and watch molecules vibrate (solid), flow (liquid), or zoom (gas). Or click one of the three preset buttons — Solid Ice (80 K), Liquid Water (300 K), or Steam Gas (450 K) — to jump straight to that state. Pressure adjusts automatically with the presets to show realistic conditions for each phase.",
 
   challenges: [
     {
@@ -117,16 +97,38 @@ export const k5StatesOfMatter: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "States of Matter",
   },
+  htmlControlAliases: {
+    temperature: "tempSlider",
+  },
+  presets: [
+    {
+      id: "solid",
+      label: "Solid Ice (80 K)",
+      description:
+        "Very cold sample at 80 K — well below water's freezing point. Molecules are locked in a rigid crystal pattern; the substance behaves as a solid.",
+      paramValues: { temperature: 80 },
+    },
+    {
+      id: "liquid",
+      label: "Liquid Water (300 K)",
+      description:
+        "Room-temperature sample at 300 K (about 27 °C). Molecules slide past each other with enough energy to flow but still attract each other; the substance behaves as a liquid.",
+      paramValues: { temperature: 300 },
+    },
+    {
+      id: "gas",
+      label: "Steam Gas (450 K)",
+      description:
+        "Hot sample at 450 K (about 177 °C). Molecules have enough energy to break free of each other and zoom around independently; the substance behaves as a gas.",
+      paramValues: { temperature: 450 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Everything around you is made of tiny, tiny particles — atoms or molecules — far too small to see. How those molecules behave depends on how much heat energy they have. When they are cold and do not have much energy, they huddle together tightly and barely move. That gives us a solid, like an ice cube. When they warm up and get more energy, they can slide past each other and flow. That gives us a liquid, like the water in your glass. When they get even more energy, they zoom around freely in all directions and spread out to fill whatever space they are in. That gives us a gas, like the steam rising from a hot pot of soup. Matter can change between these three states just by adding or taking away heat. Melting is when a solid warms up and turns into a liquid. Boiling is when a liquid heats up so much it turns into a gas. Freezing is when a liquid cools down and turns into a solid. Every day you see all three states: ice in your freezer is solid water, the water in your cup is liquid, and the water from a hot shower produces both invisible water vapor (true gas) and the white misty cloud you see — which is actually tiny liquid droplets that formed when the hot vapor cooled in the air.",
     parameterExplanations: {
       temperature:
-        "Temperature controls how hot or cold the substance is, measured in degrees Celsius (°C). Watch the molecules in the animation slow down and huddle tightly as temperature drops, or speed up and spread out as temperature rises. For water, the key moments are at 0°C (it freezes into ice) and 100°C (it boils into steam). Iron stays solid throughout this entire range — it only melts at about 1538°C. Nitrogen is already a gas at room temperature and stays gas throughout this range — it only becomes liquid at about -196°C. Each substance has its own special change-of-state temperatures.",
-      substance:
-        "The substance slider lets you pick what material you are heating or cooling: 0 for Water (the most familiar — freezes at 0°C, boils at 100°C), 1 for Iron (a tough metal that stays solid until it reaches about 1538°C — very hot), or 2 for Nitrogen (a gas in the air around us that only becomes liquid at about -196°C — extremely cold). Comparing substances shows that every material has its own special melting and boiling temperatures.",
-      pressure:
-        "Pressure controls how hard the air is pushing down on the substance, measured in atm (atmospheres — 1 atm is normal air pressure at sea level). This is a Pro feature. Higher pressure makes it harder for molecules to escape into gas, so liquids need a higher temperature to boil. Lower pressure — like at the top of a tall mountain — lets molecules escape more easily, so water boils at a lower temperature. Climbers on Mount Everest find that water boils below 70°C, which is not hot enough to cook pasta properly.",
+        "Temperature controls how hot or cold the water sample is, measured in kelvins (K). Kelvin is the science temperature scale where 0 K is the coldest possible — colder than anything in nature. The slider runs from 0 K to 500 K. Important moments for water: 273 K is freezing (water turns to ice), and 373 K is boiling (water turns to steam). Drag below 273 K and watch molecules slow down and lock into a solid pattern; drag above 373 K and watch them break free and zoom around as a gas. The three preset buttons jump you to a Solid (80 K), a Liquid (300 K, about room temperature), or a Gas (450 K, hotter than boiling). On the Celsius scale you may know from weather reports, 0 K = -273 °C and 273 K = 0 °C.",
     },
     misconceptions: [
       {
@@ -151,11 +153,11 @@ export const k5StatesOfMatter: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set substance to Water (0) and drag temperature from -50°C up to 200°C slowly; have students call out 'freeze,' 'melt,' and 'boil' at the right temperatures and record the two transition points — directly supporting 2-PS1-1 observation of material properties.",
-      "Set substance to Iron (1) and note that the temperature slider only goes to 200°C — far below iron's melting point of about 1538°C. Use this to discuss why we build bridges and frying pans from iron and steel — they stay solid at temperatures we ever encounter in daily life. Iron and nitrogen are out of this simulation's range; compare them as a thought experiment.",
-      "Set substance to Nitrogen (2) and show that it is already a gas at room temperature (20°C), connecting to the idea that the air we breathe contains nitrogen gas — reinforcing that gases are all around us even when invisible.",
-      "Have students predict which state each substance will be in at 25°C before setting temperature, then check predictions; discuss why predictions were right or wrong using the concept of melting and boiling points.",
-      "Use Water at 0°C to discuss the pressure slider (Pro): ask why astronauts or mountain climbers would find water boiling at a lower temperature, connecting temperature, pressure, and state of matter for advanced 5th-grade discussion supporting 5-PS1-3.",
+      "Click the Solid Ice preset (80 K), then drag the Temperature slider slowly up to 500 K. Have students call out 'melting' when they see the transition near 273 K and 'boiling' near 373 K. Record both transition temperatures — directly supporting 2-PS1-1 (classify materials by observable properties).",
+      "Cycle through all three preset buttons in order — Solid Ice → Liquid Water → Steam Gas — and have students describe what they see the molecules doing in each state (vibrating in place / sliding past each other / zooming freely). Pair this with vocabulary practice: solid, liquid, gas.",
+      "Use the Solid Ice preset (80 K) to introduce the kelvin scale: 0 K is the coldest possible, water freezes at 273 K, water boils at 373 K. Compare these to Celsius equivalents (-273 °C, 0 °C, 100 °C). This helps 5th graders connect a science temperature scale to the everyday Celsius they know — supporting 5-PS1-3 measurement skills.",
+      "Have students predict the state of water at 200 K, 350 K, and 400 K before dragging the slider, then check their predictions. Discuss why predictions were right or wrong using the freezing point (273 K) and boiling point (373 K) as anchor values.",
+      "After exploring the presets, ask students why each preset uses a different temperature: 80 K for ice (well below freezing), 300 K for liquid (above freezing, below boiling), 450 K for gas (above boiling). Reinforces that the same substance — water — exists in different states based on temperature alone.",
     ],
     faq: [
       {
@@ -176,7 +178,7 @@ export const k5StatesOfMatter: Experiment = {
       {
         question: "Which NGSS standards does this experiment connect to?",
         answer:
-          "This simulation supports 2-PS1-1, which asks students to plan and conduct an investigation to describe and classify different kinds of materials by their observable properties, including whether they are solid or liquid at different temperatures. It also connects to 5-PS1-3, which asks students to make observations and measurements to identify material properties that are maintained regardless of the quantity of the sample — like the fact that water always melts at 0°C whether you have a tiny ice cube or a whole glacier. The pressure parameter (Pro) extends into MS-PS1-4 for teachers looking to preview middle school concepts.",
+          "This simulation supports 2-PS1-1, which asks students to plan and conduct an investigation to describe and classify different kinds of materials by their observable properties, including whether they are solid or liquid at different temperatures. It also connects to 5-PS1-3, which asks students to make observations and measurements to identify material properties that are maintained regardless of the quantity of the sample — like the fact that water always melts at 273 K (0 °C) whether you have a tiny ice cube or a whole glacier. The kelvin temperature scale used here is a useful preview of the units students will see again in middle school physical science (MS-PS1-4).",
       },
       {
         question: "Can something go straight from solid to gas without becoming liquid first?",

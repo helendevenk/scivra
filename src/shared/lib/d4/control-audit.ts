@@ -139,6 +139,19 @@ export function extractHtmlControls(
 
     if (id && isExcludedId(id)) continue;
 
+    const idPresetMatch = id.match(/^preset-(.+)$/);
+    if (idPresetMatch) {
+      const target = idPresetMatch[1];
+      controls.push({
+        id: `preset:id:${target}`,
+        kind: "preset-button",
+        label: btn.textContent?.trim() ?? undefined,
+        presetTarget: target,
+        source: btn.outerHTML.slice(0, 200),
+      });
+      continue;
+    }
+
     if (dataPreset) {
       controls.push({
         id: `preset:${dataPreset}`,
