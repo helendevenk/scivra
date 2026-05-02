@@ -6,7 +6,7 @@ export const k5ForceMotion: Experiment = {
   title: "Force & Motion",
   subtitle: "Push, pull, and how forces change movement",
   description:
-    "Apply pushes and pulls to objects and watch them accelerate, slow down, and change direction. See balanced and unbalanced forces in action. Adjust friction and gravity to discover how forces work together to determine motion.",
+    "Apply pushes and pulls to objects and watch them accelerate, slow down, and change direction. See balanced and unbalanced forces in action. Adjust friction to discover how surfaces and pushes work together to determine motion.",
   thumbnail: "/imgs/experiments/k5-force-motion.png",
 
   standards: {
@@ -27,40 +27,20 @@ export const k5ForceMotion: Experiment = {
       label: "Push Force",
       unit: "N",
       min: 0,
-      max: 20,
-      default: 5,
+      max: 50,
+      default: 20,
       step: 1,
       tier: "free",
     },
     {
-      id: "friction",
-      label: "Surface Friction",
+      id: "frictionPct",
+      label: "Friction (×100)",
       unit: "",
       min: 0,
-      max: 1,
-      default: 0.3,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "objectMass",
-      label: "Object Mass",
-      unit: "kg",
-      min: 1,
-      max: 10,
-      default: 2,
+      max: 100,
+      default: 20,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "gravity",
-      label: "Gravity",
-      unit: "m/s²",
-      min: 1,
-      max: 20,
-      default: 9.8,
-      step: 0.1,
-      tier: "pro",
     },
   ],
 
@@ -79,7 +59,7 @@ export const k5ForceMotion: Experiment = {
     "A force is a push or pull that can change an object's motion. Forces have both size (magnitude) and direction. When the forces on an object are balanced (equal in all directions), the object stays still or moves at constant speed. When forces are unbalanced, the object accelerates in the direction of the net force. Friction is a force that opposes motion between surfaces in contact. More mass requires more force to achieve the same acceleration (F=ma). Gravity pulls objects downward with a force equal to their weight (W=mg).",
 
   instructions:
-    "Use the Push Force slider to apply a horizontal force to the object. Watch the object accelerate. Increase friction to slow it down. Try changing the mass — a heavier object needs more force for the same acceleration. Can you find the force needed to keep the object moving at constant speed?",
+    "Use the Push Force slider to choose how hard you push, and use the Friction (×100) slider to choose how sticky or slippery the surface feels. Try the Ice Surface, Rough Carpet, and Steep Incline presets. Watch what starts moving, what slows down, and when a bigger push is needed.",
 
   challenges: [
     {
@@ -127,34 +107,54 @@ export const k5ForceMotion: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Force and Motion",
   },
+  htmlControlAliases: {
+    pushForce: "forceSlider",
+    frictionPct: "muSlider",
+  },
+  presets: [
+    {
+      id: "ice",
+      label: "🧊 Ice Surface (μ=0.05)",
+      description: "A very slippery surface with little friction, so the object is easier to move and keeps sliding longer.",
+      paramValues: { pushForce: 20, frictionPct: 5 },
+    },
+    {
+      id: "carpet",
+      label: "🟫 Rough Carpet (μ=0.60)",
+      description: "A rough surface with lots of friction, so the object needs a stronger push and slows down faster.",
+      paramValues: { pushForce: 25, frictionPct: 60 },
+    },
+    {
+      id: "incline",
+      label: "⛰️ Steep Incline",
+      description: "A slanted setup that helps students compare how force and friction change the motion they observe.",
+      paramValues: { pushForce: 30, frictionPct: 25 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "A force is a push or a pull. Every time you push a toy car across the floor, kick a ball, or pull a wagon, you are using a force! Forces can make things start moving, stop moving, speed up, or change direction. When you push harder, things speed up faster while the push acts. When two forces push against each other equally, nothing moves — the forces are balanced. Friction is a sneaky force that slows things down by rubbing surfaces together. A rough sidewalk has lots of friction; a slippery ice rink has almost none. Gravity is the force that pulls everything down toward the ground. It is why a ball you toss always comes back down. Heavier objects need a bigger push to get moving at the same speed as lighter ones. Scientists call this idea Newton's Second Law, but you can just think of it as: more push equals faster movement, and more mass means you need more push!",
     parameterExplanations: {
       pushForce:
-        "This slider controls how hard you are pushing the object. At 0 N there is no push at all, so nothing moves. At 20 N you are pushing very hard — like a strong grown-up. Try starting at 5 N and slowly moving it up to watch the object speed up. A bigger push force means the object speeds up faster.",
-      friction:
-        "Friction is a rubbing force between the object and the floor. At 0 the surface is perfectly slippery (like ice) and the object keeps sliding forever. At 1.0 the surface is very rough (like sandpaper) and slows the object down quickly. The friction force depends on the friction coefficient, the object's mass, and gravity together (f = μ × m × g). Try adjusting the push force until the calculated friction force matches it and the object rolls at a steady speed — that is balanced forces!",
-      objectMass:
-        "Mass is how much stuff is in the object — think of it as how heavy it is. At 1 kg it is like a small book. At 10 kg it is like a heavy backpack full of rocks. A heavier object needs a much bigger push to move at the same speed. Try keeping the push the same and making the object heavier — watch how much slower it speeds up!",
-      gravity:
-        "Gravity is the invisible force that pulls things down. On Earth it is about 9.8 m/s². On the Moon it would be only about 1.6 m/s² — things fall much more slowly there! Higher gravity means more friction (the object gets pressed harder against the floor). This is a Pro setting so you can explore how other planets would feel.",
+        "Push Force controls how hard you push the object. A small number is like a gentle tap. A bigger number is like a strong shove. When the surface is slippery, even a smaller push can make the object move well. When the surface is rough, the same push may not be enough. Try setting Push Force to 0 first, then raise it little by little. Watch for the moment when the object starts moving faster. This helps you see that a force can change motion by starting, stopping, speeding up, or changing how something moves.",
+      frictionPct:
+        "Friction (×100) controls how much the surface rubs against the object. The number is written from 0 to 100, where 5 means very slippery like ice and 60 means rough like carpet. Low friction lets the object slide more easily. High friction pushes back more, so the object slows down or needs a bigger push to get moving. Try the Ice Surface preset, then try Rough Carpet without changing anything else. Compare what you notice. This slider helps you see why shoes grip the floor, why sleds slide on snow, and why rough surfaces can slow moving things down.",
     },
     misconceptions: [
       {
         wrong: "You need to keep pushing something to keep it moving.",
         correct:
-          "Once something is moving with no friction, it keeps going on its own! You only need a push to fight friction or to speed something up. In space, astronauts and spacecraft move for years without any engine because there is almost no friction. On Earth we need to keep pushing mainly because friction is always trying to slow us down.",
+          "A push changes motion. If there is almost no friction, an object can keep moving after the push. On a very slippery surface, it slides for a long time. On a rough surface, friction slows it down. Use the Ice Surface preset and then the Rough Carpet preset to compare. The push starts or speeds up the motion, while friction works against the motion.",
       },
       {
-        wrong: "Heavier objects always fall faster than lighter ones.",
+        wrong: "A rough surface always stops motion right away.",
         correct:
-          "Gravity gives all objects the same acceleration downward if there is no air in the way. A bowling ball and a feather dropped in a vacuum tube hit the bottom at the same time — they fall with the same acceleration. On Earth, air slows down light, fluffy things like feathers more than heavy, dense things — but that is air resistance, not gravity.",
+          "A rough surface makes more friction, but a strong enough push can still make an object move. Try Rough Carpet, then raise Push Force slowly. Students can look for the point where the push is strong enough to overcome the rubbing force. This shows that motion depends on how the forces work together.",
       },
       {
         wrong: "A bigger push always means the object goes at a constant fast speed.",
         correct:
-          "A push makes the object speed up (accelerate), not just move fast. The moment you stop pushing, friction starts slowing it down. To move at a steady speed, your push has to exactly match the friction force — then the forces are balanced, the net force is zero, and the object's motion does not change (it rolls at the same speed without speeding up or slowing down).",
+          "A bigger push usually makes the object speed up while the push is stronger than the friction. Constant speed happens when the forces balance, not just when the push is big. Use the Push Force and Friction (×100) sliders to search for motion that looks steady instead of speeding up or slowing down.",
       },
       {
         wrong: "Friction is always bad and gets in the way.",
@@ -163,37 +163,37 @@ export const k5ForceMotion: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Balanced forces demo: set pushForce to 6 N and friction to 0.6 with objectMass 1 kg — ask students to predict whether the object moves, then observe approximately steady motion. Note: friction force depends on the friction coefficient, mass, and gravity together, so this is approximately balanced. Discuss why the forces are nearly equal.",
-      "More push, faster go: keep friction at 0.3 and objectMass at 2 kg, then sweep pushForce from 2 N to 10 N. Students record speed results in a simple table and notice the pattern — bigger push, speeds up faster.",
-      "Heavy vs. light challenge: set pushForce to 10 N and friction to 0.2, then compare objectMass 1 kg vs. 10 kg. Ask 'which one wins the race?' to surface the misconception that heavier always means faster.",
-      "Friction surface comparison: fix pushForce at 8 N and objectMass at 3 kg, then slide friction from 0 (ice) to 1.0 (rough). Students describe the surface using real-life words — 'this feels like…' — connecting NGSS 3-PS2-1.",
-      "Moon vs. Earth (Pro): set gravity to 1.6 m/s² (Moon) with the same push. Ask students why the object behaves differently and relate to why astronauts bounce when they walk on the Moon.",
+      "Preset comparison: have students run Ice Surface, Rough Carpet, and Steep Incline. They record the Push Force and Friction (×100) values for each preset, then describe which setup moves most easily and cite evidence from the simulation.",
+      "Balanced and unbalanced forces demo: keep Friction (×100) at 20, then change Push Force from 0 N to 10 N, 20 N, and 40 N. Students predict whether motion will stay the same or change, supporting NGSS 3-PS2-1.",
+      "Surface investigation: set Push Force to 25 N and compare Friction (×100) values of 5, 25, and 60. Students connect the pattern to real surfaces such as ice, tile, grass, and carpet.",
+      "Motion pattern table: students choose one preset, observe motion, then change only Push Force. They record what happens at three force values and use the pattern to predict a fourth result, supporting NGSS 3-PS2-2.",
+      "K-PS2-1 push-and-pull talk: ask students to describe what they changed using simple words like stronger push, weaker push, slippery surface, and rough surface. Then connect those words to the Push Force slider, Friction (×100) slider, and the three presets.",
     ],
     faq: [
       {
-        question: "Why does a heavy wagon need more of a push than a light toy car?",
+        question: "Why does a rough surface make the object harder to move?",
         answer:
-          "The wagon has more mass — more stuff packed inside it. It takes more force to change the motion of something with more mass. This is the big idea scientists call Newton's Second Law. Think of pushing a shopping cart when it is empty versus when it is full of groceries. The full cart is much harder to get rolling! The same push that zooms an empty cart barely moves a full one. In this simulation you can test this yourself by switching the object mass slider while keeping the push force the same.",
+          "A rough surface has more friction. Friction is a rubbing force that pushes against motion. Imagine sliding a book across a smooth desk, then across a thick carpet. The carpet grabs the book more, so the book slows down faster and needs a stronger push. In this simulation, use Friction (×100) to change the surface. A low number acts more like ice. A high number acts more like carpet. Then use Push Force to test how much push is needed.",
       },
       {
-        question: "What happens when there is zero friction?",
+        question: "What happens when there is very little friction?",
         answer:
-          "With no friction at all, even the tiniest push would make an object keep sliding forever — just like a hockey puck on a very smooth ice rink barely slows down. In real life, true zero friction does not exist, but ice and oiled surfaces get very close. Space is the closest thing to zero friction: spacecraft launched long ago are still traveling through the solar system with no engine running because nothing is there to slow them down. In the simulation, set friction to 0 and give even a small push to see this in action.",
+          "With very little friction, the object slides more easily and keeps moving longer after it gets pushed. This is like a hockey puck on smooth ice. Real surfaces still have some friction, but ice has much less than rough carpet. Try the Ice Surface preset to see low friction. Then switch to Rough Carpet. Keep an eye on how far and how fast the object moves with the same kind of push.",
       },
       {
         question: "Which NGSS standards does this experiment connect to?",
         answer:
-          "This simulation directly supports NGSS 3-PS2-1 (plan and conduct investigations of the effects of balanced and unbalanced forces on motion) and 3-PS2-2 (make observations and measurements of an object's motion to provide evidence that a pattern can be used to predict future motion). It also connects to 5-PS2-1, which asks students to support an argument about the gravitational force Earth exerts on objects. The parameters in this simulation let students gather evidence for all three standards through hands-on digital investigation.",
+          "This simulation directly supports NGSS 3-PS2-1, where students investigate the effects of balanced and unbalanced forces on motion. It also supports 3-PS2-2, where students make observations and measurements of motion patterns to predict future motion. Younger learners can connect to K-PS2-1 by testing how different strengths of pushes and different surfaces change how an object moves.",
       },
       {
-        question: "Is gravity only on Earth?",
+        question: "What do the Ice Surface, Rough Carpet, and Steep Incline buttons do?",
         answer:
-          "Every object in the universe that has mass pulls on every other object — that is gravity! The Moon has gravity too, but it is about six times weaker than Earth's, which is why astronauts can jump so high there. Jupiter has much stronger gravity than Earth. Even you pull on the Earth a tiny, tiny bit — but the Earth is so huge that you cannot notice its pull on you moving it at all. The gravity slider in the Pro settings lets you explore what pushing an object would feel like on different worlds.",
+          "The preset buttons jump to useful starting setups. Ice Surface sets low Friction (×100), so the object is easy to slide. Rough Carpet sets high Friction (×100), so the object is harder to move and slows faster. Steep Incline gives a setup for comparing motion on a slanted surface. Presets are helpful because everyone in the class can start from the same values before changing one slider at a time.",
       },
       {
         question: "What does balanced forces really mean?",
         answer:
-          "Balanced forces means the pushes and pulls on an object cancel each other out perfectly so the net force is zero. When forces are balanced, a still object stays still and a moving object keeps moving at the same steady speed — its motion does not change (acceleration is zero). A book sitting on a table has balanced forces — gravity pulls it down and the table pushes it up with equal force. In this simulation you can find the balanced point by matching push force to friction: when they are equal the object rolls at a constant speed without speeding up or slowing down.",
+          "Balanced forces means the pushes and pulls on an object cancel each other out, so the motion does not change. A still object stays still, and a moving object keeps moving at the same steady speed. In this simulation, try changing Push Force and Friction (×100) until the motion looks steady. If the object speeds up, one force is winning. If it slows down, friction is winning. If motion stays about the same, the forces are closer to balanced.",
       },
     ],
   },
