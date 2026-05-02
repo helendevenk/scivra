@@ -33,44 +33,24 @@ export const cellStructure3d: Experiment = {
 
   parameters: [
     {
-      id: "cellType",
-      label: "Cell Type (0=Animal, 1=Plant)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
+      id: "scale",
+      label: "Scale",
+      unit: "×",
+      min: 0.5,
+      max: 2,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
     {
       id: "transparency",
       label: "Membrane Transparency",
-      unit: "%",
-      min: 10,
-      max: 90,
-      default: 50,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "showLabels",
-      label: "Show Labels (0=Off, 1=On)",
       unit: "",
       min: 0,
       max: 1,
-      default: 1,
-      step: 1,
+      default: 0.18,
+      step: 0.05,
       tier: "free",
-    },
-    {
-      id: "highlightSystem",
-      label: "System (0=All 1=Endomembrane 2=Energy 3=Cytoskeleton)",
-      unit: "",
-      min: 0,
-      max: 3,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -92,7 +72,7 @@ export const cellStructure3d: Experiment = {
     "Eukaryotic cells contain membrane-bound organelles that compartmentalize cellular functions. The nucleus houses DNA and controls gene expression. The rough endoplasmic reticulum (RER) synthesizes proteins destined for membranes or export, while the smooth ER (SER) synthesizes lipids and detoxifies compounds. The Golgi apparatus modifies, sorts, and packages proteins for secretion or lysosomal delivery. Mitochondria generate ATP through oxidative phosphorylation (cellular respiration). Lysosomes contain hydrolytic enzymes for intracellular digestion. The cytoskeleton (microfilaments, intermediate filaments, microtubules) provides structural support, enables movement, and organizes intracellular transport. Plant cells additionally have a rigid cell wall, chloroplasts for photosynthesis, and a large central vacuole for turgor pressure. The endomembrane system (ER → Golgi → lysosomes → plasma membrane) represents a continuous pathway of membrane flow.",
 
   instructions:
-    "Rotate the 3D cell by dragging. Scroll to zoom. Click on any organelle to highlight it and read its description. Use the Cell Type toggle to compare animal and plant cells. Adjust transparency to see internal structures. Select a system to highlight only endomembrane, energy, or cytoskeletal components.",
+    "Rotate the 3D cell by dragging. Scroll to zoom. Click on any organelle to highlight it and read its description. Use the Scale slider to move from a whole-cell overview to a closer view of organelle organization. Adjust the Membrane Transparency slider to reveal or emphasize internal membrane-bound structures. Try the Full Cell View, Nucleus Focus, and Mitochondria Focus presets to compare the whole model, genetic control center, and energy organelles.",
 
   challenges: [
     {
@@ -138,18 +118,35 @@ export const cellStructure3d: Experiment = {
     educationalLevel: "High School",
     teaches: "Eukaryotic Cell Structure and Organelle Function",
   },
+  htmlControlAliases: {
+    scale: "scale-slider",
+    transparency: "alpha-slider",
+  },
+  presets: [
+    {
+      id: "full",
+      label: "Full Cell View",
+      paramValues: { scale: 1, transparency: 0.18 },
+    },
+    {
+      id: "nucleus",
+      label: "Nucleus Focus",
+      paramValues: { scale: 1.4, transparency: 0.1 },
+    },
+    {
+      id: "mito",
+      label: "Mitochondria Focus",
+      paramValues: { scale: 1.6, transparency: 0.2 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "A eukaryotic cell is a microscopic city — every organelle is a department with a specific job, all enclosed within a phospholipid membrane wall. Your liver cells, muscle cells, and the plant cells in a spinach leaf all share this compartmentalized design. The nucleus acts as city hall, housing DNA and issuing instructions via mRNA. The mitochondria are the power plants, oxidizing pyruvate and feeding electron carriers into the electron transport chain to produce most of the ~30–32 ATP per glucose. The endomembrane system — rough ER, Golgi, and lysosomes — handles manufacturing, shipping, and waste disposal. Plant cells add a chloroplast solar panel and a central vacuole that inflates like a water balloon to keep stems upright. Toggle the highlightSystem control to isolate each subsystem and watch how organelles cluster by function.",
+      "A eukaryotic cell is a microscopic city — every organelle is a department with a specific job, all enclosed within a phospholipid membrane wall. Your liver cells, muscle cells, and the plant cells in a spinach leaf all share this compartmentalized design. The nucleus acts as city hall, housing DNA and issuing instructions via mRNA. The mitochondria are the power plants, oxidizing pyruvate and feeding electron carriers into the electron transport chain to produce most of the ~30–32 ATP per glucose. The endomembrane system — rough ER, Golgi, and lysosomes — handles manufacturing, shipping, and waste disposal. Plant cells add a chloroplast solar panel and a central vacuole that inflates like a water balloon to keep stems upright. Use the Scale slider to move between whole-cell overview and organelle close-up, and adjust Membrane Transparency to balance internal organelle visibility with the importance of the bounding membrane.",
     parameterExplanations: {
-      cellType:
-        "Switches the rendered model between an animal cell (0) and a plant cell (1). Plant cells gain a rigid cell wall, chloroplasts, and a large central vacuole; animal cells retain centrioles for cell division. Use this toggle to run side-by-side structural comparisons.",
+      scale:
+        "Scale changes the viewing distance and emphasis of the 3D model without changing the biology of the cell. At lower values, students can see the whole eukaryotic cell as an organized system of compartments. Higher values support close inspection of organelles such as the nucleus, mitochondria, ER, Golgi apparatus, and lysosomes. In AP Biology terms, this helps connect structure to function: organelles are not isolated labels, but spatially arranged compartments that support gene expression, ATP production, membrane trafficking, and cellular regulation.",
       transparency:
-        "Sets how opaque the plasma membrane appears, from 10 % (nearly solid) to 90 % (nearly invisible). Increasing transparency lets you see internal organelle arrangement without rotating; decreasing it restores the sense of the cell as a bounded compartment.",
-      showLabels:
-        "Turns organelle name labels on (1) or off (0) in the 3D viewport. Hiding labels is useful for self-quizzing — identify each structure by shape and position before re-enabling them to check.",
-      highlightSystem:
-        "Dims all organelles except those belonging to a chosen functional group: 0 = all visible, 1 = endomembrane system (ER, Golgi, lysosomes, vesicles), 2 = energy organelles (mitochondria; chloroplasts in plant mode), 3 = cytoskeleton (microfilaments, intermediate filaments, microtubules). Use this to trace the path of a secreted protein end-to-end.",
+        "Membrane Transparency controls how visible the cell boundary is while students inspect internal membrane systems. A lower value makes the plasma membrane more visually present, emphasizing selective permeability and the idea that cells maintain internal environments. A higher value makes internal organelles easier to compare, especially membrane-bound compartments involved in AP Biology topics such as endomembrane transport, nuclear control of gene expression, and mitochondrial energy conversion. Use this slider to balance two linked ideas: cells are bounded by membranes, and eukaryotic function depends on compartmentalized internal membranes.",
     },
     misconceptions: [
       {
@@ -178,11 +175,11 @@ export const cellStructure3d: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Pre-lab sketch: before opening the simulation, ask students to draw an animal cell and a plant cell from memory, then toggle cellType between 0 and 1 and list every structure that appears or disappears — records the functional differences as a data table.",
-      "System trace: set highlightSystem to 1 (endomembrane) and challenge students to narrate the full route of a secreted protein from ribosome on rough ER through Golgi to exocytosis — links AP Bio 4.A.2 to a spatial model.",
-      "Misconception probe: show the energy system (highlightSystem = 2) and ask 'Where does the energy in ATP come from?' — use wrong answers to launch the glucose oxidation discussion and correct the 'mitochondria create energy' error.",
-      "SA:V data collection: using the formula SA:V = 3/r, have students calculate ratios for cells of radius 1, 5, 10, and 50 μm, then correlate with why cells stay small — connects the formula card to the model's scale.",
-      "Plant vs animal comparison quiz: hide labels (showLabels = 0), display plant mode, and have students click each organelle and name it before checking — builds identification fluency before the AP free-response cell-structure question.",
+      "Whole-cell orientation: start with the Full Cell View preset, ask students to list visible organelles, then adjust the Scale slider slightly while keeping Membrane Transparency near 0.18 so they connect cell organization to HS-LS1-2 model-building practice.",
+      "Nuclear control discussion: use the Nucleus Focus preset, lower Membrane Transparency to 0.10, and have students trace how DNA information leaves the nucleus as mRNA before ribosomes and the rough ER support protein synthesis.",
+      "Energetics misconception probe: use the Mitochondria Focus preset and ask 'Where does the energy in ATP come from?' Use student answers to distinguish energy transformation from energy creation in AP Biology cellular respiration.",
+      "Membrane systems trace: keep Scale around 1.4 and move Membrane Transparency from 0.10 to 0.30 while students narrate the route of a secreted protein from rough ER to Golgi to vesicle fusion, linking AP Bio 4.A.2 to a spatial model.",
+      "SA:V data collection: using the formula SA:V = 3/r, have students calculate ratios for cells of radius 1, 5, 10, and 50 μm, then use the Scale slider as a visual anchor for why cells stay small.",
     ],
     faq: [
       {
@@ -198,7 +195,7 @@ export const cellStructure3d: Experiment = {
       {
         question: "How does this relate to AP Bio standard 2.B.1 and HS-LS1-2?",
         answer:
-          "AP Bio 2.B.1 requires students to explain how the structure of cell membranes results in selective permeability. HS-LS1-2 asks students to develop and use models to illustrate the hierarchical organization of cells, tissues, and organs. This simulation directly addresses both: toggle systems to see membrane-defined compartments in context.",
+          "AP Bio 2.B.1 requires students to explain how the structure of cell membranes results in selective permeability. HS-LS1-2 asks students to develop and use models to illustrate the hierarchical organization of cells, tissues, and organs. This simulation supports both: adjust Membrane Transparency to connect visible boundaries with membrane-defined compartments, then use the Scale slider and presets to inspect how organelles fit into the larger cellular model.",
       },
       {
         question: "Why are plant cells generally larger than animal cells?",

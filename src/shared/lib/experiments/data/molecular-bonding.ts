@@ -23,44 +23,24 @@ export const molecularBonding: Experiment = {
 
   parameters: [
     {
-      id: "molecule",
-      label: "Molecule (0=H₂O, 1=CH₄, 2=NH₃, 3=CO₂, 4=BF₃, 5=SF₆)",
+      id: "deltaEN",
+      label: "Electronegativity Δ (×10)",
       unit: "",
       min: 0,
-      max: 5,
-      default: 0,
+      max: 35,
+      default: 21,
       step: 1,
       tier: "free",
     },
     {
-      id: "bondType",
-      label: "Bond Display (0=stick, 1=ball-stick, 2=spacefill)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 1,
+      id: "bondLength",
+      label: "Bond Length",
+      unit: "pm",
+      min: 70,
+      max: 400,
+      default: 281,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "showDipoles",
-      label: "Show Dipole Moments",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
-      tier: "pro",
-    },
-    {
-      id: "showLonePairs",
-      label: "Show Lone Pairs",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -83,7 +63,7 @@ export const molecularBonding: Experiment = {
     "Chemical bonding determines molecular geometry, polarity, and reactivity. Covalent bonds form when atoms share electrons; the electronegativity difference determines polarity (nonpolar < 0.5, polar 0.5-1.7, ionic > 1.7). VSEPR theory predicts 3D geometry: electron pairs (bonding + lone) arrange to minimize repulsion. Lone pairs repel more strongly than bonding pairs, compressing bond angles. Linear (180°): CO₂, BeCl₂. Trigonal planar (120°): BF₃. Tetrahedral (109.5°): CH₄. Bent (104.5°): H₂O (2 lone pairs). Trigonal pyramidal (107°): NH₃ (1 lone pair). Octahedral (90°): SF₆. Net molecular dipole moment = vector sum of all bond dipoles.",
 
   instructions:
-    "Select a molecule from the dropdown. The 3D model builds automatically showing atoms, bonds, and lone pairs. Rotate with mouse to inspect all angles. Toggle dipole arrows to see individual bond dipoles and the net molecular dipole. Switch to spacefill mode to see van der Waals radii.",
+    "Use the Electronegativity Δ (×10) slider to move across the nonpolar covalent, polar covalent, and ionic bonding continuum, and use the Bond Length slider to adjust the internuclear distance in picometers. Try the NaCl (ionic), H₂O (polar), and N₂ (nonpolar) presets to compare three anchor cases.",
 
   challenges: [
     {
@@ -131,25 +111,45 @@ export const molecularBonding: Experiment = {
     educationalLevel: "High School",
     teaches: "Molecular Structure and Chemical Bonding",
   },
+  htmlControlAliases: {
+    deltaEN: "sl-den",
+    bondLength: "sl-len",
+  },
+  presets: [
+    {
+      id: "NaCl",
+      label: "NaCl (ionic)",
+      description: "A high-electronegativity-difference, long-bond anchor case for predominantly ionic bonding.",
+      paramValues: { deltaEN: 21, bondLength: 281 },
+    },
+    {
+      id: "H2O",
+      label: "H₂O (polar)",
+      description: "A polar covalent anchor case with moderate electronegativity difference and short O-H bonds.",
+      paramValues: { deltaEN: 14, bondLength: 96 },
+    },
+    {
+      id: "N2",
+      label: "N₂ (nonpolar)",
+      description: "A nonpolar covalent anchor case with equal electronegativity and a short triple bond.",
+      paramValues: { deltaEN: 0, bondLength: 110 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Chemical bonding describes how atoms join by transferring or sharing valence electrons to reach lower-energy, more stable arrangements. Table salt (NaCl) forms when sodium transfers one electron to chlorine — an ionic bond held together by ~787 kJ/mol of lattice energy. Water forms when two hydrogen atoms each share an electron pair with oxygen — a polar covalent bond where the higher electronegativity of oxygen (3.44 vs. H at 2.20) pulls electron density toward itself, creating partial charges. This simulation builds six molecules (H₂O, CH₄, NH₃, CO₂, BF₃, SF₆) in 3D, lets you switch between stick, ball-and-stick, and spacefill rendering, and overlays individual bond dipole arrows whose vector sum reveals whether the molecule carries a net dipole moment. Lone pairs can be toggled visible to see their role in distorting geometry. AP Chem 2.A.1, 2.A.2, and 2.B.1 are all addressed here.",
+      "Chemical bonding describes how atoms join by transferring or sharing valence electrons to reach lower-energy, more stable arrangements. Table salt (NaCl) forms when sodium transfers one electron to chlorine — an ionic bond held together by ~787 kJ/mol of lattice energy. Water forms when two hydrogen atoms each share an electron pair with oxygen — a polar covalent bond where the higher electronegativity of oxygen (3.44 vs. H at 2.20) pulls electron density toward itself, creating partial charges. This simulation lets students explore the bonding continuum directly: adjust the Electronegativity Δ (×10) slider to move from nonpolar covalent through polar covalent toward predominantly ionic bonding, and change the Bond Length slider to inspect how internuclear distance varies across that continuum. The NaCl, H₂O, and N₂ presets anchor three reference cases that map to AP Chem 2.A.1, 2.A.2, and 2.B.1.",
     parameterExplanations: {
-      molecule:
-        "Selects the molecule to display: 0=H₂O, 1=CH₄, 2=NH₃, 3=CO₂, 4=BF₃, 5=SF₆. Each choice rebuilds the 3D model with correct bond lengths (O-H ~96 pm, C-H ~109 pm, C=O ~116 pm), bond angles, and lone-pair positions. The six selections are all covalent and span polar vs. nonpolar examples plus several VSEPR geometries (bent, tetrahedral, trigonal pyramidal, linear, trigonal planar, octahedral); ionic structures and trigonal bipyramidal geometry are not included in this library.",
-      bondType:
-        "Controls the rendering style: 0=stick (lines only), 1=ball-and-stick (atoms as spheres, bonds as cylinders), 2=spacefill (CPK spheres scaled to van der Waals radii). Spacefill mode makes molecular size and shape tangible — students can see why two water molecules can hydrogen-bond at close range while a bulky nonpolar molecule cannot approach as easily.",
-      showDipoles:
-        "Toggles arrows representing individual bond dipole moments, with the net molecular dipole drawn in a distinct color. Turning this on for CO₂ (linear) shows two equal and opposite C=O dipoles that cancel exactly, producing zero net dipole — the clearest illustration of why a molecule with polar bonds can be nonpolar overall. For H₂O, the two O-H dipoles add vectorially to a net dipole pointing toward oxygen.",
-      showLonePairs:
-        "Toggles visible lobes representing lone electron pairs on the model. With this on, students can see the two lone pairs on oxygen in H₂O occupying space above and below the H-O-H plane, directly connecting the Lewis structure to the 3D geometry and explaining the 104.5° angle.",
+      deltaEN:
+        "Electronegativity Δ (×10) represents the difference in Pauling electronegativity between two bonded atoms, scaled so a slider value of 14 means ΔEN = 1.4. In AP Chemistry, this value is best treated as a continuum rather than a set of hard boxes. Near 0, electrons are shared nearly equally and the bond is nonpolar covalent, as in N₂. Around 4-17 on this slider, electron density is pulled toward the more electronegative atom, producing polar covalent character such as an O-H bond in water. Above about 17, the bond is described as predominantly ionic, as in NaCl, though real bonds can retain some covalent character.",
+      bondLength:
+        "Bond Length sets the distance between bonded nuclei in picometers. Shorter bonds usually reflect stronger attraction and greater orbital overlap, especially when the bonded atoms are small or the bond order is high, such as the short N≡N distance in N₂. Longer distances often appear for larger ions or atoms, such as the Na-Cl separation in crystalline salt. Bond length is not determined by electronegativity difference alone: atom size, bond order, charge distribution, and the surrounding structure all matter. Use it with Electronegativity Δ (×10) to compare how bond character and internuclear distance jointly shape chemical properties.",
     },
     misconceptions: [
       {
         wrong:
-          "Polar molecules must have polar bonds, and molecules with polar bonds are always polar.",
+          "Polar bonds always make the entire structure polar.",
         correct:
-          "Molecular polarity comes from a nonzero net charge separation; in most AP-level examples, that requires both polar bonds AND a geometry that prevents cancellation. CO₂ has two polar C=O bonds (ΔEN ≈ 1.0) but its linear geometry makes the dipoles cancel exactly, giving zero net dipole. Symmetry can erase polarity entirely. Toggle showDipoles=1 on CO₂ and watch the arrows neutralize each other.",
+          "A polar bond means electron density is uneven within that bond, but overall polarity also depends on geometry and vector addition. CO₂ has polar C=O bonds, yet the linear arrangement makes equal bond dipoles cancel. H₂O has polar O-H bonds and a bent shape, so the dipoles do not cancel. Use the H₂O (polar) preset as a covalent example with uneven sharing, then compare the N₂ (nonpolar) preset where ΔEN = 0 and no bond polarity is expected.",
       },
       {
         wrong:
@@ -161,53 +161,53 @@ export const molecularBonding: Experiment = {
         wrong:
           "Any large electronegativity difference must mean a 100% ionic bond with full charges on each atom.",
         correct:
-          "Electronegativity difference gives a continuous spectrum, not a step function. ΔEN below ~0.4 is treated as nonpolar covalent (H₂, Cl₂). ΔEN 0.4 to ~1.7 is polar covalent (H₂O, HCl). ΔEN above ~1.7 is described as predominantly ionic (NaCl, ΔEN = 2.1), but even those bonds retain some covalent character. The boundaries are approximate; bond character changes gradually along the spectrum. AP Chem 2.A.1 covers this spectrum explicitly.",
+          "Electronegativity difference gives a continuous spectrum, not a step function. ΔEN below ~0.4 is treated as nonpolar covalent, ΔEN from ~0.4 to ~1.7 is polar covalent, and ΔEN above ~1.7 is described as predominantly ionic. The NaCl (ionic), H₂O (polar), and N₂ (nonpolar) presets are useful anchors, but the boundaries are approximate. Bond character changes gradually along the spectrum, and AP Chem 2.A.1 expects students to reason from evidence rather than memorize absolute cutoffs.",
       },
       {
         wrong:
-          "A bent molecule like water has its hydrogen atoms attached on opposite sides of oxygen, like a straight line but tilted.",
+          "A longer bond must always be weaker only because the atoms are less electronegative.",
         correct:
-          "Bent means the H-O-H angle is approximately 104.5° — both hydrogens are on the same side of the oxygen. The two lone pairs occupy the opposite region. This asymmetric distribution of charge is what makes water polar and allows it to dissolve ionic compounds. The spacefill model in the simulation makes the actual shape unmistakable.",
+          "Bond length and bond strength are related, but electronegativity difference is not the only cause. Atomic radius, bond order, ionic radius, charge, and crystal or molecular environment all influence the distance between nuclei. N₂ has a short bond largely because it is a triple bond between small atoms. NaCl has a much longer Na-Cl distance because it involves larger ions arranged in an extended lattice. Change Bond Length separately from Electronegativity Δ (×10) to keep those ideas distinct.",
       },
       {
         wrong:
-          "Dipole moment is a property of individual bonds only, not of the whole molecule.",
+          "Nonpolar covalent, polar covalent, and ionic bonds are three unrelated categories.",
         correct:
-          "Individual bond dipoles exist, but the molecular dipole moment is the vector sum of all bond dipoles. In BF₃ (trigonal planar), three polar B-F bonds (ΔEN ≈ 2.0) point 120° apart and cancel to zero net dipole. In NH₃ (trigonal pyramidal), three N-H bonds point in the same general direction and add to a measurable net dipole of 1.47 D.",
+          "They are useful labels on a continuous bonding spectrum. As electronegativity difference increases, electron sharing becomes less equal, partial charges become more pronounced, and the description shifts from nonpolar covalent to polar covalent to predominantly ionic. The N₂ preset starts at ΔEN = 0, the H₂O preset places the bond in the polar covalent range, and the NaCl preset moves into the predominantly ionic range. The categories help communicate patterns, but the underlying variable changes continuously.",
       },
     ],
     teacherUseCases: [
-      "Dipole cancellation demonstration: project CO₂ with showDipoles=1 and H₂O with showDipoles=1 side by side. Ask students why one molecule with polar bonds is nonpolar while the other is polar — the geometry-dipole link is immediately visible and sets up AP Chem 2.A.2.",
-      "Bond type spectrum data collection: give students a table of six pairs (H-H, H-Cl, H-F, Na-Cl, Mg-O, Al-Cl) with Pauling electronegativity values. Students classify each as nonpolar covalent, polar covalent, or ionic using the ΔEN thresholds, then use the simulation to check predicted vs. observed molecular polarity for the covalent examples.",
-      "Lone pair geometry probe: load H₂O with showLonePairs=1 and NH₃ with showLonePairs=1, then ask 'where are the lone pairs and how do they affect the shape?' Students must articulate that lone pairs compress bond angles — a misconception target in AP Chem 2.B.1.",
-      "Spacefill size comparison: cycle through CH₄ → NH₃ → H₂O in spacefill mode and ask students to observe how molecular shape and size change despite similar atom counts. Connect to intermolecular forces by asking which molecule can form hydrogen bonds and why (lone pair + N-H/O-H bond required).",
-      "Ionic vs. covalent bond strength challenge: before showing numbers, ask students to rank NaCl, H₂O, N₂, and HF by bond strength. After discussion, reveal lattice energy (~787 kJ/mol), O-H bond energy (~459 kJ/mol), N≡N (~941 kJ/mol), and H-F (~570 kJ/mol) to address the misconception that ionic always beats covalent.",
+      "Bonding continuum opener: have students click N₂ (nonpolar), H₂O (polar), and NaCl (ionic), then record Electronegativity Δ (×10), Bond Length, and the displayed bond classification. Ask for a one-sentence claim connecting particle-level structure to properties, supporting HS-PS1-3.",
+      "Controlled-variable comparison: keep Bond Length constant while increasing Electronegativity Δ (×10) from 0 to 35. Students identify where the model transitions from nonpolar covalent to polar covalent to predominantly ionic, then explain why the boundaries are approximate rather than absolute.",
+      "Distance-and-attraction discussion: keep Electronegativity Δ (×10) near the H₂O (polar) preset, then move Bond Length from short to long. Students describe how changing internuclear distance affects the visual model and connect electrostatic attraction to HS-PS2-6.",
+      "Preset evidence table: assign groups one preset each — NaCl (ionic), H₂O (polar), or N₂ (nonpolar). Each group reports the parameter values, predicted bond character, and one real chemical property that follows from electron distribution or bond distance.",
+      "AP Chemistry quick CER: students choose two of the three presets and write a claim comparing bond character. Their evidence must cite Electronegativity Δ (×10) and Bond Length values, and their reasoning must use the ionic/polar/nonpolar continuum rather than a memorized label alone.",
     ],
     faq: [
       {
         question: "What electronegativity difference separates ionic from polar covalent bonds?",
         answer:
-          "The commonly used threshold is ΔEN greater than approximately 1.7 on the Pauling scale for predominantly ionic character and ΔEN less than 0.4 for nonpolar covalent. Between 0.4 and 1.7 is polar covalent. These cutoffs are approximations — the H-F bond (ΔEN = 1.9) has significant covalent character despite falling above 1.7. AP Chem 2.A.1 treats bond character as a spectrum rather than three discrete categories.",
+          "The commonly used threshold is ΔEN greater than approximately 1.7 on the Pauling scale for predominantly ionic character and ΔEN less than 0.4 for nonpolar covalent. Between 0.4 and 1.7 is polar covalent. On this simulation, Electronegativity Δ (×10) scales those values by ten, so 17 corresponds to ΔEN = 1.7. These cutoffs are approximations. The NaCl (ionic), H₂O (polar), and N₂ (nonpolar) presets are anchor cases, not proof that bonding changes in sudden jumps.",
       },
       {
         question: "Why is CO₂ nonpolar if each C=O bond is polar?",
         answer:
-          "CO₂ is linear (180°). The two C=O bond dipoles (ΔEN ≈ 1.0) point in exactly opposite directions along the molecular axis and cancel when added as vectors, producing a net dipole of zero. Toggle showDipoles=1 on CO₂ in the simulation to see the cancellation. Compare to H₂O, where the bent geometry (104.5°) prevents cancellation and produces a net dipole of 1.85 D.",
+          "CO₂ is linear, so the two C=O bond dipoles point in exactly opposite directions and cancel when added as vectors. A single C=O bond has a moderate electronegativity difference, but the entire linear structure has no net dipole. Compare that idea with the H₂O (polar) preset: O-H bonds are polar and the bent shape prevents cancellation. Bond polarity starts with Electronegativity Δ (×10), but overall polarity also depends on geometry.",
       },
       {
         question: "How do I use this simulation to study AP Chem 2.A.1, 2.A.2, and 2.B.1?",
         answer:
-          "AP Chem 2.A.1 covers the ionic and covalent bonding spectrum — use the simulation's six molecules to identify bond types by electronegativity difference. AP Chem 2.A.2 asks students to explain how bond type and geometry determine polarity — the showDipoles overlay directly demonstrates vector addition of bond dipoles. AP Chem 2.B.1 requires predicting VSEPR geometries for all six molecules displayed here. NGSS HS-PS1-1 is also supported.",
+          "AP Chem 2.A.1 covers the ionic and covalent bonding spectrum, so start with the Electronegativity Δ (×10) slider and the N₂, H₂O, and NaCl presets. AP Chem 2.A.2 asks students to connect bond type and structure to polarity, so compare polar covalent and nonpolar covalent cases and discuss vector cancellation. AP Chem 2.B.1 involves molecular structure and geometry, which can be connected by asking how bond polarity and bond length fit into a larger model of molecular shape.",
       },
       {
         question: "What is dipole moment and what are typical values?",
         answer:
-          "Dipole moment (μ) = charge × distance, measured in debyes (D). A fully ionic bond of unit charge separated by 100 pm would have μ ≈ 4.8 D. Real polar covalent bonds are much smaller: H-F is 1.82 D, H₂O molecule is 1.85 D, NH₃ is 1.47 D. Nonpolar molecules like CO₂, CH₄, and BF₃ have μ = 0 D. The showDipoles overlay draws vectors proportional to these values.",
+          "Dipole moment (μ) = charge × distance, measured in debyes (D). A fully ionic pair with unit charge separated by 100 pm would have μ ≈ 4.8 D. Real polar covalent bonds are usually smaller because the charges are partial, not full. H-F is about 1.82 D, an H₂O sample has a molecular dipole of about 1.85 D, and NH₃ is about 1.47 D. Nonpolar structures such as N₂ have μ = 0 D because equal atoms share electrons evenly.",
       },
       {
-        question: "How does ball-and-stick differ from spacefill mode and when should I use each?",
+        question: "What do the NaCl, H₂O, and N₂ presets show?",
         answer:
-          "Ball-and-stick (bondType=1) shows bond connectivity and angles clearly — best for identifying geometry and measuring bond angles. Spacefill (bondType=2) shows atoms at their van der Waals radii, giving a realistic picture of molecular size and the actual space a molecule occupies. Use spacefill when discussing intermolecular forces or explaining why large molecules have higher London dispersion forces than small ones.",
+          "They provide three reference points on the bonding continuum. NaCl (ionic) sets Electronegativity Δ (×10) to 21 and Bond Length to 281 pm, representing a predominantly ionic interaction. H₂O (polar) sets the controls to 14 and 96 pm, representing a polar covalent O-H bond. N₂ (nonpolar) sets the controls to 0 and 110 pm, representing equal electron sharing in a short triple bond. Use the presets first, then move one slider at a time to test which variable caused each observed change.",
       },
     ],
   },

@@ -6,11 +6,11 @@ export const mitosis: Experiment = {
   title: "Mitosis: Cell Division & the Cell Cycle",
   subtitle: "How one cell becomes two identical daughters",
   description:
-    "Step through all phases of mitosis — Prophase, Metaphase, Anaphase, Telophase — and watch chromosomes condense, align, and separate. Control the speed of each phase, track individual chromosomes with color coding, and compare normal division with cancer cell dysregulation.",
+    "Step through all phases of mitosis — Prophase, Metaphase, Anaphase, Telophase — and watch chromosomes condense, align, and separate. Adjust cell size and chromosome count, track individual chromosomes with color coding, and compare normal human, abnormal cancer-like, and yeast cell presets.",
   thumbnail: "/imgs/experiments/mitosis.png",
 
   standards: {
-    ngss: ["HS-LS1-4"],
+    ngss: ["HS-LS1-4", "MS-LS1-2"],
     gcse: ["B1.1", "B1.2"],
     ap: ["3.A.2", "3.A.3"],
   },
@@ -23,44 +23,24 @@ export const mitosis: Experiment = {
 
   parameters: [
     {
-      id: "divisionSpeed",
-      label: "Division Speed",
+      id: "cellSize",
+      label: "Cell Size",
       unit: "×",
       min: 0.5,
-      max: 5,
+      max: 2,
       default: 1,
-      step: 0.5,
+      step: 0.05,
       tier: "free",
     },
     {
       id: "chromosomeCount",
-      label: "Chromosome Pairs (n)",
+      label: "Chromosome Count",
       unit: "",
-      min: 2,
-      max: 8,
-      default: 4,
-      step: 1,
+      min: 4,
+      max: 64,
+      default: 46,
+      step: 2,
       tier: "free",
-    },
-    {
-      id: "checkpointEnabled",
-      label: "Cell Cycle Checkpoints",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
-      tier: "pro",
-    },
-    {
-      id: "cancerMode",
-      label: "Cancer Cell Behavior",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -83,7 +63,7 @@ export const mitosis: Experiment = {
     "Mitosis is somatic cell division producing two genetically identical daughter cells. The cell cycle consists of Interphase (G₁: growth, S: DNA replication, G₂: preparation) and Mitotic phase. Mitosis has 4 stages: Prophase (chromosomes condense, spindle forms), Metaphase (chromosomes align at the metaphase plate), Anaphase (sister chromatids separate, pulled to poles), Telophase (nuclear envelopes reform, chromosomes decondense). Cytokinesis then splits the cytoplasm. Cell cycle checkpoints (G₁/S, G₂/M, spindle assembly) ensure fidelity. Cancer results from checkpoint failure — cells divide uncontrollably.",
 
   instructions:
-    "Press Play to watch the full cell cycle. Use the phase buttons to jump directly to any mitotic stage. Click individual chromosomes to track them through division. Toggle Cancer Mode (Pro) to see what happens when checkpoints are disabled — uncontrolled proliferation begins.",
+    "Press Play to watch the full cell cycle. Use the phase buttons to jump directly to any mitotic stage, then adjust the Cell Size and Chromosome Count sliders to compare how scale and genome size affect the visual model. Try the Normal Human Cell, Cancer Cell, and Yeast Cell presets to jump between three biologically meaningful chromosome-count examples. Click individual chromosomes to track them through division.",
 
   challenges: [
     {
@@ -131,51 +111,68 @@ export const mitosis: Experiment = {
     educationalLevel: "High School",
     teaches: "Mitosis and the Cell Cycle",
   },
+  htmlControlAliases: {
+    cellSize: "sl-cellsize",
+    chromosomeCount: "sl-chrnum",
+  },
+  presets: [
+    {
+      id: "human",
+      label: "Normal Human Cell (46 chr)",
+      paramValues: { cellSize: 1.0, chromosomeCount: 46 },
+    },
+    {
+      id: "cancer",
+      label: "Cancer Cell (abnormal)",
+      paramValues: { cellSize: 1.2, chromosomeCount: 60 },
+    },
+    {
+      id: "yeast",
+      label: "Yeast Cell (16 chr)",
+      paramValues: { cellSize: 0.7, chromosomeCount: 16 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Mitosis is the cell division process that produces two genetically identical daughter cells from a single somatic (body) cell, preserving the diploid chromosome number. Every time a skin cell regenerates, a bone fracture heals, or an embryo grows from four cells to forty, mitosis is running the program. The cell cycle frames it: a cell spends most of its time in Interphase — growing in G₁, replicating all its DNA in S phase, and preparing for division in G₂ — before entering the four mitotic stages: Prophase, Metaphase, Anaphase, and Telophase. Cancer emerges not simply from \"too much division\" but from disabled checkpoints — molecular gatekeepers like p53 and Rb that normally stop a damaged cell from advancing to the next phase. This simulation lets you step through each stage, adjust division speed, and toggle cancer behavior to see what checkpoint failure actually looks like.",
+      "Mitosis is the cell division process that produces two genetically identical daughter cells from a single somatic (body) cell, preserving the diploid chromosome number. Every time a skin cell regenerates, a bone fracture heals, or an embryo grows from four cells to forty, mitosis is running the program. The cell cycle frames it: a cell spends most of its time in Interphase — growing in G₁, replicating all its DNA in S phase, and preparing for division in G₂ — before entering the four mitotic stages: Prophase, Metaphase, Anaphase, and Telophase. Cancer emerges not simply from \"too much division\" but from disabled checkpoints — molecular gatekeepers like p53 and Rb that normally stop a damaged cell from advancing to the next phase. This simulation lets you step through each stage, adjust cell size and chromosome count, and compare preset organisms or abnormal cancer-like configurations.",
     parameterExplanations: {
-      divisionSpeed:
-        "Controls how fast the simulation animates each stage of the cell cycle, from 0.5× (half speed, useful for studying chromosome movement) to 5× (accelerated, useful for observing multiple rounds). Changing this does not alter the biology — it only changes the playback rate.",
+      cellSize:
+        "Cell Size changes the visual scale of the dividing cell without changing the basic logic of mitosis. In real biology, cells must coordinate growth, DNA replication, spindle formation, and cytokinesis so that each daughter cell receives enough cytoplasm and organelles to function. Very small or very large cells can create transport, surface-area-to-volume, and spindle-positioning challenges, but mitosis still has the same goal: produce two viable daughter cells with complete genomes. Use this slider to help students separate cell morphology from chromosome inheritance. A larger display can make spindle geometry easier to inspect, while a smaller one emphasizes that chromosome partitioning remains the central AP Biology concept.",
       chromosomeCount:
-        "Sets the number of homologous chromosome pairs (n) in the simulated cell, from 2 to 8 pairs. Higher values make chromosome behavior at the metaphase plate more complex to track and more closely approximate real organisms. Humans have n=23 pairs (2n=46); set to 4 for a manageable teaching model.",
-      checkpointEnabled:
-        "Toggles the G₁/S and G₂/M cell cycle checkpoints on or off. With checkpoints on (default = 1), a cell with simulated DNA damage will halt and not proceed to mitosis. Turn this off to model what happens when tumor suppressor pathways — like p53 — are inactivated: the cell bypasses quality control and divides anyway.",
-      cancerMode:
-        "When enabled (1), simulates a cell line with disabled checkpoints and accelerated, unregulated cycling — modeling the hallmark behavior of cancer cells. Use alongside checkpointEnabled = 0 to show students how checkpoint failure is the upstream cause of uncontrolled proliferation.",
+        "Chromosome Count sets the diploid chromosome number shown in the model. Humans have 46 chromosomes in most somatic cells, while budding yeast have 16; many cancers also show aneuploidy, meaning abnormal chromosome numbers caused by segregation errors or genome instability. In mitosis, chromosome count should be preserved: after S phase, each chromosome consists of two sister chromatids, and anaphase separates those sisters so each daughter receives one complete set. Increasing the count makes metaphase alignment and anaphase separation visually more crowded, which is useful for discussing why the spindle assembly process must attach every kinetochore correctly before chromatids separate.",
     },
     misconceptions: [
       {
         wrong:
           "Mitosis halves the chromosome number — that's the whole point of cell division.",
         correct:
-          "Mitosis preserves the diploid number. A 2n=46 parent cell produces two daughters each with 2n=46. It is meiosis, not mitosis, that reduces chromosome number from 2n to n. Mitosis is for growth and repair; meiosis is for making gametes.",
+          "Mitosis preserves the diploid number. A 2n=46 parent cell produces two daughters each with 2n=46. It is meiosis, not mitosis, that reduces chromosome number from 2n to n. Use the Chromosome Count slider or the Normal Human Cell preset to track the same chromosome number before and after division.",
       },
       {
         wrong:
           "DNA replication happens during Prophase, right when the chromosomes become visible.",
         correct:
-          "DNA replication occurs in S phase of Interphase — before mitosis begins. By the time chromosomes condense in Prophase, each chromosome already consists of two identical sister chromatids joined at the centromere. Mitosis separates those pre-copied sisters, it does not copy DNA.",
+          "DNA replication occurs in S phase of Interphase — before mitosis begins. By the time chromosomes condense in Prophase, each chromosome already consists of two identical sister chromatids joined at the centromere. The Chromosome Count slider changes how many chromosomes are displayed, but mitosis separates pre-copied sisters rather than copying DNA during the visible stages.",
       },
       {
         wrong:
-          "Cancer happens because cells start dividing faster than normal.",
+          "The Cancer Cell preset means cancer is just a larger cell with more chromosomes.",
         correct:
-          "Speed is secondary. Cancer results primarily from checkpoint failure — when proteins like p53 or Rb no longer stop cells with damaged or incompletely replicated DNA from entering mitosis. The consequence is uncontrolled proliferation and accumulation of mutations, but the root cause is lost quality control, not an accelerator being pressed.",
+          "The Cancer Cell preset is a simplified teaching configuration, not a full cancer model. Its larger Cell Size and abnormal Chromosome Count help students notice genome instability and altered cell morphology, but real cancer depends on many molecular changes, including mutations in growth-control and DNA-repair pathways. Treat the preset as a comparison case, then ask what mechanisms could create abnormal chromosome numbers.",
       },
       {
         wrong:
           "After Anaphase the cell has twice as many chromosomes — that means it's tetraploid for a moment.",
         correct:
-          "During Anaphase, sister chromatids separate and move to opposite poles, so the total count of chromosomal units in the whole cell temporarily appears doubled. But each pole is receiving a complete 2n complement — not a tetraploid set. Once cytokinesis completes, each daughter has the same 2n as the parent.",
+          "During Anaphase, sister chromatids separate and move to opposite poles, so the total count of chromosomal units in the whole cell temporarily appears doubled. But each pole is receiving a complete 2n complement — not a tetraploid set. Once cytokinesis completes, each daughter has the same Chromosome Count as the parent configuration.",
       },
     ],
     teacherUseCases: [
-      "Phase identification exercise: pause the simulation at a random stage and ask students to name the phase and identify three visible features — use this to build recognition of Prophase (condensed chromosomes, spindle forming), Metaphase (plate alignment), Anaphase (V-shaped chromatid movement), and Telophase (nuclear envelope reforming).",
-      "Checkpoint probe: set checkpointEnabled = 0 and run the simulation, then ask 'why does the cell keep dividing even after we introduced DNA damage?' Use student responses to assess whether they understand checkpoint biology versus just memorizing phase names.",
-      "Cancer mechanism data collection: run 10 cycles with checkpoints enabled and 10 with cancerMode = 1, recording division rate and error accumulation. Students graph the difference and write a one-paragraph mechanistic explanation referencing p53 or Rb.",
-      "Mitosis vs. meiosis compare-and-contrast: run this simulation alongside the meiosis simulation, then have student pairs list three observable differences — a structured approach to the most-confused pair of processes in AP Biology.",
-      "Cell cycle timing investigation: given that a typical human cell cycle is 24 hours and mitosis takes roughly 1–2 hours, ask students to calculate what fraction of time is spent in each phase and discuss why cells spend most of their lives in interphase rather than actively dividing.",
+      "Preset comparison for HS-LS1-4 and MS-LS1-2: have students run the Normal Human Cell, Cancer Cell, and Yeast Cell presets, record cellSize and chromosomeCount values, and explain what stays constant about mitotic inheritance.",
+      "Chromosome tracking lab: set chromosomeCount to 16 with the Yeast Cell preset, pause at metaphase and anaphase, and ask students to trace how sister chromatids separate into two equal daughter-cell sets.",
+      "Human somatic cell checkpoint discussion: start with the Normal Human Cell preset at chromosomeCount = 46, then ask why accurate kinetochore attachment matters more as chromosome number increases.",
+      "Cancer preset CER prompt: use the Cancer Cell preset, cite its cellSize and chromosomeCount values as evidence, and have students write a claim about how abnormal chromosome number can signal genome instability.",
+      "Scale versus inheritance mini-investigation: keep chromosomeCount constant while changing cellSize, then have students distinguish visual cell morphology from the core mitosis outcome required by HS-LS1-4.",
     ],
     faq: [
       {
@@ -196,12 +193,12 @@ export const mitosis: Experiment = {
       {
         question: "At what stage do chromosomes look like the classic X shape?",
         answer:
-          "Chromosomes appear as X-shaped structures in late Prophase and Metaphase, when they are maximally condensed and the two sister chromatids are still attached at the centromere. The X shape disappears in Anaphase when the centromere splits and the sisters separate into individual rod-shaped chromosomes.",
+          "Chromosomes appear as X-shaped structures in late Prophase and Metaphase, when they are maximally condensed and the two sister chromatids are still attached at the centromere. The X shape disappears in Anaphase when the centromere splits and the sisters separate into individual rod-shaped chromosomes. A higher Chromosome Count makes more X-shaped structures visible at metaphase.",
       },
       {
-        question: "How is the G₂/M checkpoint relevant to cancer treatment?",
+        question: "How should I compare the Normal Human Cell, Cancer Cell, and Yeast Cell presets?",
         answer:
-          "The G₂/M checkpoint verifies that DNA replication is complete and damage-free before allowing a cell to enter mitosis. Many chemotherapy drugs — including taxol and vinca alkaloids — specifically target the spindle assembly process, triggering a checkpoint that forces cancer cells (which often already have a compromised G₁ checkpoint) to arrest or die in mitosis. Understanding this checkpoint is central to AP standard 3.A.3.",
+          "Use the presets as quick biological comparison cases. Normal Human Cell sets chromosomeCount to 46, matching most human somatic cells. Yeast Cell sets chromosomeCount to 16, showing that different eukaryotes can have very different chromosome numbers while still using mitosis. Cancer Cell uses a larger cellSize and abnormal chromosomeCount to support discussion of aneuploidy and genome instability. After selecting each preset, pause at metaphase and anaphase to check whether sister chromatids still separate into two daughter-cell sets.",
       },
     ],
   },
