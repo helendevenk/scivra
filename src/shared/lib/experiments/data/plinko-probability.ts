@@ -89,7 +89,7 @@ export const plinkoProbability: Experiment = {
       },
     ],
     teacherUseCases: [
-      "CLT emergence demo: set num_rows to 6, prob_right to 50%, and drop balls progressively — first 5, then 20, then 100. After each batch, ask students to describe the histogram shape. Students observe the bell curve solidifying as num_balls increases, connecting the law of large numbers to the visual evidence.",
+      "Law of large numbers demo: set num_rows to 6, prob_right to 50%, and drop balls progressively — first 5, then 20, then 100. After each batch, ask students to describe the histogram shape. Students observe the histogram stabilizing as num_balls increases, illustrating how empirical frequencies converge to theoretical probabilities with more trials. For a CLT demo, fix num_balls at 100 and compare num_rows at 3, 6, and 12 to show how increasing independent steps per ball produces a distribution that more closely approximates a normal curve.",
       "Standard deviation scaling: keep prob_right at 50% and num_balls at 100. Run with num_rows at 3, then 6, then 12. Students calculate the theoretical σ = √(n × 0.5 × 0.5) for each and compare to the histogram spread. This concretizes the √n scaling relationship before introducing formal variance formulas.",
       "Symmetry-breaking with bias: start at prob_right 50% with num_rows 6 and num_balls 100 to establish a symmetric baseline. Then shift prob_right to 30% and run again. Students compare the peak location to the theoretical mean μ = n × p = 6 × 0.3 = 1.8 (approximately bin 2). This connects binomial mean formula to a visual result.",
       "Empirical vs. theoretical probability: with num_rows 6 and prob_right 50%, drop num_balls 100 and record the fraction of balls in the center bin. Compare to the theoretical probability P(3 rights) = C(6,3)/2^6 = 20/64 ≈ 31.25%. Repeat with a fresh run to show variation, reinforcing that empirical probability fluctuates around the theoretical value.",
@@ -114,12 +114,12 @@ export const plinkoProbability: Experiment = {
       {
         question: "How does the standard deviation formula relate to what I see in the simulation?",
         answer:
-          "The formula σ = √(n × p × (1-p)) predicts the spread of the landing distribution. With n = 6 rows and p = 0.5, σ = √(6 × 0.5 × 0.5) ≈ 1.22 bins. This means roughly 68% of balls should land within about 1.2 bins of the center bin in either direction, and about 95% within 2.4 bins. You can verify this by counting the fraction of balls in the central bins after dropping 100 balls. The formula also shows why increasing rows widens the distribution: σ grows with √n.",
+          "The formula σ = √(n × p × (1-p)) predicts the spread of the landing distribution. With n = 6 rows and p = 0.5, σ = √(6 × 0.5 × 0.5) ≈ 1.22 bins. Note that the 68/95 rule is a large-n normal approximation; for small discrete cases like n = 6, the exact binomial probabilities differ from those percentages. For n = 6, p = 0.5, the exact probability of landing within 1 bin of the center is about 78%, not 68%. You can verify this by counting the fraction of balls in the central bins after dropping 100 balls. The formula also shows why increasing rows widens the distribution: σ grows with √n.",
       },
       {
         question: "Is Plinko probability the same as a normal distribution?",
         answer:
-          "Not exactly — Plinko follows a binomial distribution, which is discrete (balls can only land in whole-numbered bins). The normal distribution is continuous. However, the binomial distribution converges toward the normal distribution as the number of rows increases, especially when prob_right is near 50%. For practical purposes at 10 or more rows, the binomial and normal distributions are often nearly indistinguishable when plotted, which is why the normal distribution is so widely useful as an approximation in statistics.",
+          "Not exactly — Plinko follows a binomial distribution, which is discrete (balls can only land in whole-numbered bins). The normal distribution is continuous. However, the binomial distribution converges toward the normal distribution as the number of rows increases, especially when prob_right is near 50%. Normal approximation improves for larger n and p not too close to 0 or 1; for small n or extreme p, use exact binomial probabilities rather than the normal approximation.",
       },
       {
         question: "How does changing prob_right connect to real-world probability problems?",
