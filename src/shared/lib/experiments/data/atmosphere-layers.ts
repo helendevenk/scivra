@@ -34,19 +34,29 @@ export const atmosphereLayers: Experiment = {
       label: "Altitude",
       unit: "km",
       min: 0,
-      max: 500,
+      max: 700,
       default: 0,
-      step: 1,
+      step: 5,
       tier: "free",
     },
     {
-      id: "showOzone",
-      label: "Show Ozone Layer (0=off, 1=on)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
+      id: "solarActivity",
+      label: "Solar Activity",
+      unit: "×normal",
+      min: 0.1,
+      max: 5,
+      default: 1.0,
+      step: 0.1,
+      tier: "free",
+    },
+    {
+      id: "ozoneLevel",
+      label: "Ozone Level",
+      unit: "×normal",
+      min: 0.1,
+      max: 2,
+      default: 1.0,
+      step: 0.05,
       tier: "free",
     },
   ],
@@ -68,7 +78,7 @@ export const atmosphereLayers: Experiment = {
     "Earth's atmosphere is divided into layers based on temperature changes with altitude. The troposphere (0-12 km) contains 75% of atmospheric mass and all weather; temperature decreases at ~6.5°C/km. The stratosphere (12-50 km) contains the ozone layer (peak at ~25 km) that absorbs UV, warming the air — temperature increases with altitude. The mesosphere (50-85 km) is the coldest layer, where temperature drops again. The thermosphere (85-600 km) absorbs extreme UV and X-rays, reaching >1000°C, but feels cold due to low particle density. Pressure drops exponentially: halving roughly every 5.5 km. At 100 km (Kármán line), space officially begins.",
 
   instructions:
-    "Use the altitude slider to move through the atmosphere. Watch the temperature and pressure gauges change. The diagram highlights which layer you're in and shows key features (ozone layer, weather zone, aurora). The graph on the right plots the temperature profile.",
+    "Use the Altitude, Solar Activity, and Ozone Level sliders to test how height, incoming solar energy, and stratospheric ozone shape the atmosphere. Try the Standard Atmosphere, High Solar Activity (Aurora), and Stratospheric Ozone Focus presets to compare normal conditions, upper-atmosphere heating, and ozone-driven warming.",
 
   challenges: [
     {
@@ -111,14 +121,41 @@ export const atmosphereLayers: Experiment = {
     educationalLevel: "High School",
     teaches: "Earth's Atmospheric Layers",
   },
+  htmlControlAliases: {
+    altitude: "alt-slider",
+    solarActivity: "solar-slider",
+    ozoneLevel: "ozone-slider",
+  },
+  presets: [
+    {
+      id: "standard",
+      label: "Standard Atmosphere",
+      description:
+        "A baseline atmosphere with normal solar activity and ozone level. Use it to compare how temperature and pressure change as altitude increases through the main layers.",
+    },
+    {
+      id: "aurora",
+      label: "High Solar Activity (Aurora)",
+      description:
+        "A high-solar-energy case that emphasizes heating and visible activity in the upper atmosphere. It is useful for connecting solar radiation to thermosphere behavior and aurora formation.",
+    },
+    {
+      id: "ozone",
+      label: "Stratospheric Ozone Focus",
+      description:
+        "A focused view of the ozone-rich stratosphere, where UV absorption changes the temperature trend. Use it to investigate why the stratosphere warms with altitude instead of cooling like the troposphere.",
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Earth's atmosphere is a layered shell of gases held by gravity, divided into distinct zones by how temperature changes with altitude. The troposphere (0–12 km) holds 75% of the atmosphere's mass and all weather — thunderstorms, rain, the smell of air after lightning. Above it, the stratosphere (12–50 km) actually warms with altitude because ozone absorbs ultraviolet radiation; that temperature inversion is exactly why weather stops at the tropopause. Higher still, the mesosphere cools again, and the thermosphere heats to over 1000°C from X-ray absorption — yet feels cold because air there is nearly a vacuum. The simulation lets you drag a virtual weather balloon from sea level to 500 km, tracking temperature, pressure, and which layer you're in at every step.",
+      "Earth's atmosphere is a layered shell of gases held by gravity, divided into distinct zones by how temperature changes with altitude. The troposphere (0–12 km) holds 75% of the atmosphere's mass and all weather — thunderstorms, rain, the smell of air after lightning. Above it, the stratosphere (12–50 km) actually warms with altitude because ozone absorbs ultraviolet radiation; that temperature inversion is exactly why weather stops at the tropopause. Higher still, the mesosphere cools again, and the thermosphere heats to over 1000°C from X-ray absorption — yet feels cold because air there is nearly a vacuum. The simulation lets you drag a virtual weather balloon from sea level to 700 km, tracking temperature, pressure, and which layer you're in at every step. Solar activity and ozone concentration sliders show how the atmosphere responds to changes in incoming radiation and stratospheric chemistry.",
     parameterExplanations: {
       altitude:
-        "Height above sea level, ranging 0–500 km. At sea level (0 km) pressure is 101 kPa and temperature is ~15°C; by 5.5 km altitude, pressure has already dropped to roughly half that value.",
-      showOzone:
-        "Toggle (0 = off, 1 = on) that overlays the ozone concentration profile, peaking near 25 km in the stratosphere where O₃ absorbs UV-B and UV-C radiation and converts it to heat.",
+        "Altitude is height above sea level, measured here from 0 to 700 km. As you raise the slider, pressure drops quickly because there is less air above that point pushing downward. Temperature does not follow one simple pattern: it decreases in the troposphere, rises in the ozone-rich stratosphere, falls again in the mesosphere, and rises sharply in the thermosphere. Start with the Standard Atmosphere preset and move altitude in 5 km steps to see why atmospheric layers are defined by temperature trends, not by equal spacing.",
+      solarActivity:
+        "Solar Activity represents how much incoming solar energy reaches the upper atmosphere compared with normal conditions. A value of 1×normal is typical; higher values model more active solar conditions that can heat the thermosphere and support aurora-related effects. This slider is most useful at high altitudes, where extreme ultraviolet and charged particle interactions matter more than weather or surface pressure. Try the High Solar Activity (Aurora) preset, then lower the value while keeping altitude the same to isolate how energy from the Sun changes the upper-atmosphere temperature pattern.",
+      ozoneLevel:
+        "Ozone Level changes the relative amount of stratospheric ozone, the gas that absorbs much of the Sun's harmful ultraviolet radiation. Ozone is not a solid shield; it is a diffuse gas with its strongest effect in the stratosphere, especially around the region where temperature begins increasing with altitude. Raising this slider strengthens the connection between UV absorption and stratospheric warming, while lowering it weakens that effect. Use the Stratospheric Ozone Focus preset to connect ozone concentration with the temperature inversion that helps separate weather-filled tropospheric air from the more stable stratosphere.",
     },
     misconceptions: [
       {
@@ -147,11 +184,11 @@ export const atmosphereLayers: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Pre-lab sketch: before touching the simulation, have students draw a graph of expected temperature vs. altitude from 0 to 100 km. After running the altitude slider from 0 to 100, compare their predictions to the actual non-linear profile and discuss where their intuition broke down.",
-      "Layer boundary identification: set altitude to 0 and advance in 5 km increments. Students record temperature at each step and identify the three main temperature-defined boundaries (tropopause, stratopause, mesopause) by spotting direction reversals, then discuss how the gradual thermosphere-to-exosphere transition differs from these sharp reversals. Compile class data into a shared table comparing measured vs. textbook values.",
-      "Ozone misconception probe: toggle showOzone between 0 and 1 at altitudes of 10 km, 25 km, and 40 km. The temperature profile is determined by ozone physics and does not change with the overlay toggle; ask students instead to use showOzone on to connect the stratospheric temperature inversion they observe to the ozone concentration peak shown in the overlay. Use responses to address the 'ozone as shield' model.",
-      "Pressure halving activity: have students advance altitude from 0 to 50 km in steps of ~5.5 km and record pressure at each stop. They should observe pressure approximately halving at each step, confirming the barometric formula without using the equation directly.",
-      "Weather boundary discussion: set altitude to 12 km and ask why weather 'stops' at the tropopause. Connect the temperature inversion to the stability of air layers — warm over cold prevents vertical convection, linking to HS-ESS2-4 on how Earth's systems interact.",
+      "Use the Standard Atmosphere preset and have students move the Altitude slider from 0 to 100 km in 5 or 10 km steps, recording temperature trends and pressure changes. Students use the model as evidence for HS-ESS2-4 by explaining how atmospheric structure affects Earth's energy system.",
+      "Use the Stratospheric Ozone Focus preset, then vary only the Ozone Level slider while keeping Altitude in the stratosphere. Students connect ozone absorption of UV radiation to the stratospheric temperature inversion and explain why this matters for Earth's energy budget.",
+      "Use the High Solar Activity (Aurora) preset at thermosphere altitudes, then have students lower and raise the Solar Activity slider. Ask them to describe how solar energy changes upper-atmosphere conditions without confusing high temperature with high heat content.",
+      "Run a controlled-variable investigation where each group chooses one preset, changes only one slider, and records the response. Groups compare results to show how altitude, solar activity, and ozone level represent interacting parts of Earth's climate and atmospheric systems under HS-ESS2-4.",
+      "Have students build a claim-evidence-reasoning response comparing the Standard Atmosphere and Stratospheric Ozone Focus presets. Their evidence should cite slider values and observed layer behavior to explain how variations in atmospheric composition affect energy absorption.",
     ],
     faq: [
       {

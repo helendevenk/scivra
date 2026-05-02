@@ -8,54 +8,46 @@ export const k5MixturesSolutions: Experiment = {
   description:
     "Explore the world of mixtures and solutions! Choose different substances and water temperatures to see what dissolves and what doesn't. Learn to tell mixtures apart from solutions by filtering, evaporating, and observing. Discover why hot water dissolves sugar faster than cold water.",
   thumbnail: "/imgs/experiments/k5-mixtures-solutions.png",
-
-  standards: {
-    ngss: ["5-PS1-3"],
-    gcse: [],
-    ap: [],
-  },
+  standards: { ngss: ["5-PS1-3"], gcse: [], ap: [] },
   primaryStandard: "elementary-k5",
   category: "chemistry",
   subject: "chemistry",
   gradeLevel: "3-5",
   tags: ["mixtures", "solutions", "solubility", "dissolving", "K5 science"],
   difficulty: "beginner",
-
   parameters: [
-    { id: "substanceType", label: "Substance (0=Salt 1=Sugar 2=Sand 3=Baking Soda)", unit: "", min: 0, max: 3, default: 0, step: 1, tier: "free" },
-    { id: "waterTemp", label: "Water Temperature (°C)", unit: "°C", min: 10, max: 80, default: 25, step: 5, tier: "free" },
+    { id: "concentration", label: "Concentration", unit: "%", min: 0, max: 100, default: 50, step: 1, tier: "free" },
+    { id: "waterTemp", label: "Water Temperature", unit: "°C", min: 0, max: 100, default: 25, step: 1, tier: "free" }
   ],
-
-  formulas: [
-    { latex: "\\text{Solubility} \\propto \\text{Temperature}", description: "Most solid substances dissolve more easily in warmer water" },
-  ],
-
+  formulas: [{ latex: "\\text{Solubility} \\propto \\text{Temperature}", description: "Most solid substances dissolve more easily in warmer water" }],
   theory: "A mixture is made of two or more substances combined together, but each substance keeps its own properties. A solution is a special mixture where one substance (the solute) dissolves completely in another (the solvent) so you cannot see the separate parts. Salt water is a solution — the salt disappears into the water. Sand in water is a mixture — you can still see the grains. Temperature affects solubility: warmer water usually dissolves more solute because the water molecules move faster and break apart the solute more quickly.",
-
-  instructions: "Pick a substance and set the water temperature, then press Mix! Watch whether the substance dissolves to form a clear solution or stays visible as a mixture. Try filtering or evaporating to recover the substance. Compare results at different temperatures to discover the solubility pattern.",
-
+  instructions: "Use the Concentration slider to change how much solute is added, and use the Water Temperature slider to warm or cool the water. Try the Dilute, Saturated, and Super-saturated presets to compare how clear solutions, full solutions, and crystal-forming mixtures behave.",
   challenges: [
     { id: "k5ms-c1", question: "Which substance does NOT dissolve in water?", hint: "Sand stays at the bottom — it is insoluble. You can separate it by filtering.", tier: "free" },
-    { id: "k5ms-c2", question: "Does sugar dissolve faster in hot or cold water?", hint: "Hot water! Higher temperature makes water molecules move faster, breaking sugar apart more quickly.", tier: "free" },
+    { id: "k5ms-c2", question: "Does sugar dissolve faster in hot or cold water?", hint: "Hot water! Higher temperature makes water molecules move faster, breaking sugar apart more quickly.", tier: "free" }
   ],
-
   wave: 11,
   tier: "free",
   estimatedTime: 10,
   relatedExperiments: ["k5-chemical-changes", "k5-states-of-matter"],
   htmlPath: "/experiments/elementary/k5-mixtures-solutions.html",
-
   seoTitle: "Mixtures & Solutions for Kids | Scivra Elementary Science",
   seoKeywords: ["mixtures and solutions for kids", "solubility experiment elementary", "dissolving substances K5", "K5 science experiment"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Mixtures, Solutions, and Solubility" },
+  htmlControlAliases: { concentration: "sliderConc", waterTemp: "sliderTemp" },
+  presets: [
+    { id: "dilute", label: "Dilute", description: "A dilute solution has only a small amount of solute mixed into the water. The particles spread out easily, so the liquid usually stays clear." },
+    { id: "saturated", label: "Saturated", description: "A saturated solution is holding about as much solute as it can at that temperature. Adding more may leave extra solid behind instead of dissolving." },
+    { id: "super", label: "Super-saturated", description: "A super-saturated solution has more dissolved solute than usual, often because warm water dissolved extra material. It can be unstable and may form crystals when disturbed or cooled." }
+  ],
   contentSections: {
     whatIsIt:
       "Have you ever stirred sugar into lemonade and watched it disappear? Or tried to mix sand into water and seen it settle at the bottom? You just made two very different things — a solution and a mixture! A mixture is when you put two or more things together but each thing keeps its own look and properties. A salad is a mixture — you can still see the lettuce, tomatoes, and croutons as separate pieces. A solution is a special kind of mixture where one thing (like salt or sugar) breaks apart into such tiny, tiny pieces that it becomes invisible — no longer visible because its particles spread evenly through the water. Salt water is a solution — the salt is no longer visible, but it is still there. You could detect it in known-safe food examples, but in science class use evaporation to show it is still present. Some things dissolve (break apart and mix in) and some things do not. Sand does not dissolve in water — it just sinks. Temperature matters too. Hot water usually dissolves things faster than cold water, because the warm water molecules move around more quickly and help break things apart. This is why hot chocolate powder mixes in faster with hot milk than cold milk!",
     parameterExplanations: {
-      substanceType:
-        "This control lets you pick what you are mixing into water. Setting 0 is salt — it dissolves completely and makes a clear solution, just like ocean water. Setting 1 is sugar — it also dissolves to make a sweet, clear solution, like Kool-Aid or lemonade. Setting 2 is sand — it does NOT dissolve and sinks to the bottom, making a true mixture that you can filter to get the sand back. Setting 3 is baking soda — it dissolves in water much like salt. Try each one and notice which ones become invisible (dissolved) and which ones stay visible.",
+      concentration:
+        "Concentration means how much solute is mixed into the water compared with the amount of water. A low concentration is like a tiny spoonful of sugar in a big cup: the particles have lots of room to spread out, so the solution looks clear. A high concentration adds more solute, and the water may not be able to hold it all. Then you may see extra material or crystals. Use the Dilute preset to start with less solute, Saturated to see water that is almost full, and Super-saturated to explore what happens when there may be too much dissolved material.",
       waterTemp:
-        "This slider changes how warm or cool the water is, from 10°C (cold, like refrigerator water) all the way up to 80°C (very hot water — unsafe to touch; only adults or teachers should handle water this hot). Warmer water usually dissolves things faster because the water molecules have more energy and bump into the substance more often, breaking it apart more quickly. Try the same substance at cold vs. hot temperatures and watch what changes.",
+        "Water Temperature changes how fast the water particles move. Cold water particles move more slowly, so they usually pull solute particles apart more slowly. Warm or hot water particles move faster and bump into the solute more often, which can help more solid dissolve. Try keeping the Concentration slider the same while changing only Water Temperature. Then compare the presets: a saturated solution may look different in cool water than in warm water. This helps you use observations and measurements, like temperature and amount dissolved, to describe a material's properties.",
     },
     misconceptions: [
       {
@@ -80,11 +72,11 @@ export const k5MixturesSolutions: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Soluble vs. insoluble sort: run substanceType through all four options at waterTemp 25°C. Students predict, observe, and sort into 'dissolves' and 'does not dissolve' columns — building NGSS 5-PS1-3 evidence.",
-      "Temperature investigation: fix substanceType at 0 (salt) and compare waterTemp 10°C vs. 60°C. Students time how quickly the salt becomes invisible (dissolves) and record findings in a simple data table.",
-      "Filtration challenge: after mixing sand (substanceType 2), discuss how you could get the sand back — introduce the idea of filtering. Connect to real-world water treatment plants that filter water to remove solid particles.",
-      "Evaporation recovery: after dissolving salt (substanceType 0), ask 'where did the salt go?' Discuss what would happen if you let the water dry up — relate to salt flats and ocean evaporation leaving salt behind.",
-      "Kool-Aid connection: use substanceType 1 (sugar) at different temperatures to model why stirring cold vs. warm drinks matters. Students connect lab results to everyday kitchen experiences.",
+      "Have students set the Dilute preset, record the Concentration and Water Temperature values, and describe visible properties of the solution to support NGSS 5-PS1-3 observation practice.",
+      "Ask pairs to keep Water Temperature constant while moving the Concentration slider from low to high, then compare when the mixture changes from clear to cloudy or crystal-forming.",
+      "Use the Saturated preset to discuss how solubility is a material property, then have students collect evidence by changing only the Water Temperature slider.",
+      "Use the Super-saturated preset as a prediction activity: students explain what they expect to observe, then connect crystals or undissolved material to measurements and material properties.",
+      "Run a quick CER activity where students choose Dilute, Saturated, or Super-saturated, cite slider values as evidence, and claim whether the sample is a solution or a visible mixture.",
     ],
     faq: [
       {

@@ -22,8 +22,8 @@ export const k5ChemicalChanges: Experiment = {
   difficulty: "beginner",
 
   parameters: [
-    { id: "substance1", label: "Substance 1 (0=Vinegar 1=Baking Soda 2=Milk 3=Lemon Juice)", unit: "", min: 0, max: 3, default: 0, step: 1, tier: "free" },
-    { id: "substance2", label: "Substance 2 (0=Baking Soda 1=Vinegar 2=Food Coloring 3=Copper Penny)", unit: "", min: 0, max: 3, default: 0, step: 1, tier: "free" },
+    { id: "reactionRate", label: "Reaction Rate", unit: "%", min: 1, max: 100, default: 50, step: 1, tier: "free" },
+    { id: "temperature", label: "Temperature", unit: "°C", min: 0, max: 100, default: 25, step: 1, tier: "free" },
   ],
 
   formulas: [
@@ -32,7 +32,7 @@ export const k5ChemicalChanges: Experiment = {
 
   theory: "A chemical change creates new substances with different properties. Signs include: color change, gas production (bubbles), temperature change (hot or cold), precipitate formation, and light/sound emission. Unlike physical changes (cutting, melting, dissolving), chemical changes are usually difficult to reverse. Examples: baking soda + vinegar produces carbon dioxide gas; iron + oxygen produces rust.",
 
-  instructions: "Choose two substances and press Mix! Watch for signs of chemical changes. The indicator panel shows which signs appear. Try different combinations to find which ones are chemical changes and which are just physical mixing.",
+  instructions: "Use the Reaction Rate slider to make the change happen slowly or quickly, and use the Temperature slider to cool or warm the reaction. Try Combustion, Rust, and Vinegar + Baking Soda Fizz presets to compare different clues that show new substances are forming.",
 
   challenges: [
     { id: "k5cc-c1", question: "What happens when you mix vinegar and baking soda?", hint: "Fizzy bubbles appear! The gas is carbon dioxide (CO₂) — this is a chemical change.", tier: "free" },
@@ -48,14 +48,38 @@ export const k5ChemicalChanges: Experiment = {
   seoTitle: "Chemical Changes for Kids | Scivra Elementary Science",
   seoKeywords: ["chemical changes for kids", "chemical reactions elementary", "signs of chemical change", "K5 science experiment"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Chemical Changes and Reactions" },
+  htmlControlAliases: { reactionRate: "rateSlider", temperature: "tempSlider" },
+  presets: [
+    {
+      id: "combustion",
+      label: "Combustion (CH₄ burning)",
+      description:
+        "Combustion is a fast chemical change where methane burns and makes new substances, including carbon dioxide and water. Students can look for strong clues such as heat, light, and gas production.",
+      paramValues: { reactionRate: 95, temperature: 90 },
+    },
+    {
+      id: "rust",
+      label: "Iron Rusting",
+      description:
+        "Rusting is a slower chemical change where iron reacts with oxygen and water to make reddish-brown rust. It helps students compare quick reactions with changes that can happen over days or weeks.",
+      paramValues: { reactionRate: 15, temperature: 25 },
+    },
+    {
+      id: "fizz",
+      label: "Vinegar + Baking Soda Fizz",
+      description:
+        "This preset shows a familiar bubbling reaction where vinegar and baking soda make carbon dioxide gas. Students can use the bubbles and temperature change as evidence that new substances formed.",
+      paramValues: { reactionRate: 60, temperature: 25 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Did you ever mix baking soda and vinegar and watch it fizz and bubble like crazy? That fizzing is a chemical change! A chemical change happens when one or more substances change or react to form something brand new — something that was not there before. Mixing is one common way this can happen, but heating, burning, or breaking apart a single substance can also cause a chemical change. The new stuff has different properties than what you started with. Sometimes you can tell a chemical change is happening because you see bubbles, or the color changes, or the mixture gets warm or cold, or a solid chunk forms that was not there before. A physical change is different — the substance stays the same thing, just in a new shape or form. Cutting paper into tiny pieces is a physical change: it is still paper. Burning paper is a chemical change: you get ash and smoke, which are completely new substances. In this simulation you can mix different substances and look for the clues that tell you whether a chemical change happened.",
     parameterExplanations: {
-      substance1:
-        "Substance 1 is the first ingredient you choose to mix. You can pick from four options: 0 for Vinegar (a sour liquid you find in kitchens), 1 for Baking Soda (a white powder used in baking), 2 for Milk (the white drink from a carton), or 3 for Lemon Juice (the sour juice squeezed from lemons). Each substance has its own special properties. Try different combinations to discover which pairs create a chemical change and which ones just blend together without making anything new.",
-      substance2:
-        "Substance 2 is the second ingredient you add to the first one. Choose from: 0 for Baking Soda, 1 for Vinegar, 2 for Food Coloring (a safe dye used to color frosting or drinks), or 3 for Copper Penny (a coin with a copper coating). When you press Mix, the simulation shows you what happens when these two substances come together. Watch the indicator panel carefully — it lights up to show you which signs of a chemical change appear, like bubbles, a color shift, warming, or a new solid forming.",
+      reactionRate:
+        "Reaction Rate means how quickly the chemical change happens. A low rate is like slow rusting: you may need to watch carefully because the evidence appears little by little. A high rate is like combustion or vinegar and baking soda fizzing: bubbles, heat, or color changes can show up quickly. Try the Rust preset first, then move the Reaction Rate slider higher and compare it with the Combustion and Fizz presets. Scientists often compare slow and fast reactions to understand what clues are easiest to observe.",
+      temperature:
+        "Temperature tells how warm or cool the reaction is. Many chemical changes happen faster or show stronger clues when the temperature is higher, because the tiny particles are moving and bumping into each other more. Cooler temperatures can make a reaction look slower or gentler. Try keeping Reaction Rate the same while changing only Temperature, then compare the Rust, Combustion, and Fizz presets. Watch for evidence such as warming, bubbles, light, or color change, and ask whether the change made a new substance.",
     },
     misconceptions: [
       {
@@ -80,11 +104,11 @@ export const k5ChemicalChanges: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set substance1 to Vinegar (0) and substance2 to Baking Soda (0), run the mix, and have students identify all the signs of chemical change they observe — bubbles, temperature shift — then record their evidence in a T-chart of physical vs. chemical changes, supporting 5-PS1-4.",
-      "Set substance2 to Food Coloring (2) with any substance1, then ask students whether adding food coloring is a chemical or physical change and how they can justify their answer using the indicator panel results.",
-      "Use the copper penny combination (substance2 = 3) to introduce the idea that some chemical changes happen slowly in real life — like coins turning green or iron rusting — even though the simulation shows it quickly.",
-      "Have students predict which combination will cause the most dramatic chemical change before mixing, record predictions, then compare to results and discuss what evidence changed their thinking.",
-      "After exploring all combinations, challenge students to sort the results into two columns — chemical change and no chemical change — and write one sentence explaining the biggest clue they used to decide.",
+      "Start with the Fizz preset and have students identify evidence such as bubbles and temperature change, then connect their observations to NGSS 5-PS1-4 by explaining that new substances formed.",
+      "Use the Rust preset with a low Reaction Rate, then ask students why some chemical changes are harder to notice right away even when a new substance is forming.",
+      "Use the Combustion preset to compare a high-temperature, fast reaction with the slower Rust preset, focusing on how heat, light, and gas can be evidence of chemical change.",
+      "Have students keep Temperature constant while changing only the Reaction Rate slider, then record which signs appear quickly and which require more careful observation.",
+      "Run a quick CER activity where students choose one preset, cite Reaction Rate and Temperature values as evidence, and claim whether the observed change supports NGSS 5-PS1-4.",
     ],
     faq: [
       {
