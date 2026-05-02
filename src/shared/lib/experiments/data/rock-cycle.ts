@@ -6,7 +6,7 @@ export const rockCycle: Experiment = {
   title: "Rock Cycle",
   subtitle: "Three rock types and the geological processes that transform them",
   description:
-    "Explore the rock cycle through an interactive 3D geological cross-section. Drag rock samples through melting, cooling, weathering, erosion, compaction, and metamorphism to trace how igneous, sedimentary, and metamorphic rocks transform into one another. Adjust temperature, pressure, and time to observe the conditions driving each transition.",
+    "Explore the rock cycle through an interactive 3D geological cross-section. Drag rock samples through melting, cooling, weathering, erosion, compaction, and metamorphism to trace how igneous, sedimentary, and metamorphic rocks transform into one another. Adjust temperature and burial depth to observe the conditions driving each transition.",
   thumbnail: "/imgs/experiments/rock-cycle.png",
 
   standards: {
@@ -36,29 +36,19 @@ export const rockCycle: Experiment = {
       label: "Temperature",
       unit: "°C",
       min: 0,
-      max: 1400,
-      default: 200,
+      max: 1500,
+      default: 1200,
       step: 50,
       tier: "free",
     },
     {
-      id: "pressure",
-      label: "Pressure",
-      unit: "GPa",
+      id: "depth",
+      label: "Burial Depth",
+      unit: "km",
       min: 0,
-      max: 4,
-      default: 0.5,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "timescale",
-      label: "Time Scale",
-      unit: "My",
-      min: 1,
-      max: 500,
-      default: 50,
-      step: 10,
+      max: 50,
+      default: 0,
+      step: 1,
       tier: "free",
     },
   ],
@@ -70,9 +60,9 @@ export const rockCycle: Experiment = {
         "Igneous rock breaks down through weathering and erosion into sediment, which compacts and cements into sedimentary rock over millions of years.",
     },
     {
-      latex: "\\text{Any Rock} \\xrightarrow{T > 200°C,\\, P > 0.3\\,\\text{GPa}} \\text{Metamorphic}",
+      latex: "\\text{Any Rock} \\xrightarrow{T > 200°C,\\, \\text{depth} > 10\\,\\text{km}} \\text{Metamorphic}",
       description:
-        "Heat and pressure transform any existing rock into metamorphic rock without melting. Higher T and P produce higher-grade metamorphism.",
+        "Heat and burial pressure transform any existing rock into metamorphic rock without melting. Higher T and deeper burial produce higher-grade metamorphism.",
     },
     {
       latex: "\\text{Any Rock} \\xrightarrow{T > 700\\text{–}1200°C} \\text{Magma} \\xrightarrow{\\text{cooling}} \\text{Igneous}",
@@ -82,16 +72,16 @@ export const rockCycle: Experiment = {
   ],
 
   theory:
-    "The rock cycle describes the continuous transformation of rocks among three types. Igneous rocks form when magma or lava cools and crystallizes — slow cooling underground (intrusive) produces coarse-grained granite, while rapid surface cooling (extrusive) produces fine-grained basalt. Sedimentary rocks form when weathering breaks existing rock into fragments that are transported, deposited, compacted, and cemented — examples include sandstone, limestone, and shale. Metamorphic rocks form when existing rocks are subjected to elevated temperature (>200°C) and/or pressure (>0.3 GPa) without melting — slate from shale, marble from limestone, gneiss from granite. Any rock type can become any other: igneous can weather into sedimentary, be metamorphosed, or re-melt. The cycle is driven by Earth's internal heat (mantle convection, radioactive decay) and external energy (solar-driven weathering). Plate tectonics is the engine: subduction carries rocks to depth (metamorphism, melting), while uplift and volcanism bring material back to the surface.",
+    "The rock cycle describes the continuous transformation of rocks among three types. Igneous rocks form when magma or lava cools and crystallizes — slow cooling underground (intrusive) produces coarse-grained granite, while rapid surface cooling (extrusive) produces fine-grained basalt. Sedimentary rocks form when weathering breaks existing rock into fragments that are transported, deposited, compacted, and cemented — examples include sandstone, limestone, and shale. Metamorphic rocks form when existing rocks are subjected to elevated temperature (>200°C) and burial pressure (>~10 km depth) without melting — slate from shale, marble from limestone, gneiss from granite. Any rock type can become any other: igneous can weather into sedimentary, be metamorphosed, or re-melt. The cycle is driven by Earth's internal heat (mantle convection, radioactive decay) and external energy (solar-driven weathering). Plate tectonics is the engine: subduction carries rocks to depth (metamorphism, melting), while uplift and volcanism bring material back to the surface.",
 
   instructions:
-    "Click on a rock type node (Igneous, Sedimentary, or Metamorphic) to select it, then click a process arrow to trigger the transformation. Adjust temperature, pressure, and time scale to see how conditions affect which transformations are possible. The 3D cross-section shows where each process occurs in Earth's crust and mantle.",
+    "Use the Temperature slider (0–1500 °C) and the Burial Depth slider (0–50 km) to set the geological conditions, then click one of the three rock-type focus presets — Igneous Formation, Sedimentary Layers, or Metamorphic Zone — to highlight that part of the cross-section and see the transformations happening under those conditions.",
 
   challenges: [
     {
       id: "rc-c1",
       question: "What conditions cause metamorphic rock to form instead of melting into magma?",
-      hint: "Metamorphism occurs at elevated T (200–700°C) and P (>0.3 GPa) but below the melting point. If temperature exceeds ~700–1200°C (depending on composition), the rock melts into magma instead.",
+      hint: "Metamorphism occurs at elevated T (200–700°C) and burial depth (>10 km, equivalent to >0.3 GPa pressure) but below the melting point. If temperature exceeds ~700–1200°C (depending on composition), the rock melts into magma instead.",
       tier: "free",
     },
     {
@@ -128,16 +118,35 @@ export const rockCycle: Experiment = {
     educationalLevel: "High School",
     teaches: "Rock Cycle and Geological Processes",
   },
+  htmlControlAliases: { temperature: "tempSlider", depth: "depthSlider" },
+  presets: [
+    {
+      id: "igneous",
+      label: "Igneous Formation",
+      description:
+        "Highlights the magma-cooling pathway: silica-rich magma crystallizes slowly underground into intrusive rocks like granite, while iron-rich lava cools quickly at the surface into extrusive rocks like basalt.",
+    },
+    {
+      id: "sedimentary",
+      label: "Sedimentary Layers",
+      description:
+        "Highlights weathering, transport, deposition, and lithification: surface rocks erode into sediment that accumulates in layers and is compacted and cemented into sandstone, shale, or limestone.",
+    },
+    {
+      id: "metamorphic",
+      label: "Metamorphic Zone",
+      description:
+        "Highlights heat-and-pressure transformation below the melting point: slate forms from shale, marble from limestone, and gneiss from granite as minerals recrystallize without the rock becoming liquid.",
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "The rock cycle describes how Earth's three main rock families — igneous, sedimentary, and metamorphic — continuously transform into one another through geological processes powered by Earth's internal heat and the Sun's energy at the surface. Igneous rocks crystallize from cooling magma; sedimentary rocks form from the compaction and cementation of eroded fragments; metamorphic rocks form when heat and pressure transform existing rock without melting it. Crucially, the cycle has no single fixed direction: any rock type can become any other through the right combination of temperature, pressure, and time. The simulation lets you move rock samples through the cycle by adjusting temperature, pressure, and timescale, showing which transformation pathway activates under each set of conditions.",
+      "The rock cycle describes how Earth's three main rock families — igneous, sedimentary, and metamorphic — continuously transform into one another through geological processes powered by Earth's internal heat and the Sun's energy at the surface. Igneous rocks crystallize from cooling magma; sedimentary rocks form from the compaction and cementation of eroded fragments; metamorphic rocks form when heat and burial pressure transform existing rock without melting it. Crucially, the cycle has no single fixed direction: any rock type can become any other through the right combination of temperature and depth. The simulation lets you set Temperature (0–1500 °C) and Burial Depth (0–50 km) and then focus on the Igneous, Sedimentary, or Metamorphic part of the cross-section to see which transformation pathway activates under each set of conditions.",
     parameterExplanations: {
       temperature:
-        "Temperature in °C, ranging 0–1400°C. Sedimentary and igneous rocks begin metamorphic transformation above ~200°C. Above ~700–1200°C (depending on composition), rock melts into magma and re-enters the igneous pathway. The default value of 200°C sits at the low-grade metamorphic threshold.",
-      pressure:
-        "Confining pressure in GPa, ranging 0–4 GPa. A pressure of 0.3 GPa corresponds roughly to burial at 10 km depth. Metamorphism begins above ~0.3 GPa combined with elevated temperature; high-pressure subduction environments (>1 GPa) can produce minerals such as glaucophane, lawsonite, or omphacite. Garnet occurs across a broader range of metamorphic grades and is not exclusive to high-pressure subduction.",
-      timescale:
-        "Geological time in millions of years (My), ranging 1–500 My. Sediment compaction into sedimentary rock requires tens of millions of years. Metamorphic reactions accelerate with temperature but still require millions of years at geological scales. The default 50 My spans a typical sedimentary basin filling timescale.",
+        "Temperature in degrees Celsius, ranging from 0 to 1500 °C. Below ~200 °C most rocks remain stable. Between ~200 and ~700 °C, combined with deep burial, existing rocks recrystallize as metamorphic rocks without melting. Above ~700–1200 °C (the exact value depends on rock composition and water content) rocks begin to melt into magma, which can crystallize again into igneous rock when it cools. The default of 1200 °C sits inside the partial-melting range for many crustal rocks, useful for showing the metamorphic-to-igneous transition. Pair this slider with the Igneous Formation and Metamorphic Zone presets to compare endpoints.",
+      depth:
+        "Burial Depth in kilometers, ranging 0–50 km. At the surface (0 km), weathering and erosion dominate, breaking rocks into sediment. Around 10 km depth, the lithostatic pressure roughly reaches 0.3 GPa — a typical threshold for low-grade metamorphism when combined with elevated temperature. Below ~30 km the pressure can produce high-grade metamorphic minerals like garnet or kyanite. The slider helps connect the three-rock-type model to depth-driven mountain belt geology and subduction-zone settings, where buried rocks rise back to the surface through uplift and erosion.",
     },
     misconceptions: [
       {
@@ -156,7 +165,7 @@ export const rockCycle: Experiment = {
         wrong:
           "Sedimentary rocks form quickly from mud and sand.",
         correct:
-          "Loose sediment must be buried under additional sediment, compressed under its own weight (lithification), and cemented by minerals precipitating from groundwater. This typically takes tens of millions of years for deep burial to produce well-lithified rock. The timescale parameter in the simulation ranges up to 500 million years to represent this geological pacing.",
+          "Loose sediment must be buried under additional sediment, compressed under its own weight (lithification), and cemented by minerals precipitating from groundwater. This typically takes tens of millions of years for deep burial to produce well-lithified rock — much longer than the surface processes that produce the sediment in the first place.",
       },
       {
         wrong:
@@ -166,32 +175,32 @@ export const rockCycle: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Pathway mapping activity: assign pairs a starting rock type and a target rock type. They must identify at least two different parameter paths through the simulation that achieve the transformation. For example, going from sedimentary to igneous requires either raising temperature above 700°C (melting) or first metamorphosing then melting, showing multiple valid routes.",
-      "Metamorphism threshold investigation: starting at temperature 200°C and pressure 0.3 GPa, increase each parameter independently in steps while holding the other constant. Students identify the minimum temperature-pressure combination that triggers metamorphism and map the boundary on a T-P grid — a simplified phase diagram exercise at HS algebra level.",
-      "Timescale intuition: set temperature to 50°C and pressure to 0.1 GPa (shallow burial), then sweep timescale from 1 My to 500 My. Ask students when sediment becomes well-lithified rock. Connect the 50–100 My typical value to the timescale of mountain building and erosion, supporting HS-ESS2-1.",
-      "Misconception challenge — one-way cycle: before the sim, display the classic igneous → sedimentary → metamorphic → magma textbook diagram and ask if that is the only possible route. Then have students find, in the simulation, a path from metamorphic directly back to sedimentary (erosion and weathering after uplift) without passing through igneous. This directly corrects the one-way cycle misconception.",
-      "Subduction connection: at temperature 600°C and pressure 1.5 GPa, identify which rock type forms and what real-world setting produces those conditions (deep subduction zone, ~50 km depth). Link to the plate-tectonics-advanced simulation to show that plate tectonics is the mechanism driving the rock cycle at depth, addressing HS-ESS2-1 on internal Earth processes.",
+      "Pathway mapping activity: assign pairs a starting rock type and a target rock type using the three focus presets. They must identify at least one parameter combination of Temperature and Burial Depth that achieves each transformation, supporting HS-ESS2-1 modeling of internal processes.",
+      "Metamorphism threshold investigation: starting at Temperature 200 °C and Burial Depth 10 km, increase each parameter independently in steps while holding the other constant. Students identify the minimum Temperature-Depth combination that triggers metamorphism (use the Metamorphic Zone preset to highlight the affected region) and map a simplified phase boundary at HS algebra level.",
+      "Igneous pathway exploration: select the Igneous Formation preset and sweep Temperature from 700 °C to 1500 °C while keeping Depth at 0 km versus 30 km. Students compare extrusive (surface, fast cooling, basalt) and intrusive (deep, slow cooling, granite) endpoints, connecting cooling rate to crystal size.",
+      "Sedimentary surface focus: select the Sedimentary Layers preset and keep Temperature low (~50 °C) and Depth shallow (~3 km). Discuss how surface weathering, transport, and burial together produce sedimentary rock without high heat. Connect to MS-ESS2-1 surface-process reasoning.",
+      "Subduction connection: at Temperature ~600 °C and Burial Depth ~30 km, identify which rock type forms and what real-world setting produces those conditions (deep subduction zone). Link to the plate-tectonics-advanced simulation to show that plate tectonics drives the rock cycle at depth (HS-ESS2-1).",
     ],
     faq: [
       {
         question: "What is the difference between igneous and metamorphic rock if both involve heat?",
         answer:
-          "The key distinction is whether the rock melted. Metamorphic rock forms when existing rock is heated (above ~200°C) and compressed but remains solid — minerals recrystallize without the rock becoming liquid. Igneous rock forms when rock melts completely into magma (above ~700–1200°C depending on composition) and then solidifies. Try setting temperature above 700°C in the simulation to see the transition from metamorphic to igneous pathway.",
+          "The key distinction is whether the rock melted. Metamorphic rock forms when existing rock is heated (above ~200 °C) and compressed by burial but remains solid — minerals recrystallize without the rock becoming liquid. Igneous rock forms when rock melts completely into magma (above ~700–1200 °C depending on composition) and then solidifies. Try setting Temperature above 700 °C in the simulation to see the transition from metamorphic to igneous pathway.",
       },
       {
         question: "How long does the rock cycle take?",
         answer:
-          "It varies enormously by pathway. Lava cooling into igneous rock can take years to decades. Sediment compacting into sedimentary rock typically takes tens of millions of years (the simulation's timescale parameter spans 1–500 My). Metamorphism at depth takes millions to tens of millions of years. Full cycle completion — from magma to sedimentary rock and back to metamorphic — can span hundreds of millions of years.",
+          "It varies enormously by pathway. Lava cooling into igneous rock can take years to decades. Sediment compacting into sedimentary rock typically takes tens of millions of years. Metamorphism at depth takes millions to tens of millions of years. Full cycle completion — from magma to sedimentary rock and back to metamorphic — can span hundreds of millions of years.",
       },
       {
         question: "Which NGSS standards does this simulation address?",
         answer:
-          "The simulation supports HS-ESS2-1 (develop a model to illustrate how Earth's internal and surface processes operate at different spatial and temporal scales to form continental and ocean-floor features). Rock type transitions under different temperature and pressure conditions directly model the processes described in that standard. MS-ESS2-1 is also listed in the file for cross-grade connection.",
+          "The simulation supports HS-ESS2-1 (develop a model to illustrate how Earth's internal and surface processes operate at different spatial and temporal scales to form continental and ocean-floor features). Rock type transitions under different temperature and burial-depth conditions directly model the processes described in that standard. MS-ESS2-1 is also listed for cross-grade connection.",
       },
       {
         question: "Can sedimentary rock become igneous rock without first becoming metamorphic?",
         answer:
-          "In simplified rock-cycle diagrams a direct arrow from sedimentary to magma is sometimes shown, but in nature, burial heating typically passes through metamorphic conditions before reaching melting temperatures. The distinction matters: sedimentary rock usually becomes metamorphic rock first, then melts into magma if temperatures climb high enough. Set temperature above 800°C and pressure above 1 GPa in the simulation to see the melting pathway — but treat the 'skip metamorphism' route as a diagram simplification rather than a common geological process.",
+          "In simplified rock-cycle diagrams a direct arrow from sedimentary to magma is sometimes shown, but in nature, burial heating typically passes through metamorphic conditions before reaching melting temperatures. The distinction matters: sedimentary rock usually becomes metamorphic rock first, then melts into magma if temperatures climb high enough. Set Temperature above 800 °C and Burial Depth above 20 km in the simulation to see the melting pathway — but treat the 'skip metamorphism' route as a diagram simplification rather than a common geological process.",
       },
       {
         question: "What makes granite different from basalt if both are igneous?",
