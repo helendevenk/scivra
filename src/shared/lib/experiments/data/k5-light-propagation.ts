@@ -127,4 +127,74 @@ export const k5LightPropagation: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Light Propagation and Optics",
   },
+  contentSections: {
+    whatIsIt:
+      "Light is amazing! It travels incredibly fast and it moves in straight lines — like a flashlight beam that shoots straight across a dark room. Because light travels in straight lines, it cannot go around corners on its own. That is why you get a shadow when you stand in front of a light. Your body blocks the straight-moving light and leaves a dark area behind you. When light hits a smooth shiny surface like a mirror, it bounces back. This is called reflection. The light bounces off at the same angle it arrived, like a ball bouncing off a wall. When light moves from air into water or glass, something interesting happens — it bends! This is called refraction. It is why a straw in a glass of water looks broken or bent. Different materials bend light by different amounts. Objects also have colors because of light. A red apple looks red because it bounces red light toward your eyes and absorbs all the other colors. In this simulation, you can aim a beam of light at different angles, point it at a mirror, and send it through different materials to watch how it bends.",
+    parameterExplanations: {
+      lightAngle:
+        "This slider changes the angle of the light beam as it comes from the light source, from 0 degrees (straight across) to 90 degrees (pointing straight down). Try different angles to see how the beam hits the mirror or enters the water at different spots. The angle you set affects where the reflected or refracted beam goes.",
+      medium:
+        "This control chooses what material the light travels through. Set it to 0 for air (light goes straight with no bending), 1 for water (light bends when it enters the water), or 2 for glass (light bends even more than in water). Watch closely at the boundary between air and water or glass to see the bending happen.",
+      mirrorAngle:
+        "This slider rotates the mirror from 0 to 90 degrees. Changing the mirror angle changes which direction the reflected light bounces. Try to aim the reflected beam at a target by adjusting both the light angle and the mirror angle together.",
+      colorFilter:
+        "This pro control changes the color of the light beam — white, red, blue, or green. White light contains all colors mixed together. When white light passes through a material, different colors bend by slightly different amounts. This is how a prism splits white light into a rainbow.",
+    },
+    misconceptions: [
+      {
+        wrong: "Light can bend around corners on its own.",
+        correct:
+          "In everyday life, light travels in straight lines and cannot bend around corners on its own. That is why a shadow forms — the light cannot curve around the object blocking it. You need a mirror or special curved surface to redirect light around a corner.",
+      },
+      {
+        wrong: "When you look in a mirror, the image is behind the mirror.",
+        correct:
+          "The image in a mirror is not really behind it — it is a virtual image created by your brain tracing the reflected light rays backward. There is no actual object behind the mirror. Your brain sees light coming from a certain direction and assumes something must be there producing it.",
+      },
+      {
+        wrong: "A red apple produces red light.",
+        correct:
+          "The apple does not produce any light on its own. White light from the sun or a lamp has all the colors mixed together. The red apple's skin absorbs most colors but reflects red light back toward your eyes. Your eye sees the red light and your brain says it is a red apple.",
+      },
+      {
+        wrong: "Light slows down when it goes through a mirror.",
+        correct:
+          "A mirror reflects light — the light bounces off the surface rather than going through it. Light does slow down slightly when it enters glass or water, and that slowing is what causes it to bend (refraction). But at a mirror surface, light does not enter the material — it reflects off the shiny coating on the front.",
+      },
+    ],
+    teacherUseCases: [
+      "Set medium to 0 (air) and lightAngle to 45 degrees. Ask students to predict where the beam will go when you switch medium to 1 (water). Watch together to confirm or correct predictions.",
+      "Set mirrorAngle to 45 degrees and lightAngle to 45 degrees to show a classic right-angle reflection. Have students sketch the incoming and outgoing beam and measure the angles with a protractor on their sketch.",
+      "Compare medium 0 (air), 1 (water), and 2 (glass) at the same lightAngle. Have students rank which material bends light the most and least, explaining in their own words what they observe.",
+      "Use the colorFilter (pro) set to white and then switch to red, blue, and green. Ask students if all colors bend the same amount when entering water. Connect to how a raindrop separates sunlight into a rainbow.",
+      "Shadow discussion starter: cover the light source (light angle = 90) and ask students why a shadow forms. Connect back to the rule that light travels in straight lines and cannot go around solid objects.",
+    ],
+    faq: [
+      {
+        question: "Why does light travel in straight lines?",
+        answer:
+          "Light is a form of energy that moves as waves — very tiny waves that travel outward from a source. In a material with even density, like calm air, there is nothing to push or pull the light sideways, so it travels in a straight path. This is why a flashlight beam, a laser pointer, and a sunbeam all travel in straight lines unless they hit something.",
+      },
+      {
+        question: "Why does a straw look bent in a glass of water?",
+        answer:
+          "When light travels from water back into air, it bends at the surface because water and air are different materials and light slows down in water. When you look at the straw, the light coming from the part underwater bends as it leaves the water and travels to your eye. Your brain traces the light back in a straight line and places the straw in the wrong spot, so the straw looks bent even though it is perfectly straight.",
+      },
+      {
+        question: "Which NGSS standards does this experiment address?",
+        answer:
+          "This simulation supports 1-PS4-3 (plan and conduct an investigation to determine the effect of placing objects made with different materials in the path of a beam of light) and 4-PS4-2 (develop a model to describe that light reflecting from objects and entering the eye allows objects to be seen). Students observe reflection and refraction in an interactive environment.",
+      },
+      {
+        question: "What makes something cast a shadow?",
+        answer:
+          "A shadow forms when an object blocks light that is traveling in a straight line. The light cannot bend around the object, so there is a dark area behind it where no light reaches. The shape of the shadow depends on the shape of the object and the angle of the light source. Early morning and late afternoon shadows are long because the sun is at a low angle.",
+      },
+      {
+        question: "Why does a mirror flip your image left to right but not upside down?",
+        answer:
+          "A mirror does not actually flip left and right — it flips front and back. When you face a mirror, the reflection faces back toward you. What seems like a left-right flip is really your brain getting confused because you expect your mirror image to turn around like another person would. If you raise your right hand, the mirror image raises the hand on the opposite side of the mirror, which your brain reads as its left hand.",
+      },
+    ],
+  },
 };

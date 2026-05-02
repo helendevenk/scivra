@@ -48,4 +48,69 @@ export const k5LandformsErosion: Experiment = {
   seoTitle: "Landforms & Erosion for Kids | Scivra Elementary Science",
   seoKeywords: ["landforms and erosion for kids", "weathering and erosion elementary", "geology K5", "K5 earth science experiment"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Landforms, Erosion, and Earth Surface Processes" },
+  contentSections: {
+    whatIsIt:
+      "Have you ever watched rainwater wash dirt off a hill, or seen sand move when the wind blows? That is erosion in action! Erosion is the slow wearing away of rocks and soil and the moving of those pieces to a new place. It happens all over Earth and has been shaping the land for millions of years. Water is the most powerful eroder. Rivers and streams carry tiny pieces of rock and sand downstream, carving out valleys and canyons over a very long time. Wind picks up loose sand and dust in dry places, blasting it against rocks and slowly shaping them into amazing rounded forms. Glaciers — huge, slow rivers of ice — grind across the land and carve wide valleys. All of these forces work with time. The Grand Canyon, for example, was carved by the Colorado River over about 5 to 6 million years. That is an incredibly long time — much longer than humans have been on Earth! In this experiment, you can choose which erosion force to use and speed up time to see the land change before your eyes.",
+    parameterExplanations: {
+      erosionType:
+        "This slider lets you pick which force is doing the eroding. Set it to 0 for water erosion — rivers and rain wearing down rock and soil. Set it to 1 for wind erosion — blowing air that carries sand and carves soft rock into rounded shapes. Set it to 2 for glacial ice erosion — a slow, heavy sheet of ice grinding the land. Each one leaves a different mark on the landscape. Try all three and compare what the land looks like after each one.",
+      timeScale:
+        "This slider controls how many years pass in the simulation, from 100 years to 10,000 years. Erosion is usually very slow — you would never notice it day to day. But set the slider to 5,000 or 10,000 years and watch how much the land changes! The higher the number, the more dramatic the change. At 100 years, the change is tiny. At 10,000 years, valleys deepen and mountains shrink noticeably.",
+    },
+    misconceptions: [
+      {
+        wrong: "Erosion only happens during big storms or floods.",
+        correct:
+          "Erosion happens all the time, even in gentle rain or a light breeze. A slow trickle of water over thousands of years can carve deep channels in rock. Wind that blows steadily through a desert slowly rounds and hollows out boulders. Most erosion is so gradual that we never notice it in our lifetime, but over hundreds and thousands of years it dramatically reshapes the land.",
+      },
+      {
+        wrong: "Mountains and canyons have always looked the way they do now.",
+        correct:
+          "Mountains, valleys, and canyons are always slowly changing. Mountains are worn down by water, wind, and ice over millions of years. Canyons grow wider and deeper as rivers keep cutting through rock. New mountains can also be pushed up from below by the movement of large pieces of Earth's crust. The landscapes we see today are just a snapshot of a very long, slow process of change.",
+      },
+      {
+        wrong: "Water erosion and wind erosion make the same shapes.",
+        correct:
+          "Water and wind leave very different clues on the land. Water erosion usually creates narrow valleys, deep canyons, and river channels with V-shaped cross-sections. It also deposits material in fan shapes where rivers slow down. Wind erosion creates smooth, rounded rock shapes and moving sand dunes. Glacial ice creates wide, U-shaped valleys, scratched rocks, and piles of mixed gravel and boulders called moraines. Geologists can tell which force shaped a landscape by looking at the shapes it left behind.",
+      },
+      {
+        wrong: "Erosion is always harmful and bad.",
+        correct:
+          "Erosion creates many beautiful and useful landforms. River deltas built by erosion and deposition are some of the most fertile farmland on Earth — the Nile Delta and Mississippi Delta feed millions of people. Beaches are made of sand that was eroded from rocks and carried by water. Canyons and valleys shaped by rivers become home to many animals and plants. Erosion can cause problems when it happens too fast in the wrong place, like when topsoil washes off farmland, but as a natural process it is essential to shaping the living world.",
+      },
+    ],
+    teacherUseCases: [
+      "Set erosionType to 0 (water) and timeScale to 5000 years; ask students to describe what landform is being created and compare it to images of real river valleys.",
+      "Run water erosion at timeScale 1000, then switch to erosionType 2 (glacial ice) at the same timeScale; have students compare the valley shapes and identify which is V-shaped and which is U-shaped.",
+      "Set erosionType to 1 (wind) and timeScale to 10000 years to show desert rock shaping; connect to photos of arches and balanced rocks found in dry regions like the American Southwest.",
+      "Use timeScale from 100 to 10000 years as a class discussion prompt: how does the amount of change connect to how long erosion has been working? Tie to NGSS 4-ESS2-1.",
+    ],
+    faq: [
+      {
+        question: "What is the difference between weathering and erosion?",
+        answer:
+          "Weathering and erosion work as a team, but they are two different steps. Weathering is the breaking of rocks into smaller pieces right where they sit. Rain, ice, heat, and even plant roots can crack and crumble rock over time. Think of it like crumbling a cookie. Erosion is what happens next — the small pieces get picked up and carried away by water, wind, or ice. Think of it like sweeping up the cookie crumbs and moving them somewhere else. Weathering breaks things apart; erosion moves them. Both together are constantly reshaping Earth's surface. NGSS standards 4-ESS2-1 and 4-ESS2-2 ask students to observe and describe these processes.",
+      },
+      {
+        question: "How did the Grand Canyon form?",
+        answer:
+          "The Grand Canyon was carved by the Colorado River over about 5 to 6 million years. The river slowly wore away the rock, carrying tiny pieces downstream. The canyon is now about 446 kilometers long, up to 29 kilometers wide, and over 1.6 kilometers deep — nearly a mile straight down! The layers of colorful rock on the canyon walls are like the pages of a history book, with older rock at the bottom and younger rock near the top. Some of the rock at the very bottom is almost 2 billion years old. Water is patient — a small river, given enough time, can carve through solid rock and create one of the most spectacular landscapes on Earth.",
+      },
+      {
+        question: "Why are sandy beaches always changing?",
+        answer:
+          "Beaches are shaped by erosion and deposition working together constantly. Ocean waves pick up sand and move it along the shore — this is called longshore drift. Storm waves erode cliffs and add new sand. Rivers bring eroded material from inland and deposit it at the coast, building new beach. In calm weather, sand drifts back. This means beaches are always shifting — parts grow while other parts shrink. That is why shorelines look different over years and decades. Beaches are among the most actively changing landforms on Earth, and the sand you walk on is made of tiny rock and shell pieces that have been worn down by water over a very long time.",
+      },
+      {
+        question: "Can erosion happen underwater?",
+        answer:
+          "Yes! Water currents on the ocean floor, rivers underwater, and even waves crashing on underwater cliffs all erode rock and sediment. Underwater erosion can carve channels in the seafloor called submarine canyons — some are just as deep and dramatic as canyons on land. Turbidity currents — fast-moving flows of muddy water — rush down underwater slopes and carve these features in hours or days. Coral reefs are also worn away by wave energy and by animals that nibble on them. Erosion shapes Earth's surface both above and below the water.",
+      },
+      {
+        question: "How can people slow down erosion where it causes problems?",
+        answer:
+          "When erosion happens too fast — like topsoil washing off farmland in heavy rain, or a riverbank collapsing — people use several methods to slow it down. Planting grass, trees, and shrubs on bare soil gives roots that hold the soil in place. Farmers plant crops in curved rows that follow the shape of hills, called contour farming, so water cannot rush straight down the slope. Builders place erosion barriers like hay bales, nets, or rock walls to catch moving soil. Wetlands and healthy plant cover act like natural sponges that soak up rainwater before it can wash soil away. Protecting the land from erosion helps keep soil healthy for growing food and keeps rivers and streams clean.",
+      },
+    ],
+  },
 };
