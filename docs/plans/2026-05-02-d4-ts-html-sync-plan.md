@@ -2,7 +2,7 @@
 name: d4-ts-html-sync-plan
 status: backlog
 created: 2026-05-02T06:07:20Z
-updated: 2026-05-02T06:32:00Z
+updated: 2026-05-02T07:30:00Z
 ---
 
 # D4 — TS Metadata vs HTML Simulation Sync Plan
@@ -264,7 +264,7 @@ Total realistic timeline: **6-9 sessions** to ship Phases A-C cleanly.
 
 1. **Is `parameters[].id` consumed by any external contract?** Specifically: gallery search/filter URL params, analytics events, SEO JSON-LD, saved sessions, embed iframe URLs. Resolution required before Phase A so the script knows whether semantic id renames are even on the table. **Action:** grep `src/`, `public/`, analytics configs for `parameters[].id` usage; document in `_phase3-research/d4-audit/external-contracts.md`.
 2. **For 🔴 hard cases without PM response within 14 days, is "default to Strategy A" acceptable?** The plan assumes yes. PM team to confirm or override.
-3. **Should preset buttons enter `parameters[]`?** Currently `.ts` only models continuous-valued params. Some HTML controls are preset buttons (e.g., `applyPreset(...)`) that map to combinations of underlying params. Three options: (a) model presets as separate `presets[]` field, (b) include them as a single param with discrete values, (c) leave them out of `parameters[]` entirely and document them only in `instructions`. Decision needed before Phase B.
+3. ~~**Should preset buttons enter `parameters[]`?**~~ **RESOLVED 2026-05-02 — Option (a):** added `presets?: ExperimentPreset[]` field to the Experiment type (`src/shared/types/experiment.ts`). Each preset has `{ id, label, description?, paramValues? }`. Audit script matches `presets[].id` against HTML preset button targets (last segment of `preset:<fn>:<value>` ids). Validated on ms-newtons-laws — went from 4+6 missing controls to clean diff. parameterExplanations stays focused on continuous params; teacherUseCases reference presets by label.
 4. **For React/R3F experiments (4 files) without `htmlPath`, how do we cover params-vs-actual-controls drift?** Their controls live in `src/shared/components/experiments/three/`. Either skip (current plan via `R3F_EXEMPT`) or extend the audit to parse R3F sidebar prop usage. Recommendation: skip in v1; track as Phase E if needed.
 5. **Add `htmlControlAliases` to the Experiment type globally, or only in `parameters[]`?** This plan proposes top-level on the Experiment object. Alternative: `parameters[].alias?` per-param. The latter colocates the alias with the param but adds noise. Decision needed in Phase B.
 
@@ -307,3 +307,63 @@ This v2 incorporates a codex `gpt-5.5` high-reasoning review of the v1 draft. Ke
 - §8 Open Qs: 5 open questions resolved before Phase B, including external contracts (Q1) and preset modeling (Q3)
 
 Codex full review log: `_phase3-research/d4-plan-review/codex-review-v2.log`
+
+## 12. Phase A audit results (2026-05-02 06:50 UTC)
+
+**Initial audit completed.** Surface area is significantly larger than the v1 estimate of 25-30 files. Raw classification:
+
+| Severity | Tier | Count | Fix direction |
+|---|---|---:|---|
+| ✅ OK | — | 0 | no action |
+| 🟢 trivial | C1 | 0 | range tweaks |
+| 🟢 easy | C2 | 0 | aliases only |
+| 🟡 drop | C3 | 1 | remove .ts params |
+| 🟡 add | C4 | 0 | add HTML controls |
+| 🟡 mixed | C5 | 38 | combination drop+add |
+| 🔴 hard | D | 76 | topic-level mismatch (PM decision) |
+| ⚪ exempt | R3F | 4 | no HTML to audit |
+| ⚫ html-missing | HTML-MAP | 60 | no `EXPERIMENT_HTML_MAP` entry — **separate tech debt, out of D4 scope** |
+
+**Critical caveats:**
+
+1. The 🔴 hard count is inflated by a cheap word-overlap heuristic that flags any `.ts.subtitle` lacking a 4+-letter word in common with the HTML's `<title>`. Many of these are legitimate topic matches with different phrasing (e.g., "Mole ratios, limiting reagents, and reaction yields" vs HTML title "Stoichiometry — Particle Counter"). Real 🔴 count after manual review is likely much smaller (estimate: 10-20 true hard cases like ms-genetics).
+2. The 0 trivial / 0 easy count is because no slug currently has an `htmlControlAliases` map. Most "🟡 mixed" classifications reflect that the audit can't tell `objectMass` should map to `sl-mass` without aliases. Adding aliases will reclassify many of these to 🟢 easy.
+3. 60 slugs in `tests/unit/content/phase3-manifest.ts` have NO entry in `src/shared/lib/experiments/html-map.ts`. At runtime `getExperimentHtmlPath(slug)` returns null. These ship with content but no iframe simulation. **This is a different tech debt** — possibly experiments that have HTML in `public/` but were never wired into the map, or experiments that intentionally use a different rendering path. **Recommendation: open a separate sister issue ("D5 — html-map gaps") and don't conflate with D4.**
+
+**Revised cost expectation:**
+
+After Phase A.2 (manual review of 🔴 candidates) and Phase A.3 (pilot 2-3 slugs through C2 alias workflow), the realistic distribution is likely:
+
+- 🟢 trivial+easy: 80-100 (most of the "mixed" + many "hard")
+- 🟡 drop+add+mixed: 20-30
+- 🔴 hard (true topic mismatch): 10-20
+
+**Revised timeline:** 8-12 sessions for D4 alone (Phases A complete; B requires the htmlControlAliases bulk-add workflow to be different than originally drafted).
+
+**Recommended next step:** ~~Pilot Phase C2 (aliases-only) on a single slug~~ **DONE 2026-05-02.** Pilot on `ms-newtons-laws` succeeded:
+
+| Stage | Result |
+|---|---|
+| Add `htmlControlAliases` (C2) | 4 missingInHtml → 1 (lawDemo); 6 missingInTs → 3 (presets) |
+| Align ranges + parameterExplanations + teacherUseCases (C1) | rangeMismatch 3 → 0 |
+| Resolve Q3 — extract lawDemo discrete param into `presets[]` field | full diff → empty (CLEAN) |
+
+**Gold-standard workflow per slug** (validated end-to-end, ~30-40 min for ms-newtons-laws):
+
+1. Read `_phase3-research/d4-audit/audit.jsonl` row for the slug
+2. Add `htmlControlAliases` for slider semantic↔DOM id mappings
+3. Align `parameters[].min/max/step/default` to HTML control attributes
+4. If HTML has preset buttons, extract any "scenario selector" discrete param into `presets[]` and remove it from `parameters[]`
+5. Update `parameterExplanations` to reflect new ranges/semantics
+6. Update `teacherUseCases` parameter values to be in-range; replace "set lawDemo to N" wording with "click the X preset"
+7. Run validation: `pnpm test tests/unit/content/experiment-content-sections.test.ts` → 1434/1434
+8. Run `pnpm tsx scripts/audit-params-vs-html.ts` → confirm clean diff for that slug
+
+Artifacts:
+
+- Script: `scripts/audit-params-vs-html.ts`
+- Classifier: `scripts/d4-classify-triage.ts`
+- Raw data: `_phase3-research/d4-audit/audit.jsonl`
+- Summary: `_phase3-research/d4-audit/audit-summary.md`
+- Triage report: `docs/reports/2026-05-02-d4-triage.md`
+- Open Q1 resolution: `_phase3-research/d4-audit/external-contracts.md`

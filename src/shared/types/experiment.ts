@@ -36,6 +36,24 @@ export interface Parameter {
   tier: Tier;
 }
 
+/**
+ * A named scenario / preset that bundles a set of parameter values.
+ * Surfaced in the HTML simulation as a preset button (e.g.,
+ * `applyPreset('inertia')`). Presets are auxiliary UI shortcuts; they
+ * never introduce new degrees of freedom beyond what `parameters[]`
+ * already exposes.
+ */
+export interface ExperimentPreset {
+  /** HTML preset id (matches the string passed to applyPreset/setMode). */
+  id: string;
+  /** Human-readable label shown in the UI. */
+  label: string;
+  /** Optional one-line description for educators. */
+  description?: string;
+  /** Optional snapshot of parameter values this preset applies. */
+  paramValues?: Record<string, number>;
+}
+
 /** Physics formula for display */
 export interface Formula {
   latex: string;
@@ -165,6 +183,25 @@ export interface Experiment {
 
   /** Optional educational content sections rendered below the simulation. */
   contentSections?: ExperimentContentSection;
+
+  /**
+   * Optional map from semantic parameter id (e.g., "objectMass") to the
+   * actual HTML DOM control id used inside the simulation file (e.g.,
+   * "sl-mass"). Used by D4 params-vs-html audit to prove that a semantic
+   * parameter is backed by a real user-facing control without forcing a
+   * semantic id rename. Absent map means the audit assumes id strings
+   * match directly between parameters[].id and HTML control ids.
+   */
+  htmlControlAliases?: Record<string, string>;
+
+  /**
+   * Optional list of named scenarios surfaced as preset buttons in the
+   * HTML simulation. Each preset bundles parameter values so a teacher
+   * can jump to a specific lesson configuration in one click. Audited
+   * against HTML preset buttons (applyPreset/setMode/setPreset patterns)
+   * by D4 params-vs-html audit.
+   */
+  presets?: ExperimentPreset[];
 }
 
 /** Blog post frontmatter */
