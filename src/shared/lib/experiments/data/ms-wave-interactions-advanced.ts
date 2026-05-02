@@ -126,4 +126,71 @@ export const msWaveInteractionsAdvanced: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Wave Interactions — Reflection, Refraction, Diffraction, and Interference",
   },
+  contentSections: {
+    whatIsIt:
+      "Waves carry energy from place to place without moving matter along with them. Toss a stone into a pond and ripples spread outward — the water molecules bob up and down but do not travel with the wave. The same principle applies to sound waves in air, light waves traveling through space, and seismic waves moving through Earth. When waves encounter boundaries, obstacles, or other waves, four fundamental behaviors can occur. Reflection is when a wave bounces back — the same way a rubber ball bounces off a wall, or your voice echoes off a cliff. Refraction is when a wave bends as it crosses into a different material and changes speed — the same way a straw looks bent in a glass of water. Diffraction is when a wave spreads around corners and through gaps — why you can hear someone talking around a corner but cannot see them. Interference is when two waves meet and combine — adding together to make a bigger wave (constructive) or canceling each other out (destructive). This simulation lets you switch wave types, adjust frequency, and change the medium to observe all four behaviors and see how wave properties change together.",
+    parameterExplanations: {
+      waveType:
+        "Selects whether the simulation shows a transverse wave (setting 0) or a longitudinal wave (setting 1). In a transverse wave, the material moves perpendicular to the direction the wave travels — like shaking a rope up and down while the wave moves sideways. Light and water-surface waves are transverse. In a longitudinal wave, the material moves back and forth in the same direction the wave travels — like a slinky being compressed and stretched. Sound is a longitudinal wave. Both types obey the same wave equation (v = f times wavelength) and show all four interactions.",
+      frequency:
+        "The number of complete wave cycles produced per second, measured in hertz (Hz), adjustable from 0.5 Hz to 10 Hz. Higher frequency means more waves per second and therefore a shorter wavelength (since wave speed stays constant in the same medium: wavelength = speed divided by frequency). Frequency affects diffraction — higher-frequency waves have shorter wavelengths that diffract less around obstacles and gaps. It also sets the pitch of a sound wave and the color of a light wave.",
+      medium:
+        "The material through which the wave travels, selectable from Air (0), Water (1), or Glass (2). Different materials transmit waves at different speeds. For light-like transverse waves, speed decreases from air to water to glass — this is the ordering shown in the simulation and the basis of optical refraction. Note: for sound, the ordering is reversed — sound travels fastest in solids, slower in liquids, and slowest in gases, because sound speed depends on the stiffness of the medium rather than its optical density. When a wave crosses from one medium to another, frequency stays the same but wavelength changes (shorter in slower media), causing refraction.",
+    },
+    misconceptions: [
+      {
+        wrong: "Waves move matter from place to place — for example, the water in a wave actually travels to shore.",
+        correct:
+          "Waves transfer energy, not matter. In an ocean wave, water molecules move in circular orbits but return almost to where they started — a rubber duck bobs up and down and slightly back and forth but does not travel to shore with the wave. The energy of the disturbance travels forward while the medium stays roughly in place. This is why a leaf floating on water bobs up and down rather than being carried along with the wave.",
+      },
+      {
+        wrong: "Refraction happens because the wave is bent by a force when it enters a new material.",
+        correct:
+          "Refraction is not caused by a force — it is a geometric consequence of one side of the wavefront slowing down before the other. Imagine a row of marching soldiers turning to walk through mud: soldiers who hit the mud first slow down, causing the whole line to pivot and change direction. Similarly, when a wave crosses into a slower medium at an angle, the side that enters first slows, bending the wavefront. No external force is involved.",
+      },
+      {
+        wrong: "Interference destroys one of the two waves permanently.",
+        correct:
+          "Waves pass through each other without being permanently affected. When two waves overlap, they combine at every point — constructively or destructively — but once they pass through the overlap region, each continues on unchanged. Destructive interference silences sound locally (as in noise-cancelling headphones) but does not eliminate either wave; they keep traveling beyond the overlap zone. Interference is a temporary combination, not permanent destruction.",
+      },
+      {
+        wrong: "Higher-frequency waves always travel faster than lower-frequency waves in the same medium.",
+        correct:
+          "In many simplified wave models, speed is treated as constant in one medium, so frequency and wavelength are inversely linked (wavelength = speed divided by frequency) — higher frequency means shorter wavelength, not faster travel. In real materials, dispersion does occur: glass, for example, slows different colors of visible light by slightly different amounts, which is why a prism separates white light into a rainbow. So the speed-stays-constant rule is a useful simplification, while dispersive materials show small frequency-dependent speed differences.",
+      },
+    ],
+    teacherUseCases: [
+      "Frequency and wavelength relationship: set medium to 0 (Air) and waveType to 0 (Transverse). Increase frequency from 1 Hz to 4 Hz to 8 Hz while students count the number of wave crests visible on screen. Students observe that more crests appear (shorter wavelength) as frequency rises, verifying the relationship wavelength = speed divided by frequency — supporting MS-PS4-1.",
+      "Refraction exploration: set waveType to 0 and frequency to 2 Hz. Switch medium from 0 (Air) to 1 (Water) to 2 (Glass). Students describe what changes about the wave pattern (wavelength gets shorter, wave bends at the boundary). Ask them to connect this to why pools look shallower than they are, or why a straw appears bent in water — bridging MS-PS4-2 to everyday observation.",
+      "Diffraction vs. frequency: hold medium at 0 and waveType at 0. Compare the wave spreading around an obstacle at frequency 1 Hz versus 8 Hz. Students should observe that lower-frequency (longer-wavelength) waves spread more. This sets up the everyday analogy: sound (long wavelengths) bends around corners easily; light (tiny wavelengths) does not — explaining why you hear but cannot see around a corner.",
+      "Constructive and destructive interference demo: if the simulation displays a built-in interference pattern (where two wave trains overlap), have students identify bright or loud spots (constructive — crests align) and quiet spots (destructive — crest meets trough). If a dedicated two-source interference mode is not available, use the frequency and waveType controls to observe how the existing wave pattern changes and discuss constructive vs. destructive interference conceptually. Ask: can two waves added together produce silence? Experiencing this counterintuitive result motivates understanding of noise-cancelling technology as an engineering application of MS-PS4-1.",
+    ],
+    faq: [
+      {
+        question: "Why can you hear someone talking around a corner but not see them?",
+        answer:
+          "Both sound and light are waves, but their wavelengths are vastly different. Typical sound wavelengths range from about 2 centimeters to 17 meters — similar in size to doorways and building corners. Waves diffract (spread around obstacles) most when their wavelength is comparable to the obstacle size, so sound bends easily around corners. Visible light has wavelengths between about 400 and 700 nanometers — millions of times smaller than a doorway — so light barely diffracts and travels in nearly straight lines. This is why sound turns corners but light does not.",
+      },
+      {
+        question: "What is the difference between a transverse and a longitudinal wave?",
+        answer:
+          "In a transverse wave, the medium (the material through which the wave travels) vibrates perpendicular to the direction the wave moves. Picture shaking a rope up and down: your hand moves vertically, but the wave pattern travels horizontally along the rope. Light is a transverse wave. In a longitudinal wave, the medium vibrates parallel to the direction of travel — regions of compression (squished together) and rarefaction (spread apart) move along the wave's path. Sound is a longitudinal wave: air molecules push back and forth in the same direction the sound travels. Both types carry energy and obey the wave equation v = f times wavelength.",
+      },
+      {
+        question: "Which NGSS standards does this experiment address?",
+        answer:
+          "This simulation primarily supports MS-PS4-1 (use mathematical representations to describe a simple model for waves that includes how the amplitude of a wave is related to the energy in the wave) and MS-PS4-2 (develop and use a model to describe that waves are reflected, absorbed, or transmitted through various materials). Adjusting frequency, medium, and wave type while observing reflection, refraction, diffraction, and interference directly builds the observational foundation for both standards, and the wave equation v = f times wavelength provides the mathematical representation MS-PS4-1 requires.",
+      },
+      {
+        question: "Why does a wave bend when it enters a new medium?",
+        answer:
+          "Refraction occurs because the wave changes speed when it crosses from one medium to another, and the two sides of the wavefront do not cross the boundary at the same instant. The side that enters the new (slower) medium first slows down while the other side is still moving at the original speed. This speed difference causes the wavefront to pivot — the same way a car turning into mud on one side skids and turns in that direction. The greater the speed difference between the two media, the more the wave bends.",
+      },
+      {
+        question: "How does noise-cancelling technology use wave interference?",
+        answer:
+          "Noise-cancelling headphones contain a small microphone that detects incoming sound waves. Electronics then generate a new sound wave with the same frequency and amplitude but completely flipped — the peaks of the original become the troughs of the new wave, and vice versa. When these two waves overlap in your ear, destructive interference occurs: the peaks and troughs cancel each other out, reducing the amplitude of the noise dramatically. This is a direct engineering application of destructive wave interference and demonstrates that interference is controllable, not random.",
+      },
+    ],
+  },
 };

@@ -130,4 +130,73 @@ export const msNewtonsLaws: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Newton's Three Laws of Motion",
   },
+  contentSections: {
+    whatIsIt:
+      "Newton's three laws of motion are the foundation of all everyday physics — from sliding a book across a desk to launching a rocket into space. The First Law (inertia) says objects are lazy: they resist changing their state of motion. Something sitting still stays still, and something moving keeps moving in a straight line at constant speed, unless a net force acts on it. The Second Law (F = ma) says that when a net force does act, the result is acceleration — and heavier objects need more force to get the same acceleration. The Third Law (action-reaction) says forces always come in pairs: when you push on something, it pushes back on you with exactly the same strength in the opposite direction. These action-reaction forces always act on different objects — that is what makes rockets work and what lets you walk without sliding. This simulation brings all three laws to life in one place, letting you adjust force, mass, and friction while watching free body diagrams, motion animations, and collision pairs update in real time.",
+    parameterExplanations: {
+      appliedForce:
+        "The push force applied to the object in newtons (N), adjustable from 0 N to 100 N. A larger applied force produces greater acceleration for the same mass (Newton's Second Law: a = F/m). Setting this to 0 demonstrates Newton's First Law — with no applied force and no friction, a moving object keeps moving at constant velocity. In Law 3 mode, this value controls the thrust force displayed on the action-reaction diagram.",
+      objectMass:
+        "The mass of the object being pushed in kilograms (kg), adjustable from 1 kg to 50 kg. For a fixed applied force, doubling the mass halves the acceleration. This parameter directly demonstrates the inverse relationship between mass and acceleration in Newton's Second Law. Heavier objects have more inertia — they resist changes in motion more strongly — which is why a shopping cart full of groceries is harder to start moving than an empty one.",
+      frictionCoeff:
+        "The friction coefficient (a dimensionless number, often written as Greek letter mu), adjustable from 0 to 0.8. Friction force equals the friction coefficient times the normal force (the object's weight on a flat surface). As this value increases, the friction force opposing motion grows and the net force on the object decreases. At high friction values the object may not accelerate at all if friction equals or exceeds the applied force. Setting this to 0 gives a frictionless surface, useful for isolating Newton's First Law.",
+      lawDemo:
+        "Selects which of Newton's three laws the simulation demonstrates (Pro tier). Setting 1 shows Newton's First Law — an object in motion with no net force, illustrating inertia. Setting 2 (default) shows Newton's Second Law with the Force and Mass sliders active and a live acceleration readout. Setting 3 shows Newton's Third Law through a collision or rocket scenario with paired force arrows of equal magnitude pointing in opposite directions on two different objects.",
+    },
+    misconceptions: [
+      {
+        wrong: "A moving object needs a constant force to keep moving at constant speed.",
+        correct:
+          "This is the single most common misconception in physics, called 'Aristotelian physics.' Newton's First Law says the opposite: a moving object at constant velocity needs zero net force. Forces are needed to change motion — to speed up, slow down, or turn. On a truly frictionless surface (or in outer space), an object keeps moving forever with no engine. The reason everyday objects slow down is friction, not the lack of a push.",
+      },
+      {
+        wrong: "Newton's Third Law action-reaction forces cancel each other out.",
+        correct:
+          "Action-reaction forces are equal in magnitude and opposite in direction, but they act on different objects — so they cannot cancel. When you push a wall, the wall pushes you back. Those forces act on different things (you vs. the wall) and cannot be added together to get zero. Forces only cancel when they act on the same object. Newton's Third Law pairs never cancel; Newton's First Law equilibrium (forces on one object canceling) is a separate concept.",
+      },
+      {
+        wrong: "Heavier objects fall faster than lighter ones.",
+        correct:
+          "In a gravity-only system with no air resistance, all objects fall with the same acceleration (about 10 m/s squared on Earth) regardless of mass. A feather and a hammer dropped on the Moon — where there is no air — hit the ground at the same time, as demonstrated by Apollo 15 astronauts. On Earth, air resistance creates a difference for very light or very flat objects, but that is air resistance, not gravity, causing the difference.",
+      },
+      {
+        wrong: "Friction always acts downward or against the direction of motion.",
+        correct:
+          "Kinetic friction (sliding friction) acts opposite to the direction of motion — that part is correct. But static friction (when an object is not sliding) can act in any direction needed to prevent motion. When you walk forward, static friction between your foot and the ground actually pushes you forward — without it, your foot would slip backward and you would fall. This forward static friction from the ground is what actually propels you when walking.",
+      },
+    ],
+    teacherUseCases: [
+      "F = ma isolation: set lawDemo to 2 and frictionCoeff to 0. Run with objectMass at 10 kg and appliedForce at 20 N. Record the acceleration. Then double the force to 40 N and record again. Then return force to 20 N and double the mass to 20 kg. Students build the table F, m, a and derive the relationship a = F/m themselves before seeing the formula — supporting MS-PS2-2.",
+      "Inertia demo: set lawDemo to 1 and frictionCoeff to 0. Give the object an initial push (briefly raise appliedForce to 50 N then drop to 0). Students observe that the object continues moving at constant velocity with zero applied force. Then repeat with frictionCoeff at 0.4 to show that friction — not the absence of force — is what stops real objects.",
+      "Action-reaction pairs: set lawDemo to 3 and walk students through the force arrows on both objects in the collision. Ask: which object experiences the larger force? (Neither — they are equal.) Which accelerates more? (The lighter one, because a = F/m.) This distinguishes the Third Law (equal forces) from the Second Law (unequal accelerations due to different masses), addressing a very common confusion.",
+      "Real-world scaling: keep lawDemo at 2 and set objectMass to 50 kg (a heavy student) vs 5 kg (a backpack). Apply the same appliedForce of 25 N. Students compare accelerations and connect to why you need more engine force to accelerate a loaded truck than an empty bicycle — directly linking F = ma to everyday transportation engineering.",
+    ],
+    faq: [
+      {
+        question: "If action and reaction forces are equal, why does a rocket move at all?",
+        answer:
+          "The rocket pushes exhaust gas backward with a large force. By Newton's Third Law, the exhaust gas pushes the rocket forward with an equal force. These two equal-and-opposite forces act on different objects — the gas and the rocket — so they do not cancel. The rocket accelerates forward because the net force on the rocket (from the exhaust pushing it) is nonzero. The exhaust accelerates backward for the same reason. This is also why rockets work in space where there is nothing to 'push against' — they push against the exhaust they expel.",
+      },
+      {
+        question: "What is inertia, and does every object have it?",
+        answer:
+          "Inertia is the tendency of any object to resist changes in its state of motion. An object at rest resists being pushed; an object in motion resists being stopped or redirected. Every object with mass has inertia — more mass means more inertia. A bowling ball is much harder to start rolling than a tennis ball for this reason. In space, with no friction and no gravity, a spacecraft coasting at thousands of kilometers per hour needs zero fuel to maintain that speed — pure inertia at work. Newton's First Law is essentially a mathematical statement of inertia.",
+      },
+      {
+        question: "Which NGSS standards does this experiment address?",
+        answer:
+          "The simulation primarily supports MS-PS2-1 (apply Newton's Third Law to design a solution to a problem involving the motion of two colliding objects) and MS-PS2-2 (plan an investigation to provide evidence that the change in an object's motion depends on the sum of the forces and the mass of the object). The lawDemo parameter lets you switch between scenarios targeting each law specifically. HS-PS2-1 is also listed, making this a useful bridge for students beginning to formalize Newton's laws algebraically.",
+      },
+      {
+        question: "Why does friction depend on a coefficient rather than just the surface area in contact?",
+        answer:
+          "Experiments show that for most everyday surfaces, friction force depends on how hard the surfaces are pressed together (the normal force) and on the roughness of the surfaces (captured by the friction coefficient), but not on the contact area. A large flat box and the same box balanced on one end experience the same friction force when pulled across a floor. This seems counterintuitive but has been verified repeatedly since the 1700s. The coefficient is a compact way to capture the material and texture properties of a pair of surfaces in one number.",
+      },
+      {
+        question: "Can the net force on an object be zero even if multiple forces are acting on it?",
+        answer:
+          "Yes — this is called equilibrium. A book sitting on a table has two forces acting on it: gravity pulling it downward and the normal force from the table pushing it upward. These are equal in magnitude and opposite in direction, so the net force is zero and the book does not accelerate (Newton's First Law). Equilibrium does not mean no forces — it means the forces balance. You can see this in the simulation when the friction force exactly equals the applied force and the object does not accelerate despite both forces being nonzero.",
+      },
+    ],
+  },
 };
