@@ -165,6 +165,16 @@ export interface Experiment {
 
   /** Optional educational content sections rendered below the simulation. */
   contentSections?: ExperimentContentSection;
+
+  /**
+   * Optional map from semantic parameter id (e.g., "objectMass") to the
+   * actual HTML DOM control id used inside the simulation file (e.g.,
+   * "sl-mass"). Used by D4 params-vs-html audit to prove that a semantic
+   * parameter is backed by a real user-facing control without forcing a
+   * semantic id rename. Absent map means the audit assumes id strings
+   * match directly between parameters[].id and HTML control ids.
+   */
+  htmlControlAliases?: Record<string, string>;
 }
 
 /** Blog post frontmatter */
