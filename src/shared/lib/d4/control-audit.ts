@@ -51,6 +51,15 @@ export function isExcludedId(id: string): boolean {
   return EXCLUDED_ID_PATTERNS.some((re) => re.test(id));
 }
 
+const EXCLUDED_PRESET_FN_PATTERNS: RegExp[] = [
+  /^(setSpeed|setSimSpeed|setPlaySpeed|setPlayback|setTimeSpeed|setRate|setFps)/,
+  /^(toggle|show|hide|open|close|reset|play|pause|step|fullscreen|focus)/i,
+];
+
+function isExcludedPresetFn(fn: string, _target: string): boolean {
+  return EXCLUDED_PRESET_FN_PATTERNS.some((re) => re.test(fn));
+}
+
 export function extractHtmlControls(
   htmlPath: string,
   publicDir: string = PUBLIC_DIR_DEFAULT,
@@ -69,9 +78,21 @@ export function extractHtmlControls(
     'input[type="range"], input[type="number"], input[type="checkbox"]',
   );
   for (const input of Array.from(inputs)) {
-    const id = input.getAttribute("id") ?? "";
-    if (!id || isExcludedId(id)) continue;
+    const rawId = input.getAttribute("id") ?? "";
     const type = (input.getAttribute("type") ?? "range").toLowerCase();
+    let id = rawId;
+
+    if (!id) {
+      const oninput = input.getAttribute("oninput") ?? input.getAttribute("onchange") ?? "";
+      const m = oninput.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+      if (m) {
+        id = `oninput:${m[1]}`;
+      } else {
+        continue;
+      }
+    }
+
+    if (isExcludedId(id)) continue;
     const min = input.getAttribute("min");
     const max = input.getAttribute("max");
     const step = input.getAttribute("step");
@@ -140,11 +161,12 @@ export function extractHtmlControls(
     }
     if (onclick) {
       const presetMatch = onclick.match(
-        /(applyPreset|setMode|setPreset|set[A-Z]\w*|select[A-Z]\w*)\(\s*['"`]([^'"`]+)['"`]/,
+        /(applyPreset|setMode|setPreset|set[A-Z]\w*|select[A-Z]\w*|load[A-Z]\w*|choose[A-Z]\w*|pick[A-Z]\w*|jumpTo[A-Z]\w*|goTo[A-Z]\w*)\(\s*(?:['"`]([^'"`]+)['"`]|(-?\d+(?:\.\d+)?))/,
       );
       if (presetMatch) {
         const fn = presetMatch[1];
-        const target = presetMatch[2];
+        const target = presetMatch[2] ?? presetMatch[3];
+        if (isExcludedPresetFn(fn, target)) continue;
         controls.push({
           id: `preset:${fn}:${target}`,
           kind: "preset-button",
