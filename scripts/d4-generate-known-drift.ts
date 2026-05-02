@@ -77,6 +77,10 @@ function main() {
   const expiresDate = "2026-08-31"; // ~3 months out — re-evaluate after Phase C
   const owner = "claude";
 
+  const existing: Record<string, KnownDriftEntry> = existsSync(OUT_PATH)
+    ? (JSON.parse(readFileSync(OUT_PATH, "utf-8")) as Record<string, KnownDriftEntry>)
+    : {};
+
   const allExperiments = getAllExperiments();
   const bySlug = new Map(allExperiments.map((e) => [e.slug, e]));
 
@@ -98,13 +102,22 @@ function main() {
     }
     const diff = diffControls(exp, htmlControls);
     if (isCleanDiff(diff)) continue;
-    drift[slug] = {
-      diff,
-      owner,
-      tier: inferTier(diff),
-      expires: expiresDate,
-      reason: inferReason(diff),
-    };
+    const prior = existing[slug];
+    drift[slug] = prior
+      ? {
+          diff,
+          owner: prior.owner,
+          tier: prior.tier,
+          expires: prior.expires,
+          reason: inferReason(diff),
+        }
+      : {
+          diff,
+          owner,
+          tier: inferTier(diff),
+          expires: expiresDate,
+          reason: inferReason(diff),
+        };
   }
 
   const sorted: Record<string, KnownDriftEntry> = {};
