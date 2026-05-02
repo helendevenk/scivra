@@ -159,11 +159,11 @@ export const k5FoodChain: Experiment = {
       {
         wrong: "There are usually more wolves than rabbits in an ecosystem.",
         correct:
-          "It is usually the opposite. There are always many more plants than plant-eaters, and many more plant-eaters than meat-eaters. This is because a lot of energy is lost at each step. To feed one fox, you need many rabbits. To feed those rabbits, you need many plants.",
+          "It is usually the opposite. In this simple land food-chain model, there are usually many more plants than plant-eaters, and many more plant-eaters than meat-eaters. This is because a lot of energy is lost at each step — only about 10% passes to the next level, so each level needs many individuals from the level below to support it. To feed one fox, you need many rabbits. To feed those rabbits, you need many plants.",
       },
     ],
     teacherUseCases: [
-      "Set producerPop to 100, herbivoreRatio to 0.2, and carnivoreRatio to 0.05 as a balanced starting point. Ask students to describe what they see, then predict what will happen if carnivores are removed.",
+      "Set producerPop to 100, herbivoreRatio to 0.2, and carnivoreRatio to 0.05 as a balanced starting point. Ask students to describe what they see, then predict what will happen if carnivores are reduced to the minimum (carnivoreRatio = 0.01).",
       "Reduce carnivoreRatio to 0.01 and have students watch what happens to the herbivore and plant populations over time. This demonstrates how predators keep ecosystems in balance.",
       "Lower sunlight to 20% (pro) and observe how reduced plant growth affects every level of the food chain. Connect to discussions about seasons, forest fires, or drought.",
       "Start with producerPop at 200 and herbivoreRatio at 0.5 to show overpopulation of plant-eaters. Ask: what usually controls how many rabbits or deer there are in nature?",
@@ -176,7 +176,7 @@ export const k5FoodChain: Experiment = {
           "A producer makes its own food using sunlight. Plants, algae, and some bacteria are producers. A consumer cannot make its own food, so it must eat other living things to get energy. Rabbits consume plants, foxes consume rabbits. Decomposers are a special kind of consumer that eat dead material and recycle nutrients back into the soil.",
       },
       {
-        question: "Why are there always more plants than animals in an ecosystem?",
+        question: "Why are there usually more plants than animals in an ecosystem?",
         answer:
           "At each step in the food chain, most of the energy is used up or lost as body heat. Only a small amount passes to the next level. It takes many plants to feed a rabbit, and many rabbits to feed a fox. So the lower you are in the food chain, the more individuals there must be to support the levels above.",
       },

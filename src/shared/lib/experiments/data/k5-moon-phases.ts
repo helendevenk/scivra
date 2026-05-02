@@ -93,7 +93,7 @@ export const k5MoonPhases: Experiment = {
     {
       id: "mp-c4",
       question: "Why do we always see the same face of the Moon from Earth?",
-      hint: "The Moon rotates on its axis in exactly the same time it takes to orbit Earth (29.5 days) — this is called 'tidal locking.' Gravity from Earth gradually slowed the Moon's rotation over billions of years until it synchronized with its orbital period.",
+      hint: "The Moon rotates on its axis in exactly the same time it takes to orbit Earth — about 27.3 days for one rotation and one orbit — this is called 'tidal locking.' The full phase cycle (New Moon back to New Moon) takes about 29.5 days because Earth moves along its own orbit during that time. Gravity from Earth gradually slowed the Moon's rotation over billions of years until it synchronized with its orbital period.",
       tier: "pro",
     },
   ],
@@ -146,7 +146,7 @@ export const k5MoonPhases: Experiment = {
       {
         wrong: "We can see all sides of the Moon if we wait long enough.",
         correct:
-          "We always see the same side of the Moon from Earth. The Moon spins on its own axis, but it takes the exact same amount of time to spin once as it takes to travel around Earth once — about 29.5 days. This keeps the same face pointing toward us all the time. Spacecraft have been sent to photograph the far side, which humans only saw for the first time in 1959.",
+          "We always see the same side of the Moon from Earth. The Moon spins on its own axis, but it takes the exact same amount of time to spin once as it takes to orbit Earth once — about 27.3 days for both. This keeps the same face pointing toward us all the time. (The full phase cycle of 29.5 days is a little longer because Earth itself moves around the Sun during that time.) Spacecraft have been sent to photograph the far side, which humans only saw for the first time in 1959.",
       },
     ],
     teacherUseCases: [
@@ -170,7 +170,7 @@ export const k5MoonPhases: Experiment = {
       {
         question: "Can we ever see the other side of the Moon?",
         answer:
-          "Not from Earth! We always see the same side because the Moon takes the same amount of time to spin once as it takes to travel around Earth — about 29.5 days. This is called tidal locking. Gravity from Earth has gradually slowed the Moon's spin over billions of years until it matched its orbit perfectly. The first people to see the far side of the Moon were the astronauts of Apollo 8, who flew around the Moon in 1968. We now have photos of the entire Moon from spacecraft, so scientists know what the far side looks like even though you can never see it from your backyard.",
+          "Not from Earth! We always see the same side because the Moon takes the same amount of time to spin once as it takes to travel around Earth — about 27.3 days for both its rotation and its orbit. (The full phase cycle of 29.5 days is slightly longer because Earth itself moves around the Sun during that time.) This is called tidal locking. Gravity from Earth has gradually slowed the Moon's spin over billions of years until it matched its orbit perfectly. The first people to see the far side of the Moon were the astronauts of Apollo 8, who flew around the Moon in 1968. We now have photos of the entire Moon from spacecraft, so scientists know what the far side looks like even though you can never see it from your backyard.",
       },
       {
         question: "What is a lunar eclipse?",

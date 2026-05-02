@@ -124,7 +124,7 @@ export const k5PlantLifeCycle: Experiment = {
       {
         wrong: "Seeds need sunlight to sprout.",
         correct:
-          "Seeds actually do not need sunlight to start sprouting. They use the food stored inside the seed coat to grow their first root and shoot. What they do need is water and warmth. Once the sprout grows leaves above the soil, then sunlight becomes important for making more food.",
+          "Most classroom seeds, like beans, do not need sunlight to start sprouting. They use the food stored inside the seed to grow their first root and shoot. What they do need is water and warmth. Once the sprout grows leaves above the soil, sunlight becomes important for making more food. Some seeds are sensitive to light, but for the common seeds students grow in class, darkness underground is not a problem.",
       },
       {
         wrong: "The flower is just for decoration and is not important.",
@@ -134,7 +134,7 @@ export const k5PlantLifeCycle: Experiment = {
       {
         wrong: "A plant's life cycle ends when its flowers die.",
         correct:
-          "When flowers die, that is actually an exciting part of the cycle. The flower turns into a fruit that holds new seeds. Those seeds travel — by wind, animals, or falling — to the ground. Then the whole cycle starts over with germination. The plant life cycle is a circle, not a dead end.",
+          "When flowers die, that is actually an exciting part of the cycle. Part of the flower becomes a fruit that holds new seeds. Those seeds travel — by wind, animals, or falling — to the ground. Then the whole cycle starts over with germination. The plant life cycle is a circle, not a dead end.",
       },
     ],
     teacherUseCases: [

@@ -44,7 +44,7 @@ export const k5WeatherMeasurement: Experiment = {
       precipitation:
         "Precipitation is any water that falls from the sky — rain, snow, sleet, or hail. We measure it in millimeters (mm), which is how deep the water would be if it collected in a flat dish. Zero mm means no rain at all. Five mm is a light shower. Twenty-five mm or more in one day is a heavy rainstorm. The rain gauge fills up as you increase precipitation — just like a real gauge collects falling rain.",
       humidity:
-        "Humidity tells us how much water vapor — tiny invisible water droplets — is floating in the air. It is measured as a percentage from 10% (very dry, like a desert) to 100% (completely full of moisture, like a foggy morning or a rainforest). When humidity is high, sweat does not dry quickly and it feels sticky. When humidity is low, your skin and lips can feel dry. Watch the hygrometer needle move as you change humidity.",
+        "Humidity tells us how much water vapor — tiny invisible water molecules in gas form — is floating in the air. It is measured as a percentage from 10% (very dry, like a desert) to 100% (completely full of moisture). When humidity is high, sweat does not dry quickly and it feels sticky. When humidity is low, your skin and lips can feel dry. Note: fog, clouds, and dew are made of tiny liquid water droplets — those form when the invisible vapor cools and condenses. Watch the hygrometer needle move as you change humidity.",
     },
     misconceptions: [
       {
@@ -55,7 +55,7 @@ export const k5WeatherMeasurement: Experiment = {
       {
         wrong: "More wind always means rain is coming.",
         correct:
-          "Wind and rain are separate weather measurements. It can be very windy on a completely sunny, dry day. It can also be raining with almost no wind at all. Sometimes strong winds do come before a storm, but wind alone does not cause rain. You need to look at humidity and pressure together with wind to predict rain.",
+          "Wind and rain are separate weather measurements. It can be very windy on a completely sunny, dry day. It can also be raining with almost no wind at all. Sometimes strong winds do come before a storm, but wind alone does not cause rain. Meteorologists also use air pressure to predict rain; this simulation focuses on temperature, wind speed, precipitation, and humidity — the four instruments you can read here.",
       },
       {
         wrong: "If humidity is 100%, it must be raining.",
@@ -99,7 +99,7 @@ export const k5WeatherMeasurement: Experiment = {
       {
         question: "What is the difference between rain and snow if they are both precipitation?",
         answer:
-          "Both rain and snow are water falling from clouds, but the temperature of the air decides which form it takes. When air temperature is above 0°C all the way from the cloud to the ground, water drops stay liquid and fall as rain. When the air near the ground is below 0°C, liquid droplets freeze into ice crystals and fall as snow or sleet. This is why it can rain on a 2°C day if warm air is blowing in at lower altitudes, but snow on a 1°C day when cold air stretches all the way up.",
+          "Both rain and snow are water falling from clouds, but the temperature of the air from the cloud all the way to the ground decides which form it takes. Snow forms as ice crystals inside cold clouds. If the air stays below freezing all the way down, those crystals reach the ground as snow. If warmer air layers are in between, the ice can melt into rain, or partially melt into sleet or freezing rain. This is why it can snow on a 1°C day when cold air stretches all the way up, or rain on a 2°C day if a warm layer of air sits lower down.",
       },
     ],
   },

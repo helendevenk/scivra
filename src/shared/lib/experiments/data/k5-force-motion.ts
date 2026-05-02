@@ -129,12 +129,12 @@ export const k5ForceMotion: Experiment = {
   },
   contentSections: {
     whatIsIt:
-      "A force is a push or a pull. Every time you push a toy car across the floor, kick a ball, or pull a wagon, you are using a force! Forces can make things start moving, stop moving, speed up, or change direction. When you push harder, things move faster. When two forces push against each other equally, nothing moves — the forces are balanced. Friction is a sneaky force that slows things down by rubbing surfaces together. A rough sidewalk has lots of friction; a slippery ice rink has almost none. Gravity is the force that pulls everything down toward the ground. It is why a ball you toss always comes back down. Heavier objects need a bigger push to get moving at the same speed as lighter ones. Scientists call this idea Newton's Second Law, but you can just think of it as: more push equals faster movement, and more mass means you need more push!",
+      "A force is a push or a pull. Every time you push a toy car across the floor, kick a ball, or pull a wagon, you are using a force! Forces can make things start moving, stop moving, speed up, or change direction. When you push harder, things speed up faster while the push acts. When two forces push against each other equally, nothing moves — the forces are balanced. Friction is a sneaky force that slows things down by rubbing surfaces together. A rough sidewalk has lots of friction; a slippery ice rink has almost none. Gravity is the force that pulls everything down toward the ground. It is why a ball you toss always comes back down. Heavier objects need a bigger push to get moving at the same speed as lighter ones. Scientists call this idea Newton's Second Law, but you can just think of it as: more push equals faster movement, and more mass means you need more push!",
     parameterExplanations: {
       pushForce:
         "This slider controls how hard you are pushing the object. At 0 N there is no push at all, so nothing moves. At 20 N you are pushing very hard — like a strong grown-up. Try starting at 5 N and slowly moving it up to watch the object speed up. A bigger push force means the object speeds up faster.",
       friction:
-        "Friction is a rubbing force between the object and the floor. At 0 the surface is perfectly slippery (like ice) and the object keeps sliding forever. At 1.0 the surface is very rough (like sandpaper) and slows the object down quickly. Try matching the push force to the friction to make the object roll at a steady speed — that is balanced forces!",
+        "Friction is a rubbing force between the object and the floor. At 0 the surface is perfectly slippery (like ice) and the object keeps sliding forever. At 1.0 the surface is very rough (like sandpaper) and slows the object down quickly. The friction force depends on the friction coefficient, the object's mass, and gravity together (f = μ × m × g). Try adjusting the push force until the calculated friction force matches it and the object rolls at a steady speed — that is balanced forces!",
       objectMass:
         "Mass is how much stuff is in the object — think of it as how heavy it is. At 1 kg it is like a small book. At 10 kg it is like a heavy backpack full of rocks. A heavier object needs a much bigger push to move at the same speed. Try keeping the push the same and making the object heavier — watch how much slower it speeds up!",
       gravity:
@@ -149,12 +149,12 @@ export const k5ForceMotion: Experiment = {
       {
         wrong: "Heavier objects always fall faster than lighter ones.",
         correct:
-          "Gravity pulls all objects downward at the same speed if there is no air in the way. A bowling ball and a feather dropped in a vacuum tube hit the bottom at the same time. On Earth, air slows down light, fluffy things like feathers more than heavy, dense things — but that is air resistance, not gravity.",
+          "Gravity gives all objects the same acceleration downward if there is no air in the way. A bowling ball and a feather dropped in a vacuum tube hit the bottom at the same time — they fall with the same acceleration. On Earth, air slows down light, fluffy things like feathers more than heavy, dense things — but that is air resistance, not gravity.",
       },
       {
         wrong: "A bigger push always means the object goes at a constant fast speed.",
         correct:
-          "A push makes the object speed up (accelerate), not just move fast. The moment you stop pushing, friction starts slowing it down. To move at a steady speed, your push has to exactly match the friction force — then the forces are balanced and the object rolls smoothly without speeding up or slowing down.",
+          "A push makes the object speed up (accelerate), not just move fast. The moment you stop pushing, friction starts slowing it down. To move at a steady speed, your push has to exactly match the friction force — then the forces are balanced, the net force is zero, and the object's motion does not change (it rolls at the same speed without speeding up or slowing down).",
       },
       {
         wrong: "Friction is always bad and gets in the way.",
@@ -163,7 +163,7 @@ export const k5ForceMotion: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Balanced forces demo: set pushForce to 6 N and friction to 0.6 with objectMass 1 kg — ask students to predict whether the object moves, then observe steady motion. Discuss why the forces are balanced.",
+      "Balanced forces demo: set pushForce to 6 N and friction to 0.6 with objectMass 1 kg — ask students to predict whether the object moves, then observe approximately steady motion. Note: friction force depends on the friction coefficient, mass, and gravity together, so this is approximately balanced. Discuss why the forces are nearly equal.",
       "More push, faster go: keep friction at 0.3 and objectMass at 2 kg, then sweep pushForce from 2 N to 10 N. Students record speed results in a simple table and notice the pattern — bigger push, speeds up faster.",
       "Heavy vs. light challenge: set pushForce to 10 N and friction to 0.2, then compare objectMass 1 kg vs. 10 kg. Ask 'which one wins the race?' to surface the misconception that heavier always means faster.",
       "Friction surface comparison: fix pushForce at 8 N and objectMass at 3 kg, then slide friction from 0 (ice) to 1.0 (rough). Students describe the surface using real-life words — 'this feels like…' — connecting NGSS 3-PS2-1.",
@@ -193,7 +193,7 @@ export const k5ForceMotion: Experiment = {
       {
         question: "What does balanced forces really mean?",
         answer:
-          "Balanced forces means the pushes and pulls on an object cancel each other out perfectly so the net force is zero. When forces are balanced, a still object stays still and a moving object keeps moving at the same steady speed. A book sitting on a table has balanced forces — gravity pulls it down and the table pushes it up with equal force. In this simulation you can find the balanced point by matching push force to friction: when they are equal the object rolls at a constant speed without speeding up or slowing down.",
+          "Balanced forces means the pushes and pulls on an object cancel each other out perfectly so the net force is zero. When forces are balanced, a still object stays still and a moving object keeps moving at the same steady speed — its motion does not change (acceleration is zero). A book sitting on a table has balanced forces — gravity pulls it down and the table pushes it up with equal force. In this simulation you can find the balanced point by matching push force to friction: when they are equal the object rolls at a constant speed without speeding up or slowing down.",
       },
     ],
   },

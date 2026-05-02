@@ -24,7 +24,7 @@ export const k5PlantNeeds: Experiment = {
   instructions: "Set the sunlight hours, water amount, and nutrient level for your virtual plant. Press 'Grow' and watch what happens over several days. Try removing one factor to see its effect. Compare side-by-side plants with different conditions.",
   challenges: [
     { id: "kpn-c1", question: "What happens if a plant gets water and nutrients but no sunlight?", hint: "It can't photosynthesize — no energy to make food. It will grow pale and weak, then eventually die", tier: "free" },
-    { id: "kpn-c2", question: "Why do plants in dark closets grow very tall and thin?", hint: "They're stretching toward light (etiolation) — using stored energy to grow taller, hoping to find sunlight", tier: "free" },
+    { id: "kpn-c2", question: "Why do plants in dark closets grow very tall and thin?", hint: "They stretch toward light — using stored energy to grow taller in search of sunlight. This stretching for light is sometimes called etiolation.", tier: "free" },
   ],
   wave: 12, tier: "free", estimatedTime: 10,
   relatedExperiments: ["k5-plant-life-cycle"],
@@ -62,11 +62,11 @@ export const k5PlantNeeds: Experiment = {
       {
         wrong: "A plant in a dark closet will die right away.",
         correct:
-          "A plant in a very dark place will not die instantly. It will use its stored energy to grow its stem longer, stretching toward any hint of light. This is called etiolation. The stem grows tall and thin and pale because the plant is desperately searching for light. Eventually, if it cannot find light, it will run out of energy and die.",
+          "A plant in a very dark place will not die instantly. It will use its stored energy to grow its stem longer, stretching toward any hint of light. The stem grows tall and thin and pale as it stretches for light (this is sometimes called etiolation). Eventually, if it cannot find light, it will run out of energy and die.",
       },
     ],
     teacherUseCases: [
-      "Set sunlight to 8 hours, water to 200 mL, and nutrients to 70% as the healthy baseline. Students observe robust growth, then remove one variable at a time to see which need matters most.",
+      "Set sunlight to 8 hours, water to 200 mL, and nutrients to 70% as the healthy baseline. Students observe strong, healthy growth, then remove one variable at a time to see which need matters most.",
       "Run a zero-sunlight trial (sunlight = 0) with water at 200 mL and nutrients at 70%. Ask students: if water and nutrients are perfect, why is the plant still struggling?",
       "Compare a zero-nutrient plant (nutrients = 0, sunlight = 8, water = 200 mL) with a full-nutrient plant. Have students look at leaf color and growth rate to connect nutrients to healthy appearance.",
       "Model a drought by starting at water = 200 mL and reducing to 0 mL over several steps. Students predict and observe the wilting response, then restore water to see recovery.",
@@ -81,7 +81,7 @@ export const k5PlantNeeds: Experiment = {
       {
         question: "Why do plants in a dark room grow very tall and skinny?",
         answer:
-          "When a plant is in the dark it uses its stored energy to stretch its stem as tall as possible, hoping to reach a light source. This stretched, pale growth is called etiolation. The plant is not growing happily — it is actually desperate. If it finds light, it can start growing normally. If it never finds light, it will eventually use up all its stored energy.",
+          "When a plant is in the dark it uses its stored energy to stretch its stem as tall as possible, hoping to reach a light source. This stretched, pale growth — sometimes called etiolation — shows the plant is not thriving. If it finds light, it can start growing more strongly. If it never finds light, it will eventually use up all its stored energy.",
       },
       {
         question: "Which NGSS standards does this experiment address?",

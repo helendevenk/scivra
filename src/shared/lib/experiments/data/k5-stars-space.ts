@@ -129,7 +129,7 @@ export const k5StarsSpace: Experiment = {
       {
         wrong: "All stars look the same — just little white dots.",
         correct:
-          "Stars come in different colors! Red stars are cooler, while blue-white stars are much hotter. Our Sun is a yellow-white star and is somewhere in the middle. If you look carefully at the night sky or through binoculars, you can often spot color differences. The star Betelgeuse in Orion has a noticeable reddish tint. Color can tell us a lot about a star's temperature and age.",
+          "Stars come in different colors! Red stars are cooler, while blue-white stars are much hotter. Our Sun is a yellow-white star and is somewhere in the middle. If you look carefully at the night sky or through binoculars, you can often spot color differences. The star Betelgeuse in Orion has a noticeable reddish tint. Color tells us a lot about a star's temperature, and sometimes about a star's type or life stage.",
       },
       {
         wrong: "Constellations are groups of stars that are close together in space.",
@@ -152,7 +152,7 @@ export const k5StarsSpace: Experiment = {
       {
         question: "Why do stars twinkle?",
         answer:
-          "Stars do not actually twinkle — they shine steadily. The twinkling we see is caused by Earth's atmosphere. Air is always moving and has pockets of different temperatures and densities. As starlight passes through this moving air on its way to your eyes, it bends in slightly different directions very quickly, making the star appear to flicker. This is called atmospheric twinkle or scintillation. Planets, which are closer and appear as tiny discs rather than points of light, usually twinkle less than stars. Astronauts in space see stars shine steadily because there is no atmosphere above them.",
+          "Stars do not actually twinkle — they shine steadily. The twinkling we see is caused by Earth's atmosphere. Air is always moving and has pockets of different temperatures and densities. As starlight passes through this moving air on its way to your eyes, it bends in slightly different directions very quickly, making the star appear to flicker. This twinkling is caused by moving air (scientists call it atmospheric scintillation, but you can just call it atmospheric twinkle). Planets, which are closer and appear as tiny discs rather than points of light, usually twinkle less than stars. Astronauts in space see stars shine steadily because there is no atmosphere above them.",
       },
       {
         question: "What is a constellation and why do they matter?",

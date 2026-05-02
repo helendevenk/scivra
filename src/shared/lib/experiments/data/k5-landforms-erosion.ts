@@ -82,7 +82,7 @@ export const k5LandformsErosion: Experiment = {
     teacherUseCases: [
       "Set erosionType to 0 (water) and timeScale to 5000 years; ask students to describe what landform is being created and compare it to images of real river valleys.",
       "Run water erosion at timeScale 1000, then switch to erosionType 2 (glacial ice) at the same timeScale; have students compare the valley shapes and identify which is V-shaped and which is U-shaped.",
-      "Set erosionType to 1 (wind) and timeScale to 10000 years to show desert rock shaping; connect to photos of arches and balanced rocks found in dry regions like the American Southwest.",
+      "Set erosionType to 1 (wind) and timeScale to 10000 years to show desert rock shaping; connect to photos of sand dunes, ventifacts (wind-polished rocks), and yardangs found in dry regions like the American Southwest. Note: famous arches and balanced rocks in that region were shaped by a combination of wind, water, and gravity over long periods.",
       "Use timeScale from 100 to 10000 years as a class discussion prompt: how does the amount of change connect to how long erosion has been working? Tie to NGSS 4-ESS2-1.",
     ],
     faq: [

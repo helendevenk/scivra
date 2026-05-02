@@ -159,7 +159,7 @@ export const k5LightPropagation: Experiment = {
       {
         wrong: "Light slows down when it goes through a mirror.",
         correct:
-          "A mirror reflects light — the light bounces off the surface rather than going through it. Light does slow down slightly when it enters glass or water, and that slowing is what causes it to bend (refraction). But at a mirror surface, light does not enter the material — it reflects off the shiny coating on the front.",
+          "A mirror reflects light rather than transmitting it through. Most household mirrors have a reflective metal backing — light travels through the glass, reflects off the backing, and comes back out. Front-surface mirrors used in science labs reflect from the very front, skipping the glass entirely. Either way, the result is reflection: light bounces back rather than passing through. Light does slow down when it enters glass or water (causing refraction), but mirrors work by reflecting, not transmitting.",
       },
     ],
     teacherUseCases: [
@@ -167,7 +167,7 @@ export const k5LightPropagation: Experiment = {
       "Set mirrorAngle to 45 degrees and lightAngle to 45 degrees to show a classic right-angle reflection. Have students sketch the incoming and outgoing beam and measure the angles with a protractor on their sketch.",
       "Compare medium 0 (air), 1 (water), and 2 (glass) at the same lightAngle. Have students rank which material bends light the most and least, explaining in their own words what they observe.",
       "Use the colorFilter (pro) set to white and then switch to red, blue, and green. Ask students if all colors bend the same amount when entering water. Connect to how a raindrop separates sunlight into a rainbow.",
-      "Shadow discussion starter: cover the light source (light angle = 90) and ask students why a shadow forms. Connect back to the rule that light travels in straight lines and cannot go around solid objects.",
+      "Shadow discussion starter: set lightAngle to 90 to redirect the beam and ask students why a shadow forms when an object is placed in the beam's path. Connect back to the rule that light travels in straight lines and cannot go around solid objects.",
     ],
     faq: [
       {

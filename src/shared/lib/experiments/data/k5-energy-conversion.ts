@@ -135,7 +135,7 @@ export const k5EnergyConversion: Experiment = {
       ballMass:
         "Ball Mass sets how heavy the ball is, measured in kilograms. A basketball is about 0.6 kg; a bowling ball is about 5 kg. A heavier ball stores more potential energy at the same height. If you double the mass, you double the stored energy. Try comparing a 0.1 kg ball (like a ping-pong ball) with a 5 kg ball dropped from the same height and notice how the energy bars differ.",
       surfaceLoss:
-        "Surface Loss controls how much energy turns into heat and sound when the ball bounces, shown as a percentage. At 0% the ball bounces back perfectly to its starting height — no energy is lost to heat. At 80% most of the moving energy turns into warmth and a thud on impact, so the ball barely bounces. In real life all bounces lose some energy to heat, which is why a dropped ball never bounces back quite as high as where it started.",
+        "Surface Loss controls how much energy turns into heat and sound when the ball bounces, shown as a percentage. At 0% the ball bounces back perfectly to its starting height — an ideal, lossless rebound that real surfaces never quite achieve. When surfaceLoss is above 0%, it takes away some bounce energy as heat and sound on impact, so the ball bounces lower. The higher the percentage, the more energy is lost and the lower the bounce.",
       energyType:
         "Scenario lets you switch between three different situations: 0 for a simple ball drop, 1 for a roller coaster (a Pro feature showing energy changing along a curved track), and 2 for a solar panel system (a Pro feature tracing light energy turning into electrical energy and then motion). Each scenario shows a different everyday example of how energy changes form.",
     },
@@ -165,7 +165,7 @@ export const k5EnergyConversion: Experiment = {
       "Set dropHeight to 10 m and ballMass to 1 kg with surfaceLoss at 0%, then show students the energy bar at the top versus just before landing — ask them where the potential energy went and connect to 4-PS3-2 energy transfer concepts.",
       "Keep dropHeight at 10 m and compare ballMass at 0.5 kg versus 2 kg; have students predict which bar will be taller before running, then verify and discuss why mass changes the amount of stored energy.",
       "Increase surfaceLoss from 0% to 60% and ask students to observe how high the ball bounces back — use this to discuss why real-world machines always lose some energy to heat and why a perpetual motion machine is impossible.",
-      "Have students act out energy conversion physically: stand up (potential energy), run across the room (kinetic energy), and slide to a stop (heat from friction) — then map their actions onto the simulation's bar chart.",
+      "Have students act out energy conversion physically: hold a book up high (potential energy from height), drop it or run with it (kinetic energy), and slide to a stop (heat from friction) — then map their actions onto the simulation's bar chart.",
       "Run dropHeight at 20 m with surfaceLoss at 20% and challenge students to sketch a bar graph prediction before pressing play, then compare their sketch to the simulation output to practice 4-PS3-4 evidence-based reasoning.",
     ],
     faq: [
@@ -177,7 +177,7 @@ export const k5EnergyConversion: Experiment = {
       {
         question: "Why does a bouncing ball never bounce back to the same height it was dropped from?",
         answer:
-          "Every time the ball hits the ground, some of its moving energy turns into heat and sound instead of bouncing back up. The ball squishes very slightly on impact, and that squishing creates a tiny amount of warmth. The thud sound you hear is also energy leaving the ball as vibrations in the air. So the ball bounces back with a little less energy each time, which means it reaches a lower height. This is why the surfaceLoss slider in the simulation always takes away some energy — it models this very real effect.",
+          "Every time the ball hits the ground, some of its moving energy turns into heat and sound instead of bouncing back up. The ball squishes very slightly on impact, and that squishing creates a tiny amount of warmth. The thud sound you hear is also energy leaving the ball as vibrations in the air. So the ball bounces back with a little less energy each time, which means it reaches a lower height. This is why, when surfaceLoss is above 0%, the slider takes away some bounce energy as heat and sound — it models this very real effect. At 0% the bounce is ideal and lossless.",
       },
       {
         question: "Where does the energy in food come from?",

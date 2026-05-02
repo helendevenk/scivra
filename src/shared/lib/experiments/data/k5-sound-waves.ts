@@ -154,7 +154,7 @@ export const k5SoundWaves: Experiment = {
       {
         wrong: "Sound travels at the same speed no matter what it is going through.",
         correct:
-          "Sound travels at very different speeds depending on the material. In air at room temperature: about 343 m/s. In water: about 1480 m/s. In steel: about 5960 m/s. Sound travels faster through denser, stiffer materials because molecules pass the vibration along more quickly when they are packed closely together. This is why you can sometimes hear a train coming by pressing your ear to the rail long before you hear it through the air. The medium selector in this simulation changes the wave speed accordingly.",
+          "Sound travels at very different speeds depending on the material. In air at room temperature: about 343 m/s. In water: about 1480 m/s. In this simulation, you can compare Air, Water, and Vacuum. In real solids like steel, sound travels even faster than in water — about 5960 m/s — because steel molecules are extremely tightly packed AND steel is much stiffer (harder to compress) than water or air. Both factors together let vibrations pass along almost instantly. This is why you can sometimes hear a train coming by pressing your ear to the rail long before you hear it through the air.",
       },
       {
         wrong: "Sound waves look like up-and-down ripples moving through the air.",
@@ -178,7 +178,7 @@ export const k5SoundWaves: Experiment = {
       {
         question: "Why does sound travel faster through solids and water than through air?",
         answer:
-          "Sound travels by pushing molecules together and apart in a chain reaction. In a solid like steel, the molecules are packed extremely closely together — when one gets pushed, it almost immediately pushes the next one. In water, molecules are much closer together than in air, though not as close as in a solid. In air, molecules are spread far apart, so each one must travel farther before bumping the next one in line. The closer together the molecules, the faster the vibration chain travels. Think of dominoes: closely spaced dominoes fall faster in a chain than widely spaced ones. That is why sound travels roughly 17 times faster through steel than through air.",
+          "Sound travels by pushing molecules together and apart in a chain reaction. In a solid like steel, the molecules are packed extremely closely together — when one gets pushed, it almost immediately pushes the next one. In water, molecules are much closer together than in air, though not as close as in a solid. In air, molecules are spread far apart, so each one must travel farther before bumping the next one in line. The closer together the molecules AND the stiffer the material is, the faster the vibration chain travels. Steel carries sound roughly 17 times faster than air because its molecules are extremely tightly packed AND steel is very hard to compress — both factors speed the vibration chain. Think of dominos: closely spaced, stiff dominos fall faster in a chain than widely spaced, soft ones.",
       },
       {
         question: "Which NGSS standards does this experiment address?",
