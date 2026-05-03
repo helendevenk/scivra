@@ -32,56 +32,11 @@ export const hardyWeinberg: Experiment = {
   difficulty: "intermediate",
 
   parameters: [
-    {
-      id: "pFreq",
-      label: "p (dominant allele freq)",
-      unit: "",
-      min: 0.01,
-      max: 0.99,
-      default: 0.6,
-      step: 0.01,
-      tier: "free",
-    },
-    {
-      id: "popSize",
-      label: "Population Size",
-      unit: "",
-      min: 20,
-      max: 10000,
-      default: 1000,
-      step: 20,
-      tier: "free",
-    },
-    {
-      id: "selectionCoeff",
-      label: "Selection Against aa",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 0.05,
-      tier: "free",
-    },
-    {
-      id: "mutationRate",
-      label: "Mutation Rate (A→a)",
-      unit: "",
-      min: 0,
-      max: 0.01,
-      default: 0,
-      step: 0.001,
-      tier: "pro",
-    },
-    {
-      id: "generations",
-      label: "Generations",
-      unit: "",
-      min: 10,
-      max: 500,
-      default: 100,
-      step: 10,
-      tier: "free",
-    },
+    { id: "pFreq", label: "Allele Frequency p", unit: "", min: 0.01, max: 0.99, default: 0.7, step: 0.01, tier: "free" },
+    { id: "selectionCoeff", label: "Selection Coefficient s", unit: "", min: 0, max: 1, default: 0, step: 0.01, tier: "free" },
+    { id: "mutationRate", label: "Mutation Rate μ", unit: "", min: 0, max: 0.05, default: 0, step: 0.001, tier: "free" },
+    { id: "migrationRate", label: "Migration Rate", unit: "", min: 0, max: 0.3, default: 0, step: 0.01, tier: "free" },
+    { id: "popSize", label: "Population Size N", unit: "", min: 10, max: 2000, default: 1000, step: 10, tier: "free" },
   ],
 
   formulas: [
@@ -107,7 +62,7 @@ export const hardyWeinberg: Experiment = {
     "The Hardy-Weinberg principle states that allele and genotype frequencies in a population remain constant from generation to generation in the absence of evolutionary forces. Five conditions must be met: (1) no mutation, (2) random mating, (3) no natural selection, (4) infinite population size (no genetic drift), and (5) no gene flow (migration). Given allele frequencies p and q (where p + q = 1), genotype frequencies are AA = p², Aa = 2pq, aa = q². When any condition is violated, evolution occurs. Natural selection changes frequencies based on fitness differences. Genetic drift causes random fluctuations more pronounced in small populations. Mutation introduces new alleles at low rates. Migration introduces alleles from other populations. Non-random mating (assortative mating, inbreeding) changes genotype but not allele frequencies.",
 
   instructions:
-    "Set the initial p frequency and population size, then press Simulate. The bar chart shows current genotype frequencies compared to Hardy-Weinberg predictions. The line chart tracks p and q over generations. Introduce selection, mutation, or reduce population size to observe deviations from equilibrium.",
+    "Use the five sliders — Allele Frequency p, Selection Coefficient s, Mutation Rate μ, Migration Rate, and Population Size N — to test the five Hardy-Weinberg assumptions: no selection, no mutation, no migration, no drift, and random mating. Try the five presets: 1 HW Equilibrium, 2 Selection vs aa, 3 Genetic Drift N=10, 4 Mutation Pressure, and 5 Gene Flow. Compare each run to p² + 2pq + q² expectations and identify which evolutionary force changes allele frequencies.",
 
   challenges: [
     {
@@ -153,20 +108,28 @@ export const hardyWeinberg: Experiment = {
     educationalLevel: "High School",
     teaches: "Hardy-Weinberg Equilibrium and Population Genetics",
   },
+  htmlControlAliases: { pFreq: "sl-p", selectionCoeff: "sl-s", mutationRate: "sl-mu", migrationRate: "sl-mig", popSize: "sl-n" },
+  presets: [
+    { id: "hw", label: "1 HW Equilibrium", paramValues: { pFreq: 0.7, selectionCoeff: 0, mutationRate: 0, migrationRate: 0, popSize: 1000 } },
+    { id: "selection", label: "2 Selection vs aa", paramValues: { pFreq: 0.5, selectionCoeff: 0.3, mutationRate: 0, migrationRate: 0, popSize: 1000 } },
+    { id: "drift", label: "3 Genetic Drift N=10", paramValues: { pFreq: 0.5, selectionCoeff: 0, mutationRate: 0, migrationRate: 0, popSize: 10 } },
+    { id: "mutation", label: "4 Mutation Pressure", paramValues: { pFreq: 0.5, selectionCoeff: 0, mutationRate: 0.02, migrationRate: 0, popSize: 1000 } },
+    { id: "migration", label: "5 Gene Flow", paramValues: { pFreq: 0.5, selectionCoeff: 0, mutationRate: 0, migrationRate: 0.15, popSize: 1000 } },
+  ],
   contentSections: {
     whatIsIt:
       "The Hardy-Weinberg principle is a mathematical baseline that describes allele and genotype frequencies in a population that is not evolving. If a population meets five conditions — no mutation, no migration, random mating, no natural selection, and a large enough population to avoid genetic drift — allele frequencies p and q remain constant generation after generation, and genotype frequencies are always p² (AA) + 2pq (Aa) + q² (aa) = 1. No real population is perfectly static, but the principle is useful precisely because deviations from it reveal which evolutionary force is operating. A population of sickle-cell carriers that has more heterozygotes than 2pq predicts is showing balancing selection. A small island population whose allele frequencies jump erratically from year to year is showing genetic drift. This simulation lets you set starting conditions and then introduce selection, mutation, and population size to watch the equilibrium break — or hold.",
     parameterExplanations: {
       pFreq:
-        "The starting frequency of the dominant allele A, from 0.01 to 0.99. Because p + q = 1, setting p also sets q. At p = 0.6, the expected genotype distribution is AA = 0.36, Aa = 0.48, aa = 0.16. The simulation runs forward in time from this starting point and plots how p changes over generations.",
-      popSize:
-        "The number of individuals in the modeled population, from 20 to 10,000. Population size directly controls genetic drift: a population of 20 will show large random swings in allele frequency each generation, while a population of 10,000 tracks Hardy-Weinberg predictions closely. Set popSize to 50 to see bottleneck-like drift even without a discrete bottleneck event.",
+        "Allele Frequency p sets the starting proportion of the A allele in the gene pool. Because p + q = 1, every change to p also changes q, then the expected genotype frequencies: AA = p², Aa = 2pq, and aa = q². In AP Biology Big Idea 7, this is the quantitative baseline students use before arguing that evolution is happening. For HS-LS4-3, pFreq lets students connect mathematical evidence to how heritable variation is distributed before selection, drift, mutation, or gene flow changes that distribution.",
       selectionCoeff:
-        "The selection coefficient against the aa homozygote, from 0 (no selection) to 1 (lethal). A value of 0.1 means aa individuals leave 10% fewer offspring than AA or Aa individuals per generation. Even modest selection (s = 0.1) noticeably shifts p over 100 generations, demonstrating why Hardy-Weinberg requires zero selection.",
+        "Selection Coefficient s controls how strongly natural selection acts against the aa genotype. At s = 0, aa individuals have the same modeled fitness as AA and Aa, so the no-selection Hardy-Weinberg assumption is preserved. Raising s gives aa lower reproductive success, so allele frequencies shift as the recessive allele is exposed in homozygotes. This supports AP Biology Big Idea 7 by showing that evolution is a change in allele frequencies, not simply a trait appearing. It also supports HS-LS4-3 because students can use graph evidence to explain how advantageous traits become more common.",
       mutationRate:
-        "The per-generation probability that allele A mutates to allele a, from 0 to 0.01 (1%). Realistic biological mutation rates are far lower — around 10⁻⁵ to 10⁻⁶ per locus per generation — but raising this parameter shows students how mutation pressure gradually shifts equilibrium q upward. Mutation alone is too slow to drive rapid evolution; its role is introducing new alleles that selection then acts on.",
-      generations:
-        "The number of generations the simulation runs before stopping, from 10 to 500. Short runs (10–20 generations) are useful for seeing immediate effects of strong selection. Long runs (200–500) reveal slow-acting forces like mutation pressure or weak selection (s = 0.05) that would be invisible in a short time window.",
+        "Mutation Rate μ adds a recurring source of new allele copies in the model. Hardy-Weinberg assumes no mutation, so μ = 0 belongs to the equilibrium baseline. Increasing μ shows mutation pressure: allele frequencies can change even when selection, migration, and drift are absent. The effect is usually slower than selection, which is a useful AP Biology Big Idea 7 comparison because mutation creates variation while selection sorts variation. For HS-LS4-3, students can describe mutation as one source of heritable variation that may later affect survival and reproduction depending on the environment.",
+      migrationRate:
+        "Migration Rate models gene flow, the movement of alleles into the population from outside. Hardy-Weinberg assumes no migration, so a nonzero value intentionally breaks that condition. In the Gene Flow preset, students can see allele frequencies shift even without selection or mutation because incoming individuals or gametes change the gene pool. This aligns with AP Biology Big Idea 7 by separating gene flow from natural selection as a distinct evolutionary mechanism. It also supports HS-LS4-3 discussions about how populations change when environments and population connections alter which heritable variants are present.",
+      popSize:
+        "Population Size N controls the strength of genetic drift, the random sampling effect that is strongest in small populations. Hardy-Weinberg assumes an effectively infinite population, so large N keeps random fluctuation small while N = 10 makes allele frequencies jump unpredictably. This is essential for AP Biology Big Idea 7 because students often expect only selection to cause evolution; drift can change allele frequencies without improving adaptation. For HS-LS4-3, popSize helps students evaluate when a population pattern is evidence of chance sampling rather than a trait increasing because it improves survival or reproduction.",
     },
     misconceptions: [
       {
@@ -195,11 +158,11 @@ export const hardyWeinberg: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Baseline calculation exercise: set selectionCoeff = 0, mutationRate = 0, and popSize = 10000, then run 100 generations. Confirm with students that p stays constant — this establishes what true equilibrium looks like before any forces are introduced.",
-      "Selection force experiment: hold all else constant and vary selectionCoeff from 0.05 to 1.0 in separate runs, plotting how many generations it takes for q to fall below 0.05. Students discover that selection against a recessive allele becomes progressively less efficient as q decreases — because most 'a' alleles are hidden in Aa heterozygotes.",
-      "Genetic drift vs. selection comparison: run popSize = 50 with selectionCoeff = 0 versus popSize = 5000 with selectionCoeff = 0.05, asking which scenario changes allele frequency faster. Results challenge the intuition that selection is always the dominant force.",
-      "Carrier frequency calculation: set pFreq = 0.8 (so q = 0.2 and q² = 0.04, i.e. 4% affected), pause, and ask students to compute q, p, and 2pq before revealing the simulation output — directly practicing AP standard 7.A.1 problem-solving.",
-      "Deviation-as-evidence probe: introduce mutation or selection mid-run by toggling mutationRate or selectionCoeff and ask students to identify, from the graph alone, at which generation an evolutionary force was introduced — building the core AP Bio reasoning skill of using H-W deviation as evidence of evolution.",
+      "Baseline calculation exercise: use the 1 HW Equilibrium preset or set pFreq = 0.7, selectionCoeff = 0, mutationRate = 0, migrationRate = 0, and popSize = 1000. Have students calculate p², 2pq, and q², then confirm that the model matches the no-selection, no-mutation, no-migration, no-drift baseline.",
+      "Selection evidence investigation: use 2 Selection vs aa, then compare it with 1 HW Equilibrium. Students explain how changing only selectionCoeff alters allele frequencies and connect the result to HS-LS4-3 evidence for differential survival and reproduction.",
+      "Genetic drift comparison: use 3 Genetic Drift N=10, then raise popSize to 1000 while keeping selectionCoeff, mutationRate, and migrationRate at 0. Students identify why random sampling causes much larger allele-frequency change in small populations.",
+      "Mutation versus migration contrast: compare 4 Mutation Pressure with 5 Gene Flow. Students cite mutationRate and migrationRate values to distinguish new allele formation from allele movement between populations.",
+      "AP-style claim-evidence-reasoning: assign groups one preset, hide the label, and ask them to infer whether selection, mutation, migration, or drift is disrupting Hardy-Weinberg equilibrium using pFreq trends, popSize, and the active parameter values.",
     ],
     faq: [
       {
@@ -210,17 +173,17 @@ export const hardyWeinberg: Experiment = {
       {
         question: "If p = 0.7, what are the genotype frequencies under Hardy-Weinberg?",
         answer:
-          "With p = 0.7 and q = 0.3: AA = p² = 0.49, Aa = 2pq = 2(0.7)(0.3) = 0.42, aa = q² = 0.09. Check: 0.49 + 0.42 + 0.09 = 1.00. In a population of 1,000, that predicts 490 AA individuals, 420 Aa carriers, and 90 aa individuals.",
+          "With pFreq = 0.7 and q = 0.3: AA = p² = 0.49, Aa = 2pq = 2(0.7)(0.3) = 0.42, aa = q² = 0.09. Check: 0.49 + 0.42 + 0.09 = 1.00. In a population of 1,000, that predicts 490 AA individuals, 420 Aa carriers, and 90 aa individuals.",
       },
       {
         question: "How does AP standard 7.A.1 use the Hardy-Weinberg equation?",
         answer:
-          "AP standard 7.A.1 requires students to apply the Hardy-Weinberg equation to calculate allele and genotype frequencies and to determine whether a population is evolving. A classic AP Free Response scenario gives students the frequency of one phenotype class (e.g., 9% show the recessive trait), asks them to solve for q, then p, then 2pq, and finally to state which evolutionary force might explain an observed deviation. Mastering the algebraic solve-for-q-first approach is essential.",
+          "AP standard 7.A.1 requires students to apply the Hardy-Weinberg equation to calculate allele and genotype frequencies and to determine whether a population is evolving. A classic AP Free Response scenario gives students the frequency of one phenotype class (e.g., 9% show the recessive trait), asks them to solve for q, then p, then 2pq, and finally to state which evolutionary force might explain an observed deviation. In this simulator, compare the HW Equilibrium preset with selectionCoeff, mutationRate, migrationRate, or low popSize cases to practice that reasoning.",
       },
       {
         question: "Why does selection against a recessive allele slow down as the allele becomes rare?",
         answer:
-          "When q is small, nearly all copies of the recessive allele are carried in heterozygotes (Aa), not in the homozygotes (aa) that selection can actually see. The fraction of 'a' alleles exposed to selection (those sitting in aa homozygotes) is 2q² / (2pq + 2q²) = q / (p + q) ≈ q when q is small. The remaining fraction p ≈ 1 is hidden in heterozygotes. As q approaches zero, almost none of the remaining 'a' alleles are in aa individuals, so selection has almost nothing to act on.",
+          "When q is small, nearly all copies of the recessive allele are carried in heterozygotes (Aa), not in the homozygotes (aa) that selection can actually see. The fraction of 'a' alleles exposed to selection (those sitting in aa homozygotes) is 2q² / (2pq + 2q²) = q / (p + q) ≈ q when q is small. The remaining fraction p ≈ 1 is hidden in heterozygotes. As q approaches zero, almost none of the remaining 'a' alleles are in aa individuals, so selectionCoeff has less visible variation to act on.",
       },
       {
         question: "What is the difference between allele frequency and phenotype frequency?",
