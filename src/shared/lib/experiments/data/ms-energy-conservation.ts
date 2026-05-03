@@ -74,8 +74,8 @@ export const msEnergyConservation: Experiment = {
   challenges: [
     {
       id: "ec-ms-c1",
-      question: "A 2 kg ball is dropped from 15 m. What is its speed just before hitting the ground? (g=10 m/s²)",
-      hint: "All PE converts to KE: mgh = ½mv² → v = √(2gh) = √(2×10×15) = √300 ≈ 17.3 m/s",
+      question: "A 2 kg ball is dropped from 10 m. What is its speed just before hitting the ground? (g=10 m/s²)",
+      hint: "All PE converts to KE: mgh = ½mv² → v = √(2gh) = √(2×10×10) = √200 ≈ 14.1 m/s",
       tier: "free",
     },
     {

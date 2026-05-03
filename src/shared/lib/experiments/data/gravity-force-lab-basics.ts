@@ -34,7 +34,7 @@ export const gravityForceLabBasics: Experiment = {
   theory:
     "Newton's Law of Universal Gravitation states that every mass attracts every other mass with a force proportional to the product of their masses and inversely proportional to the square of the distance between them. The gravitational constant G = 6.674×10⁻¹¹ N·m²/kg² is extremely small, which is why only planetary-scale masses produce noticeable gravitational forces. This same law describes orbits, tides, and spacecraft trajectories.",
   instructions:
-    "Use the Mass 1, Mass 2, and Distance sliders to test Newton's law of gravitation: F = Gm1m2/r². Start with the Earth-Moon preset, then compare Surface Gravity and Orbital Mechanics to see how changing mass scale and separation changes the force arrows. Keep two sliders fixed while changing the third so the linear mass effects and inverse-square distance effect are easy to isolate.",
+    "Use the Mass 1, Mass 2, and Distance sliders to test Newton's law of gravitation: F = Gm1m2/r². Start with the Earth-Moon preset, then compare Close Encounter and Geostationary-Scale Orbit to see how changing mass scale and separation changes the force arrows. Keep two sliders fixed while changing the third so the linear mass effects and inverse-square distance effect are easy to isolate.",
   challenges: [
     { id: "gfl-c1", question: "If you triple the distance between two masses, how does gravity change?", hint: "F ∝ 1/r² → tripling r reduces F by factor 9", tier: "free" },
     { id: "gfl-c2", question: "Why do you not feel gravitational attraction to the person next to you?", hint: "G is tiny (10⁻¹¹); typical person masses give force ~ 10⁻⁷ N", tier: "free" },
@@ -59,15 +59,15 @@ export const gravityForceLabBasics: Experiment = {
     },
     {
       id: "surface",
-      label: "Surface Gravity",
-      description: "Keeps Earth as the source mass and places a small test mass near Earth's surface scale.",
-      paramValues: { m1: 5.97, m2: 0.001, distance: 0.064 },
+      label: "Close Encounter",
+      description: "Keeps Earth as the source mass with a smaller secondary at the closest separation the slider allows — illustrates how the inverse-square term dominates at short distance.",
+      paramValues: { m1: 5.97, m2: 0.5, distance: 0.5 },
     },
     {
       id: "orbit",
-      label: "Orbital Mechanics",
-      description: "Uses a lower-orbit style separation to compare stronger gravitational force at smaller radius.",
-      paramValues: { m1: 5.97, m2: 0.42, distance: 0.42 },
+      label: "Geostationary-Scale Orbit",
+      description: "Smaller secondary mass at a separation comparable to geostationary altitude (~4.2×10⁷ m), useful for comparing orbital-radius effects.",
+      paramValues: { m1: 5.97, m2: 0.42, distance: 0.5 },
     },
   ],
 
@@ -78,16 +78,16 @@ export const gravityForceLabBasics: Experiment = {
       m1:
         "Mass 1 is the larger source mass, measured in units of ×10²⁴ kg. In Newton's law of gravitation, force is directly proportional to this mass: doubling Mass 1 doubles the force on Mass 2 when Distance and Mass 2 stay fixed. This supports AP Physics 1 and HS-PS2-4 modeling because students can isolate one variable and connect the slider value to the symbolic term m1. In the Earth-Moon preset, Mass 1 represents Earth, making it clear why planetary masses produce forces that are enormous compared with everyday objects even though G is very small.",
       m2:
-        "Mass 2 is the second object, measured in units of ×10²² kg. Increasing Mass 2 increases the gravitational force by the same factor, but Newton's third law still says both objects pull on each other with equal force magnitudes. The difference is acceleration: the smaller object changes motion more noticeably because a = F/m. Use the Earth-Moon preset to compare a massive planet and a smaller moon, then use Surface Gravity to treat Mass 2 as a test object. This helps students distinguish gravitational force from gravitational field strength, a key AP Physics 1 idea.",
+        "Mass 2 is the second object, measured in units of ×10²² kg. Increasing Mass 2 increases the gravitational force by the same factor, but Newton's third law still says both objects pull on each other with equal force magnitudes. The difference is acceleration: the smaller object changes motion more noticeably because a = F/m. Use the Earth-Moon preset to compare a massive planet and a smaller moon, then use Close Encounter to treat Mass 2 as a test object. This helps students distinguish gravitational force from gravitational field strength, a key AP Physics 1 idea.",
       distance:
-        "Distance is the center-to-center separation between the two masses, measured in units of ×10⁸ m. It appears in the denominator as r², so it has a quadratic effect: doubling Distance divides the force by four, while cutting Distance in half multiplies the force by four. This is the inverse-square pattern behind orbital motion, tides, and surface gravity. Keep Mass 1 and Mass 2 fixed while changing only Distance to see why radius is so important in HS-PS2-4 mathematical representations. The Orbital Mechanics preset makes this especially visible by using a much smaller separation.",
+        "Distance is the center-to-center separation between the two masses, measured in units of ×10⁸ m. It appears in the denominator as r², so it has a quadratic effect: doubling Distance divides the force by four, while cutting Distance in half multiplies the force by four. This is the inverse-square pattern behind orbital motion, tides, and surface gravity. Keep Mass 1 and Mass 2 fixed while changing only Distance to see why radius is so important in HS-PS2-4 mathematical representations. The Geostationary-Scale Orbit preset makes this especially visible by using a much smaller separation.",
     },
     misconceptions: [
       {
         wrong:
           "Heavier objects fall faster because gravity pulls harder on them.",
         correct:
-          "Gravity does pull harder when Mass 2 is larger, but acceleration is F/m, so the extra mass cancels for objects near the same source mass. In vacuum, a feather and a hammer hit the ground together. Use the Surface Gravity preset to connect this idea to g = GM/r²: the field depends on Mass 1 and Distance, not on the test object's mass.",
+          "Gravity does pull harder when Mass 2 is larger, but acceleration is F/m, so the extra mass cancels for objects near the same source mass. In vacuum, a feather and a hammer hit the ground together. Use the Close Encounter preset to connect this idea to g = GM/r²: the field depends on Mass 1 and Distance, not on the test object's mass.",
       },
       {
         wrong:
@@ -112,8 +112,8 @@ export const gravityForceLabBasics: Experiment = {
       "HS-PS2-4 inverse-square discovery: set the Earth-Moon preset, keep Mass 1 and Mass 2 fixed, then have students vary Distance and graph force versus 1/r².",
       "MS-PS2-4 force-pattern probe: use the three presets as class stations, asking students to describe how stronger and weaker gravitational interactions depend on mass and separation.",
       "Mass proportionality check: hold Distance constant, change Mass 1 by a known factor, and have students predict and verify the matching factor change in force. Repeat with Mass 2 to show symmetry.",
-      "Surface gravity bridge: use the Surface Gravity preset to derive g = GM/r² from F = GMm/r², emphasizing why the test mass cancels when calculating acceleration near Earth.",
-      "Orbital pre-lab: use the Orbital Mechanics preset after Earth-Moon so students can explain why smaller orbital radius creates stronger gravity before introducing centripetal force.",
+      "Surface gravity bridge: use the Close Encounter preset to derive g = GM/r² from F = GMm/r², emphasizing why the test mass cancels when calculating acceleration near Earth.",
+      "Orbital pre-lab: use the Geostationary-Scale Orbit preset after Earth-Moon so students can explain why smaller orbital radius creates stronger gravity before introducing centripetal force.",
     ],
     faq: [
       {
@@ -134,12 +134,12 @@ export const gravityForceLabBasics: Experiment = {
       {
         question: "Why doesn't the simulation show acceleration in addition to force?",
         answer:
-          "The lab shows force directly so you can verify F = GMm/r² without mixing it with the object's response. Once you have force, acceleration is just a = F/m. The Surface Gravity preset helps separate these ideas: changing Mass 2 changes the force, but the gravitational field near the same Mass 1 at the same Distance is still g = GM/r².",
+          "The lab shows force directly so you can verify F = GMm/r² without mixing it with the object's response. Once you have force, acceleration is just a = F/m. The Close Encounter preset helps separate these ideas: changing Mass 2 changes the force, but the gravitational field near the same Mass 1 at the same Distance is still g = GM/r².",
       },
       {
-        question: "How do the Earth-Moon, Surface Gravity, and Orbital Mechanics presets help?",
+        question: "How do the Earth-Moon, Close Encounter, and Geostationary-Scale Orbit presets help?",
         answer:
-          "The Earth-Moon preset gives a realistic astronomical baseline. Surface Gravity keeps Earth as Mass 1 and uses a much smaller Distance to connect universal gravitation with g near Earth's surface. Orbital Mechanics uses a smaller separation than Earth-Moon, making the inverse-square effect easier to see before students study circular motion and orbits.",
+          "The Earth-Moon preset gives a realistic astronomical baseline. Close Encounter keeps Earth as Mass 1 and uses a much smaller Distance to connect universal gravitation with g near Earth's surface. Geostationary-Scale Orbit uses a smaller separation than Earth-Moon, making the inverse-square effect easier to see before students study circular motion and orbits.",
       },
       {
         question: "How does this connect to NGSS HS-PS2-4?",
