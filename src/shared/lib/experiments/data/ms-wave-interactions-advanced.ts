@@ -4,9 +4,9 @@ export const msWaveInteractionsAdvanced: Experiment = {
   id: "ms-wave-interactions-advanced",
   slug: "ms-wave-interactions-advanced",
   title: "Wave Interactions",
-  subtitle: "Reflection, refraction, diffraction, and interference of waves",
+  subtitle: "Two-source interference, phase, amplitude, and source geometry",
   description:
-    "Explore the four fundamental wave behaviors in one simulation. Watch waves bounce off barriers (reflection), bend when entering a new medium (refraction), spread around obstacles (diffraction), and combine with other waves (interference). Switch between transverse and longitudinal wave types, adjust frequency, and change the medium to see how each property affects wave behavior.",
+    "Explore wave superposition with two coherent sources. Adjust frequency to change wave spacing, phase difference to align or oppose the sources, amplitude to scale wave strength, and source separation to reshape the interference geometry. Compare constructive, destructive, and standing-wave style patterns.",
   thumbnail: "/imgs/experiments/ms-wave-interactions-advanced.png",
 
   standards: {
@@ -20,10 +20,10 @@ export const msWaveInteractionsAdvanced: Experiment = {
   gradeLevel: "6-8",
   tags: [
     "waves",
-    "reflection",
-    "refraction",
-    "diffraction",
     "interference",
+    "superposition",
+    "phase",
+    "amplitude",
     "wave behavior",
     "middle school",
     "6-8",
@@ -32,33 +32,43 @@ export const msWaveInteractionsAdvanced: Experiment = {
 
   parameters: [
     {
-      id: "waveType",
-      label: "Wave Type (0=Transverse, 1=Longitudinal)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
       id: "frequency",
-      label: "Wave Frequency",
+      label: "Frequency",
       unit: "Hz",
-      min: 0.5,
-      max: 10,
-      default: 2,
-      step: 0.5,
+      min: 5,
+      max: 50,
+      default: 20,
+      step: 1,
       tier: "free",
     },
     {
-      id: "medium",
-      label: "Medium (0=Air, 1=Water, 2=Glass)",
-      unit: "",
+      id: "phase",
+      label: "Phase Difference",
+      unit: "°",
       min: 0,
-      max: 2,
+      max: 360,
       default: 0,
+      step: 5,
+      tier: "free",
+    },
+    {
+      id: "amplitude",
+      label: "Amplitude",
+      unit: "",
+      min: 1,
+      max: 20,
+      default: 10,
       step: 1,
+      tier: "free",
+    },
+    {
+      id: "separation",
+      label: "Source Separation",
+      unit: "",
+      min: 1,
+      max: 10,
+      default: 4,
+      step: 0.5,
       tier: "free",
     },
   ],
@@ -70,38 +80,38 @@ export const msWaveInteractionsAdvanced: Experiment = {
         "Wave speed equals frequency times wavelength — the universal relationship for all waves",
     },
     {
-      latex: "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2 \\quad \\text{(Snell's law)}",
+      latex: "y_{tot}(x,t) = y_1(x,t) + y_2(x,t) \\quad \\text{(superposition)}",
       description:
-        "Describes how waves bend when passing between media with different speeds (refraction)",
+        "When two waves overlap, the displacement at every point is the sum of both wave displacements",
     },
   ],
 
   theory:
-    "Waves transfer energy without transferring matter. A transverse wave (like a wave on a rope or light) oscillates perpendicular to its travel direction. A longitudinal wave (like sound) oscillates parallel to its travel direction. All waves share four behaviors. Reflection: when a wave hits a barrier, it bounces back — the angle of incidence equals the angle of reflection. This is why you see your reflection in a mirror and hear echoes off walls. Refraction: when a wave passes from one medium to another (air to water, for example), it changes speed and bends. Snell's law (n1 sin theta1 = n2 sin theta2) describes the bending angle. This is why a straw looks bent in a glass of water. Diffraction: waves spread out when passing through a gap or around an obstacle. Smaller gaps (relative to wavelength) cause more spreading. This is why you can hear someone around a corner but not see them — sound waves have long wavelengths that diffract easily, while light wavelengths are tiny. Interference: when two waves meet, they combine. Constructive interference (peaks align) makes a bigger wave; destructive interference (peak meets trough) cancels them out. Noise-cancelling headphones use destructive interference.",
+    "Waves transfer energy without transferring matter. When two coherent sources emit waves of the same frequency, the waves overlap in space and combine via superposition: the displacement at every point is the sum of both wave displacements. If the sources are in phase (Δφ=0°), peaks meet peaks at many locations and constructive interference dominates. If the sources are 180° out of phase, peaks meet troughs at many locations and destructive interference dominates. Source separation changes the geometry: as sources move apart, the path-length difference from each source to a given screen point changes, shifting where constructive and destructive bands appear. Amplitude scales the size of the disturbance and, in physical waves, the energy carried.",
 
   instructions:
-    "Select a wave type and adjust the frequency. Watch the wave propagate across the screen. The simulation shows all four interactions: the wave reflects off a barrier on the right, refracts when crossing into a different medium (change the medium slider), diffracts through a gap in a wall, and interferes with a second wave source. Higher frequency means shorter wavelength — observe how this affects diffraction spreading.",
+    "Use the four sliders to investigate wave interference and superposition from two coherent sources. Change Frequency to adjust wave spacing, Phase Difference to shift one source relative to the other, Amplitude to change wave strength, and Source Separation to move the emitters apart or together. Try the three presets — Constructive (Δφ=0°), Destructive (Δφ=180°), and Standing Wave Pattern — then change one slider at a time to see how overlapping waves add, cancel, or form stable-looking interference patterns.",
 
   challenges: [
     {
       id: "mwa-c1",
       question:
-        "A wave has a frequency of 4 Hz and a wavelength of 0.5 m. What is its speed? If it enters water where the speed drops to 1.5 m/s, what happens to its wavelength?",
-      hint: "v = f × lambda = 4 × 0.5 = 2 m/s. When entering water, frequency stays the same (4 Hz) but speed changes. New wavelength = v/f = 1.5/4 = 0.375 m. The wavelength shrinks, which is why the wave bends (refracts) — one side slows down before the other.",
+        "Two coherent sources emit waves at 20 Hz with wavelength 0.5 m. What is the wave speed? At a point where the two waves arrive in phase, what kind of interference occurs?",
+      hint: "v = f × λ = 20 × 0.5 = 10 m/s. When two waves arrive in phase (peaks aligned), constructive interference occurs and the combined amplitude is the sum of both individual amplitudes.",
       tier: "free",
     },
     {
       id: "mwa-c2",
       question:
-        "You can hear someone talking around a corner, but you cannot see them. Explain this using diffraction.",
-      hint: "Diffraction depends on the ratio of wavelength to obstacle size. Sound waves have wavelengths of 0.02-17 meters — similar to doorway sizes, so they diffract strongly around corners. Visible light has wavelengths around 400-700 nanometers (millions of times smaller than a doorway), so light barely diffracts and travels in straight lines. That is why sound bends around corners but light does not.",
+        "Two speakers play the same note. At some spots the sound is extra loud, at others it is nearly silent. What is happening?",
+      hint: "This is wave interference. Where the peaks of both sound waves arrive together (constructive interference), the amplitudes add up — extra loud. Where a peak from one speaker meets a trough from the other (destructive interference), they cancel out — nearly silent. These loud and quiet spots form an interference pattern that depends on Frequency and Source Separation.",
       tier: "free",
     },
     {
       id: "mwa-c3",
       question:
-        "Two speakers play the same note. At some spots the sound is extra loud, at others it is nearly silent. What is happening?",
-      hint: "This is wave interference. Where the peaks of both sound waves arrive together (constructive interference), the amplitudes add up — extra loud. Where a peak from one speaker meets a trough from the other (destructive interference), they cancel out — nearly silent. These loud and quiet spots form an interference pattern that depends on the wavelength and speaker positions.",
+        "If you set Phase Difference to 180° with the same Frequency and Amplitude, what happens at points where the two waves arrive simultaneously?",
+      hint: "Destructive interference. With Δφ=180°, the two sources oscillate out of step. Where a peak from one source arrives at the same point as a trough from the other, the displacements cancel and the combined amplitude is near zero.",
       tier: "free",
     },
   ],
@@ -113,40 +123,71 @@ export const msWaveInteractionsAdvanced: Experiment = {
 
   htmlPath: "/experiments/middle/ms-wave-interactions-advanced.html",
 
-  seoTitle: "Wave Interactions: Reflection, Refraction, Diffraction | Scivra Middle School Physics",
+  seoTitle: "Wave Interference & Superposition | Scivra Middle School Physics",
   seoKeywords: [
-    "wave interactions simulation middle school",
-    "reflection refraction diffraction interference",
-    "wave behavior interactive 6-8",
-    "Snell's law wave equation simulation",
+    "wave interference simulation middle school",
+    "two source interference interactive",
+    "phase difference superposition 6-8",
+    "wave equation simulation",
     "NGSS MS-PS4-1 MS-PS4-2 waves",
   ],
   jsonLd: {
     "@type": "LearningResource",
     educationalLevel: "Middle School",
-    teaches: "Wave Interactions — Reflection, Refraction, Diffraction, and Interference",
+    teaches: "Wave Interference and Superposition",
   },
+  htmlControlAliases: {
+    frequency: "sl-freq",
+    phase: "sl-phase",
+    amplitude: "sl-amp",
+    separation: "sl-sep",
+  },
+  presets: [
+    {
+      id: "constructive",
+      label: "Constructive (Δφ=0°)",
+      description:
+        "Aligns the two sources in phase so matching crests and troughs reinforce each other across the interference pattern.",
+      paramValues: { frequency: 20, phase: 0, amplitude: 10, separation: 4 },
+    },
+    {
+      id: "destructive",
+      label: "Destructive (Δφ=180°)",
+      description:
+        "Offsets one source by half a cycle so crests from one wave tend to meet troughs from the other and reduce amplitude.",
+      paramValues: { frequency: 20, phase: 180, amplitude: 10, separation: 4 },
+    },
+    {
+      id: "standing",
+      label: "Standing Wave Pattern",
+      description:
+        "Uses a tighter wave pattern and wider source spacing to make stable nodes and antinodes easier to compare.",
+      paramValues: { frequency: 25, phase: 0, amplitude: 10, separation: 6 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Waves carry energy from place to place without moving matter along with them. Toss a stone into a pond and ripples spread outward — the water molecules bob up and down but do not travel with the wave. The same principle applies to sound waves in air, light waves traveling through space, and seismic waves moving through Earth. When waves encounter boundaries, obstacles, or other waves, four fundamental behaviors can occur. Reflection is when a wave bounces back — the same way a rubber ball bounces off a wall, or your voice echoes off a cliff. Refraction is when a wave bends as it crosses into a different material and changes speed — the same way a straw looks bent in a glass of water. Diffraction is when a wave spreads around corners and through gaps — why you can hear someone talking around a corner but cannot see them. Interference is when two waves meet and combine — adding together to make a bigger wave (constructive) or canceling each other out (destructive). This simulation lets you switch wave types, adjust frequency, and change the medium to observe all four behaviors and see how wave properties change together.",
+      "Waves carry energy from place to place without moving matter along with them. Toss a stone into a pond and ripples spread outward — the water molecules bob up and down but do not travel with the wave. The same principle applies to sound waves in air, light waves traveling through space, and seismic waves moving through Earth. When two coherent sources emit waves at the same frequency, the disturbances overlap and combine via superposition: at every point, the total displacement equals the sum of the two individual wave displacements. This simulation places two emitters on a 2D screen and lets you adjust four properties at once. Frequency sets how tightly packed the wave crests are. Phase Difference sets how the two sources are aligned in time. Amplitude controls the size of each disturbance. Source Separation changes the geometry. By moving one slider at a time, you can isolate which property changes the interference pattern — and connect what you observe to the wave equation v = f × wavelength.",
     parameterExplanations: {
-      waveType:
-        "Selects whether the simulation shows a transverse wave (setting 0) or a longitudinal wave (setting 1). In a transverse wave, the material moves perpendicular to the direction the wave travels — like shaking a rope up and down while the wave moves sideways. Light and water-surface waves are transverse. In a longitudinal wave, the material moves back and forth in the same direction the wave travels — like a slinky being compressed and stretched. Sound is a longitudinal wave. Both types obey the same wave equation (v = f times wavelength) and show all four interactions.",
       frequency:
-        "The number of complete wave cycles produced per second, measured in hertz (Hz), adjustable from 0.5 Hz to 10 Hz. Higher frequency means more waves per second and therefore a shorter wavelength (since wave speed stays constant in the same medium: wavelength = speed divided by frequency). Frequency affects diffraction — higher-frequency waves have shorter wavelengths that diffract less around obstacles and gaps. It also sets the pitch of a sound wave and the color of a light wave.",
-      medium:
-        "The material through which the wave travels, selectable from Air (0), Water (1), or Glass (2). Different materials transmit waves at different speeds. For light-like transverse waves, speed decreases from air to water to glass — this is the ordering shown in the simulation and the basis of optical refraction. Note: for sound, the ordering is reversed — sound travels fastest in solids, slower in liquids, and slowest in gases, because sound speed depends on the stiffness of the medium rather than its optical density. When a wave crosses from one medium to another, frequency stays the same but wavelength changes (shorter in slower media), causing refraction.",
+        "Frequency sets how many complete wave cycles each source produces per second, from 5 Hz to 50 Hz. In this model, increasing frequency packs the crests closer together, so the interference pattern gains more closely spaced bright and quiet regions. Middle school students can connect this to MS-PS4-1 by comparing frequency, wavelength, and the repeating pattern of waves. High school students can extend the same evidence toward HS-PS4-3 by asking how changing frequency affects information carried by a wave-like signal while amplitude and source spacing stay fixed.",
+      phase:
+        "Phase Difference controls how far one source is shifted in its cycle compared with the other source, from 0° to 360°. At 0°, the sources start together, so many locations show constructive interference where crests meet crests. At 180°, one source is half a cycle behind, making destructive interference easier to find where crests meet troughs. This slider gives students a concrete way to test superposition: the observed displacement at any point is the sum of both waves. That supports MS-PS4-1 pattern modeling and prepares HS-PS4-3 discussions of controlled wave modulation.",
+      amplitude:
+        "Amplitude sets the height or strength of each wave source, from 1 to 20. Larger amplitude means a larger disturbance and, in physical waves, greater energy transfer. When two waves overlap, amplitude also determines how dramatic the reinforcement or cancellation appears: constructive regions become stronger, while destructive regions can approach zero if the waves are closely matched. Students can use this slider to connect visual wave height to energy as required by MS-PS4-1. For HS-PS4-3, it also supports the idea that changing amplitude can change a signal's strength without necessarily changing its frequency.",
+      separation:
+        "Source Separation changes the distance between the two wave emitters, from 1 to 10. Moving the sources apart changes the path-length difference from each source to points on the screen, which shifts where constructive and destructive bands appear. Small separation can make the pattern broad and simple; larger separation can create more tightly arranged interference regions. This is useful for MS students building a model of how waves combine, and for HS students connecting geometry, wave travel, and signal patterns. Keep frequency and phase constant, then change only separation to isolate the effect of source position.",
     },
     misconceptions: [
       {
         wrong: "Waves move matter from place to place — for example, the water in a wave actually travels to shore.",
         correct:
-          "Waves transfer energy, not matter. In an ocean wave, water molecules move in circular orbits but return almost to where they started — a rubber duck bobs up and down and slightly back and forth but does not travel to shore with the wave. The energy of the disturbance travels forward while the medium stays roughly in place. This is why a leaf floating on water bobs up and down rather than being carried along with the wave.",
+          "Waves transfer energy, not matter. In an ocean wave, water molecules move in circular orbits but return almost to where they started — a rubber duck bobs up and down and slightly back and forth but does not travel to shore with the wave. The energy of the disturbance travels forward while the material itself stays roughly in place. In the two-source interference model, each source sends out a disturbance, but the pattern you see comes from energy moving through positions and adding by superposition, not from particles traveling across the whole screen.",
       },
       {
-        wrong: "Refraction happens because the wave is bent by a force when it enters a new material.",
+        wrong: "Constructive interference means one wave wins and destructive interference means the other wave disappears.",
         correct:
-          "Refraction is not caused by a force — it is a geometric consequence of one side of the wavefront slowing down before the other. Imagine a row of marching soldiers turning to walk through mud: soldiers who hit the mud first slow down, causing the whole line to pivot and change direction. Similarly, when a wave crosses into a slower medium at an angle, the side that enters first slows, bending the wavefront. No external force is involved.",
+          "Interference is not a contest between waves. At each point, the two wave displacements add together. If both are upward or both are downward, the result has a larger amplitude: constructive interference. If one is upward while the other is downward, the result is smaller: destructive interference. Neither wave is permanently removed. Changing Phase Difference from 0° to 180° is a direct way to test this because the same two sources can produce very different combined patterns.",
       },
       {
         wrong: "Interference destroys one of the two waves permanently.",
@@ -154,37 +195,38 @@ export const msWaveInteractionsAdvanced: Experiment = {
           "Waves pass through each other without being permanently affected. When two waves overlap, they combine at every point — constructively or destructively — but once they pass through the overlap region, each continues on unchanged. Destructive interference silences sound locally (as in noise-cancelling headphones) but does not eliminate either wave; they keep traveling beyond the overlap zone. Interference is a temporary combination, not permanent destruction.",
       },
       {
-        wrong: "Higher-frequency waves always travel faster than lower-frequency waves in the same medium.",
+        wrong: "Higher-frequency waves always travel faster than lower-frequency waves in the same setup.",
         correct:
-          "In many simplified wave models, speed is treated as constant in one medium, so frequency and wavelength are inversely linked (wavelength = speed divided by frequency) — higher frequency means shorter wavelength, not faster travel. In real materials, dispersion does occur: glass, for example, slows different colors of visible light by slightly different amounts, which is why a prism separates white light into a rainbow. So the speed-stays-constant rule is a useful simplification, while dispersive materials show small frequency-dependent speed differences.",
+          "In many classroom wave models, changing Frequency mainly changes wavelength while the wave speed is treated as fixed. Higher frequency means more cycles per second and shorter spacing between crests, not automatically faster travel. In this simulation, use Frequency to compare how the interference bands tighten or spread while keeping Phase Difference, Amplitude, and Source Separation steady. That one-variable test helps separate wave speed from the pattern changes caused by frequency.",
       },
     ],
     teacherUseCases: [
-      "Frequency and wavelength relationship: set medium to 0 (Air) and waveType to 0 (Transverse). Increase frequency from 1 Hz to 4 Hz to 8 Hz while students count the number of wave crests visible on screen. Students observe that more crests appear (shorter wavelength) as frequency rises, verifying the relationship wavelength = speed divided by frequency — supporting MS-PS4-1.",
-      "Refraction exploration: set waveType to 0 and frequency to 2 Hz. Switch medium from 0 (Air) to 1 (Water) to 2 (Glass). Students describe what changes about the wave pattern (wavelength gets shorter, wave bends at the boundary). Ask them to connect this to why pools look shallower than they are, or why a straw appears bent in water — bridging MS-PS4-2 to everyday observation.",
-      "Diffraction vs. frequency: hold medium at 0 and waveType at 0. Compare the wave spreading around an obstacle at frequency 1 Hz versus 8 Hz. Students should observe that lower-frequency (longer-wavelength) waves spread more. This sets up the everyday analogy: sound (long wavelengths) bends around corners easily; light (tiny wavelengths) does not — explaining why you hear but cannot see around a corner.",
-      "Constructive and destructive interference demo: if the simulation displays a built-in interference pattern (where two wave trains overlap), have students identify bright or loud spots (constructive — crests align) and quiet spots (destructive — crest meets trough). If a dedicated two-source interference mode is not available, use the frequency and waveType controls to observe how the existing wave pattern changes and discuss constructive vs. destructive interference conceptually. Ask: can two waves added together produce silence? Experiencing this counterintuitive result motivates understanding of noise-cancelling technology as an engineering application of MS-PS4-1.",
+      "Frequency and wavelength relationship: start with the Constructive (Δφ=0°) preset and have students increase Frequency from 10 Hz to 20 Hz to 40 Hz while keeping Phase Difference, Amplitude, and Source Separation unchanged. Students count how the spacing between crests and interference bands changes, supporting MS-PS4-1 mathematical wave modeling.",
+      "Phase and superposition demo: compare the Constructive (Δφ=0°) and Destructive (Δφ=180°) presets. Students identify where waves reinforce and where they cancel, then explain the pattern using superposition and the Phase Difference slider. Keep NGSS MS-PS4-1 as the anchor standard for describing amplitude patterns in a wave model.",
+      "Amplitude and energy comparison: keep Frequency at 20 Hz, Phase Difference at 0°, and Source Separation at 4. Move Amplitude from 3 to 10 to 18 and ask students what changes in the visual pattern and what stays the same. Connect larger amplitude to greater wave energy while preserving the same interference geometry, supporting MS-PS4-1.",
+      "Source geometry investigation: use the Standing Wave Pattern preset, then vary only Source Separation from 2 to 6 to 10. Students sketch or describe how node and antinode locations shift as the sources move apart. This supports model-based reasoning about how source position affects interference without changing wave frequency.",
+      "Engineering connection: use the Destructive (Δφ=180°) preset to introduce noise-cancelling technology. Students explain why matching Frequency and Amplitude matter, then adjust Phase Difference away from 180° to see why cancellation is strongest only under controlled timing. Keep the discussion tied to MS-PS4-1 and the existing MS-PS4-2 wave-interaction context.",
     ],
     faq: [
       {
-        question: "Why can you hear someone talking around a corner but not see them?",
+        question: "What does phase difference do in a two-source wave pattern?",
         answer:
-          "Both sound and light are waves, but their wavelengths are vastly different. Typical sound wavelengths range from about 2 centimeters to 17 meters — similar in size to doorways and building corners. Waves diffract (spread around obstacles) most when their wavelength is comparable to the obstacle size, so sound bends easily around corners. Visible light has wavelengths between about 400 and 700 nanometers — millions of times smaller than a doorway — so light barely diffracts and travels in nearly straight lines. This is why sound turns corners but light does not.",
-      },
-      {
-        question: "What is the difference between a transverse and a longitudinal wave?",
-        answer:
-          "In a transverse wave, the medium (the material through which the wave travels) vibrates perpendicular to the direction the wave moves. Picture shaking a rope up and down: your hand moves vertically, but the wave pattern travels horizontally along the rope. Light is a transverse wave. In a longitudinal wave, the medium vibrates parallel to the direction of travel — regions of compression (squished together) and rarefaction (spread apart) move along the wave's path. Sound is a longitudinal wave: air molecules push back and forth in the same direction the sound travels. Both types carry energy and obey the wave equation v = f times wavelength.",
+          "Phase difference describes where one source is in its cycle compared with the other source. At 0°, both sources rise and fall together, so many places show constructive interference. At 180°, one source is half a cycle out of step, so crests from one source often meet troughs from the other and reduce the combined amplitude. Values between those extremes shift the locations of the loud/quiet or bright/dim regions. The Phase Difference slider is the fastest way to see superposition because the sources stay the same while only their timing changes.",
       },
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation primarily supports MS-PS4-1 (use mathematical representations to describe a simple model for waves that includes how the amplitude of a wave is related to the energy in the wave) and MS-PS4-2 (develop and use a model to describe that waves are reflected, absorbed, or transmitted through various materials). Adjusting frequency, medium, and wave type while observing reflection, refraction, diffraction, and interference directly builds the observational foundation for both standards, and the wave equation v = f times wavelength provides the mathematical representation MS-PS4-1 requires.",
+          "This simulation primarily supports MS-PS4-1 (use mathematical representations to describe a simple model for waves that includes how the amplitude of a wave is related to the energy in the wave) and MS-PS4-2 (develop and use a model to describe that waves are reflected, absorbed, or transmitted through various materials). Adjusting Frequency, Phase Difference, Amplitude, and Source Separation while observing constructive and destructive interference directly builds the observational foundation for wave modeling, and the wave equation v = f times wavelength provides the mathematical representation MS-PS4-1 requires.",
       },
       {
-        question: "Why does a wave bend when it enters a new medium?",
+        question: "Why do some places in the pattern look strong while others look weak?",
         answer:
-          "Refraction occurs because the wave changes speed when it crosses from one medium to another, and the two sides of the wavefront do not cross the boundary at the same instant. The side that enters the new (slower) medium first slows down while the other side is still moving at the original speed. This speed difference causes the wavefront to pivot — the same way a car turning into mud on one side skids and turns in that direction. The greater the speed difference between the two media, the more the wave bends.",
+          "The pattern comes from superposition. At each point, the disturbance from source A and the disturbance from source B add together. If both waves arrive with the same sign — crest with crest or trough with trough — the combined amplitude is larger, producing constructive interference. If a crest arrives with a trough, the two displacements partly or fully cancel, producing destructive interference. Frequency affects wave spacing, Phase Difference changes the timing between sources, Amplitude changes the strength of the result, and Source Separation changes the geometry of the bands.",
+      },
+      {
+        question: "How does Source Separation change the interference pattern?",
+        answer:
+          "Source Separation sets the distance between the two emitters. As the sources move farther apart, the path-length difference from each source to any given screen point changes more rapidly, so constructive and destructive bands appear closer together. With sources very close, the pattern broadens out. The Standing Wave Pattern preset uses a wider separation with a tighter Frequency to make stable nodes and antinodes easier to identify. Try changing only Source Separation to isolate this effect from Frequency and Phase Difference.",
       },
       {
         question: "How does noise-cancelling technology use wave interference?",
