@@ -3,108 +3,196 @@ import type { Experiment } from "@/shared/types/experiment";
 export const cellularRespirationDetail: Experiment = {
   id: "cellular-respiration-detail",
   slug: "cellular-respiration-detail",
-  title: "Cellular Respiration (Detailed)",
-  subtitle: "Glycolysis, Krebs cycle, and oxidative phosphorylation step by step",
+  title: "Electron Transport Chain & Chemiosmosis",
+  subtitle: "Model Complexes I-IV, ATP synthase, proton motive force, and ETC inhibitor effects",
   description:
-    "Follow glucose through all three stages of cellular respiration. Track ATP, NADH, and FADH₂ production through glycolysis, the Krebs cycle, and the electron transport chain. Compare aerobic and anaerobic pathways and calculate total ATP yield per glucose molecule.",
+    "Explore oxidative phosphorylation at the inner mitochondrial membrane. Adjust proton gradient strength and electron transport rate to see how NADH and FADH2 oxidation, proton pumping, oxygen reduction, and ATP synthase rotation are coupled. Use cyanide, DNP, and oligomycin presets to compare three distinct ways ATP production can fail.",
   thumbnail: "/imgs/experiments/cellular-respiration-detail.png",
-  standards: { ngss: ["HS-LS1-7"], gcse: [], ap: ["2.A.2"] },
+  standards: { ngss: ["HS-LS1-7"], gcse: [], ap: ["2.A.2", "3.D"] },
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
   gradeLevel: "AP",
-  tags: ["cellular respiration", "glycolysis", "Krebs cycle", "oxidative phosphorylation", "ATP", "AP Biology"],
+  tags: [
+    "electron transport chain",
+    "chemiosmosis",
+    "oxidative phosphorylation",
+    "ATP synthase",
+    "proton gradient",
+    "ETC inhibitors",
+    "AP Biology",
+  ],
   difficulty: "advanced",
   parameters: [
-    { id: "glucoseAmount", label: "Glucose Molecules", unit: "", min: 1, max: 10, default: 1, step: 1, tier: "free" },
-    { id: "oxygenAvailable", label: "O₂ Available (0=no, 1=yes)", unit: "", min: 0, max: 1, default: 1, step: 1, tier: "free" },
-    { id: "speed", label: "Animation Speed", unit: "x", min: 0.5, max: 3, default: 1, step: 0.5, tier: "free" },
+    { id: "protonGradient", label: "Proton Gradient", unit: "%", min: 0, max: 100, default: 100, step: 1, tier: "free" },
+    { id: "electronTransportRate", label: "Electron Transport Rate", unit: "×", min: 0, max: 2, default: 1.0, step: 0.1, tier: "free" },
   ],
   formulas: [
-    { latex: "\\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2 \\rightarrow 6\\text{CO}_2 + 6\\text{H}_2\\text{O} + \\sim36\\text{ATP}", description: "Overall aerobic respiration equation" },
-    { latex: "\\text{Glycolysis: Glucose} \\rightarrow 2\\text{Pyruvate} + 2\\text{ATP} + 2\\text{NADH}", description: "Net products of glycolysis (cytoplasm)" },
+    {
+      latex: "\\Delta p = \\Delta \\Psi - \\frac{2.303RT}{F}\\Delta\\text{pH}",
+      description: "Proton motive force combines the membrane voltage and pH gradient across the inner mitochondrial membrane.",
+    },
+    {
+      latex: "\\text{NADH} + \\text{H}^+ + \\frac{1}{2}\\text{O}_2 \\rightarrow \\text{NAD}^+ + \\text{H}_2\\text{O}",
+      description: "Electrons from NADH flow through the ETC to oxygen, the terminal electron acceptor.",
+    },
+    {
+      latex: "\\sim 2.7\\text{ H}^+ + \\text{ADP} + \\text{P}_i \\rightarrow \\text{ATP} + \\text{H}_2\\text{O}",
+      description: "Proton flow through F0 drives F1 rotation and ATP synthesis.",
+    },
   ],
-  theory: "Cellular respiration converts glucose to ATP in three stages. Glycolysis (cytoplasm) splits glucose into 2 pyruvate, yielding 2 ATP and 2 NADH net. The Krebs cycle (mitochondrial matrix) oxidizes acetyl-CoA, producing 2 ATP, 6 NADH, and 2 FADH₂ per glucose. Oxidative phosphorylation (inner mitochondrial membrane) uses the electron transport chain to create a proton gradient, driving ATP synthase to produce ~32-34 ATP. Total yield: ~36-38 ATP per glucose. Without O₂, fermentation produces only 2 ATP per glucose (lactic acid or ethanol pathway).",
-  instructions: "Watch glucose molecules pass through each stage. The molecule counter tracks ATP, NADH, FADH₂, and CO₂ in real time. Toggle oxygen to compare aerobic vs anaerobic respiration.",
+  theory:
+    "The electron transport chain is embedded in the inner mitochondrial membrane. NADH donates high-energy electrons to Complex I, while FADH2 donates electrons through Complex II. Electrons move through ubiquinone, Complex III, cytochrome c, and Complex IV, where oxygen is reduced to water. Complexes I, III, and IV use the released free energy to pump H+ into the intermembrane space, building a proton motive force made of both charge separation and a pH difference. ATP synthase uses this gradient: H+ flows through the F0 channel, rotating the c-ring and gamma subunit, which changes the F1 catalytic sites so ADP and phosphate form ATP. The inhibitor presets isolate mechanism. Cyanide blocks Complex IV, stopping oxygen reduction and electron flow. DNP uncouples electron transport from ATP synthesis by carrying protons across the membrane. Oligomycin blocks the ATP synthase proton channel, causing the gradient to build and slowing electron flow by back-pressure.",
+  instructions:
+    "Use the Proton Gradient slider to change how much electrochemical gradient is maintained across the inner mitochondrial membrane. Use the Electron Transport Rate slider to change electron flow through the ETC. Compare the Normal ETC, Cyanide, DNP Uncoupler, and Oligomycin presets to explain how each condition changes proton pumping, proton flow through ATP synthase, and ATP output.",
   challenges: [
-    { id: "crd-c1", question: "How many ATP molecules are produced per glucose in aerobic respiration?", hint: "~36-38 total: 2 from glycolysis + 2 from Krebs + ~32-34 from oxidative phosphorylation", tier: "free" },
-    { id: "crd-c2", question: "Why does fermentation yield so much less ATP than aerobic respiration?", hint: "Without O₂, the ETC can't run. NADH isn't oxidized, so only substrate-level phosphorylation in glycolysis yields 2 ATP", tier: "pro" },
+    {
+      id: "etc-c1",
+      question: "Why does cyanide rapidly stop oxidative phosphorylation?",
+      hint: "Cyanide inhibits Complex IV, so electrons cannot reduce O2 to H2O. Electron flow backs up, proton pumping stops, and the proton gradient collapses.",
+      tier: "free",
+    },
+    {
+      id: "etc-c2",
+      question: "How can DNP increase electron transport while decreasing ATP synthesis?",
+      hint: "DNP carries H+ across the inner membrane, dissipating the gradient. The ETC may run faster trying to rebuild the gradient, but ATP synthase is bypassed.",
+      tier: "free",
+    },
+    {
+      id: "etc-c3",
+      question: "Why does oligomycin slow electron transport even though it targets ATP synthase?",
+      hint: "Blocking the F0 proton channel prevents H+ from returning to the matrix. The proton motive force becomes very high, creating back-pressure against further proton pumping.",
+      tier: "pro",
+    },
+    {
+      id: "etc-c4",
+      question: "Why does FADH2 usually support less ATP production than NADH?",
+      hint: "FADH2 enters through Complex II, which does not pump protons, so fewer H+ are moved across the membrane per electron pair.",
+      tier: "pro",
+    },
   ],
-  wave: 12, tier: "free", estimatedTime: 25,
+  wave: 12,
+  tier: "free",
+  estimatedTime: 25,
   relatedExperiments: ["cellular-respiration", "photosynthesis-light-reactions"],
   htmlPath: "/experiments/ap-biology/cellular-respiration-detail.html",
-  seoTitle: "Cellular Respiration Detailed Simulation | Scivra AP Biology",
-  seoKeywords: ["cellular respiration simulation", "glycolysis Krebs cycle interactive", "ATP production", "AP Biology"],
-  jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Cellular Respiration" },
+  seoTitle: "Electron Transport Chain & Chemiosmosis Simulation | Scivra AP Biology",
+  seoKeywords: [
+    "electron transport chain simulation",
+    "chemiosmosis AP Biology",
+    "ATP synthase proton gradient",
+    "oxidative phosphorylation interactive",
+    "cyanide DNP oligomycin ETC inhibitors",
+  ],
+  jsonLd: {
+    "@type": "LearningResource",
+    educationalLevel: "High School",
+    teaches: "Electron Transport Chain, Chemiosmosis, ATP Synthase, and ETC Inhibitors",
+  },
+  htmlControlAliases: { protonGradient: "sl-pg", electronTransportRate: "sl-etr" },
+  presets: [
+    {
+      id: "normal",
+      label: "1 Normal ETC",
+      description:
+        "Electrons flow from NADH and FADH2 through Complexes I-IV to oxygen, proton pumps maintain the gradient, and ATP synthase uses H+ flow to make ATP.",
+      paramValues: { protonGradient: 100, electronTransportRate: 1.0 },
+    },
+    {
+      id: "cyanide",
+      label: "2 Cyanide",
+      description:
+        "Cyanide blocks Complex IV, preventing oxygen reduction. Electron flow stops, proton pumping stops, and the proton gradient collapses.",
+      paramValues: { protonGradient: 0, electronTransportRate: 0 },
+    },
+    {
+      id: "dnp",
+      label: "3 DNP Uncoupler",
+      description:
+        "DNP acts as a proton ionophore, carrying H+ across the inner membrane. Electron transport can continue rapidly, but the gradient is dissipated as heat instead of driving ATP synthase.",
+      paramValues: { protonGradient: 0, electronTransportRate: 1.5 },
+    },
+    {
+      id: "oligomycin",
+      label: "4 Oligomycin",
+      description:
+        "Oligomycin blocks the F0 proton channel of ATP synthase. H+ cannot flow back to the matrix, so the gradient remains high and electron transport slows from back-pressure.",
+      paramValues: { protonGradient: 100, electronTransportRate: 0.3 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Cellular respiration is the metabolic process cells use to extract energy from glucose and store it as ATP — the currency that powers muscle contraction, active transport, and protein synthesis. Most of the yield comes not from glycolysis, but from the electron transport chain (ETC) embedded in the inner mitochondrial membrane, where NADH and FADH₂ donate electrons that drive proton pumping, creating a gradient that spins ATP synthase like a molecular turbine. One glucose molecule processed through glycolysis, the Krebs cycle, and oxidative phosphorylation generates roughly 30–32 ATP under aerobic conditions — of which oxidative phosphorylation contributes ~26–28 — compared to just 2 ATP from fermentation. The simulation lets you feed glucose molecules through all three stages and toggle oxygen availability to contrast aerobic efficiency against anaerobic fallback pathways.",
+      "The electron transport chain and chemiosmosis are the membrane-based stage of cellular respiration that converts redox energy into ATP. In mitochondria, NADH and FADH2 deliver electrons to protein complexes in the inner membrane. As electrons move toward oxygen, Complexes I, III, and IV pump H+ into the intermembrane space. That stored electrochemical potential is the proton motive force, combining membrane voltage and a pH difference. ATP synthase then works like a rotary enzyme: H+ flows through the F0 subunit, the rotor turns, and the F1 catalytic head changes shape to phosphorylate ADP. This simulation focuses only on ETC and chemiosmosis, not the full respiration pathway, so students can isolate coupling, inhibition, and gradient-driven ATP synthesis.",
     parameterExplanations: {
-      glucoseAmount:
-        "The number of glucose molecules fed into the pathway at once, from 1 to 10. More glucose increases the throughput of all three stages simultaneously — watch the ATP, NADH, and FADH₂ counters scale proportionally as each molecule completes glycolysis, the Krebs cycle, and oxidative phosphorylation.",
-      oxygenAvailable:
-        "A binary switch: 1 enables the full aerobic pathway (ETC active, ~32 ATP per glucose), 0 forces anaerobic fermentation (ETC offline, only 2 ATP from glycolysis). Toggling this mid-simulation illustrates why oxygen is the terminal electron acceptor that makes the proton gradient possible.",
-      speed:
-        "Animation playback rate in multiples of normal speed (0.5×–3×). Slow down to 0.5× to trace individual electron carriers through the ETC; speed up to 3× to observe the cumulative ATP yield across multiple glucose molecules more quickly.",
+      protonGradient:
+        "Proton Gradient represents how much of the H+ electrochemical gradient is maintained across the inner mitochondrial membrane. A strong gradient provides the driving force for ATP synthase; a collapsed gradient means electron transport is no longer coupled to ATP production. Use this slider to test whether ATP synthase has enough proton motive force to convert ADP and phosphate into ATP.",
+      electronTransportRate:
+        "Electron Transport Rate controls how quickly electrons move through the ETC from reduced carriers toward oxygen. Higher electron flow can support more proton pumping only if the complexes and proton gradient coupling remain functional. Use this slider to distinguish normal acceleration from inhibitor conditions where electron flow, oxygen reduction, or chemiosmotic coupling is disrupted.",
     },
     misconceptions: [
       {
-        wrong:
-          "ATP is a form of energy — cells 'make energy' during respiration.",
+        wrong: "The ETC directly makes ATP at Complexes I-IV.",
         correct:
-          "Cells don't create energy; ATP transfers stored chemical energy via its phosphate bonds. Respiration converts chemical energy already in glucose into a form (ATP) that other cellular reactions can directly use. The total energy is conserved, not manufactured.",
+          "Complexes I-IV do not directly synthesize ATP. They transfer electrons and pump protons. ATP synthase makes ATP when H+ flows back through its F0 channel and drives conformational changes in the F1 catalytic head.",
       },
       {
-        wrong:
-          "Most ATP comes from glycolysis, so the rest of the pathway is not that important.",
+        wrong: "Oxygen is used because it is pumped across the membrane.",
         correct:
-          "Glycolysis yields only 2 ATP per glucose net. The electron transport chain and chemiosmosis account for roughly 26–28 of the ~30–32 ATP produced aerobically — about 85–90% of the total yield. Glycolysis matters mainly because it feeds pyruvate into the Krebs cycle.",
+          "Oxygen is not pumped. It is the terminal electron acceptor at Complex IV, where it is reduced to water. Without oxygen accepting electrons, the chain backs up and proton pumping stops.",
       },
       {
-        wrong:
-          "Plants photosynthesize instead of doing cellular respiration.",
+        wrong: "A stronger proton gradient always means more ATP.",
         correct:
-          "Plants carry out cellular respiration continuously in all living cells, day and night, using the same mitochondrial machinery as animals. Photosynthesis and respiration are complementary, not alternatives — the glucose made by photosynthesis is the substrate that respiration burns.",
+          "A gradient must be able to flow through ATP synthase. If oligomycin blocks the proton channel, the gradient can remain high while ATP synthesis falls and electron transport slows.",
       },
       {
-        wrong:
-          "Fermentation produces no useful products — it is just a waste pathway.",
+        wrong: "Uncouplers block the ETC the same way cyanide does.",
         correct:
-          "Fermentation regenerates NAD⁺ from NADH, allowing glycolysis to continue when oxygen is absent. Without this recycling step, glycolysis would halt from NAD⁺ depletion. Lactic acid fermentation sustains muscle activity during intense exercise; ethanol fermentation underlies bread-making and brewing.",
+          "Uncouplers such as DNP do not primarily block electron flow. They dissipate the proton gradient, so electron transport may continue or accelerate while ATP synthesis drops because H+ bypasses ATP synthase.",
+      },
+      {
+        wrong: "NADH and FADH2 are equivalent electron donors.",
+        correct:
+          "NADH enters at Complex I, which pumps protons. FADH2 enters through Complex II, which does not pump protons, so FADH2 contributes less to the proton motive force.",
       },
     ],
     teacherUseCases: [
-      "Pre-lab prediction: before running the simulation, ask students to sketch how total ATP yield changes as glucose input increases from 1 to 10. Compare their linear predictions to the simulation's readout and discuss what determines the ceiling.",
-      "Aerobic vs anaerobic data table: have pairs record ATP, NADH, and FADH₂ yields for the same glucose amount under O₂ = 1 and O₂ = 0. Calculate the percent efficiency difference and connect to why aerobic organisms dominate when oxygen is available.",
-      "Misconception probe on ATP: pause the simulation mid-ETC and ask 'Where did the energy in ATP come from?' Students who answer 'from the reaction' need redirection to the glucose oxidation chain — use this moment to trace energy transfer from bonds in glucose to NADH to the proton gradient to ATP.",
-      "ETC bottleneck investigation: have students vary speed to observe the ETC segment and identify which stage produces the most ATP per glucose. Tie to AP Bio standard 2.A.2 by asking why the inner mitochondrial membrane structure enables chemiosmosis.",
-      "Fermentation real-world extension: assign students to research one real-world application of fermentation (yogurt, bread rising, brewing, or muscle cramp recovery) and explain which step of the simulation models that pathway.",
+      "Use the Cyanide preset as an AP Bio 3.D mechanism prompt: students trace cause and effect from Complex IV inhibition to oxygen reduction failure, halted electron flow, gradient collapse, and ATP synthesis loss.",
+      "Run the DNP preset after Normal ETC and ask students why electron transport can remain high while ATP output falls, emphasizing the distinction between electron flow and chemiosmotic coupling.",
+      "Use the Oligomycin preset to teach feedback in energy systems: ATP synthase is blocked first, then proton back-pressure slows proton pumping and electron transport.",
+      "Have students compare NADH entry at Complex I with FADH2 entry at Complex II, then explain why bypassing one proton-pumping complex changes ATP yield.",
+      "Connect HS-LS1-7 to energy transformation by having students identify each energy transfer: redox energy, proton motive force, mechanical rotation, and chemical energy in ATP.",
     ],
     faq: [
       {
-        question: "Why does aerobic respiration produce so many more ATP than fermentation?",
+        question: "What does this simulation teach?",
         answer:
-          "The electron transport chain oxidizes NADH and FADH₂, pumping H⁺ across the inner mitochondrial membrane to drive ATP synthase. This chemiosmotic mechanism contributes roughly 26–28 of the ~30–32 ATP produced per glucose aerobically. Fermentation cannot use the ETC, so only the 2 ATP from substrate-level phosphorylation in glycolysis are available.",
+          "It teaches the electron transport chain and chemiosmosis stage of aerobic respiration: electron transfer through Complexes I-IV, proton pumping across the inner mitochondrial membrane, oxygen reduction at Complex IV, and ATP synthesis by the F0F1 ATP synthase.",
       },
       {
-        question: "What exactly does ATP synthase do, and why is the proton gradient important?",
+        question: "How does cyanide stop ATP production?",
         answer:
-          "ATP synthase is a molecular motor embedded in the inner mitochondrial membrane. As H⁺ ions flow down their electrochemical gradient through its F₀ subunit, the rotation drives the F₁ subunit to phosphorylate ADP to ATP. Without the proton gradient built by the ETC, the synthase has no driving force and ATP production drops to near zero.",
+          "Cyanide binds Complex IV, also called cytochrome c oxidase. Because electrons can no longer reduce oxygen to water, electron flow through the ETC stops, proton pumping stops, the gradient collapses, and ATP synthase loses its driving force.",
       },
       {
-        question: "How many ATP does one glucose actually produce — why do textbooks give different numbers?",
+        question: "Why is DNP called an uncoupler?",
         answer:
-          "Textbooks historically cited 36–38 ATP per glucose; current measurements put the aerobic yield closer to 30–32 ATP in intact cells, because the cost of shuttling NADH into mitochondria and running the ATP-ADP translocase is factored in. For AP exams, ~36 is still widely accepted; this simulation uses the modern ~30–32 figure, with oxidative phosphorylation contributing ~26–28 of that total.",
+          "DNP separates electron transport from ATP synthesis. It carries protons across the inner mitochondrial membrane, dissipating the gradient as heat. The ETC can still move electrons, but the stored proton motive force no longer passes through ATP synthase efficiently.",
       },
       {
-        question: "Does this connect to AP Bio standard 2.A.2?",
+        question: "What exactly do the F0 and F1 parts of ATP synthase do?",
         answer:
-          "Yes. AP Biology 2.A.2 requires students to explain how free energy is captured and transferred during cellular respiration, specifically including the role of electron carriers (NADH, FADH₂), the electron transport chain, and chemiosmotic synthesis of ATP. Running this simulation with both oxygen states directly addresses all three components of that standard.",
+          "F0 is the membrane-embedded proton channel and rotor. As H+ moves through F0, rotation is transmitted to the gamma subunit. F1 is the matrix-facing catalytic head; its binding-change mechanism converts ADP and phosphate into ATP.",
       },
       {
-        question: "Why does the Krebs cycle only produce 2 ATP directly if it's so important?",
+        question: "Why do biology sources often say about 30 ATP per glucose, and how does this align with AP Biology and NGSS?",
         answer:
-          "The Krebs cycle's main role is not direct ATP synthesis but electron carrier loading. Each turn of the cycle produces 3 NADH and 1 FADH₂, which carry electrons to the ETC where their oxidation drives the synthesis of ~10 ATP per turn (×2 turns per glucose). The 2 ATP from substrate-level phosphorylation in the cycle are a minor fraction of its total contribution.",
+          "Modern estimates are usually near 30 to 32 ATP per glucose because ATP yield depends on shuttle systems, proton leak, transport costs, and the lower ATP contribution from FADH2 (which enters at Complex II and skips one proton-pumping step). The ETC sets the upper limit by determining how many protons are pumped and how efficiently ATP synthase uses them. For AP Biology 2.A.2 and 3.D, the simulation emphasizes free energy transfer, electron carriers, chemiosmosis, membrane structure, and response to molecular disruptions. For HS-LS1-7, it supports explaining how cells transform matter and energy into usable chemical energy.",
+      },
+      {
+        question: "Is this the same as a full cellular respiration simulation?",
+        answer:
+          "No. This activity focuses only on ETC and chemiosmosis. A separate cellular-respiration experiment covers the broader pathway context.",
       },
     ],
   },
