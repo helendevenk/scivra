@@ -100,3 +100,15 @@ A `ms-genetics-punnett` slug already exists in the registry (separately covered 
 
 - 2026-05-02: opened by claude
 - 2026-05-02: PM notification pending
+
+## PM Decision
+
+**Decision:** Option A applied (auto-default per SLA, pre-empted).
+**Date:** 2026-05-04
+**Trigger:** D4 Phase D cycle close-out; pre-empted SLA expiry of 2026-05-16.
+**Reasoning:** No PM Decision section was added during the SLA window. Option A is
+the documented default. The `ms-genetics-punnett` slug already covers Punnett-square
+content elsewhere in the registry, so this rewrite makes the two slugs distinct
+rather than redundant.
+**Outcome:** TS metadata now matches HTML's Hardy-Weinberg simulation. D-tier
+KNOWN_DRIFT entry resolved (75 → 74).
