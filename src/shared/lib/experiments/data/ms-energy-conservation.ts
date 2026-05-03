@@ -23,18 +23,8 @@ export const msEnergyConservation: Experiment = {
 
   parameters: [
     {
-      id: "initialHeight",
-      label: "Release Height",
-      unit: "m",
-      min: 1,
-      max: 20,
-      default: 10,
-      step: 1,
-      tier: "free",
-    },
-    {
       id: "mass",
-      label: "Object Mass",
+      label: "Mass",
       unit: "kg",
       min: 0.5,
       max: 10,
@@ -43,24 +33,24 @@ export const msEnergyConservation: Experiment = {
       tier: "free",
     },
     {
-      id: "airResistance",
-      label: "Air Resistance",
-      unit: "%",
-      min: 0,
-      max: 50,
-      default: 0,
-      step: 5,
+      id: "height",
+      label: "Initial Height",
+      unit: "m",
+      min: 1,
+      max: 10,
+      default: 5,
+      step: 0.5,
       tier: "free",
     },
     {
-      id: "scenario",
-      label: "Scenario (0=Drop, 1=Pendulum, 2=Roller Coaster)",
-      unit: "",
+      id: "friction",
+      label: "Friction Level",
+      unit: "level",
       min: 0,
-      max: 2,
+      max: 3,
       default: 0,
       step: 1,
-      tier: "pro",
+      tier: "free",
     },
   ],
 
@@ -79,7 +69,7 @@ export const msEnergyConservation: Experiment = {
     "The Law of Conservation of Energy states that energy cannot be created or destroyed, only transformed from one form to another. In mechanical systems (no friction), kinetic energy (KE = ½mv²) and gravitational potential energy (PE = mgh) continuously convert between each other while their sum stays constant. At the highest point: all PE, no KE. At the lowest point: all KE, no PE. When friction is present, mechanical energy decreases as some converts to thermal energy (heat). The total energy of the universe remains constant — this is the First Law of Thermodynamics (ΔU = Q - W). Perpetual motion machines are impossible because friction always converts some mechanical energy to heat.",
 
   instructions:
-    "Set the initial height and watch the ball drop. The energy bar chart shows PE decreasing and KE increasing as the ball falls. At the bottom, all PE has become KE. Add air resistance to watch total mechanical energy decrease — energy isn't lost, it becomes heat!",
+    "Use the Mass, Initial Height, and Friction Level sliders to test how mechanical energy changes. Try the Roller Coaster, Pendulum Swing, and Ball Drop + Bounce presets to compare three energy-transfer setups. Watch the PE, KE, and thermal energy bars as energy shifts form while total energy stays conserved.",
 
   challenges: [
     {
@@ -103,7 +93,7 @@ export const msEnergyConservation: Experiment = {
     {
       id: "ec-ms-c4",
       question: "In a roller coaster, the first hill must be the tallest. Why? What would happen if a later hill were taller?",
-      hint: "Energy is lost to friction and air resistance at each hill. The coaster cannot gain energy from nothing. If a later hill were higher than the first, the coaster wouldn't have enough energy to clear it — it would stop and roll back.",
+      hint: "Energy is lost to friction throughout the ride. The coaster cannot gain energy from nothing. If a later hill were higher than the first, the coaster wouldn't have enough energy to clear it — it would stop and roll back.",
       tier: "pro",
     },
   ],
@@ -126,29 +116,45 @@ export const msEnergyConservation: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Energy Conservation and Transformation",
   },
+  htmlControlAliases: { mass: "sl-mass", height: "sl-h", friction: "sl-fr" },
+  presets: [
+    {
+      id: "coaster",
+      label: "Roller Coaster",
+      paramValues: { mass: 2, height: 8, friction: 1 },
+    },
+    {
+      id: "pendulum",
+      label: "Pendulum Swing",
+      paramValues: { mass: 1, height: 3, friction: 0 },
+    },
+    {
+      id: "ball",
+      label: "Ball Drop + Bounce",
+      paramValues: { mass: 0.5, height: 5, friction: 2 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Energy conservation is one of the most powerful ideas in all of science: energy is never created or destroyed, only transformed from one form to another. In this simulation you will watch that principle play out across three scenarios — a falling object, a swinging pendulum, and a roller coaster. At the top of each path, an object stores energy in the form of gravitational potential energy (PE), like a stretched rubber band waiting to snap. As it falls or swings downward, that stored energy converts into kinetic energy (KE) — the energy of motion. At the very bottom, all PE has become KE and the object moves fastest. Then, as it rises again, KE converts back to PE. Without friction, this swap repeats forever and the total mechanical energy stays constant. Add air resistance and some energy leaks away as heat — the object rises a little less high each time. This is not energy disappearing; it is mechanical energy transforming into thermal energy. The total energy of the entire system (object plus air) is still conserved. This simulation gives you a bar chart showing PE, KE, and thermal energy at every moment so you can see the transformation happening in real time.",
+      "Energy conservation is one of the most powerful ideas in all of science: energy is never created or destroyed, only transformed from one form to another. In this simulation you will watch that principle play out across three setups — a falling object, a swinging pendulum, and a roller coaster. At the top of each path, an object stores energy in the form of gravitational potential energy (PE), like a stretched rubber band waiting to snap. As it falls or swings downward, that stored energy converts into kinetic energy (KE) — the energy of motion. At the very bottom, all PE has become KE and the object moves fastest. Then, as it rises again, KE converts back to PE. Without friction, this swap repeats forever and the total mechanical energy stays constant. Add friction and some energy leaks away as heat — the object rises a little less high each time. This is not energy disappearing; it is mechanical energy transforming into thermal energy. The total energy of the entire system is still conserved. This simulation gives you a bar chart showing PE, KE, and thermal energy at every moment so you can see the transformation happening in real time.",
     parameterExplanations: {
-      initialHeight:
-        "The height in meters from which the object is released, adjustable from 1 m to 20 m. Greater height means more gravitational potential energy at the start (PE = mgh), which converts to kinetic energy as the object falls. Doubling the height doubles the initial PE and therefore doubles the kinetic energy at the bottom — which makes the object move about 41% faster (since KE depends on v squared).",
       mass:
-        "The mass of the falling or swinging object in kilograms, adjustable from 0.5 kg to 10 kg. Heavier objects store more PE at the same height (PE = mgh) and carry more KE at the same speed (KE = 1/2 mv squared). In a gravity-only system with no air resistance, mass cancels out of the speed equation — a 1 kg ball and a 10 kg ball dropped from the same height hit the ground at the same speed. With air resistance or drag, mass can matter because drag force is proportional to area, not mass, so the drag-to-weight ratio differs; with simple sliding friction on a surface, mass usually still cancels.",
-      airResistance:
-        "The percentage of energy lost to air drag per unit time, adjustable from 0% to 50%. At 0%, the simulation is ideal — total mechanical energy is perfectly conserved and the object bounces or swings to exactly the same height each cycle. Increasing air resistance causes the object to rise a little less each time as mechanical energy converts to heat. At 50%, the object loses energy rapidly and comes to rest much sooner. Thermal energy is inferred from the decrease in mechanical energy — if the simulation's bar chart shows a thermal-energy bar, it equals the mechanical energy lost; otherwise, track the difference between initial and current mechanical energy totals.",
-      scenario:
-        "Selects which physical scenario the simulation displays (Pro tier). Setting 0 shows a simple free-falling object dropping from the set height. Setting 1 shows a pendulum swinging back and forth — a classic demonstration of PE-KE exchange. Setting 2 shows a roller coaster car moving over hills — allowing students to see why the first hill must always be the tallest. Each scenario illustrates the same conservation law in a different context.",
+        "Mass changes how much matter is moving, from 0.5 kg to 10 kg. At the same Initial Height, a larger mass starts with more gravitational potential energy because PE = mgh, and it also has more kinetic energy at the same speed because KE = 1/2 mv squared. In an ideal no-friction run, mass does not change the speed reached at the bottom because mass appears in both PE and KE and cancels when solving for speed. This supports MS-PS3-1: students can compare graphs and see that kinetic energy depends on mass and speed, while speed from a given height depends mainly on gravitational energy transfer.",
+      height:
+        "Initial Height sets how far above the low point the object begins, from 1 m to 10 m. Raising the object stores more gravitational potential energy in the object-Earth system because PE = mgh. As the object falls, swings, or rolls downward, that stored PE transforms into kinetic energy, so a greater height produces a faster motion at the bottom when friction is low. Doubling height doubles the starting PE, but it does not double the speed because KE depends on speed squared. This aligns with MS-PS3-5 by making energy transfer visible: energy moves between potential and kinetic forms instead of appearing from nowhere.",
+      friction:
+        "Friction Level controls how much mechanical energy is transformed into thermal energy during motion. Level 0 shows the ideal conservation case: PE and KE trade back and forth while total mechanical energy stays constant. Levels 1, 2, and 3 add increasing energy transfer to heat, so the roller coaster, pendulum, or bouncing ball reaches lower heights over time. This does not mean energy is destroyed. The bar chart should show mechanical energy decreasing while thermal energy increases. That distinction is central to MS-PS3-5: when kinetic energy changes, energy is transferred to or from the object and surrounding system. It also helps students argue why real machines cannot keep moving forever without an energy input.",
     },
     misconceptions: [
       {
         wrong: "Friction destroys energy, so energy is not really conserved when friction is present.",
         correct:
-          "Friction does not destroy energy — it converts mechanical energy into thermal energy (heat). If you could measure the tiny temperature increase of the object and the air, you would find exactly as much heat energy gained as mechanical energy lost. Total energy (KE + PE + thermal) is always conserved. The Law of Conservation of Energy has no exceptions; perpetual motion machines fail because friction is unavoidable, not because energy disappears.",
+          "Friction does not destroy energy — it converts mechanical energy into thermal energy (heat). If you could measure the tiny temperature increase of the object and its surroundings, you would find exactly as much heat energy gained as mechanical energy lost. Total energy (KE + PE + thermal) is always conserved. The Law of Conservation of Energy has no exceptions; perpetual motion machines fail because friction is unavoidable, not because energy disappears.",
       },
       {
         wrong: "A heavier object falls faster and hits the ground with more speed than a lighter one.",
         correct:
-          "In the absence of air resistance, all objects fall with the same acceleration (about 10 m/s squared on Earth) regardless of mass. Galileo demonstrated this around 1590. A bowling ball and a tennis ball dropped from the same height reach the ground at the same time and speed. Mass does affect how much force is needed to stop the object (momentum and kinetic energy both depend on mass), but not the speed gained during free fall.",
+          "In the ideal friction-free model, all objects fall with the same acceleration (about 10 m/s squared on Earth) regardless of mass. Galileo demonstrated this around 1590. A bowling ball and a tennis ball dropped from the same height reach the ground at the same time and speed. Mass does affect how much force is needed to stop the object because momentum and kinetic energy both depend on mass, but it does not change the speed gained from the same height in the ideal model.",
       },
       {
         wrong: "When a pendulum reaches the bottom of its swing, it has no energy.",
@@ -158,20 +164,21 @@ export const msEnergyConservation: Experiment = {
       {
         wrong: "A roller coaster can be designed so that a later hill is taller than the first hill.",
         correct:
-          "Energy is lost to friction and air resistance at every point of the ride. The coaster can never have more kinetic energy than it started with at the top of the first hill. If a later hill were taller, the coaster would not have enough energy to reach the top and would roll back. This is why the first hill in any coaster is always the tallest — it represents the maximum stored energy in the entire ride.",
+          "Energy is lost to friction at every point of the ride. The coaster can never have more kinetic energy than it started with at the top of the first hill. If a later hill were taller, the coaster would not have enough energy to reach the top and would roll back. This is why the first hill in any coaster is always the tallest — it represents the maximum stored energy in the entire ride.",
       },
     ],
     teacherUseCases: [
-      "Mass cancellation demonstration: set airResistance to 0% and initialHeight to 10 m. Run with mass at 1 kg, then at 8 kg. Students observe that the speed at the bottom is the same in both cases, discovering that mass cancels in free-fall — a key insight tied to MS-PS3-1.",
-      "Friction as energy transformation: set scenario to 0 (drop) and initialHeight to 15 m. Run with airResistance at 0%, then repeat at 25%. Ask students where the 'lost' mechanical energy went. The bar chart shows thermal energy growing as mechanical energy drops, reinforcing MS-PS3-5 that energy transforms rather than disappears.",
-      "Pendulum comparison: switch scenario to 1 (pendulum) with airResistance at 0%. Students predict the maximum height on the other side and confirm it equals the starting height. Then add airResistance at 20% and observe how each swing falls slightly shorter — directly modeling real pendulum behavior and why grandfather clocks need periodic winding.",
-      "Roller coaster engineering challenge: set scenario to 2 and airResistance to 10%. Students experiment with initialHeight to find the minimum starting height that allows the coaster to clear a given hill. This frames the conservation law as an engineering constraint, supporting MS-PS3-2 and MS-ETS1 design thinking.",
+      "Mass comparison for MS-PS3-1: set Friction Level to 0 and Initial Height to 5 m. Run the Ball Drop + Bounce preset, then change only Mass from 0.5 kg to 8 kg. Students compare speed and kinetic-energy bars to see that speed is unchanged while KE increases with mass.",
+      "Height investigation for MS-PS3-5: keep Mass constant and Friction Level at 0, then move Initial Height from 2 m to 8 m. Students record how PE at the start and KE at the bottom change, using the bar chart as evidence that energy transforms between stored and motion forms.",
+      "Friction as energy transfer: use the Pendulum Swing preset, then test Friction Level 0, 1, 2, and 3. Students track how the peak height decreases while the thermal-energy bar grows, supporting the claim that mechanical energy is transferred to heat rather than destroyed.",
+      "Preset comparison discussion: assign groups Roller Coaster, Pendulum Swing, and Ball Drop + Bounce. Each group identifies where PE is highest, where KE is highest, and when thermal energy appears, then connects the pattern to MS-PS3-1 and MS-PS3-5.",
+      "Engineering constraint challenge: start with the Roller Coaster preset and ask students to adjust only Initial Height and Friction Level to make the coaster clear the track. Students justify their design with evidence from energy bars and explain why adding friction requires more starting PE.",
     ],
     faq: [
       {
-        question: "Why does the simulation say energy is conserved even when the ball slows down due to air resistance?",
+        question: "Why does the simulation say energy is conserved even when the object slows down due to friction?",
         answer:
-          "When air resistance is active, the simulation tracks three energy types: kinetic energy (KE), potential energy (PE), and thermal energy generated by drag. The mechanical energy (KE + PE) does decrease, but the thermal energy increases by exactly the same amount. The total of all three stays constant. Energy conservation means the universe's total energy never changes — it just moves between different forms. The simulation's energy bar chart shows all three bars so you can verify this yourself.",
+          "When friction is active, the simulation tracks three energy types: kinetic energy (KE), potential energy (PE), and thermal energy generated by friction. The mechanical energy (KE + PE) does decrease, but the thermal energy increases by the same amount. The total of all three stays constant. Energy conservation means the universe's total energy never changes — it just moves between different forms. The simulation's energy bar chart shows all three bars so you can verify this yourself.",
       },
       {
         question: "What is the difference between kinetic energy and potential energy?",
@@ -186,12 +193,17 @@ export const msEnergyConservation: Experiment = {
       {
         question: "Why can't we build a perpetual motion machine?",
         answer:
-          "A perpetual motion machine would have to run forever without any energy input. But in every real physical system, some mechanical energy is always converted to thermal energy by friction, air resistance, and other dissipative forces. You cannot get that thermal energy back into useful mechanical energy without doing work (that is the Second Law of Thermodynamics). The simulation with airResistance greater than 0 shows this clearly: the object rises a little less each cycle because energy is steadily leaking away as heat. There is no mechanism to stop that process entirely.",
+          "A perpetual motion machine would have to run forever without any energy input. But in every real physical system, some mechanical energy is always converted to thermal energy by friction and other dissipative forces. You cannot get that thermal energy back into useful mechanical energy without doing work (that is the Second Law of Thermodynamics). The simulation with Friction Level greater than 0 shows this clearly: the object rises a little less each cycle because energy is steadily transferred into heat. There is no mechanism to stop that process entirely.",
       },
       {
-        question: "Does the height of release affect how fast the object moves at the bottom?",
+        question: "Does Initial Height affect how fast the object moves at the bottom?",
         answer:
-          "Yes, directly. All the gravitational PE at the top converts to KE at the bottom (with no friction). PE = mgh and KE = 1/2 mv squared, so setting them equal gives v = the square root of (2gh). If you double the height, you get about 41% more speed (not twice as much), because speed depends on the square root of height. Tripling the height multiplies speed by roughly 1.73. You can test this in the simulation by changing initialHeight and watching the speed reading at the lowest point.",
+          "Yes, directly. All the gravitational PE at the top converts to KE at the bottom when Friction Level is 0. PE = mgh and KE = 1/2 mv squared, so setting them equal gives v = the square root of (2gh). If you double the height, you get about 41% more speed (not twice as much), because speed depends on the square root of height. Tripling the height multiplies speed by roughly 1.73. You can test this by changing only the Initial Height slider and watching the speed reading at the lowest point.",
+      },
+      {
+        question: "How should I use the Roller Coaster, Pendulum Swing, and Ball Drop + Bounce presets?",
+        answer:
+          "Use the presets as three quick comparison cases before changing sliders one at a time. Roller Coaster sets a taller height with low friction so students can see PE turn into KE along a track. Pendulum Swing uses a smaller mass, lower height, and no friction to show repeated PE-KE exchange. Ball Drop + Bounce uses low mass and medium friction so students can see each bounce return to a lower height as thermal energy grows. After choosing a preset, change only Mass, Initial Height, or Friction Level to identify which control caused the observed energy change.",
       },
     ],
   },

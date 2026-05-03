@@ -23,44 +23,34 @@ export const k5LightPropagation: Experiment = {
 
   parameters: [
     {
-      id: "lightAngle",
-      label: "Light Source Angle",
+      id: "angle",
+      label: "Light Angle",
       unit: "°",
-      min: 0,
-      max: 90,
+      min: 10,
+      max: 80,
       default: 45,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "medium",
-      label: "Medium (0=Air, 1=Water, 2=Glass)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
       step: 1,
       tier: "free",
     },
     {
-      id: "mirrorAngle",
-      label: "Mirror Angle",
-      unit: "°",
-      min: 0,
-      max: 90,
-      default: 45,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "colorFilter",
-      label: "Light Color (0=White, 1=Red, 2=Blue, 3=Green)",
-      unit: "",
-      min: 0,
+      id: "objectSize",
+      label: "Object Size",
+      unit: "×",
+      min: 0.3,
       max: 3,
-      default: 0,
-      step: 1,
-      tier: "pro",
+      default: 1.0,
+      step: 0.1,
+      tier: "free",
+    },
+    {
+      id: "refractiveIndex",
+      label: "Refractive Index",
+      unit: "n",
+      min: 1.1,
+      max: 2.5,
+      default: 1.5,
+      step: 0.05,
+      tier: "free",
     },
   ],
 
@@ -71,15 +61,15 @@ export const k5LightPropagation: Experiment = {
     },
     {
       latex: "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2 \\quad (\\text{Snell's law})",
-      description: "Snell's Law — light bends when entering a new medium",
+      description: "Snell's Law — light bends when entering a new material",
     },
   ],
 
   theory:
-    "Light travels in straight lines called rays. When light hits a smooth surface (like a mirror), it bounces off — this is reflection. The angle at which light hits equals the angle at which it bounces: angle of incidence = angle of reflection. When light passes from one material to another (air to water, for example), it bends — this is refraction. Light bends toward the normal line when entering a denser medium and away when leaving. This is why a straw looks bent in a glass of water. Objects appear a certain color because they reflect that color of light and absorb all others. Transparent objects let light through; opaque objects block it; translucent objects let some through.",
+    "Light travels in straight lines called rays. When light hits a smooth surface (like a mirror), it bounces off — this is reflection. The angle at which light hits equals the angle at which it bounces: angle of incidence = angle of reflection. When light passes from one material to another (air to water, for example), it bends — this is refraction. Light bends toward the normal line when entering a denser material and away when leaving. This is why a straw looks bent in a glass of water. Objects appear a certain color because they reflect that color of light and absorb all others. Transparent objects let light through; opaque objects block it; translucent objects let some through.",
 
   instructions:
-    "Adjust the light source angle and watch the beam travel. Aim it at the mirror and see reflection — measure both angles! Switch the medium to Water or Glass and watch the beam bend as it crosses the boundary. Use the color filter (Pro) to explore how color affects refraction.",
+    "Use the Light Angle slider to aim the beam, the Object Size slider to make the blocker bigger or smaller, and the Refractive Index slider to change how strongly a clear material bends light. Try the Reflection, Rainbow (Prism), and Shadow presets to compare three common ways light behaves.",
 
   challenges: [
     {
@@ -127,29 +117,33 @@ export const k5LightPropagation: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Light Propagation and Optics",
   },
+  htmlControlAliases: { angle: "sl-ang", objectSize: "sl-size", refractiveIndex: "sl-n" },
+  presets: [
+    { id: "reflect", label: "Reflection", paramValues: { angle: 45, objectSize: 1, refractiveIndex: 1.5 } },
+    { id: "rainbow", label: "Rainbow (Prism)", paramValues: { angle: 30, objectSize: 1, refractiveIndex: 1.5 } },
+    { id: "shadow", label: "Shadow", paramValues: { angle: 60, objectSize: 2, refractiveIndex: 1.5 } },
+  ],
   contentSections: {
     whatIsIt:
       "Light is amazing! It travels incredibly fast and it moves in straight lines — like a flashlight beam that shoots straight across a dark room. Because light travels in straight lines, it cannot go around corners on its own. That is why you get a shadow when you stand in front of a light. Your body blocks the straight-moving light and leaves a dark area behind you. When light hits a smooth shiny surface like a mirror, it bounces back. This is called reflection. The light bounces off at the same angle it arrived, like a ball bouncing off a wall. When light moves from air into water or glass, something interesting happens — it bends! This is called refraction. It is why a straw in a glass of water looks broken or bent. Different materials bend light by different amounts. Objects also have colors because of light. A red apple looks red because it bounces red light toward your eyes and absorbs all the other colors. In this simulation, you can aim a beam of light at different angles, point it at a mirror, and send it through different materials to watch how it bends.",
     parameterExplanations: {
-      lightAngle:
-        "This slider changes the angle of the light beam as it comes from the light source, from 0 degrees (straight across) to 90 degrees (pointing straight down). Try different angles to see how the beam hits the mirror or enters the water at different spots. The angle you set affects where the reflected or refracted beam goes.",
-      medium:
-        "This control chooses what material the light travels through. Set it to 0 for air (light goes straight with no bending), 1 for water (light bends when it enters the water), or 2 for glass (light bends even more than in water). Watch closely at the boundary between air and water or glass to see the bending happen.",
-      mirrorAngle:
-        "This slider rotates the mirror from 0 to 90 degrees. Changing the mirror angle changes which direction the reflected light bounces. Try to aim the reflected beam at a target by adjusting both the light angle and the mirror angle together.",
-      colorFilter:
-        "This pro control changes the color of the light beam — white, red, blue, or green. White light contains all colors mixed together. When white light passes through a material, different colors bend by slightly different amounts. This is how a prism splits white light into a rainbow.",
+      angle:
+        "Light Angle changes the direction the beam travels before it reaches a surface or object. A small angle sends the beam on a lower path, while a larger angle sends it on a steeper path. This helps students see that light travels in straight lines until it hits something. When the beam reaches a shiny surface, it reflects in a new direction. When it reaches a clear material, it can bend. Try moving only this slider and watching where the bright line goes. This supports 1-PS4 ideas about testing what happens when light meets objects, and 4-PS4 ideas about using reflected light to see.",
+      objectSize:
+        "Object Size changes how large the blocking object appears in the path of the beam. A small object blocks only part of the light, so the dark area can be smaller. A larger object blocks more of the straight-moving light, so the shadow can grow. This is a simple way to test the idea that shadows form when light cannot pass through an opaque object. Students can use the Shadow preset, change only Object Size, and describe what they observe. That kind of careful observation connects to 1-PS4 because students investigate what different objects do to a beam of light.",
+      refractiveIndex:
+        "Refractive Index tells how strongly a clear material bends light. A value near 1 acts more like air, so the beam changes direction only a little. A higher value acts more like glass or a prism, so the beam bends more. Students do not need to calculate with this number in K5. They can treat it as a strength slider for bending light. Try the Rainbow (Prism) preset and then move Refractive Index up and down. This helps students build a model: light travels to the eye after bouncing, passing through, or bending at materials, which connects to 4-PS4.",
     },
     misconceptions: [
       {
         wrong: "Light can bend around corners on its own.",
         correct:
-          "In everyday life, light travels in straight lines and cannot bend around corners on its own. That is why a shadow forms — the light cannot curve around the object blocking it. You need a mirror or special curved surface to redirect light around a corner.",
+          "In everyday life, light travels in straight lines and cannot bend around corners on its own. That is why a shadow forms — the light cannot curve around the object blocking it. Use the Shadow preset, then change Object Size to see how a bigger blocker can make a bigger dark area.",
       },
       {
         wrong: "When you look in a mirror, the image is behind the mirror.",
         correct:
-          "The image in a mirror is not really behind it — it is a virtual image created by your brain tracing the reflected light rays backward. There is no actual object behind the mirror. Your brain sees light coming from a certain direction and assumes something must be there producing it.",
+          "The image in a mirror is not really behind it — it is a virtual image created by your brain tracing the reflected light rays backward. There is no actual object behind the mirror. Use the Reflection preset and change Light Angle to see how the direction of incoming light changes the direction of reflected light.",
       },
       {
         wrong: "A red apple produces red light.",
@@ -157,17 +151,17 @@ export const k5LightPropagation: Experiment = {
           "The apple does not produce any light on its own. White light from the sun or a lamp has all the colors mixed together. The red apple's skin absorbs most colors but reflects red light back toward your eyes. Your eye sees the red light and your brain says it is a red apple.",
       },
       {
-        wrong: "Light slows down when it goes through a mirror.",
+        wrong: "Clear materials never change the path of light.",
         correct:
-          "A mirror reflects light rather than transmitting it through. Most household mirrors have a reflective metal backing — light travels through the glass, reflects off the backing, and comes back out. Front-surface mirrors used in science labs reflect from the very front, skipping the glass entirely. Either way, the result is reflection: light bounces back rather than passing through. Light does slow down when it enters glass or water (causing refraction), but mirrors work by reflecting, not transmitting.",
+          "Some clear materials let light pass through but also bend its path. This bending is called refraction. Water, glass, and prisms can bend light by different amounts. Use the Rainbow (Prism) preset and move Refractive Index to see how stronger bending changes the beam.",
       },
     ],
     teacherUseCases: [
-      "Set medium to 0 (air) and lightAngle to 45 degrees. Ask students to predict where the beam will go when you switch medium to 1 (water). Watch together to confirm or correct predictions.",
-      "Set mirrorAngle to 45 degrees and lightAngle to 45 degrees to show a classic right-angle reflection. Have students sketch the incoming and outgoing beam and measure the angles with a protractor on their sketch.",
-      "Compare medium 0 (air), 1 (water), and 2 (glass) at the same lightAngle. Have students rank which material bends light the most and least, explaining in their own words what they observe.",
-      "Use the colorFilter (pro) set to white and then switch to red, blue, and green. Ask students if all colors bend the same amount when entering water. Connect to how a raindrop separates sunlight into a rainbow.",
-      "Shadow discussion starter: set lightAngle to 90 to redirect the beam and ask students why a shadow forms when an object is placed in the beam's path. Connect back to the rule that light travels in straight lines and cannot go around solid objects.",
+      "Use the Reflection preset and ask students to predict where the beam will go. Move the Light Angle slider, then have students sketch the incoming and reflected paths to support NGSS 4-PS4-2 modeling.",
+      "Use the Shadow preset with Object Size set low, medium, and high. Have students record how the shadow changes and explain that light travels in straight lines until an object blocks it, connecting to NGSS 1-PS4-3.",
+      "Use the Rainbow (Prism) preset and keep Light Angle the same while changing only Refractive Index. Ask students to describe how a clear material can change the beam's path.",
+      "Run a three-preset compare activity: Reflection, Rainbow (Prism), and Shadow. Students name what the light does in each case: bounce, bend, or get blocked.",
+      "Have students choose one preset, change one slider, and write a claim-evidence-reasoning sentence using the slider value as evidence while keeping the NGSS standards intact.",
     ],
     faq: [
       {
@@ -183,12 +177,12 @@ export const k5LightPropagation: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation supports 1-PS4-3 (plan and conduct an investigation to determine the effect of placing objects made with different materials in the path of a beam of light) and 4-PS4-2 (develop a model to describe that light reflecting from objects and entering the eye allows objects to be seen). Students observe reflection and refraction in an interactive environment.",
+          "This simulation supports 1-PS4-3 (plan and conduct an investigation to determine the effect of placing objects made with different materials in the path of a beam of light) and 4-PS4-2 (develop a model to describe that light reflecting from objects and entering the eye allows objects to be seen). Students observe reflection, refraction, and shadows using the Light Angle, Object Size, and Refractive Index sliders plus the three preset buttons.",
       },
       {
         question: "What makes something cast a shadow?",
         answer:
-          "A shadow forms when an object blocks light that is traveling in a straight line. The light cannot bend around the object, so there is a dark area behind it where no light reaches. The shape of the shadow depends on the shape of the object and the angle of the light source. Early morning and late afternoon shadows are long because the sun is at a low angle.",
+          "A shadow forms when an object blocks light that is traveling in a straight line. The light cannot bend around the object, so there is a dark area behind it where no light reaches. The shape of the shadow depends on the shape of the object and the angle of the light source. Use the Shadow preset, then change Object Size and Light Angle to compare different shadow shapes.",
       },
       {
         question: "Why does a mirror flip your image left to right but not upside down?",
