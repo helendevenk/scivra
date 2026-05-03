@@ -69,7 +69,7 @@ export const circuitDcVirtualLab: Experiment = {
       r1:
         "R₁ is one adjustable resistance in the circuit, measured in ohms. Resistance describes how strongly a component limits charge flow and converts electrical energy into thermal energy. In a series or divider setup, increasing R₁ raises the total resistance and lowers the circuit current for the same EMF. It also changes how the source voltage is shared: the larger resistance gets the larger voltage drop. For HS-PS3-2 energy-transfer analysis, R₁ helps students connect a mathematical model, V = IR, to observable changes in brightness, meter readings, and power distribution.",
       r2:
-        "R₂ is the second adjustable resistance, measured in ohms. Comparing R₂ against R₁ is the fastest way to separate two ideas students often mix up: current through a series path is common, but voltage drops divide in proportion to resistance; parallel or bridge branches can share node voltages while carrying different currents. In the Voltage Divider preset, raising R₂ increases the fraction of source voltage measured across it. In the Wheatstone Bridge preset, matching R₂ with R₁ supports a balanced comparison case where symmetry makes node behavior easier to predict and defend with Ohm's Law.",
+        "R₂ is the second adjustable resistance, measured in ohms. Comparing R₂ against R₁ is the fastest way to separate two ideas students often mix up: current through a series path is common, but voltage drops divide in proportion to resistance; parallel branches share voltage while carrying different currents. In the Voltage Divider preset, raising R₂ increases the fraction of source voltage measured across it. In the Series and Parallel measurement views, changing R₂ lets students test Ohm's Law predictions directly with voltage and current readings.",
       capacitance:
         "Capacitance measures how much charge a capacitor stores for each volt across it, in microfarads. In an RC circuit, the capacitor does not instantly jump to the source voltage; it charges over time because current through the resistance changes as charge accumulates. The key model is the time constant τ = RC. A larger capacitance stores more charge at the same voltage and makes the charging curve slower, giving students a direct bridge between energy storage, electric potential difference, and mathematical modeling. Use the RC Charging preset, then vary only capacitance to see how the time scale changes.",
     },
@@ -102,7 +102,7 @@ export const circuitDcVirtualLab: Experiment = {
     teacherUseCases: [
       "Use the Voltage Divider preset; have students record EMF / Voltage, R₁, and R₂, calculate the expected divider output, then verify it with the meter and connect the result to HS-PS3-2 energy transfer.",
       "Run a one-variable investigation: keep R₁, R₂, and Capacitance fixed while changing only EMF / Voltage, then ask students to graph current or voltage drop and defend the Ohm's Law relationship.",
-      "Use the Wheatstone Bridge preset as a symmetry case. Students predict which measured points should match when R₁ = R₂, then change one resistor and explain the imbalance using Kirchhoff's laws.",
+      "Use the Voltage Divider preset as a measurement case. Students predict the voltage across R₂ from V₂ = Vtotal × R₂ / (R₁ + R₂), then change one resistor and compare the prediction with the multimeter reading.",
       "Use the RC Charging preset to introduce τ = RC. Students change Capacitance from low to high, compare charging time, and explain how electrical energy is stored in the capacitor field.",
       "AP-style lab discussion: assign groups different combinations of R₁ and R₂, require a prediction before measurement, and have them cite EMF / Voltage, resistance values, and preset choice as evidence in a short CER response.",
     ],
@@ -115,7 +115,7 @@ export const circuitDcVirtualLab: Experiment = {
       {
         question: "How do I apply KVL to a circuit with two loops?",
         answer:
-          "Pick a direction around each loop, label voltage rises through the source from − to + as positive and drops across resistive elements in the direction of current as negative, and write the sum equal to zero for each loop. Combine those loop equations with Kirchhoff's current rule at shared nodes. In this lab, the Voltage Divider and Wheatstone Bridge presets are good places to compare loop reasoning with direct meter readings.",
+          "Pick a direction around each loop, label voltage rises through the source from − to + as positive and drops across resistive elements in the direction of current as negative, and write the sum equal to zero for each loop. Combine those loop equations with Kirchhoff's current rule at shared nodes. In this lab, the Voltage Divider and basic series/parallel measurements are good places to compare loop reasoning with direct meter readings.",
       },
       {
         question: "What's the difference between Ohm's Law and Kirchhoff's laws?",

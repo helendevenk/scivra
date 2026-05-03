@@ -36,7 +36,7 @@ export const msElectricCircuitsAdvanced: Experiment = {
       label: "Voltage",
       unit: "V",
       min: 1,
-      max: 24,
+      max: 12,
       default: 12,
       step: 1,
       tier: "free",
@@ -155,7 +155,7 @@ export const msElectricCircuitsAdvanced: Experiment = {
       "Electric circuits are closed loops that carry electrical energy from a battery through components like light bulbs and resistors and back again. Think of electricity like water flowing through pipes: the battery is a pump, the wires are pipes, and resistors are narrow sections that slow the flow. Two fundamental circuit designs exist. In a series circuit, all components sit in one single loop — like beads on a necklace. The same current flows through every component, but the voltage gets divided up. If one bulb burns out, the whole circuit breaks and everything goes dark. In a parallel circuit, each component has its own separate path back to the battery — like lanes on a highway. Every component gets the full battery voltage, and if one bulb burns out the others stay lit. Your home uses parallel wiring for exactly that reason. This simulation lets you switch between series, parallel, and combination circuits, adjust the battery voltage, and change the resistor value to see how current and brightness respond in real time.",
     parameterExplanations: {
       voltage:
-        "Voltage is the electrical push supplied by the source, measured in volts. In this simulation, the Voltage slider changes that push from 1 V to 24 V. When R₁ and R₂ stay the same, increasing voltage increases current because Ohm's Law says I = V/R. That makes the relationship between cause and measurement visible: more voltage across the same resistance means more charge flows each second. Middle school students can use this slider to ask testable questions about electric force and energy transfer, then compare evidence across the Series, Parallel, and RC Charging Circuit presets.",
+        "Voltage is the electrical push supplied by the source, measured in volts. In this simulation, the Voltage slider changes that push from 1 V to 12 V. When R₁ and R₂ stay the same, increasing voltage increases current because Ohm's Law says I = V/R. That makes the relationship between cause and measurement visible: more voltage across the same resistance means more charge flows each second. Middle school students can use this slider to ask testable questions about electric force and energy transfer, then compare evidence across the Series, Parallel, and RC Charging Circuit presets.",
       r1:
         "R₁ is the first resistor, measured in ohms. A resistor makes it harder for current to flow, so raising R₁ usually lowers current when voltage stays fixed. Its effect depends on the preset. In Series R₁ + R₂, R₁ adds directly to R₂, so both resistors help set one total resistance for the only current path. In Parallel R₁ ‖ R₂, R₁ controls one branch while R₂ controls another branch. Changing only R₁ helps students separate variables, compare current paths, and connect observations to V = IR instead of treating resistance as an invisible idea.",
       r2:
@@ -184,7 +184,7 @@ export const msElectricCircuitsAdvanced: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Ohm's Law slider investigation: start with the Series R₁ + R₂ preset, keep R₁ at 100 Ω and R₂ at 200 Ω, then move Voltage from 6 V to 12 V to 24 V. Students record current and explain why doubling voltage doubles current when total resistance stays constant.",
+      "Ohm's Law slider investigation: start with the Series R₁ + R₂ preset, keep R₁ at 100 Ω and R₂ at 200 Ω, then move Voltage from 3 V to 6 V to 12 V. Students record current and explain why doubling voltage doubles current when total resistance stays constant.",
       "Series resistance evidence task: use the Series R₁ + R₂ preset at 12 V, then compare R₁ = 100 Ω / R₂ = 200 Ω with a higher R₂ value. Students calculate R_total = R₁ + R₂ and connect the lower current to MS-PS2-3 data analysis about factors that affect electric interactions.",
       "Parallel branch comparison: choose the Parallel R₁ ‖ R₂ preset, keep Voltage at 12 V, and set R₁ and R₂ to different values. Students predict which branch carries more current, then use the display to support a claim that lower resistance allows greater current in that branch.",
       "Preset contrast discussion: have groups run Series R₁ + R₂ and Parallel R₁ ‖ R₂ with the same Voltage, R₁, and R₂ values. They compare total resistance, current paths, and brightness or power indicators, then explain why homes use parallel wiring.",
@@ -214,7 +214,7 @@ export const msElectricCircuitsAdvanced: Experiment = {
       {
         question: "Can I damage the simulation by setting very high voltage and very low resistance?",
         answer:
-          "No — the simulation is safe to explore at any parameter combination within the allowed ranges: Voltage from 1–24 V, R₁ from 1–500 Ω, and R₂ from 1–500 Ω. In a real circuit, high voltage with very low resistance can create large current that overheats wires or blows a fuse. Exploring those extremes here is a safe way to understand why real circuits include fuses and circuit breakers.",
+          "No — the simulation is safe to explore at any parameter combination within the allowed ranges: Voltage from 1–12 V, R₁ from 1–500 Ω, and R₂ from 1–500 Ω. In a real circuit, high voltage with very low resistance can create large current that overheats wires or blows a fuse. Exploring those extremes here is a safe way to understand why real circuits include fuses and circuit breakers.",
       },
     ],
   },
