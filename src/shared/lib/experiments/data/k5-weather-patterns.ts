@@ -4,39 +4,67 @@ export const k5WeatherPatterns: Experiment = {
   id: "k5-weather-patterns",
   slug: "k5-weather-patterns",
   title: "Weather Patterns",
-  subtitle: "Track temperature, wind, and precipitation to predict weather",
+  subtitle: "Change wind speed and humidity to see clear skies, storms, and blizzards",
   description:
-    "Become a junior meteorologist! Select a season and region to observe how temperature, wind speed, and precipitation change over time. Spot patterns in the data, learn to read simple weather maps, and make your own weather predictions based on the clues nature gives us.",
+    "Explore how wind and humidity help shape the weather you see outside. Move the Wind Speed and Humidity sliders, then watch the sky change from calm and clear to rainy, stormy, windy, or snowy. Use the Clear Sky, Thunderstorm, and Blizzard presets to compare weather conditions like a young meteorologist.",
   thumbnail: "/imgs/experiments/k5-weather-patterns.png",
 
   standards: {
-    ngss: ["3-ESS2-1"],
+    ngss: ["K-ESS2-1", "3-ESS2-1"],
     gcse: [],
     ap: [],
   },
   primaryStandard: "elementary-k5",
   category: "earth",
   subject: "earth-science",
-  gradeLevel: "3-5",
-  tags: ["weather", "temperature", "precipitation", "seasons", "K5 science"],
+  gradeLevel: "K-2",
+  tags: ["weather", "wind", "humidity", "storms", "K5 science"],
   difficulty: "beginner",
 
   parameters: [
-    { id: "season", label: "Season (0=Spring 1=Summer 2=Fall 3=Winter)", unit: "", min: 0, max: 3, default: 0, step: 1, tier: "free" },
-    { id: "region", label: "Region (0=Tropical 1=Temperate 2=Arctic 3=Desert)", unit: "", min: 0, max: 3, default: 1, step: 1, tier: "free" },
+    { id: "windSpeed", label: "Wind Speed", unit: "km/h", min: 0, max: 120, default: 30, step: 1, tier: "free" },
+    { id: "humidity", label: "Humidity", unit: "%", min: 0, max: 100, default: 45, step: 1, tier: "free" },
   ],
 
   formulas: [
-    { latex: "T_{\\text{pattern}} = T_{\\text{avg}} + A \\sin\\!\\left(\\frac{2\\pi}{365}\\,d\\right)", description: "Temperature follows a wave pattern through the year — warmest in summer, coldest in winter" },
+    {
+      latex: "\\text{More humidity} \\rightarrow \\text{more water vapor in the air}",
+      description: "Humid air holds more water vapor, which can help clouds, rain, or snow form.",
+    },
+    {
+      latex: "\\text{Faster wind} \\rightarrow \\text{stronger moving air}",
+      description: "Fast wind can move clouds and precipitation quickly and can make storms more dangerous.",
+    },
   ],
 
-  theory: "Weather is the day-to-day condition of the atmosphere: temperature, wind, clouds, and precipitation. Climate is the average weather over many years. Scientists observe patterns — for example, summers are warmer because the Earth's tilt angles your region toward the Sun, giving longer days and more direct sunlight. Different regions have different climates: tropical areas stay warm year-round, arctic areas stay cold, deserts get very little rain, and temperate areas experience all four seasons. By tracking weather data over time, meteorologists can spot patterns and make forecasts.",
+  theory:
+    "Weather is what the air outside is like right now or this week. Wind tells us how fast air is moving. Humidity tells us how much water vapor is in the air. When humidity is low and wind is gentle, the sky is often clearer. When humid air rises and wind is stronger, clouds can build and a thunderstorm may form. When air is cold, snowy, and very windy, the weather can become a blizzard. Scientists study weather data many times so they can find patterns and make better forecasts.",
 
-  instructions: "Choose a season and region, then press Start! Watch the animated weather dashboard update temperature, wind, and rain data day by day. Look for patterns — does temperature rise or fall? When does it rain most? After observing, try to predict tomorrow's weather based on the trend you see.",
+  instructions:
+    "Move the Wind Speed slider to make the air calmer or stronger. Move the Humidity slider to add or remove water vapor from the air. Try the Clear Sky, Thunderstorm, and Blizzard presets. Watch the live data and condition label, then explain what changed and why.",
 
   challenges: [
-    { id: "k5wp-c1", question: "Why is summer warmer than winter?", hint: "Earth is tilted! In summer your part of Earth leans toward the Sun, so sunlight hits more directly and days are longer.", tier: "free" },
-    { id: "k5wp-c2", question: "Which region gets the least rainfall?", hint: "Deserts receive very little rain — some get less than 25 cm (10 inches) per year!", tier: "free" },
+    {
+      id: "k5wp-c1",
+      question: "What setting makes the clearest sky?",
+      hint: "Try low humidity and gentle wind. Clear skies usually happen when the air is not holding much water vapor.",
+      relatedParameterId: "humidity",
+      tier: "free",
+    },
+    {
+      id: "k5wp-c2",
+      question: "What happens when humidity gets high?",
+      hint: "High humidity means more water vapor is in the air. That can help clouds, rain, fog, or snow appear.",
+      relatedParameterId: "humidity",
+      tier: "free",
+    },
+    {
+      id: "k5wp-c3",
+      question: "Why is a blizzard dangerous?",
+      hint: "A blizzard has strong wind and snow. That can make it hard to see and hard to travel safely.",
+      relatedParameterId: "windSpeed",
+      tier: "free",
+    },
   ],
 
   wave: 11,
@@ -45,72 +73,116 @@ export const k5WeatherPatterns: Experiment = {
   relatedExperiments: ["k5-water-cycle", "k5-landforms-erosion"],
   htmlPath: "/experiments/elementary/k5-weather-patterns.html",
 
-  seoTitle: "Weather Patterns for Kids | Scivra Elementary Science",
-  seoKeywords: ["weather patterns for kids", "seasons and weather elementary", "meteorology K5", "K5 earth science experiment"],
-  jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Weather Patterns, Seasons, and Climate" },
+  seoTitle: "Wind and Humidity Weather Patterns for Kids | Scivra Elementary Science",
+  seoKeywords: [
+    "wind and humidity for kids",
+    "weather patterns elementary science",
+    "thunderstorm and blizzard simulation",
+    "K5 weather experiment",
+    "NGSS weather patterns",
+  ],
+  jsonLd: {
+    "@type": "LearningResource",
+    educationalLevel: "Elementary School",
+    teaches: "Wind, Humidity, Weather Conditions, and Weather Patterns",
+  },
+
+  htmlControlAliases: { windSpeed: "sliderWind", humidity: "sliderHumid" },
+
+  presets: [
+    {
+      id: "clear",
+      label: "Clear Sky",
+      description: "Light wind and low humidity make calm weather with fewer clouds.",
+      paramValues: { windSpeed: 10, humidity: 30 },
+    },
+    {
+      id: "storm",
+      label: "Thunderstorm",
+      description: "Stronger wind and high humidity can help tall storm clouds, heavy rain, thunder, and lightning form.",
+      paramValues: { windSpeed: 60, humidity: 85 },
+    },
+    {
+      id: "blizzard",
+      label: "Blizzard",
+      description: "Very strong wind with snowy air can create blowing snow and low visibility.",
+      paramValues: { windSpeed: 90, humidity: 70 },
+    },
+  ],
+
   contentSections: {
     whatIsIt:
-      "Have you ever noticed that summer is almost always warmer than winter? Or that it rains more at certain times of year where you live? These are weather patterns — things that happen again and again in a regular way. Meteorologists are scientists who study weather. They track temperature, wind, and rainfall day after day, season after season, and look for patterns. A pattern is like a clue that helps them predict what the weather will probably do next. Different places on Earth have very different patterns. A tropical rainforest near the equator stays warm and rainy all year. A desert gets very little rain even in summer. An arctic area stays cold most of the year. A temperate region like much of the United States has all four seasons. By exploring different seasons and regions in this simulation, you can think like a meteorologist and spot the patterns yourself.",
+      "Weather is what the air outside is doing right now. It can be sunny, rainy, windy, snowy, foggy, or stormy. In this simulation, two weather clues matter most: wind speed and humidity. Wind speed tells how fast the air is moving. Humidity tells how much water vapor is in the air. Low humidity and light wind can make a clear sky. High humidity can help clouds and rain form. Strong wind can move clouds and precipitation fast. When strong wind, wet air, and cold snow happen together, a blizzard can form. Meteorologists use weather data like this to look for patterns and make forecasts.",
     parameterExplanations: {
-      season:
-        "The season slider lets you pick one of Earth's four seasons: 0 for Spring, 1 for Summer, 2 for Fall (Autumn), and 3 for Winter. The season changes how warm or cold it is and how much rain or snow usually falls. In Summer (1) temperatures are highest because your part of Earth tilts toward the Sun, giving longer days and more direct sunlight. In Winter (3) temperatures are lowest because Earth tilts away, giving shorter days and less direct sunlight. Spring and Fall are in between — temperatures are changing and weather can be unpredictable.",
-      region:
-        "The region slider lets you visit four different places on Earth: 0 for Tropical (hot and rainy near the equator, like a rainforest), 1 for Temperate (four seasons, like most of the United States), 2 for Arctic (cold most of the year, like northern Canada or Alaska), and 3 for Desert (very dry, often with large day-night temperature changes; some deserts are hot and some are cold, like the Sahara or the Gobi). Each region has its own pattern of temperature and rainfall across the seasons. Try combining Summer with Arctic, or Winter with Tropical, to see how much regions differ.",
+      windSpeed:
+        "Wind Speed shows how fast the air is moving. Air moves when one place has more air pressure than another place, so the air flows from one area to another. A low value on the slider feels calm, like a quiet day when leaves barely move. A medium value can push clouds across the sky and make rain slant sideways. A high value means strong moving air. Strong wind can spread rain or snow quickly, make trees bend, and make storms harder to stay safe in. In the simulation, use Wind Speed with Humidity to compare calm weather, thunderstorms, and blizzards.",
+      humidity:
+        "Humidity shows how much water vapor is in the air. Water vapor is water we cannot see, like tiny water gas mixed into the air around us. Low humidity means the air is drier, so the sky may look clearer and fewer clouds may form. High humidity means the air has more water vapor. If that moist air cools, the water vapor can turn into tiny drops or ice crystals. Those drops or crystals can make clouds, fog, rain, or snow. Humidity is not the same as rain, but high humidity gives the air more water to build wet or snowy weather.",
     },
     misconceptions: [
       {
-        wrong: "The seasons happen because Earth is closer to or farther from the Sun.",
+        wrong: "Wind and humidity are the same thing.",
         correct:
-          "Earth's distance from the Sun barely changes during the year. Seasons happen because Earth is tilted on its axis at about 23.5 degrees. When your part of Earth tilts toward the Sun, sunlight hits more directly and days are longer — that is summer. When your part tilts away, sunlight hits at an angle and days are shorter — that is winter. In fact, Earth is actually slightly closer to the Sun in January (Northern Hemisphere winter), not summer.",
+          "Wind is moving air. Humidity is water vapor in the air. They work together, but they measure different parts of weather.",
       },
       {
-        wrong: "Weather and climate are the same thing.",
+        wrong: "High humidity always means it is raining right now.",
         correct:
-          "Weather is what is happening right now — today's temperature, rain, and wind. Climate is the average weather of a place over 30 years or more. You might have a very cold summer day (weather), but summer is still usually the warmest season in a temperate region (climate). Meteorologists use climate patterns to make better weather forecasts.",
+          "High humidity means the air holds a lot of water vapor. Rain may happen if the air cools and water droplets form, but humid air can also be cloudy, foggy, or just sticky.",
       },
       {
-        wrong: "All deserts are hot all the time.",
+        wrong: "A clear sky means there is no weather.",
         correct:
-          "Deserts are defined by very little rainfall, not by heat. Hot deserts like the Sahara can be extremely hot during the day but drop to near freezing at night. Cold deserts like Antarctica or the Gobi Desert in Asia are very cold most of the year. What they share is less than 250 mm of rain or snow per year, not a certain temperature.",
+          "Clear sky is still weather. It usually means the air is calm enough and dry enough that many clouds are not forming.",
       },
       {
-        wrong: "Tropical regions always get the most rain in summer.",
+        wrong: "A blizzard is just a lot of snow.",
         correct:
-          "Tropical regions usually stay warm all year, but their wet and dry seasons do not match northern summer and winter. Many tropical areas near the equator have a wet season and a dry season driven by shifting wind patterns called monsoons, not by Earth's tilt the same way temperate regions experience seasons.",
+          "A blizzard needs strong wind and blowing snow. The wind makes it hard to see, which is why blizzards can be dangerous.",
+      },
+      {
+        wrong: "Strong wind always means a thunderstorm is happening, and dry air can never grow clouds.",
+        correct:
+          "Strong wind can happen with many kinds of weather. A thunderstorm also needs tall storm clouds, and those clouds usually need moist air and rising air to grow. Dry air makes clouds less likely, but not impossible — weather can change when new air moves in or when air rises and cools.",
       },
     ],
     teacherUseCases: [
-      "Set region to Temperate (1) and cycle through all four seasons (0-3) one by one; have students record temperature and precipitation for each season and identify which has the most rain and which is coldest — supporting 3-ESS2-1 data collection.",
-      "Set season to Summer (1) and compare all four regions by moving the region slider from 0 to 3; ask students to rank regions from hottest to coldest and explain what they notice about how region affects temperature even in the same season.",
-      "Set region to Arctic (2) and season to Winter (3), then switch to Tropical (0) and Summer (1); have students describe the two places in words and discuss which animals or plants could survive in each environment.",
-      "Have students predict what weather they would find in a Desert (3) in Summer (1) versus Fall (2) before running the simulation, then check their predictions against the results to practice evidence-based revision of ideas.",
-      "Use the Temperate region across all four seasons to model how a school weather journal might look year-round, connecting daily observation habits to the larger patterns visible in the simulation.",
+      "Set Wind Speed to a low value and Humidity to a low value, then ask students to describe the clear-sky pattern they observe.",
+      "Keep Wind Speed the same while moving the Humidity slider from low to high. Have students record how clouds, fog, rain, or snow change.",
+      "Keep Humidity high while moving the Wind Speed slider upward. Ask students how stronger moving air changes the scene and live data.",
+      "Use the Clear Sky, Thunderstorm, and Blizzard presets. Have students compare the Wind Speed and Humidity values for each weather condition.",
+      "Ask students to choose slider values, predict the weather condition, run the simulation, and revise their idea using evidence from the live data. They can record their predictions on a two-column chart (Wind Speed and Humidity), draw the sky they see for three slider pairs, and write one sentence about the weather pattern. Then use the Blizzard preset to discuss safety: which clue makes travel hard to see — the snow, the strong wind, or both working together.",
     ],
     faq: [
       {
-        question: "Why is summer warmer than winter in most places?",
+        question: "What does wind speed mean?",
         answer:
-          "Earth spins on a tilted axis, leaning about 23.5 degrees. In summer, your part of Earth leans toward the Sun. This means sunlight hits the ground more directly — like shining a flashlight straight down instead of at an angle — and days are longer, so the ground has more hours to warm up. In winter, your part leans away, sunlight hits at a shallow angle spreading over a bigger area so it is weaker, and days are shorter. Together these two things make summer warm and winter cold. This idea connects to the NGSS standard 3-ESS2-2 about how climates differ across regions.",
+          "Wind speed tells how fast air is moving. A small number means gentle air. A large number means strong wind that can move clouds, rain, or snow quickly.",
       },
       {
-        question: "Why do different regions of the world have such different weather patterns?",
+        question: "What does humidity mean?",
         answer:
-          "A region's distance from the equator, nearness to oceans, and height above sea level all shape its climate pattern. Tropical regions near the equator receive direct, intense sunlight all year, so they stay warm. Arctic regions are far from the equator and receive sunlight at a very shallow angle, keeping them cold. Deserts are often blocked from ocean moisture by mountains or wind patterns, so very little rain reaches them. Temperate regions receive a mix of conditions as Earth tilts through the year, producing all four seasons.",
+          "Humidity tells how much water vapor is in the air. When humidity is high, the air has more water vapor. That can help clouds, fog, rain, or snow form.",
       },
       {
-        question: "What is a weather pattern, and how is it different from one weird weather day?",
+        question: "Why do thunderstorms need humid air?",
         answer:
-          "A weather pattern is something that happens regularly and predictably across many days, weeks, or years — like 'it usually rains more in spring' or 'summers are hot and winters are cold here.' One unusual cold day in July is just weird weather, not a change in the pattern. Scientists look at data from many years to find the reliable patterns, and those patterns help meteorologists make forecasts. A single strange day does not break a pattern, just like one bad score on a quiz does not change your average grade.",
+          "Thunderstorms often grow when warm, moist air rises. Moist air has water vapor. As the air rises and cools, water droplets can form tall storm clouds.",
       },
       {
-        question: "Which NGSS standard does this experiment connect to?",
+        question: "Why is a blizzard different from regular snow?",
         answer:
-          "This simulation directly supports 3-ESS2-1, which asks students to represent data in tables and graphs to describe typical weather conditions expected during a particular season. It also connects to 3-ESS2-2, which asks students to obtain and combine information to describe climates in different regions of the world. By exploring how season and region together shape weather patterns, students practice analyzing and interpreting data — a key science and engineering practice for grades K-5.",
+          "Regular snow can fall with little wind. A blizzard has strong wind and blowing snow, so it can be very hard to see.",
       },
       {
-        question: "Can meteorologists predict the weather perfectly?",
+        question: "Why does wind happen?",
         answer:
-          "Not perfectly, and that is okay! Weather forecasting has improved a lot with satellites, radar, and computers, but the atmosphere is incredibly complex with billions of tiny air movements all affecting each other. Short-term forecasts (one or two days ahead) are usually quite accurate. Longer forecasts (a week ahead) are less certain. That is why forecasters say things like '70% chance of rain' rather than 'it will rain' — they are giving you their best estimate based on patterns, not a guarantee. Scientists prefer to be honest about uncertainty rather than pretend they know more than they do.",
+          "Wind happens when air moves from one place to another. Air can move because some places are warmer or have different air pressure. The moving air is what we feel as wind.",
+      },
+      {
+        question: "How is humidity different from rain, and how do meteorologists forecast weather?",
+        answer:
+          "Humidity is water vapor in the air, and we usually cannot see it. Rain is liquid water drops falling from clouds. Humid air can help rain form, but it does not always rain when humidity is high. Meteorologists measure clues like wind, humidity, temperature, clouds, and rain, then compare today's data with patterns they have seen before to make a careful forecast — the same kind of pattern work students do in this simulation, supporting NGSS K-ESS2-1 and 3-ESS2-1.",
       },
     ],
   },
