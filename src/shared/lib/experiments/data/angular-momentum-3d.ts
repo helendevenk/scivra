@@ -32,53 +32,33 @@ export const angularMomentum3d: Experiment = {
 
   parameters: [
     {
-      id: "scenario",
-      label: "Scenario (0=gyroscope, 1=skater, 2=collision)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "spinRate",
-      label: "Spin Rate",
+      id: "angularVelocity",
+      label: "Angular Velocity",
       unit: "rad/s",
       min: 1,
-      max: 50,
-      default: 20,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "tiltAngle",
-      label: "Initial Tilt Angle",
-      unit: "°",
-      min: 0,
-      max: 80,
-      default: 30,
-      step: 5,
+      max: 40,
+      default: 10,
+      step: 0.5,
       tier: "free",
     },
     {
       id: "armExtension",
-      label: "Arm Extension (skater)",
-      unit: "%",
-      min: 20,
-      max: 100,
-      default: 100,
-      step: 5,
+      label: "Arm Extension",
+      unit: "m",
+      min: 0.3,
+      max: 2,
+      default: 1.0,
+      step: 0.1,
       tier: "free",
     },
     {
-      id: "showVectors",
-      label: "Show L and τ vectors (0=off, 1=on)",
-      unit: "",
+      id: "torque",
+      label: "Applied Torque",
+      unit: "N·m",
       min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
+      max: 2,
+      default: 0,
+      step: 0.1,
       tier: "free",
     },
   ],
@@ -105,7 +85,7 @@ export const angularMomentum3d: Experiment = {
     "Angular momentum L = Iω is a vector quantity pointing along the axis of rotation (right-hand rule). In the absence of external torque, angular momentum is conserved: L_i = L_f. For a spinning ice skater, pulling arms in decreases I, so ω must increase to conserve L. A gyroscope tilted at angle θ from vertical experiences gravitational torque τ = Mgd·sinθ perpendicular to L, causing L to precess around the vertical axis at rate Ω = Mgd/(Iω). The faster the spin, the slower the precession. In collisions between rotating objects (e.g., two disks), the total angular momentum is conserved: I₁ω₁ + I₂ω₂ = (I₁ + I₂)ω_f for a perfectly inelastic collision.",
 
   instructions:
-    "Select a scenario: gyroscope precession, ice skater spin-up, or rotational collision. Adjust the spin rate and tilt angle. In the gyroscope scenario, observe how the L vector sweeps out a cone (precession). In the skater scenario, drag the arm extension slider to see ω change. The 3D view shows L (blue arrow) and τ (red arrow) vectors in real time. Rotate the camera with mouse drag.",
+    "Use the Angular Velocity, Arm Extension, and Applied Torque sliders to test L = Iω conservation and torque-driven changes in angular momentum. Try the Spinning Top, Gyroscope, and Figure Skater presets to compare fast precession, gyroscopic stability, and the skater arms-in/arms-out conservation demo. Increase angular velocity to build a larger L vector, change arm extension to change moment of inertia, and add torque to see precession emerge as τ changes the direction of L.",
 
   challenges: [
     {
@@ -151,90 +131,108 @@ export const angularMomentum3d: Experiment = {
     educationalLevel: "Advanced Placement",
     teaches: "Angular Momentum and Precession",
   },
+  htmlControlAliases: {
+    angularVelocity: "sl-omega",
+    armExtension: "sl-arm",
+    torque: "sl-torque",
+  },
+  presets: [
+    {
+      id: "top",
+      label: "Spinning Top",
+      paramValues: { angularVelocity: 20, armExtension: 0.5, torque: 0 },
+    },
+    {
+      id: "gyro",
+      label: "Gyroscope",
+      paramValues: { angularVelocity: 30, armExtension: 0.8, torque: 0.5 },
+    },
+    {
+      id: "skater",
+      label: "Figure Skater",
+      paramValues: { angularVelocity: 15, armExtension: 1.5, torque: 0 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Angular momentum is a vector quantity — L = Iω — that points along the rotation axis according to the right-hand rule, not merely a scalar speed. A gyroscope, a spinning top, and a figure skater pulling her arms inward are all governed by the same principle: when net external torque is zero, L is conserved in both magnitude and direction. This simulation renders three scenarios in 3D: a precessing gyroscope, a skater changing moment of inertia by extending or retracting arms, and a perfectly inelastic collision between two rotating disks. The blue L vector and red torque vector τ update in real time so you can track how gravitational torque on the tilted gyroscope causes L to sweep out a cone — precession — rather than simply falling over. Use the camera drag to inspect the vector geometry from any angle.",
     parameterExplanations: {
-      scenario:
-        "Selects which physical situation the simulation displays: 0 for gyroscope precession under gravity, 1 for the ice-skater spin-up problem, and 2 for a two-disk rotational collision. Each scenario loads different initial conditions while sharing the same conservation law.",
-      spinRate:
-        "The angular velocity ω of the spinning object in rad/s at the start of the simulation. Higher spin rates increase |L| = Iω and, for the gyroscope, slow the precession rate Ω = Mgd/(Iω) — a larger denominator means a lazier cone sweep.",
-      tiltAngle:
-        "The angle in degrees between the gyroscope's spin axis and the vertical. The gravitational torque that drives precession is τ = Mgd·sinθ, so larger tilt angles produce a wider precession cone; however, the steady-state precession rate Ω = Mgd/(Iω) is independent of θ — only when θ → 0 does the gravitational torque vanish and precession stop.",
+      angularVelocity:
+        "Angular Velocity sets the rotational speed ω of the spinning object in radians per second. In AP Physics 1 and HS-PS2 rotational dynamics, this slider is the direct link between motion and angular momentum because L = Iω. With moment of inertia held fixed, increasing angular velocity increases the magnitude of L, making the spin axis harder to redirect. In a gyroscope or spinning top, a larger L also makes the same applied torque produce slower directional change, so precession becomes more gradual. Compare the Spinning Top and Gyroscope presets, then change only Angular Velocity to isolate how spin rate affects stability and precession.",
       armExtension:
-        "Controls how far the skater's arms are extended, expressed as a percentage of maximum reach. Fully extended (100 %) maximizes I; pulling in to 20 % shrinks I dramatically. Because L = Iω is conserved, ω rises in proportion as I falls — watch the spin rate readout jump.",
-      showVectors:
-        "Toggles the 3D arrow overlays: 1 renders the blue L vector and the red τ vector; 0 hides them for a cleaner view of the motion geometry. Turn vectors on when analyzing the right-hand-rule direction; turn them off when recording angular speed data.",
+        "Arm Extension changes the effective radius of the rotating mass distribution, which changes moment of inertia I. Mass farther from the rotation axis contributes more strongly because I depends on r², so increasing this slider makes the object harder to spin up or slow down. The Figure Skater preset is the clearest conservation test: with little or no external torque, pulling arms inward reduces I, so angular velocity must increase to keep L = Iω approximately constant. This aligns with AP Physics 1 rotational inertia reasoning and HS-PS2 modeling because students connect a visible geometry change to a measurable change in motion.",
+      torque:
+        "Applied Torque sets the external twisting influence τ in newton-meters. Torque is not the same thing as angular momentum; it is the rate of change of angular momentum, τ = dL/dt. In this model, raising torque makes the L vector change direction more strongly, supporting the precession story for tops and gyroscopes. When torque is zero, angular momentum conservation is the focus: the Figure Skater preset shows how changing moment of inertia redistributes spin without needing an outside twist. When torque is nonzero, students can reason from HS-PS2-2 about how forces and interactions change motion over time.",
     },
     misconceptions: [
       {
         wrong:
-          "Angular momentum is just how fast something spins — it's a scalar like rotational speed.",
+          "Angular momentum is just how fast something spins, so Angular Velocity and angular momentum mean the same thing.",
         correct:
-          "L = r × p (or Iω for rigid bodies) is a vector. Its direction — along the spin axis, determined by the right-hand rule — is physically meaningful: gravitational torque causes L to change direction, producing precession, not a change in spin speed.",
+          "Angular Velocity is only one factor. Angular momentum is L = Iω, so it depends on both rotational speed and moment of inertia. A slowly spinning object with mass spread far from the axis can have as much angular momentum as a faster compact object. Use Arm Extension to change I while watching why the product matters.",
       },
       {
         wrong:
-          "When the skater pulls her arms in, she speeds up because a force is pushing her outward.",
+          "When the Figure Skater preset speeds up, an outside force must be pushing the skater around.",
         correct:
-          "No external torque acts, so L = Iω stays constant. Reducing the moment of inertia I forces ω to increase to keep the product fixed. Internal muscle forces do positive work on the system, converting stored chemical energy to rotational kinetic energy.",
+          "With Applied Torque near zero, there is no outside twist causing the speed-up. Pulling arms inward reduces moment of inertia, so angular velocity increases to keep L = Iω conserved. Internal muscle forces can change the skater's shape and rotational kinetic energy, but they do not create net external angular momentum.",
       },
       {
         wrong:
-          "A tilted gyroscope falls over because gravity pulls the top down.",
+          "A larger Applied Torque always makes the object spin faster.",
         correct:
-          "Gravity exerts a torque τ perpendicular to L, so it changes the direction of L, not its magnitude. The result is precession — the axis sweeps a horizontal circle — at rate Ω = Mgd/(Iω). The gyroscope does not topple as long as it spins fast enough.",
+          "Torque changes angular momentum, but the direction matters. A torque parallel to L can change spin speed; a torque perpendicular to L mainly redirects L and produces precession. In a gyroscope or top, torque can make the axis sweep around instead of simply increasing Angular Velocity.",
       },
       {
         wrong:
-          "Torque must point in the same direction as the rotation or the angular velocity.",
+          "A gyroscope is stable because gravity stops acting on it.",
         correct:
-          "Torque τ = r × F points along the axis of angular acceleration, perpendicular to both r and F. In the gyroscope, τ is horizontal and perpendicular to L, so it rotates L rather than speeding or slowing the spin.",
+          "Gravity still acts and can create torque about the support point. The key is that the spinning object already has angular momentum. The torque changes the direction of L over time, so the axis precesses rather than immediately tipping straight down.",
       },
       {
         wrong:
-          "In a rotational collision, kinetic energy is always conserved because no linear momentum is lost.",
+          "The Spinning Top, Gyroscope, and Figure Skater presets are different laws of physics.",
         correct:
-          "For a perfectly inelastic rotational collision (two disks coupling), angular momentum L_total = I₁ω₁ + I₂ω₂ is conserved, but rotational kinetic energy is not — energy is lost to internal deformation, sound, and heat, just as in a linear inelastic collision.",
+          "They are different examples of the same rotational dynamics ideas. The presets change Angular Velocity, Arm Extension, and Applied Torque to highlight different balances between L = Iω conservation and τ = dL/dt. The useful comparison is which parameter changed and how the angular momentum response followed.",
       },
     ],
     teacherUseCases: [
-      "Precession rate vs. spin rate data collection: set scenario = 0, record the observed precession period T_prec for spinRate values of 10, 20, 30, and 40 rad/s at a fixed tiltAngle of 30°. Since Ω = Mgd/(Iω), T_prec = 2π/Ω = 2πIω/(Mgd) is proportional to ω. Have students plot T_prec vs. spinRate (linear, slope 2πI/(Mgd)) or Ω = 2π/T_prec vs. 1/spinRate (linear). This directly addresses AP standard 5.E.1.",
-      "Skater conservation lab: set scenario = 1, record ω at armExtension = 100 %, 80 %, 60 %, 40 %, and 20 %. Have students compute I·ω at each step using I ∝ armExtension² (moment of inertia scales as r²) and verify that L = Iω remains constant to within experimental noise. Addresses standard 5.D.1.",
-      "Misconception probe — does the gyroscope fall?: pause the simulation at tiltAngle = 45° with showVectors = 1. Ask students to predict, before pressing Play, which direction the top will move. Most predict it topples; the precession result challenges that intuition and opens a vector-torque discussion.",
-      "Collision energy audit: set scenario = 2, record the initial and final angular speeds, compute K_i = ½I₁ω₁² and K_f = ½(I₁+I₂)ω_f². Students calculate the energy lost as a percentage of K_i and discuss where it goes, paralleling the linear-collision energy analysis they did in AP Physics 1.",
-      "Right-hand-rule drill: with showVectors = 1 in the gyroscope scenario, challenge students to predict the instantaneous direction of τ = r × F_gravity for four compass positions of the precessing axis (North, East, South, West). They confirm each prediction by reading the red vector in the 3D view.",
+      "HS-PS2-2 precession investigation: start with the Gyroscope preset, record Angular Velocity, Arm Extension, and Applied Torque, then vary Applied Torque from 0 to 2 N·m while students describe how the interaction changes the direction of motion over time.",
+      "AP 5.D.1 conservation lab: use the Figure Skater preset with Applied Torque at 0 N·m. Have students move Arm Extension from 1.5 m toward 0.3 m and explain why Angular Velocity rises when moment of inertia decreases.",
+      "AP 5.E.1 torque discussion: compare the Spinning Top preset and Gyroscope preset, then hold Angular Velocity fixed while changing Applied Torque. Students use τ = dL/dt to connect a larger torque to faster angular momentum direction change.",
+      "One-variable control practice: assign teams one preset each, then allow them to adjust only Angular Velocity, only Arm Extension, or only Applied Torque. Each team writes a claim about which variable changed L's magnitude, which changed I, and which produced precession.",
+      "Misconception probe: before using the Figure Skater preset, ask students whether pulling arms inward should slow the skater because the body becomes smaller. They then test Arm Extension values and use L = Iω to revise the prediction.",
     ],
     faq: [
       {
         question: "Why does a gyroscope precess instead of just tipping over?",
         answer:
-          "The gravitational torque τ = Mgd·sinθ acts perpendicular to the angular momentum vector L, not parallel to it. Since dL/dt = τ, this perpendicular torque rotates L rather than changing its magnitude — the axis circles the vertical at precession rate Ω = Mgd/(Iω) rad/s. Changing the tilt angle (tipping) would require a torque component in the tilt-change plane; gravity's torque is perpendicular to L and produces precession instead.",
+          "The applied or gravitational torque acts mostly perpendicular to the angular momentum vector L. Since τ = dL/dt, that perpendicular torque redirects L rather than simply making the object fall straight down. In the Gyroscope preset, increase Applied Torque to see the direction of L change more quickly. Increase Angular Velocity to make L larger, which makes the same torque produce slower precession.",
       },
       {
         question: "What AP Physics C standard covers angular momentum conservation?",
         answer:
-          "AP standard 5.D.1 addresses conservation of angular momentum when net external torque is zero. Standard 5.E.1 covers the relationship τ = dL/dt and gyroscopic precession. Both are tested in the Mechanics FRQ section and appear directly in this simulation's three scenarios.",
+          "AP standard 5.D.1 addresses conservation of angular momentum when net external torque is zero. Standard 5.E.1 covers the relationship τ = dL/dt and gyroscopic precession. The Angular Velocity, Arm Extension, and Applied Torque sliders let students separate conservation cases from cases where torque changes angular momentum.",
       },
       {
-        question: "How does the ice-skater problem connect to the formula L = Iω?",
+        question: "How does the Figure Skater preset connect to the formula L = Iω?",
         answer:
-          "With no external torque (frictionless ice), L is conserved: I_i · ω_i = I_f · ω_f. When arm extension drops from 100 % to 20 %, the moment of inertia roughly decreases by a factor of 25 (I ∝ r²), so ω must increase by roughly 25× to maintain the same L. The simulation makes this quantitative — read ω off the display at each armExtension setting.",
+          "The Figure Skater preset demonstrates angular momentum conservation with Applied Torque set to zero. When Arm Extension decreases, the skater's mass is closer to the rotation axis, so moment of inertia I decreases. To keep L = Iω constant, Angular Velocity must increase. Moving Arm Extension outward reverses the effect: I increases and angular velocity drops.",
       },
       {
         question: "Is angular momentum a vector or a scalar?",
         answer:
-          "It is a vector: L = r × p for a particle, or L = Iω for a rigid body spinning about a fixed axis, where ω is itself a vector along the axis. The direction matters — the right-hand rule determines it. Precession is entirely a consequence of L being a vector whose direction can change under perpendicular torque.",
+          "It is a vector: L = r × p for a particle, or L = Iω for a rigid body spinning about a fixed axis, where ω is itself a vector along the axis. The direction matters because torque can change that direction. Precession is a visible result of vector angular momentum responding to torque.",
       },
       {
-        question: "What happens to rotational kinetic energy when the skater pulls her arms in?",
+        question: "What does the Applied Torque slider actually change?",
         answer:
-          "K_rot = L²/(2I). Since L is constant and I decreases, K_rot increases. The extra energy comes from the work done by the skater's muscles as they pull inward against the centrifugal tendency of the arms — the skater is doing positive work, not violating energy conservation.",
+          "Applied Torque changes the external twist on the rotating system, measured in N·m. A zero value emphasizes conservation of angular momentum. A larger value makes angular momentum change more quickly according to τ = dL/dt. In the Gyroscope and Spinning Top presets, that change often appears as precession, where the spin axis sweeps around instead of simply speeding up.",
       },
       {
-        question: "Can precession occur even if the gyroscope is not tilted (tiltAngle = 0°)?",
+        question: "Which preset should I start with?",
         answer:
-          "At exactly 0° the spin axis is vertical and aligned with gravity, so the gravitational torque τ = Mgd·sin(0°) = 0. There is no torque to drive precession and the gyroscope simply spins in place. Increasing tiltAngle away from 0° introduces a nonzero torque and initiates the precessing cone.",
+          "Start with Figure Skater for L = Iω conservation because changing Arm Extension gives a clear inverse relationship between moment of inertia and Angular Velocity. Use Gyroscope next to study how Applied Torque redirects angular momentum and produces precession. Use Spinning Top to connect the same ideas to a familiar rotating object.",
       },
     ],
   },

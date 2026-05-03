@@ -24,27 +24,27 @@ export const momentumCollisions: Experiment = {
   parameters: [
     {
       id: "mass1",
-      label: "Mass 1 (m₁)",
+      label: "Mass 1",
       unit: "kg",
       min: 0.5,
-      max: 10,
-      default: 2,
+      max: 5,
+      default: 1,
       step: 0.5,
       tier: "free",
     },
     {
       id: "mass2",
-      label: "Mass 2 (m₂)",
+      label: "Mass 2",
       unit: "kg",
       min: 0.5,
-      max: 10,
-      default: 2,
+      max: 5,
+      default: 1,
       step: 0.5,
       tier: "free",
     },
     {
       id: "velocity1",
-      label: "Initial Velocity 1 (v₁)",
+      label: "Velocity 1",
       unit: "m/s",
       min: -10,
       max: 10,
@@ -53,24 +53,14 @@ export const momentumCollisions: Experiment = {
       tier: "free",
     },
     {
-      id: "velocity2",
-      label: "Initial Velocity 2 (v₂)",
-      unit: "m/s",
-      min: -10,
-      max: 10,
-      default: -3,
-      step: 0.5,
-      tier: "free",
-    },
-    {
       id: "restitution",
-      label: "Coefficient of Restitution (e)",
+      label: "Restitution Coefficient",
       unit: "",
       min: 0,
       max: 1,
       default: 1,
       step: 0.05,
-      tier: "pro",
+      tier: "free",
     },
   ],
 
@@ -105,7 +95,7 @@ export const momentumCollisions: Experiment = {
     "The law of conservation of momentum states that the total momentum of an isolated system remains constant regardless of internal interactions. In elastic collisions, both momentum and kinetic energy are conserved. In perfectly inelastic collisions, objects stick together — momentum is still conserved but kinetic energy is not (it converts to heat/deformation). The coefficient of restitution e ranges from 0 (perfectly inelastic) to 1 (perfectly elastic).",
 
   instructions:
-    "Set the masses and initial velocities of both objects. Press Launch to start the collision. The momentum display shows p₁, p₂, and p_total before and after — verify conservation. Toggle between elastic and inelastic modes. Try equal masses with one stationary object (classic AP question).",
+    "Use the four sliders to set Mass 1, Mass 2, Velocity 1, and the Restitution Coefficient. Object 2 starts at rest in this model. Press Launch to start the collision, then compare total momentum before and after to verify conservation. Use the Equal Mass Elastic, Heavy→Light, and Perfectly Inelastic presets to contrast elastic collisions where kinetic energy is conserved with inelastic collisions where momentum is conserved but kinetic energy decreases.",
 
   hook: {
     question:
@@ -253,21 +243,25 @@ export const momentumCollisions: Experiment = {
     educationalLevel: "High School",
     teaches: "Conservation of Momentum",
   },
+  htmlControlAliases: { mass1: "sl-m1", mass2: "sl-m2", velocity1: "sl-v1", restitution: "sl-e" },
+  presets: [
+    { id: "elastic", label: "Equal Mass Elastic", paramValues: { mass1: 1, mass2: 1, velocity1: 5, restitution: 1 } },
+    { id: "heavy", label: "Heavy→Light", paramValues: { mass1: 4, mass2: 1, velocity1: 5, restitution: 1 } },
+    { id: "inelastic", label: "Perfectly Inelastic", paramValues: { mass1: 1, mass2: 1, velocity1: 5, restitution: 0 } },
+  ],
 
   contentSections: {
     whatIsIt:
-      "Slide a billiard ball straight at a stationary one of equal mass. The cue ball stops dead and the target ball rolls off with the original speed. That weird, almost magical exchange is conservation of momentum doing exactly what the math says it must. Now imagine the same hit but with a lump of clay instead — the moving ball plows into it, they stick together, and the combined blob continues at half the original speed. Different outcome, same conservation law: total momentum before equals total momentum after, every time, in any isolated collision. The difference between the two cases is what happens to kinetic energy: conserved in the elastic case, partly dumped into heat and deformation in the inelastic one. This lab launches two carts at each other with adjustable masses, velocities, and a coefficient of restitution slider so you can blend smoothly from perfectly bouncy to perfectly sticky.",
+      "Slide a billiard ball straight at a stationary one of equal mass. The cue ball stops dead and the target ball rolls off with the original speed. That weird, almost magical exchange is conservation of momentum doing exactly what the math says it must. Now imagine the same hit but with a lump of clay instead — the moving ball plows into it, they stick together, and the combined blob continues at half the original speed. Different outcome, same conservation law: total momentum before equals total momentum after, every time, in any isolated collision. The difference between the two cases is what happens to kinetic energy: conserved in the elastic case, partly dumped into heat and deformation in the inelastic one. This lab launches a moving cart at a stationary target, with adjustable masses, an incoming velocity, and a coefficient of restitution slider so you can blend smoothly from perfectly bouncy to perfectly sticky.",
     parameterExplanations: {
       mass1:
-        "Mass of the first cart in kilograms. Heavier carts carry more momentum at the same speed and are harder to deflect. In an elastic head-on hit with a much lighter target, a heavy cart barely changes velocity while the target rebounds at nearly twice the cart's incoming speed.",
+        "Mass 1 is the mass of the moving cart before the collision. In AP Physics 1 and HS-PS2 work, this slider lets students separate mass from speed in the momentum equation p = mv. With Velocity 1 fixed, increasing Mass 1 increases the incoming momentum and usually makes cart 1 harder to slow down or reverse. Compare the Equal Mass Elastic preset with Heavy→Light: the same launch speed produces a very different post-collision split because the larger mass carries more momentum into the interaction. Students can use this slider to test that total system momentum, not either cart's individual momentum, is the conserved quantity.",
       mass2:
-        "Mass of the second cart in kilograms. The mass ratio m₁/m₂ controls how the post-collision velocities split. Equal masses produce a clean swap (in elastic 1D collisions); unequal masses produce a partial transfer governed by (m_1 - m_2)/(m_1 + m_2).",
+        "Mass 2 is the mass of the target cart, which starts at rest in this HTML model. Changing it alters how the incoming momentum from cart 1 is distributed after contact. Equal masses in an elastic collision produce the classic AP Physics 1 result: cart 1 stops and cart 2 leaves with nearly the original speed. A lighter target shoots away faster; a heavier target changes speed less. This supports HS-PS2-2 because students can use measurements and mathematical representations to show that the final velocities change with mass ratio while total momentum before and after remains constant.",
       velocity1:
-        "Initial velocity of cart 1 in meters per second. Sign matters: positive is rightward, negative is leftward. Momentum p_1 = m_1·v_1 is a vector, so a fast leftward cart has the same magnitude but opposite sign as a fast rightward one — and that sign survives all the way through the collision math.",
-      velocity2:
-        "Initial velocity of cart 2 in meters per second, with the same sign convention as v_1. Setting v_2 = 0 reproduces the classic 'cue ball into rack' scenario; setting v_2 negative gives a head-on closing collision; setting it positive but smaller than v_1 makes cart 1 catch up and rear-end cart 2.",
+        "Velocity 1 is the initial velocity of the moving cart. It sets both the sign and size of cart 1's starting momentum, p_1 = m_1v_1, while cart 2 begins at rest. Positive and negative values represent opposite directions, so students can connect vector signs to momentum bookkeeping instead of treating speed as just a positive number. With Mass 1 fixed, doubling Velocity 1 doubles incoming momentum but quadruples kinetic energy. That contrast is central to AP Physics 1: momentum conservation constrains every isolated collision, while kinetic energy conservation depends on whether the collision is elastic.",
       restitution:
-        "The coefficient of restitution e, dimensionless, ranging 0 to 1. It's the ratio of the relative speed of separation after to the relative speed of approach before. e = 1 is perfectly elastic (KE conserved); e = 0 is perfectly inelastic (carts stick); intermediate values model real-world collisions like rubber balls (~0.8) or steel-on-clay (~0.2).",
+        "The Restitution Coefficient controls how bouncy the collision is. A value of 1 represents the elastic limit, where total momentum and total kinetic energy are both conserved. A value of 0 represents the perfectly inelastic limit, where the carts stick together and share one final velocity. Intermediate values keep momentum conserved but reduce the relative separation speed after impact, modeling real materials that deform, heat, or vibrate. Use the Perfectly Inelastic preset and then raise this slider toward 1 to help students see the HS-PS2 and AP distinction: momentum is the system-level invariant, while kinetic energy can leave the macroscopic motion.",
     },
     misconceptions: [
       {
@@ -286,7 +280,7 @@ export const momentumCollisions: Experiment = {
         wrong:
           "When a moving object hits a stationary one, the moving object always loses speed and the stationary one always speeds up by the same amount.",
         correct:
-          "Only true for equal masses in 1D elastic collisions. With unequal masses or inelastic conditions, the velocity changes are not equal and opposite. What is always equal and opposite — for any isolated collision — is the impulse (Δp) on each object. The forces during contact are equal and opposite by Newton's third law, but the resulting velocity changes depend on the masses.",
+          "Only true for equal masses in 1D elastic collisions, like the Equal Mass Elastic preset. With unequal masses or inelastic conditions, the velocity changes are not equal and opposite. What is always equal and opposite — for any isolated collision — is the impulse (Δp) on each object. The forces during contact are equal and opposite by Newton's third law, but the resulting velocity changes depend on Mass 1, Mass 2, and the restitution setting.",
       },
       {
         wrong:
@@ -302,11 +296,11 @@ export const momentumCollisions: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Momentum bookkeeping: have students record p_1, p_2, and p_total before and after for at least four different mass and velocity combinations in elastic mode. Verify p_total stays constant to within rounding. Then repeat in perfectly inelastic mode and confirm the same. Goal: make conservation feel like a verified experimental fact, not just a slogan.",
-      "Equal-mass surprise: predict the outcome of a 3 kg cart at 4 m/s hitting a stationary 3 kg cart elastically. Most students guess both carts move forward at 2 m/s. The correct answer (cart 1 stops, cart 2 takes off at 4 m/s) is a powerful misconception breaker. Use it to motivate careful application of both conservation laws together.",
-      "Restitution slider study: have student pairs sweep e from 0 to 1 in steps of 0.1 with fixed initial conditions, and record the post-collision KE. Plot KE_after/KE_before vs. e. Discuss why the curve isn't linear — the algebra forces a quadratic relationship.",
-      "Real-world collision audit: assign each group a video of a real collision (Newton's cradle, billiards, car crash test, two pucks on an air table). Ask them to estimate e and classify the collision. The exercise sharpens the link between the slider and physical reality.",
-      "Misconception probe — sticky momentum: pause the simulation immediately after a perfectly inelastic collision and ask 'where did the momentum go?' Many students will say it disappeared. Walk them through the m_total·v_final calculation showing it didn't. Then ask 'where did the energy go?' and let them realize that's the actual question.",
+      "HS-PS2-2 momentum audit: have students run the Equal Mass Elastic, Heavy→Light, and Perfectly Inelastic presets, record p_1, p_2, and p_total before and after, and verify that p_total stays constant even when the visible outcomes look very different.",
+      "HS-PS2-3 design prompt: ask groups to use Mass 1, Mass 2, Velocity 1, and Restitution Coefficient to design a collision that reduces final kinetic energy while preserving total momentum, then justify how the Perfectly Inelastic preset models energy transfer into deformation or heat.",
+      "AP equal-mass benchmark: start with Equal Mass Elastic, then change only Mass 2. Students predict whether cart 1 stops, rebounds, or keeps moving, using conservation of momentum and kinetic energy instead of intuition.",
+      "Mass-ratio investigation: start from Heavy→Light, hold Velocity 1 and Restitution Coefficient fixed, and sweep Mass 1 and Mass 2 through several ratios. Students explain why equal impulses create different velocity changes for the two carts.",
+      "Restitution comparison lab: keep Mass 1, Mass 2, and Velocity 1 fixed while moving Restitution Coefficient from 1 to 0. Students compare KE_before and KE_after and write a claim-evidence-reasoning response about why momentum conservation survives in both elastic and inelastic cases.",
     ],
     faq: [
       {
@@ -322,7 +316,7 @@ export const momentumCollisions: Experiment = {
       {
         question: "What does the coefficient of restitution actually measure?",
         answer:
-          "It's the ratio of the relative speed of separation to the relative speed of approach: e = (v_2' - v_1') / (v_1 - v_2). For e = 1 the objects separate as fast as they came together (perfectly elastic). For e = 0 they don't separate at all (perfectly inelastic — they stick). Real-world collisions live in between: a basketball on a hardwood floor has e ≈ 0.75; a ball of putty on concrete has e ≈ 0. The coefficient is empirical and depends on both materials and impact speed.",
+          "It measures how much relative speed remains after the objects collide. In this lab, cart 2 starts at rest and Velocity 1 sets the incoming motion, so the Restitution Coefficient slider controls how strongly the carts separate after impact. For e = 1, the collision is perfectly elastic and the objects separate with no kinetic-energy loss in the model. For e = 0, they do not separate at all and move together as a perfectly inelastic pair. Real-world collisions live between those extremes.",
       },
       {
         question: "Why does a heavy truck barely slow down when it hits a small car?",
@@ -337,7 +331,7 @@ export const momentumCollisions: Experiment = {
       {
         question: "How does this lab map to AP Physics 1 standard 5.D.1?",
         answer:
-          "AP Physics 1 standard 5.D.1 expects students to apply conservation of linear momentum to collisions and explosions, distinguish elastic from inelastic outcomes, and use the impulse-momentum theorem. This lab is essentially a controlled laboratory version of every textbook problem under that standard: students set masses and velocities, predict post-collision states, verify conservation, and explore how the coefficient of restitution shifts kinetic energy out of the system. NGSS HS-PS2-2 covers the same ground from a slightly different angle.",
+          "AP Physics 1 standard 5.D.1 expects students to apply conservation of linear momentum to collisions, distinguish elastic from inelastic outcomes, and use the impulse-momentum theorem. This lab is a controlled version of the common moving-cart-into-stationary-cart problem: students set Mass 1, Mass 2, Velocity 1, and Restitution Coefficient, predict post-collision states, verify conservation, and compare how the Equal Mass Elastic and Perfectly Inelastic presets treat kinetic energy. NGSS HS-PS2-2 covers the same ground from a slightly different angle.",
       },
     ],
   },
