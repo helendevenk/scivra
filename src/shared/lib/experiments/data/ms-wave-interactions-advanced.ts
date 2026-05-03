@@ -159,9 +159,9 @@ export const msWaveInteractionsAdvanced: Experiment = {
     },
     {
       id: "standing",
-      label: "Standing Wave Pattern",
+      label: "Stable Interference Pattern",
       description:
-        "Uses a tighter wave pattern and wider source spacing to make stable nodes and antinodes easier to compare.",
+        "Uses a tighter wave pattern and wider source spacing to make stable bright and dark interference bands easier to compare. (Not a true standing wave, which would require oppositely traveling waves.)",
       paramValues: { frequency: 25, phase: 0, amplitude: 10, separation: 6 },
     },
   ],

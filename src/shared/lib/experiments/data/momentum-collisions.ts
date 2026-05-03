@@ -6,7 +6,7 @@ export const momentumCollisions: Experiment = {
   title: "Momentum & Collisions",
   subtitle: "Conservation of momentum in elastic and inelastic collisions",
   description:
-    "Launch two objects toward each other and observe momentum conservation. Switch between elastic (KE conserved) and perfectly inelastic (objects stick) collisions. Measure before and after momenta to verify conservation.",
+    "Launch one cart into a stationary target cart and observe momentum conservation. Switch between elastic (KE conserved) and perfectly inelastic (objects stick) collisions. Measure before and after momenta to verify conservation.",
   thumbnail: "/imgs/experiments/momentum-collisions.png",
 
   standards: {
@@ -152,7 +152,7 @@ export const momentumCollisions: Experiment = {
       parameterId: "mass1",
       condition: "max",
       effect: "Object 1 barely slows down while object 2 flies away at nearly twice the initial speed",
-      message: "10 kg vs 0.5 kg — like a truck hitting a shopping cart. The heavy object barely notices!",
+      message: "5 kg vs 0.5 kg — like a truck hitting a shopping cart. The heavy object barely notices!",
     },
     {
       parameterId: "mass2",

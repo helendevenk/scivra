@@ -148,7 +148,7 @@ export const oceanCurrents: Experiment = {
       {
         wrong: "Ocean currents only exist at the surface.",
         correct:
-          "Surface currents typically extend only a few hundred meters deep, but the thermohaline circulation involves the entire depth of the ocean — down to 4,000 meters or more in some places. Deep ocean currents, driven by density differences, move very slowly (centimeters per day) but transport enormous volumes of water globally. Use the Thermohaline Conveyor preset to focus on this deep circulation rather than only the visible surface path.",
+          "Surface currents typically extend only a few hundred meters deep, but the thermohaline circulation involves the entire depth of the ocean — down to 4,000 meters or more in some places. Deep ocean currents, driven by density differences, move much more slowly than surface currents (typically a few centimeters per second, or tens of meters per day) but transport enormous volumes of water globally. Use the Thermohaline Conveyor preset to focus on this deep circulation rather than only the visible surface path.",
       },
       {
         wrong: "The Gulf Stream keeps Europe warm entirely on its own.",

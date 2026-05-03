@@ -32,6 +32,7 @@ export const circuitDcVirtualLab: Experiment = {
     { latex: "V = IR", description: "Ohm's Law" },
     { latex: "\\sum V = 0", description: "Kirchhoff's Voltage Law (KVL)" },
     { latex: "\\sum I = 0", description: "Kirchhoff's Current Law (KCL)" },
+    { latex: "\\tau = RC", description: "RC time constant — characteristic charging/discharging timescale" },
   ],
 
   theory:
