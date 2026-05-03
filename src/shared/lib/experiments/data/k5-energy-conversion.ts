@@ -60,8 +60,8 @@ export const k5EnergyConversion: Experiment = {
       description: "Gravitational PE and kinetic energy formulas",
     },
     {
-      latex: "E_{\\text{total}} = PE + KE = \\text{constant}",
-      description: "Conservation of energy — total energy is always preserved",
+      latex: "E_{\\text{total}} = PE + KE + E_{\\text{thermal}} + E_{\\text{sound}} = \\text{constant}",
+      description: "Conservation of energy — total energy is preserved; with air drag, mechanical energy (PE+KE) decreases as heat and sound energy increase by the same amount",
     },
   ],
 

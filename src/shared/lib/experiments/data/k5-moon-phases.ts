@@ -92,7 +92,7 @@ export const k5MoonPhases: Experiment = {
   tier: "free",
   estimatedTime: 10,
   relatedExperiments: ["k5-day-night-seasons", "gravitational-fields"],
-  htmlPath: "/experiments/elementary/k5-moon-phases.html",
+  htmlPath: "/experiments/elementary/k5-earth-moon-phases.html",
 
   seoTitle: "Earth-Moon Phases Simulation for Kids | Scivra Elementary Earth Science",
   seoKeywords: [

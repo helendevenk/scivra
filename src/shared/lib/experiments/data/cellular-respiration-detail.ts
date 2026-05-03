@@ -102,22 +102,22 @@ export const cellularRespirationDetail: Experiment = {
       id: "cyanide",
       label: "2 Cyanide",
       description:
-        "Cyanide blocks Complex IV, preventing oxygen reduction. Electron flow stops, proton pumping stops, and the proton gradient collapses.",
-      paramValues: { protonGradient: 0, electronTransportRate: 0 },
+        "Cyanide blocks Complex IV, preventing oxygen reduction. Electron flow halts, proton pumping stops, and the proton gradient collapses to near-zero.",
+      paramValues: { protonGradient: 10, electronTransportRate: 0 },
     },
     {
       id: "dnp",
       label: "3 DNP Uncoupler",
       description:
-        "DNP acts as a proton ionophore, carrying H+ across the inner membrane. Electron transport can continue rapidly, but the gradient is dissipated as heat instead of driving ATP synthase.",
-      paramValues: { protonGradient: 0, electronTransportRate: 1.5 },
+        "DNP acts as a proton ionophore, carrying H+ across the inner membrane. Electron transport continues normally, but the gradient is dissipated as heat instead of driving ATP synthase.",
+      paramValues: { protonGradient: 5, electronTransportRate: 1.0 },
     },
     {
       id: "oligomycin",
       label: "4 Oligomycin",
       description:
-        "Oligomycin blocks the F0 proton channel of ATP synthase. H+ cannot flow back to the matrix, so the gradient remains high and electron transport slows from back-pressure.",
-      paramValues: { protonGradient: 100, electronTransportRate: 0.3 },
+        "Oligomycin blocks the F0 proton channel of ATP synthase. H+ cannot flow back to the matrix, so the gradient remains high while ATP synthesis halts; in real cells, electron transport eventually slows from back-pressure.",
+      paramValues: { protonGradient: 100, electronTransportRate: 1.0 },
     },
   ],
   contentSections: {
