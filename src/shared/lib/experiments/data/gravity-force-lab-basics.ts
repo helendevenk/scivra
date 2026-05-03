@@ -29,6 +29,7 @@ export const gravityForceLabBasics: Experiment = {
 
   formulas: [
     { latex: "F = G\\frac{m_1 m_2}{r^2}", description: "Newton's Law of Universal Gravitation (G = 6.674×10⁻¹¹ N·m²/kg²)" },
+    { latex: "g = \\frac{GM}{r^2}", description: "Gravitational field strength near a source mass M at distance r — independent of test mass" },
   ],
 
   theory:
