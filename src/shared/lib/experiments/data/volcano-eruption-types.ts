@@ -16,15 +16,15 @@ export const volcanoEruptionTypes: Experiment = {
   tags: ["volcano", "eruption types", "magma viscosity", "shield volcano", "stratovolcano", "Earth science"],
   difficulty: "intermediate",
   parameters: [
-    { id: "magmaType", label: "Magma Type (0=basaltic, 1=andesitic, 2=rhyolitic)", unit: "", min: 0, max: 2, default: 0, step: 1, tier: "free" },
-    { id: "gasContent", label: "Dissolved Gas Content", unit: "%", min: 0.5, max: 8, default: 2, step: 0.5, tier: "free" },
-    { id: "magmaTemp", label: "Magma Temperature", unit: "°C", min: 700, max: 1200, default: 1100, step: 50, tier: "free" },
+    { id: "silicaPct", label: "Silica Content", unit: "%", min: 45, max: 75, default: 52, step: 1, tier: "free" },
+    { id: "gasContent", label: "Dissolved Gas", unit: "%", min: 0.5, max: 6, default: 2, step: 0.1, tier: "free" },
+    { id: "magmaTemp", label: "Magma Temperature", unit: "°C", min: 800, max: 1300, default: 1150, step: 10, tier: "free" },
   ],
   formulas: [
     { latex: "\\eta \\propto e^{E_a / RT} \\cdot f(\\text{SiO}_2, \\text{H}_2\\text{O})", description: "Magma viscosity depends exponentially on temperature and silica/water content" },
   ],
   theory: "Volcanic eruption style is primarily determined by magma viscosity and gas content. Basaltic magma (low SiO₂, ~50%) has low viscosity, allowing gas to escape easily — producing gentle effusive eruptions with lava flows (Hawaii-type shield volcanoes). Andesitic magma (intermediate SiO₂, ~60%) produces moderate explosive eruptions (Strombolian/Vulcanian). Silica-rich dacitic to rhyolitic magma (SiO₂ ~65–75%) is extremely viscous, trapping gas until pressure builds to catastrophic levels — producing violent explosive eruptions with pyroclastic flows and ash columns (Plinian; Mt. St. Helens 1980 erupted primarily dacitic magma). Temperature also matters: hotter magma is less viscous. Water content reduces viscosity but increases explosive potential as it flashes to steam during eruption.",
-  instructions: "Select a magma type and adjust gas content and temperature. Press Erupt to simulate the volcanic eruption. Compare the eruption style, height, and products for different combinations.",
+  instructions: "Use the Silica Content, Dissolved Gas, and Magma Temperature sliders to test how viscosity and trapped gases shape eruption explosivity. Try the Mauna Loa, Mount St. Helens, and Paricutín presets to compare real-world volcano contexts, then press Erupt and connect each outcome to lava flow behavior, ash production, and volcanic hazards.",
   challenges: [
     { id: "vet-c1", question: "Why are Hawaiian eruptions less dangerous than Plinian eruptions?", hint: "Hawaiian eruptions use low-viscosity basaltic magma — gas escapes easily, producing gentle lava flows rather than explosive blasts", tier: "free" },
     { id: "vet-c2", question: "What makes pyroclastic flows so deadly?", hint: "They're superheated clouds of gas, ash, and rock fragments traveling at 100+ km/h at temperatures up to 700°C — impossible to outrun", tier: "free" },
@@ -35,22 +35,28 @@ export const volcanoEruptionTypes: Experiment = {
   seoTitle: "Volcano Eruption Types Simulation | Scivra Earth Science",
   seoKeywords: ["volcano eruption simulation", "magma viscosity interactive", "shield vs stratovolcano", "NGSS Earth science"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Middle School", teaches: "Volcanic Eruptions" },
+  htmlControlAliases: { silicaPct: "oninput:setSilica", gasContent: "oninput:setGas", magmaTemp: "oninput:setMagmaTemp" },
+  presets: [
+    { id: "shield", label: "Mauna Loa (shield, Hawaii)", paramValues: { silicaPct: 50, gasContent: 1, magmaTemp: 1200 } },
+    { id: "strato", label: "Mount St. Helens (stratovolcano)", paramValues: { silicaPct: 65, gasContent: 4, magmaTemp: 1000 } },
+    { id: "cinder", label: "Paricutín (cinder cone)", paramValues: { silicaPct: 55, gasContent: 3, magmaTemp: 1100 } },
+  ],
   contentSections: {
     whatIsIt:
       "Not all volcanic eruptions look the same. Some pour out slow rivers of glowing lava that people can walk alongside, while others explode with the force of nuclear bombs and spread ash across thousands of kilometers — large eruptions can blanket whole regions in ash. The key difference is magma viscosity — basically, how thick and sticky the molten rock is. This simulation lets you change the magma type, the amount of dissolved gas trapped inside it, and the temperature, then watch the eruption style that results. Basaltic magma (low silica) flows easily and lets gas escape gently, producing wide shield volcanoes like those in Hawaii. Silica-rich dacitic to rhyolitic magma is so thick that gas cannot escape — pressure builds until the whole thing explodes, creating towering ash columns and dangerous pyroclastic flows. Mt. St. Helens in 1980 is a famous example, driven primarily by dacitic magma. Compare the shapes of the volcanoes that each eruption style builds over time.",
     parameterExplanations: {
-      magmaType:
-        "Selects the magma composition on a scale of 0 to 2. At 0 (basaltic), the magma is low in silica (about 50%), giving it a runny consistency similar to cold honey — gas escapes easily and eruptions are relatively gentle with flowing lava. At 1 (andesitic), silica content is intermediate (~60%), producing moderate explosive eruptions. At 2 (rhyolitic), the magma is very high in silica (~70%), making it extremely thick and sticky — gas is trapped until pressure forces a violent explosion.",
+      silicaPct:
+        "Silica Content controls how much SiO2 is in the magma, which is one of the strongest controls on viscosity. Low-silica magma near 45-52% behaves more like basalt: it flows easily, releases gas more gradually, and tends to build broad shield volcanoes through lava flows. Higher-silica magma near 65-75% forms stronger networks of silicate minerals, making the melt sticky enough to trap bubbles and build pressure. That change helps students connect Earth materials to surface processes: small differences in composition can produce very different landforms and hazards, supporting MS-ESS2-2 and HS-ESS2-3 style cause-and-effect reasoning.",
       gasContent:
-        "Sets the percentage of dissolved gas (mainly water vapor and carbon dioxide) in the magma, ranging from 0.5% to 8%. Even small amounts of dissolved gas can dramatically change eruption style. When low-viscosity magma reaches the surface, dissolved gas escapes gradually like opening a warm can of soda slowly. In high-viscosity magma, the same gas cannot escape and instead drives an explosive decompression — like shaking a soda can and then popping it open suddenly.",
+        "Dissolved Gas represents volatile materials, especially water vapor and carbon dioxide, held under pressure inside magma. As magma rises, pressure drops and gases expand into bubbles. If viscosity is low, bubbles can escape through the melt, producing lava fountains or mostly effusive flows. If viscosity is high, bubbles remain trapped until pressure is released suddenly, driving ash columns, volcanic bombs, and pyroclastic flows. Use this slider with Silica Content rather than alone: the same gas percentage can be manageable in runny basalt but dangerous in sticky dacitic or rhyolitic magma. This supports evidence-based explanations of geoscience hazards and volcanic landform formation.",
       magmaTemp:
-        "Controls the temperature of the magma in degrees Celsius (700–1200°C). Higher temperatures make magma less viscous (thinner and runnier), in the same way that warming honey makes it flow more easily. Cooler magma is thicker and more likely to trap gas. Temperature and silica content together determine the final viscosity — a very hot rhyolitic magma is still much more viscous than a cool basaltic magma.",
+        "Magma Temperature changes viscosity by changing how easily atoms and mineral structures move within the melt. Hotter magma is generally less viscous, so it can flow farther and allow gases to escape more readily. Cooler magma is thicker, slows bubble movement, and can increase the chance of explosive behavior when gas content is also high. Temperature does not erase the effect of composition: hot high-silica magma can still be much stickier than cooler low-silica magma. Comparing this slider with the presets helps students model how energy, material properties, and pressure interact to shape volcanic eruptions and the resulting landforms.",
     },
     misconceptions: [
       {
         wrong: "All volcanoes erupt the same way — with a large explosion and lava.",
         correct:
-          "Eruption style varies enormously. Effusive (flowing) eruptions produce steady lava flows with little explosive activity. Explosive eruptions may eject very little lava at the surface but produce massive ash clouds, pyroclastic flows, and volcanic bombs. The style depends almost entirely on magma composition and gas content, not simply on how 'active' the volcano is.",
+          "Eruption style varies enormously. Effusive (flowing) eruptions produce steady lava flows with little explosive activity. Explosive eruptions may eject very little lava at the surface but produce massive ash clouds, pyroclastic flows, and volcanic bombs. The style depends on silica content, dissolved gas, and temperature, not simply on how 'active' the volcano is.",
       },
       {
         wrong: "The lava is the most dangerous part of a volcanic eruption.",
@@ -60,25 +66,26 @@ export const volcanoEruptionTypes: Experiment = {
       {
         wrong: "Shield volcanoes are less active than stratovolcanoes.",
         correct:
-          "Shield volcanoes like those in Hawaii erupt very frequently — sometimes continuously for years — because their low-viscosity basaltic magma flows easily to the surface without building dangerous pressure. Stratovolcanoes often have long quiet periods between eruptions precisely because thick magma seals the vent, allowing pressure to build up before a catastrophic release.",
+          "Shield volcanoes like those in Hawaii erupt very frequently — sometimes continuously for years — because their low-silica, hot magma has low viscosity and can flow easily to the surface without building dangerous pressure. Stratovolcanoes often have long quiet periods between eruptions precisely because viscous magma seals the vent, allowing pressure to build up before a catastrophic release.",
       },
       {
         wrong: "Higher gas content always means a bigger, more dangerous eruption.",
         correct:
-          "Gas content matters most in combination with viscosity. High gas content in low-viscosity basaltic magma produces lava fountains that are dramatic but typically not catastrophic. The same gas content in high-viscosity rhyolitic magma can cause an extremely violent explosion because the gas cannot escape gradually. The interaction between gas content and magma type determines eruption explosivity.",
+          "Gas content matters most in combination with viscosity. High gas content with low silica and high temperature can produce lava fountains that are dramatic but typically not catastrophic. The same gas content with high silica and lower temperature can cause an extremely violent explosion because the gas cannot escape gradually. The interaction among dissolved gas, silica content, and magma temperature determines eruption explosivity.",
       },
     ],
     teacherUseCases: [
-      "Effusive vs. explosive comparison: set magmaType to 0 (basaltic) and gasContent to 2%, press Erupt, and note the eruption style and volcano shape. Then set magmaType to 2 (rhyolitic) and gasContent to 6%, press Erupt, and compare. Students diagram both volcano shapes and write a cause-and-effect explanation (MS-ESS2-2).",
-      "Gas content investigation: hold magmaType at 2 (rhyolitic) and magmaTemp at 800°C, then vary gasContent from 0.5% to 8% in steps. Students observe how eruption explosivity changes and rank the outcomes from least to most dangerous, connecting dissolved gas to pressure buildup.",
-      "Temperature effect on viscosity: hold magmaType at 1 (andesitic) and gasContent at 4%, then compare eruptions at magmaTemp 700°C vs. 1200°C. Students describe how temperature changes the eruption character and relate it to the everyday observation that warm liquids flow more easily than cold ones.",
-      "Volcano shape and hazard mapping: after running basaltic and rhyolitic eruptions, students sketch the resulting volcano profiles and annotate where different hazards (lava flow, ash fall, pyroclastic zone) would be most dangerous. They then compare real topographic maps of Mauna Loa (shield) and Mt. Rainier (stratovolcano) as evidence.",
+      "Preset comparison: run the Mauna Loa preset, record silicaPct, gasContent, and magmaTemp, then run the Mount St. Helens preset. Students compare eruption products and volcano shape, then write a cause-and-effect explanation using MS-ESS2-2.",
+      "Silica investigation: keep gasContent at 3% and magmaTemp at 1100°C while moving silicaPct from 45% to 75%. Students identify when lava-flow behavior shifts toward more explosive behavior and explain why viscosity changes.",
+      "Gas and pressure model: hold silicaPct at 65% and magmaTemp at 1000°C, then vary gasContent from 0.5% to 6%. Students rank the resulting eruptions from least to most explosive and connect dissolved gas to pressure buildup.",
+      "Temperature effect on viscosity: hold silicaPct at 55% and gasContent at 3%, then compare eruptions at magmaTemp 800°C, 1100°C, and 1300°C. Students describe how temperature changes flow behavior while noting that composition still matters.",
+      "Hazard mapping with presets: use the shield, strato, and cinder presets as stations. Students sketch likely lava-flow, ash-fall, and pyroclastic-flow hazard zones, then connect the observed patterns to real volcano landforms and NGSS geoscience-process explanations.",
     ],
     faq: [
       {
         question: "What is magma viscosity and why does it control eruption style?",
         answer:
-          "Viscosity measures how resistant a liquid is to flowing — think of water (low viscosity) versus peanut butter (high viscosity). In magma, silica (SiO2) molecules form long chains that tangle together and slow movement. High-silica rhyolitic magma flows very slowly and traps dissolved gases, allowing pressure to build to explosive levels. Low-silica basaltic magma flows freely and lets gas escape gradually, producing gentler effusive eruptions. Temperature also plays a role: hotter magma is typically less viscous, similar to how heating honey makes it runnier.",
+          "Viscosity measures how resistant a liquid is to flowing — think of water (low viscosity) versus peanut butter (high viscosity). In magma, silica (SiO2) molecules form long chains that tangle together and slow movement. Raising Silica Content makes magma more viscous and better able to trap dissolved gases, allowing pressure to build to explosive levels. Lower-silica magma flows more freely and lets gas escape gradually, producing gentler effusive eruptions. Magma Temperature also plays a role: hotter magma is typically less viscous, similar to how heating honey makes it runnier.",
       },
       {
         question: "Which NGSS standards does this experiment address?",
@@ -93,7 +100,7 @@ export const volcanoEruptionTypes: Experiment = {
       {
         question: "Why do volcanoes form in specific locations on Earth?",
         answer:
-          "Most volcanoes occur at tectonic plate boundaries or above mantle hot spots. At subduction zones, one plate slides beneath another, releasing water that lowers the melting point of mantle rock and generates magma. This subduction-zone magma is often andesitic to rhyolitic — high in silica — which is why the Ring of Fire around the Pacific Ocean has so many explosive stratovolcanoes. At mid-ocean ridges and hot spots like Hawaii, mantle material rises directly, producing basaltic magma and gentler eruptions.",
+          "Most volcanoes occur at tectonic plate boundaries or above mantle hot spots. At subduction zones, one plate slides beneath another, releasing water that lowers the melting point of mantle rock and generates magma. This subduction-zone magma is often intermediate to high in silica, which is why the Ring of Fire around the Pacific Ocean has so many explosive stratovolcanoes. At mid-ocean ridges and hot spots like Hawaii, mantle material rises directly, producing lower-silica basaltic magma and gentler eruptions.",
       },
       {
         question: "Can volcanic eruptions affect global climate?",

@@ -6,7 +6,7 @@ export const oceanCurrents: Experiment = {
   title: "Ocean Currents",
   subtitle: "Global thermohaline circulation and surface wind-driven currents",
   description:
-    "Visualize global ocean circulation patterns driven by wind, temperature, and salinity differences. Observe surface currents like the Gulf Stream and deep thermohaline circulation (the global conveyor belt). Adjust water temperature, salinity, and wind patterns to see how currents form, interact, and redistribute heat across the planet.",
+    "Visualize global ocean circulation patterns driven by water temperature, salinity, and density differences. Observe surface currents like the Gulf Stream and deep thermohaline circulation (the global conveyor belt). Adjust water temperature and salinity, then compare three preset current systems to see how density-driven flow redistributes heat across the planet.",
   thumbnail: "/imgs/experiments/ocean-currents.png",
 
   standards: {
@@ -30,53 +30,23 @@ export const oceanCurrents: Experiment = {
 
   parameters: [
     {
-      id: "windStrength",
-      label: "Wind Strength",
-      unit: "%",
-      min: 0,
-      max: 100,
-      default: 50,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "tempDiff",
-      label: "Equator-Pole Temp Difference",
+      id: "temperature",
+      label: "Water Temperature",
       unit: "°C",
-      min: 5,
-      max: 40,
-      default: 25,
+      min: -2,
+      max: 30,
+      default: 15,
       step: 1,
       tier: "free",
     },
     {
       id: "salinity",
-      label: "Polar Salinity",
+      label: "Salinity",
       unit: "ppt",
       min: 30,
       max: 40,
       default: 35,
       step: 0.5,
-      tier: "free",
-    },
-    {
-      id: "particleCount",
-      label: "Particle Density",
-      unit: "",
-      min: 100,
-      max: 2000,
-      default: 800,
-      step: 100,
-      tier: "free",
-    },
-    {
-      id: "showLabels",
-      label: "Show Current Labels (0=off, 1=on)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
       tier: "free",
     },
   ],
@@ -98,7 +68,7 @@ export const oceanCurrents: Experiment = {
     "Ocean currents are driven by two main mechanisms: wind (surface currents) and density differences (deep thermohaline circulation). Trade winds and westerlies push surface water, while the Coriolis effect deflects currents to the right in the Northern Hemisphere and left in the Southern. This creates circular gyres — clockwise in the north, counterclockwise in the south. Western boundary currents (like the Gulf Stream) are narrow, deep, and fast; eastern boundary currents are broad, shallow, and slow. Thermohaline circulation is driven by cold, salty water sinking in polar regions (high density) and warm water rising near the equator. This 'global conveyor belt' takes about 1000 years for a complete cycle and redistributes heat globally, moderating climate. Changes in thermohaline circulation (e.g., from melting ice reducing salinity) can have dramatic climate effects.",
 
   instructions:
-    "Watch particles trace ocean current paths across a simplified world map. Adjust wind strength to see how surface currents change. Modify the temperature difference and polar salinity to observe thermohaline circulation effects. Toggle labels to identify major current systems.",
+    "Use the Water Temperature and Salinity sliders to investigate how density differences help drive thermohaline circulation. Compare the Thermohaline Conveyor, Gulf Stream, and Coastal Upwelling presets to connect slider values with three ocean-current patterns: deep density-driven overturning, fast warm surface transport, and cold nutrient-rich water rising near coasts. Focus on how changes in temperature and salinity alter seawater density, sinking, upwelling, and heat redistribution across ocean basins.",
 
   challenges: [
     {
@@ -141,36 +111,54 @@ export const oceanCurrents: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Ocean Currents and Thermohaline Circulation",
   },
+  htmlControlAliases: { temperature: "tempSlider", salinity: "salSlider" },
+  presets: [
+    {
+      id: "thc",
+      label: "Thermohaline Conveyor",
+      description:
+        "A cold, moderately salty setup that emphasizes density-driven sinking and the slow global overturning circulation.",
+      paramValues: { temperature: 4, salinity: 35 },
+    },
+    {
+      id: "gulf",
+      label: "Gulf Stream",
+      description:
+        "A warm, slightly saltier setup that highlights poleward heat transport by a fast western boundary current.",
+      paramValues: { temperature: 25, salinity: 36 },
+    },
+    {
+      id: "upwell",
+      label: "Coastal Upwelling",
+      description:
+        "A cool, slightly fresher setup that helps students compare rising deep water with surface-current pathways near coasts.",
+      paramValues: { temperature: 10, salinity: 34 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "The ocean is never still. Beneath the surface, water moves in vast rivers that span entire ocean basins — some carrying as much water as all the world's rivers combined. These ocean currents are driven by two main forces working together. At the surface, wind pushes water along, and Earth's rotation (the Coriolis effect) bends those moving water masses into giant circular loops called gyres. In the Northern Hemisphere, gyres rotate clockwise; in the Southern Hemisphere they rotate counterclockwise. Deeper down, a completely separate system operates — the thermohaline circulation, sometimes called the global ocean conveyor belt. This system is driven by differences in water density: cold water is denser than warm water, and saltier water is denser than fresher water. Near the poles, ocean water gets very cold and very salty as sea ice forms (ice freezes out as fresh water, leaving extra salt behind), making it dense enough to sink to the ocean floor. This cold, dense water then creeps slowly along the bottom of the ocean toward the equator, while warm surface water flows in from lower latitudes to replace it — completing a global circuit that can take roughly 1,000 years for a single water parcel to travel all the way around. This circulation is critically important for distributing heat around the planet and moderating regional climates.",
     parameterExplanations: {
-      windStrength:
-        "Controls how strongly the prevailing winds are driving the ocean surface, from 0 percent (no wind-driven currents) to 100 percent (maximum wind forcing). Increasing wind strength makes surface gyres more pronounced, speeds up boundary currents like the Gulf Stream, and strengthens the wind-driven sideways surface-water movement that moves water across ocean basins (advanced courses call this Ekman transport). At 0 percent, only thermohaline density-driven circulation remains visible.",
-      tempDiff:
-        "Sets the temperature contrast between equatorial and polar ocean water, from 5 degrees Celsius (nearly uniform ocean) to 40 degrees (strong pole-to-equator temperature gradient). A larger temperature difference increases the density contrast that drives thermohaline sinking at the poles and the return flow of warm water from the equator. This parameter most directly affects the strength of the deep ocean conveyor belt.",
+      temperature:
+        "Water Temperature changes seawater density, which is central to thermohaline circulation. Colder water has molecules packed more closely together, so it tends to be denser and can sink when it is also salty enough. Warmer water is less dense and more likely to remain near the surface, where currents can carry heat from low latitudes toward higher latitudes. Use this slider to compare cold conveyor-belt conditions with warm Gulf Stream conditions. This supports MS-ESS2-6 by modeling how unequal heating and Earth's rotation shape ocean circulation patterns, and it supports HS-ESS2-4 by showing how energy moves through Earth systems as ocean water transports heat.",
       salinity:
-        "Sets the salinity of polar ocean water in parts per thousand (ppt), from 30 (relatively fresh, similar to conditions near melting ice) to 40 (highly saline). Higher polar salinity increases the density of polar water, making it sink more readily and strengthening thermohaline circulation. Lower salinity — which would result from melting ice sheets adding fresh water — reduces density and can weaken or disrupt the conveyor belt.",
-      particleCount:
-        "Controls how many tracer particles are shown flowing through the ocean, from 100 (sparse, easier to follow individual paths) to 2000 (dense, better for seeing the overall current pattern). Use fewer particles to trace specific current pathways; use more particles to see the full global circulation structure and identify where gyres, boundary currents, and deep water formation occur.",
-      showLabels:
-        "Toggles current name labels on (1) or off (0). When labels are on, major named currents such as the Gulf Stream, North Atlantic Drift, Kuroshio, and Antarctic Circumpolar Current are identified on the map. Turning labels off is useful for assessment or guessing activities where students identify current systems from flow patterns alone.",
+        "Salinity measures how much dissolved salt is in seawater, in parts per thousand. Saltier water is denser than fresher water, so increasing salinity can help water sink and strengthen density-driven overturning. Lower salinity represents fresher conditions, such as meltwater entering the ocean, which can reduce surface-water density and weaken deep-water formation. Keep temperature steady while changing salinity to isolate how dissolved salt affects circulation, then compare the Thermohaline Conveyor and Coastal Upwelling presets. This aligns with MS-ESS2-6 because students use a model to explain ocean circulation patterns, and with HS-ESS2-4 because salt-driven density differences help transfer matter and energy through Earth systems.",
     },
     misconceptions: [
       {
         wrong: "Ocean currents only exist at the surface.",
         correct:
-          "Surface currents typically extend only a few hundred meters deep, but the thermohaline circulation involves the entire depth of the ocean — down to 4,000 meters or more in some places. Deep ocean currents, driven by density differences, move very slowly (centimeters per day) but transport enormous volumes of water globally. Without this deep circulation, the ocean's heat and chemical properties would be distributed very differently than they are.",
+          "Surface currents typically extend only a few hundred meters deep, but the thermohaline circulation involves the entire depth of the ocean — down to 4,000 meters or more in some places. Deep ocean currents, driven by density differences, move very slowly (centimeters per day) but transport enormous volumes of water globally. Use the Thermohaline Conveyor preset to focus on this deep circulation rather than only the visible surface path.",
       },
       {
         wrong: "The Gulf Stream keeps Europe warm entirely on its own.",
         correct:
-          "The Gulf Stream and its North Atlantic extension do transport a significant amount of heat northward, contributing to milder winters in western Europe compared to eastern Canada at similar latitudes. However, atmospheric circulation patterns — particularly the prevailing westerly winds off the relatively warm Atlantic — also play a major role. Scientists continue to study the relative contributions of ocean and atmosphere to Europe's climate.",
+          "The Gulf Stream and its North Atlantic extension do transport a significant amount of heat northward, contributing to milder winters in western Europe compared to eastern Canada at similar latitudes. However, atmospheric circulation patterns — particularly the prevailing westerly winds off the relatively warm Atlantic — also play a major role. The Gulf Stream preset is best used as a model of ocean heat transport, not as the only explanation for regional climate.",
       },
       {
         wrong: "Ocean currents move in straight lines between continents.",
         correct:
-          "Ocean currents follow curved paths shaped by the Coriolis effect (Earth's rotation deflects moving water), the positions of continents and ocean basins, wind patterns, and seafloor topography. The result is large curved gyres and boundary currents that flow along continental margins. The Gulf Stream, for example, follows the curve of the North American coast before veering northeast across the open Atlantic.",
+          "Ocean currents follow curved paths shaped by the Coriolis effect (Earth's rotation deflects moving water), the positions of continents and ocean basins, wind patterns, density differences, and seafloor topography. The result is large curved gyres, boundary currents, sinking zones, and upwelling regions. Compare the three presets to see that different current systems have different pathways rather than one simple straight-line route.",
       },
       {
         wrong: "Melting Arctic sea ice is the main threat to thermohaline circulation.",
@@ -179,10 +167,11 @@ export const oceanCurrents: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set windStrength to 0 percent and observe the resulting circulation, then increase to 100 percent — students compare the two patterns and identify which currents are wind-driven versus density-driven, building the two-mechanism mental model (MS-ESS2-6).",
-      "Hold windStrength at 50 percent and tempDiff at 25 degrees, then lower salinity from 35 to 30 ppt in steps and observe how thermohaline circulation slows — connect to real-world concern about Greenland ice melt adding fresh water to the North Atlantic.",
-      "Turn showLabels to 1 and trace the complete path of the global conveyor belt with students, identifying where deep water forms (polar regions), where it upwells (equatorial and Southern Ocean), and which named surface currents complete the return loop at the surface.",
-      "Set particleCount to 100 and windStrength to 80 percent, then ask students to identify one particle near Florida and track it along the Gulf Stream northeastward — they observe how a western boundary current carries warm water toward higher latitudes, supporting discussion of how ocean currents moderate regional climate.",
+      "Start with the Thermohaline Conveyor preset, then have students lower Salinity from 35 to 30 ppt while keeping Water Temperature cold. Students explain how freshening can reduce density and weaken sinking, supporting the ocean-circulation model in MS-ESS2-6.",
+      "Use the Gulf Stream preset to discuss warm-water heat transport. Ask students to connect the high Water Temperature value to energy transfer through the ocean system and regional climate patterns while keeping the NGSS focus on circulation and climate.",
+      "Use the Coastal Upwelling preset as a compare-and-contrast activity. Students describe how cool water near the surface differs from the warm Gulf Stream setup, then explain why upwelling matters for matter cycling, nutrients, and Earth-system interactions.",
+      "Run a two-variable investigation: students change only Water Temperature for one trial and only Salinity for another, then write a CER paragraph explaining which change most increased or reduced density-driven circulation in the model.",
+      "Have students choose one preset, record its Water Temperature and Salinity values, and defend why those values fit the named current pattern. Keep the discussion tied to MS-ESS2-6 and the role of ocean circulation in determining regional climates.",
     ],
     faq: [
       {
@@ -198,17 +187,17 @@ export const oceanCurrents: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation directly supports MS-ESS2-6, which asks students to develop and use a model to describe how unequal heating and rotation of Earth cause patterns of atmospheric and oceanic circulation that determine regional climates. It also connects to HS-ESS2-5 by exploring how the ocean circulation system influences regional climate stability and how changes in salinity or temperature could alter that circulation. The thermohaline disruption scenario links to MS-ESS3-5 regarding human impacts and climate change.",
+          "This simulation directly supports MS-ESS2-6, which asks students to develop and use a model to describe how unequal heating and rotation of Earth cause patterns of atmospheric and oceanic circulation that determine regional climates. It also connects to HS-ESS2-5 by exploring how the ocean circulation system influences regional climate stability and how changes in salinity or temperature could alter that circulation. The Thermohaline Conveyor, Gulf Stream, and Coastal Upwelling presets help students compare density-driven overturning, warm-water heat transport, and rising deep water.",
       },
       {
         question: "What would happen to global climate if the ocean conveyor belt stopped?",
         answer:
-          "Climate models suggest that a significant slowdown of the Atlantic thermohaline circulation could cause substantial cooling in northwestern Europe and parts of the North Atlantic region, because less warm tropical water would be carried northward. It could also alter monsoon patterns and rainfall distribution across the tropics and subtropics. The conveyor belt has slowed and possibly shifted during past ice ages, contributing to rapid regional temperature swings. Scientists monitor it with deep-sea sensor arrays because even a partial slowdown would have wide-reaching climate consequences.",
+          "Climate models suggest that a significant slowdown of the Atlantic thermohaline circulation could cause substantial cooling in northwestern Europe and parts of the North Atlantic region, because less warm tropical water would be carried northward. It could also alter monsoon patterns and rainfall distribution across the tropics and subtropics. In this model, lowering salinity while keeping water cold is a useful way to represent how freshening can make surface water less dense and reduce sinking. Scientists monitor overturning circulation with deep-sea sensor arrays because even a partial slowdown would have wide-reaching climate consequences.",
       },
       {
         question: "Why is the Gulf Stream narrow and fast while eastern boundary currents are wide and slow?",
         answer:
-          "This asymmetry is a result of how the Coriolis effect and wind patterns interact with the shape of ocean basins — a phenomenon called westward intensification. In the North Atlantic gyre, water is continuously piling up along the western boundary (near North America) by the wind-driven circulation, and the Coriolis effect prevents it from simply spreading out. The result is a narrow, deep, fast jet — the Gulf Stream — along the western side, and a broad, shallow, slow return flow along the eastern side. The same pattern occurs in the Pacific with the Kuroshio Current.",
+          "This asymmetry is a result of how the Coriolis effect and wind patterns interact with the shape of ocean basins — a phenomenon called westward intensification. In the North Atlantic gyre, water is continuously piling up along the western boundary (near North America) by the wind-driven circulation, and the Coriolis effect prevents it from simply spreading out. The result is a narrow, deep, fast jet — the Gulf Stream — along the western side, and a broad, shallow, slow return flow along the eastern side. Use the Gulf Stream preset to focus students on warm-water transport along a western boundary current.",
       },
     ],
   },
