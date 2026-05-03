@@ -117,7 +117,7 @@ export const populationDynamics: Experiment = {
       id: "pop-c3",
       question:
         "Why does the predator peak always lag behind the prey peak? Explain the biological mechanism.",
-      hint: "Predators need time to reproduce after prey becomes abundant — birth response has a delay proportional to generation time.",
+      hint: "Predators lag because extra prey first improve survival and reproduction, then offspring need time to be born and mature before they add to the predator population.",
       tier: "pro",
     },
   ],

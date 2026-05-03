@@ -50,7 +50,7 @@ export const k5SoundVibration: Experiment = {
       amplitude:
         "Amplitude tells how big each vibration is. A small Amplitude makes a small wiggle and a softer sound. A large Amplitude makes a bigger wiggle and a louder sound. It does not have to change the pitch. You can keep Frequency the same, move only Amplitude, and watch the wave grow taller or shorter. This matches NGSS 4-PS4-1 because students can use a wave model to see that wave height is connected to how strong the sound feels.",
       harmonic:
-        "Harmonic changes the pattern inside the sound. The first harmonic is the simplest wave, like one smooth wiggle. Higher Harmonic values add extra smaller wiggles, so the sound can look richer or buzzier. This is one reason a guitar string and a tuning fork can play a similar pitch but still sound different. Use the Guitar String preset, then move Harmonic one step at a time. Students can observe that sounds have patterns, and those patterns come from how objects vibrate.",
+        "Extra Wiggles changes the pattern inside the sound. The first setting is the simplest wave, like one smooth back-and-forth motion. Higher values add extra smaller wiggles, so the sound can look richer or buzzier. This is one reason a guitar string and a tuning fork can make a similar high or low sound but still sound different. Use the Guitar String preset, then move Extra Wiggles one step at a time. Students can observe that sounds have patterns, and those patterns come from how objects wobble back and forth.",
       tension:
         "String Tension tells how tight the string is. A loose string moves more slowly and often makes a lower sound. A tighter string snaps back faster and often makes a higher sound. This is how many string instruments are tuned: turning the peg changes how tight the string is. Try the Guitar String preset, then lower and raise String Tension while watching the wave. The control connects a real object students can touch, like a rubber band, to the idea that vibrations make sound.",
     },
@@ -68,7 +68,7 @@ export const k5SoundVibration: Experiment = {
       {
         wrong: "A guitar string, drum, and tuning fork make sound in exactly the same way.",
         correct:
-          "They are alike because they all vibrate, but their vibration patterns can be different. A Guitar String may show extra wiggles when Harmonic is higher. A Drum Beat often has a lower Frequency and a larger Amplitude. A Tuning Fork usually makes a clean, simple vibration pattern. Use the three presets to compare them. Students should look for what is the same, vibrating matter, and what is different, such as Frequency, Amplitude, Harmonic, and String Tension.",
+          "They are alike because they all vibrate, but their wobble patterns can be different. A Guitar String may show extra wiggles when Extra Wiggles is higher. A Drum Beat often has a lower sound and a bigger back-and-forth motion. A Tuning Fork usually makes a clean, simple vibration pattern. Use the three presets to compare them. Students should look for what is the same, vibrating matter, and what is different, such as high versus low sound, big versus small motion, Extra Wiggles, and String Tension.",
       },
       {
         wrong: "Louder sound means faster vibration.",
@@ -79,9 +79,9 @@ export const k5SoundVibration: Experiment = {
     teacherUseCases: [
       "Pitch exploration for NGSS 1-PS4-1: have students start with the Tuning Fork preset, keep Amplitude the same, and move Frequency from low to high. Students describe how faster vibrations change the sound and wave spacing.",
       "Volume investigation for NGSS 4-PS4-1: have students keep Frequency at 440 Hz and compare low, middle, and high Amplitude settings. Students sketch each wave and connect taller waves with louder sounds.",
-      "Instrument comparison: students run the Guitar String, Drum Beat, and Tuning Fork presets, record Frequency, Amplitude, Harmonic, and String Tension values, then explain how different vibration patterns can make different sounds.",
+      "Instrument comparison: students run the Guitar String, Drum Beat, and Tuning Fork presets, record high versus low sound, big versus small motion, Extra Wiggles, and String Tension values, then explain how different wobble patterns can make different sounds.",
       "Rubber band bridge: before using the simulation, students pluck a rubber band gently and strongly, then loose and tight. They use Amplitude and String Tension sliders to model what they observed by touch and hearing.",
-      "One-change-at-a-time CER: assign pairs one preset, then have them change only Harmonic or only String Tension. Students write a claim about what changed, cite the slider value as evidence, and connect the reasoning to vibrating materials making sound.",
+      "One-change-at-a-time CER: assign pairs one preset, then have them change only Extra Wiggles or only String Tension. Students write a claim about what changed, cite the slider value as evidence, and connect the reasoning to vibrating materials making sound.",
     ],
     faq: [
       {
@@ -97,12 +97,12 @@ export const k5SoundVibration: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation supports NGSS 1-PS4-1, which asks students to gather evidence that vibrating materials can make sound and sound can make materials vibrate. It also supports NGSS 4-PS4-1, which asks students to use wave models to describe patterns. Frequency helps students see pitch patterns. Amplitude helps students see wave height and loudness. Harmonic and String Tension help students compare different vibrating objects, especially the Guitar String, Drum Beat, and Tuning Fork presets.",
+          "This simulation supports NGSS 1-PS4-1, which asks students to gather evidence that vibrating materials can make sound and sound can make materials vibrate. It also supports NGSS 4-PS4-1, which asks students to use wave models to describe patterns. High versus low sound helps students see pitch patterns. Big versus small motion helps students see wave height and loudness. Extra Wiggles and String Tension help students compare different vibrating objects, especially the Guitar String, Drum Beat, and Tuning Fork presets.",
       },
       {
-        question: "What does the Harmonic slider show?",
+        question: "What does the Extra Wiggles slider show?",
         answer:
-          "The Harmonic slider changes the shape of the vibration pattern. A low Harmonic value makes a simpler wave. A higher Harmonic value adds extra wiggles, which can make a sound look and feel more complex. This helps explain why two instruments can play notes with similar Frequency but still sound different. Start with the Guitar String preset because strings often show rich vibration patterns. Then compare it with the Tuning Fork preset, which is usually cleaner and simpler.",
+          "The Extra Wiggles slider changes the shape of the vibration pattern. A low value makes a simpler wave. A higher value adds extra wiggles, which can make a sound look and feel more complex. This helps explain why two instruments can make similar high or low sounds but still sound different. Start with the Guitar String preset because strings often show rich wobble patterns. Then compare it with the Tuning Fork preset, which is usually cleaner and simpler.",
       },
       {
         question: "How does turning up the volume on a speaker make sound louder?",
