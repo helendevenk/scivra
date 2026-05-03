@@ -10,7 +10,7 @@ export const k5MoonPhases: Experiment = {
   thumbnail: "/imgs/experiments/k5-moon-phases.png",
 
   standards: {
-    ngss: ["1-ESS1-1", "5-ESS1-2"],
+    ngss: ["1-ESS1-1"],
     gcse: [],
     ap: [],
   },

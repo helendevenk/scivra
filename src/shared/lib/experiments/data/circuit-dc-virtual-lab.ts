@@ -10,9 +10,9 @@ export const circuitDcVirtualLab: Experiment = {
   thumbnail: "/imgs/experiments/dc-circuits.png",
 
   standards: {
-    ngss: ["HS-PS3-2", "HS-PS3-3"],
+    ngss: ["HS-PS3-2"],
     gcse: ["AQA P2.3", "AQA P2.4"],
-    ap: ["CHA-2.A", "CHA-2.B", "CHA-2.C"],
+    ap: [],
   },
   primaryStandard: "ap-physics-2",
   category: "electricity",

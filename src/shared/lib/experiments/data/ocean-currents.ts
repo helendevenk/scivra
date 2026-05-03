@@ -10,7 +10,7 @@ export const oceanCurrents: Experiment = {
   thumbnail: "/imgs/experiments/ocean-currents.png",
 
   standards: {
-    ngss: ["MS-ESS2-6", "HS-ESS2-5"],
+    ngss: ["MS-ESS2-6", "HS-ESS2-4"],
     gcse: [],
     ap: [],
   },

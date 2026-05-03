@@ -12,7 +12,7 @@ export const gravityForceLabBasics: Experiment = {
   standards: {
     ngss: ["HS-PS2-4"],
     gcse: ["AQA P5.7"],
-    ap: ["2.B.1", "2.B.2"],
+    ap: [],
   },
   primaryStandard: "ap-physics-1",
   category: "mechanics",

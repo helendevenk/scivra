@@ -10,7 +10,7 @@ export const msWaveInteractionsAdvanced: Experiment = {
   thumbnail: "/imgs/experiments/ms-wave-interactions-advanced.png",
 
   standards: {
-    ngss: ["MS-PS4-1", "MS-PS4-2"],
+    ngss: ["MS-PS4-1"],
     gcse: [],
     ap: [],
   },

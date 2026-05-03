@@ -10,9 +10,9 @@ export const momentumCollisions: Experiment = {
   thumbnail: "/imgs/experiments/momentum-collisions.png",
 
   standards: {
-    ngss: ["HS-PS2-2", "HS-PS2-3"],
+    ngss: ["HS-PS2-2"],
     gcse: ["P5.4"],
-    ap: ["4.B.1", "4.B.2", "5.D.1", "5.D.2", "5.D.3"],
+    ap: [],
   },
   primaryStandard: "ap-physics-1",
   category: "mechanics",
