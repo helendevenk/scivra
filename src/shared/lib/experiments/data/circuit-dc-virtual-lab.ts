@@ -12,7 +12,7 @@ export const circuitDcVirtualLab: Experiment = {
   standards: {
     ngss: ["HS-PS3-2"],
     gcse: ["AQA P2.3", "AQA P2.4"],
-    ap: [],
+    ap: ["11.5.A", "11.6.A", "11.7.A", "11.8.A"],
   },
   primaryStandard: "ap-physics-2",
   category: "electricity",

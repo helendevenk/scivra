@@ -12,7 +12,7 @@ export const angularMomentum3d: Experiment = {
   standards: {
     ngss: ["HS-PS2-2"],
     gcse: [],
-    ap: [],
+    ap: ["6.3.A", "6.3.B", "6.4.A"],
   },
   primaryStandard: "ap-physics-c",
   category: "mechanics",
