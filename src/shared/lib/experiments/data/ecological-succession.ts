@@ -13,7 +13,7 @@ export const ecologicalSuccession: Experiment = {
   standards: {
     ngss: ["HS-LS2-6"],
     gcse: [],
-    ap: [],
+    ap: ["8.5.B"],
   },
   primaryStandard: "ap-biology",
   category: "biology",

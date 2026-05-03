@@ -13,7 +13,7 @@ export const hardyWeinberg: Experiment = {
   standards: {
     ngss: ["HS-LS4-3"],
     gcse: [],
-    ap: [],
+    ap: ["7.5.A"],
   },
   primaryStandard: "ap-biology",
   category: "biology",

@@ -13,7 +13,7 @@ export const populationDynamics: Experiment = {
   standards: {
     ngss: ["HS-LS2-1", "HS-LS2-2"],
     gcse: [],
-    ap: [],
+    ap: ["8.3.A", "8.4.A", "8.5.B"],
   },
   primaryStandard: "ap-biology",
   category: "biology",
