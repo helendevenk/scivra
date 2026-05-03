@@ -12,7 +12,7 @@ export const momentumCollisions: Experiment = {
   standards: {
     ngss: ["HS-PS2-2"],
     gcse: ["P5.4"],
-    ap: [],
+    ap: ["4.1.A", "4.3.A", "4.4.A"],
   },
   primaryStandard: "ap-physics-1",
   category: "mechanics",
