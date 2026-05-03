@@ -10,7 +10,7 @@ export const msElectricCircuitsAdvanced: Experiment = {
   thumbnail: "/imgs/experiments/ms-electric-circuits-advanced.png",
 
   standards: {
-    ngss: ["MS-PS2-3"],
+    ngss: ["4-PS3-2"],
     gcse: [],
     ap: [],
   },

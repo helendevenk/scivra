@@ -11,9 +11,9 @@ export const ecologicalSuccession: Experiment = {
   thumbnail: "/imgs/experiments/ecological-succession.png",
 
   standards: {
-    ngss: ["HS-LS2-6", "HS-LS4-5"],
+    ngss: ["HS-LS2-6"],
     gcse: [],
-    ap: ["8.A.1"],
+    ap: [],
   },
   primaryStandard: "ap-biology",
   category: "biology",

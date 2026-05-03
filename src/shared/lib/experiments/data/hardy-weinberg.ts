@@ -11,9 +11,9 @@ export const hardyWeinberg: Experiment = {
   thumbnail: "/imgs/experiments/hardy-weinberg.png",
 
   standards: {
-    ngss: ["HS-LS3-3", "HS-LS4-3"],
+    ngss: ["HS-LS4-3"],
     gcse: [],
-    ap: ["7.A.1", "7.B.1"],
+    ap: [],
   },
   primaryStandard: "ap-biology",
   category: "biology",

@@ -8,7 +8,7 @@ export const cellularRespirationDetail: Experiment = {
   description:
     "Explore oxidative phosphorylation at the inner mitochondrial membrane. Adjust proton gradient strength and electron transport rate to see how NADH and FADH2 oxidation, proton pumping, oxygen reduction, and ATP synthase rotation are coupled. Use cyanide, DNP, and oligomycin presets to compare three distinct ways ATP production can fail.",
   thumbnail: "/imgs/experiments/cellular-respiration-detail.png",
-  standards: { ngss: ["HS-LS1-7"], gcse: [], ap: ["2.A.2", "3.D"] },
+  standards: { ngss: ["HS-LS1-7"], gcse: [], ap: [] },
   primaryStandard: "ap-biology",
   category: "biology",
   subject: "biology",
