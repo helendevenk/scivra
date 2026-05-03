@@ -6,7 +6,7 @@ export const msCellDivisionComparison: Experiment = {
   title: "Cell Division Comparison",
   subtitle: "Compare mitosis and meiosis side by side",
   description:
-    "Watch mitosis and meiosis unfold side by side to understand how cells divide. Mitosis produces two identical daughter cells for growth and repair, while meiosis produces four genetically unique gametes for reproduction. Step through each phase, toggle labels, and adjust animation speed to see the key differences: chromosome number, crossing over, and independent assortment.",
+    "Watch mitosis and meiosis unfold side by side to understand how cells divide. Mitosis produces two identical daughter cells for growth and repair, while meiosis produces four genetically unique gametes for reproduction. Adjust the Chromosome Count slider to see the key differences: chromosome number, crossing over, and independent assortment.",
   thumbnail: "/imgs/experiments/ms-cell-division-comparison.png",
 
   standards: {
@@ -31,33 +31,13 @@ export const msCellDivisionComparison: Experiment = {
 
   parameters: [
     {
-      id: "divisionType",
-      label: "Division Type (0=Mitosis, 1=Meiosis, 2=Both)",
+      id: "chromosomeCount",
+      label: "Chromosome Count",
       unit: "",
-      min: 0,
-      max: 2,
-      default: 2,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "speed",
-      label: "Animation Speed",
-      unit: "x",
-      min: 0.25,
-      max: 3,
-      default: 1,
-      step: 0.25,
-      tier: "free",
-    },
-    {
-      id: "showLabels",
-      label: "Show Phase Labels (0=Off, 1=On)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
+      min: 4,
+      max: 16,
+      default: 8,
+      step: 2,
       tier: "free",
     },
   ],
@@ -79,7 +59,7 @@ export const msCellDivisionComparison: Experiment = {
     "Cells divide to grow, repair damage, and reproduce. Mitosis is the process where one cell copies its DNA and splits into two identical daughter cells, each with the full set of chromosomes (diploid, 2n). Your body uses mitosis constantly — many cell types such as skin cells and blood cells rely on it. Meiosis is different: it happens only in reproductive organs (ovaries and testes) to make sex cells (gametes). Meiosis involves two rounds of division, producing four cells with half the chromosomes (haploid, n). Two special events make meiosis unique: crossing over (homologous chromosomes swap segments in Prophase I, creating new gene combinations) and independent assortment (chromosomes line up randomly in Metaphase I, so each gamete gets a different mix). This genetic variation is why siblings look different from each other, even with the same parents.",
 
   instructions:
-    "Choose a division type to watch: Mitosis alone, Meiosis alone, or Both side by side. Press Play to animate the phases. Adjust the speed slider to slow down tricky phases like Anaphase. Turn on phase labels to see the name of each stage as it happens. Pay attention to chromosome behavior — notice how chromosomes pair up in Meiosis I but not in Mitosis.",
+    "Use the Chromosome Count slider to change how many chromosomes are shown in the side-by-side comparison. Compare how mitosis preserves the full chromosome set in two daughter cells while meiosis reduces the chromosome number across four gametes. Watch how homologous chromosomes pair and separate in meiosis, then contrast that behavior with the chromosome separation shown in mitosis.",
 
   challenges: [
     {
@@ -125,16 +105,13 @@ export const msCellDivisionComparison: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Cell Division — Mitosis and Meiosis Comparison",
   },
+  htmlControlAliases: { chromosomeCount: "sl-chrom" },
   contentSections: {
     whatIsIt:
       "Every living thing is made of cells, and cells come from other cells. Cell division is how organisms grow, heal injuries, and make offspring. This simulation compares two very different kinds of cell division side by side. Mitosis is everyday division: one cell copies all its DNA and splits cleanly into two identical daughter cells, each with the same full set of chromosomes as the parent. Your body relies on mitosis constantly — many body cells such as skin cells and blood cells are replaced this way. Meiosis is the special process that makes sex cells (sperm and eggs). It involves two rounds of division and produces four cells, each with only half the normal chromosome count. Two unique events make meiosis particularly interesting: crossing over, where chromosomes swap gene segments to create new combinations, and independent assortment, where chromosomes sort randomly so every gamete gets a unique mix. Watching both processes together makes the differences immediately visible and helps you understand why children resemble but are not identical to their parents.",
     parameterExplanations: {
-      divisionType:
-        "Controls which division type the animation displays: 0 shows Mitosis only, 1 shows Meiosis only, and 2 shows both processes simultaneously in a split-screen view. The side-by-side mode (value 2) is especially useful for spotting differences in chromosome behavior between the two processes — particularly during the first division stage of meiosis, where pairs of chromosomes line up together rather than individually.",
-      speed:
-        "Animation playback speed, adjustable from 0.25x (very slow) to 3x (fast), with 1x as the default real-time pace. Slowing to 0.25x is helpful during tricky phases such as the stage where chromosomes are pulled apart, letting you clearly see which chromosomes move where. Speeding to 3x gives a quick overview once you understand the basic sequence.",
-      showLabels:
-        "Toggles phase name labels on or off: 0 = labels hidden, 1 = labels visible. Turning labels on is useful when first learning the sequence of stages so you can connect the visual changes to their names. Turning labels off is a good self-quiz strategy — try to name each phase from memory as the animation progresses.",
+      chromosomeCount:
+        "Chromosome Count changes the size of the starting diploid set shown in the model, so you can compare the chromosome behavior of mitosis and meiosis without changing the underlying rule. In mitosis, the full set is copied and preserved in two daughter cells. In meiosis, homologous chromosomes pair, separate, and then sister chromatids separate, producing gametes with half the starting number. This supports NGSS MS-LS3-2 by modeling why asexual reproduction preserves genetic information while sexual reproduction creates variation. It also reinforces an AP Biology idea: chromosome transmission depends on ploidy, homologous pairing, independent assortment, and reduction division.",
     },
     misconceptions: [
       {
@@ -155,7 +132,7 @@ export const msCellDivisionComparison: Experiment = {
       {
         wrong: "Each phase of cell division takes the same amount of time.",
         correct:
-          "Cell division phases vary widely in duration. In many cell types, the longest phase is interphase (DNA replication), which can last many hours, while actual division phases are relatively brief. The animation compresses time for visibility, so equal-looking segments on screen do not represent equal real-world durations.",
+          "Cell division phases vary widely in duration. In many cell types, the longest phase is interphase (DNA replication), which can last many hours, while actual division phases are relatively brief. The model compresses time for visibility, so equal-looking segments on screen do not represent equal real-world durations.",
       },
       {
         wrong: "A cell that finishes meiosis can immediately divide again.",
@@ -164,11 +141,11 @@ export const msCellDivisionComparison: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set divisionType to 2 (Both) and speed to 0.5 with showLabels on. Ask students to count the number of daughter cells produced by each process and record the chromosome count at the end of each division.",
-      "Set divisionType to 1 (Meiosis) and speed to 0.25. Pause during the first division and ask students to describe what makes homologous chromosome pairing different from what they observe in mitosis mode.",
-      "Use the side-by-side view (divisionType 2) as a class warm-up: hide labels (showLabels 0), play at speed 1, and have students write down every difference they notice before reviewing the correct terminology together.",
-      "Set divisionType to 0 (Mitosis) and have students connect the process to a real body function — ask which tissues in their body depend on mitosis for repair and why producing identical copies matters for those tissues.",
-      "After viewing meiosis, present the analogy of shuffling a deck of cards: crossing over is like swapping individual cards between two decks before the shuffle, and independent assortment is the shuffle itself. Have students explain why no two shuffled decks are identical.",
+      "Set chromosomeCount to 8 and ask students to compare the final chromosome count and number of daughter cells produced by mitosis versus meiosis, connecting observations to NGSS MS-LS3-2.",
+      "Move chromosomeCount from 4 to 16 and have students predict which outcomes should change visually and which biological rules should stay constant across both division models.",
+      "Use chromosomeCount as a class warm-up: students sketch the starting cell, the mitosis result, and the meiosis result, then explain why sexual reproduction restores the full chromosome number at fertilization.",
+      "Set chromosomeCount to 12 and ask students to identify where homologous chromosome pairing appears in meiosis but not in mitosis, then connect that difference to genetic variation.",
+      "Run a quick CER activity where students use chromosomeCount evidence to support the claim that mitosis preserves genetic information while meiosis reduces chromosome number and supports variation.",
     ],
     faq: [
       {

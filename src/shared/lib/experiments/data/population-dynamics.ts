@@ -32,64 +32,44 @@ export const populationDynamics: Experiment = {
 
   parameters: [
     {
-      id: "preyBirthRate",
-      label: "Prey Birth Rate (α)",
-      unit: "/yr",
+      id: "alpha",
+      label: "Prey Birth Rate α",
+      unit: "",
       min: 0.1,
-      max: 2.0,
-      default: 1.0,
-      step: 0.1,
+      max: 2,
+      default: 0.8,
+      step: 0.05,
       tier: "free",
     },
     {
-      id: "predationRate",
-      label: "Predation Rate (β)",
-      unit: "/yr",
+      id: "beta",
+      label: "Predation Rate β",
+      unit: "",
       min: 0.01,
       max: 0.2,
       default: 0.05,
-      step: 0.01,
+      step: 0.005,
       tier: "free",
     },
     {
-      id: "predatorDeathRate",
-      label: "Predator Death Rate (γ)",
-      unit: "/yr",
-      min: 0.1,
-      max: 2.0,
-      default: 0.8,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "conversionEff",
-      label: "Conversion Efficiency (δ)",
+      id: "delta",
+      label: "Predator Efficiency δ",
       unit: "",
       min: 0.01,
       max: 0.1,
-      default: 0.02,
-      step: 0.01,
+      default: 0.04,
+      step: 0.005,
       tier: "free",
     },
     {
-      id: "initPrey",
-      label: "Initial Prey Population",
+      id: "gamma",
+      label: "Predator Death Rate γ",
       unit: "",
-      min: 10,
-      max: 200,
-      default: 80,
-      step: 10,
-      tier: "pro",
-    },
-    {
-      id: "initPredator",
-      label: "Initial Predator Population",
-      unit: "",
-      min: 5,
-      max: 100,
-      default: 30,
-      step: 5,
-      tier: "pro",
+      min: 0.1,
+      max: 1,
+      default: 0.4,
+      step: 0.05,
+      tier: "free",
     },
   ],
 
@@ -116,7 +96,7 @@ export const populationDynamics: Experiment = {
     "The Lotka-Volterra equations model the dynamics of biological systems with predator-prey interactions. The prey population x grows exponentially at rate α in the absence of predators, but is reduced by predation at rate βxy (proportional to encounters). The predator population y declines at rate γ without prey, but grows from successful predation at rate δxy. The system produces characteristic oscillations: prey increase → predators increase → prey decline → predators decline → cycle repeats. The amplitude and period depend on all four parameters. The equilibrium point (x̄ = γ/δ, ȳ = α/β) is a center in the phase plane — orbits are closed loops. Real ecosystems add complexity (carrying capacity, refugia, time delays) but the Lotka-Volterra model captures the fundamental mechanism of coupled oscillations.",
 
   instructions:
-    "Adjust the prey birth rate (α), predation rate (β), predator death rate (γ), and conversion efficiency (δ). The time-series chart shows both populations over time, while the phase-plane plot shows the predator-prey trajectory. Watch for the characteristic quarter-cycle phase lag between populations.",
+    "Use the four sliders — Prey Birth Rate α, Predation Rate β, Predator Efficiency δ, and Predator Death Rate γ — to test the Lotka-Volterra equations dx/dt = αx − βxy and dy/dt = δxy − γy. Try the Stable Oscillation, Prey Explosion, and Predator Collapse presets, then change one slider at a time to connect parameter changes with population cycles, phase-plane trajectories, and predator-prey lag.",
 
   challenges: [
     {
@@ -162,22 +142,47 @@ export const populationDynamics: Experiment = {
     educationalLevel: "High School",
     teaches: "Population Dynamics and Lotka-Volterra Model",
   },
+  htmlControlAliases: {
+    alpha: "sl-alpha",
+    beta: "sl-beta",
+    delta: "sl-delta",
+    gamma: "sl-gamma",
+  },
+  presets: [
+    {
+      id: "stable",
+      label: "Stable Oscillation",
+      description:
+        "Balanced Lotka-Volterra parameters produce sustained predator-prey cycles around the equilibrium point.",
+      paramValues: { alpha: 0.8, beta: 0.05, delta: 0.04, gamma: 0.4 },
+    },
+    {
+      id: "explosion",
+      label: "Prey Explosion",
+      description:
+        "A higher α value lets prey increase rapidly before predator response catches up, creating a larger population surge.",
+      paramValues: { alpha: 1.5, beta: 0.05, delta: 0.04, gamma: 0.4 },
+    },
+    {
+      id: "collapse",
+      label: "Predator Collapse",
+      description:
+        "A lower α paired with stronger β creates intense predation pressure, pushing the system toward predator decline after prey scarcity.",
+      paramValues: { alpha: 0.5, beta: 0.15, delta: 0.04, gamma: 0.4 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Predator and prey populations oscillate together in a pattern ecologists call coupled cycles: when rabbits are plentiful, lynx multiply; as lynx multiply, rabbit numbers fall; as rabbits fall, lynx starve and decline; and the cycle restarts. Alfred Lotka and Vito Volterra independently wrote differential equations in the 1920s that capture this coupling mathematically. The model uses four parameters — prey birth rate, predation rate, predator death rate, and conversion efficiency — to set the equilibrium populations and the cycle period; the amplitude of the orbit is set jointly by those parameters and by the initial populations. Real data from the Hudson Bay Company's lynx and snowshoe hare fur records (1845–1935) show roughly 10-year cycles that broadly match the model, though with considerable noise, disease outbreaks, and vegetation effects the equations don't capture. This simulation runs the Lotka-Volterra model so you can see how each parameter shifts the cycle.",
     parameterExplanations: {
-      preyBirthRate:
-        "The intrinsic per-capita growth rate of the prey population in the absence of predators, α, in units of per year. At the default value of 1.0 /yr a prey population doubles in about 0.7 years with no predators present. The prey equilibrium γ/δ does NOT depend on α; instead, increasing α raises the predator equilibrium (α/β) and the oscillation frequency. Decreasing α slows the cycle and can cause predator extinction if prey can no longer sustain them.",
-      predationRate:
-        "The rate at which predator-prey encounters result in a kill, β, in units of per year per individual. The prey loss term is βxy — proportional to both populations, reflecting that more encounters occur when either population is large. The default is 0.05 /yr; raising it increases oscillation amplitude and can drive prey to near-zero crashes if set too high.",
-      predatorDeathRate:
-        "The per-capita death rate of predators in the absence of prey, γ, in units of per year. At γ = 0.8 /yr the predator population halves in about 0.87 years with no food. This parameter sets the predator equilibrium: the steady-state prey count equals γ/δ, so a higher death rate requires more prey to sustain the predator population.",
-      conversionEff:
-        "The fraction of consumed prey biomass converted into new predator biomass, δ (dimensionless, 0.01–0.1). The predator growth term is δxy. At δ = 0.02 only 2% of prey energy becomes new predators, reflecting real trophic inefficiency (~10% is a common ecology rule of thumb). Increasing δ lowers the equilibrium prey count and increases oscillation amplitude.",
-      initPrey:
-        "The starting prey population size at t = 0 (default 80 individuals). Different initial conditions place the system on different closed orbits around the same equilibrium point, so the cycle period is similar but amplitude differs. Starting far from equilibrium produces large-amplitude swings that can approach extinction.",
-      initPredator:
-        "The starting predator population size at t = 0 (default 30 individuals). Like initPrey, this shifts the starting point on the phase-plane orbit. Starting with very high predators and low prey pushes the system through a deep prey trough immediately, which is useful for demonstrating how the system recovers — or crashes — from extreme initial conditions.",
+      alpha:
+        "Prey Birth Rate α represents how quickly the prey population can grow when predators are absent. In AP Biology ecology terms, it is similar to an intrinsic rate of increase for the prey population under ideal conditions. Raising α means prey recover faster after predation and can support more predators at equilibrium because the predator equilibrium is α/β. In HS-LS2-2 modeling, this slider helps students make a quantitative claim about how resource-level population growth changes the stability and size of interacting populations. Compare Stable Oscillation with Prey Explosion to see how higher prey reproduction changes cycle amplitude and timing.",
+      beta:
+        "Predation Rate β controls how strongly encounters between predators and prey reduce the prey population. The loss term βxy means the effect depends on both populations: many predators or many prey create more encounters. Increasing β usually makes prey decline faster after a prey peak, which can amplify oscillations and create sharp crashes. For AP Biology and HS-LS2-2, β is useful evidence for explaining how biotic interactions, not just abiotic resources, affect population size and community structure. Compare the Stable Oscillation and Predator Collapse presets, then change only β to isolate predation pressure from prey reproduction.",
+      delta:
+        "Predator Efficiency δ describes how effectively prey consumed through predation contribute to predator population growth. In the equation dy/dt = δxy − γy, δ links energy transfer across trophic levels to predator births. A higher δ means each predator-prey interaction supports more predator growth, lowering the prey equilibrium γ/δ because fewer prey are needed to sustain predators. This connects directly to AP Biology ecology concepts such as trophic transfer and population regulation. For HS-LS2-2, students can use δ to argue from a mathematical model about how energy flow and species interactions influence biodiversity and population stability.",
+      gamma:
+        "Predator Death Rate γ is the rate at which predators decline when prey are not available. It represents mortality, starvation pressure, or failure to reproduce without enough food. Increasing γ raises the prey equilibrium γ/δ, meaning the ecosystem needs more prey to maintain the predator population. In AP Biology, γ helps students connect consumer survival to resource availability and trophic dependence. In HS-LS2-2, it supports claims about how changing one population factor can shift the whole community. Keep α, β, and δ fixed while changing γ to see how predator vulnerability alters both the phase-plane center and the timing of cycles.",
     },
     misconceptions: [
       {
@@ -190,7 +195,7 @@ export const populationDynamics: Experiment = {
         wrong:
           "Predator populations peak at the same time as prey populations because predators eat more when prey is most abundant.",
         correct:
-          "There is a characteristic quarter-cycle lag: predators peak after prey. When prey is at its peak, predators are still reproducing from the food surplus; by the time predators reach their peak, prey has already started declining from predation pressure. The phase-plane plot shows this as an orbit, not a point.",
+          "There is a characteristic quarter-cycle lag: predators peak after prey. When prey is at its peak, predators are still reproducing from the food surplus; by the time predators reach their peak, prey has already started declining from β-driven predation pressure. The phase-plane plot shows this as an orbit, not a point.",
       },
       {
         wrong:
@@ -200,9 +205,9 @@ export const populationDynamics: Experiment = {
       },
       {
         wrong:
-          "Higher conversion efficiency (δ) means the predators are more efficient hunters, so prey populations crash faster.",
+          "Higher Predator Efficiency δ means predators are better hunters, so prey populations crash faster immediately.",
         correct:
-          "Conversion efficiency describes how much consumed prey biomass becomes new predator biomass — it's a metabolic parameter, not a hunting behavior. A snake that converts prey efficiently still needs to catch prey at the rate set by β. Higher δ means each kill produces more offspring, which eventually increases predator pressure, but the hunting rate is controlled separately by β.",
+          "Predator Efficiency δ describes how much consumed prey supports new predator growth — it is an energy-transfer and reproduction parameter, not hunting behavior. A predator still needs encounters and successful kills at the rate controlled by β. Higher δ means each successful predation event can support more predator births, which can later increase predator pressure, but the immediate prey-loss term is controlled separately by β.",
       },
       {
         wrong:
@@ -212,11 +217,11 @@ export const populationDynamics: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Parameter sweep for equilibrium: have students calculate the theoretical equilibrium prey = γ/δ and predator = α/β before running the simulation with default values (prey = 0.8/0.02 = 40, predator = 1.0/0.05 = 20), then verify by pausing the simulation near the center of the phase-plane orbit — probes quantitative reasoning with the model equations.",
-      "Extinction threshold investigation: systematically increase predationRate (β) from 0.05 to 0.15 in increments of 0.02, recording whether the prey population crashes to zero. Students identify the approximate extinction threshold and write a claim-evidence-reasoning response connecting it to the prey birth rate — aligns with NGSS HS-LS2-2.",
-      "Phase-plane interpretation exercise: screenshot the phase-plane plot at three different initPrey and initPredator starting points and ask students to explain why all three orbits loop (closed cycles, not spirals) around the same center point — this directly addresses the misconception that initial conditions determine equilibrium.",
-      "Real data comparison: provide students with the 1845–1935 Hudson Bay lynx-hare fur records and have them overlay the Lotka-Volterra output with best-fit parameters. Students write a paragraph identifying two ways the real data deviates from the model and propose a biological explanation for each deviation.",
-      "Misconception probe — predator lag: run the simulation at default parameters and ask students to identify which population peaks first. After students answer, replay and have them measure the lag in years between prey peak and predator peak at α = 1.0, β = 0.05, γ = 0.8, δ = 0.02 (approximately 1.5–2 years with default settings).",
+      "Parameter sweep for equilibrium: have students calculate the theoretical equilibrium prey = γ/δ and predator = α/β for the Stable Oscillation preset (prey = 0.4/0.04 = 10, predator = 0.8/0.05 = 16), then compare the prediction with the phase-plane center — probes quantitative reasoning with the model equations.",
+      "Preset comparison for HS-LS2-2: run Stable Oscillation, Prey Explosion, and Predator Collapse. Students record α, β, δ, and γ for each case, identify which parameter changed, and write a claim-evidence-reasoning response about how population interactions affect ecosystem stability.",
+      "Predation-pressure investigation: start from Stable Oscillation and increase β toward 0.15 while keeping α = 0.8, δ = 0.04, and γ = 0.4. Students record whether prey crashes deepen and connect the evidence to the βxy interaction term — aligns with NGSS HS-LS2-2.",
+      "Phase-plane interpretation exercise: use the three presets as anchor cases and ask students to explain why the trajectory loops around the equilibrium point instead of showing a single static balance. Students should cite α/β and γ/δ when explaining how the model sets predator and prey equilibrium values.",
+      "Misconception probe — predator lag: run the Stable Oscillation preset and ask students to identify which population peaks first. Replay the cycle and have them explain the lag using the equations dx/dt = αx − βxy and dy/dt = δxy − γy, then compare how the lag changes under Prey Explosion and Predator Collapse.",
     ],
     faq: [
       {
@@ -227,7 +232,7 @@ export const populationDynamics: Experiment = {
       {
         question: "What do the four Lotka-Volterra parameters actually represent biologically?",
         answer:
-          "Alpha (α) is how fast prey reproduce without any predators — analogous to the intrinsic rate of increase r. Beta (β) is how deadly each predator-prey encounter is. Gamma (γ) is how fast predators starve without food. Delta (δ) is the trophic transfer efficiency — about 2–10% in most real food chains. Together these four numbers set the equilibrium populations and the period of the oscillation cycle.",
+          "Alpha (α) is how fast prey reproduce without predators, similar to an intrinsic rate of increase. Beta (β) is how strongly predator-prey encounters reduce prey numbers. Delta (δ) is predator efficiency: how much successful predation supports predator growth. Gamma (γ) is how quickly predators decline without enough prey. Together these four values set equilibrium populations, oscillation timing, and the strength of predator-prey feedback.",
       },
       {
         question: "How does carrying capacity change the model?",
@@ -242,7 +247,7 @@ export const populationDynamics: Experiment = {
       {
         question: "Can this model produce predator or prey extinction?",
         answer:
-          "In the idealized mathematical model, populations oscillate indefinitely without extinction because the equations are symmetric. In the simulation, if parameters push prey very close to zero (try β = 0.15 with default other values), the discrete numerical integration can let populations reach zero and collapse. This is a known limitation of continuous Lotka-Volterra versus real stochastic populations.",
+          "In the idealized mathematical model, populations oscillate indefinitely without extinction because the equations are continuous and deterministic. In the simulation, if α, β, δ, and γ push prey or predator values very close to zero, the discrete numerical integration can let a population reach zero and collapse. This is a known limitation of continuous Lotka-Volterra equations versus real stochastic populations.",
       },
       {
         question: "Why does the phase-plane plot show closed loops instead of spirals?",
