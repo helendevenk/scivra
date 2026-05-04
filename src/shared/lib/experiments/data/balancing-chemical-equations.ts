@@ -27,28 +27,7 @@ export const balancingChemicalEquations: Experiment = {
   ],
   difficulty: "beginner",
 
-  parameters: [
-    {
-      id: "reactionIndex",
-      label: "Reaction",
-      unit: "",
-      min: 0,
-      max: 7,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "showHints",
-      label: "Show Hints (0=Off, 1=On)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-  ],
+  parameters: [],
 
   formulas: [
     {
@@ -104,6 +83,12 @@ export const balancingChemicalEquations: Experiment = {
   estimatedTime: 15,
   relatedExperiments: ["stoichiometry", "reaction-kinetics"],
   htmlPath: "/experiments/ap-chemistry/balancing-chemical-equations.html",
+  htmlControlAliases: {},
+  presets: [
+    { id: "loadPreset:0", label: "🔥 Combustion CH₄", description: "Balance the combustion of methane: CH₄ + O₂ → CO₂ + H₂O." },
+    { id: "loadPreset:1", label: "🌿 Photosynthesis", description: "Balance the photosynthesis equation: CO₂ + H₂O → C₆H₁₂O₆ + O₂." },
+    { id: "loadPreset:2", label: "🦀 Iron Rusting", description: "Balance iron oxidation: Fe + O₂ → Fe₂O₃." },
+  ],
 
   seoTitle:
     "Balancing Chemical Equations Interactive Simulator | Scivra AP Chemistry",
@@ -124,10 +109,6 @@ export const balancingChemicalEquations: Experiment = {
     whatIsIt:
       "A balanced chemical equation is the quantitative record of a chemical reaction: it lists every reactant and product, and the integer coefficients in front of each formula ensure that the number of atoms of every element is identical on both sides. This is a direct expression of the Law of Conservation of Mass (Lavoisier, 1789) — atoms are neither created nor destroyed in a chemical reaction, only rearranged. AP Chem 4.A.1 and 4.B.1 require you to write and balance equations as the first step in any stoichiometric calculation; a wrong coefficient gives a wrong mole ratio, which cascades into every downstream calculation. This simulation presents 8 reactions of increasing complexity, from simple synthesis to redox, with a live atom-count tally that shows in real time when each element is balanced.",
     parameterExplanations: {
-      reactionIndex:
-        "Selects which of the 8 equations to balance (range 0–7, default 0). Reactions progress from straightforward synthesis and decomposition examples at low indices to combustion and redox reactions at higher indices. Work through them in order to build coefficient-balancing strategy: metals first, then nonmetals, then hydrogen, then oxygen last for combustion.",
-      showHints:
-        "Enables or disables coaching hints displayed beneath the equation (0 = off, 1 = on). With hints on, a suggested first step is shown after a delay of incorrect attempts. Turn hints off for exam-practice mode; use hints on when learning the strategy for a new reaction type.",
     },
     misconceptions: [
       {

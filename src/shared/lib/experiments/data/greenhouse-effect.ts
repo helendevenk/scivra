@@ -29,36 +29,9 @@ export const greenhouseEffect: Experiment = {
   difficulty: "intermediate",
 
   parameters: [
-    {
-      id: "co2Level",
-      label: "CO₂ Concentration",
-      unit: "ppm",
-      min: 200,
-      max: 1000,
-      default: 420,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "methaneLevel",
-      label: "CH₄ Concentration",
-      unit: "ppb",
-      min: 500,
-      max: 5000,
-      default: 1900,
-      step: 100,
-      tier: "free",
-    },
-    {
-      id: "solarIntensity",
-      label: "Solar Intensity",
-      unit: "%",
-      min: 80,
-      max: 120,
-      default: 100,
-      step: 1,
-      tier: "free",
-    },
+    { id: "co2Level", label: "CO₂ Concentration", unit: "ppm", min: 180, max: 1000, default: 420, step: 10, tier: "free" },
+    { id: "methaneLevel", label: "CH₄ Concentration", unit: "ppb", min: 700, max: 4000, default: 1900, step: 100, tier: "free" },
+    { id: "solarIntensity", label: "Solar Irradiance", unit: "W/m²", min: 1300, max: 1400, default: 1361, step: 1, tier: "free" },
   ],
 
   formulas: [
@@ -106,6 +79,12 @@ export const greenhouseEffect: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["climate-change-modeling", "atmosphere-layers"],
   htmlPath: "/experiments/earth-science/greenhouse-effect.html",
+  htmlControlAliases: { co2Level: "oninput:setCO2", methaneLevel: "oninput:setCH4", solarIntensity: "oninput:setSolar" },
+  presets: [
+    { id: "loadPreset:preindustrial", label: "Pre-industrial (280 ppm CO₂)", description: "Pre-1800 baseline: 280 ppm CO₂, 700 ppb CH₄, solar 1361 W/m²." },
+    { id: "loadPreset:current", label: "Current (420 ppm CO₂)", description: "2024 levels: 420 ppm CO₂, 1900 ppb CH₄, standard solar irradiance." },
+    { id: "loadPreset:doubled", label: "Doubled CO₂ (560 ppm)", description: "Doubled pre-industrial CO₂ scenario showing +3.7 W/m² radiative forcing." },
+  ],
 
   seoTitle: "Greenhouse Effect Interactive Simulation | Scivra Earth Science",
   seoKeywords: [
