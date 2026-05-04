@@ -1,16 +1,17 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import type { Metadata } from 'next';
+
+import { NodeLearning, NodePaywall } from '@/shared/blocks/learning-path';
+import { LandingAppShell } from '@/shared/components/layout/landing-app-shell';
 import { getExperimentBySlug } from '@/shared/lib/experiments/registry';
 import { getLocalizedPath } from '@/shared/lib/seo';
-
 import {
-  getPublishedPathBySlug,
-  getNodeByPathAndOrder,
   checkNodeAccess,
+  getNodeByPathAndOrder,
+  getPublishedPathBySlug,
 } from '@/shared/models/learning_path';
 import { getUserInfo } from '@/shared/models/user';
-import { NodeLearning, NodePaywall } from '@/shared/blocks/learning-path';
 
 interface Props {
   params: Promise<{ locale: string; slug: string; orderIndex: string }>;
@@ -52,7 +53,9 @@ export default async function NodePage({ params }: Props) {
 
   const user = await getUserInfo();
   const access = await checkNodeAccess(orderIndex, user);
-  const experiment = node.experimentSlug ? getExperimentBySlug(node.experimentSlug) : undefined;
+  const experiment = node.experimentSlug
+    ? getExperimentBySlug(node.experimentSlug)
+    : undefined;
   const experimentHref = experiment
     ? getLocalizedPath(
         `/labs/${experiment.subject}/${experiment.primaryStandard}/${experiment.slug}`,
@@ -61,15 +64,21 @@ export default async function NodePage({ params }: Props) {
     : undefined;
 
   if (!access.allowed) {
-    return <NodePaywall reason={access.reason!} />;
+    return (
+      <LandingAppShell>
+        <NodePaywall reason={access.reason!} />
+      </LandingAppShell>
+    );
   }
 
   return (
-    <NodeLearning
-      node={node}
-      path={path}
-      experimentHref={experimentHref}
-      locale={locale}
-    />
+    <LandingAppShell>
+      <NodeLearning
+        node={node}
+        path={path}
+        experimentHref={experimentHref}
+        locale={locale}
+      />
+    </LandingAppShell>
   );
 }

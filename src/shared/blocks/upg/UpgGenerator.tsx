@@ -8,13 +8,11 @@ import {
   Expand,
   Eye,
   Flag,
-  Dna,
   Loader2,
   RefreshCw,
   Sparkles,
   Split,
   Torus,
-  Fan,
   User,
   Waves,
 } from 'lucide-react';
@@ -27,23 +25,54 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Progress } from '@/shared/components/ui/progress';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useAppContext } from '@/shared/contexts/app';
-import { cn } from '@/shared/lib/utils';
 import {
   UPG_CREDITS_PER_GENERATION,
   UPG_CREDITS_PER_REGENERATION,
 } from '@/shared/lib/upg/constants';
+import { cn } from '@/shared/lib/utils';
+
 import { DisciplineSelector } from './DisciplineSelector';
 
 const MIN_PROMPT_LENGTH = 2;
 const MAX_PROMPT_LENGTH = 500;
 
 const PRESET_TEMPLATES = [
-  { key: 'doppler_effect', icon: Waves, prompt_zh: '多普勒效应', prompt_en: 'Doppler Effect' },
-  { key: 'double_slit', icon: Split, prompt_zh: '双缝干涉实验', prompt_en: 'Double-Slit Experiment' },
-  { key: 'molecular_orbital', icon: Atom, prompt_zh: '分子轨道理论', prompt_en: 'Molecular Orbital Theory' },
-  { key: 'dna_helix', icon: Dna, prompt_zh: 'DNA双螺旋结构', prompt_en: 'DNA Double Helix Structure' },
-  { key: 'black_hole', icon: Torus, prompt_zh: '黑洞引力透镜效应', prompt_en: 'Black Hole Gravitational Lensing' },
-  { key: 'turbocharger', icon: Fan, prompt_zh: '涡轮增压发动机工作原理', prompt_en: 'How a Turbocharger Works' },
+  {
+    key: 'doppler_effect',
+    icon: Waves,
+    prompt_zh: '多普勒效应',
+    prompt_en: 'Doppler Effect',
+  },
+  {
+    key: 'double_slit',
+    icon: Split,
+    prompt_zh: '双缝干涉实验',
+    prompt_en: 'Double-Slit Experiment',
+  },
+  {
+    key: 'projectile_motion',
+    icon: Sparkles,
+    prompt_zh: '抛体运动',
+    prompt_en: 'Projectile Motion',
+  },
+  {
+    key: 'pendulum_motion',
+    icon: RefreshCw,
+    prompt_zh: '单摆运动',
+    prompt_en: 'Pendulum Motion',
+  },
+  {
+    key: 'black_hole',
+    icon: Torus,
+    prompt_zh: '黑洞引力透镜效应',
+    prompt_en: 'Black Hole Gravitational Lensing',
+  },
+  {
+    key: 'electric_field',
+    icon: Atom,
+    prompt_zh: '电场线',
+    prompt_en: 'Electric Field Lines',
+  },
 ] as const;
 
 const PROGRESS_STEPS = ['analyzing', 'building', 'rendering', 'finishing'];
@@ -73,14 +102,21 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
 
-  const [history, setHistory] = useState<Array<{
-    id: string; prompt: string; status: string; createdAt: string;
-  }>>([]);
+  const [history, setHistory] = useState<
+    Array<{
+      id: string;
+      prompt: string;
+      status: string;
+      createdAt: string;
+    }>
+  >([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const progressStepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressStepTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
 
   const promptLength = prompt.trim().length;
   const isPromptValid =
@@ -101,7 +137,9 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
 
     progressStepTimerRef.current = setInterval(() => {
       currentStepIndex = (currentStepIndex + 1) % PROGRESS_STEPS.length;
-      setProgressStepText(t(`generator.progress_steps.${PROGRESS_STEPS[currentStepIndex]}`));
+      setProgressStepText(
+        t(`generator.progress_steps.${PROGRESS_STEPS[currentStepIndex]}`)
+      );
     }, 2000);
   }, [t]);
 
@@ -209,7 +247,9 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
     } catch (e: unknown) {
       stopProgressSimulation();
       setProgress(0);
-      const msg = (e instanceof Error ? e.message : String(e)) || t('errors.generation_failed');
+      const msg =
+        (e instanceof Error ? e.message : String(e)) ||
+        t('errors.generation_failed');
       setError(msg);
       // Anonymous rate limit hit — prompt to sign in
       if (!user && msg.includes('once per day')) {
@@ -254,7 +294,10 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
       if (code !== 0) throw new Error(message);
       toast.success(t('errors.report_success'));
     } catch (e: unknown) {
-      toast.error((e instanceof Error ? e.message : String(e)) || t('errors.report_failed'));
+      toast.error(
+        (e instanceof Error ? e.message : String(e)) ||
+          t('errors.report_failed')
+      );
     }
   };
 
@@ -299,14 +342,17 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
         <div className="mx-auto max-w-5xl space-y-8">
           <Card className="overflow-hidden">
             <CardContent className="space-y-6 pt-6">
-              <DisciplineSelector selected={discipline} onChange={setDiscipline} />
+              <DisciplineSelector
+                selected={discipline}
+                onChange={setDiscipline}
+              />
               <div className="space-y-2">
-                <div className="relative rounded-lg p-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 animate-gradient-border">
+                <div className="animate-gradient-border relative rounded-lg bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 p-0.5">
                   <Textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder={t('generator.placeholder')}
-                    className="min-h-28 w-full resize-none rounded-[7px] border-0 bg-background p-4 font-mono text-sm shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                    className="bg-background placeholder:text-muted-foreground/60 min-h-28 w-full resize-none rounded-[7px] border-0 p-4 font-mono text-sm shadow-none focus-visible:ring-0"
                   />
                 </div>
                 <div className="text-muted-foreground flex items-center justify-between px-2 text-xs">
@@ -322,7 +368,7 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
               </div>
 
               {/* Preset Templates */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {PRESET_TEMPLATES.map((tmpl) => (
                   <button
                     key={tmpl.key}
@@ -330,15 +376,17 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                     onClick={() => setPrompt(tmpl.prompt_en)}
                     disabled={isGenerating}
                     className={cn(
-                      'group relative flex items-center gap-3 rounded-lg border p-3 text-left cursor-pointer',
+                      'group relative flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-left',
                       'transition-all duration-200 ease-out',
                       'hover:border-primary/60 hover:bg-primary/5 hover:shadow-sm',
                       'active:scale-[0.98]',
-                      'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none'
+                      'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none'
                     )}
                   >
-                    <tmpl.icon className="h-5 w-5 text-primary transition-transform duration-200 ease-out group-hover:scale-110" />
-                    <span className="text-sm font-medium">{t(`templates.${tmpl.key}`)}</span>
+                    <tmpl.icon className="text-primary h-5 w-5 transition-transform duration-200 ease-out group-hover:scale-110" />
+                    <span className="text-sm font-medium">
+                      {t(`templates.${tmpl.key}`)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -347,8 +395,9 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
               <Button
                 size="lg"
                 className={cn(
-                  "w-full",
-                  !isCheckSign && "text-base font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 hover:shadow-[0_0_20px_theme(colors.purple.500)] hover:scale-[1.02]"
+                  'w-full',
+                  !isCheckSign &&
+                    'bg-gradient-to-r from-purple-500 to-pink-500 text-base font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_theme(colors.purple.500)]'
                 )}
                 onClick={() => handleGenerate(false)}
                 disabled={isCheckSign || isGenerating || !isPromptValid}
@@ -384,20 +433,25 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                     credits: remainingCredits,
                   })}
                 </p>
-              ) : !isCheckSign && (
-                <p className="text-muted-foreground text-center text-xs">
-                  {t('generator.free_trial_hint')}
-                </p>
+              ) : (
+                !isCheckSign && (
+                  <p className="text-muted-foreground text-center text-xs">
+                    {t('generator.free_trial_hint')}
+                  </p>
+                )
               )}
 
               {/* Progress */}
               {isGenerating && (
                 <div className="animate-fade-in-up space-y-3 rounded-lg border p-4">
                   <div className="relative overflow-hidden rounded-full">
-                    <Progress value={progress} className="[&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-pink-500 [&>div]:transition-all [&>div]:duration-500 [&>div]:ease-out" />
-                    <div className="absolute inset-0 animate-shimmer rounded-full" />
+                    <Progress
+                      value={progress}
+                      className="[&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-pink-500 [&>div]:transition-all [&>div]:duration-500 [&>div]:ease-out"
+                    />
+                    <div className="animate-shimmer absolute inset-0 rounded-full" />
                   </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center justify-between text-xs">
                     <p className="min-h-[16px]">{progressStepText}</p>
                     <span className="font-mono tabular-nums">{progress}%</span>
                   </div>
@@ -410,13 +464,17 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
           {user && history.length > 0 && (
             <Card>
               <CardContent className="pt-5 pb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                     <Clock className="h-4 w-4" />
                     <span>{t('history.title')}</span>
                   </div>
                   <Link href="/upg/my">
-                    <Button variant="ghost" size="sm" className="text-xs cursor-pointer">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="cursor-pointer text-xs"
+                    >
                       {t('history.view_all') ?? 'View All'}
                     </Button>
                   </Link>
@@ -425,25 +483,39 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                   {history.map((gen) => (
                     <div
                       key={gen.id}
-                      className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-muted/50"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className={cn("inline-block h-2 w-2 rounded-full flex-shrink-0", {
-                          'bg-green-500': gen.status === 'completed',
-                          'bg-red-500': gen.status === 'failed',
-                          'bg-amber-500': gen.status === 'pending' || gen.status === 'generating',
-                        })} />
-                        <span className="text-sm truncate">{gen.prompt}</span>
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <span
+                          className={cn(
+                            'inline-block h-2 w-2 flex-shrink-0 rounded-full',
+                            {
+                              'bg-green-500': gen.status === 'completed',
+                              'bg-red-500': gen.status === 'failed',
+                              'bg-amber-500':
+                                gen.status === 'pending' ||
+                                gen.status === 'generating',
+                            }
+                          )}
+                        />
+                        <span className="truncate text-sm">{gen.prompt}</span>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                        <span className="text-xs text-muted-foreground">
+                      <div className="ml-3 flex flex-shrink-0 items-center gap-2">
+                        <span className="text-muted-foreground text-xs">
                           {new Date(gen.createdAt).toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
                           })}
                         </span>
                         {gen.status === 'completed' && (
                           <Link href={`/upg/view/${gen.id}`}>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 cursor-pointer"
+                            >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
                           </Link>
@@ -474,8 +546,8 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                         srcDoc={result.htmlContent}
                         sandbox="allow-scripts allow-same-origin"
                         className={cn(
-                          "h-[70vh] min-h-[500px] w-full border-0 transition-opacity duration-500 ease-out",
-                          isIframeLoaded ? "opacity-100" : "opacity-0"
+                          'h-[70vh] min-h-[500px] w-full border-0 transition-opacity duration-500 ease-out',
+                          isIframeLoaded ? 'opacity-100' : 'opacity-0'
                         )}
                         onLoad={() => setIsIframeLoaded(true)}
                         title={t('view.iframe_title')}
@@ -484,11 +556,21 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
 
                     {/* Action Bar — always visible */}
                     <div className="mt-3 flex items-center justify-center gap-2">
-                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" onClick={handleFullscreen}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="cursor-pointer gap-1.5"
+                        onClick={handleFullscreen}
+                      >
                         <Expand className="h-3.5 w-3.5" />
                         {t('actions.fullscreen')}
                       </Button>
-                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" onClick={handleDownload}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="cursor-pointer gap-1.5"
+                        onClick={handleDownload}
+                      >
                         <Download className="h-3.5 w-3.5" />
                         {t('actions.download_short')}
                       </Button>
@@ -498,13 +580,20 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
                           size="sm"
                           onClick={() => handleGenerate(true)}
                           disabled={isGenerating}
-                          className="gap-1.5 cursor-pointer text-primary hover:text-primary"
+                          className="text-primary hover:text-primary cursor-pointer gap-1.5"
                         >
                           <RefreshCw className="h-3.5 w-3.5" />
-                          {t('actions.regenerate', { credits: UPG_CREDITS_PER_REGENERATION })}
+                          {t('actions.regenerate', {
+                            credits: UPG_CREDITS_PER_REGENERATION,
+                          })}
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" className="gap-1.5 cursor-pointer text-muted-foreground" onClick={handleReport}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground cursor-pointer gap-1.5"
+                        onClick={handleReport}
+                      >
                         <Flag className="h-3.5 w-3.5" />
                         {t('actions.report')}
                       </Button>
@@ -512,12 +601,12 @@ export function UpgGenerator({ srOnlyTitle, className }: UpgGeneratorProps) {
 
                     {/* Anonymous user registration prompt overlay */}
                     {showRegistrationPrompt && !user && (
-                      <div className="absolute inset-0 flex items-end justify-center rounded-lg bg-gradient-to-t from-background via-background/80 to-transparent">
-                        <div className="mb-8 text-center space-y-3 p-6">
+                      <div className="from-background via-background/80 absolute inset-0 flex items-end justify-center rounded-lg bg-gradient-to-t to-transparent">
+                        <div className="mb-8 space-y-3 p-6 text-center">
                           <p className="text-lg font-semibold">
                             {t('generator.anon_save_prompt')}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {t('generator.anon_save_description')}
                           </p>
                           <div className="flex items-center justify-center gap-3">

@@ -28,6 +28,7 @@ import {
   NavigationMenuTrigger as RawNavigationMenuTrigger,
 } from '@/shared/components/ui/navigation-menu';
 import { useMedia } from '@/shared/hooks/use-media';
+import { useAppContext } from '@/shared/contexts/app';
 import { cn } from '@/shared/lib/utils';
 import { NavItem } from '@/shared/types/blocks/common';
 import { Header as HeaderType } from '@/shared/types/blocks/landing';
@@ -51,6 +52,16 @@ export function Header({ header }: { header: HeaderType }) {
   const isLarge = useMedia('(min-width: 64rem)');
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAppContext();
+
+  const workspaceItems: NavItem[] = [
+    { title: 'Dashboard', url: '/dashboard', icon: 'LayoutDashboard' },
+    { title: 'My AI Labs', url: '/upg/my', icon: 'Sparkles' },
+    { title: 'Notebooks', url: '/notebooks', icon: 'BookOpen' },
+    { title: 'Learning Progress', url: '/learn', icon: 'TrendingUp' },
+    { title: 'Gallery', url: '/gallery', icon: 'Images' },
+    { title: 'Settings', url: '/settings/profile', icon: 'Settings' },
+  ];
 
   useEffect(() => {
     // Listen to scroll event to enable header styles on scroll
@@ -152,6 +163,32 @@ export function Header({ header }: { header: HeaderType }) {
               </NavigationMenuItem>
             );
           })}
+          {user && (
+            <>
+              <NavigationMenuItem aria-hidden className="mx-1 h-5 w-px bg-border" />
+              {workspaceItems.map((item, idx) => (
+                <NavigationMenuItem key={`workspace-${idx}`}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={item.url || ''}
+                      className={cn(
+                        'flex flex-row items-center gap-2 px-3 py-1.5 text-sm',
+                        pathname === item.url ||
+                          pathname.startsWith(`${item.url}/`)
+                          ? 'bg-muted/40 text-muted-foreground'
+                          : ''
+                      )}
+                    >
+                      {item.icon && (
+                        <SmartIcon name={item.icon as string} className="size-4" />
+                      )}
+                      {item.title}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </>
+          )}
         </NavigationMenuList>
       </NavigationMenu>
     );
@@ -224,6 +261,39 @@ export function Header({ header }: { header: HeaderType }) {
               </AccordionItem>
             );
           })}
+          {user && (
+            <AccordionItem
+              value="workspace"
+              className="group relative border-b-0 before:pointer-events-none before:absolute before:inset-x-4 before:bottom-0 before:border-b"
+            >
+              <AccordionTrigger className="data-[state=open]:bg-muted flex items-center justify-between px-4 py-3 text-lg **:!font-normal">
+                Workspace
+              </AccordionTrigger>
+              <AccordionContent className="pb-5">
+                <ul>
+                  {workspaceItems.map((item, idx) => (
+                    <li key={idx}>
+                      <Link
+                        href={item.url || ''}
+                        onClick={closeMenu}
+                        className="grid grid-cols-[auto_1fr] items-center gap-2.5 px-4 py-2"
+                      >
+                        <div
+                          aria-hidden
+                          className="flex items-center justify-center *:size-4"
+                        >
+                          {item.icon && (
+                            <SmartIcon name={item.icon as string} />
+                          )}
+                        </div>
+                        <div className="text-base">{item.title}</div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          )}
         </Accordion>
       </nav>
     );

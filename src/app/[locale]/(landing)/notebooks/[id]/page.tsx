@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 
 import { Empty } from '@/shared/blocks/common';
-import { getUserInfo } from '@/shared/models/user';
-import { findLabNotebookById } from '@/shared/models/lab_notebook';
 import { NotebookEditor } from '@/shared/blocks/notebook/NotebookEditor';
+import { LandingAppShell } from '@/shared/components/layout/landing-app-shell';
 import { getMetadata } from '@/shared/lib/seo';
+import { findLabNotebookById } from '@/shared/models/lab_notebook';
+import { getUserInfo } from '@/shared/models/user';
 
 export const generateMetadata = getMetadata({
   noIndex: true,
@@ -19,7 +20,11 @@ export default async function NotebookEditorPage({
 
   const user = await getUserInfo();
   if (!user) {
-    return <Empty message="Please sign in to view your lab notebook" />;
+    return (
+      <LandingAppShell>
+        <Empty message="Please sign in to view your lab notebook" />
+      </LandingAppShell>
+    );
   }
 
   const notebook = await findLabNotebookById(id);
@@ -27,8 +32,16 @@ export default async function NotebookEditorPage({
     notFound();
   }
   if (notebook.userId !== user.id) {
-    return <Empty message="No permission to view this notebook" />;
+    return (
+      <LandingAppShell>
+        <Empty message="No permission to view this notebook" />
+      </LandingAppShell>
+    );
   }
 
-  return <NotebookEditor notebook={notebook} />;
+  return (
+    <LandingAppShell>
+      <NotebookEditor notebook={notebook} />
+    </LandingAppShell>
+  );
 }

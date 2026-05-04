@@ -81,6 +81,9 @@ export default async function CreateApiKeyPage() {
 
   return (
     <div className="space-y-8">
+      <div className="max-w-2xl rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+        {t('add.description')}
+      </div>
       <FormCard title={t('add.title')} crumbs={crumbs} form={form} />
     </div>
   );
