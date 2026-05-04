@@ -23,34 +23,34 @@ export const gravitationalFields: Experiment = {
 
   parameters: [
     {
-      id: "launchSpeed",
-      label: "Launch Speed (v)",
-      unit: "km/s",
+      id: "mass",
+      label: "Central Mass",
+      unit: "M_E",
       min: 1,
-      max: 15,
-      default: 7.9,
+      max: 100,
+      default: 10,
+      step: 0.5,
+      tier: "free",
+    },
+    {
+      id: "distance",
+      label: "Distance",
+      unit: "m",
+      min: 0.5,
+      max: 10,
+      default: 3,
       step: 0.1,
       tier: "free",
     },
     {
-      id: "launchAngle",
-      label: "Launch Angle (θ)",
-      unit: "°",
+      id: "planet",
+      label: "Planet Selector",
+      unit: "index",
       min: 0,
-      max: 90,
+      max: 2,
       default: 0,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "planetMass",
-      label: "Planet Mass (× Earth)",
-      unit: "×M⊕",
-      min: 0.1,
-      max: 10,
-      default: 1,
-      step: 0.1,
-      tier: "pro",
     },
   ],
 
@@ -81,7 +81,7 @@ export const gravitationalFields: Experiment = {
     "Gravity follows an inverse-square law (F ∝ 1/r²). The circular orbital velocity v = √(GM/r) is the exact speed for a stable circular orbit — faster means elliptical or escape, slower means the satellite falls. Kepler's 3 laws: (1) orbits are ellipses with the planet at one focus; (2) equal areas in equal times (conservation of angular momentum); (3) T² ∝ a³. Escape velocity is √2 times the circular orbital speed.",
 
   instructions:
-    "Set the launch speed and angle. The satellite launches horizontally from the surface. At ~7.9 km/s it enters circular orbit. Increase speed to get elliptical orbits. At ~11.2 km/s it escapes. Watch the swept area triangles to verify Kepler's 2nd law. Change planet mass (Pro) to explore other worlds.",
+    "Use the Central Mass, Distance, and Planet Selector sliders to inspect how gravitational field strength, potential energy, escape velocity, and binding energy change around different massive bodies. Try the Earth Surface, Jupiter Gravity, and Near Black Hole presets to compare familiar, high-gravity, and extreme-field cases.",
 
   challenges: [
     {
@@ -129,16 +129,40 @@ export const gravitationalFields: Experiment = {
     educationalLevel: "High School",
     teaches: "Gravitational Fields and Orbital Mechanics",
   },
+  htmlControlAliases: { mass: "sliderMass", distance: "sliderDist", planet: "sliderPlanet" },
+  presets: [
+    {
+      id: "earth",
+      label: "Earth Surface",
+      description:
+        "Earth Surface sets a low central mass, close test distance, and rocky planet type so students can use a familiar baseline before comparing stronger fields.",
+      paramValues: { mass: 1, distance: 1, planet: 0 },
+    },
+    {
+      id: "jupiter",
+      label: "Jupiter Gravity",
+      description:
+        "Jupiter Gravity uses the largest available central-mass setting, a wider test distance, and the gas giant planet type to show strong but non-black-hole gravity.",
+      paramValues: { mass: 100, distance: 5.2, planet: 1 },
+    },
+    {
+      id: "blackhole",
+      label: "Near Black Hole",
+      description:
+        "Near Black Hole combines maximum central mass, minimum test distance, and the black hole planet type to highlight steep potential wells and extreme escape velocity.",
+      paramValues: { mass: 100, distance: 0.5, planet: 2 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Gravitational fields obey an inverse-square law — g = GM/r² pointing toward the source mass — and this single relationship generates all of orbital mechanics. A satellite launched horizontally at exactly v_circ = √(GM/r) stays in a circular orbit; faster launches produce ellipses or escape trajectories; slower ones curve back into the planet. Kepler's three laws all follow from Newton's law of gravitation: elliptical orbits with the planet at one focus, equal areas swept in equal times (a consequence of angular momentum conservation), and T² ∝ a³. This simulation lets you set launch speed, launch angle, and planet mass to trace circular, elliptical, and hyperbolic trajectories in real time, while swept-area triangles verify Kepler's second law as the satellite races through periapsis and crawls through apoapsis.",
+      "Gravitational fields obey an inverse-square law — g = GM/r² pointing toward the source mass — and this single relationship generates all of orbital mechanics. A satellite in circular orbit needs v_circ = √(GM/r); escape requires v_esc = √(2GM/r); and Kepler's third law follows from the same central force. This simulation focuses on the field view: change central mass, test distance, and planet type to see field vectors, potential wells, escape velocity, and binding energy respond in real time. The Earth Surface, Jupiter Gravity, and Near Black Hole presets give quick comparison cases for familiar gravity, strong planetary gravity, and an extreme compact source.",
     parameterExplanations: {
-      launchSpeed:
-        "Initial speed in km/s at the moment of launch from the planet surface. For planetMass = 1 (Earth-mass) and launchAngle = 0° at the planet's surface radius, ~7.9 km/s gives a circular orbit; below that the satellite arcs back down; above it the orbit stretches into an ellipse with a higher apoapsis; at ~11.2 km/s (= √2 × v_circ) the trajectory becomes a parabolic escape; above that it is hyperbolic. Different planetMass or nonzero launchAngle shifts these thresholds.",
-      launchAngle:
-        "Angle in degrees above horizontal at launch. A purely horizontal launch (0°) at circular speed produces a circular orbit. Non-zero angles introduce a radial velocity component, which shifts the apse line so that periapsis and apoapsis appear elsewhere along the orbit; the launch point is generally not an apsis because apsides require zero radial velocity.",
-      planetMass:
-        "Planet mass expressed as a multiple of Earth's mass (M⊕ ≈ 5.97 × 10²⁴ kg). Increasing the planet mass scales both the circular orbital speed (v_circ ∝ √M) and escape velocity (v_esc ∝ √M) proportionally, while also tightening orbital periods via Kepler's third law T² = (4π²/GM)a³.",
+      mass:
+        "Central Mass controls the strength of the source creating the gravitational field, scaled in Earth-mass units. Raising this slider makes the field vectors stronger at the same distance because g = GM/r² is directly proportional to M. It also deepens the gravitational potential well and raises escape velocity, since v_esc = √(2GM/r). Use Earth Surface as a baseline, then compare Jupiter Gravity and Near Black Hole to see how a larger central mass changes every readout even before you move the distance slider.",
+      distance:
+        "Distance sets how far the test point is from the center of the gravitational source. This is the r term in g = GM/r², so moving farther away weakens the field rapidly: doubling distance cuts field strength to one fourth when mass stays fixed. Potential energy per kilogram also becomes less negative with distance, and escape velocity falls because less energy is needed to coast away. Keep Central Mass fixed and move only Distance to isolate inverse-square behavior before comparing the presets.",
+      planet:
+        "Planet Selector chooses the visual and physical context for the central object: 0 for an Earth-like rocky body, 1 for a Jupiter-like gas giant, and 2 for a black-hole case. The selector helps students connect the same gravitational equations to different astronomical settings without adding a new formula. Use it with the mass and distance sliders to compare how field shape, potential-well depth, and escape velocity feel in familiar planetary gravity versus an extreme compact source. It also makes preset comparisons easier to discuss.",
     },
     misconceptions: [
       {
@@ -155,9 +179,9 @@ export const gravitationalFields: Experiment = {
       },
       {
         wrong:
-          "Increasing launch speed always raises the entire orbit — the satellite gets farther from the planet everywhere.",
+          "Moving farther from a planet only makes gravity a little weaker.",
         correct:
-          "Adding speed at the launch point raises only the opposite side of the orbit (apoapsis), not the launch point itself. The launch point becomes periapsis. The orbit stretches asymmetrically: one end is anchored at the launch radius while the other lifts away.",
+          "Gravitational field strength follows an inverse-square relationship, so distance matters strongly. If the distance from the central mass doubles, g becomes one fourth as large; if distance triples, g becomes one ninth as large. The Distance slider makes that rapid falloff visible in the field vectors and data readouts.",
       },
       {
         wrong:
@@ -169,15 +193,15 @@ export const gravitationalFields: Experiment = {
         wrong:
           "Kepler's third law T² ∝ a³ only applies to planets orbiting the Sun.",
         correct:
-          "T² = (4π²/GM)a³ applies to any two-body gravitational system. The proportionality constant 4π²/GM depends on the central body's mass M. For Earth's satellites, replace M_Sun with M_Earth; for the Moon orbiting Earth, use M_Earth. The simulation lets you vary planetMass to confirm this scaling.",
+          "T² = (4π²/GM)a³ applies to any two-body gravitational system. The proportionality constant 4π²/GM depends on the central body's mass M. For Earth's satellites, replace M_Sun with M_Earth; for the Moon orbiting Earth, use M_Earth. The simulation lets you vary Central Mass to confirm this scaling.",
       },
     ],
     teacherUseCases: [
-      "Circular orbit speed measurement: have students increment launchSpeed in steps of 0.1 km/s near 7.9 km/s and identify by inspection (orbit closes cleanly) the circular orbital speed. They then compute v_circ = √(GM/R_Earth) analytically and compare to their measured value. Addresses standard 3.C.1.",
-      "Kepler's second law verification: launch an elliptical orbit (launchSpeed ≈ 9 km/s, launchAngle = 0°). Pause the simulation at four equally-spaced time intervals and estimate the swept-area triangles using the on-screen indicators. Students verify that all four areas are approximately equal, linking area conservation to angular momentum conservation. Addresses standard 3.G.1.",
-      "Escape velocity ratio lab: have students record v_circ (the circular orbital speed found in the first activity) and then find v_esc by increasing launchSpeed until the satellite no longer returns. Students compute the ratio v_esc/v_circ and check whether it matches √2 ≈ 1.414. Addresses standard 3.C.2.",
-      "Misconception probe — does a faster orbit always stay higher?: set launchAngle = 0° and ask students to predict what happens to the orbit shape as launchSpeed increases from 7.9 to 11 km/s. After their predictions, run the simulation and discuss the asymmetric stretching of the ellipse — only apoapsis rises while periapsis stays at the launch radius.",
-      "Planet mass scaling: vary planetMass from 0.5 to 2.0 × M⊕ while keeping the orbit circular by adjusting launchSpeed = √(GM/r) for each M (so the orbit radius stays fixed). Have students measure the orbital period T and verify T² = (4π²/GM)a³ with a held constant, confirming that T² ∝ 1/M at fixed radius. Addresses standard 3.C.2.",
+      "Inverse-square field lab: keep Central Mass fixed, move Distance from 1 to 2 to 4, and have students record gravitational field strength. They compare the readout with g ∝ 1/r² and explain why field vectors shrink rapidly. Addresses standard 3.C.1.",
+      "Mass proportionality check: keep Distance fixed and increase Central Mass in equal steps. Students graph field strength versus mass and verify that g is directly proportional to M when r is held constant. Addresses standard 3.C.1.",
+      "Escape velocity comparison: students use Earth Surface, Jupiter Gravity, and Near Black Hole presets, then record escape velocity for each case. They explain why v_esc rises with stronger central mass and smaller distance. Addresses standard 3.C.2.",
+      "Potential well discussion: compare the three presets and ask students to connect the shape of the potential well to binding energy. Students should cite mass, distance, and planet type as evidence rather than relying only on visual depth.",
+      "Model limitations prompt: have students use Planet Selector values 0, 1, and 2 while keeping the other sliders steady, then discuss which changes are visual context and which changes come directly from g = GM/r². Addresses standard 3.G.1.",
     ],
     faq: [
       {
@@ -188,7 +212,7 @@ export const gravitationalFields: Experiment = {
       {
         question: "What AP Physics C standard directly covers gravitational fields and orbital energy?",
         answer:
-          "Standards 3.C.1 and 3.C.2 address gravitational force, field, and orbital dynamics, while 3.G.1 covers Kepler's laws and gravitational potential energy. Together they form the core of the AP Physics C Mechanics gravity unit. All three are probed by this simulation through the launchSpeed, launchAngle, and planetMass parameters.",
+          "Standards 3.C.1 and 3.C.2 address gravitational force, field, and orbital dynamics, while 3.G.1 covers Kepler's laws and gravitational potential energy. Together they form the core of the AP Physics C Mechanics gravity unit. This simulation probes those ideas through the Central Mass, Distance, and Planet Selector controls.",
       },
       {
         question: "What determines whether an orbit is circular, elliptical, or a hyperbola?",

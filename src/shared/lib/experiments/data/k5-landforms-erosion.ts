@@ -22,8 +22,8 @@ export const k5LandformsErosion: Experiment = {
   difficulty: "beginner",
 
   parameters: [
-    { id: "erosionType", label: "Erosion Agent (0=Water 1=Wind 2=Glacial Ice)", unit: "", min: 0, max: 2, default: 0, step: 1, tier: "free" },
-    { id: "timeScale", label: "Time Scale (years)", unit: "years", min: 100, max: 10000, default: 1000, step: 100, tier: "free" },
+    { id: "erosionRate", label: "Erosion Rate", unit: "%", min: 1, max: 100, default: 50, step: 1, tier: "free" },
+    { id: "timeScale", label: "Time Scale", unit: "%", min: 1, max: 100, default: 20, step: 1, tier: "free" },
   ],
 
   formulas: [
@@ -32,7 +32,7 @@ export const k5LandformsErosion: Experiment = {
 
   theory: "Erosion is the process that breaks down and moves rock and soil from one place to another. Water erosion is the most powerful — rivers carve valleys, and ocean waves reshape coastlines. Wind erosion is strongest in dry areas with loose soil, creating sand dunes and wearing down rock faces. Glacial erosion happens when massive ice sheets slowly grind across the land, scooping out U-shaped valleys and leaving behind boulders. Weathering (breaking rock apart) works together with erosion (carrying pieces away). Over thousands of years these forces create landforms like canyons, mesas, deltas, and beaches.",
 
-  instructions: "Select an erosion agent and set the time scale, then press Play! The landscape will change before your eyes as erosion reshapes it. Drag the time slider to speed up or slow down. Compare how water, wind, and ice each leave different marks on the land.",
+  instructions: "Use the Erosion Rate slider to make the land change slowly or quickly. Use the Time Scale slider to watch a short or long time pass. Try the River Canyon, Coastal Cliff, and Desert Dunes presets to compare how moving water, waves, and wind shape the land.",
 
   challenges: [
     { id: "k5le-c1", question: "Which erosion agent carved the Grand Canyon?", hint: "Water! The Colorado River has been cutting through rock for about 5–6 million years, creating the canyon we see today.", tier: "free" },
@@ -48,14 +48,20 @@ export const k5LandformsErosion: Experiment = {
   seoTitle: "Landforms & Erosion for Kids | Scivra Elementary Science",
   seoKeywords: ["landforms and erosion for kids", "weathering and erosion elementary", "geology K5", "K5 earth science experiment"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Landforms, Erosion, and Earth Surface Processes" },
+  htmlControlAliases: { erosionRate: "erosionSlider", timeScale: "timeSlider" },
+  presets: [
+    { id: "canyon", label: "🏜️ River Canyon", description: "A river slowly cuts into rock and carries sand away. Over a long time, the channel can grow into a deep canyon." },
+    { id: "cliff", label: "🌊 Coastal Cliff", description: "Ocean waves hit the shore again and again. The water wears away the bottom of a cliff and can make pieces fall." },
+    { id: "dunes", label: "🌵 Desert Dunes", description: "Wind pushes loose sand across dry land. Sand piles up into dunes that can move and change shape." },
+  ],
   contentSections: {
     whatIsIt:
       "Have you ever watched rainwater wash dirt off a hill, or seen sand move when the wind blows? That is erosion in action! Erosion is the slow wearing away of rocks and soil and the moving of those pieces to a new place. It happens all over Earth and has been shaping the land for millions of years. Water is the most powerful eroder. Rivers and streams carry tiny pieces of rock and sand downstream, carving out valleys and canyons over a very long time. Wind picks up loose sand and dust in dry places, blasting it against rocks and slowly shaping them into amazing rounded forms. Glaciers — huge, slow rivers of ice — grind across the land and carve wide valleys. All of these forces work with time. The Grand Canyon, for example, was carved by the Colorado River over about 5 to 6 million years. That is an incredibly long time — much longer than humans have been on Earth! In this experiment, you can choose which erosion force to use and speed up time to see the land change before your eyes.",
     parameterExplanations: {
-      erosionType:
-        "This slider lets you pick which force is doing the eroding. Set it to 0 for water erosion — rivers and rain wearing down rock and soil. Set it to 1 for wind erosion — blowing air that carries sand and carves soft rock into rounded shapes. Set it to 2 for glacial ice erosion — a slow, heavy sheet of ice grinding the land. Each one leaves a different mark on the landscape. Try all three and compare what the land looks like after each one.",
+      erosionRate:
+        "Erosion Rate controls how strongly the land is worn away. A low number means the river, waves, or wind move only a little rock and soil, so the land changes slowly. A high number means more material is carried away, so channels, cliffs, or dunes change faster. Time Scale controls how much time passes in the model. Erosion usually takes many years, so the slider helps you see slow changes quickly. Try one preset, move one slider, and watch what changes. Then reset and test a different preset.",
       timeScale:
-        "This slider controls how many years pass in the simulation, from 100 years to 10,000 years. Erosion is usually very slow — you would never notice it day to day. But set the slider to 5,000 or 10,000 years and watch how much the land changes! The higher the number, the more dramatic the change. At 100 years, the change is tiny. At 10,000 years, valleys deepen and mountains shrink noticeably.",
+        "Use the three presets to choose a place to study. River Canyon shows water cutting a path through rock. Coastal Cliff shows waves wearing away land near the ocean. Desert Dunes shows wind moving sand. The sliders still matter after you pick a preset: Erosion Rate changes how much material moves, and Time Scale changes how long the process runs. Compare the shapes you see. A canyon may get deeper, a cliff may pull back, and dunes may shift across the desert.",
     },
     misconceptions: [
       {
@@ -80,10 +86,11 @@ export const k5LandformsErosion: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set erosionType to 0 (water) and timeScale to 5000 years; ask students to describe what landform is being created and compare it to images of real river valleys.",
-      "Run water erosion at timeScale 1000, then switch to erosionType 2 (glacial ice) at the same timeScale; have students compare the valley shapes and identify which is V-shaped and which is U-shaped.",
-      "Set erosionType to 1 (wind) and timeScale to 10000 years to show desert rock shaping; connect to photos of sand dunes, ventifacts (wind-polished rocks), and yardangs found in dry regions like the American Southwest. Note: famous arches and balanced rocks in that region were shaped by a combination of wind, water, and gravity over long periods.",
-      "Use timeScale from 100 to 10000 years as a class discussion prompt: how does the amount of change connect to how long erosion has been working? Tie to NGSS 4-ESS2-1.",
+      "Use the River Canyon preset and ask students to describe evidence that moving water can change landforms over time, connecting observations to NGSS 4-ESS2-1.",
+      "Keep the River Canyon preset active while students change only the Erosion Rate slider, then have them compare how faster and slower erosion affect the depth of the channel.",
+      "Use the Coastal Cliff preset to discuss how waves can reshape shorelines. Ask students to identify where material appears to be removed and where it may be deposited.",
+      "Use the Desert Dunes preset to show wind moving sand. Have students compare dune movement with canyon carving and explain how different Earth processes leave different patterns.",
+      "Run a short CER discussion in which students choose one preset, record both slider values, and support a claim about how time and erosion shape land.",
     ],
     faq: [
       {

@@ -23,44 +23,24 @@ export const k5WaterCycle: Experiment = {
 
   parameters: [
     {
-      id: "sunIntensity",
-      label: "Sun Intensity",
+      id: "temperature",
+      label: "Temperature",
+      unit: "°C",
+      min: 0,
+      max: 50,
+      default: 25,
+      step: 1,
+      tier: "free",
+    },
+    {
+      id: "rainfall",
+      label: "Rainfall",
       unit: "%",
       min: 0,
       max: 100,
-      default: 70,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "temperature",
-      label: "Air Temperature",
-      unit: "°C",
-      min: -10,
-      max: 40,
-      default: 20,
-      step: 2,
-      tier: "free",
-    },
-    {
-      id: "cloudHeight",
-      label: "Cloud Formation Height",
-      unit: "km",
-      min: 1,
-      max: 10,
-      default: 3,
-      step: 0.5,
-      tier: "pro",
-    },
-    {
-      id: "precipitation",
-      label: "Precipitation Type (0=Rain, 1=Snow)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
+      default: 50,
       step: 1,
-      tier: "pro",
+      tier: "free",
     },
   ],
 
@@ -75,7 +55,7 @@ export const k5WaterCycle: Experiment = {
     "The water cycle (hydrological cycle) describes how water continuously moves through Earth's systems. Evaporation: the sun heats surface water, causing it to change from liquid to gas (water vapor) and rise into the atmosphere. Transpiration: plants release water vapor through their leaves. Condensation: as water vapor rises, it cools and condenses around tiny particles to form clouds (liquid water droplets). Precipitation: when cloud droplets combine and grow heavy enough, they fall as rain or snow. Collection: water collects in oceans, lakes, rivers, and groundwater. The cycle then repeats. The water on Earth today is the same water that has always been here — constantly recycled.",
 
   instructions:
-    "Increase the Sun Intensity to watch water molecules evaporate from the ocean. Watch them rise and condense to form clouds. Adjust the Air Temperature — cooler temperatures create snow instead of rain. Track individual water molecules as they complete the full cycle.",
+    "Use the Temperature slider to warm or cool the air, and use the Rainfall slider to change how much rain falls from the clouds. Try the Tropical, Desert, and Storm presets to compare wet, dry, and heavy-rain water cycle scenes.",
 
   challenges: [
     {
@@ -122,18 +102,20 @@ export const k5WaterCycle: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "The Water Cycle",
   },
+  htmlControlAliases: { temperature: "sliderTemp", rainfall: "sliderRain" },
+  presets: [
+    { id: "tropical", label: "Tropical", description: "A warm, wet place where lots of water evaporates and rain falls often." },
+    { id: "desert", label: "Desert", description: "A hot, dry place where little rain falls and clouds may stay small." },
+    { id: "storm", label: "Storm", description: "A stormy scene with heavy rain and fast-moving water returning to the ground." }
+  ],
   contentSections: {
     whatIsIt:
       "Have you ever seen a puddle disappear on a sunny day? Where does all that water go? It does not vanish — it goes up into the sky! Water is always moving in a big circle called the water cycle. The Sun heats water in oceans, lakes, rivers, and puddles. When water warms up enough, it turns into an invisible gas called water vapor and floats up into the air. This is called evaporation — water turning into invisible water vapor gas. As the vapor rises higher, the air gets cooler. Cool air cannot hold as much invisible water vapor, so the vapor turns back into tiny liquid drops. Billions of tiny drops together make a cloud. This process is called condensation — air-water turning back into tiny water drops. When clouds collect enough drops, the water falls back down as rain or snow. That is called precipitation. The water lands on the ground, flows into streams and rivers, soaks into the soil, and eventually reaches the ocean — and then the whole cycle starts again! The same water has been going around this cycle for billions of years. The water you drink today might once have been drunk by a dinosaur.",
     parameterExplanations: {
-      sunIntensity:
-        "This slider controls how strong the Sun is — from 0 percent (no sunlight, like night) to 100 percent (full blazing sun). A stronger Sun heats the water faster and causes more evaporation. Watch how the number of water vapor particles floating upward changes when you crank the Sun up high. At 0 percent, almost no evaporation happens and the clouds shrink.",
       temperature:
-        "This slider sets the air temperature from minus 10 degrees Celsius (very cold — below freezing) to 40 degrees Celsius (a very hot day). Warmer air can hold more water vapor before it condenses, so clouds take longer to form. Colder air condenses water vapor more quickly. Below 0°C, snow is more likely in cold clouds; use the precipitation slider (Pro) to switch between rain (0) and snow (1) and see how each looks.",
-      cloudHeight:
-        "This Pro slider changes the height at which clouds form. In real life, different cloud types form at different heights. Low clouds form around 1 to 2 kilometers up. High, wispy clouds called cirrus can form at 6 to 10 kilometers. Higher clouds form in colder, thinner air. Try different heights and observe how the water vapor travels farther up before condensing.",
-      precipitation:
-        "This Pro slider switches the type of precipitation between rain (0) and snow (1). Rain falls when air temperatures are above freezing. Snow forms in cold clouds when water vapor freezes directly into ice crystals; if the air from the cloud all the way to the ground stays cold enough, those crystals reach the ground as snow instead of melting into rain. Try switching between them to see how the falling water looks different and think about what conditions on the ground might cause one or the other.",
+        "Temperature tells how warm the air and water feel. When the temperature is higher, water can evaporate faster, which means more invisible water vapor rises into the air. That vapor can cool and help make clouds. When the temperature is lower, the water cycle may move more slowly. Try moving only this slider first. Watch the water, sky, and clouds, then describe what changed. This helps you see that heat from the Sun is an important part of evaporation, too.",
+      rainfall:
+        "Rainfall tells how much water falls from the clouds back to Earth. A low rainfall setting means only a little rain comes down, like a dry day. A high rainfall setting means much more water falls, like a storm. Rain is part of precipitation, the step when water leaves clouds and returns to land, lakes, rivers, and oceans. Try keeping Temperature the same while changing Rainfall. Then explain where the falling water goes after it reaches the ground each time.",
     },
     misconceptions: [
       {
@@ -154,15 +136,15 @@ export const k5WaterCycle: Experiment = {
       {
         wrong: "The water cycle only works in warm places.",
         correct:
-          "The water cycle happens everywhere on Earth, including cold places. In very cold regions, precipitation falls as snow and builds up as ice sheets or glaciers. Even ice slowly changes into vapor — called sublimation — without melting first. Melting snow and ice also contribute to rivers and groundwater. The water cycle is slower in cold regions but it never stops completely.",
+          "The water cycle happens everywhere on Earth, including cold places. In very cold regions, water can fall as snow and build up as ice sheets or glaciers. Even ice slowly changes into vapor — called sublimation — without melting first. Melting snow and ice also contribute to rivers and groundwater. The water cycle is slower in cold regions but it never stops completely.",
       },
     ],
     teacherUseCases: [
-      "Set sunIntensity to 100 percent and temperature to 30 degrees to show maximum evaporation; then lower sunIntensity to 10 percent and ask students to predict what will happen to the clouds.",
-      "Set temperature to minus 5 degrees and precipitation to 1 (snow) to show winter precipitation; compare to temperature 25 degrees and precipitation 0 (rain) to connect to local weather patterns students recognize.",
-      "Set cloudHeight to 1 km (low clouds) vs. 8 km (high clouds) and discuss with students why the air feels different at those altitudes and how that affects water droplet formation.",
-      "Run the simulation at high sunIntensity and pause just as clouds start forming; ask students to explain in their own words what just happened using the words evaporation and condensation.",
-      "Pose the question: if you set sunIntensity to 0, what happens over time? Let students predict, then observe that without solar energy the water cycle slows and clouds stop forming.",
+      "Use the Tropical preset to introduce evaporation, condensation, and precipitation, then have students identify visible evidence for each stage.",
+      "Use the Desert preset to discuss why some regions receive less rain, then ask students to connect low rainfall to dry land and smaller collections of surface water.",
+      "Use the Storm preset for a prediction activity: students explain what they expect to observe before heavy rain begins, then compare their prediction with the simulation.",
+      "Have students keep Rainfall constant while changing Temperature, then record how warming or cooling affects what they observe in the water cycle.",
+      "Have students keep Temperature constant while changing Rainfall, then write a claim about how water returns to land, rivers, lakes, and oceans.",
     ],
     faq: [
       {
@@ -183,7 +165,7 @@ export const k5WaterCycle: Experiment = {
       {
         question: "Where does snow come from?",
         answer:
-          "Snow forms when it is very cold high in the clouds. Water vapor or tiny droplets freeze directly into ice crystals. Each snowflake grows as more water vapor freezes onto it, building the six-sided crystal shapes that make snow look beautiful under a magnifying glass. Snowflakes fall when they get heavy enough, and if the air all the way down to the ground is cold enough, they reach the ground as snow instead of melting into rain. In this simulation, you can switch the precipitation slider to 1 (snow) and lower the temperature to below freezing to see snow fall instead of rain. Snow that piles up in mountains melts in spring and provides water for rivers and farms.",
+          "Snow forms when it is very cold high in the clouds. Water vapor or tiny droplets freeze directly into ice crystals. Each snowflake grows as more water vapor freezes onto it, building the six-sided crystal shapes that make snow look beautiful under a magnifying glass. Snowflakes fall when they get heavy enough, and if the air all the way down to the ground is cold enough, they reach the ground as snow instead of melting into rain. Snow that piles up in mountains melts in spring and provides water for rivers and farms.",
       },
       {
         question: "What is groundwater and is it part of the water cycle?",

@@ -32,23 +32,23 @@ export const k5SolarEnergy: Experiment = {
 
   parameters: [
     {
-      id: "panelAngle",
-      label: "Solar Panel Angle",
+      id: "sunAngle",
+      label: "Sun Angle",
       unit: "°",
       min: 0,
       max: 90,
-      default: 45,
-      step: 5,
+      default: 75,
+      step: 1,
       tier: "free",
     },
     {
-      id: "sunIntensity",
-      label: "Sun Intensity",
-      unit: "%",
-      min: 10,
-      max: 100,
-      default: 80,
-      step: 5,
+      id: "panelTilt",
+      label: "Panel Tilt",
+      unit: "°",
+      min: 0,
+      max: 90,
+      default: 30,
+      step: 1,
       tier: "free",
     },
   ],
@@ -66,7 +66,7 @@ export const k5SolarEnergy: Experiment = {
     "The Sun is Earth's primary source of energy. Sunlight carries energy that can be converted into heat and electricity. Solar panels (photovoltaic cells) contain special materials that release electrons when sunlight hits them, creating an electric current — this is how sunlight becomes electricity. The angle of the solar panel matters: when the panel faces the Sun directly, it captures the maximum amount of light. Tilting it away means less light hits the surface, just like how a flashlight shining straight down makes a bright circle, but shining it at an angle spreads the light over a larger area making it dimmer. Solar energy is renewable — the Sun will keep shining for billions of years. Dark-colored objects absorb more solar energy as heat than light-colored objects, which is why wearing a black shirt on a sunny day feels hotter.",
 
   instructions:
-    "Adjust the Solar Panel Angle to find the best position for capturing sunlight. Watch the energy meter to see how much electricity is generated. Change the Sun Intensity to simulate cloudy and sunny days. Notice how the light bulb glows brighter when the panel captures more energy.",
+    "Use the Sun Angle slider to move the Sun higher or lower in the sky. Use the Panel Tilt slider to aim the solar panel toward the light. Try the Noon, Morning, and Winter presets to compare different days. Watch the meter and bulb to see when the panel collects more energy.",
 
   challenges: [
     {
@@ -106,25 +106,46 @@ export const k5SolarEnergy: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Solar Energy, Heat, and Electricity from Sunlight",
   },
+  htmlControlAliases: { sunAngle: "sunAngleSlider", panelTilt: "tiltSlider" },
+  presets: [
+    {
+      id: "noon",
+      label: "🔆 Noon Summer (90°)",
+      description:
+        "The Sun is high in the sky. Aim the panel well and it can collect strong sunlight.",
+    },
+    {
+      id: "morning",
+      label: "🌅 Morning Light (25°)",
+      description:
+        "The Sun is low in the sky. The panel needs a different tilt to catch more light.",
+    },
+    {
+      id: "winter",
+      label: "❄️ Winter Solstice (30°)",
+      description:
+        "Winter sunlight comes from a lower angle. Tilting the panel can help it face the Sun.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "The Sun is like a giant power station in the sky — and it is free for everyone! Every day, the Sun sends out huge amounts of energy as light and heat. We can capture some of that energy and use it to power things in our homes and schools. One way to do this is with a solar panel. A solar panel is made of special materials that turn sunlight directly into electricity. When sunlight hits the panel, tiny particles of energy called photons knock loose tiny bits inside the panel, and those moving bits create electric power. You can use that electricity to light a bulb, charge a phone, or run a fan! The angle of the panel matters a lot. When the panel faces the Sun straight on, it catches the most light. When it tilts away, less light hits it and less electricity is made. This is the same reason your shadow is shortest at noon when the Sun is highest in the sky. Solar energy is clean — it does not make smoke or pollution. And the Sun will keep shining for billions of years, so it will not run out the way coal or oil can.",
     parameterExplanations: {
-      panelAngle:
-        "This slider changes the angle of the solar panel. At 0 degrees, the panel faces the Sun head-on and catches the most sunlight. As you increase the angle toward 90 degrees, the panel tilts away from the Sun and catches less light — watch the energy meter drop! Try different angles and find the sweet spot. This is just like how solar panels on rooftops are tilted to face the Sun as directly as possible.",
-      sunIntensity:
-        "This slider controls how bright the Sun is — from 10 percent (a very cloudy day) to 100 percent (a bright sunny day). On a cloudy day, less sunlight gets through and the panel makes less electricity. On a clear sunny day, the panel works at full power. Try setting it to 50 percent to see how a partly cloudy day affects how much energy the panel produces.",
+      sunAngle:
+        "Sun Angle shows how high the Sun is in the sky. A high Sun, like noon in summer, shines more straight down. A low Sun, like morning or winter, shines from the side. Panel Tilt changes how the solar panel points. The panel collects the most energy when its face points toward the Sun's light. Move one slider at a time and watch the meter. Then try the Noon, Morning, and Winter presets. Ask: Which setup makes the bulb brightest? Which setup makes less power? This helps you see how position changes the amount of sunlight a panel can catch.",
+      panelTilt:
+        "Panel Tilt changes how the solar panel points. A flat panel may work well when the Sun is high, but it may miss more light when the Sun is low. A tilted panel can face low sunlight better. The best tilt depends on the Sun Angle. Try changing the Sun first, then move the panel until the meter grows. The presets give you three easy starting points: Noon, Morning, and Winter. Use them to compare how a real solar panel might need different positions during the day or during different seasons.",
     },
     misconceptions: [
       {
         wrong: "Solar panels work just as well on cloudy days as on sunny days.",
         correct:
-          "Clouds block some sunlight, so solar panels make less electricity on cloudy days. They still work — they are not completely off — but they produce much less power. On a heavily overcast day, a panel might only make about 10 to 25 percent of what it makes on a bright sunny day. That is why solar installations often include batteries to store energy from sunny periods for use at night or on cloudy days.",
+          "Clouds block some sunlight, so solar panels make less electricity on cloudy days. They still work, but they usually make less power than on a clear day. Solar systems often use batteries or the electric grid so people can still use electricity at night or when the weather changes.",
       },
       {
         wrong: "It does not matter which direction a solar panel faces.",
         correct:
-          "The direction and angle of a solar panel makes a big difference! Panels work best when they face the Sun as directly as possible. In the Northern Hemisphere, that usually means tilting panels toward the south. A panel lying flat on the ground or tilted away from the Sun catches much less light than one aimed straight at it. This experiment shows that effect clearly — try moving the panelAngle slider from 0 to 90 to see the energy drop.",
+          "The direction and angle of a solar panel make a big difference. Panels work best when they face the Sun as directly as possible. A panel lying flat or tilted away from the Sun catches less light than one aimed toward it. In this experiment, compare the Sun Angle and Panel Tilt sliders to find a stronger setup.",
       },
       {
         wrong: "Solar energy is too weak to power anything useful.",
@@ -138,10 +159,10 @@ export const k5SolarEnergy: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set sunIntensity to 100 percent and have students slowly increase panelAngle from 0 to 90 degrees, recording the energy reading every 15 degrees to graph how angle affects power output.",
-      "Hold panelAngle at 45 degrees and decrease sunIntensity from 100 to 10 percent step by step; ask students to predict the energy reading before each change.",
-      "Set panelAngle to 0 degrees and sunIntensity to 80 percent as a baseline; challenge students to find the settings that cut the energy in half.",
-      "Discuss real-world connections: why do solar panels on houses face south? Why are some installed with adjustable tilts that follow the Sun?",
+      "Use the Noon preset as a baseline and have students adjust Panel Tilt in 10-degree steps, recording the energy reading to identify the strongest panel position.",
+      "Have pairs compare the Morning and Winter presets, then explain how lower Sun Angle changes the best Panel Tilt using evidence from the meter.",
+      "Ask students to keep Sun Angle fixed while changing only Panel Tilt, supporting NGSS 4-PS3-2 with observations about energy transfer from sunlight to electricity.",
+      "Connect NGSS 4-ESS3-1 by discussing how solar panels use sunlight as a natural resource and why placement matters for real buildings.",
     ],
     faq: [
       {

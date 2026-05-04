@@ -34,30 +34,30 @@ export const gasProperties: Experiment = {
       id: "temperature",
       label: "Temperature",
       unit: "K",
-      min: 100,
-      max: 800,
-      default: 300,
-      step: 10,
+      min: 50,
+      max: 1000,
+      default: 273,
+      step: 1,
       tier: "free",
     },
     {
       id: "volume",
-      label: "Container Width",
-      unit: "%",
-      min: 20,
-      max: 100,
-      default: 60,
-      step: 5,
+      label: "Volume",
+      unit: "L",
+      min: 1,
+      max: 20,
+      default: 10,
+      step: 1,
       tier: "free",
     },
     {
       id: "particles",
-      label: "Number of Particles",
-      unit: "",
-      min: 10,
-      max: 200,
-      default: 80,
-      step: 10,
+      label: "Particles",
+      unit: "particles",
+      min: 1,
+      max: 20,
+      default: 5,
+      step: 1,
       tier: "free",
     },
   ],
@@ -79,7 +79,7 @@ export const gasProperties: Experiment = {
     "The ideal gas law PV = nRT relates pressure, volume, amount, and temperature of a gas. At the molecular level, pressure arises from particles colliding with container walls. Temperature is proportional to average kinetic energy. Boyle's Law (P ∝ 1/V at constant T,n) can be observed by changing volume. Charles's Law (V ∝ T at constant P,n) relates volume to temperature. Gay-Lussac's Law (P ∝ T at constant V,n) shows pressure increases with temperature. Deviations from ideal behavior occur at high pressure (small volume) or low temperature, where intermolecular forces become significant.",
 
   instructions:
-    "Use the sliders to adjust temperature, container volume, and number of gas particles. Watch particles bounce around — faster at higher temperatures, more wall collisions in smaller volumes. The real-time graph plots pressure data so you can verify gas law relationships.",
+    "Use the three sliders to adjust temperature, volume, and particle count, then compare the Ideal Gas (STP), High Temperature, and Real Gas (vdW) presets. Watch particle motion and pressure respond as you change one variable at a time.",
 
   challenges: [
     {
@@ -122,16 +122,37 @@ export const gasProperties: Experiment = {
     educationalLevel: "High School",
     teaches: "Ideal Gas Law and Kinetic Molecular Theory",
   },
+  htmlControlAliases: { temperature: "sl-T", volume: "sl-V", particles: "sl-n" },
+  presets: [
+    {
+      id: "stp",
+      label: "Ideal Gas (STP)",
+      description:
+        "Sets up a standard-temperature-and-pressure comparison point for an ideal gas. Use it as a baseline before changing volume, temperature, or particle count.",
+    },
+    {
+      id: "hot",
+      label: "High Temperature",
+      description:
+        "Raises the gas temperature so particles move faster and collide more energetically with the walls. Compare pressure against the STP preset while keeping volume and particles in view.",
+    },
+    {
+      id: "real",
+      label: "Real Gas (vdW)",
+      description:
+        "Switches to a real-gas comparison using van der Waals behavior. It is useful for discussing why finite particle size and attraction can make gases deviate from PV = nRT.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Gas properties describes the macroscopic behavior — pressure, volume, temperature, and amount — of gases at the molecular level using kinetic molecular theory and the ideal gas law PV = nRT. Pressure arises from particles colliding with container walls; temperature is proportional to average kinetic energy (KE_avg = 3/2 k_B T). The four classical gas laws — Boyle's (P∝1/V), Charles's (V∝T), Gay-Lussac's (P∝T), and Avogadro's (V∝n) — are all special cases of PV = nRT, each obtained by holding the appropriate variables constant. At STP (273 K, 1 atm), 1 mol of an ideal gas occupies 22.4 L. This simulation lets you vary temperature, volume, and particle count while watching molecular motion and live pressure data update simultaneously.",
     parameterExplanations: {
       temperature:
-        "Absolute temperature in kelvins (100–800 K, default 300 K). Temperature sets the average kinetic energy of particles: KE_avg = 3/2 k_B T, so doubling T doubles average KE and increases average speed by √2. At constant V and n, pressure is proportional to T (Gay-Lussac's Law). Always use kelvins — Charles's Law and PV = nRT are undefined in Celsius.",
+        "Temperature is measured in kelvins on the simulation's 50-1000 K slider. It controls the average kinetic energy of the gas particles: higher temperature means faster particles, harder wall collisions, and usually higher pressure when volume and particle count stay fixed. Try starting at the STP preset, then move only the temperature slider upward to test Gay-Lussac's Law, P/T = constant at fixed volume and amount. Because gas laws use absolute temperature, kelvins are required; Celsius values would break the direct proportional relationship between temperature and molecular motion.",
       volume:
-        "Container width expressed as a percentage of the maximum (20–100%, default 60%). Reducing container width compresses the gas into a smaller space, increasing collision frequency with walls and thus raising pressure — Boyle's Law (P₁V₁ = P₂V₂ at constant T and n). At 20% width, pressure is five times the 100%-width value for the same T and n.",
+        "Volume is measured in liters on the 1-20 L slider. Lowering the volume gives the same particles less space, so they strike the container walls more often and pressure rises. Raising the volume spreads collisions over a larger space and lowers pressure when temperature and particle count are unchanged. This is Boyle's Law in action: P1V1 = P2V2 for a fixed amount of gas at fixed temperature. For a clean test, choose the STP preset, leave temperature and particles unchanged, and move only the volume slider while watching the pressure readout.",
       particles:
-        "Number of simulated particles (10–200, default 80). More particles increase the number of wall collisions per second, directly raising pressure at fixed T and V. Avogadro's Law states V ∝ n at constant P and T; in constant-volume mode, adding particles raises P proportionally. Each particle represents a fixed scaled mole amount for the ideal gas law calculation.",
+        "Particles sets how many gas particles are inside the container, from 1 to 20 particles. Adding particles increases the number of wall collisions each second, so pressure rises when temperature and volume stay fixed. Removing particles does the opposite. This slider gives a visible version of the amount term in PV = nRT: more gas in the same space at the same temperature produces more pressure. To isolate the effect, hold temperature and volume steady, then compare 5 particles with 10 particles and look for the pressure ratio.",
     },
     misconceptions: [
       {
@@ -166,11 +187,11 @@ export const gasProperties: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Boyle's Law data collection: hold temperature and particles fixed while stepping volume from 100% to 20% in increments. Students record P and V, compute P×V at each point, and verify the product stays constant. Plotting P vs. 1/V gives a straight line through the origin — direct evidence of PV = constant for AP 9.A.1.",
-      "Gay-Lussac graphing: fix particles and volume, vary temperature from 200 to 800 K in 100 K steps, and plot P vs. T. The line passes through the origin in K — extrapolating it confirms that P → 0 at 0 K (absolute zero), connecting kinetic theory to the concept of an absolute temperature scale. (At constant volume the relationship is P/T = const, which is Gay-Lussac's, not Charles's.)",
-      "Ideal vs. real gas misconception probe: ask students to predict whether a real gas at 700 K and high pressure obeys PV = nRT exactly, then discuss what corrections the van der Waals equation adds. The simulation models ideal behavior; comparing to known real-gas data tables provides the discrepancy for discussion.",
-      "Avogadro's Law verification: fix T and volume, then double the particle count from 40 to 80 and record the pressure ratio. Students confirm P doubles, then write the proportional relationship P ∝ n, connecting to the insight that equal volumes of different ideal gases at the same T and P contain equal numbers of molecules.",
-      "STP calculation bridge: set T = 273 K, particles to represent 1 mol, and adjust volume until P = 1 atm. Read off the volume and confirm 22.4 L/mol. This grounds the abstract STP molar volume in an observable simulation result and directly supports PV = nRT quantitative calculations on the AP exam.",
+      "Boyle's Law data collection: hold temperature and particles fixed while stepping volume from 20 L down to 1 L in several increments. Students record P and V, compute P×V at each point, and verify the product stays approximately constant. Plotting P vs. 1/V gives a straight line through the origin — direct evidence of PV = constant for AP 9.A.1.",
+      "Gay-Lussac graphing: fix particles and volume, vary temperature across the 50-1000 K slider range, and plot P vs. T. The line should trend through the origin in K, connecting kinetic theory to the concept of an absolute temperature scale. At constant volume the relationship is P/T = const, which is Gay-Lussac's, not Charles's.",
+      "Preset comparison warm-up: have students record the slider values and pressure behavior for Ideal Gas (STP), High Temperature, and Real Gas (vdW). They then explain which variable changed most visibly and whether the result matches PV = nRT or suggests real-gas deviation.",
+      "Avogadro's Law verification: fix T and volume, then double the particle count from 5 to 10 and record the pressure ratio. Students confirm pressure approximately doubles, then write the proportional relationship P ∝ n, connecting to the insight that equal volumes of different ideal gases at the same T and P contain equal numbers of particles.",
+      "Ideal vs. real gas misconception probe: ask students to predict whether a real gas at high temperature or compressed volume obeys PV = nRT exactly, then compare the ideal and Real Gas (vdW) preset behavior. Use the difference to discuss what the van der Waals equation adds: particle volume and intermolecular attraction.",
     ],
     faq: [
       {

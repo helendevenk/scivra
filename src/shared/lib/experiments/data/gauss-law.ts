@@ -33,53 +33,33 @@ export const gaussLaw: Experiment = {
 
   parameters: [
     {
-      id: "chargeDistribution",
-      label: "Charge Distribution (0=point, 1=line, 2=plane, 3=sphere)",
-      unit: "",
-      min: 0,
-      max: 3,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "chargeAmount",
+      id: "charge",
       label: "Charge (Q)",
       unit: "μC",
-      min: -10,
-      max: 10,
-      default: 5,
-      step: 0.5,
+      min: -5,
+      max: 5,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
     {
-      id: "surfaceRadius",
+      id: "gaussianRadius",
       label: "Gaussian Surface Radius",
       unit: "m",
       min: 0.5,
-      max: 5,
+      max: 4,
       default: 2,
       step: 0.1,
       tier: "free",
     },
     {
-      id: "fieldDensity",
-      label: "Field Vector Density",
-      unit: "",
-      min: 4,
-      max: 20,
-      default: 10,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "showFluxArrows",
-      label: "Show Flux Arrows (0=off, 1=on)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
+      id: "chargeRadius",
+      label: "Charge Radius",
+      unit: "m",
+      min: 0.2,
+      max: 2,
+      default: 0.8,
+      step: 0.1,
       tier: "free",
     },
   ],
@@ -106,7 +86,7 @@ export const gaussLaw: Experiment = {
     "Gauss's Law is one of Maxwell's four equations and relates the electric flux through a closed surface to the charge enclosed within it. The law states Φ_E = Q_enc/ε₀, where ε₀ = 8.854×10⁻¹² C²/(N·m²). For highly symmetric charge distributions (spherical, cylindrical, planar), Gauss's Law provides an elegant shortcut to calculate the electric field without integration. For a point charge Q, the field at distance r is E = kQ/r² (radial). A spherical Gaussian surface of radius r centered on the charge captures flux Φ = E·4πr² = Q/ε₀, independent of r — demonstrating that flux depends only on enclosed charge, not surface size. For an infinite line charge with linear density λ, a cylindrical Gaussian surface gives E = λ/(2πε₀r). For an infinite plane with surface density σ, E = σ/(2ε₀), uniform and independent of distance.",
 
   instructions:
-    "Select a charge distribution type and set the charge magnitude. Adjust the Gaussian surface radius to enclose or exclude charges. Observe the 3D electric field vectors (length proportional to field strength, color-coded by magnitude). The flux panel shows the calculated Φ and verifies Gauss's Law. Rotate the 3D view with mouse drag, zoom with scroll.",
+    "Use the Charge Q, Gaussian Surface Radius r, and Charge Radius R sliders to test how enclosed charge and surface size affect electric flux. Start with the Point, Line, and Sphere presets to compare the three HTML modes, then change one slider at a time. Observe the 3D electric field vectors and flux readouts while rotating the view with mouse drag and zooming with scroll.",
 
   challenges: [
     {
@@ -152,20 +132,44 @@ export const gaussLaw: Experiment = {
     educationalLevel: "Advanced Placement",
     teaches: "Gauss's Law and Electric Flux",
   },
+  htmlControlAliases: {
+    charge: "sl-Q",
+    gaussianRadius: "sl-surfR",
+    chargeRadius: "sl-chargeR",
+  },
+  presets: [
+    {
+      id: "point",
+      label: "Point Charge",
+      description:
+        "Sets a compact +1 μC source with a larger surrounding Gaussian surface, making the inverse-square field and radius-independent total flux easiest to inspect.",
+      paramValues: { charge: 1, gaussianRadius: 2, chargeRadius: 0.2 },
+    },
+    {
+      id: "line",
+      label: "Infinite Line Charge",
+      description:
+        "Sets a stronger line-charge mode with a moderate Gaussian radius, useful for comparing cylindrical symmetry with the point-charge case.",
+      paramValues: { charge: 2, gaussianRadius: 1.5, chargeRadius: 0.3 },
+    },
+    {
+      id: "sphere",
+      label: "Charged Sphere",
+      description:
+        "Sets an extended charged sphere so students can move the Gaussian surface inside and outside the source radius and watch enclosed charge change.",
+      paramValues: { charge: 3, gaussianRadius: 2.5, chargeRadius: 1.2 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Gauss's Law — one of Maxwell's four equations — states that the total electric flux through any closed surface equals the net charge enclosed divided by ε₀: ∮E·dA = Q_enc/ε₀. The law is always true, but it becomes a practical field-calculation tool only when the charge distribution has enough symmetry (spherical, cylindrical, or planar) to factor a constant E out of the surface integral. This simulation places point charges, infinite line charges, or uniformly charged spheres inside user-defined Gaussian surfaces rendered in 3D, computes the flux numerically at every surface element dA, and displays the running total alongside the analytical result Q_enc/ε₀. Drag the surface radius slider to watch flux stay constant as the surface grows — as long as no additional charge crosses the boundary — and observe field vectors stretch or compress while their total flux through the surface remains unchanged.",
     parameterExplanations: {
-      chargeDistribution:
-        "Selects the source geometry: 0 = point charge (spherical symmetry, Gaussian sphere), 1 = infinite line charge (cylindrical symmetry, Gaussian cylinder), 2 = infinite plane (planar symmetry, Gaussian pillbox), 3 = uniformly charged sphere (field inside differs from outside). Each geometry calls for a different Gaussian surface shape to exploit symmetry.",
-      chargeAmount:
-        "Controls the charge strength in microcoulombs (μC). For point-charge and uniform-sphere modes this is the total enclosed charge Q; for line-charge mode it represents an effective linear charge density λ (charge per unit length) used by the simulation; for plane mode it represents an effective surface charge density σ. Positive values produce outward flux; negative values produce inward flux.",
-      surfaceRadius:
-        "The radius of the Gaussian surface in meters. For a point charge, changing this radius does not change the enclosed charge or total flux — only the field magnitude at the surface (E ∝ 1/r²) and the surface area (A ∝ r²) change, with the product E·A staying constant. For the charged-sphere distribution (option 3), moving the radius inside versus outside the sphere changes Q_enc and hence the flux.",
-      fieldDensity:
-        "Controls the number of electric field arrow samples rendered on the Gaussian surface. Higher values (up to 20) give a denser arrow grid, making flux direction and magnitude gradients easier to read qualitatively. Lower values reduce visual clutter when focusing on symmetry arguments.",
-      showFluxArrows:
-        "Toggles the flux-density arrow overlay on the Gaussian surface: 1 renders arrows colored by E·dA magnitude; 0 shows only the field vectors in the surrounding space. Turn flux arrows on during Gauss's Law verification, off when examining the field structure far from the surface.",
+      charge:
+        "Charge Q sets the source strength in microcoulombs, from negative to positive values. Positive charge sends electric field vectors outward and gives positive outward flux; negative charge reverses the field direction and the flux sign. In the Point and Sphere presets, this represents the total source charge used for Qenc. In the Line preset, the simulation uses the same control as an effective charge strength for the line model. Keep Gaussian Surface Radius and Charge Radius fixed while changing Q first: the flux readout should scale directly with charge, matching Φ = Qenc/ε₀ whenever the Gaussian surface encloses the source.",
+      gaussianRadius:
+        "Gaussian Surface Radius changes the size of the closed surface used to measure electric flux. For a centered point charge that remains enclosed, increasing radius spreads the field over a larger area, but the total flux stays constant because E decreases as area increases. In the Sphere preset, this slider becomes especially important: when the Gaussian radius is smaller than the charged sphere radius, only part of the total charge is enclosed; once it grows outside the source, the full charge contributes. Compare Point and Sphere before changing Q so students can separate surface size from enclosed charge.",
+      chargeRadius:
+        "Charge Radius sets the physical radius of the modeled source, not the Gaussian surface itself. In the Point preset it is made very small so the source behaves like a compact charge at the center. In the Sphere preset it defines the boundary of the charged object, making it possible to place the Gaussian surface inside or outside the charge distribution. That comparison shows why Gauss's Law depends on enclosed charge rather than just total available charge. Hold Q fixed, then move Charge Radius across the Gaussian Surface Radius to see when Qenc changes and when only the source geometry changes.",
     },
     misconceptions: [
       {
@@ -178,7 +182,7 @@ export const gaussLaw: Experiment = {
         wrong:
           "A larger Gaussian surface encloses more field lines and therefore has more flux.",
         correct:
-          "Flux through a closed surface depends only on Q_enc, not surface size or shape. Doubling the sphere's radius quadruples A but reduces E to one-quarter (since E ∝ 1/r²); the product E·4πr² = Q/ε₀ remains constant. Verify this by dragging surfaceRadius in the simulation while watching the flux readout stay fixed.",
+          "Flux through a closed surface depends only on Q_enc, not surface size or shape. Doubling the sphere's radius quadruples A but reduces E to one-quarter (since E ∝ 1/r²); the product E·4πr² = Q/ε₀ remains constant. Verify this with the Gaussian Surface Radius slider in the Point preset while watching the flux readout stay fixed.",
       },
       {
         wrong:
@@ -200,11 +204,11 @@ export const gaussLaw: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Flux vs. surface radius data collection: set chargeDistribution = 0 (point charge) and chargeAmount = 5 μC. Have students record the total flux displayed for surfaceRadius = 0.5, 1, 2, 3, and 4 m. They should find Φ ≈ 5.65 × 10⁵ N·m²/C at every radius, confirming Q_enc/ε₀ is independent of surface size. Directly addresses AP standard 2.B.1.",
-      "Field extraction with symmetry: switch to chargeDistribution = 3 (uniform sphere) and vary surfaceRadius from just inside to just outside the sphere's boundary. Students observe the flux rising smoothly inside the sphere and flattening once the surface fully encloses the charge — the slope changes at the boundary — and use Gauss's Law to derive the expression for E inside (E = kQr/R³) and outside (E = kQ/r²) the sphere. Addresses standard 2.C.1.",
-      "Misconception probe — does surface size matter?: before touching the simulation, ask students to predict whether doubling the Gaussian surface radius will double, halve, or leave unchanged the total flux. Most predict it doubles. Run the simulation with showFluxArrows = 1 to reveal the constant flux, then derive why E·4πr² = Q/ε₀ is scale-invariant. Addresses standard 2.A.1.",
-      "Sign of flux and charge sign: set chargeAmount to +5 μC, record the displayed flux sign and direction of arrows. Then set chargeAmount to −5 μC and repeat. Students observe that flux reverses sign and arrows point inward, connecting the mathematical sign convention (outward normal positive) to the physical picture of field lines originating on positive and terminating on negative charges.",
-      "Line charge field strength: switch to chargeDistribution = 1 and record the field magnitude at the surface for surfaceRadius = 0.5, 1.0, 1.5, and 2.0 m. Students compute E = λ/(2πε₀r) analytically using the effective linear charge density displayed by the simulation in line-charge mode, and check whether E · r is approximately constant, verifying the cylindrical Gauss's Law result.",
+      "Flux vs. Gaussian radius data collection: use the Point preset and keep Charge Q at +1 μC. Have students record total flux for Gaussian Surface Radius values of 0.5, 1, 2, 3, and 4 m. They should find the displayed flux remains constant, confirming Q_enc/ε₀ is independent of surface size. Directly addresses AP standard 2.B.1.",
+      "Field extraction with symmetry: use the Sphere preset and vary Gaussian Surface Radius from just inside to just outside the Charge Radius boundary. Students observe the flux rising inside the sphere and flattening once the surface fully encloses the charge, then use Gauss's Law to derive E inside (E = kQr/R³) and outside (E = kQ/r²). Addresses standard 2.C.1.",
+      "Misconception probe — does surface size matter?: before touching the simulation, ask students to predict whether doubling the Gaussian surface radius will double, halve, or leave unchanged the total flux. Run the Point preset, move only Gaussian Surface Radius, and derive why E·4πr² = Q/ε₀ is scale-invariant. Addresses standard 2.A.1.",
+      "Sign of flux and charge sign: use the Charge Q slider to compare +5 μC and −5 μC while keeping the Point preset geometry fixed. Students observe that flux reverses sign and arrows point inward for negative charge, connecting the outward-normal sign convention to field lines originating on positive charges and terminating on negative charges.",
+      "Line charge field strength: use the Line preset and record field magnitude at Gaussian Surface Radius values of 0.5, 1.0, 1.5, and 2.0 m. Students compare the result with E = λ/(2πε₀r) and check whether E · r is approximately constant, verifying the cylindrical Gauss's Law result.",
     ],
     faq: [
       {
@@ -215,7 +219,7 @@ export const gaussLaw: Experiment = {
       {
         question: "Which AP Physics C E&M standards directly map to Gauss's Law?",
         answer:
-          "Standards 2.A.1 (electric field and force), 2.B.1 (Gauss's Law and flux), and 2.C.1 (electric field from symmetric charge distributions) are all addressed in this simulation. Standard 2.B.1 in particular is the core Gauss's Law statement ∮E·dA = Q_enc/ε₀ that the flux panel verifies numerically for each distribution type.",
+          "Standards 2.A.1 (electric field and force), 2.B.1 (Gauss's Law and flux), and 2.C.1 (electric field from symmetric charge distributions) are all addressed in this simulation. Standard 2.B.1 in particular is the core Gauss's Law statement ∮E·dA = Q_enc/ε₀ that the flux panel verifies numerically as students compare the Point, Line, and Sphere presets.",
       },
       {
         question: "What is ε₀ and where does it come from?",
