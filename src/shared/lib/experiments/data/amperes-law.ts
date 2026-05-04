@@ -33,53 +33,33 @@ export const amperesLaw: Experiment = {
 
   parameters: [
     {
-      id: "currentConfig",
-      label: "Configuration (0=wire, 1=coaxial, 2=solenoid)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
       id: "current",
       label: "Current I",
       unit: "A",
-      min: 0.5,
-      max: 20,
-      default: 5,
-      step: 0.5,
-      tier: "free",
-    },
-    {
-      id: "loopRadius",
-      label: "Amperian Loop Radius",
-      unit: "m",
-      min: 0.3,
-      max: 5,
-      default: 2,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "fieldDensity",
-      label: "Field Vector Density",
-      unit: "",
-      min: 4,
-      max: 20,
+      min: 1,
+      max: 100,
       default: 10,
       step: 1,
       tier: "free",
     },
     {
-      id: "solenoidTurns",
-      label: "Solenoid Turns per meter",
-      unit: "turns/m",
-      min: 10,
-      max: 200,
-      default: 100,
-      step: 10,
+      id: "loopRadius",
+      label: "Loop Radius",
+      unit: "m",
+      min: 0.1,
+      max: 2,
+      default: 0.5,
+      step: 0.05,
+      tier: "free",
+    },
+    {
+      id: "turns",
+      label: "Turns",
+      unit: "turns",
+      min: 100,
+      max: 2000,
+      default: 500,
+      step: 50,
       tier: "free",
     },
   ],
@@ -106,7 +86,7 @@ export const amperesLaw: Experiment = {
     "Ampère's Law is one of Maxwell's equations relating the circulation of the magnetic field around a closed loop to the current enclosed by that loop. For a long straight wire carrying current I, the magnetic field at distance r forms concentric circles with magnitude B = μ₀I/(2πr), where μ₀ = 4π×10⁻⁷ T·m/A. Using the right-hand rule: thumb along current direction, fingers curl in the direction of B. For a coaxial cable (inner current +I, outer current -I), the field outside is zero because the net enclosed current is zero. Inside a solenoid with n turns per unit length, B = μ₀nI (uniform and parallel to the axis), while outside it is approximately zero. Ampère's Law is most useful when the magnetic field has high symmetry (cylindrical for wires, rectangular for solenoids), allowing B to be pulled out of the integral.",
 
   instructions:
-    "Select a current configuration and set the current magnitude. Adjust the Amperian loop radius to see how the enclosed current changes. Observe the 3D magnetic field vectors (color-coded by magnitude, following the right-hand rule). The circulation panel shows ∮B·dl and verifies Ampère's Law. Rotate the 3D view with mouse drag.",
+    "Use the Current I slider to change the current, the Loop Radius slider to resize the Amperian loop, and the Turns slider to change the winding count for solenoid and toroid cases. Try the Infinite Straight Wire, Solenoid (n=1000), and Toroid presets to compare how geometry changes the enclosed current, field direction, and circulation ∮B·dl. Rotate the 3D view with mouse drag.",
 
   challenges: [
     {
@@ -152,20 +132,37 @@ export const amperesLaw: Experiment = {
     educationalLevel: "Advanced Placement",
     teaches: "Ampère's Law and Magnetic Fields",
   },
+  htmlControlAliases: { current: "sl-current", loopRadius: "sl-loopR", turns: "sl-turns" },
+  presets: [
+    {
+      id: "wire",
+      label: "Infinite Straight Wire",
+      description:
+        "A long straight conductor creates circular magnetic field lines around the current. Use it to test B = μ₀I/(2πr) and the right-hand rule.",
+    },
+    {
+      id: "solenoid",
+      label: "Solenoid (n=1000)",
+      description:
+        "A coil with many turns produces an approximately uniform interior magnetic field. Use it to compare current, turn count, and field strength.",
+    },
+    {
+      id: "toroid",
+      label: "Toroid",
+      description:
+        "A closed circular coil confines most of its magnetic field inside the core. Use it to connect Ampère's Law with enclosed turns and radius.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "In magnetostatics, Ampère's Law states that the line integral of B around any closed Amperian loop equals μ₀ times the current threading that loop: ∮B·dl = μ₀I_enc; the full Maxwell-Ampère version adds a displacement-current term μ₀ε₀ dΦ_E/dt for time-varying fields. The power of the magnetostatic form lies in symmetry: for a long straight wire the integrand is constant around a circle of radius r, giving B(2πr) = μ₀I and therefore B = μ₀I/(2πr). Inside an ideal solenoid with n turns per meter, a rectangular Amperian loop yields B = μ₀nI (uniform, axially directed) while outside B ≈ 0. The simulation lets you switch between a bare wire, a coaxial cable, and a solenoid, position the Amperian loop with loopRadius, and watch ∮B·dl update numerically as the enclosed current changes.",
     parameterExplanations: {
-      currentConfig:
-        "Selects the geometry: 0 = infinite straight wire, 1 = coaxial cable (inner +I, outer −I), 2 = solenoid. Each geometry has a different enclosed-current rule, so the same Amperian loop radius gives a different B depending on which configuration is active.",
       current:
-        "Current magnitude I in amperes flowing through the conductor(s). For the wire configuration, B = μ₀I/(2πr) scales linearly with current. For the solenoid, B = μ₀nI, so doubling current doubles the interior field.",
+        "Current I controls how much charge flow threads the magnetic geometry. In the Infinite Straight Wire preset, increasing Current raises the magnetic field everywhere in direct proportion, so doubling Current doubles B at the same Loop Radius. In the Solenoid (n=1000) preset, Current also scales the interior field linearly through B = μ₀nI. In the Toroid preset, Current multiplies the enclosed turn contribution, so the field inside the toroidal path grows while the outside remains much smaller in the ideal model. Keep Loop Radius and Turns fixed, then sweep Current to isolate this linear dependence.",
       loopRadius:
-        "Radius of the circular Amperian loop in meters. For the wire, increasing loopRadius while I is constant reduces B as 1/r. For the coaxial cable set to enclose only the inner conductor, B decreases with r; once the loop also encloses the outer conductor, B drops to zero because I_enc = 0.",
-      fieldDensity:
-        "Controls how many magnetic field vectors are rendered in the 3D view — purely a visualization parameter. Higher values show the spatial variation of B more clearly but do not affect any calculated quantity.",
-      solenoidTurns:
-        "Turns per meter n of the solenoid. In the solenoid configuration, B = μ₀nI scales linearly with solenoidTurns. Increasing this value from 10 to 200 turns/m at I = 5 A takes B from about 63 μT to about 1.26 mT inside the solenoid.",
+        "Loop Radius sets the size of the Amperian loop used to sample circulation. For the Infinite Straight Wire preset, a larger Loop Radius means the same enclosed current is spread around a longer circular path, so B decreases as 1/r even though ∮B·dl remains tied to μ₀I_enc. In toroidal reasoning, radius also matters because the field around the core follows B = μ₀NI/(2πr) inside the winding region. Use this slider after choosing a preset to test whether changing the loop geometry changes enclosed current, path length, or both.",
+      turns:
+        "Turns controls the number of windings used by coil-based cases. It has little conceptual role for the Infinite Straight Wire preset, where the conductor is modeled as one long current path. In the Solenoid (n=1000) preset, more Turns means more current loops per length, increasing the interior field predicted by B = μ₀nI. In the Toroid preset, Turns represents the total winding count N enclosed by an Amperian loop inside the core, giving B = μ₀NI/(2πr). Keep Current fixed while changing Turns to see how repeated windings amplify magnetic circulation.",
     },
     misconceptions: [
       {
@@ -184,7 +181,7 @@ export const amperesLaw: Experiment = {
         wrong:
           "The magnetic field outside a solenoid is just weaker, not zero.",
         correct:
-          "For an ideal infinite solenoid, B outside is zero by a symmetry argument: the field must be uniform and vanish at infinity for an infinite uniform solenoid. An Amperian rectangle straddling the wall with one long side inside and one outside gives B_inside − B_outside = μ₀nI (the loop encloses surface current nIℓ), consistent with B_inside = μ₀nI when B_outside = 0. Real finite solenoids have a small but nonzero exterior field.",
+          "For an ideal infinite solenoid, B outside is zero by a symmetry argument: the field must be uniform and vanish at infinity for an infinite uniform solenoid. An Amperian rectangle straddling the wall with one long side inside and one outside gives B_inside − B_outside = μ₀nI, consistent with B_inside = μ₀nI when B_outside = 0. Real finite solenoids have a small but nonzero exterior field.",
       },
       {
         wrong:
@@ -200,11 +197,11 @@ export const amperesLaw: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Symmetry argument gateway: before running the simulation, ask students to write the general Ampère's Law ∮B·dl = μ₀I_enc and explain what additional physical argument lets them replace the integral with B(2πr). Use this to establish that the law alone does not give B — the symmetry argument is essential.",
-      "Wire field data collection: set currentConfig = 0, sweep loopRadius from 0.3 m to 3.0 m in 0.1 m steps, record the displayed B at each step, and plot B vs. 1/r. Students should obtain a straight line through the origin with slope μ₀I/(2π). Verify by extracting μ₀ = 2π × slope / I and comparing to the accepted 4π × 10⁻⁷ T·m/A.",
-      "Solenoid interior vs. exterior probe: set currentConfig = 2 and solenoidTurns = 100 turns/m. Place loopRadius inside the solenoid and record B = μ₀nI; then move it outside and observe B ≈ 0. Discuss the two-step argument: (1) far-field/symmetry boundary conditions for an ideal infinite solenoid force B_outside → 0; (2) a rectangular Amperian loop straddling the wall then gives B_inside − B_outside = μ₀nI, so B_inside = μ₀nI.",
-      "Coaxial cable misconception challenge: set currentConfig = 1 and increase loopRadius past the outer conductor radius. Students who expect B to diminish gradually are surprised to see it drop to zero. Have them draw the Amperian loop, label I_enc, and write ∮B·dl = μ₀(0) explicitly.",
-      "Right-hand rule 3D practice: with currentConfig = 0, increase current to 10 A and use the fieldDensity slider to display a dense vector field. Ask students to verify the rotational direction of B vectors using the right-hand rule with thumb along the current direction, then predict how doubling current changes the B vector magnitude and observe the simulation.",
+      "Symmetry argument gateway: before running the simulation, ask students to write the general Ampère's Law ∮B·dl = μ₀I_enc and explain what additional physical argument lets them replace the integral with B(2πr). Use the Infinite Straight Wire preset first so Current and Loop Radius map directly onto B = μ₀I/(2πr).",
+      "Wire field data collection: choose the Infinite Straight Wire preset, hold Current constant, sweep Loop Radius from 0.1 m to 2.0 m, record the displayed B at each step, and plot B vs. 1/r. Students should obtain a straight line through the origin with slope μ₀I/(2π). Verify by extracting μ₀ = 2π × slope / I and comparing to the accepted 4π × 10⁻⁷ T·m/A.",
+      "Solenoid scaling lab: choose the Solenoid (n=1000) preset, hold Loop Radius fixed, and compare several Current values. Then hold Current fixed and sweep Turns from 100 to 2000. Students should identify the linear relationships in B = μ₀nI and explain why many windings make the interior field stronger.",
+      "Toroid enclosed-current challenge: choose the Toroid preset and ask students to predict how increasing Turns changes ∮B·dl. Then vary Loop Radius and discuss why the ideal toroid field is strongest inside the winding region and much smaller outside, even though each wire still carries the same Current.",
+      "Right-hand rule 3D practice: with the Infinite Straight Wire preset, increase Current to 10 A and ask students to verify the rotational direction of B vectors using the right-hand rule with thumb along the current direction. Then switch to Solenoid (n=1000) and Toroid presets so students compare circular field lines, axial interior fields, and confined toroidal fields.",
     ],
     faq: [
       {

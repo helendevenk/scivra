@@ -30,9 +30,9 @@ export const electronConfiguration: Experiment = {
 
   parameters: [
     {
-      id: "atomicNumber",
-      label: "Atomic Number (Z)",
-      unit: "",
+      id: "electronCount",
+      label: "Electrons",
+      unit: "e⁻",
       min: 1,
       max: 36,
       default: 1,
@@ -40,12 +40,12 @@ export const electronConfiguration: Experiment = {
       tier: "free",
     },
     {
-      id: "showOrbitalDiagram",
-      label: "Show Orbital Diagram (0=Off, 1=On)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
+      id: "animationSpeed",
+      label: "Animation Speed",
+      unit: "level",
+      min: 1,
+      max: 4,
+      default: 2,
       step: 1,
       tier: "free",
     },
@@ -66,7 +66,7 @@ export const electronConfiguration: Experiment = {
     "Electrons in atoms occupy orbitals — regions of space described by quantum numbers (n, l, ml, ms). The Aufbau principle states that electrons fill from lowest to highest energy. Each orbital holds at most 2 electrons with opposite spins (Pauli exclusion principle). When filling degenerate orbitals (same energy), electrons spread out with parallel spins first (Hund's rule). The filling order follows the (n+l) rule: 1s, 2s, 2p, 3s, 3p, 4s, 3d, 4p... Notable exceptions: Cr is [Ar] 3d⁵4s¹ (half-filled d stability) and Cu is [Ar] 3d¹⁰4s¹ (fully-filled d stability). Electron configuration determines chemical properties and periodic trends.",
 
   instructions:
-    "Use the slider or element buttons to select an element. Watch the Bohr model animate electrons into shells, while the orbital diagram fills boxes according to the Aufbau order. The notation panel shows both full and noble gas shorthand configurations. Pay attention to the 3d/4s crossover and the Cr/Cu exceptions.",
+    "Use the Electrons slider to choose a neutral atom from 1 to 36 electrons, and use the Speed slider to slow down or accelerate orbital rotation and Aufbau fill animation. Try the Carbon, Neon, and Iron presets to compare a bonding main-group atom, a filled noble-gas shell, and a transition-metal d subshell. Press Animate Fill to watch the boxes populate according to Aufbau, Pauli, and Hund's rules.",
 
   challenges: [
     {
@@ -109,14 +109,35 @@ export const electronConfiguration: Experiment = {
     educationalLevel: "High School",
     teaches: "Electron Configuration and Orbital Theory",
   },
+  htmlControlAliases: { electronCount: "sl-e", animationSpeed: "sl-spd" },
+  presets: [
+    {
+      id: "C",
+      label: "Carbon (6e)",
+      description:
+        "Carbon has six electrons, ending in 2p² with four valence electrons. Use it to connect orbital filling to carbon's common bonding patterns.",
+    },
+    {
+      id: "Ne",
+      label: "Neon (10e)",
+      description:
+        "Neon has ten electrons and a filled second shell. It is a clean preset for discussing noble-gas stability and completed s and p subshells.",
+    },
+    {
+      id: "Fe",
+      label: "Iron (26e)",
+      description:
+        "Iron has twenty-six electrons and reaches the 3d subshell. Use it to count unpaired d electrons and discuss transition-metal configurations.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Electron configuration is the complete address of every electron in an atom — which sublevel it occupies and how many electrons share that sublevel. The configuration of carbon, 1s²2s²2p², instantly tells a chemist that carbon has four valence electrons available for bonding, explaining why it forms four bonds in methane and two double bonds in CO₂. Three rules govern the address assignment: the Aufbau principle fills lowest-energy orbitals first, the Pauli exclusion principle limits each orbital to two electrons with opposite spins, and Hund's rule spreads electrons across degenerate orbitals singly before pairing. This simulation animates the filling sequence for any element Z=1 to 36, shows the noble-gas shorthand notation side by side with the full configuration, and flags the Cr and Cu exceptions where half-filled and fully filled d subshells break the expected pattern. Covered by AP Chem 1.B.1 and 1.C.1.",
     parameterExplanations: {
-      atomicNumber:
-        "The number of protons (and electrons for a neutral atom), ranging from 1 (hydrogen) to 36 (krypton). Each increment advances the filling sequence by one electron — the orbital diagram animates the new electron dropping into its correct subshell according to the (n+l) Madelung rule, and both the full configuration string and the noble-gas shorthand update in real time.",
-      showOrbitalDiagram:
-        "Toggles the box-and-arrow orbital diagram that shows each subshell as a row of boxes with spin-up and spin-down arrows. Setting this to 1 (on) makes Hund's rule visible: the three 2p boxes for nitrogen (Z=7) each get one arrow before any pairing occurs. Setting it to 0 shows only the compact notation, useful for timed configuration-writing practice.",
+      electronCount:
+        "Electron Count sets how many electrons are placed into the neutral atom model, from 1 electron for hydrogen through 36 electrons for krypton. In a neutral atom this count matches the atomic number, so each step adds one proton's worth of electron structure while the visualization rebuilds the filled orbitals, valence-electron count, and unpaired-electron count. Move slowly through 4s and 3d to see why transition-metal configurations require careful ordering. The Carbon, Neon, and Iron presets jump to useful checkpoints for comparing partially filled p orbitals, a closed noble-gas shell, and a d-block example.",
+      animationSpeed:
+        "Animation Speed controls how quickly the scene rotates and how fast the Animate Fill sequence advances from one electron to the next. It is a viewing control rather than a chemical variable: changing it does not alter the electron configuration, orbital capacities, or Hund's-rule box filling. Lower levels make the Aufbau sequence easier to narrate as each electron appears, which is helpful when students are counting boxes or checking spin pairing. Higher levels are useful after students already understand the sequence and want to scan several electron counts quickly or reset for another preset comparison.",
     },
     misconceptions: [
       {
@@ -151,17 +172,17 @@ export const electronConfiguration: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Prediction-then-reveal: students write configurations for Z=21 through Z=30 on paper, then step through the simulation one element at a time, pausing at Cr (Z=24) and Cu (Z=29) to identify where their predictions differ and why — directly addresses AP Chem 1.B.1 exceptions.",
-      "Orbital diagram Hund's rule check: set Z=7 (nitrogen) with showOrbitalDiagram=1 and ask students to count unpaired electrons. Then move to Z=8 (oxygen) and ask why one 2p box shows two arrows — this probes whether students understand pairing vs. spin alignment.",
-      "Ion configuration data collection: students record the neutral configuration for Fe, Co, Ni, Cu (Z=26-29), then predict the ion configurations for each 2+ ion by removing 4s electrons first — challenges the common misconception that d electrons are removed first.",
-      "Misconception probe on filling order: before opening the simulation, ask 'does 4s or 3d fill first?' Collect both answers, then run the simulation through K (Z=19) to Sc (Z=21) to show the 4s-before-3d sequence and discuss the (n+l) rule quantitatively to address whichever direction students were uncertain.",
-      "Valence electron connect: after determining the configuration, ask students to identify the valence electrons and predict the likely ion charge. Compare Cl ([Ne]3s²3p⁵, gains 1e⁻ → Cl⁻) to Ca ([Ar]4s², loses 2e⁻ → Ca²⁺) to reinforce how configuration predicts reactivity.",
+      "Prediction-then-reveal: students write configurations for electron counts 21 through 30 on paper, then step through the Electrons slider one value at a time, pausing where their Aufbau predictions become harder to track.",
+      "Orbital diagram Hund's rule check: set the Electrons slider to 7 for nitrogen and ask students to count unpaired electrons. Then move to 8 for oxygen and ask why one 2p box shows two arrows — this probes whether students understand pairing vs. spin alignment.",
+      "Preset comparison: jump from Carbon to Neon to Iron and ask students to identify the highest occupied subshell, the valence-electron count shown in the overlay, and the number of unpaired electrons.",
+      "Misconception probe on filling order: before opening the simulation, ask 'does 4s or 3d fill first?' Collect both answers, then run the simulation through 19 to 21 electrons to show the 4s-before-3d sequence and discuss the (n+l) rule quantitatively.",
+      "Animation pacing activity: set Animation Speed low, press Animate Fill, and have students call out each subshell as it begins filling. Repeat at a higher speed after they can predict the sequence without pausing.",
     ],
     faq: [
       {
         question: "How do I write a noble-gas shorthand electron configuration?",
         answer:
-          "Find the noble gas in the period above your element, write it in brackets, then continue filling from the next s subshell. For chlorine (Z=17), the noble gas above it is neon (Z=10), so the shorthand is [Ne]3s²3p⁵. The simulation displays both the full and shorthand notations side by side.",
+          "Find the noble gas in the period above your element, write it in brackets, then continue filling from the next s subshell. For chlorine (17 electrons), the noble gas above it is neon (10 electrons), so the shorthand is [Ne]3s²3p⁵. Use the simulation's full configuration and orbital boxes as evidence, then convert the filled core into bracket notation yourself.",
       },
       {
         question: "Why does copper (Z=29) have configuration [Ar]3d¹⁰4s¹ instead of [Ar]3d⁹4s²?",
@@ -181,7 +202,7 @@ export const electronConfiguration: Experiment = {
       {
         question: "How many unpaired electrons does iron (Fe, Z=26) have?",
         answer:
-          "Iron's configuration is [Ar]3d⁶4s². The 3d⁶ distributes as five boxes: four boxes have one electron each and one box is paired, giving 4 unpaired electrons. This makes iron strongly paramagnetic. You can verify this by setting Z=26 in the simulation with showOrbitalDiagram=1 and counting the single arrows in the 3d row.",
+          "Iron's configuration is [Ar]3d⁶4s². The 3d⁶ distributes across five d boxes: four boxes have one electron each and one box is paired, giving 4 unpaired electrons. This makes iron strongly paramagnetic. You can verify this by choosing the Iron preset or setting the Electrons slider to 26 and counting the single arrows in the 3d row.",
       },
     ],
   },

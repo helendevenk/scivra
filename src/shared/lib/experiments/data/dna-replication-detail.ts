@@ -16,15 +16,14 @@ export const dnaReplicationDetail: Experiment = {
   tags: ["DNA replication", "helicase", "DNA polymerase", "leading strand", "lagging strand", "Okazaki fragments", "AP Biology"],
   difficulty: "advanced",
   parameters: [
-    { id: "speed", label: "Replication Speed", unit: "x", min: 0.5, max: 3, default: 1, step: 0.5, tier: "free" },
-    { id: "showEnzymes", label: "Show Enzyme Labels (0=off, 1=on)", unit: "", min: 0, max: 1, default: 1, step: 1, tier: "free" },
-    { id: "showDirection", label: "Show 5'→3' Direction (0=off, 1=on)", unit: "", min: 0, max: 1, default: 1, step: 1, tier: "free" },
+    { id: "repSpeed", label: "Replication Speed", unit: "x", min: 0.2, max: 4, default: 1, step: 0.1, tier: "free" },
+    { id: "errorRate", label: "Polymerase Error Rate", unit: "%", min: 0, max: 5, default: 0, step: 1, tier: "free" },
   ],
   formulas: [
     { latex: "5' \\rightarrow 3'", description: "DNA polymerase can only add nucleotides in the 5' to 3' direction" },
   ],
   theory: "DNA replication is semi-conservative — each new DNA molecule contains one original and one new strand. Helicase unwinds the double helix at the replication fork. Single-strand binding proteins stabilize the separated strands. Primase synthesizes short RNA primers. DNA polymerase III extends primers in the 5'→3' direction. On the leading strand, synthesis is continuous. On the lagging strand, synthesis is discontinuous, producing Okazaki fragments (~1000-2000 bp in prokaryotes). DNA polymerase I replaces RNA primers with DNA. DNA ligase seals nicks between fragments. The result: two identical DNA molecules.",
-  instructions: "Press Play to watch the replication fork advance. Observe the difference between leading (continuous) and lagging (discontinuous) strand synthesis. Toggle enzyme labels and 5'→3' direction arrows.",
+  instructions: "Press Play to watch the replication fork advance. Use Replication Speed to slow down or accelerate fork movement, and use Polymerase Error Rate to introduce copying mistakes. Try the Normal Replication, Helicase Blocked, and Pol III Error presets to compare a healthy fork, a stalled fork, and replication without effective proofreading.",
   challenges: [
     { id: "drd-c1", question: "Why is the lagging strand synthesized in fragments?", hint: "DNA polymerase only works 5'→3'. The lagging strand template runs 5'→3' toward the fork, so polymerase must work away from the fork in short bursts", tier: "free" },
     { id: "drd-c2", question: "What would happen if ligase were knocked out?", hint: "Okazaki fragments on the lagging strand would never be joined, leaving nicks in the new DNA that could lead to strand breaks", tier: "pro" },
@@ -35,16 +34,20 @@ export const dnaReplicationDetail: Experiment = {
   seoTitle: "DNA Replication Detailed Simulation | Scivra AP Biology",
   seoKeywords: ["DNA replication simulation", "helicase polymerase interactive", "leading lagging strand", "AP Biology"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "DNA Replication" },
+  htmlControlAliases: { repSpeed: "sl-repspeed", errorRate: "sl-errrate" },
+  presets: [
+    { id: "normal", label: "Normal Replication", description: "Runs the replication fork with typical enzyme coordination and low copying error. Use it as the baseline for comparing speed, strand directionality, and fragment joining." },
+    { id: "blocked", label: "Helicase Blocked", description: "Shows what happens when helicase cannot unwind the parental double helix. The fork stalls because polymerases cannot copy a template that remains zipped together." },
+    { id: "error", label: "Pol III Error (no proofreading)", description: "Models a replication condition where DNA polymerase III makes errors without normal proofreading. Use it to connect molecular copying mistakes with mutation risk and fidelity mechanisms." },
+  ],
   contentSections: {
     whatIsIt:
       "DNA replication is the molecular process every dividing cell runs to copy its genome — humans copy all 3.2 billion base pairs in roughly 8 hours by firing thousands of origins at once. The process is semi-conservative: each new DNA double helix contains one original strand and one freshly built strand, evidence Meselson and Stahl built up in 1958. Helicase unzips the double helix at the replication fork; primase drops short RNA primers to give polymerase a foothold; the replicative DNA polymerase races along, adding nucleotides only in the 5'→3' direction. (This simulation uses the well-characterized E. coli replisome with DNA polymerase III as its model; eukaryotes use polymerases α, δ, and ε for the same logic.) That directionality constraint is why the lagging strand is built in reverse chunks called Okazaki fragments — each about 1,000–2,000 base pairs in prokaryotes.",
     parameterExplanations: {
-      speed:
-        "A playback multiplier from 0.5× (half speed) to 3× (triple speed), controlling how fast the replication fork animation advances. Set speed to 0.5× to count individual nucleotide additions on both strands; set it to 3× for a quick overview of the whole-fork architecture.",
-      showEnzymes:
-        "Toggles floating name labels for each enzyme in the animation (0 = hidden, 1 = visible). With labels on, helicase, primase, DNA polymerase III, DNA polymerase I, and ligase each display their name at their current position. Hiding labels and asking students to identify each enzyme by behavior makes a quick formative assessment.",
-      showDirection:
-        "Overlays arrows indicating the 5'→3' synthesis direction on both strands (0 = off, 1 = on). Enabling this makes immediately visible why the leading strand synthesis is continuous toward the fork while lagging strand synthesis must flip away from it in each Okazaki fragment.",
+      repSpeed:
+        "Replication Speed controls how quickly the fork animation moves, from 0.2× for close observation to 4× for a compressed overview. Slow speeds are useful when students need to track helicase opening the fork, primase placing RNA primers, and DNA polymerase extending each strand in the 5'→3' direction. Faster speeds help reveal the system-level pattern: continuous leading-strand synthesis happening beside discontinuous lagging-strand synthesis. Keep the preset on Normal Replication first, then change only this slider so students can separate playback rate from the underlying molecular mechanism.",
+      errorRate:
+        "Polymerase Error Rate controls how often the simulation introduces copying mistakes during strand synthesis. At 0%, the fork represents high-fidelity replication with normal proofreading logic. Raising the slider makes mismatches easier to observe and gives students a concrete way to discuss why DNA polymerase accuracy and repair pathways matter. Use a low value to show occasional mistakes, or compare it with the Pol III Error preset to emphasize what happens when proofreading is compromised. This slider supports discussions of mutation without implying that every replication error automatically becomes a permanent inherited change.",
     },
     misconceptions: [
       {
@@ -73,11 +76,11 @@ export const dnaReplicationDetail: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Leading vs. lagging strand comparison: enable showDirection (1) and pause the animation at several time points — ask students to record the direction of each polymerase relative to the fork and explain why they differ, generating written justification for the 5'→3' rule.",
-      "Enzyme identification quiz: set showEnzymes to 0 and run the simulation, then stop at a moment when all enzymes are visible and ask students to label each one on a screenshot — probes retention of the multi-enzyme misconception.",
+      "Leading vs. lagging strand comparison: run the Normal Replication preset and pause the animation at several time points — ask students to record the direction of each polymerase relative to the fork and explain why they differ, generating written justification for the 5'→3' rule.",
+      "Helicase checkpoint discussion: switch from Normal Replication to Helicase Blocked and ask students to identify which downstream steps stop first, then connect that observation to why template unwinding must happen before polymerase extension.",
       "Meselson-Stahl reconstruction: before showing the simulation, have students predict what density-gradient results would look like after 1, 2, and 3 rounds of replication for conservative, semi-conservative, and dispersive models; then use the simulation to confirm semi-conservative behavior, connecting AP Bio 3.A.1 evidence to mechanism.",
-      "Okazaki fragment data collection: run at speed = 0.5× and count how many Okazaki fragments form on the lagging strand per complete fork advance; compare to the biological value (~1,000–2,000 bp per fragment in E. coli at ~1,000 nt/s) and discuss what variables affect fragment length.",
-      "Ligase knockout thought experiment: after watching a full replication cycle, ask students to predict what would accumulate in the nucleus if ligase were inhibited — grounds the abstract enzyme function in observable consequences.",
+      "Okazaki fragment data collection: set Replication Speed near the low end and count how many Okazaki fragments form on the lagging strand per complete fork advance; compare to the biological value (~1,000–2,000 bp per fragment in E. coli at ~1,000 nt/s) and discuss what variables affect fragment length.",
+      "Proofreading and mutation mini-lab: raise Polymerase Error Rate, then compare the result with the Pol III Error preset so students can explain how replication fidelity reduces, but does not erase, mutation risk.",
     ],
     faq: [
       {

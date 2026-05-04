@@ -27,40 +27,30 @@ export const atomicStructure: Experiment = {
       label: "Atomic Number (Z)",
       unit: "",
       min: 1,
-      max: 36,
-      default: 6,
+      max: 92,
+      default: 1,
       step: 1,
       tier: "free",
     },
     {
-      id: "energyLevel",
-      label: "Excitation Energy Level",
-      unit: "",
+      id: "principalQuantumNumber",
+      label: "Principal Quantum Number",
+      unit: "n",
       min: 1,
-      max: 6,
+      max: 7,
+      default: 1,
+      step: 1,
+      tier: "free",
+    },
+    {
+      id: "subshellIndex",
+      label: "Orbital Subshell",
+      unit: "subshell",
+      min: 1,
+      max: 4,
       default: 2,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "orbitalType",
-      label: "Orbital View (0=s, 1=p, 2=d)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "pro",
-    },
-    {
-      id: "showTrends",
-      label: "Show Periodic Trend (0=radius, 1=IE, 2=EN)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -83,7 +73,7 @@ export const atomicStructure: Experiment = {
     "Atoms consist of a nucleus (protons + neutrons) surrounded by electrons in quantum orbitals. Principal quantum number n defines energy shells. Subshells: s (1 orbital, 2e), p (3 orbitals, 6e), d (5 orbitals, 10e), f (7 orbitals, 14e). Electron configuration follows the Aufbau principle (fill lowest energy first), Pauli exclusion (max 2e per orbital, opposite spins), and Hund's rule (fill each orbital singly before pairing). Orbital shapes: s = sphere, p = dumbbell (3 orientations), d = cloverleaf (5 orientations). Periodic trends: atomic radius decreases across a period (increasing nuclear charge pulls electrons in) and increases down a group (more shells). Ionization energy (IE) and electronegativity (EN) show opposite trends to radius.",
 
   instructions:
-    "Set the atomic number and watch electrons fill orbitals. The electron configuration is displayed. Click energy levels to excite an electron — watch the photon emitted as it drops back, and see the corresponding spectral line colored by wavelength. Use the orbital viewer (Pro) to see 3D probability density clouds for s, p, d orbitals.",
+    "Use the Atomic Number slider to choose an element from hydrogen to uranium, the Principal Quantum Number slider to focus on shell n = 1 through 7, and the Orbital Subshell slider to switch between s, p, d, and f views. Try the Hydrogen (Z=1), Carbon (Z=6), and Mercury (Z=80) presets to jump between a one-electron atom, a period-2 bonding example, and a heavy atom with filled inner shells.",
 
   challenges: [
     {
@@ -116,6 +106,7 @@ export const atomicStructure: Experiment = {
   tier: "free",
   estimatedTime: 15,
   relatedExperiments: ["molecular-bonding", "acid-base-ph"],
+  htmlPath: "/experiments/ap-chemistry/atomic-structure.html",
 
   seoTitle: "Atomic Structure Electron Configuration 3D | Scivra AP Chemistry",
   seoKeywords: [
@@ -131,18 +122,41 @@ export const atomicStructure: Experiment = {
     educationalLevel: "High School",
     teaches: "Atomic Structure and Electron Configuration",
   },
+  htmlControlAliases: {
+    atomicNumber: "sl-Z",
+    principalQuantumNumber: "sl-n",
+    subshellIndex: "sl-spd",
+  },
+  presets: [
+    {
+      id: "H",
+      label: "Hydrogen (Z=1)",
+      description:
+        "Hydrogen gives the simplest possible atom: one proton and one electron. It is the cleanest starting point for connecting atomic number, the n shell setting, and quantized energy levels.",
+    },
+    {
+      id: "C",
+      label: "Carbon (Z=6)",
+      description:
+        "Carbon shows a compact period-2 atom with valence electrons in the 2s and 2p subshells. It is useful for discussing orbital occupancy and chemical bonding patterns.",
+    },
+    {
+      id: "Hg",
+      label: "Mercury (Z=80)",
+      description:
+        "Mercury jumps to a heavy atom with many filled inner shells and d-block history. It helps students compare a simple atom with a high-Z element where shielding matters.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Atomic structure describes how protons and neutrons pack into a nucleus while electrons occupy discrete quantum orbitals — regions of space defined by four quantum numbers rather than fixed circular paths. A neon sign glows red-orange because electrons in neon atoms absorb electrical energy, jump to higher orbitals, and release photons of specific wavelengths when they fall back. This simulation lets you dial in any element from hydrogen (Z=1) to krypton (Z=36), watch the Aufbau filling sequence populate s, p, and d subshells, excite electrons to higher energy levels and observe the emitted photon color, and overlay periodic trend data to see how atomic radius, ionization energy, and electronegativity shift across the table. AP Chem 1.A.1, 1.B.1, and 1.C.1 all converge here.",
     parameterExplanations: {
       atomicNumber:
-        "The number of protons in the nucleus, which also equals the number of electrons in a neutral atom (Z = 1 to 36). Increasing Z by one adds a proton and an electron, advancing the Aufbau filling sequence one step — the simulation rebuilds the ground-state configuration and redraws the orbital diagram instantly.",
-      energyLevel:
-        "The principal quantum number (n = 1 to 6) to which the outermost electron is excited. Raising this value moves that electron farther from the nucleus; when it relaxes the simulation fires a photon whose color corresponds to ΔE = hf. The visible Balmer series comes from transitions ending at n = 2 (e.g., n = 3 → 2 gives Hα at 656 nm); transitions ending at n = 1 fall in the UV Lyman series.",
-      orbitalType:
-        "Selects which subshell shape to render in the 3D viewer: 0 = spherical s orbital, 1 = dumbbell-shaped p orbital (three orientations), 2 = cloverleaf d orbital (five orientations). Switching between them illustrates why p orbitals have directional bonding and d orbitals produce the split energy levels central to transition-metal color.",
-      showTrends:
-        "Overlays a periodic-trend heat map: 0 = atomic radius (pm), 1 = first ionization energy (kJ/mol), 2 = electronegativity (Pauling scale). The three maps form mirror images of each other across the table — atomic radius increases down and to the left, while IE and EN increase up and to the right.",
+        "Atomic Number is the number of protons in the nucleus. For a neutral atom, it also sets the number of electrons that must be placed into orbitals. Moving this slider from 1 to 92 changes the element, so students can compare hydrogen, carbon, transition metals, and heavier atoms without changing the underlying rules. Watch how adding protons increases nuclear charge while added electrons occupy shells and subshells according to the filling pattern. This is the main control for connecting element identity to electron configuration, shielding, valence electrons, and periodic behavior.",
+      principalQuantumNumber:
+        "Principal Quantum Number selects the shell being emphasized, from n = 1 through n = 7. Lower n values represent orbitals closer to the nucleus and generally lower in energy, while higher n values represent larger shells farther out. Holding the atomic number constant while changing n helps students separate two ideas that are often blended together: which element they are studying and which shell they are inspecting. Use this slider to ask where core electrons sit, where valence electrons appear, and how shell number contributes to atomic size and shielding.",
+      subshellIndex:
+        "Orbital Subshell chooses the subshell family displayed by the viewer: 1 for s, 2 for p, 3 for d, and 4 for f. The index is numeric because the HTML control is a slider, but each stop maps to a named orbital shape and capacity. Moving from s to p to d to f shows why orbital geometry matters: s orbitals are spherical, p orbitals are directional, d orbitals support transition-metal behavior, and f orbitals appear in heavier elements. Use it with the n slider to compare shell level and subshell shape as separate quantum labels.",
     },
     misconceptions: [
       {
@@ -177,22 +191,22 @@ export const atomicStructure: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Trend prediction before reveal: cover the showTrends overlay, have students sketch their predicted atomic radius heat map for Z=1 to 18, then uncover the simulation to compare — targets AP Chem 1.C.1 periodic trend reasoning.",
-      "Emission spectrum lab: set Z=1 (hydrogen), sweep energyLevel from 2 to 6, record each photon color and estimated wavelength, then use ΔE = hc/λ to calculate transition energies and compare to the Balmer series values — reinforces AP Chem 1.B.1.",
-      "Misconception probe on atomic radius: ask students which is larger, Na or Cl, before opening the simulation. After revealing the trend overlay, follow up with 'why does adding protons shrink the atom?' to surface the Z_eff argument.",
-      "Aufbau data collection: students record ground-state configurations for Z=21 through Z=30 and flag every exception to the expected filling order (Cr at Z=24, Cu at Z=29) — connects to AP Chem 1.B.1 anomalies.",
-      "Comparative ionization probe: examine a high-Z element like Kr (Z=36) and have students explain why its first ionization energy (1351 kJ/mol) is so much higher than potassium's (419 kJ/mol) despite being one period away.",
+      "Preset comparison warm-up: have students click Hydrogen, Carbon, and Mercury, then write one claim about how increasing Z changes the nucleus, electron count, and shell complexity.",
+      "Quantum-label practice: keep Carbon selected, move the Principal Quantum Number slider from n = 1 to n = 3, and ask students which shells contain core electrons, valence electrons, or no electrons for carbon.",
+      "Subshell shape station: set a fixed n value and move the Orbital Subshell slider through s, p, d, and f. Students sketch each shape and connect the numeric slider stops to subshell names and capacities.",
+      "Periodic reasoning prompt: use the Atomic Number slider to compare neighboring elements, then ask students to explain why added protons and added electrons do not affect atomic size in identical ways.",
+      "Heavy-element contrast: jump from Hydrogen to Mercury and have students identify why shielding becomes a necessary idea once many inner shells sit between the nucleus and outer electrons.",
     ],
     faq: [
       {
-        question: "Why does the simulation only go up to Z = 36 (krypton)?",
+        question: "Why does the simulation go up to Z = 92?",
         answer:
-          "Elements up to Z=36 cover the full 1s through 4p filling sequence, which includes all the Aufbau rules, both notable d-block exceptions (Cr and Cu), and the complete set of AP Chem 1.B.1 configurations. Heavier elements require f-orbital treatment that exceeds the AP curriculum scope.",
+          "Z = 92 reaches uranium, so the slider covers the naturally familiar span from hydrogen through very heavy atoms while still keeping the control bounded for classroom use. That range lets students compare simple one-electron behavior, second-period bonding examples, transition-metal d subshells, and heavier atoms where shielding and inner shells become important. Teachers can stay within the AP Chemistry scope by focusing on lower-Z examples, then use high-Z presets or slider positions as contrast cases.",
       },
       {
         question: "How does this simulation connect to AP Chem standards 1.A.1, 1.B.1, and 1.C.1?",
         answer:
-          "AP Chem 1.A.1 covers the nuclear model and subatomic particles — the Z slider and nucleus display address that directly. AP Chem 1.B.1 requires writing electron configurations and identifying periodic trends, which the Aufbau animation and showTrends overlay practice. AP Chem 1.C.1 connects electron configuration to periodic trends like ionization energy and atomic radius.",
+          "AP Chem 1.A.1 covers the nuclear model and subatomic particles — the Atomic Number slider and nucleus display address that directly. AP Chem 1.B.1 requires writing electron configurations and understanding orbital occupancy, which the n-shell and subshell controls help students inspect. AP Chem 1.C.1 connects electron configuration to periodic trends like ionization energy and atomic radius, which students can reason about by comparing elements across Z values.",
       },
       {
         question: "What is effective nuclear charge and why does it matter for periodic trends?",

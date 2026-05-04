@@ -32,40 +32,30 @@ export const beersLawLab: Experiment = {
     {
       id: "concentration",
       label: "Concentration",
-      unit: "mol/L",
-      min: 0,
-      max: 1.0,
-      default: 0.1,
-      step: 0.01,
+      unit: "mM",
+      min: 1,
+      max: 200,
+      default: 50,
+      step: 1,
       tier: "free",
     },
     {
       id: "pathLength",
       label: "Path Length",
-      unit: "cm",
-      min: 0.5,
-      max: 5.0,
-      default: 1.0,
-      step: 0.5,
+      unit: "mm",
+      min: 1,
+      max: 50,
+      default: 10,
+      step: 1,
       tier: "free",
     },
     {
-      id: "wavelength",
-      label: "Wavelength",
-      unit: "nm",
-      min: 400,
-      max: 700,
-      default: 520,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "solutionType",
-      label: "Solution (0=CuSO₄, 1=KMnO₄, 2=CoCl₂)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
+      id: "molarAbsorptivity",
+      label: "Molar Absorptivity",
+      unit: "M⁻¹·cm⁻¹",
+      min: 1,
+      max: 500,
+      default: 12,
       step: 1,
       tier: "free",
     },
@@ -88,7 +78,7 @@ export const beersLawLab: Experiment = {
     "Beer-Lambert Law states that absorbance is directly proportional to both the concentration of the absorbing species and the path length of light through the solution. A = εbc, where ε is the molar absorptivity (a constant for each substance at a given wavelength), b is the path length in cm, and c is the molar concentration. Transmittance T = I/I₀ is the fraction of light that passes through. A = -log₁₀(T). A calibration curve (A vs c) at fixed wavelength and path length gives a straight line through the origin. The slope is εb. To find an unknown concentration, measure its absorbance and read from the calibration curve. Deviations from Beer's Law occur at high concentrations (>0.01 M for most species) due to intermolecular interactions.",
 
   instructions:
-    "Select a solution type and adjust concentration with the slider. Observe the solution color change in the cuvette — darker = more concentrated. The spectrophotometer beam passes through and measures absorbance. Try different path lengths and wavelengths. The graph plots absorbance vs concentration in real time.",
+    "Use the three sliders to adjust concentration, path length, and molar absorptivity. Compare how each variable changes absorbance and transmittance in the cuvette. Try the CuSO₄, KMnO₄, and K₂Cr₂O₇ presets to switch between common colored solutions, then fine-tune the sliders to test Beer's Law relationships.",
 
   challenges: [
     {
@@ -131,31 +121,54 @@ export const beersLawLab: Experiment = {
     educationalLevel: "High School",
     teaches: "Beer-Lambert Law and Spectrophotometry",
   },
+  htmlControlAliases: {
+    concentration: "sl-c",
+    pathLength: "sl-l",
+    molarAbsorptivity: "sl-eps",
+  },
+  presets: [
+    {
+      id: "CuSO4",
+      label: "CuSO₄ (blue)",
+      description:
+        "Copper(II) sulfate is a blue solution that provides a familiar reference case for connecting concentration, path length, molar absorptivity, absorbance, and transmittance.",
+    },
+    {
+      id: "KMnO4",
+      label: "KMnO₄ (purple)",
+      description:
+        "Potassium permanganate is a strongly colored purple solution, useful for showing how high absorptivity can produce large absorbance even at modest concentrations.",
+    },
+    {
+      id: "K2Cr2O7",
+      label: "K₂Cr₂O₇ (orange)",
+      description:
+        "Potassium dichromate is an orange solution that helps students compare a different colored absorber while keeping the same Beer's Law variables visible.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Beer's Law (the Beer-Lambert Law) states that the absorbance of a solution is directly proportional to both its molar concentration and the distance light travels through it: A = ε × b × c. A colorimeter or spectrophotometer in a real lab exploits this relationship to determine unknown concentrations — the same principle that medical analyzers use to measure glucose, hemoglobin, or bilirubin in blood. AP Chem 3.C.1 requires quantitative understanding of this proportionality and the construction of calibration curves. In this simulation, you control solution concentration, cuvette path length, and wavelength, while a virtual spectrophotometer reports absorbance in real time and plots the A-vs-c calibration curve as you adjust each parameter.",
     parameterExplanations: {
       concentration:
-        "The molar concentration of the solution in the cuvette, in mol/L (range 0–1.0 M, default 0.1 M). Absorbance increases linearly with concentration within the Beer's Law range; the actual usable range depends on the species, wavelength, path length, and instrument absorbance ceiling, so always verify linearity from the calibration curve before reporting a concentration. This parameter is the primary variable when constructing that curve.",
+        "Concentration is the amount of absorbing solute in the cuvette, shown in millimoles per liter. In Beer's Law, concentration is the c term in A = εbc, so increasing it raises absorbance when path length and molar absorptivity stay fixed. Use this slider to build an A-vs-c calibration curve and see why dilute standards form a straight-line relationship. The simulation range spans 1-200 mM, so students can compare low, moderate, and high sample amounts while watching transmittance fall as more light is absorbed.",
       pathLength:
-        "The distance the light beam travels through the solution, in cm (range 0.5–5.0 cm, default 1.0 cm). By A = εbc, doubling path length doubles absorbance at constant concentration — the same mathematical relationship as doubling concentration. Standard laboratory cuvettes have a 1.0 cm path length; the simulation lets you explore how deviating from this default changes the measured absorbance.",
-      wavelength:
-        "The wavelength of incident light, in nm (range 400–700 nm, default 520 nm). Each compound absorbs most strongly at its peak wavelength (λ_max), where ε is highest. CuSO₄ appears blue because it absorbs red-orange light near 635 nm; KMnO₄ is purple and absorbs in the green near 525 nm. Selecting a wavelength far from λ_max reduces ε and compresses the calibration curve slope, making concentration measurements less sensitive.",
-      solutionType:
-        "Selects the solution in the cuvette: 0 = CuSO₄ (blue, λ_max ≈ 635 nm), 1 = KMnO₄ (purple, λ_max ≈ 525 nm), 2 = CoCl₂ (pink, λ_max ≈ 510 nm). Each compound has a distinct molar absorptivity ε at any given wavelength. Switching compounds at the same concentration and path length produces different absorbance values, illustrating that ε is a substance-specific constant.",
+        "Path length is the distance the light travels through the colored solution, shown in millimeters. In the Beer-Lambert equation it is the b term, traditionally converted to centimeters for calculation. A longer path gives the absorbing particles more distance to intercept light, so absorbance increases in direct proportion when concentration and molar absorptivity stay the same. The 1-50 mm slider makes this visible beyond the standard 10 mm laboratory cuvette, helping students understand why calibration standards and unknowns must be measured with the same cuvette geometry.",
+      molarAbsorptivity:
+        "Molar absorptivity is the ε term in A = εbc, with units M⁻¹·cm⁻¹. It represents how strongly the dissolved species absorbs the selected light under the simulation conditions. A larger ε produces a steeper calibration curve, so a small change in concentration creates a larger absorbance change. Use the CuSO₄, KMnO₄, and K₂Cr₂O₇ presets to compare colored solutions, then adjust this slider directly to isolate the mathematical role of ε. This helps students separate substance-specific absorption strength from sample amount and cuvette path length.",
     },
     misconceptions: [
       {
         wrong:
           "Beer's Law works at any concentration — just measure absorbance and divide by εb to get concentration.",
         correct:
-          "Beer's Law is linear only within a limited concentration range that depends on species, wavelength, path length, and instrument range. For many AP-level colored species the linear range falls in dilute aqueous concentrations, and the simulation shows a noticeable bend at higher values. Always verify linearity from your calibration curve before reporting a concentration from a measured absorbance.",
+          "Beer's Law is linear only within a limited concentration range that depends on the absorbing species, path length, molar absorptivity, and instrument range. For many AP-level colored species the linear range falls in dilute aqueous concentrations, and the simulation shows a noticeable bend at higher values. Always verify linearity from your calibration curve before reporting a concentration from a measured absorbance.",
       },
       {
         wrong:
-          "A solution's color tells you which wavelength to use for measurement — a blue solution should be measured with blue light.",
+          "A solution's visible color alone tells you exactly how much light it will absorb.",
         correct:
-          "You should use the wavelength the solution absorbs most strongly, which is the complement of its color. A blue solution (like CuSO₄) looks blue because it transmits blue light and absorbs its complement, orange-red (~635 nm). Measuring at 635 nm gives the highest absorbance and therefore the most sensitive calibration curve. Measuring with blue light at ~460 nm gives near-zero absorbance — the solution barely absorbs it.",
+          "Visible color is useful qualitative evidence, but absorbance must be measured quantitatively. Two blue-looking solutions can have different concentrations, cuvette path lengths, or molar absorptivity values, so they can transmit different fractions of light. In this lab, use the presets to choose a colored solution, then rely on the sliders and absorbance display to connect the visual cue to A = εbc.",
       },
       {
         wrong:
@@ -173,26 +186,26 @@ export const beersLawLab: Experiment = {
         wrong:
           "The slope of the A-vs-c calibration curve is just a number from the graph — it has no physical meaning.",
         correct:
-          "The slope of an A-vs-c calibration curve at fixed path length is equal to ε × b (units: L/(mol·cm) × cm = L/mol). It is the product of the molar absorptivity — a fundamental property of the compound at that wavelength — and the path length. A steeper slope means more sensitive detection at lower concentrations; it directly reflects how strongly the compound absorbs at the chosen wavelength.",
+          "The slope of an A-vs-c calibration curve at fixed path length is equal to ε × b (units: L/(mol·cm) × cm = L/mol). It is the product of the molar absorptivity — a property of the selected absorber under the measurement conditions — and the path length. A steeper slope means more sensitive detection at lower concentrations; it directly reflects how strongly the sample absorbs in the model.",
       },
     ],
     teacherUseCases: [
-      "Calibration curve construction: fix wavelength at λ_max for the selected compound and path length at 1.0 cm; have students record absorbance at 6–8 concentrations from 0.01 to 0.10 M, plot A vs. c, and determine the slope (= ε × b). Compare slopes across solutionType values to show that ε is compound-specific.",
-      "Unknown concentration determination: after building a calibration curve, provide a target absorbance value (e.g., A = 0.42) and ask students to read the corresponding concentration from their graph and verify by setting that concentration in the simulation. Connects the analytical method to the underlying Beer-Lambert equation.",
-      "Wavelength selection investigation: for CuSO₄, have students record absorbance at 10 nm intervals from 400 to 700 nm at a fixed concentration (0.05 M, 1 cm), plot absorbance vs. wavelength (an absorption spectrum), and identify λ_max. Reinforces why selecting λ_max maximizes measurement sensitivity.",
-      "Beer's Law deviation probe: have students extend the calibration curve data collection to concentrations of 0.2, 0.5, and 1.0 M and observe where the curve departs from linearity. Discuss the intermolecular-interaction explanation and the practical implication — dilute the sample before measuring if concentrations exceed the linear range.",
-      "Misconception probe — color vs. measurement wavelength: ask students which wavelength gives the best absorbance for a blue solution before they touch the sliders. After collecting predictions, sweep wavelength from 400–700 nm at constant concentration and observe the absorbance peak. The contrast — blue solution appearance, red-region absorbance peak — helps students connect the observed solution color with the absorbed wavelength.",
+      "Calibration curve construction: choose one preset, set path length to 10 mm, keep molar absorptivity fixed, and have students record absorbance across 6-8 concentration values. Plot A vs. c and connect the slope to ε × b.",
+      "Variable isolation: assign groups to change only one slider at a time. One group varies concentration, one varies path length, and one varies molar absorptivity. Students compare which changes are linear and justify the pattern from A = εbc.",
+      "Preset comparison: have students apply CuSO₄, KMnO₄, and K₂Cr₂O₇ at the same concentration and path length, then compare absorbance. Use the results to discuss why different colored ions can absorb with different strength.",
+      "Unknown concentration determination: after students build a calibration curve with a chosen preset, provide a target absorbance and ask them to solve for concentration algebraically, then verify by setting the concentration slider to their calculated value.",
+      "Path length error demonstration: build a calibration curve at 10 mm, then ask students what would happen if an unknown were measured at 20 mm. Use the slider to show how a mismatched cuvette path can make the calculated concentration too high.",
     ],
     faq: [
       {
         question: "What does the molar absorptivity ε actually represent?",
         answer:
-          "Molar absorptivity ε (also called the molar extinction coefficient) is an intrinsic property of a substance at a specific wavelength, with units of L/(mol·cm). It quantifies how strongly one mole of the substance absorbs light of that wavelength per centimeter of path length. A high ε means the compound absorbs that wavelength intensely and can be detected at lower concentrations. ε varies with wavelength and is largest at λ_max.",
+          "Molar absorptivity ε (also called the molar extinction coefficient) is an intrinsic measure of how strongly a substance absorbs light under a defined measurement condition, with units of L/(mol·cm). It quantifies how much one mole of the substance absorbs per centimeter of path length. A high ε means the compound absorbs intensely and can be detected at lower concentrations. In this simulation, use the molar absorptivity slider to see how ε changes the calibration curve slope.",
       },
       {
         question: "How do I find an unknown concentration using Beer's Law?",
         answer:
-          "Build a calibration curve: measure absorbance for several known concentrations at fixed λ and b, plot A vs. c, and fit a straight line (slope = εb). For the unknown, measure its absorbance under the same conditions, then solve c = A / (εb) or read c directly from the calibration curve. Verify the unknown's absorbance falls within the linear range of the curve (A ≤ ~0.8 for most compounds). AP Chem 3.C.1 requires this procedure.",
+          "Build a calibration curve: measure absorbance for several known concentrations while keeping ε and b fixed, plot A vs. c, and fit a straight line (slope = εb). For the unknown, measure its absorbance under the same conditions, then solve c = A / (εb) or read c directly from the calibration curve. Verify the unknown's absorbance falls within the linear range of the curve (A ≤ ~0.8 for most compounds). AP Chem 3.C.1 requires this procedure.",
       },
       {
         question: "Why does absorbance deviate from linearity at high concentrations in the simulation?",
@@ -205,9 +218,9 @@ export const beersLawLab: Experiment = {
           "Transmittance T = I/I₀, the fraction of incident light that passes through the sample (dimensionless, 0–1). Absorbance A = −log₁₀(T). So T = 0.1 → A = 1.0; T = 0.01 → A = 2.0. Absorbance is preferred for analytical work because it is linear with concentration, while transmittance is not. Most spectrophotometers display both; always use absorbance for calibration curves and Beer's Law calculations.",
       },
       {
-        question: "How does wavelength choice affect the accuracy of my concentration measurement?",
+        question: "How does absorptivity choice affect the accuracy of my concentration measurement?",
         answer:
-          "Selecting λ_max gives the highest ε value, producing the steepest calibration curve slope (most sensitive). At other wavelengths, ε is smaller, the slope is shallower, and small errors in measuring absorbance translate into larger errors in the calculated concentration. For CuSO₄, measuring at 635 nm rather than 460 nm can increase sensitivity by a factor of 5–10. Always determine λ_max from an absorption spectrum before measuring unknowns.",
+          "A larger ε value gives a steeper calibration curve slope, making the measurement more sensitive. With a shallow slope, small absorbance reading errors create larger errors in calculated concentration. With a steep slope, the same concentration change produces a clearer absorbance change, though very high absorbance can exceed the useful linear range. In this lab, compare presets and the molar absorptivity slider to see how substance-specific absorption strength affects analytical precision.",
       },
       {
         question: "How does Beer's Law connect to AP Chem 3.C.1 on the exam?",

@@ -23,44 +23,34 @@ export const electrochemistry: Experiment = {
 
   parameters: [
     {
-      id: "anodeMetal",
-      label: "Anode Metal (0=Zn, 1=Fe, 2=Cu)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "cathodeMetal",
-      label: "Cathode Metal (0=Cu, 1=Ag, 2=Au)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "concentration",
-      label: "Ion Concentration",
+      id: "anodeConcentration",
+      label: "Anode Ion Concentration",
       unit: "mol/L",
       min: 0.01,
-      max: 2.0,
-      default: 1.0,
+      max: 3,
+      default: 1,
       step: 0.05,
       tier: "free",
     },
     {
-      id: "cellMode",
-      label: "Cell Mode (0=galvanic, 1=electrolytic)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "pro",
+      id: "cathodeConcentration",
+      label: "Cathode Ion Concentration",
+      unit: "mol/L",
+      min: 0.01,
+      max: 3,
+      default: 1,
+      step: 0.05,
+      tier: "free",
+    },
+    {
+      id: "temperature",
+      label: "Temperature",
+      unit: "K",
+      min: 200,
+      max: 500,
+      default: 298,
+      step: 5,
+      tier: "free",
     },
   ],
 
@@ -83,7 +73,7 @@ export const electrochemistry: Experiment = {
     "Electrochemistry links chemical reactions to electrical energy. In galvanic (voltaic) cells, spontaneous redox reactions generate electric current. Oxidation occurs at the anode (loses electrons); reduction at the cathode (gains electrons). Electrons flow through the external circuit; ions migrate through the salt bridge to maintain electrical neutrality. Standard reduction potentials (E°) are measured vs the standard hydrogen electrode (SHE). E°cell = E°cathode - E°anode; positive E° → spontaneous. ΔG = -nFE°cell. The Nernst equation adjusts for non-standard concentrations. Electrolytic cells use external voltage to drive non-spontaneous reactions: water splitting (2H₂O → 2H₂ + O₂), electroplating (Cu²⁺ + 2e⁻ → Cu at cathode), and chloralkali process. Faraday's law: mass deposited ∝ charge passed.",
 
   instructions:
-    "Select anode and cathode metals and see the cell potential calculated from standard reduction potentials. Watch electron flow animation — metal dissolves at anode, deposits at cathode. Move the concentration slider and watch the Nernst equation update cell potential in real time. Switch to Electrolytic mode (Pro) to see water being electrolyzed.",
+    "Use the anode ion concentration, cathode ion concentration, and temperature sliders to change Q and watch the Nernst voltage update in real time. Try the Zn-Cu Cell, Hydrogen Fuel Cell, and Electrolysis of Water presets to compare a metal galvanic cell, a fuel cell, and a driven non-spontaneous setup, then animate electron and ion motion.",
 
   challenges: [
     {
@@ -131,18 +121,22 @@ export const electrochemistry: Experiment = {
     educationalLevel: "High School",
     teaches: "Electrochemistry: Galvanic and Electrolytic Cells",
   },
+  htmlControlAliases: { anodeConcentration: "sl-cAn", cathodeConcentration: "sl-cCa", temperature: "sl-T" },
+  presets: [
+    { id: "0", label: "⚡ Zn-Cu Cell (1.10V)", description: "A zinc-copper galvanic cell starts at standard 1.0 M conditions with E°cell = 1.10 V. Use it to connect anode oxidation, cathode reduction, and Nernst concentration shifts." },
+    { id: "1", label: "🔋 Hydrogen Fuel Cell", description: "The hydrogen fuel cell preset compares hydrogen oxidation with oxygen reduction and highlights a positive cell potential near 1.23 V. It is useful for discussing clean energy and gas half-reactions." },
+    { id: "2", label: "💧 Electrolysis of Water", description: "The water electrolysis preset reverses the energy story: the displayed setup is non-spontaneous and requires external electrical work. Use it to contrast galvanic cells with electrolytic cells." }
+  ],
   contentSections: {
     whatIsIt:
-      "Electrochemistry connects spontaneous redox reactions to electrical energy. In a galvanic (voltaic) cell, a spontaneous oxidation-reduction reaction drives electron flow through an external circuit — the chemical energy of Zn dissolving and Cu²⁺ depositing produces a measurable voltage (E°cell = +1.10 V for the Zn-Cu pair). Cell potential is calculated from standard reduction potentials: E°cell = E°cathode − E°anode; a positive result confirms spontaneity (ΔG = −nFE°cell < 0). The Nernst equation adjusts E for non-standard concentrations. Electrolytic cells reverse the process: an external power source forces a non-spontaneous reaction such as water splitting or electroplating, consuming energy rather than generating it. This simulation lets you build both cell types, change metals and concentrations, and watch electron flow and ion migration animate in real time.",
+      "Electrochemistry connects spontaneous redox reactions to electrical energy. In a galvanic (voltaic) cell, a spontaneous oxidation-reduction reaction drives electron flow through an external circuit — the chemical energy of Zn dissolving and Cu²⁺ depositing produces a measurable voltage (E°cell = +1.10 V for the Zn-Cu pair). Cell potential is calculated from standard reduction potentials: E°cell = E°cathode − E°anode; a positive result confirms spontaneity (ΔG = −nFE°cell < 0). The Nernst equation adjusts E for non-standard concentrations. Electrolytic cells reverse the process: an external power source forces a non-spontaneous reaction such as water splitting or electroplating, consuming energy rather than generating it. This simulation lets you compare preset cell types, change ion concentrations and temperature, and watch electron flow and ion migration animate in real time.",
     parameterExplanations: {
-      anodeMetal:
-        "Selects the anode electrode: 0 = Zn (E° = −0.76 V), 1 = Fe (E° = −0.44 V), 2 = Cu (E° = +0.34 V). The anode undergoes oxidation — metal atoms lose electrons and dissolve into solution as cations (M → M²⁺ + 2e⁻). Metals with more negative E° are stronger reducing agents and dissolve more readily.",
-      cathodeMetal:
-        "Selects the cathode electrode: 0 = Cu (Cu²⁺ + 2e⁻ → Cu, E° = +0.34 V), 1 = Ag (Ag⁺ + e⁻ → Ag, E° = +0.80 V), 2 = Au (Au³⁺ + 3e⁻ → Au, E° = +1.50 V). The cathode undergoes reduction — metal cations gain electrons and deposit as solid metal. Note that the electron count (n) varies by metal: 2 for Cu, 1 for Ag, 3 for Au, which matters in ΔG = −nFE° calculations. Metals with more positive E° are stronger oxidizing agents.",
-      concentration:
-        "The molar concentration of metal ions in both half-cells (0.01–2.0 mol/L, default 1.0 mol/L). For a 1:1 metal/ion cell with both half-cells at the same concentration, Q = [Anode_ion]/[Cathode_ion] = 1, so E = E° at any matched value. To produce a Nernst shift, the two half-cell concentrations must differ — change one electrode's surroundings (or add a separate cathode-concentration parameter in your scenario) to see E deviate from E°.",
-      cellMode:
-        "Toggles between galvanic mode (0, spontaneous — acts like a battery, E°cell > 0) and electrolytic mode (1, non-spontaneous — requires external voltage greater than E°cell). In electrolytic mode the anode polarity reverses: the external source forces oxidation at the positive terminal and reduction at the negative terminal.",
+      anodeConcentration:
+        "Anode Ion Concentration sets the dissolved ion concentration on the oxidation side of the selected preset, from 0.01 to 3.00 mol/L. In the Nernst calculation used here, Q = [anode ions] / [cathode ions], so raising this slider increases Q and tends to lower the live cell potential E when the other values stay fixed. This is the product side for a typical metal galvanic cell such as Zn-Cu, where zinc atoms oxidize into Zn²⁺. Compare values above and below 1.0 M to see why standard potentials are only the starting point, not the whole prediction.",
+      cathodeConcentration:
+        "Cathode Ion Concentration sets the dissolved ion concentration on the reduction side of the selected preset, from 0.01 to 3.00 mol/L. Because it is in the denominator of Q for this simulation, raising this slider lowers Q and tends to increase the live Nernst potential E. In the Zn-Cu preset, this represents the Cu²⁺ available to gain electrons and plate out as copper metal. Keep the anode concentration fixed while moving this slider to isolate the cathode-side effect, then reverse the comparison to see how concentration gradients can shift voltage without changing E°cell.",
+      temperature:
+        "Temperature changes the Kelvin value used in the Nernst term RT/nF. The default 298 K corresponds to about 25 °C, the usual standard-condition temperature for tabulated reduction potentials. Moving toward 200 K or 500 K does not change E°cell in this model, but it changes how strongly ln Q affects the actual cell potential E. When the two ion concentrations are equal, Q = 1 and ln Q = 0, so temperature has little visible effect. To make the temperature slider matter, first create unequal anode and cathode concentrations, then compare low and high temperatures.",
     },
     misconceptions: [
       {
@@ -171,28 +165,28 @@ export const electrochemistry: Experiment = {
       },
       {
         wrong:
-          "A higher standard reduction potential at the cathode always guarantees the cell will work.",
+          "A positive standard potential in one preset means every concentration and temperature setting will stay spontaneous.",
         correct:
-          "E°cell = E°cathode − E°anode must be positive for a spontaneous galvanic cell. If you accidentally pick an anode with a higher E° than the cathode (e.g., Cu as 'anode' and Zn as 'cathode'), E°cell is negative and the reaction is non-spontaneous under standard conditions — you would need electrolytic mode.",
+          "E°cell describes standard conditions. The actual cell potential is E = E° − (RT/nF)ln Q, so strongly unequal ion concentrations or different temperatures can shift E away from E°. A galvanic setup is spontaneous only when the actual E remains positive.",
       },
     ],
     teacherUseCases: [
-      "Standard reduction potential ranking: give students the E° values for Zn, Fe, Cu, Ag, and Au and ask them to predict which metal pair produces the highest E°cell before using the anodeMetal/cathodeMetal sliders. Builds intuition for the activity series and AP 9.A.1 redox spontaneity.",
-      "Nernst equation data collection: set anodeMetal = Zn, cathodeMetal = Cu, and vary concentration from 0.01 to 2.0 mol/L while recording the live E readout. Students plot E vs. ln[Q] and extract the slope (−RT/nF) — a direct AP 9.C.1 quantitative skill.",
-      "Galvanic vs. electrolytic comparison probe: ask students to write the half-reactions for water splitting (2H₂O → 2H₂ + O₂) and predict whether it is spontaneous. Then switch to electrolytic mode (cellMode = 1) and discuss what minimum external voltage is needed and why. Targets the persistent 'all cells need power' misconception.",
-      "Faraday's law calculation lab: set electrolytic mode with a defined current and time; students calculate predicted mass of Cu deposited using m = MIt/(nF), then compare to the simulation's mass readout. Reinforces dimensional analysis with real values (5.0 A for 30 min → 2.96 g).",
-      "ΔG-E°cell connection: students calculate ΔG° = −nFE°cell for three different metal pairs and rank them by spontaneity. Then pose: 'which cell does the most electrical work per mole of reaction?' Bridges AP 9.B.1 (ΔG and E°) with conceptual understanding of energy output.",
+      "Zn-Cu Nernst data collection: load the Zn-Cu Cell preset, hold cathode ion concentration at 1.00 M, vary anode ion concentration from low to high, and record E. Students plot E vs. ln Q and connect the slope to −RT/nF for AP 9.C.1.",
+      "Concentration-ratio probe: have students create two settings with the same Q ratio using different absolute concentrations, such as 0.10/1.00 and 0.30/3.00. They should predict and verify that the Nernst voltage depends on Q, not simply on one slider alone.",
+      "Temperature sensitivity mini-lab: set unequal anode and cathode ion concentrations, then sweep Temperature from 200 K to 500 K. Students explain why the temperature effect is most visible when Q is not 1.",
+      "Galvanic vs. electrolytic comparison: ask students to write half-reactions for the Zn-Cu Cell and Electrolysis of Water presets, then compare sign of E, ΔG, and the need for external work. Targets the persistent 'all cells need power' misconception.",
+      "Fuel cell context discussion: load the Hydrogen Fuel Cell preset and connect the oxygen reduction half-reaction to batteries, clean energy claims, and AP 9.A.1 redox identification. Students identify which species is oxidized, which is reduced, and how n affects ΔG = −nFE.",
     ],
     faq: [
       {
         question: "How do I calculate E°cell and know if a galvanic cell is spontaneous?",
         answer:
-          "Use E°cell = E°cathode − E°anode with standard reduction potentials. For Zn-Cu: E°cell = (+0.34) − (−0.76) = +1.10 V. A positive E°cell means ΔG° = −nFE°cell is negative, confirming spontaneity. The metal with the more negative E° always acts as the anode (oxidized); the more positive one is the cathode (reduced).",
+          "Use E°cell = E°cathode − E°anode with standard reduction potentials. For the Zn-Cu preset: E°cell = (+0.34) − (−0.76) = +1.10 V. A positive E°cell means ΔG° = −nFE°cell is negative under standard conditions, confirming spontaneity. The species being oxidized is the anode half-reaction; the species being reduced is the cathode half-reaction.",
       },
       {
         question: "What is the Nernst equation and when do I need it?",
         answer:
-          "The Nernst equation E = E° − (RT/nF)·ln Q adjusts cell potential for non-standard concentrations. At 298 K it simplifies to E = E° − (0.0257/n)·ln Q. Use it whenever ion concentrations differ from 1.0 mol/L. For the Zn-Cu cell with [Zn²⁺] = 2.0 M and [Cu²⁺] = 0.01 M: Q = 200, E ≈ 1.10 − 0.068 = 1.03 V — addressing AP 9.C.1.",
+          "The Nernst equation E = E° − (RT/nF)·ln Q adjusts cell potential for non-standard concentrations and temperature. In this simulation Q = [anode ions] / [cathode ions], so equal slider values give Q = 1 and E = E°. For the Zn-Cu preset with [anode ions] = 2.0 M, [cathode ions] = 0.01 M, and T = 298 K: Q = 200, E ≈ 1.10 − 0.068 = 1.03 V.",
       },
       {
         question: "Why does a salt bridge need to be present for the cell to keep working?",
@@ -202,12 +196,12 @@ export const electrochemistry: Experiment = {
       {
         question: "How is electroplating different from a galvanic cell?",
         answer:
-          "Electroplating is an electrolytic process: an external power supply forces metal cations (e.g., Cu²⁺) to deposit onto a cathode surface. The external voltage must exceed E°cell of the reverse (non-spontaneous) reaction. The anode is typically the plating metal itself (dissolves to replenish the solution). No useful electrical energy is generated — energy is consumed instead.",
+          "Electroplating is an electrolytic process: an external power supply forces metal cations to deposit onto a cathode surface. The external voltage must be large enough to drive the reverse, non-spontaneous reaction plus real-world losses. A galvanic cell releases electrical energy from a spontaneous redox reaction; an electrolytic setup consumes electrical energy to make a reaction happen.",
       },
       {
         question: "How do AP Chemistry standards 9.A.1, 9.B.1, and 9.C.1 map to this simulation?",
         answer:
-          "AP 9.A.1 requires identifying oxidation and reduction half-reactions and balancing redox equations — practiced by observing anode dissolution and cathode deposition. AP 9.B.1 requires calculating E°cell and relating it to ΔG° = −nFE°cell — practiced with the metal selector. AP 9.C.1 requires applying the Nernst equation — practiced by varying the concentration slider and recording E vs. Q.",
+          "AP 9.A.1 requires identifying oxidation and reduction half-reactions and balancing redox equations — practiced by comparing the preset half-reactions. AP 9.B.1 requires calculating E°cell and relating it to ΔG° = −nFE°cell — practiced with the live E°cell and ΔG° readouts. AP 9.C.1 requires applying the Nernst equation — practiced by varying anode ion concentration, cathode ion concentration, and temperature while recording E vs. Q.",
       },
       {
         question: "How many grams of copper deposit when 5.0 A flows for 30 minutes?",

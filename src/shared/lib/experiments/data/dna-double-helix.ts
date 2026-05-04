@@ -23,44 +23,24 @@ export const dnaDoubleHelix: Experiment = {
 
   parameters: [
     {
-      id: "rotationSpeed",
-      label: "Helix Rotation Speed",
-      unit: "rpm",
+      id: "rotSpeed",
+      label: "Rotation Speed",
+      unit: "×",
       min: 0,
-      max: 10,
-      default: 2,
-      step: 0.5,
-      tier: "free",
-    },
-    {
-      id: "basePairs",
-      label: "Number of Base Pairs",
-      unit: "",
-      min: 5,
-      max: 20,
-      default: 10,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "unzipSpeed",
-      label: "Replication Fork Speed",
-      unit: "bp/s",
-      min: 0.5,
-      max: 5,
+      max: 3,
       default: 1,
-      step: 0.5,
-      tier: "pro",
+      step: 0.1,
+      tier: "free",
     },
     {
-      id: "mutationRate",
-      label: "Mutation Probability",
-      unit: "%",
-      min: 0,
-      max: 20,
-      default: 0,
-      step: 1,
-      tier: "pro",
+      id: "helixStretch",
+      label: "Helix Stretch",
+      unit: "×",
+      min: 0.5,
+      max: 2.5,
+      default: 1,
+      step: 0.05,
+      tier: "free",
     },
   ],
 
@@ -83,7 +63,7 @@ export const dnaDoubleHelix: Experiment = {
     "DNA (deoxyribonucleic acid) is a double-stranded helix where two polynucleotide chains coil around each other. Each strand is a polymer of nucleotides, each containing a deoxyribose sugar, a phosphate group, and one of four nitrogenous bases: Adenine (A), Thymine (T), Guanine (G), or Cytosine (C). The strands are antiparallel and held together by hydrogen bonds between complementary bases (A-T, G-C). The genetic code is read as triplets (codons) along one strand. During replication, helicase unzips the helix and DNA polymerase synthesizes new complementary strands — producing two identical daughter molecules (semi-conservative replication).",
 
   instructions:
-    "Use the rotation slider to spin the helix and observe its 3D structure. Click any base pair to highlight and identify the complementary bases. Toggle 'Replication Mode' to watch the fork unzip and new strands synthesize. In Pro mode, enable mutations to see how single-nucleotide polymorphisms (SNPs) change the sequence.",
+    "Use the Rotation Speed slider to control how quickly the helix turns, and use the Helix Stretch slider to compress or elongate the base-pair spacing. Click any base pair to highlight complementary bases and hydrogen-bond counts. Try the B-DNA (Standard), Unwound by Helicase, and Transition to A-form presets to compare canonical structure, strand-opening stress, and alternate helix geometry.",
 
   challenges: [
     {
@@ -131,19 +111,39 @@ export const dnaDoubleHelix: Experiment = {
     educationalLevel: "High School",
     teaches: "DNA Structure and Base Pairing",
   },
+  htmlControlAliases: { rotSpeed: "sl-rotspeed", helixStretch: "sl-stretch" },
+  presets: [
+    {
+      id: "bdna",
+      label: "B-DNA (Standard)",
+      description:
+        "Shows the familiar B-DNA geometry used in most textbook diagrams, with moderate rotation and normal base-pair spacing. Use it as the reference case before changing sliders.",
+      paramValues: { rotSpeed: 1, helixStretch: 1 },
+    },
+    {
+      id: "unwound",
+      label: "Unwound by Helicase",
+      description:
+        "Stretches the helix and speeds rotation to suggest the mechanical stress of strand separation near a replication fork. It is a visual comparison mode, not a full enzyme simulation.",
+      paramValues: { rotSpeed: 3, helixStretch: 2 },
+    },
+    {
+      id: "aform",
+      label: "Transition to A-form",
+      description:
+        "Compresses the displayed helix and slows rotation to contrast B-DNA with an alternate DNA-like conformation. Compare it with B-DNA to discuss how environmental conditions can shift nucleic-acid geometry.",
+      paramValues: { rotSpeed: 0.5, helixStretch: 0.75 },
+    },
+  ],
 
   contentSections: {
     whatIsIt:
       "DNA is the molecule that carries the genetic instructions for every living thing. Its shape — the famous double helix proposed by Watson, Crick, and Franklin in 1953 — is two strands of nucleotides twisted around each other like a spiral ladder. The 'rungs' are pairs of nitrogenous bases held together by hydrogen bonds, with adenine always pairing with thymine (A-T, two H bonds) and guanine always with cytosine (G-C, three H bonds). The pairing rule is what lets DNA copy itself: each strand is a perfect template for a new partner. Rotate the helix, zoom into a base pair, and unzip the strands to see replication as the cell sees it.",
     parameterExplanations: {
-      rotationSpeed:
-        "How fast the helix spins. Slow it down to count the 10 base pairs per full turn (one of the structural facts you should know cold for AP Bio).",
-      basePairs:
-        "How many rungs the helix shows. More base pairs let you see longer stretches of code. Real human chromosomes are millions of base pairs long; this lab shows a teaching slice.",
-      unzipSpeed:
-        "Controls the rate at which the two strands separate. Replication, transcription, and PCR all start with this unzipping — slow it down to see hydrogen bonds breaking one base pair at a time.",
-      mutationRate:
-        "Crank this up to introduce occasional pairing errors. Lets you observe substitutions (A swapped for G), the kind of point mutation natural selection then has to work with.",
+      rotSpeed:
+        "Rotation Speed controls how quickly the 3D helix turns around its central axis. Set it near 0 when students need to count base pairs, inspect the sugar-phosphate backbones, or click a specific A-T or G-C pair without visual distraction. Increase it toward 3× when the goal is to perceive the molecule as a continuous spiral rather than a flat ladder. This slider changes the viewing motion, not a biological replication rate, so it is best used as an observation tool alongside the B-DNA and A-form presets.",
+      helixStretch:
+        "Helix Stretch changes the vertical spacing between adjacent base pairs in the model. At 1×, the structure represents the standard B-DNA teaching view, where roughly ten base pairs make one full turn. Lower values compress the displayed helix, making the turns look tighter and helping students compare alternate geometry in the A-form preset. Higher values elongate the molecule, which makes the Unwound by Helicase preset feel mechanically stressed and easier to discuss as strand-opening pressure. Keep Rotation Speed constant while changing only Helix Stretch to isolate shape from motion.",
     },
     misconceptions: [
       {
@@ -168,15 +168,15 @@ export const dnaDoubleHelix: Experiment = {
         wrong:
           "All DNA mutations are bad and lead to disease.",
         correct:
-          "Most mutations are silent (no effect on the protein) or in non-coding regions. A few are harmful, but a few are also beneficial — that's the raw material natural selection acts on. Use the mutationRate slider to see how rare any single mutation is.",
+          "Most mutations are silent, occur in non-coding regions, or have effects that depend on cellular context and environment. A few are harmful, a few can be beneficial, and many are neutral. This simulation focuses on DNA structure and pairing, so use separate sequence examples when discussing how point mutations, insertions, or deletions change proteins.",
       },
     ],
     teacherUseCases: [
-      "Pre-lab: have students draw what they think DNA looks like, then compare to the rotating helix. Catch the antiparallel direction misconception early.",
-      "Base pairing rules drill: hide one strand and have students fill in the complement (A↔T, G↔C). Reveal the strand and check.",
-      "Replication walkthrough: pause partway through unzipping and ask students which enzymes would be working at that exact moment (helicase, primase, polymerase, ligase).",
-      "Mutation discussion: turn the mutation rate up briefly and ask which mutations would be silent vs. missense. Connect to AP Bio Big Idea 3.",
-      "Compare to RNA: after running the lab, ask students how the structure would change if it were RNA (single-stranded, U replaces T, ribose).",
+      "Pre-lab: have students sketch DNA from memory, then open the B-DNA (Standard) preset and use low Rotation Speed to compare their drawings with the antiparallel double-helix model.",
+      "Base-pair evidence drill: students click several rungs, record A-T versus G-C pairs, and explain why the displayed hydrogen-bond counts support complementary pairing rules.",
+      "Geometry comparison: keep Rotation Speed fixed and move only Helix Stretch, then have students describe which observations changed and which core pairing rules stayed constant.",
+      "Preset station rotation: assign teams B-DNA (Standard), Unwound by Helicase, or Transition to A-form and ask each group to cite slider values and visible structure as evidence.",
+      "AP Biology discussion: connect the B-DNA reference view to HS-LS1-1 and HS-LS3-1 by asking how structure supports replication and information storage without turning the visual into a full replication simulation.",
     ],
     faq: [
       {
@@ -190,14 +190,14 @@ export const dnaDoubleHelix: Experiment = {
           "Each DNA strand has direction — a 5' end and a 3' end. In the double helix, one strand runs 5' to 3' top-to-bottom while the other runs 3' to 5' top-to-bottom. DNA polymerase only adds new bases to the 3' end, which is why one strand replicates continuously (leading) and the other in fragments (lagging).",
       },
       {
-        question: "Why are there always 10 base pairs per turn?",
+        question: "Why does the B-DNA preset show about 10 base pairs per turn?",
         answer:
-          "It's set by the geometry of the deoxyribose-phosphate backbone and the angles at which the bases stack. Each base pair rises about 0.34 nm and rotates 36° around the helix axis, so a full 360° turn covers 10 base pairs and ~3.4 nm. This is the B-form DNA you'll see on AP exam diagrams.",
+          "B-form DNA has geometry where each base pair rises about 0.34 nm and rotates about 36° around the helix axis, so a full 360° turn covers roughly 10 base pairs and about 3.4 nm. Other nucleic-acid conformations can differ, which is why the A-form preset is useful for comparison. Treat 10 base pairs per turn as the standard B-DNA reference, not a rule for every possible helix state.",
       },
       {
         question: "How does this connect to AP Biology?",
         answer:
-          "AP Bio expects students to know the structure of DNA, complementary base pairing rules, and how the structure enables replication. This lab covers Big Idea 3 (Information storage and transmission) and supports learning objectives 3.A.1 (DNA is the heritable material) and 3.A.2 (DNA is replicated semiconservatively).",
+          "AP Bio expects students to know the structure of DNA, complementary base pairing rules, and how the structure enables replication. Use Rotation Speed, Helix Stretch, and the three presets to connect visible structure with Big Idea 3: information storage and transmission. The model supports learning objectives 3.A.1 and 3.A.2 as a structural reference, while detailed enzyme steps should be taught with a separate replication activity.",
       },
       {
         question: "Why does G-C pair via three hydrogen bonds while A-T uses two?",

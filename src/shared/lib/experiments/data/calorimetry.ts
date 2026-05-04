@@ -31,53 +31,43 @@ export const calorimetry: Experiment = {
 
   parameters: [
     {
-      id: "massA",
-      label: "Mass of Solution A",
+      id: "mass",
+      label: "Sample Mass",
       unit: "g",
       min: 10,
-      max: 200,
-      default: 50,
+      max: 500,
+      default: 100,
       step: 5,
       tier: "free",
     },
     {
-      id: "tempA",
-      label: "Temperature of Solution A",
+      id: "specificHeat",
+      label: "Specific Heat Capacity",
+      unit: "J/(g·°C)",
+      min: 0.5,
+      max: 8,
+      default: 4.18,
+      step: 0.1,
+      tier: "free",
+    },
+    {
+      id: "initialTemperature",
+      label: "Initial Temperature",
       unit: "°C",
       min: 0,
-      max: 100,
+      max: 80,
       default: 25,
-      step: 1,
+      step: 0.5,
       tier: "free",
     },
     {
-      id: "massB",
-      label: "Mass of Solution B",
-      unit: "g",
-      min: 10,
-      max: 200,
-      default: 50,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "tempB",
-      label: "Temperature of Solution B",
+      id: "temperatureChange",
+      label: "Temperature Change",
       unit: "°C",
-      min: 0,
-      max: 100,
-      default: 75,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "reactionType",
-      label: "Reaction (0=mixing, 1=acid-base, 2=dissolution)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
+      min: -30,
+      max: 30,
+      default: 5,
+      step: 0.5,
       tier: "free",
     },
   ],
@@ -104,7 +94,7 @@ export const calorimetry: Experiment = {
     "Calorimetry measures heat changes during chemical or physical processes. In a coffee-cup calorimeter (constant pressure), the heat released or absorbed by a reaction is captured by the surrounding solution. Using q = mcΔT, where c for dilute aqueous solutions ≈ 4.184 J/(g·°C), we calculate q_solution. By conservation of energy, q_rxn = -q_solution. The molar enthalpy ΔH_rxn = q_rxn/n (per mole of limiting reagent). For mixing two solutions at different temperatures (no reaction), the final temperature is the weighted average: T_f = (m₁c₁T₁ + m₂c₂T₂)/(m₁c₁ + m₂c₂). Hess's Law states that ΔH for an overall reaction equals the sum of ΔH values for individual steps, regardless of the path taken.",
 
   instructions:
-    "Set the mass and temperature of two solutions, then choose a reaction type. Press 'Mix' to combine them in the virtual calorimeter. Watch the temperature curve update in real time as thermal equilibrium is reached. The data panel calculates q, ΔT, and ΔH automatically.",
+    "Use the Sample Mass, Specific Heat Capacity, Initial Temperature, and Temperature Change sliders to calculate heat transfer with q = mcΔT. Try the NaOH+HCl Neutralization, Combustion of Methane, and Ice in Water (Fusion) presets to compare exothermic, combustion, and phase-change calorimetry examples.",
 
   challenges: [
     {
@@ -147,33 +137,57 @@ export const calorimetry: Experiment = {
     educationalLevel: "High School",
     teaches: "Calorimetry and Heat Transfer",
   },
+  htmlControlAliases: {
+    mass: "sl-mass",
+    specificHeat: "sl-c",
+    initialTemperature: "sl-Ti",
+    temperatureChange: "sl-dT",
+  },
+  presets: [
+    {
+      id: "loadPreset:0",
+      label: "🧂 NaOH+HCl Neutralization",
+      description:
+        "Loads a strong acid-base neutralization example. Use it to connect an exothermic temperature rise to q_solution and the sign of ΔH_rxn.",
+    },
+    {
+      id: "loadPreset:1",
+      label: "🔥 Combustion of Methane",
+      description:
+        "Loads a combustion calorimetry example for methane. It highlights a large exothermic heat release and supports comparison with smaller solution reactions.",
+    },
+    {
+      id: "loadPreset:2",
+      label: "🧊 Ice in Water (Fusion)",
+      description:
+        "Loads a phase-change example where energy goes into melting ice. Use it to separate temperature change from latent heat during fusion.",
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "Calorimetry is the experimental technique of measuring heat flow during physical or chemical processes by tracking temperature changes in a known mass of surroundings. The core equation is q = mcΔT: multiply the mass of solution (g) by its specific heat capacity (4.184 J/(g·°C) for dilute aqueous solutions) and by the observed temperature change to get heat in joules. In a coffee-cup calorimeter at constant pressure, heat released by the reaction warms the solution; conservation of energy gives q_rxn = −q_solution. Dividing by moles of limiting reagent yields ΔH in kJ/mol. Bomb calorimetry operates at constant volume and measures ΔE instead. This simulation models both simple thermal mixing and reactive scenarios so you can see how mass, initial temperature, and reaction type affect the measured enthalpy.",
+      "Calorimetry is the experimental technique of measuring heat flow during physical or chemical processes by tracking temperature changes in a known mass of surroundings. The core equation is q = mcΔT: multiply the mass of solution (g) by its specific heat capacity (4.184 J/(g·°C) for dilute aqueous solutions) and by the observed temperature change to get heat in joules. In a coffee-cup calorimeter at constant pressure, heat released by the reaction warms the solution; conservation of energy gives q_rxn = −q_solution. Dividing by moles of limiting reagent yields ΔH in kJ/mol. Bomb calorimetry operates at constant volume and measures ΔE instead. This simulation models both simple thermal mixing and reactive scenarios so you can see how mass, initial temperature, and temperature change affect the measured heat transfer.",
     parameterExplanations: {
-      massA:
-        "The mass of Solution A in grams, ranging from 10 to 200 g (default 50 g). A larger mass has more thermal energy to exchange; doubling mass doubles the heat transferred at the same ΔT. In the calculation, m_A appears in q_A = m_A · c · ΔT_A.",
-      tempA:
-        "The initial temperature of Solution A in degrees Celsius (0–100°C, default 25°C). Combined with tempB, this sets the direction and magnitude of heat flow: the hotter solution loses heat, the cooler one gains it. Raising tempA increases the driving force for heat transfer.",
-      massB:
-        "The mass of Solution B in grams (10–200 g, default 50 g). When massB differs from massA, the mixture's final temperature shifts toward the temperature of the heavier solution because it contains proportionally more thermal energy. This illustrates the weighted-average nature of T_final.",
-      tempB:
-        "The initial temperature of Solution B in degrees Celsius (0–100°C, default 75°C). Setting tempB above tempA makes Solution B the heat source; below tempA it becomes the heat sink. For reactive modes, tempB also sets starting conditions for the enthalpy calculation.",
-      reactionType:
-        "Selects the type of process: 0 = simple thermal mixing (no reaction, only heat transfer), 1 = acid-base neutralization (exothermic, ΔH ≈ −57 kJ/mol for strong acid + strong base), 2 = dissolution (endothermic or exothermic depending on solute). Each mode applies the appropriate ΔH_rxn on top of the mixing calculation.",
+      mass:
+        "Sample Mass is the amount of material or solution being treated as the calorimeter surroundings, measured in grams. In q = mcΔT, mass scales heat directly: doubling the mass doubles q for the same specific heat capacity and temperature change. Use this slider first when students need to see why a large beaker of water can absorb much more energy than a small sample while showing a smaller temperature response. Keep Specific Heat Capacity and Temperature Change fixed, then sweep Sample Mass to isolate the m term in the equation and connect measured heat to the amount of matter involved.",
+      specificHeat:
+        "Specific Heat Capacity sets how much energy one gram of the sample needs for a one-degree Celsius temperature change. Water and dilute aqueous solutions sit near 4.18 J/(g·°C), while metals, oils, and other materials can be much lower or higher. This slider lets students test that q depends on material identity, not just mass and temperature. With Sample Mass and Temperature Change held fixed, increasing Specific Heat Capacity raises the calculated heat transfer. Use the Ice in Water (Fusion) preset as a reminder that phase changes can involve energy transfer even when temperature behavior is not a simple warming curve.",
+      initialTemperature:
+        "Initial Temperature sets the starting thermometer reading before the calorimetry event. It does not by itself determine q; the heat calculation depends on the change from that starting point. This makes the slider useful for distinguishing absolute temperature from ΔT. A sample starting at 20°C and warming by 5°C transfers the same q as one starting at 50°C and warming by 5°C, provided mass and specific heat are unchanged. Use this control with the presets to discuss what the thermometer shows before the process begins and how the final temperature is inferred from initial temperature plus the chosen temperature change.",
+      temperatureChange:
+        "Temperature Change is the observed ΔT used directly in q = mcΔT. Positive values represent warming of the surroundings, which usually means the chemical system released heat to the solution; negative values represent cooling, often associated with an endothermic process or energy absorbed by a phase change. This slider is the fastest way to connect sign convention to the data panel. Keep Sample Mass and Specific Heat Capacity fixed, then compare +5°C and -5°C. The magnitude of q is the same, but the sign changes, giving students a concrete way to discuss exothermic versus endothermic behavior and why ΔH_rxn has the opposite sign from q_solution.",
     },
     misconceptions: [
       {
         wrong:
           "The heat released by the reaction (q_rxn) is the same number as q_solution, just with a negative sign added.",
         correct:
-          "By conservation of energy, q_rxn + q_solution = 0, so q_rxn = −q_solution. If the solution temperature rises (q_solution > 0, heat gained by solution), the reaction released heat (q_rxn < 0, exothermic). The sign convention is: negative ΔH means the system (reactants → products) lost energy to the surroundings.",
+          "By conservation of energy, q_rxn + q_solution = 0, so q_rxn = −q_solution. If Temperature Change is positive, the surroundings gained heat and q_solution is positive, so the reaction released heat and q_rxn is negative. If Temperature Change is negative, the surroundings cooled and the process absorbed heat. The sign convention is: negative ΔH means the system lost energy to the surroundings.",
       },
       {
         wrong:
           "Specific heat capacity is the same for all liquids — just use 4.18 J/(g·°C) for everything.",
         correct:
-          "4.184 J/(g·°C) is the specific heat of pure water. Organic solvents, oils, and metals differ substantially (ethanol ≈ 2.44, aluminum ≈ 0.90 J/(g·°C)). Dilute aqueous solutions approximate water, but concentrated solutions or non-aqueous media require the correct c value or the calculated q will be wrong.",
+          "4.184 J/(g·°C) is the specific heat of pure water. Organic solvents, oils, and metals differ substantially (ethanol ≈ 2.44, aluminum ≈ 0.90 J/(g·°C)). Dilute aqueous solutions approximate water, but concentrated solutions or non-aqueous media require the correct c value. Use the Specific Heat Capacity slider to see how changing only c changes the calculated heat transfer.",
       },
       {
         wrong:
@@ -189,17 +203,17 @@ export const calorimetry: Experiment = {
       },
       {
         wrong:
-          "The final temperature of a mixture is always halfway between the two starting temperatures.",
+          "The final temperature matters, but the initial temperature is just background information.",
         correct:
-          "That is only true when both masses and specific heats are equal. The correct formula is T_f = (m₁c₁T₁ + m₂c₂T₂)/(m₁c₁ + m₂c₂). Use the simulation to mix 100 g at 80°C with 50 g at 20°C and confirm T_f ≈ 60°C, not 50°C.",
+          "Initial temperature is part of the measured temperature change. In this simulation, Temperature Change is applied relative to Initial Temperature, so a 25°C start with +5°C ends at 30°C, while a 60°C start with +5°C ends at 65°C. The same ΔT can produce the same q when Sample Mass and Specific Heat Capacity match, even though the final thermometer readings differ.",
       },
     ],
     teacherUseCases: [
-      "Mixing-law verification: have students predict T_final for three different mass-ratio combinations (1:1, 2:1, 3:1) before running the simulation, then compare to measured values. This builds quantitative intuition for the weighted-average formula before introducing reactive scenarios.",
-      "Enthalpy of neutralization determination: set reactionType = 1 (acid-base), vary massA/massB to change total solution mass, record q_solution = mcΔT, then compute q_rxn = −q_solution and divide by moles of acid (estimated from massA assuming 1.0 M HCl) to get ΔH ≈ −57 kJ/mol. Discuss why the per-mole value is consistent across mass changes — addressing AP 6.B.1 directly.",
-      "Specific-heat misconception probe: ask students which scenario produces a larger temperature spike — adding 2000 J to 200 g or to 50 g of water — before touching the controls. Use the result to drive home that ΔT = q/(mc) and that ΔT is not a proxy for q.",
-      "Error analysis activity: introduce a 'leaky calorimeter' scenario by comparing ideal calculated T_f to a slightly lower observed T_f, asking students to quantify percent heat loss. This mimics real lab conditions and addresses systematic error, a recurring AP exam theme.",
-      "Mass-ratio thermal mixing: hold reactionType = 0 (mixing) and tempA = 25°C, tempB = 75°C, then vary the massA / massB ratio across 1:1, 2:1, and 1:2. Record T_final at each ratio and verify against T_f = (m_A T_A + m_B T_B) / (m_A + m_B). Hess's Law pathway construction is better suited to the thermochemistry experiment.",
+      "q = mcΔT isolation: keep Specific Heat Capacity at 4.18 J/(g·°C) and Temperature Change at +5°C, then vary only Sample Mass from 50 g to 200 g. Students record q and verify that heat transfer scales directly with mass.",
+      "Material comparison: hold Sample Mass and Temperature Change constant while changing Specific Heat Capacity from a metal-like value to a water-like value. Students explain why different materials require different amounts of energy for the same temperature change, supporting AP 6.B.1 calorimetry calculations.",
+      "Sign convention probe: set the same Sample Mass and Specific Heat Capacity, then compare Temperature Change values of +10°C and -10°C. Students identify which case corresponds to surroundings gaining heat and which process would have positive or negative ΔH_rxn.",
+      "Preset comparison: run NaOH+HCl Neutralization, Combustion of Methane, and Ice in Water (Fusion) as three anchor cases. Students classify each as solution calorimetry, combustion calorimetry, or phase-change energy transfer, then cite slider values as evidence.",
+      "Initial versus change discussion: choose two different Initial Temperature settings with the same Temperature Change, Sample Mass, and Specific Heat Capacity. Students calculate q for both trials and explain why absolute starting temperature and temperature change are not the same variable.",
     ],
     faq: [
       {
@@ -215,22 +229,22 @@ export const calorimetry: Experiment = {
       {
         question: "How is ΔH calculated from calorimetry data?",
         answer:
-          "Measure m (mass of solution in grams), c (specific heat, ≈ 4.184 J/(g·°C) for aqueous solutions), and ΔT (final minus initial temperature in °C). Calculate q_solution = mcΔT, then q_rxn = −q_solution. Finally ΔH_rxn = q_rxn / n, where n is moles of limiting reagent. Units: joules → divide by 1000 for kJ/mol.",
+          "Measure m (Sample Mass in grams), c (Specific Heat Capacity, ≈ 4.184 J/(g·°C) for water), and ΔT (Temperature Change in °C). Calculate q_solution = mcΔT, then q_rxn = −q_solution. Finally ΔH_rxn = q_rxn / n, where n is moles of limiting reagent. Units: joules → divide by 1000 for kJ/mol.",
       },
       {
         question: "Does the mass of the calorimeter itself affect the result?",
         answer:
-          "In an ideal coffee-cup calorimeter, the cup is assumed to absorb negligible heat. In reality, the calorimeter has a heat capacity C_cal (J/°C) that must be measured and subtracted: q_rxn = −(q_solution + q_calorimeter). Real lab calorimeters with non-negligible heat capacity require this correction.",
+          "In an ideal coffee-cup calorimeter, the cup is assumed to absorb negligible heat. In reality, the calorimeter has a heat capacity C_cal (J/°C) that must be measured and included: q_rxn = −(q_solution + q_calorimeter). Real lab calorimeters with non-negligible heat capacity require this correction.",
       },
       {
         question: "How does this connect to AP Chemistry standards 6.A.1 and 6.B.1?",
         answer:
-          "AP 6.A.1 requires students to explain energy diagrams and heat transfer at constant pressure using ΔH. AP 6.B.1 requires calculating ΔH from calorimetry data using q = mcΔT and identifying the system versus surroundings. Both are directly practiced in this simulation's mixing and reactive modes.",
+          "AP 6.A.1 requires students to explain energy transfer at constant pressure using ΔH. AP 6.B.1 requires calculating ΔH from calorimetry data using q = mcΔT and identifying the system versus surroundings. The Sample Mass, Specific Heat Capacity, and Temperature Change sliders directly support those calculations.",
       },
       {
         question: "Can I use this simulation to understand Hess's Law?",
         answer:
-          "Yes — run two or three reactions separately, record each q and compute each partial ΔH, then algebraically sum them. Because enthalpy is a state function, the sum must equal the ΔH of the overall combined reaction. This matches the AP 5.C.1 Hess's Law skill and is the same calculation used on multi-step calorimetry free-response questions.",
+          "Yes — use the presets and slider values as separate calorimetry cases, record each q, and compute each partial ΔH where the reaction amount is known. Because enthalpy is a state function, partial reaction enthalpies can be added algebraically to obtain an overall ΔH. This is the same logic used in multi-step calorimetry and Hess's Law free-response questions.",
       },
     ],
   },
