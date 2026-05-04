@@ -114,22 +114,24 @@ CREATE TABLE upg_generation_tag (
 
 D4 Phase D close-out 后，以下项已知但本周期未做：
 
-| 项目 | 范围 | 来源 | 推荐周期 |
+| 项目 | 范围 | 来源 | 状态 / 推荐周期 |
 |---|---|---|---|
-| TD-D4-01: C5 cosmetic drift 清理（69 slugs） | `tests/unit/content/d4-known-drift.json` | Wave 7 deferral；详见 `docs/reports/d4-phase-d-closeout.md` | "Phase E param alignment cleanup" |
-| TD-D4-02: WCAG 2.1 AA 修复（175 HTML） | `public/experiments/**/*.html` | Wave 9 audit `docs/reports/d4-accessibility-audit.md` | "Phase F a11y remediation" |
-| TD-D4-03: HTML JS 质量修复（175 HTML） | `public/experiments/**/*.html` | Wave 10 audit `docs/reports/d4-html-js-quality-audit.md` | 与 a11y 合并或独立 |
-| TD-D4-04: Tailwind CDN → 本地构建（175 HTML） | `public/experiments/**/*.html` | Tailwind 官方不推荐生产用 CDN | 独立 infra 周期 |
-| TD-D4-05: three.js r134 → r170+ 升级（175 HTML） | `public/experiments/**/*.html` | 已 pinned 但落后 36 个版本 | 独立 infra 周期 |
-| TD-D4-06: NGSS 高优先级 gap 实现（top-10） | catalog 扩展 | Wave 8 audit `docs/reports/d4-ngss-coverage-gap.md` | catalog 路线图规划 |
+| TD-D4-01: C5 cosmetic drift 清理（69 slugs） | `tests/unit/content/d4-known-drift.json` | Wave 7 deferral；详见 `docs/reports/d4-phase-d-closeout.md` | ✅ **RESOLVED** in Phase E (PRs #41 #43 #44 #45) — 68/69 cleared, 1 intentional kept (ms-electric-circuits-advanced W5 voltage cap) |
+| TD-D4-02: WCAG 2.1 AA 修复（175 HTML） | `public/experiments/**/*.html` | Wave 9 audit `docs/reports/d4-accessibility-audit.md` | 🟡 **PARTIAL** — P1 三件套 done in Phase F (PR #42); P2/P3 (color contrast, semantic landmarks, color-only signal, canvas a11y) → Phase F2 cycle |
+| TD-D4-03: HTML JS 质量修复（175 HTML） | `public/experiments/**/*.html` | Wave 10 audit `docs/reports/d4-html-js-quality-audit.md` | 🟡 **PARTIAL** — 6 critical per-file bugs done in Phase F (PRs #46 #47); systemic refactor (OrbitControls helper, innerHTML→DOM, lifecycle, frame alloc) → Phase F2 cycle |
+| TD-D4-04: Tailwind CDN → 本地构建（175 HTML） | `public/experiments/**/*.html` | Tailwind 官方不推荐生产用 CDN | ⏸ 独立 infra 周期 |
+| TD-D4-05: three.js r134 → r170+ 升级（175 HTML） | `public/experiments/**/*.html` | 已 pinned 但落后 36 个版本 | ⏸ 独立 infra 周期 |
+| TD-D4-06: NGSS 高优先级 gap 实现（top-10） | catalog 扩展 | Wave 8 audit `docs/reports/d4-ngss-coverage-gap.md` | ⏸ catalog 路线图规划 |
+| TD-D4-07: audit script 漏检 sl-speed slider | `scripts/audit-params-vs-html.ts` | 2026-05-04 Wave D codex review 发现 circular-motion.html 的 `sl-speed` 没被 parser 识别，误报 C2 drift | 🆕 audit-script repair (~1 hour)；并校对其他可能漏检的 slider |
 
-**优先级建议**：
-- TD-D4-02（accessibility）= P1（catalog-blocking for Section 508 / WCAG procurement）
-- TD-D4-03（HTML JS bugs）= P1（部分实验有不工作的控件 + 错误的 pedagogy 显示）
-- TD-D4-01（C5 cosmetic drift）= P2（topic 正确，参数对不齐，不影响用户体验但有 audit failure）
+**优先级建议（更新）**：
+- TD-D4-02 P2/P3 = P1（catalog-blocking for Section 508 / WCAG procurement，剩余 audit 项）
+- TD-D4-03 systemic = P1（lifecycle helper、innerHTML→DOM 是大量 HTML 文件长期维护的关键）
+- TD-D4-07 = P2（影响 drift 监控准确性，但不阻塞功能）
 - TD-D4-04, 05, 06 = P2/P3
 
 ## 更新日志
 
 - 2026-03-09：创建文档，记录 4 项技术债务
 - 2026-05-04：追加 D4 Phase D 显式延后项（6 条 TD-D4-*）
+- 2026-05-04：Phase E + F P1 周期完成 — TD-D4-01 RESOLVED；TD-D4-02 / TD-D4-03 标记 PARTIAL；新增 TD-D4-07（audit script slider parser gap）
