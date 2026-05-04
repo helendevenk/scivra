@@ -32,34 +32,34 @@ export const evidenceOfEvolution: Experiment = {
 
   parameters: [
     {
-      id: "evidenceType",
-      label: "Evidence Type (0=Anatomy 1=Fossil 2=Molecular 3=Tree)",
-      unit: "",
+      id: "timeScale",
+      label: "Time Scale",
+      unit: "mya",
+      min: 100,
+      max: 3800,
+      default: 3800,
+      step: 100,
+      tier: "free",
+    },
+    {
+      id: "sequenceSimilarity",
+      label: "Sequence Similarity",
+      unit: "pair",
       min: 0,
       max: 3,
-      default: 3,
+      default: 0,
       step: 1,
       tier: "free",
     },
     {
-      id: "speciesCount",
-      label: "Species to Compare",
-      unit: "",
-      min: 3,
-      max: 8,
-      default: 5,
+      id: "rotationSpeed",
+      label: "Rotation Speed",
+      unit: "level",
+      min: 0,
+      max: 3,
+      default: 1,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "timeDepth",
-      label: "Time Depth (Mya)",
-      unit: "Mya",
-      min: 10,
-      max: 500,
-      default: 100,
-      step: 10,
-      tier: "pro",
     },
   ],
 
@@ -81,7 +81,7 @@ export const evidenceOfEvolution: Experiment = {
     "Evolution is supported by converging evidence from multiple fields. Comparative anatomy reveals homologous structures (same developmental origin, different function — e.g., human arm vs. whale flipper) indicating common ancestry, and analogous structures (different origin, similar function — e.g., bird wing vs. insect wing) showing convergent evolution. The fossil record documents transitional forms (e.g., Tiktaalik between fish and tetrapods) and patterns of appearance/extinction. Molecular biology provides the strongest evidence: DNA and protein sequence comparisons show that more closely related species share more similar sequences. The molecular clock hypothesis proposes that neutral mutations accumulate at a roughly constant rate, allowing estimation of divergence times. Phylogenetic trees (cladograms) organize this evidence into branching diagrams showing evolutionary relationships based on shared derived characters (synapomorphies).",
 
   instructions:
-    "Switch between four evidence views using the Evidence Type slider. In Tree view, explore the phylogenetic tree and click species to highlight branches. In Anatomy view, compare homologous limb structures across vertebrates. In Fossil view, scroll through a stratigraphic timeline. In Molecular view, see DNA sequence alignment and similarity percentages.",
+    "Use the Fossil Timeline, Molecular Phylogeny, and Comparative Anatomy presets to switch evidence views. In Fossil Timeline, move the Time Scale slider to focus the fossil record from 100 to 3800 mya. In Molecular Phylogeny, use Sequence Similarity to compare cytochrome c pairs. Use Rotation Speed to slow, pause, or speed up the 3D scene while students inspect the evidence.",
 
   challenges: [
     {
@@ -127,16 +127,41 @@ export const evidenceOfEvolution: Experiment = {
     educationalLevel: "High School",
     teaches: "Evidence of Evolution and Phylogenetics",
   },
+  htmlControlAliases: {
+    timeScale: "sl-time",
+    sequenceSimilarity: "sl-sim",
+    rotationSpeed: "sl-rot",
+  },
+  presets: [
+    {
+      id: "0",
+      label: "Fossil Timeline",
+      description:
+        "Shows fossil strata from early prokaryotes through modern humans. Use it to connect rock-layer sequence, transitional fossils, and major evolutionary events across deep time.",
+    },
+    {
+      id: "1",
+      label: "Molecular Phylogeny",
+      description:
+        "Compares cytochrome c similarity between humans and selected taxa. The view makes molecular relatedness visible as percent identity and branching distance.",
+    },
+    {
+      id: "2",
+      label: "Comparative Anatomy",
+      description:
+        "Displays homologous forelimb bones in human, whale, bat, and horse examples. Shared bone colors emphasize common origin despite different functions.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Evolution is the change in inherited traits across generations, and four converging lines of evidence support it: comparative anatomy, the fossil record, molecular biology, and phylogenetic trees built from those data. A whale flipper and a human arm share the same bone arrangement — humerus, radius, ulna, carpals — because they descended from the same ancestor, not because flippers are useful. Molecular evidence is even more precise: human and chimpanzee cytochrome c are identical (0 differences out of 104 residues), while humans and yeast differ at roughly 44 of 104 — a gap that mirrors the deep evolutionary distance the fossil record already suggested. This simulation lets you toggle between four evidence modes, adjust how many species you compare, and stretch the time axis to 500 million years to watch sequence divergence accumulate on a phylogenetic tree.",
     parameterExplanations: {
-      evidenceType:
-        "Selects which line of evidence the visualization displays: 0 = comparative anatomy (limb homology across vertebrates), 1 = fossil record (stratigraphic timeline of transitional forms), 2 = molecular data (DNA/protein sequence alignment and percent divergence), 3 = phylogenetic tree (cladogram built from shared derived characters). Switching between modes lets you verify that each independent dataset points to the same branching pattern.",
-      speciesCount:
-        "Sets how many species are loaded into the comparison, from 3 to 8. Adding more species increases the number of pairwise comparisons visible in molecular mode and adds more branch tips to the tree, making the pattern of increasing divergence with evolutionary distance easier to read.",
-      timeDepth:
-        "Sets the depth of the time axis in millions of years ago (Mya), from 10 to 500. In molecular mode this controls how far back the molecular clock is run; in fossil mode it sets the oldest stratum displayed. A setting of 100 Mya captures the mammal radiation; 500 Mya reaches the Cambrian and shows the deep split between vertebrate classes.",
+      timeScale:
+        "Time Scale controls how much evolutionary time the fossil view spans, from 100 mya to 3800 mya. A shorter setting keeps attention on relatively recent events, while the full 3800 mya setting places prokaryotes, eukaryotes, multicellular life, the Cambrian explosion, mass extinctions, hominins, and Homo sapiens on one compressed sequence. Use the Fossil Timeline preset first, then move this slider to ask which events remain visible at each scale. Students can connect deeper time to broader evolutionary transitions and see why a fossil record is ordered by age, not by a ladder of progress.",
+      sequenceSimilarity:
+        "Sequence Similarity selects the cytochrome c comparison shown in the molecular evidence view. The slider steps through human-chimp, human-rhesus, human-dog, and human-yeast examples, with identity values moving from nearly identical to much more divergent. In the Molecular Phylogeny preset, students can compare the displayed percent identity with the distance of each taxon from the human node. The goal is not to memorize the exact pairs, but to observe the pattern: more shared sequence usually indicates a more recent common ancestor, while lower similarity points to a deeper split.",
+      rotationSpeed:
+        "Rotation Speed changes how quickly the 3D scene turns while students inspect fossil strata, molecular nodes, or homologous limb bones. Off is useful when students need to sketch, read values, or compare bone positions. Normal keeps the scene gently moving for classroom demonstration. Fast and Very Fast make the spatial layout easier to notice, but they can distract from measurements if used during data collection. Use this slider as an observation control: keep it low for evidence gathering, then increase it when you want students to see the full structure from multiple angles.",
     },
     misconceptions: [
       {
@@ -171,11 +196,11 @@ export const evidenceOfEvolution: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Pre-lab prediction exercise: show students the four evidence type buttons and ask them to predict whether all four will produce the same branching pattern for five chosen species. Record predictions, then run the simulation to compare — use the disagreements to introduce why convergence of independent evidence strengthens a scientific claim.",
-      "Molecular clock calculation activity: set timeDepth to 500 Mya, switch to molecular mode, and record percent divergence between three pairs of species. Have students apply t = d/(2μ) with μ = 1% per 10 Mya to calculate divergence times and compare with the displayed tree node ages.",
-      "Homologous vs. analogous structure sort: pause on anatomy mode with speciesCount = 6, screenshot the limb comparison panel. Students sort each structure pair as homologous or analogous and justify using developmental origin, not function — probes the most common AP exam misconception.",
-      "Data collection — divergence vs. relatedness: students record percent sequence divergence for all pairwise species combinations in molecular mode and plot divergence vs. node depth from the tree. The positive linear trend demonstrates that sequence divergence is a quantitative proxy for evolutionary distance.",
-      "Standards connection — HS-LS4-1 evidence analysis: assign each lab group one evidence type to build a written argument supporting the claim that the given species share common ancestry, citing at least two specific observations from the simulation. Groups then share arguments and discuss whether any evidence type alone would be sufficient.",
+      "Pre-lab prediction exercise: show students the Fossil Timeline, Molecular Phylogeny, and Comparative Anatomy presets and ask what evidence each view should provide for common ancestry. Record predictions, then compare them with observations from the simulation.",
+      "Molecular evidence activity: open the Molecular Phylogeny preset and move Sequence Similarity through each pair. Students record percent identity, rank the comparisons from most to least related, and justify their ranking using sequence data.",
+      "Fossil record scale check: use the Fossil Timeline preset and move Time Scale from 100 mya to 3800 mya. Students list which major events appear at each scale and explain why deep time is needed to interpret broad evolutionary transitions.",
+      "Homologous structure sort: open Comparative Anatomy, set Rotation Speed to Off or Normal, and have students identify the same colored forelimb bones across human, whale, bat, and horse examples. Their justification should use developmental origin, not current function.",
+      "Standards connection — HS-LS4-1 evidence analysis: assign each lab group one preset to build a written argument supporting common ancestry, citing at least two specific observations from the simulation. Groups then compare whether one evidence source alone is as convincing as converging independent evidence.",
     ],
     faq: [
       {
@@ -189,9 +214,9 @@ export const evidenceOfEvolution: Experiment = {
           "The molecular clock assumes neutral mutations accumulate at a roughly constant rate. If two species share 5% sequence divergence and the mutation rate is 1% per 10 million years, the formula t = d/(2μ) gives a split time of 25 Mya. Reliability varies by gene: slowly evolving genes like ribosomal RNA are used for deep splits (bacteria vs. eukaryotes), while faster-evolving mitochondrial genes resolve more recent splits. Calibrating the clock against fossils with known dates improves accuracy.",
       },
       {
-        question: "Why does the simulation show ribosomal RNA as a molecular evidence type?",
+        question: "Why does the simulation use cytochrome c as molecular evidence?",
         answer:
-          "Ribosomal RNA (rRNA) is nearly universal across life and evolves slowly, making it ideal for comparing distantly related organisms — Carl Woese used 16S rRNA to establish the three-domain tree of life. Cytochrome c, another option in the simulation, is a respiratory protein conserved across eukaryotes; humans and chimpanzees differ at 0 positions, while humans and yeast differ at roughly 44 of 104 residues, quantifying the depth of the split.",
+          "Cytochrome c is a respiratory protein conserved across many eukaryotes, so its amino acid sequence can be compared across very different organisms. Closely related species tend to have fewer differences: humans and chimpanzees are identical in this example, while human and yeast sequences differ far more. That pattern helps students connect molecular similarity with recency of common ancestry. Other molecules, including ribosomal RNA, are also useful in evolutionary biology, but this simulation's molecular view focuses on cytochrome c.",
       },
       {
         question: "How does this lab connect to AP Biology standard 7.A.1?",

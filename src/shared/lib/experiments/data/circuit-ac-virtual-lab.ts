@@ -22,11 +22,10 @@ export const circuitAcVirtualLab: Experiment = {
   difficulty: "advanced",
 
   parameters: [
-    { id: "source_voltage", label: "Source Voltage (peak)", unit: "V", min: 1, max: 100, default: 10, step: 0.5, tier: "free" },
-    { id: "frequency", label: "Frequency", unit: "Hz", min: 1, max: 10000, default: 60, step: 1, tier: "free" },
-    { id: "resistance", label: "Resistance", unit: "Ω", min: 0, max: 1000, default: 100, step: 1, tier: "free" },
-    { id: "capacitance", label: "Capacitance", unit: "μF", min: 0.1, max: 1000, default: 100, step: 0.1, tier: "pro" },
-    { id: "inductance", label: "Inductance", unit: "mH", min: 0, max: 1000, default: 0, step: 1, tier: "pro" },
+    { id: "frequency", label: "Frequency", unit: "Hz", min: 10, max: 10000, default: 1000, step: 10, tier: "free" },
+    { id: "resistance", label: "Resistance", unit: "Ω", min: 10, max: 1000, default: 100, step: 10, tier: "free" },
+    { id: "inductance", label: "Inductance", unit: "mH", min: 1, max: 100, default: 25, step: 1, tier: "free" },
+    { id: "capacitance", label: "Capacitance", unit: "μF", min: 1, max: 100, default: 1, step: 1, tier: "free" },
   ],
 
   formulas: [
@@ -38,7 +37,7 @@ export const circuitAcVirtualLab: Experiment = {
   theory:
     "AC circuits require analysis with phasors and complex impedance. The total impedance Z of a series RLC circuit combines resistance R with inductive reactance X_L and capacitive reactance X_C. At resonance (X_L = X_C), impedance is purely resistive and current is maximized. An oscilloscope reveals phase relationships between voltage and current waveforms.",
   instructions:
-    "Use the component toolbar to build your circuit. Connect the oscilloscope probes to measure waveforms. Adjust frequency to find resonance — the oscilloscope will show V and I in phase. The phasor diagram updates in real time.",
+    "Use only the four sliders: Frequency, Resistance, Inductance, and Capacitance. Tune the series RLC circuit while the oscilloscope, phasor diagram, and frequency-response graph update in real time, then adjust one slider at a time to compare how each parameter changes current, phase, impedance, and frequency response.",
   challenges: [
     { id: "ca-c1", question: "At 60 Hz, what is the capacitive reactance of a 100μF capacitor?", hint: "X_C = 1/(2π × 60 × 100×10⁻⁶)", tier: "free" },
     { id: "ca-c2", question: "Find the resonant frequency for L=100mH, C=100μF.", hint: "f₀ = 1/(2π√(LC))", tier: "free" },
@@ -53,21 +52,20 @@ export const circuitAcVirtualLab: Experiment = {
   seoTitle: "AC Circuit Virtual Lab | RLC Circuits | AP Physics 2 Simulation",
   seoKeywords: ["AC circuit lab", "RLC circuit", "impedance", "oscilloscope", "AP Physics 2", "virtual lab"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "AC Circuits, RLC, Impedance" },
+  htmlControlAliases: { frequency: "sl-f", resistance: "sl-R", inductance: "sl-L", capacitance: "sl-C" },
 
   contentSections: {
     whatIsIt:
       "Pop the case off a guitar pedal or a cheap radio and you'll find the same three components staring back at you: resistors, capacitors, and inductors wired into an AC signal path. They are the building blocks of every analog filter, tuner, and power supply in the room. The catch is that AC current and AC voltage do not always peak at the same instant — capacitors make current lead voltage, inductors make it lag, and a real circuit blends both effects. This virtual lab gives you an oscilloscope, real component sliders, and a phasor diagram so you can see the phase shift as a number, a waveform, and a rotating arrow at the same time. Build a series RLC circuit, sweep the source frequency, and watch the impedance triangle rotate as the circuit slides through resonance.",
     parameterExplanations: {
-      source_voltage:
-        "The peak voltage of the AC source in volts. RMS is V_peak/√2, so a 10 V peak source delivers about 7.07 V RMS. This sets the overall amplitude of every waveform you see on the oscilloscope.",
       frequency:
-        "The driving frequency of the source in hertz. As you sweep it, X_L grows and X_C shrinks; resonance is the one frequency where they exactly cancel and current peaks.",
+        "Frequency sets how many AC cycles the source completes each second. In this lab it is the fastest way to move the same RLC circuit from capacitive behavior to inductive behavior. At low frequency, the capacitor's reactance is large and can dominate the phase shift; at high frequency, the inductor's reactance grows and can dominate instead. Somewhere between those extremes, X_L and X_C become equal, so the circuit is at resonance and the current reaches its maximum for the fixed 10 V source. Move only Frequency to see current, impedance, and phase change together.",
       resistance:
-        "Pure ohmic resistance R in the loop, in ohms. Resistance is what dissipates real power and sets the minimum impedance of the circuit at resonance.",
-      capacitance:
-        "Capacitor value in microfarads. Larger C lowers capacitive reactance at any given frequency and shifts the resonant frequency downward, since f_0 = 1/(2π√LC).",
+        "Resistance controls the real, energy-dissipating part of the circuit. Unlike inductive or capacitive reactance, resistance does not depend on frequency, so it sets the floor for total impedance at resonance. Lower resistance gives a larger current peak and a higher Q value, making the resonance curve narrower and more selective. Higher resistance damps the circuit, lowers the peak current, and makes the transition from capacitive to inductive behavior less sharp. Adjust only Resistance to isolate how damping changes the phasor diagram and the frequency-response graph.",
       inductance:
-        "Inductor value in millihenries. Larger L raises inductive reactance at any frequency and also pulls the resonant frequency lower. Set this to 0 to model a simpler RC circuit.",
+        "Inductance measures how strongly the coil opposes changes in current. The slider is shown in millihenries, while the calculation converts it to henries. As Inductance increases, inductive reactance X_L = 2πfL increases at the same frequency, so current tends to lag the source voltage more strongly. Larger L also lowers the resonant frequency because f_0 depends on 1/sqrt(LC). This makes the slider useful for showing that resonance is set by the pair of energy-storage components, not by resistance alone. Hold Capacitance fixed and raise Inductance to watch the resonance marker shift left on the graph.",
+      capacitance:
+        "Capacitance measures how much charge the capacitor stores for a given voltage. The slider is shown in microfarads, while the calculation converts it to farads. Increasing Capacitance lowers capacitive reactance X_C = 1/(2πfC), so the capacitor offers less opposition to AC current at the same frequency. It also lowers the resonant frequency when Inductance is unchanged, because a larger energy-storage capacity makes the LC exchange slower. Change only Capacitance to see how a larger capacitor changes current, phase angle, and the apparent filter cutoff.",
     },
     misconceptions: [
       {
@@ -92,15 +90,15 @@ export const circuitAcVirtualLab: Experiment = {
         wrong:
           "The voltage across an individual component can never be larger than the source voltage.",
         correct:
-          "In a series RLC at or near resonance, V_L and V_C can each be many times the source voltage. They are equal in magnitude but 180° out of phase, so they cancel in the loop equation while individually being huge. This is the trick behind radio receivers and Tesla coils.",
+          "In a series RLC circuit at or near resonance, V_L and V_C can each be many times the fixed source amplitude. They are equal in magnitude but 180° out of phase, so they cancel in the loop equation while individually being large. This is the same selectivity principle used in tuned circuits such as radio receivers.",
       },
     ],
     teacherUseCases: [
-      "Phase shift discovery: students set L = 0 and observe an RC circuit on the scope, then set C = 0 and look at an RL circuit. They record the sign and rough size of the phase shift in each case and compare to predictions.",
-      "Resonance experiment: with default L and C, sweep frequency from 1 Hz to 1000 Hz in 10 to 20 steps, recording V_R, V_L, V_C, and I at each step. Students plot all three voltages vs. frequency and identify the resonant frequency.",
+      "Phase shift discovery: students keep Resistance, Inductance, and Capacitance fixed, then sweep Frequency across the resonance point. They record whether the circuit behaves more capacitive, resistive, or inductive and compare the sign of the phase angle to the phasor diagram.",
+      "Resonance experiment: students use the sliders to set a series RLC circuit, then sweep Frequency below and above the computed peak in 10 to 20 steps. Students record V_R, V_L, V_C, and I at each step, plot the curves, and identify the resonant frequency.",
       "Misconception probe: at resonance, ask students to predict whether V_L will be smaller, equal, or larger than the source voltage. Many will say smaller; the simulation will show that V_L can be much larger when X_L >> R.",
-      "Q-factor lab: have one team set R = 10 Ω and another set R = 200 Ω, both with the same L and C. Compare the sharpness of the current-vs-frequency peak and discuss bandwidth and selectivity in radio receivers.",
-      "Filter design challenge: ask students to design an RC low-pass filter with a target cutoff frequency, set the components in the simulation, and verify by sweeping frequency that the output amplitude rolls off as expected.",
+      "Q-factor lab: students hold Frequency, Inductance, and Capacitance fixed, then change only Resistance. They should connect lower resistance with a sharper current-vs-frequency peak and stronger frequency selectivity.",
+      "Filter comparison challenge: students vary Frequency and Capacitance one at a time, then explain how the response differs across settings using impedance and phase evidence.",
     ],
     faq: [
       {
@@ -111,7 +109,7 @@ export const circuitAcVirtualLab: Experiment = {
       {
         question: "How can the voltage across L or C be larger than the source voltage at resonance?",
         answer:
-          "At resonance the current I in the loop is V_source/R, which can be quite large because impedance is at its minimum. The voltage across the inductor is V_L = I × X_L, and X_L can be many times R, so V_L easily exceeds V_source. The same is true for V_C. They are exactly opposite in phase, so when you go around the loop they cancel and Kirchhoff's voltage law is still satisfied.",
+          "At resonance the current in the loop is large because impedance is at its minimum. The voltage across the inductor is V_L = I × X_L, and X_L can be many times larger than R, so V_L can exceed the fixed source amplitude. The same is true for V_C. Those two component voltages are opposite in phase, so when you go around the loop they cancel and Kirchhoff's voltage law is still satisfied.",
       },
       {
         question: "What is the difference between peak current and RMS current?",

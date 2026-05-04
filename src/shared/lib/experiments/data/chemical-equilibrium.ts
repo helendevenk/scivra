@@ -23,13 +23,13 @@ export const chemicalEquilibrium: Experiment = {
 
   parameters: [
     {
-      id: "initialA",
-      label: "Initial [A] (reactant)",
-      unit: "mol/L",
-      min: 0.1,
+      id: "reactantAdded",
+      label: "[Reactant] added",
+      unit: "M",
+      min: 0,
       max: 3.0,
       default: 1.0,
-      step: 0.1,
+      step: 0.05,
       tier: "free",
     },
     {
@@ -37,8 +37,8 @@ export const chemicalEquilibrium: Experiment = {
       label: "Temperature",
       unit: "K",
       min: 200,
-      max: 700,
-      default: 400,
+      max: 800,
+      default: 298,
       step: 10,
       tier: "free",
     },
@@ -47,20 +47,10 @@ export const chemicalEquilibrium: Experiment = {
       label: "System Pressure",
       unit: "atm",
       min: 0.5,
-      max: 10,
+      max: 5,
       default: 1,
-      step: 0.5,
-      tier: "pro",
-    },
-    {
-      id: "addReactant",
-      label: "Stress: Add [A]",
-      unit: "mol/L",
-      min: 0,
-      max: 1.0,
-      default: 0,
       step: 0.1,
-      tier: "pro",
+      tier: "free",
     },
   ],
 
@@ -83,7 +73,7 @@ export const chemicalEquilibrium: Experiment = {
     "Chemical equilibrium is a dynamic state where the forward and reverse reaction rates are equal, so concentrations remain constant (but not necessarily equal). The equilibrium constant Kc is calculated from equilibrium concentrations: Kc = [products]^m / [reactants]^n. Large K (>1) favors products; small K (<1) favors reactants. Le Chatelier's Principle: if a system at equilibrium is disturbed, it shifts to partially counteract the disturbance. Adding a reactant → shifts right (more products). Removing a product → shifts right. Increasing pressure (for gases) → shifts toward fewer moles of gas. Increasing temperature → shifts in the endothermic direction (changes K). Catalysts do NOT change the equilibrium position — only reach it faster.",
 
   instructions:
-    "Press Play to watch the reaction approach equilibrium — concentration lines converge. Once at equilibrium, apply stresses using the controls. Adding [A] (reactant) → watch the system shift right. Increasing temperature on an exothermic reaction → K decreases, equilibrium shifts left. The Q vs K indicator shows which way the reaction is going.",
+    "Choose one of the three presets — N₂O₄ ⇌ 2NO₂, Fe³⁺+SCN⁻ ⇌ FeSCN²⁺, or Haber N₂+3H₂ ⇌ 2NH₃ — then use the [Reactant] added, Temperature, and Pressure sliders to inspect the live particle counts, K, Q, and direction readout. Press Animate to move the particles, use Add Reactant for a quick concentration stress, and compare Q vs K after each change.",
 
   challenges: [
     {
@@ -116,6 +106,7 @@ export const chemicalEquilibrium: Experiment = {
   tier: "free",
   estimatedTime: 18,
   relatedExperiments: ["reaction-kinetics", "acid-base-ph"],
+  htmlPath: "/experiments/ap-chemistry/chemical-equilibrium.html",
 
   seoTitle: "Chemical Equilibrium Le Chatelier's Principle | Scivra AP Chemistry",
   seoKeywords: [
@@ -131,19 +122,42 @@ export const chemicalEquilibrium: Experiment = {
     educationalLevel: "High School",
     teaches: "Chemical Equilibrium and Le Chatelier's Principle",
   },
+  htmlControlAliases: {
+    reactantAdded: "sl-cA",
+    temperature: "sl-T",
+    pressure: "sl-P",
+  },
+  presets: [
+    {
+      id: "0",
+      label: "🟤 N₂O₄ ⇌ 2NO₂",
+      description:
+        "Loads a dinitrogen tetroxide to nitrogen dioxide equilibrium with a product-side coefficient of 2 and an endothermic temperature response. It is useful for connecting color, particle counts, Q, and K in a compact gas-phase system.",
+    },
+    {
+      id: "1",
+      label: "🔴 Fe³⁺+SCN⁻ ⇌ FeSCN²⁺",
+      description:
+        "Loads the iron(III)-thiocyanate complex equilibrium, a strongly product-favored case with a red product species. Use it to contrast large K behavior with reactant-favored systems.",
+    },
+    {
+      id: "2",
+      label: "🏭 Haber N₂+3H₂ ⇌ 2NH₃",
+      description:
+        "Loads the Haber ammonia synthesis case, an exothermic industrial equilibrium with fewer gas particles on the product side. It supports discussion of why temperature, pressure, and rate compromises matter in real production.",
+    },
+  ],
 
   contentSections: {
     whatIsIt:
       "Chemical equilibrium is the state where the forward and reverse reactions of a reversible process happen at the same rate. The concentrations of reactants and products stop changing — but the reactions don't stop. Both directions keep going at equal speed, like two escalators moving people up and down at the same rate. The position of that balance is captured by the equilibrium constant K, a single number that summarizes the ratio of products to reactants when nothing more is changing on the macroscopic scale. Le Chatelier's principle then predicts what happens when you disturb the balance: the system shifts to partially counteract the change. Add more reactant, products grow. Heat an exothermic reaction, equilibrium shifts toward reactants. Tune temperature, pressure, and concentration in this lab and watch the system rebalance in real time, with the on-screen rates and concentrations tracing the path back to a new equilibrium.",
     parameterExplanations: {
-      initialA:
-        "Starting concentration of reactant A. Higher initial values let the reaction proceed further toward products before equilibrium is reached, but the equilibrium constant K stays the same.",
+      reactantAdded:
+        "The [Reactant] added slider sets the starting reactant concentration used by the equilibrium calculation. Raising it gives the system more reactant particles to convert, so the live display recalculates the equilibrium amounts of reactant and product for the selected preset. Watch the particle counts, Q, K, and direction readout together: changing concentration changes Q first, then the system is interpreted relative to K. The Add Reactant button is a fast version of the same stress, increasing this slider by a fixed amount. Compare all three presets at the same concentration to see how stoichiometry and K change the final balance.",
       temperature:
-        "Temperature is the only stress that actually changes K. For an endothermic reaction, raising T shifts equilibrium toward products (heat acts as a 'reactant'). For exothermic, the opposite.",
+        "Temperature controls the Kelvin value used in the simulation's van't Hoff-style K adjustment. Because each preset has its own enthalpy sign, the same temperature move can have different meaning: the N₂O₄ ⇌ 2NO₂ preset is endothermic, while the FeSCN²⁺ and Haber presets are exothermic. As you move the slider, focus on whether K grows or shrinks and then use Q vs K to explain the displayed direction. This is the cleanest way to show the AP Chemistry rule that concentration and pressure can move Q, but temperature is the stress that changes the equilibrium constant.",
       pressure:
-        "Increasing pressure shifts gaseous equilibria toward whichever side has fewer moles of gas. If both sides have equal moles, pressure has no effect on the position of equilibrium.",
-      addReactant:
-        "Stresses the system by injecting more reactant. Watch the forward rate spike, products climb, then both rates equalize again at a new equilibrium position. The textbook 'shift right' visualized.",
+        "Pressure sets the displayed system pressure in atmospheres for Le Chatelier discussion. Use it with the gas-phase presets to ask which side has fewer gas particles and predict the qualitative pressure shift before checking the sidebar rules or quiz. In this HTML model, the live K and Q calculation is driven by the selected preset, reactant amount, and temperature, so pressure is best treated as a reasoning prompt rather than a separate equilibrium solver. That distinction is useful: students can separate what the visual model calculates from the chemical rule they must apply on AP-style questions.",
     },
     misconceptions: [
       {
@@ -160,23 +174,23 @@ export const chemicalEquilibrium: Experiment = {
       },
       {
         wrong:
-          "A catalyst shifts equilibrium toward more products.",
+          "A higher pressure setting always increases K and creates more products in the simulator.",
         correct:
-          "Catalysts speed up both forward and reverse reactions equally. They reduce the time to reach equilibrium, but the final concentrations of reactants and products are unchanged.",
+          "Pressure can shift a gas equilibrium position when the two sides have different gas-particle counts, but it does not change K. In this HTML lab the Pressure slider is a discussion variable and readout; use the preset stoichiometry and Le Chatelier rule to predict the qualitative pressure effect.",
       },
       {
         wrong:
-          "Le Chatelier's principle works because the system 'wants' to maintain the original conditions.",
+          "The preset buttons only change colors, so the same K and temperature behavior apply to every reaction.",
         correct:
-          "It's not about wanting. The principle is a consequence of rate kinetics: when you raise a concentration, you raise the rate of the reaction that consumes it. The system shifts because rates change, not because of any preference.",
+          "Each preset loads a different reaction model with its own K, stoichiometric coefficients, enthalpy sign, labels, and particle colors. That is why the same slider move can produce different Q, K, and particle-count patterns across N₂O₄, FeSCN²⁺, and Haber cases.",
       },
     ],
     teacherUseCases: [
-      "Stress-test ladder: start at equilibrium, then apply one stress at a time (add A, raise T, raise P). After each, ask students to predict the direction of shift, then use the lab to verify.",
-      "Q vs. K: pause mid-shift and have students calculate Q from current concentrations. Compare to K and explain why the reaction is still moving.",
-      "Endo vs. exo discovery: don't tell students the sign of ΔH. Have them raise and lower temperature and deduce whether the reaction is exothermic or endothermic from the direction of shift.",
-      "Industrial chemistry tie-in: discuss how the Haber process for ammonia picks temperature and pressure to maximize yield, then have students reproduce the conditions.",
-      "AP free-response practice: turn the simulation result into a predict/explain pair, e.g. 'When pressure is doubled at constant T, in which direction does equilibrium shift, and why?'",
+      "Preset comparison warm-up: load N₂O₄, FeSCN²⁺, and Haber in sequence with the same [Reactant] added value, then have students rank the cases by K and product formation using the live particle counts as evidence.",
+      "Q vs K reasoning drill: move the [Reactant] added slider or press Add Reactant, pause, and ask students to explain the displayed direction from Q and K rather than from memorized 'shift right' language alone.",
+      "Temperature investigation: keep [Reactant] added constant, move Temperature upward for each preset, and have students infer which reactions are endothermic or exothermic from whether K increases or decreases.",
+      "Pressure limitation discussion: use the Pressure slider with N₂O₄ and Haber to make qualitative Le Chatelier predictions, then explicitly separate the slider readout from the HTML model's K/Q calculation.",
+      "AP-style explanation practice: assign each group one preset and one slider change, then require a two-sentence claim that cites K, Q, stoichiometry, or enthalpy sign as the evidence.",
     ],
     faq: [
       {
@@ -187,7 +201,7 @@ export const chemicalEquilibrium: Experiment = {
       {
         question: "Why doesn't pressure affect equilibria with equal moles of gas on each side?",
         answer:
-          "Pressure only matters when the total moles of gas differ between reactants and products. If both sides have the same number of gas moles, raising pressure compresses both equally and there's no preferred direction.",
+          "Pressure only matters when the total moles of gas differ between reactants and products. If both sides have the same number of gas moles, raising pressure compresses both sides equally and there is no preferred direction. In this HTML lab, pressure is shown as a slider for Le Chatelier reasoning, while the numeric K/Q calculation is driven by the preset, reactant amount, and temperature.",
       },
       {
         question: "How do I tell if a reaction is exothermic from K?",
@@ -202,7 +216,7 @@ export const chemicalEquilibrium: Experiment = {
       {
         question: "How does this connect to AP Chemistry?",
         answer:
-          "AP Chem Unit 7 (Equilibrium) expects students to write equilibrium expressions, use Q to predict shift direction, apply Le Chatelier qualitatively, and reason about why only temperature changes K. Every shift in this lab should be explainable in those terms.",
+          "AP Chem Unit 7 (Equilibrium) expects students to write equilibrium expressions, use Q to predict shift direction, apply Le Chatelier qualitatively, and reason about why only temperature changes K. Use the three presets to compare reaction forms, then use the sliders to support claim-evidence explanations from the live K, Q, and particle-count displays.",
       },
     ],
   },

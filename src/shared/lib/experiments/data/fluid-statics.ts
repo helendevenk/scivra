@@ -23,44 +23,34 @@ export const fluidStatics: Experiment = {
 
   parameters: [
     {
-      id: "objectDensity",
-      label: "Object Density (ρ_obj)",
-      unit: "kg/m³",
-      min: 100,
-      max: 3000,
-      default: 800,
-      step: 50,
-      tier: "free",
-    },
-    {
       id: "fluidDensity",
-      label: "Fluid Density (ρ_fluid)",
+      label: "Fluid Density (ρ)",
       unit: "kg/m³",
-      min: 500,
-      max: 2000,
+      min: 800,
+      max: 1200,
       default: 1000,
-      step: 50,
+      step: 5,
       tier: "free",
     },
     {
-      id: "objectVolume",
-      label: "Object Volume (V)",
-      unit: "×10⁻³ m³",
-      min: 0.1,
+      id: "totalDepth",
+      label: "Total Depth (h)",
+      unit: "m",
+      min: 0.5,
       max: 5,
-      default: 1,
+      default: 2.5,
       step: 0.1,
       tier: "free",
     },
     {
-      id: "pipeRatio",
-      label: "Pipe Constriction Ratio (A₁/A₂)",
-      unit: "",
-      min: 1,
-      max: 5,
-      default: 2,
-      step: 0.1,
-      tier: "pro",
+      id: "surfacePressure",
+      label: "Surface Pressure (P₀)",
+      unit: "kPa",
+      min: 101,
+      max: 200,
+      default: 101,
+      step: 1,
+      tier: "free",
     },
   ],
 
@@ -87,7 +77,7 @@ export const fluidStatics: Experiment = {
     "Archimedes' principle: the buoyant force equals the weight of displaced fluid. An object floats when its average density is less than the fluid. Pascal's law: pressure applied to enclosed fluid transmits equally in all directions (basis of hydraulics). Bernoulli's equation is conservation of energy for flowing fluid: faster flow → lower pressure. A wing generates lift because air moves faster over the curved top surface, creating lower pressure above than below.",
 
   instructions:
-    "In buoyancy mode, adjust object and fluid densities. Watch the object sink, float, or rise. The net force display shows weight vs buoyancy. Switch to Bernoulli mode (Pro) to see how pipe constriction speeds up flow and drops pressure.",
+    "Use the Fluid Density, Total Depth, and Surface Pressure sliders to change the hydrostatic pressure field in the tank. Compare the Fresh Water, Sea Water, and Dense Fluid presets to see how density, depth, and applied surface pressure change the pressure-at-depth readout, buoyant force, and floating height of the submerged object.",
 
   challenges: [
     {
@@ -135,19 +125,42 @@ export const fluidStatics: Experiment = {
     educationalLevel: "High School",
     teaches: "Fluid Statics and Bernoulli's Principle",
   },
+  htmlControlAliases: {
+    fluidDensity: "sl-density",
+    totalDepth: "sl-depth",
+    surfacePressure: "sl-surf",
+  },
+  presets: [
+    {
+      id: "fresh",
+      label: "Fresh Water",
+      description:
+        "Fresh Water sets the tank to 1000 kg/m³, 2.5 m depth, and normal atmospheric surface pressure. It is the baseline for comparing hydrostatic pressure and buoyant force.",
+    },
+    {
+      id: "sea",
+      label: "Sea Water",
+      description:
+        "Sea Water raises the fluid density to 1025 kg/m³ and the depth to 3.0 m. The preset shows why saltier water creates slightly larger buoyant forces and pressure at the same depth.",
+    },
+    {
+      id: "dense",
+      label: "Dense Fluid",
+      description:
+        "Dense Fluid uses 1200 kg/m³, 4.0 m depth, and 120 kPa surface pressure. It combines denser fluid, deeper measurement, and extra surface pressure to produce a much larger pressure reading.",
+    },
+  ],
 
   contentSections: {
     whatIsIt:
       "A 250,000-ton oil tanker rides high in the harbor. A scuba diver feels different pressure at every depth. A hydraulic lift turns a foot tap into a multi-ton hoist. All three rely on a tiny set of rules for fluids at rest. Archimedes figured out the first in a bathtub: any immersed object feels a buoyant force equal to the weight of fluid it displaces. Less-dense objects float; denser ones sink while still feeling that upward push. Pascal added: pressure applied to an enclosed fluid transmits equally in all directions, so a small piston can lift a car balanced on a large one. The third rule is hydrostatic pressure: every meter of depth adds ρgh, which is why ears pop in the deep end. This lab lets you drop objects of different densities into different fluids and watch them float, sink, or settle.",
     parameterExplanations: {
-      objectDensity:
-        "Density of the dropped object in kg/m³. This is the deciding number for buoyancy. If ρ_obj < ρ_fluid the object floats with submerged fraction = ρ_obj/ρ_fluid (a 600 kg/m³ wood block in water sits 60% submerged). If ρ_obj > ρ_fluid it sinks. If they're equal the object hovers neutrally — divers achieve this with their buoyancy compensator vests.",
       fluidDensity:
-        "Density of the surrounding fluid in kg/m³. Fresh water is 1000, sea water about 1025 (which is why you float higher in the ocean), light oil about 800, mercury 13,600. The buoyant force F_b = ρ_fluid · g · V_submerged scales linearly with fluid density, so the same boat floats higher in the saltier Dead Sea than in a freshwater lake.",
-      objectVolume:
-        "Total object volume in units of 10⁻³ m³ (i.e., liters). Buoyant force is ρ_fluid · g · V_submerged, so volume sets the maximum possible upward push when the object is fully submerged. Doubling the volume of a fully submerged object doubles the buoyant force — which is exactly the design trick a steel ship uses to float despite being made of dense steel.",
-      pipeRatio:
-        "Ratio of pipe areas (A₁/A₂) used in the Bernoulli flow mode. Larger ratio means the narrow section is much tighter, the fluid speeds up more drastically, and the pressure drop deepens. This is the same continuity-plus-Bernoulli logic from the Venturi lab — the fluid trades static pressure for kinetic energy as it accelerates through the constriction.",
+        "Fluid Density sets ρ in both P = P₀ + ρgh and F_b = ρgV. Fresh water is about 1000 kg/m³, sea water is a little denser, and heavy lab fluids can be denser still. Raising this slider makes each meter of depth add more pressure, so the color gradient darkens more strongly toward the bottom. It also increases the buoyant force on the orange sphere because the same displaced volume weighs more. Use Fresh Water as the baseline, Sea Water to test a small density change, and Dense Fluid to see the largest combined pressure and buoyancy effect.",
+      totalDepth:
+        "Total Depth sets the h value used for the pressure-at-depth readout. In an incompressible static fluid, gauge pressure grows linearly with depth: doubling h doubles the ρgh term when fluid density and surface pressure stay fixed. The tank also redraws taller or shorter, so students can connect the geometric depth they see with the numerical pressure value. Keep Fluid Density at 1000 kg/m³ and Surface Pressure at 101 kPa, then move only this slider to isolate the depth relationship. The Sea Water and Dense Fluid presets give quick deeper comparison cases.",
+      surfacePressure:
+        "Surface Pressure sets P₀, the pressure already acting on the top of the fluid before the weight of the fluid column is added. Normal atmospheric pressure is about 101 kPa, so the Fresh Water and Sea Water presets begin there. Increasing this slider adds the same extra pressure everywhere in the tank, which illustrates Pascal's principle: an applied pressure is transmitted through the fluid. It does not change the ρgh slope created by depth and density, but it raises the absolute pressure readout at every selected depth. Compare 101 kPa and 150 kPa while holding the other sliders steady.",
     },
     misconceptions: [
       {
@@ -164,9 +177,9 @@ export const fluidStatics: Experiment = {
       },
       {
         wrong:
-          "Bernoulli's principle says fast-moving fluid pulls objects in.",
+          "Increasing surface pressure only affects the top layer of the fluid.",
         correct:
-          "Pressure drops where speed increases, but the net force on a nearby object always points from high pressure to low pressure. The fast region pushes back less, so surrounding fluid pushes objects toward it. There's no 'pulling' — just a pressure imbalance.",
+          "In a static enclosed fluid, an added surface pressure is transmitted throughout the fluid. The pressure at depth is P = P₀ + ρgh, so raising P₀ by 20 kPa raises the pressure readout at every depth by 20 kPa. The depth term still depends on ρ and h, but the whole pressure profile shifts upward together.",
       },
       {
         wrong:
@@ -182,11 +195,11 @@ export const fluidStatics: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Float-fraction prediction: have students predict the submerged fraction of wood blocks of various densities (300, 500, 700, 900 kg/m³) in fresh water before running the simulation. Anchor the rule fraction = ρ_obj/ρ_fluid and discuss why ice (ρ ≈ 917) sits so high in liquid water.",
-      "Why ships float: assign students to compute the buoyant force on a 1 m³ block of solid steel (ρ ≈ 7800) and show it sinks. Then have them imagine the steel hammered into a thin-walled boat hull enclosing 100 m³ of air. Compare the average density and watch the same mass of steel float comfortably.",
-      "Salt vs. fresh: have students float identical wooden blocks in fresh water (1000 kg/m³) and sea water (1025 kg/m³) and measure the change in submerged depth. Connect to why people float more easily in the Dead Sea (1240 kg/m³).",
-      "Hydraulic-lift sketch: walk students through a 1:100 piston ratio. Calculate the input distance required to raise a car by 10 cm. Use the energy bookkeeping to show no work is created — input distance × input force = output distance × output force.",
-      "Bernoulli bridge: switch into flow mode after the buoyancy section, run a constriction at ratio 2, and ask students to predict the pressure change. Connect the static-fluid Pascal/Archimedes arguments to the moving-fluid Bernoulli framework.",
+      "Depth-linearity lab: keep Fluid Density at 1000 kg/m³ and Surface Pressure at 101 kPa, then have students record pressure at several Total Depth values. They should graph pressure vs. depth and identify the constant ρg slope.",
+      "Fresh vs. sea comparison: run Fresh Water and Sea Water back to back, then ask students to explain why the sea-water case gives slightly higher pressure and buoyant-force readings at similar depths.",
+      "Pascal's principle check: hold Fluid Density and Total Depth constant while raising Surface Pressure from 101 kPa to 150 kPa. Students should predict and verify that the pressure-at-depth readout increases by the same 49 kPa.",
+      "Dense-fluid case study: use the Dense Fluid preset, then have students separate which part of the larger pressure reading comes from density, which part comes from depth, and which part comes from surface pressure.",
+      "AP free-response warmup: ask students to write P = P₀ + ρgh and F_b = ρgV before touching the controls, then use the sliders as evidence for how each variable changes pressure or buoyant force.",
     ],
     faq: [
       {
@@ -215,9 +228,9 @@ export const fluidStatics: Experiment = {
           "Both come from hydrostatic pressure. Archimedes' principle is what you get when you integrate the depth-dependent pressure over an object's surface — the net upward push equals the weight of fluid displaced. Pascal's law is the statement that any extra pressure applied to an enclosed fluid adds uniformly everywhere. Together they cover most of static-fluid physics: buoyancy, hydraulics, dam design, and submarine ballast.",
       },
       {
-        question: "How does this connect to AP Physics 2 standard 3.C.4 and to Bernoulli flow?",
+        question: "How does this connect to AP Physics 2 standard 3.C.4?",
         answer:
-          "AP Physics 2 3.C.4 asks students to apply Newton's laws to fluid systems — including buoyancy, hydrostatic pressure, and the connection to flowing fluids via Bernoulli. NGSS HS-PS2-1 also expects students to use Newton's second law in fluid contexts. This lab pairs the static-fluid framework (Archimedes, Pascal, hydrostatic pressure) with a Bernoulli flow demo so students can see the full progression — from sitting fluids to moving ones — without switching apps.",
+          "AP Physics 2 3.C.4 asks students to apply Newton's laws to fluid systems, including buoyancy and hydrostatic pressure. NGSS HS-PS2-1 also expects students to use Newton's second law in force contexts. This lab focuses on static fluids: students can change density, depth, and surface pressure, then connect the numerical readouts to P = P₀ + ρgh and F_b = ρgV.",
       },
     ],
   },

@@ -25,21 +25,21 @@ export const electricFieldLines: Experiment = {
     {
       id: "charge1",
       label: "Charge 1 (q₁)",
-      unit: "×10⁻⁹ C",
-      min: -10,
-      max: 10,
-      default: 5,
-      step: 1,
+      unit: "μC",
+      min: -3,
+      max: 3,
+      default: 2,
+      step: 0.1,
       tier: "free",
     },
     {
       id: "charge2",
       label: "Charge 2 (q₂)",
-      unit: "×10⁻⁹ C",
-      min: -10,
-      max: 10,
-      default: -5,
-      step: 1,
+      unit: "μC",
+      min: -3,
+      max: 3,
+      default: -2,
+      step: 0.1,
       tier: "free",
     },
     {
@@ -47,30 +47,10 @@ export const electricFieldLines: Experiment = {
       label: "Charge Separation (d)",
       unit: "m",
       min: 0.5,
-      max: 5,
+      max: 4,
       default: 2,
       step: 0.1,
       tier: "free",
-    },
-    {
-      id: "charge3",
-      label: "Third Charge (q₃)",
-      unit: "×10⁻⁹ C",
-      min: -10,
-      max: 10,
-      default: 0,
-      step: 1,
-      tier: "pro",
-    },
-    {
-      id: "showEquipotential",
-      label: "Show Equipotential Surfaces",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -105,7 +85,7 @@ export const electricFieldLines: Experiment = {
     "Electric field lines show the direction a positive test charge would move. They originate from positive charges, terminate on negative charges, and never cross. The density of field lines represents field strength. When multiple charges are present, the total field at any point is the vector sum of individual fields (superposition principle). Equipotential surfaces are perpendicular to field lines — no work is done moving a charge along an equipotential.",
 
   instructions:
-    "Adjust the charges of two objects and their separation. Field lines draw in 3D — use your mouse to orbit and see the full structure. Try +/+ (repulsion), +/- (attraction), and equal charges. Pro users can add a third charge and toggle equipotential surfaces.",
+    "Use the Charge 1, Charge 2, and Charge Separation sliders to change the two source charges and the distance between them. Field lines draw in 3D — use your mouse to orbit, then compare the Dipole (±q), Two Positive, and Three Charges presets to see attraction, cancellation, and superposition patterns.",
 
   hook: {
     question: "Can you feel the electric force from your phone charger? It's there — you just can't sense it.",
@@ -239,21 +219,23 @@ export const electricFieldLines: Experiment = {
     educationalLevel: "High School",
     teaches: "Electric Fields and Coulomb's Law",
   },
+  htmlControlAliases: { charge1: "q1-slider", charge2: "q2-slider", separation: "sep-slider" },
+  presets: [
+    { id: "0", label: "Dipole (±q)", description: "Sets equal-magnitude opposite charges at a moderate separation. Use it to show field lines leaving the positive charge and terminating on the negative charge." },
+    { id: "1", label: "Two Positive", description: "Sets both source charges positive with the same magnitude. This preset highlights repulsion and the midpoint cancellation that comes from symmetry." },
+    { id: "2", label: "Three Charges", description: "Adds a fixed third negative charge while keeping the three sliders available for the two main charges and separation. Use it to discuss superposition when the field has more than two sources." },
+  ],
 
   contentSections: {
     whatIsIt:
       "Run a comb through dry hair and the comb can pick up bits of paper from across the desk without touching them. The mechanism is an electric field — an invisible structure that surrounds every charged object and pushes or pulls on other charges nearby. This lab makes that field visible. Place one or two point charges in 3D space, dial each one positive or negative with the slider, and watch field lines stream out of positives and dive into negatives. The denser the lines, the stronger the field. Toggle equipotential surfaces on and you see the perpendicular partner of the field: shells where moving a test charge costs no work. The math behind it all is Coulomb's law and the superposition principle, both treated qualitatively here.",
     parameterExplanations: {
       charge1:
-        "The size and sign of the first point charge in nanocoulombs. Positive values send field lines outward; negative values pull them inward. Larger magnitudes pack more lines into the surrounding space.",
+        "Charge 1 sets the size and sign of the first source charge, measured in microcoulombs. Positive values make field lines point away from that charge, while negative values make nearby lines point inward. The magnitude matters as much as the sign: moving from +1 μC to +3 μC triples that charge's contribution to the field at the same distance. Keep Charge 2 and Charge Separation fixed while changing only Charge 1 to isolate how one source affects the net field pattern, then compare the Dipole and Two Positive presets.",
       charge2:
-        "The size and sign of the second point charge. Pair it with charge1 to see classic configurations: equal and opposite makes a dipole, equal and same-sign makes a repulsive pair with a field-free midpoint.",
+        "Charge 2 controls the second source charge in the same microcoulomb range as Charge 1. When the two sliders have opposite signs, field lines tend to connect from the positive charge toward the negative charge, giving the classic dipole pattern. When the signs match, lines spread away from both positives or toward both negatives, and symmetry can create a zero-field point between equal charges. Change Charge 2 after setting Charge 1 so students can see superposition as a vector addition rule rather than a separate force.",
       separation:
-        "The distance in meters between charges 1 and 2. Because the field of each charge falls as 1/r², shrinking separation makes the local fields and forces grow extremely quickly — halving distance nearly quadruples the force.",
-      charge3:
-        "An optional third charge for building triangular configurations and exploring superposition with three sources at once. Set it to zero to deactivate; otherwise it contributes another field that vector-adds with the first two.",
-      showEquipotential:
-        "Toggle that overlays equipotential surfaces — the places where electric potential is constant. They are always perpendicular to the field lines, and no work is done when a charge moves along one. Useful for connecting field geometry to energy.",
+        "Charge Separation changes the distance between the two main source charges, in meters. Electric field strength from each point charge follows an inverse-square relationship, so distance is not a gentle adjustment: bringing charges closer makes the nearby field and force much stronger, while moving them apart spreads the pattern out and weakens interactions. Use this slider after choosing Dipole or Two Positive so the charge signs stay fixed. Students can then test whether the field geometry changes because of distance, sign, or magnitude.",
     },
     misconceptions: [
       {
@@ -282,17 +264,17 @@ export const electricFieldLines: Experiment = {
       },
       {
         wrong:
-          "Equipotential surfaces are the same thing as field lines.",
+          "The Three Charges preset means there must be a third charge slider somewhere.",
         correct:
-          "They are perpendicular partners. Field lines show the direction a positive test charge feels a push; equipotentials show surfaces where potential is constant. Moving along a field line costs work; moving along an equipotential costs none.",
+          "In this HTML simulation the Three Charges preset adds a fixed third source charge to the scene, while the visible sliders still control Charge 1, Charge 2, and their separation. It is a preset scenario for superposition, not an extra adjustable parameter.",
       },
     ],
     teacherUseCases: [
-      "Symmetry hunt — predict before you click: students set q₁ = q₂ = +5 nC and predict where the field is zero before enabling the visualization. Then verify the midpoint cancellation directly.",
-      "Data collection on Coulomb's law: hold q₁ and q₂ fixed, vary separation from 0.5 m to 5 m in steps, record the simulation's force readout, plot F vs 1/r² and check linearity.",
-      "Misconception probe at a dipole midpoint: ask students to vote on the field direction at the center of a +5 / -5 dipole. Many will pick zero by analogy with the equal-positive case — use the simulation to surface and correct the error.",
-      "Equipotential / field-line orthogonality: with the equipotential toggle on, ask students to trace a path from one surface to the next and explain in writing why the path must cross every line at right angles.",
-      "Three-charge configurations: pro-tier students set up an equilateral triangle of charges and predict the net field at the centroid using vector decomposition, then confirm against the simulation.",
+      "Symmetry hunt — students choose the Two Positive preset, confirm q₁ = q₂ = +2 μC, and predict where the field is zero before orbiting the 3D visualization to verify midpoint cancellation.",
+      "Data collection on Coulomb's law: hold q₁ and q₂ fixed, vary Charge Separation from 0.5 m to 4 m in steps, record the simulation's force readout, plot F vs 1/r², and check linearity.",
+      "Misconception probe at a dipole midpoint: students choose the Dipole (±q) preset and vote on the field direction at the center. Use the visualization to contrast it with the equal-positive case.",
+      "Superposition station: students compare Dipole (±q), Two Positive, and Three Charges presets, then write how the net field direction changes when a third fixed source is added.",
+      "Slider isolation practice: students change only Charge 1, only Charge 2, or only Charge Separation while keeping the other values fixed, then identify which observed differences come from sign, magnitude, or distance.",
     ],
     faq: [
       {
@@ -309,9 +291,9 @@ export const electricFieldLines: Experiment = {
       },
       {
         question:
-          "Are equipotential surfaces always perpendicular to field lines, even for weird charge arrangements?",
+          "What do the Dipole, Two Positive, and Three Charges presets show?",
         answer:
-          "Yes, always — it is a geometric consequence of the definition. Moving a test charge along an equipotential by definition does no work, since potential does not change. Work equals qE·d, so for arbitrary motion along the surface E must be perpendicular to d. That has to hold at every point on every equipotential, regardless of how complicated the source distribution is.",
+          "Dipole (±q) shows equal-magnitude opposite charges, so field lines leave the positive source and bend toward the negative source. Two Positive shows same-sign charges and the cancellation point that appears between equal sources. Three Charges adds a fixed third negative charge to the scene, so students can see how the net field changes when one more source contributes to the vector sum.",
       },
       {
         question:
@@ -329,7 +311,7 @@ export const electricFieldLines: Experiment = {
         question:
           "Is this AP Physics 1 or AP Physics 2 material?",
         answer:
-          "Electric fields, Coulomb's law, and equipotentials are formally part of the AP Physics 2 curriculum, but introductory treatments are common in AP Physics 1 courses too — and they map onto NGSS HS-PS2-4 and HS-PS3-5 at the high-school level. The simulation deliberately stays qualitative (no calculus, no Gauss's law surface integrals) so it works as a first exposure for AP Physics 1 students and a refresher for AP Physics 2.",
+          "Electric fields and Coulomb's law are formally part of the AP Physics 2 curriculum, but introductory treatments are common in AP Physics 1 courses too — and they map onto NGSS HS-PS2-4 and HS-PS3-5 at the high-school level. The simulation deliberately stays qualitative (no calculus, no Gauss's law surface integrals) so it works as a first exposure for AP Physics 1 students and a refresher for AP Physics 2.",
       },
     ],
   },

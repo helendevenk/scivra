@@ -23,26 +23,6 @@ export const circularMotion: Experiment = {
 
   parameters: [
     {
-      id: "radius",
-      label: "Radius (r)",
-      unit: "m",
-      min: 0.5,
-      max: 5,
-      default: 2,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "speed",
-      label: "Speed (v)",
-      unit: "m/s",
-      min: 0.5,
-      max: 10,
-      default: 4,
-      step: 0.1,
-      tier: "free",
-    },
-    {
       id: "mass",
       label: "Mass (m)",
       unit: "kg",
@@ -53,14 +33,14 @@ export const circularMotion: Experiment = {
       tier: "free",
     },
     {
-      id: "showCut",
-      label: "Cut the string!",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "pro",
+      id: "radius",
+      label: "Radius (r)",
+      unit: "m",
+      min: 0.5,
+      max: 6,
+      default: 2,
+      step: 0.1,
+      tier: "free",
     },
   ],
 
@@ -87,7 +67,7 @@ export const circularMotion: Experiment = {
     "Uniform circular motion requires a net inward (centripetal) force to continuously change the direction of velocity. This force is NOT a new type of force — it is provided by tension, gravity, normal force, or friction depending on the situation. The centripetal acceleration always points toward the center, while velocity is always tangential. Remove the centripetal force and the object moves in a straight line (Newton's 1st Law).",
 
   instructions:
-    "Adjust radius and speed. Watch how the centripetal force vector (arrow) changes magnitude and always points inward. Increase speed while keeping radius fixed — feel how much more force is required. Use the 'cut string' toggle (Pro) to see the ball fly off tangentially.",
+    "Use the 2 sliders + 3 presets to change the circular motion model. Watch the live readouts for period, angular velocity, centripetal acceleration, centripetal force, angle, and energy. Try the Conical Pendulum, Banked Curve, and Vertical Circle presets, then change one slider at a time to compare how the same centripetal-force relationship appears in each scenario.",
 
   hook: {
     question: "Does a ball on a string get pulled outward when you spin it? Hint: there is no centrifugal force!",
@@ -118,9 +98,9 @@ export const circularMotion: Experiment = {
     },
     {
       id: "cm-lc4",
-      title: "What Happens When the Force Disappears?",
-      content: "Cut the string and the ball flies off tangentially — not outward! This is Newton's first law in action: without a net force, the object continues in a straight line along its instantaneous velocity direction.",
-      relatedParameterId: "showCut",
+      title: "Same Equation, Different Situations",
+      content: "Conical pendulums, banked curves, and vertical circles all require a net inward force, but the real force doing the job changes. The presets help you compare tension, normal force, gravity components, and apparent weight while the core relationship F_c = mv²/r stays visible.",
+      relatedParameterId: "speed",
     },
   ],
 
@@ -187,26 +167,43 @@ export const circularMotion: Experiment = {
     educationalLevel: "High School",
     teaches: "Circular Motion and Centripetal Force",
   },
+  htmlControlAliases: { mass: "sl-mass", radius: "sl-radius" },
+  presets: [
+    {
+      id: "conical",
+      label: "Conical Pendulum",
+      description:
+        "A mass swings in a horizontal circle while a string supplies the inward force. Use it to connect tension components, cone angle, and F_c = mv²/r.",
+    },
+    {
+      id: "banked",
+      label: "Banked Curve",
+      description:
+        "A car follows a tilted circular track where the normal force has an inward component. This preset highlights why a design speed can reduce the need for friction.",
+    },
+    {
+      id: "vertical",
+      label: "Vertical Circle",
+      description:
+        "A roller-coaster-style loop shows how speed, radius, gravity, and apparent weight interact. Compare top and bottom positions to see why minimum speed matters.",
+    },
+  ],
 
   contentSections: {
     whatIsIt:
-      "A car turns onto a highway off-ramp, a yo-yo whirls on a string, the Moon swings around the Earth — every one of these is an object that wants to fly straight but is being yanked sideways into a curve. Newton's first law says without a net force an object travels in a straight line, so anything moving in a circle must have a force constantly pulling it toward the center. We call that the centripetal force. It is not a new kind of force; it's a job some other force (tension, gravity, friction, normal force) has to do. Cut the source of that inward pull and the object stops curving. In this lab you set the radius, speed, and mass of an orbiting ball, watch the inward force vector update, and snip the string to see where it actually goes.",
+      "A car turns onto a highway off-ramp, a yo-yo whirls on a string, the Moon swings around the Earth — every one of these is an object that wants to fly straight but is being yanked sideways into a curve. Newton's first law says without a net force an object travels in a straight line, so anything moving in a circle must have a force constantly pulling it toward the center. We call that the centripetal force. It is not a new kind of force; it's a job some other force (tension, gravity, friction, normal force) has to do. In this lab you set the mass, speed, and radius, then compare conical pendulum, banked-curve, and vertical-circle presets to see how different real forces create the same inward acceleration pattern.",
     parameterExplanations: {
-      radius:
-        "The radius of the circular path in meters — how far the ball is from the center of its circle. Smaller radii at fixed speed mean tighter turns and much higher centripetal acceleration (a_c = v²/r). That fixed-speed turning effect is separate from the angular-momentum effect that makes skaters spin faster when they pull their arms in.",
-      speed:
-        "The ball's tangential speed along the circle in m/s. Centripetal force scales with speed squared, so doubling the speed quadruples the inward force needed to keep the same circular path. This is why highway curves get dangerous fast as you accelerate.",
       mass:
-        "The mass of the orbiting object in kilograms. The required centripetal force scales linearly with mass (F_c = mv²/r), so a 2 kg ball needs twice the inward pull of a 1 kg ball at the same speed and radius. Doesn't change the centripetal acceleration, only the force.",
-      showCut:
-        "A toggle that severs the string mid-orbit. When on, the ball loses its inward force and continues in a straight line tangent to the circle at the cut point — a direct demonstration of Newton's first law and a quick way to kill the misconception that the ball flies outward.",
+        "Mass changes how much force is needed for the same circular motion. The centripetal acceleration a_c = v²/r depends only on the motion and radius, so changing mass does not change the inward acceleration shown by the model. It does change the net force requirement because F_c = ma_c = mv²/r. A heavier car on the same banked curve, or a heavier bob in the same conical pendulum, needs proportionally more real inward force from normal force, tension, friction, or gravity components. Compare the presets at fixed Radius, then move only Mass to separate force from acceleration.",
+      radius:
+        "Radius sets the size of the circular path, from a tight curve to a wider loop. A smaller Radius produces a larger centripetal acceleration because a_c = v²/r; the path must bend the velocity direction more sharply each second. Increasing Radius lowers the inward acceleration and force requirement, but it also lengthens the period because one revolution covers more distance. Use Radius with the Vertical Circle preset to connect loop size with the required inward acceleration, and with the Banked Curve preset to see why broad highway curves can be taken more gently than tight ramps.",
     },
     misconceptions: [
       {
         wrong:
           "When you spin a ball on a string, centrifugal force pushes the ball outward.",
         correct:
-          "There is no outward force in an inertial frame. What you feel as 'centrifugal' is actually your hand pulling the ball inward; by Newton's third law, the ball pulls back on your hand outward. Cut the string and the ball flies tangent to the circle, not straight out from the center.",
+          "There is no outward force in an inertial frame. What you feel as 'centrifugal' is actually your hand pulling the ball inward; by Newton's third law, the ball pulls back on your hand outward. If the inward force vanished, the object would continue along its tangent direction rather than shooting straight out from the center.",
       },
       {
         wrong:
@@ -222,28 +219,28 @@ export const circularMotion: Experiment = {
       },
       {
         wrong:
-          "If you double the speed of a car going around a curve, you need twice as much friction to keep it on the road.",
+          "A wider curve needs the same inward force as a tight curve if the object has the same mass.",
         correct:
-          "You need four times as much. Centripetal force depends on v², so doubling speed quadruples the friction demand. This is why posted curve-speed limits drop sharply as curves tighten — the available friction can't keep up.",
+          "A wider curve needs less inward force for the same motion because centripetal acceleration scales as v²/r. Tight curves require a sharper change in velocity direction, so the required inward force is larger.",
       },
     ],
     teacherUseCases: [
-      "Data plot task: have students record the centripetal force at speeds of 2, 4, 6, and 8 m/s with a fixed radius, then plot F versus v and F versus v² to confirm the quadratic relationship.",
-      "Predict-the-trajectory: ask students to draw on paper where the ball will go when the string is cut at the 12 o'clock position before they toggle the cut. The most common wrong answer (radially outward) is the most useful teaching moment.",
-      "Curve-of-the-road problem: give students a 50 m radius curve and a 1200 kg car, and ask them to measure the friction force needed at 15 m/s, 20 m/s, and 25 m/s. Tie it to highway design.",
-      "Identify-the-force discussion: pause after each parameter change and ask 'in this scenario, what real force is providing the centripetal pull?' Students who can answer that consistently have nailed the core skill.",
-      "Misconception probe: ask the class whether the ball moving in a circle has zero acceleration. Most students who say yes are confusing speed with velocity — pause the sim and use the inward arrow to make the case.",
+      "AP Physics 1 data plot: keep Radius fixed, record centripetal force at several Mass values, then graph F versus m to confirm the linear relationship.",
+      "Scenario comparison: run Conical Pendulum, Banked Curve, and Vertical Circle presets, then have students identify which real force or force component provides the required inward net force in each case.",
+      "Banked-curve design task: use the Banked Curve preset, vary Radius and Mass one at a time, and ask students to explain how road geometry and inertia change the normal-force component needed for turning.",
+      "Vertical-loop apparent-weight check: use the Vertical Circle preset and have students compare top and bottom positions, connecting radius and normal force to why riders feel lighter or heavier.",
+      "Misconception probe: ask whether changing direction means acceleration, then pause the discussion on the live a_c readout to distinguish speed from changing velocity direction.",
     ],
     faq: [
       {
-        question: "Why does the ball fly tangent to the circle when the string is cut, not outward?",
+        question: "Why is the velocity tangent to the circle instead of pointing inward?",
         answer:
-          "At any instant, the ball's velocity points along the tangent to the circle. The string had been pulling it inward to bend that velocity into a curve. The moment the inward force vanishes, Newton's first law takes over and the ball keeps moving in whatever direction it was going — which is tangent, not radial.",
+          "Velocity points in the direction an object is moving at that instant. In circular motion the object moves around the rim, so its instantaneous velocity is tangent to the circle. The inward force does not point along the motion; it changes the direction of the velocity so the path keeps curving. This is why the acceleration arrow can point inward while the velocity direction stays perpendicular to it.",
       },
       {
-        question: "What happens if I double the speed but keep the radius the same?",
+        question: "What happens if I make the radius smaller?",
         answer:
-          "The required centripetal force quadruples because F_c = mv²/r and force depends on the square of speed. The acceleration also quadruples to v²/r. This is why a car taking a curve at 40 mph needs four times the friction of the same curve at 20 mph.",
+          "The required centripetal force increases because F_c = mv²/r and force is inversely proportional to radius. The acceleration also increases to v²/r. This is why tight curves need more inward force than broad curves.",
       },
       {
         question: "Is centripetal force a real force I would feel?",
@@ -258,7 +255,7 @@ export const circularMotion: Experiment = {
       {
         question: "How does this connect to AP Physics 1 standards?",
         answer:
-          "AP Physics 1 standard 3.B.1 expects students to apply Newton's second law to objects in circular motion and identify the force providing the centripetal acceleration. Standard 4.A.2 covers translational and rotational kinematics. This lab gives you a controlled environment to practice both — the cut-string toggle in particular is an AP-style probe of inertial reasoning.",
+          "AP Physics 1 standard 3.B.1 expects students to apply Newton's second law to objects in circular motion and identify the force providing the centripetal acceleration. Standard 4.A.2 covers translational and rotational kinematics. This lab gives you a controlled environment to practice both by comparing mass, radius, period, angular velocity, and net inward force across conical pendulum, banked curve, and vertical circle cases.",
       },
     ],
   },
