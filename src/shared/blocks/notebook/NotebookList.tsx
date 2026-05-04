@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { Archive, RotateCcw } from 'lucide-react';
 
 import type { LabNotebook } from '@/config/db/schema';
 import { Badge } from '@/shared/components/ui/badge';
@@ -34,6 +35,7 @@ export function NotebookList({
   const router = useRouter();
   const t = useTranslations('notebook');
   const [creating, setCreating] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   async function handleCreate() {
     setCreating(true);
@@ -61,6 +63,27 @@ export function NotebookList({
     if (value !== 'all') params.set('status', value);
     const qs = params.toString();
     router.push(`/notebooks${qs ? `?${qs}` : ''}`);
+  }
+
+  async function updateStatus(id: string, status: 'archived' | 'draft') {
+    setUpdatingId(id);
+    try {
+      const res = await fetch(`/api/notebooks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (json.code !== 0) {
+        alert(json.message || t('errors.save_failed'));
+      } else {
+        router.refresh();
+      }
+    } catch {
+      alert(t('errors.save_failed'));
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
   function formatTime(date: Date | string) {
@@ -107,9 +130,41 @@ export function NotebookList({
             >
               <div className="mb-2 flex items-start justify-between">
                 <h3 className="line-clamp-1 font-medium">{nb.title}</h3>
-                <Badge variant={STATUS_VARIANTS[nb.status] || 'outline'}>
-                  {t(`card.${nb.status}` as 'card.draft')}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={STATUS_VARIANTS[nb.status] || 'outline'}>
+                    {t(`card.${nb.status}` as 'card.draft')}
+                  </Badge>
+                  {nb.status === 'draft' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={updatingId === nb.id}
+                      aria-label={t('list.archive')}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        updateStatus(nb.id, 'archived');
+                      }}
+                    >
+                      <Archive className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {nb.status === 'archived' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={updatingId === nb.id}
+                      aria-label={t('list.restore')}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        updateStatus(nb.id, 'draft');
+                      }}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <span>{formatTime(nb.updatedAt)}</span>

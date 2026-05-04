@@ -99,6 +99,14 @@ export async function softDeleteLabNotebook(id: string) {
   return result;
 }
 
+export async function archiveLabNotebook(id: string) {
+  return updateLabNotebook(id, { status: 'archived' });
+}
+
+export async function restoreLabNotebookDraft(id: string) {
+  return updateLabNotebook(id, { status: 'draft' });
+}
+
 export async function getNotebookForExperiment(
   userId: string,
   experimentId: string

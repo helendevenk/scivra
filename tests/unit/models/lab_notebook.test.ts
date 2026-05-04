@@ -17,6 +17,8 @@ import {
   getNotebooksByUser,
   getNotebooksByUserCount,
   softDeleteLabNotebook,
+  archiveLabNotebook,
+  restoreLabNotebookDraft,
   getNotebookForExperiment,
   getNotebookForGeneration,
   getMonthlyNotebookCount,
@@ -239,6 +241,31 @@ describe('softDeleteLabNotebook', () => {
     const result = await softDeleteLabNotebook('nonexistent');
 
     expect(result).toBeUndefined();
+  });
+});
+
+describe('archiveLabNotebook', () => {
+  it('marks a notebook as archived', async () => {
+    const archived = { ...MOCK_NOTEBOOK, status: 'archived' };
+    mockDb._resolveInsert([archived]);
+
+    const result = await archiveLabNotebook('nb-1');
+
+    expect(result.status).toBe('archived');
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalledWith({ status: 'archived' });
+  });
+});
+
+describe('restoreLabNotebookDraft', () => {
+  it('restores an archived notebook to draft', async () => {
+    mockDb._resolveInsert([MOCK_NOTEBOOK]);
+
+    const result = await restoreLabNotebookDraft('nb-1');
+
+    expect(result.status).toBe('draft');
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalledWith({ status: 'draft' });
   });
 });
 

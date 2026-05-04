@@ -138,7 +138,7 @@ export function UpgHero() {
         </div>
 
         <p className="text-muted-foreground mt-6 font-mono text-xs">
-          Max plan includes 200 AI credits/month · 10 credits per generated lab
+          Max plan includes 2,000 AI credits/month · 200 credits per frontier AI Lab operation
         </p>
       </div>
     </section>

@@ -165,9 +165,15 @@ export function DashboardClient() {
         </div>
 
         {data.recentWorks.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            {t('recent_works.empty')}
-          </p>
+          <div className="rounded-lg border bg-card p-6">
+            <p className="text-muted-foreground mb-4 text-sm">
+              {t('recent_works.empty')}
+            </p>
+            <Button onClick={() => router.push('/upg')}>
+              <Plus className="h-4 w-4 mr-1" />
+              {t('recent_works.create')}
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.recentWorks.map((work) => (

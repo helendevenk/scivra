@@ -96,7 +96,7 @@ function setupAuthenticatedUser() {
   vi.mocked(getCurrentSubscription).mockResolvedValue(undefined as never);
   vi.mocked(subscriptionToTier).mockReturnValue('free' as never);
   vi.mocked(getDailyQuotaCount).mockResolvedValue(0);
-  vi.mocked(getRemainingCredits).mockResolvedValue(20);
+  vi.mocked(getRemainingCredits).mockResolvedValue(300);
 }
 
 function setupAnonymousUser() {
@@ -151,7 +151,7 @@ describe('UPG pipeline orchestration', () => {
     expect(consumeCredits).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',
-        credits: 10,
+        credits: 200,
         scene: 'upg-generate',
       })
     );
@@ -217,7 +217,7 @@ describe('UPG pipeline orchestration', () => {
     expect(refundCredits).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',
-        credits: 10,
+        credits: 200,
         scene: 'upg-refund',
         relatedCreditId: 'credit-1',
       })

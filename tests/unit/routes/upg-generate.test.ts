@@ -74,7 +74,7 @@ function makeRequest(
 
 function setupAuthenticatedUser() {
   vi.mocked(getUserInfo).mockResolvedValue({ id: 'user-1', email: 'test@example.com' } as never);
-  vi.mocked(getRemainingCredits).mockResolvedValue(100);
+  vi.mocked(getRemainingCredits).mockResolvedValue(300);
   vi.mocked(getDailyQuotaCount).mockResolvedValue(0);
   vi.mocked(getCurrentSubscription).mockResolvedValue(undefined as any);
   vi.mocked(subscriptionToTier).mockReturnValue('free' as never);
@@ -242,7 +242,7 @@ describe('POST /api/upg/generate', () => {
     expect(consumeCredits).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',
-        credits: 10,
+        credits: 200,
         scene: 'upg-generate',
       })
     );

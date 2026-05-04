@@ -146,6 +146,7 @@ export async function getGalleryList(params: GalleryListParams) {
     eq(upgGeneration.isPublic, true),
     eq(upgGeneration.status, 'completed'),
     isNull(upgGeneration.deletedAt),
+    sql`${upgGeneration.htmlSize} > 0`,
   ];
 
   if (params.cursor) {
@@ -165,6 +166,10 @@ export async function getGalleryList(params: GalleryListParams) {
   }
 
   if (params.verified) {
+    conditions.push(gte(upgGeneration.validationScore, 70));
+  }
+
+  if (sort === 'popular' || sort === 'most_liked') {
     conditions.push(gte(upgGeneration.validationScore, 70));
   }
 
@@ -245,6 +250,7 @@ export async function getPopularTags(limit: number = 20) {
     WHERE is_public = true
       AND status = 'completed'
       AND deleted_at IS NULL
+      AND html_size > 0
       AND tags IS NOT NULL
     GROUP BY tag
     ORDER BY count DESC

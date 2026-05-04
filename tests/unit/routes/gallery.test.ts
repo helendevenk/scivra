@@ -102,6 +102,22 @@ describe('Gallery API Routes', () => {
         expect.objectContaining({ q: 'pendulum' })
       );
     });
+
+    it('should pass verified-only filter', async () => {
+      mockGetUserInfo.mockResolvedValue(undefined);
+      mockGetGalleryList.mockResolvedValue({
+        list: [],
+        nextCursor: null,
+        hasMore: false,
+      } as any);
+
+      const req = makeRequest('http://localhost/api/gallery?verified=true');
+      await galleryGet(req);
+
+      expect(mockGetGalleryList).toHaveBeenCalledWith(
+        expect.objectContaining({ verified: true })
+      );
+    });
   });
 
   // --- Like ---
