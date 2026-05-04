@@ -23,44 +23,34 @@ export const thermochemistry: Experiment = {
 
   parameters: [
     {
-      id: "reactionType",
-      label: "Reaction (0=combustion, 1=neutralization, 2=dissolution, 3=photosynthesis)",
-      unit: "",
-      min: 0,
-      max: 3,
-      default: 0,
-      step: 1,
+      id: "enthalpyChange",
+      label: "Enthalpy Change",
+      unit: "kJ/mol",
+      min: -400,
+      max: 400,
+      default: -100,
+      step: 5,
       tier: "free",
     },
     {
-      id: "moles",
-      label: "Moles of Reactant",
-      unit: "mol",
-      min: 0.5,
-      max: 5,
-      default: 1,
-      step: 0.5,
+      id: "entropyChange",
+      label: "Entropy Change",
+      unit: "J/(mol·K)",
+      min: -200,
+      max: 200,
+      default: 100,
+      step: 5,
       tier: "free",
     },
     {
-      id: "calorimeter",
-      label: "Calorimeter Heat Capacity",
-      unit: "J/°C",
+      id: "temperature",
+      label: "Temperature",
+      unit: "K",
       min: 100,
       max: 1000,
-      default: 400,
-      step: 50,
-      tier: "pro",
-    },
-    {
-      id: "hessCombine",
-      label: "Hess's Law Step (1-3)",
-      unit: "",
-      min: 1,
-      max: 3,
-      default: 1,
-      step: 1,
-      tier: "pro",
+      default: 298,
+      step: 10,
+      tier: "free",
     },
   ],
 
@@ -83,7 +73,7 @@ export const thermochemistry: Experiment = {
     "Thermochemistry studies energy changes in chemical reactions. Enthalpy (H) is heat flow at constant pressure. Exothermic reactions release heat (ΔH < 0): combustion, neutralization, most phase changes from gas → liquid → solid. Endothermic reactions absorb heat (ΔH > 0): photosynthesis, dissolving NH₄NO₃, most decompositions. Bond energy approach: breaking bonds requires energy (endothermic), forming bonds releases energy (exothermic). ΔH = energy in (break bonds) - energy out (form bonds). Hess's Law: ΔH for a reaction equals the sum of ΔH for any series of steps with the same overall equation — enthalpy is a state function (path-independent). Standard enthalpies of formation (ΔHf°) are measured for 1 mol from elements in standard state.",
 
   instructions:
-    "Select a reaction type and watch the energy diagram animate. In Combustion mode, CH₄ + O₂ → CO₂ + H₂O releases −890 kJ/mol. Drag the activation energy hill to see transition state. Switch to Hess's Law mode to build complex reactions from simpler steps — add or reverse steps and watch ΔH accumulate.",
+    "Use the Enthalpy Change, Entropy Change, and Temperature sliders to test when ΔG = ΔH − TΔS becomes negative or positive. Try the Exothermic Spontaneous, Endothermic (high T), and ΔG Analysis presets, then adjust one slider at a time to see how molecular order, energy level, equilibrium, and spontaneity respond.",
 
   challenges: [
     {
@@ -131,57 +121,77 @@ export const thermochemistry: Experiment = {
     educationalLevel: "High School",
     teaches: "Thermochemistry and Hess's Law",
   },
+  htmlControlAliases: {
+    enthalpyChange: "sl-dH",
+    entropyChange: "sl-dS",
+    temperature: "sl-T",
+  },
+  presets: [
+    {
+      id: "loadPreset:0",
+      label: "✅ Exothermic Spontaneous",
+      description:
+        "Loads a reaction with negative ΔH and positive ΔS so students can see why both energy release and increasing disorder strongly favor negative ΔG.",
+    },
+    {
+      id: "loadPreset:1",
+      label: "🌡️ Endothermic (high T)",
+      description:
+        "Loads an endothermic case where positive ΔS can make the process spontaneous at high temperature because the TΔS term grows large enough to overcome ΔH.",
+    },
+    {
+      id: "loadPreset:2",
+      label: "📊 ΔG Analysis",
+      description:
+        "Loads a mixed-sign case for comparing ΔH and TΔS directly, showing how lower temperature can favor spontaneity when both ΔH and ΔS are negative.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Thermochemistry is the branch of chemistry that quantifies energy changes — primarily enthalpy (H) — during chemical reactions at constant pressure. An exothermic reaction releases energy (ΔH < 0): the products sit lower on the energy diagram than the reactants, and the surroundings warm up. An endothermic reaction absorbs energy (ΔH > 0): products sit higher, and the surroundings cool down. ΔH can be calculated from standard enthalpies of formation (ΔH_rxn = ΣΔH_f°(products) − ΣΔH_f°(reactants)), from bond energies, or assembled via Hess's Law — any multi-step pathway whose steps sum to the target equation. This simulation animates energy diagrams for combustion, neutralization, dissolution, and photosynthesis, and lets you build Hess's Law pathways step by step.",
     parameterExplanations: {
-      reactionType:
-        "Selects the reaction scenario: 0 = methane combustion (CH₄ + 2O₂ → CO₂ + 2H₂O, ΔH° ≈ −890 kJ/mol), 1 = acid-base neutralization (ΔH° ≈ −57 kJ/mol), 2 = dissolution (NH₄NO₃, ΔH° ≈ +26 kJ/mol, endothermic), 3 = photosynthesis (ΔH° ≈ +2803 kJ/mol). Each mode updates the energy diagram, ΔH readout, and calorimetry graph.",
-      moles:
-        "The number of moles of limiting reactant (0.5–5 mol, default 1 mol). Total heat released or absorbed scales linearly: 2 mol of methane combusted releases 2 × 890 = 1780 kJ. This parameter demonstrates that ΔH values are always quoted per mole of reaction as written.",
-      calorimeter:
-        "The heat capacity of the calorimeter in J/°C (100–1000 J/°C, default 400 J/°C). A higher heat capacity means the calorimeter itself absorbs more energy, dampening the observed ΔT. Used in the corrected equation q_rxn = −(q_solution + C_cal × ΔT).",
-      hessCombine:
-        "Selects which Hess's Law step (1, 2, or 3) is currently displayed in Hess mode. Stepping through 1 → 2 → 3 builds up the target reaction; ΔH values accumulate, showing that the sum of pathway ΔH equals the direct ΔH — path independence in action.",
+      enthalpyChange:
+        "Enthalpy Change sets ΔH, the heat absorbed or released by the reaction at constant pressure, in kJ/mol. Negative values model exothermic processes whose products sit lower in enthalpy than the reactants; positive values model endothermic processes that require energy input. In the ΔG equation, ΔH is the starting energy term before entropy and temperature are considered. Move this slider while holding ΔS and T fixed to see that a more negative ΔH pushes ΔG downward, while a more positive ΔH can make spontaneity depend on the TΔS contribution.",
+      entropyChange:
+        "Entropy Change sets ΔS, the change in dispersal or disorder, in J/(mol·K). Positive ΔS means the products have more available microstates than the reactants, such as when gas particles increase or a solid dissolves into mobile ions. Negative ΔS means the products are more ordered. Because the simulation calculates TΔS in kJ/mol, the entropy value is divided by 1000 before combining with ΔH. Keep ΔH fixed and raise temperature to see why positive ΔS becomes increasingly favorable at high T, while negative ΔS becomes a larger penalty.",
+      temperature:
+        "Temperature sets the absolute temperature in kelvin, the scale required for thermodynamic equations. It controls how strongly entropy affects spontaneity through the TΔS term in ΔG = ΔH − TΔS. At low temperature, ΔH often dominates because TΔS is small. At high temperature, entropy can outweigh enthalpy, making some endothermic but disorder-increasing reactions spontaneous. Try the Endothermic (high T) preset, then lower Temperature until ΔG changes sign. This shows that spontaneity is not fixed by ΔH alone; it can depend on classroom or lab conditions.",
     },
     misconceptions: [
       {
-        wrong:
-          "Exothermic means the reaction vessel feels hot because the reaction itself is hot.",
+        wrong: "Exothermic reactions are always spontaneous.",
         correct:
-          "Exothermic means the system (reactants → products) loses energy — ΔH < 0. That energy transfers to the surroundings, so the solution and container warm up. The SYSTEM's energy decreases; it is the surroundings that gain heat and register a temperature rise.",
+          "A negative ΔH helps make ΔG negative, but spontaneity depends on both enthalpy and entropy: ΔG = ΔH − TΔS. If ΔS is strongly negative, the TΔS term becomes a penalty, especially at high temperature. Use a negative ΔH with a negative ΔS to see that an exothermic process can become nonspontaneous under some conditions.",
       },
       {
         wrong:
-          "Activation energy is the energy released by the reaction — a higher Eₐ means more heat given off.",
+          "Endothermic reactions can never be spontaneous because they absorb heat.",
         correct:
-          "Eₐ is the energy barrier molecules must overcome to reach the transition state; ΔH is the difference between product and reactant energies. Combustion of methane has ΔH° ≈ −890 kJ/mol yet requires a spark to initiate because Eₐ is substantial. The two quantities are independent.",
+          "Endothermic means ΔH is positive, so enthalpy alone is unfavorable. A reaction can still be spontaneous if ΔS is positive and the temperature is high enough for TΔS to exceed ΔH. The Endothermic (high T) preset demonstrates this: the reaction absorbs heat, but the entropy gain can still make ΔG negative.",
+      },
+      {
+        wrong: "Entropy is the same thing as heat.",
+        correct:
+          "Entropy measures energy dispersal and the number of accessible microstates, not heat itself. Heat flow is connected to enthalpy and temperature, while entropy describes how spread out matter and energy can become. The units are different too: ΔH is kJ/mol, while ΔS is J/(mol·K), so the simulation converts TΔS before comparing it with ΔH.",
       },
       {
         wrong:
-          "Hess's Law only works if the steps happen physically in sequence in the lab.",
+          "Temperature only changes reaction speed, not thermodynamic favorability.",
         correct:
-          "Hess's Law works because enthalpy is a state function — its value depends only on initial and final states, not the path. You can use tabulated ΔH_f° values for steps that are impossible to perform directly in a lab, and the sum is still valid for the overall reaction.",
+          "Temperature can affect both rate and spontaneity, but in different ways. Kinetics uses temperature to explain how often molecules overcome activation barriers. Thermodynamics uses temperature in ΔG = ΔH − TΔS. Changing Temperature in this simulation changes the TΔS term and can flip whether the reaction is thermodynamically favored.",
       },
       {
-        wrong:
-          "Bond breaking is exothermic because you are 'releasing' atoms from the bond.",
+        wrong: "A negative ΔG means products form instantly and completely.",
         correct:
-          "Bond breaking is endothermic — energy must be supplied to pull atoms apart against their attractive interaction. Bond formation is exothermic. ΔH = energy in (break bonds) − energy out (form bonds); a negative result means more energy was released forming new bonds than was consumed breaking old ones.",
-      },
-      {
-        wrong:
-          "Reversing a reaction does not change the magnitude of ΔH, only the products and reactants.",
-        correct:
-          "Reversing a reaction flips the sign of ΔH: if A → B has ΔH = −200 kJ/mol, then B → A has ΔH = +200 kJ/mol. This sign flip is fundamental to constructing Hess's Law pathways — multiplying a reaction by a coefficient also multiplies ΔH by that factor.",
+          "Negative ΔG means the forward direction is thermodynamically favored under the selected conditions, not that it is fast or goes to 100% completion. A reaction can be spontaneous but slow if the activation barrier is high. The equilibrium readout connects ΔG to favorability, while kinetics would be needed to predict how quickly the change occurs.",
       },
     ],
     teacherUseCases: [
-      "Exo/endothermic classification: display each reaction type one at a time and ask students to predict from the energy diagram — before reading the ΔH number — whether the reaction is exothermic or endothermic. Builds skill at reading energy diagrams, which appear regularly in AP 5.A.1 free-response.",
-      "Hess's Law construction exercise: give students the two known ΔH values for C + O₂ → CO₂ and CO + ½O₂ → CO₂, then have them use the hessCombine slider to build the target reaction C + ½O₂ → CO. Verify the algebraic result matches the simulation output.",
-      "Bond energy data collection: using the bond-energy formula display, students look up H-H (432), Cl-Cl (243), and H-Cl (431 kJ/mol) and calculate ΔH for H₂ + Cl₂ → 2HCl, then compare to the simulation's ΔH readout. Addresses AP 5.B.1 bond-energy calculation skill.",
-      "Moles scaling investigation: students record ΔT for 0.5, 1, 2, and 3 mol of combustion and confirm that heat scales linearly with moles. Then pose: 'if you burned 88 g of methane (M = 16), how much heat is released?' Bridges dimensional analysis with thermochemistry.",
-      "Misconception probe — activation energy vs. ΔH: set reactionType to combustion, note the large negative ΔH, then ask 'so why does this candle need a flame to start?' The discussion targets the confusion between Eₐ and ΔH and sets up the role of activation energy in kinetics.",
+      "ΔG sign prediction: choose the Exothermic Spontaneous preset, hide the readout briefly, and ask students to predict the sign of ΔG from ΔH, ΔS, and T before revealing the calculation.",
+      "Temperature threshold investigation: start with the Endothermic (high T) preset, lower Temperature in steps, and have students identify where ΔG changes sign. Connect the threshold to AP 5.C.1 reasoning about ΔG = ΔH − TΔS.",
+      "Units and conversion check: have students calculate TΔS by hand using ΔS in J/(mol·K), convert to kJ/mol, and compare their result with the simulation display.",
+      "Entropy misconception probe: keep ΔH fixed, switch ΔS from positive to negative, and ask students to explain the molecular order changes shown by the particle visualization.",
+      "Preset comparison CER: assign each group one preset and require a claim about spontaneity, evidence from the three slider values, and reasoning that references both enthalpy and entropy.",
     ],
     faq: [
       {
@@ -207,7 +217,7 @@ export const thermochemistry: Experiment = {
       {
         question: "How do AP Chemistry standards 5.A.1, 5.B.1, and 5.C.1 map to this simulation?",
         answer:
-          "AP 5.A.1 covers energy diagrams and the classification of reactions as exothermic or endothermic — practiced via the reactionType selector and energy diagram view. AP 5.B.1 covers bond energy and formation enthalpy calculations — practiced in the bond-energy formula. AP 5.C.1 covers Hess's Law and state functions — practiced directly with the hessCombine slider and multi-step pathway construction.",
+          "AP 5.A.1 covers energy diagrams and the classification of reactions as exothermic or endothermic, which students practice by reading the ΔH slider and energy display. AP 5.B.1 connects bond energy and formation enthalpy calculations to the meaning of ΔH. AP 5.C.1 covers thermodynamic favorability, state functions, and ΔG reasoning, practiced by adjusting ΔH, ΔS, and Temperature to test when ΔG becomes negative.",
       },
       {
         question: "How much energy does burning 1 mol of methane release, and where does it go?",

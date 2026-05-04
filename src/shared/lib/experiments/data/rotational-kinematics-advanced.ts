@@ -32,53 +32,33 @@ export const rotationalKinematicsAdvanced: Experiment = {
 
   parameters: [
     {
-      id: "shape",
-      label: "Object (0=disk, 1=ring, 2=sphere, 3=cylinder)",
-      unit: "",
-      min: 0,
-      max: 3,
-      default: 0,
-      step: 1,
+      id: "mass",
+      label: "Mass M",
+      unit: "kg",
+      min: 0.5,
+      max: 5,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
     {
       id: "radius",
-      label: "Radius",
+      label: "Radius R",
       unit: "m",
-      min: 0.1,
-      max: 2,
+      min: 0.2,
+      max: 1.2,
       default: 0.5,
       step: 0.05,
       tier: "free",
     },
     {
-      id: "mass",
-      label: "Mass",
-      unit: "kg",
-      min: 0.5,
-      max: 20,
-      default: 2,
-      step: 0.5,
-      tier: "free",
-    },
-    {
-      id: "angAccel",
-      label: "Angular Acceleration α",
-      unit: "rad/s²",
-      min: -10,
-      max: 10,
-      default: 2,
-      step: 0.5,
-      tier: "free",
-    },
-    {
-      id: "initialOmega",
-      label: "Initial Angular Velocity ω₀",
-      unit: "rad/s",
-      min: 0,
-      max: 20,
-      default: 0,
-      step: 0.5,
+      id: "angle",
+      label: "Incline Angle θ",
+      unit: "°",
+      min: 5,
+      max: 60,
+      default: 30,
+      step: 1,
       tier: "free",
     },
   ],
@@ -105,7 +85,7 @@ export const rotationalKinematicsAdvanced: Experiment = {
     "Rotational kinematics parallels translational kinematics: angular displacement θ replaces x, angular velocity ω replaces v, and angular acceleration α replaces a. For constant α: ω(t) = ω₀ + αt and θ(t) = θ₀ + ω₀t + ½αt². The moment of inertia I depends on mass distribution: I = ½MR² (solid disk/cylinder), I = MR² (ring/thin cylinder), I = ⅖MR² (solid sphere). Newton's second law for rotation is τ = Iα. For rolling without slipping, the contact point has zero velocity: v_cm = Rω. The total kinetic energy is K = ½Mv²_cm + ½Iω² = ½(M + I/R²)v²_cm. When rolling down an incline of angle θ, a = gsinθ/(1 + I/(MR²)), meaning objects with larger I/MR² roll more slowly.",
 
   instructions:
-    "Select an object shape and set its mass and radius. Apply an angular acceleration and watch it spin. The canvas shows the rotating object with velocity vectors, while graphs display θ(t), ω(t), and the tangential/centripetal acceleration components. Press Play to start the animation.",
+    "Use the three sliders to set Mass M, Radius R, and Incline Angle θ. Start with one of the three presets — Solid Sphere, Hollow Cylinder, or Rod About End — then press Play to watch how moment of inertia changes acceleration, rolling speed, angular velocity, and the energy split.",
 
   challenges: [
     {
@@ -151,27 +131,44 @@ export const rotationalKinematicsAdvanced: Experiment = {
     educationalLevel: "Advanced Placement",
     teaches: "Rotational Kinematics and Dynamics",
   },
+  htmlControlAliases: { mass: "sl-mass", radius: "sl-radius", angle: "sl-theta" },
+  presets: [
+    {
+      id: "loadPreset:sphere",
+      label: "Solid Sphere (2/5MR²)",
+      description:
+        "A solid sphere has relatively low moment of inertia for its mass and radius, so more gravitational potential energy becomes translational kinetic energy as it rolls.",
+    },
+    {
+      id: "loadPreset:hollowcyl",
+      label: "Hollow Cylinder (MR²)",
+      description:
+        "A hollow cylinder concentrates mass near the rim, giving it the largest I/(MR²) value among the rolling presets and the slowest descent.",
+    },
+    {
+      id: "loadPreset:rod",
+      label: "Rod About End (1/3ML²)",
+      description:
+        "A rod about one end highlights the parallel axis theorem and compares pivot-style rotational inertia with rolling bodies on the same incline view.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Rotational kinematics is the calculus-based description of angular motion: angular displacement θ, angular velocity ω = dθ/dt, and angular acceleration α = dω/dt mirror the translational trio (x, v, a) but apply to objects spinning about an axis. The moment of inertia I = ∫r² dm encodes how mass is distributed relative to the axis and determines how a given torque τ = Iα changes the spin. This simulation lets you choose four object geometries — solid disk, ring, solid sphere, and solid cylinder — set their mass and radius, apply a constant angular acceleration, and watch θ(t) and ω(t) graphs build in real time. The rolling-without-slipping constraint v_cm = Rω connects rotational and translational motion, and the simulation makes tangential and centripetal acceleration components visible simultaneously.",
     parameterExplanations: {
-      shape:
-        "Selects the mass distribution geometry: 0 = solid disk (I = ½MR²), 1 = ring/hoop (I = MR²), 2 = solid sphere (I = ⅖MR²), 3 = solid cylinder (I = ½MR², same as disk). Different shapes with identical M and R will accelerate at different rates under the same torque, because τ = Iα implies α = τ/I.",
-      radius:
-        "The outer radius R of the object in meters. Increasing R raises I quadratically (I ∝ R²), so for a fixed applied torque the angular acceleration α = τ/I drops. It also changes the linear surface speed v = Rω and the centripetal acceleration a_c = Rω² of points on the rim.",
       mass:
-        "Total mass M in kg. Combined with R and shape, it sets I = cMR² where c is the shape-dependent coefficient. A heavier object of the same geometry has a larger I and accelerates more slowly under the same torque, exactly analogous to Newton's second law F = ma in linear motion.",
-      angAccel:
-        "Constant angular acceleration α in rad/s², applied to the object. Positive values spin up in the chosen initial direction; negative values decelerate or reverse rotation. Analogous to constant linear acceleration, it produces a linearly growing ω(t) = ω₀ + αt and a quadratic θ(t) profile.",
-      initialOmega:
-        "Initial angular velocity ω₀ in rad/s at t = 0. Starting from rest (0 rad/s) is the default; setting a nonzero ω₀ lets you study deceleration when angAccel is negative, or explore the kinematic equations in the decoupled region where the object starts fast and brakes to a stop.",
+        "Mass M sets how much material is in the rolling object. For a selected preset, moment of inertia scales directly with mass: I = cMR² for the sphere or cylinder-style bodies, while the rod uses its own length-based expression. Changing Mass also changes gravitational potential energy, translational kinetic energy, and rotational kinetic energy together, so the readouts help students separate absolute energy size from acceleration behavior. With the same Radius, Angle, and preset, increasing mass raises I and energy values proportionally, but the ideal rolling acceleration depends on the shape coefficient rather than mass alone.",
+      radius:
+        "Radius R changes both the size of the rolling body and the rotational inertia term. For sphere and cylinder presets, I scales with R², so a larger radius greatly increases resistance to angular acceleration. Radius also links translation and rotation through v_cm = Rω: at the same center-of-mass speed, a larger radius means a smaller angular velocity. Use Radius while keeping Mass and Angle fixed to compare how the object geometry, rolling constraint, and energy bars respond. The effect is clearest when you switch between Solid Sphere and Hollow Cylinder after choosing the same Radius value.",
+      angle:
+        "Incline Angle θ controls the component of gravity pulling the object down the ramp. A small angle gives a gentle acceleration and slower growth in v_cm and ω; a steep angle increases g sinθ, so the object speeds up more quickly. Because the model combines translational and rotational equations, the same angle can produce different descents for different presets: the hollow cylinder stores more energy in rotation, while the solid sphere translates more readily. Change only Angle after choosing a preset to isolate the role of gravity's ramp-parallel component from mass distribution.",
     },
     misconceptions: [
       {
         wrong:
-          "All round objects roll at the same speed down a ramp because they have the same shape — round.",
+          "All round objects roll at the same speed down a ramp because they are all round.",
         correct:
-          "On an incline with enough friction to roll without slipping, acceleration is a = g sinθ / (1 + I/(MR²)). A solid sphere (I/(MR²) = 2/5) always beats a ring (I/(MR²) = 1) because the sphere stores less energy in rotation relative to translation. Shape coefficient c, not just geometry, determines the race outcome.",
+          "On an incline with enough friction to roll without slipping, acceleration is a = g sinθ / (1 + I/(MR²)). A solid sphere (I/(MR²) = 2/5) beats a hollow cylinder (I/(MR²) = 1) because the sphere stores less energy in rotation relative to translation. The moment-of-inertia coefficient, not roundness alone, determines the race outcome.",
       },
       {
         wrong:
@@ -187,29 +184,29 @@ export const rotationalKinematicsAdvanced: Experiment = {
       },
       {
         wrong:
-          "Angular acceleration and angular velocity always point in the same direction.",
+          "A steeper ramp only changes the final speed, not the acceleration during the roll.",
         correct:
-          "Just as linear deceleration is antiparallel to velocity, angular deceleration gives α opposite to ω. Set initialOmega to a positive value and angAccel to a negative value in the simulation to observe this: ω decreases toward zero while α (and hence net torque τ = Iα) points in the opposite direction.",
+          "The Incline Angle slider changes the ramp-parallel gravity component, g sinθ. A larger θ increases the center-of-mass acceleration and angular acceleration throughout the descent. Presets still matter because I/(MR²) changes how much of that gravitational energy goes into rotation instead of translation.",
       },
       {
         wrong:
           "The kinematic equations θ = ω₀t + ½αt² and ω = ω₀ + αt are always valid.",
         correct:
-          "These equations apply only for constant angular acceleration α. If α varies with time — for example, if torque depends on angle or speed — you need calculus: ω = ∫α dt and θ = ∫ω dt. The simulation applies constant α, which is why the kinematic equations hold throughout.",
+          "These equations apply only for constant angular acceleration α. In this rolling model, α is determined by the selected preset, radius, and incline angle while the object remains in the ideal rolling regime. If torque or constraints varied with time, you would need calculus: ω = ∫α dt and θ = ∫ω dt.",
       },
     ],
     teacherUseCases: [
-      "Required-torque comparison: set shape to each of the four options (0–3) with identical mass = 2 kg, radius = 0.5 m, and angAccel = 2 rad/s². Because α is held constant, all shapes reach the same ω(t); students compute the required torque τ = Iα for each geometry — which differs because I differs — and rank the shapes by I. This shows that achieving the same angular acceleration demands more torque for shapes with larger moment of inertia. Directly addresses AP standard 5.B.1.",
-      "Torque–acceleration verification: fix shape = 0 (solid disk) and radius = 0.5 m; vary mass across 1, 2, 5, and 10 kg while holding angAccel constant. Have students compute I = ½MR² and the required torque τ = Iα for each mass, then plot τ vs. I and confirm the linear relationship. Addresses standard 5.C.1.",
-      "Misconception probe — required torque vs. shape: with `angAccel` fixed (the simulation controls α directly, not τ), ask students which shape would need the LARGEST applied torque to achieve the same α. Most predict the heaviest or the largest in radius. Have them compute τ = Iα for each shape with identical M and R, identify why the shape coefficient (½, 1, ⅖) is the deciding factor, and order the four shapes from least to most torque-demanding.",
-      "Kinematic equation audit: set initialOmega = 0, angAccel = 2 rad/s², run for 10 s, then pause the simulation. Have students use θ = ½αt² to predict θ at t = 3, 5, and 8 s and compare to the simulation's θ(t) graph. Discrepancies prompt discussion of constant-α assumptions. Addresses standard 5.A.1.",
-      "Centripetal vs. tangential comparison: set radius to 0.5 m and 1.0 m with the same angAccel and mass. Have students compute a_t = Rα and a_c = Rω² at t = 3 s for both radii, observe that centripetal acceleration grows quadratically with ω, and discuss why the total acceleration vector rotates toward the center as ω increases.",
+      "Preset race comparison: keep Mass = 1.0 kg, Radius = 0.50 m, and Incline Angle = 30°. Run Solid Sphere, Hollow Cylinder, and Rod About End, then have students rank the resulting motion by acceleration and explain the ranking using I and I/(MR²). Addresses AP standard 5.B.1.",
+      "Angle isolation lab: choose Solid Sphere, keep Mass and Radius fixed, and compare Incline Angle values of 10°, 30°, and 50°. Students calculate how g sinθ changes and connect the slider evidence to faster growth in v_cm and ω. Addresses standard 5.A.1.",
+      "Mass misconception probe: choose Hollow Cylinder, hold Radius and Incline Angle constant, and vary Mass from low to high. Students record I and energy values, then explain why ideal rolling acceleration is not determined by mass alone even though total energy and moment of inertia increase.",
+      "Radius and angular velocity audit: choose Solid Sphere and compare Radius = 0.30 m, 0.70 m, and 1.10 m at the same Mass and Incline Angle. Students use v_cm = Rω to explain why angular velocity readouts change when the rolling constraint is maintained.",
+      "Parallel axis theorem discussion: switch to Rod About End and compare its I readout with the rolling presets. Students connect the displayed rod behavior to I = I_cm + Md² and identify why changing the axis changes rotational resistance. Addresses standard 5.C.1.",
     ],
     faq: [
       {
         question: "What is the moment of inertia for the shapes in this simulation?",
         answer:
-          "Solid disk and solid cylinder: I = ½MR². Ring (thin hoop): I = MR². Solid sphere: I = ⅖MR². These come from evaluating I = ∫r² dm over the mass distribution. Objects with more mass concentrated near the rim (ring) have larger I and require more torque to achieve the same α.",
+          "The preset buttons focus on a solid sphere, a hollow cylinder, and a rod about one end. The solid sphere uses I = ⅖MR², the hollow cylinder uses I = MR², and the rod-about-end case uses I = ⅓ML² for the modeled rod length. These formulas all come from I = ∫r² dm, so mass farther from the rotation axis contributes more strongly.",
       },
       {
         question: "Which AP Physics C Mechanics standards does this experiment address?",
@@ -219,7 +216,7 @@ export const rotationalKinematicsAdvanced: Experiment = {
       {
         question: "Why does a solid sphere always beat a hollow ring rolling down a ramp?",
         answer:
-          "Rolling acceleration is a = g sinθ / (1 + I/(MR²)). For the sphere, I/(MR²) = 2/5, giving a = 5g sinθ/7 ≈ 0.714g sinθ. For the ring, I/(MR²) = 1, giving a = g sinθ/2 = 0.5g sinθ. A smaller shape coefficient means less energy stored in rotation and more in translation, so the sphere moves faster down the ramp.",
+          "Rolling acceleration is a = g sinθ / (1 + I/(MR²)). For the sphere, I/(MR²) = 2/5, giving a = 5g sinθ/7 ≈ 0.714g sinθ. For the hollow cylinder, I/(MR²) = 1, giving a = g sinθ/2 = 0.5g sinθ. A smaller shape coefficient means less energy stored in rotation and more in translation, so the sphere moves faster down the ramp.",
       },
       {
         question: "What does rolling without slipping actually mean at the contact point?",
@@ -229,12 +226,12 @@ export const rotationalKinematicsAdvanced: Experiment = {
       {
         question: "How do the kinematic equations for rotation compare to the linear versions?",
         answer:
-          "They are identical in structure with substitutions θ ↔ x, ω ↔ v, α ↔ a: ω(t) = ω₀ + αt corresponds to v = v₀ + at; θ = ω₀t + ½αt² corresponds to x = v₀t + ½at². Both sets assume constant acceleration; if α varies with time, integration is required.",
+          "They are identical in structure with substitutions θ ↔ x, ω ↔ v, α ↔ a: ω(t) = ω₀ + αt corresponds to v = v₀ + at; θ = ω₀t + ½αt² corresponds to x = v₀t + ½at². In this simulation, α is produced by the selected preset, Radius, and Incline Angle rather than by a separate angular-acceleration control. Both equation sets assume constant acceleration; if α varies with time, integration is required.",
       },
       {
         question: "Can I use the parallel axis theorem with these shapes?",
         answer:
-          "Yes. If the object rotates about a point other than its center of mass, I = I_cm + Md², where d is the distance between the two parallel axes. For example, a disk rotating about a point on its rim has I = ½MR² + MR² = 3/2 MR². The simulation uses the center-of-mass axis; to explore off-center rotation, apply this correction to your torque calculations.",
+          "Yes. If an object rotates about a point other than its center of mass, I = I_cm + Md², where d is the distance between the two parallel axes. The Rod About End preset is the clearest example: a rod with I_cm = 1/12 ML² becomes I_end = 1/3 ML² when shifted to an end pivot. Use that preset to connect the theorem to a visible change in rotational resistance.",
       },
     ],
   },

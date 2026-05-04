@@ -35,8 +35,8 @@ export const rlcCircuit: Experiment = {
       label: "Resistance R",
       unit: "Ω",
       min: 1,
-      max: 500,
-      default: 50,
+      max: 1000,
+      default: 100,
       step: 1,
       tier: "free",
     },
@@ -45,8 +45,8 @@ export const rlcCircuit: Experiment = {
       label: "Inductance L",
       unit: "mH",
       min: 1,
-      max: 100,
-      default: 10,
+      max: 500,
+      default: 50,
       step: 1,
       tier: "free",
     },
@@ -54,30 +54,20 @@ export const rlcCircuit: Experiment = {
       id: "capacitance",
       label: "Capacitance C",
       unit: "μF",
-      min: 0.1,
-      max: 100,
+      min: 1,
+      max: 200,
       default: 10,
-      step: 0.1,
+      step: 1,
       tier: "free",
     },
     {
-      id: "drivingFreq",
+      id: "frequency",
       label: "Driving Frequency",
       unit: "Hz",
       min: 10,
-      max: 5000,
-      default: 500,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "voltage",
-      label: "Source Voltage V₀",
-      unit: "V",
-      min: 1,
-      max: 20,
-      default: 10,
-      step: 0.5,
+      max: 2000,
+      default: 225,
+      step: 5,
       tier: "free",
     },
   ],
@@ -104,7 +94,7 @@ export const rlcCircuit: Experiment = {
     "An RLC circuit consists of a resistor R, inductor L, and capacitor C in series with an AC voltage source V₀sin(ωt). The impedance Z determines the current amplitude I₀ = V₀/Z. At resonance (ω₀ = 1/√(LC)), the inductive reactance XL = ωL exactly cancels the capacitive reactance XC = 1/(ωC), leaving Z = R (minimum impedance, maximum current). The phase angle φ = arctan((XL - XC)/R) indicates whether current leads or lags voltage. The quality factor Q = ω₀L/R = 1/(R√(C/L)) measures the sharpness of the resonance peak. In transient response (no driving source), the circuit exhibits damped oscillations. The damping ratio ζ = R/(2√(L/C)) determines the behavior: underdamped (ζ < 1, oscillating decay), critically damped (ζ = 1, fastest non-oscillating decay), or overdamped (ζ > 1, slow exponential decay).",
 
   instructions:
-    "Set R, L, and C values, then adjust the driving frequency. Watch the current and voltage waveforms in real time. The impedance curve shows the resonance peak — try to match the driving frequency to f₀ for maximum current. The phasor diagram shows the phase relationship between V and I. Toggle to transient mode to see damped oscillations.",
+    "Use the four sliders for Resistance, Inductance, Capacitance, and Frequency to tune the series RLC circuit. Try the Underdamped, At Resonance, and Overdamped presets to jump between contrasting damping and resonance cases, then adjust one slider at a time while watching current, voltage, impedance, phase angle, and transient behavior update.",
 
   challenges: [
     {
@@ -150,20 +140,39 @@ export const rlcCircuit: Experiment = {
     educationalLevel: "Advanced Placement",
     teaches: "RLC Circuits and Resonance",
   },
+  htmlControlAliases: { resistance: "sl-R", inductance: "sl-L", capacitance: "sl-C", frequency: "sl-f" },
+  presets: [
+    {
+      id: "loadPreset:underdamped",
+      label: "Underdamped (R=10Ω)",
+      description:
+        "A low-resistance setup where energy loss is small enough for the transient response to oscillate visibly before it decays.",
+    },
+    {
+      id: "loadPreset:resonance",
+      label: "At Resonance",
+      description:
+        "A preset that places the driving frequency near the LC resonant frequency so current is large and the reactive terms cancel.",
+    },
+    {
+      id: "loadPreset:overdamped",
+      label: "Overdamped (R=1kΩ)",
+      description:
+        "A high-resistance setup where damping dominates, suppressing oscillation and showing a slow non-oscillatory transient response.",
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "A series RLC circuit contains a resistor R, inductor L, and capacitor C driven by an AC voltage source V₀ sin(ωt). The total opposition to current — impedance — is Z = √(R² + (ωL − 1/(ωC))²), and current amplitude is I₀ = V₀/Z. At the resonant frequency ω₀ = 1/√(LC), the inductive and capacitive reactances exactly cancel, Z collapses to R, and current peaks. Below resonance the circuit is net-capacitive (current leads voltage); above resonance it is net-inductive (current lags). The quality factor Q = ω₀L/R measures how sharply peaked the resonance is. In transient mode (no driving source), the circuit oscillates with damping set by ζ = R/(2√(L/C)). Adjust drivingFreq and watch the impedance curve shift in real time.",
+      "A series RLC circuit contains a resistor R, inductor L, and capacitor C driven by an AC voltage source V₀ sin(ωt). The total opposition to current — impedance — is Z = √(R² + (ωL − 1/(ωC))²), and current amplitude is I₀ = V₀/Z. At the resonant frequency ω₀ = 1/√(LC), the inductive and capacitive reactances exactly cancel, Z collapses to R, and current peaks. Below resonance the circuit is net-capacitive (current leads voltage); above resonance it is net-inductive (current lags). The quality factor Q = ω₀L/R measures how sharply peaked the resonance is. In transient mode (no driving source), the circuit oscillates with damping set by ζ = R/(2√(L/C)). Adjust Frequency and watch the impedance curve shift in real time.",
     parameterExplanations: {
       resistance:
-        "R in ohms sets the resistive loss in the circuit and is the sole term remaining in Z at resonance. Higher R broadens the resonance peak (lower Q = ω₀L/R) and damps transient oscillations faster.",
+        "Resistance sets the ohmic loss in the series circuit. It is the only part of the impedance that remains at resonance, because the inductive and capacitive reactances cancel there. Raising Resistance lowers the peak current, broadens the resonance curve, and reduces the quality factor Q = ω₀L/R. It also increases damping in the transient response, so stored energy disappears faster as heat. Use the Underdamped and Overdamped presets to see the contrast: low resistance lets current and charge oscillate while the envelope decays, while high resistance can suppress visible oscillation and make the circuit return toward equilibrium without ringing.",
       inductance:
-        "L in mH determines inductive reactance X_L = ωL, which grows with frequency. It also affects the resonant frequency ω₀ = 1/√(LC) and quality factor Q = (1/R)√(L/C) — larger L lowers ω₀ (since ω₀ = 1/√(LC)) while sharpening the resonance peak (Q = (1/R)√(L/C) grows with L).",
+        "Inductance measures how strongly the coil resists changes in current. The slider is shown in millihenries, while the formulas use henries, so each setting is converted before calculating X_L = 2πfL. Increasing Inductance raises inductive reactance at the same frequency, which pushes the circuit toward inductive behavior where current lags voltage. It also lowers the resonant frequency because f₀ = 1/(2π√(LC)). With Resistance and Capacitance fixed, a larger Inductance shifts the resonance marker to a lower frequency and can increase Q, making the resonance peak sharper when damping is not too large.",
       capacitance:
-        "C in μF determines capacitive reactance X_C = 1/(ωC), which shrinks as frequency rises. Together with L it fixes ω₀ = 1/√(LC); a larger C lowers the resonant frequency and, for fixed L and R, lowers Q.",
-      drivingFreq:
-        "The AC source frequency in Hz. Sweeping this parameter traces out the impedance vs. frequency curve. Peak current occurs when drivingFreq = f₀ = 1/(2π√(LC)). Below f₀ the circuit is capacitive; above f₀ it is inductive.",
-      voltage:
-        "Peak amplitude V₀ of the AC source in volts. Scales all current and voltage amplitudes linearly without affecting resonant frequency, phase angle, or quality factor — those depend only on R, L, C, and ω.",
+        "Capacitance measures how much charge the capacitor stores for each volt across it. The slider is shown in microfarads, while calculations convert it to farads. Increasing Capacitance lowers capacitive reactance X_C = 1/(2πfC), so the capacitor offers less opposition at the same frequency. It also lowers the resonant frequency because the LC energy exchange becomes slower when either storage element is larger. Hold Resistance and Inductance fixed, then raise Capacitance to watch the resonance point move lower and the phase response change. This slider is useful for comparing capacitive behavior below resonance with the more resistive behavior at resonance.",
+      frequency:
+        "Frequency sets how many AC cycles the driving source completes each second. Sweeping it is the direct way to move one fixed RLC circuit from capacitive behavior, through resonance, into inductive behavior. Below f₀, capacitive reactance is larger than inductive reactance and current leads the source voltage. At f₀ = 1/(2π√(LC)), the two reactances cancel, impedance reaches its minimum value R, and current peaks. Above f₀, inductive reactance dominates and current lags. Use the At Resonance preset as a reference, then move Frequency lower and higher to connect waveform phase, impedance, and the resonance graph.",
     },
     misconceptions: [
       {
@@ -192,17 +201,17 @@ export const rlcCircuit: Experiment = {
       },
       {
         wrong:
-          "The resonant frequency changes if you increase the source voltage V₀.",
+          "The resonant frequency changes when the circuit is driven with a larger source amplitude.",
         correct:
-          "Resonant frequency ω₀ = 1/√(LC) depends only on L and C, not on source voltage. Changing V₀ scales the current amplitude uniformly at all frequencies; it does not shift the peak's position on the frequency axis.",
+          "Resonant frequency ω₀ = 1/√(LC) depends only on L and C. A larger source amplitude would scale the current response, but it would not move the peak's position on the frequency axis. To shift resonance in this simulation, change Inductance or Capacitance.",
       },
     ],
     teacherUseCases: [
-      "Resonance hunt: set R = 50 Ω, L = 10 mH, C = 10 μF and ask students to calculate f₀ = 1/(2π√(LC)) ≈ 503 Hz before touching drivingFreq. Then have them sweep drivingFreq and find the frequency where current peaks, comparing their prediction to the simulation result. This closes the loop between formula and observable.",
-      "Impedance vs. frequency sweep: have pairs record |Z| at drivingFreq = 100, 200, 300, 400, 500, 600, 700, 800 Hz and plot Z(f). Students identify the minimum Z = R at f₀, note the asymmetry above and below resonance, and connect the shape to Z = √(R² + (ωL − 1/(ωC))²).",
-      "Q-factor investigation: keep L = 10 mH and C = 10 μF fixed; compare R = 10 Ω (high-Q underdamped) and R = 50 Ω (moderate). For each, sweep drivingFreq across the resonance peak and measure the bandwidth Δf where I ≥ I₀/√2 (both half-power points fall within the simulation's 10–5000 Hz range). Verify Q = f₀/Δf. Larger R values (e.g. 500 Ω) push the upper half-power point outside the simulation's drivingFreq range; treat those qualitatively.",
-      "Phase angle misconception probe: pause the simulation at a frequency below resonance and ask students whether current leads or lags voltage. Many will guess lag (because inductors lag), but at sub-resonance the capacitive reactance dominates and current leads. Use the phasor display to correct the intuition.",
-      "Transient decay comparison: switch to transient mode at fixed L and C; vary only resistance and observe how the oscillation envelope collapses faster at higher R. Restrict this activity to the underdamped regime (R < R_c = 2√(L/C) ≈ 63 Ω for the default L and C) where the envelope follows e^(−Rt/(2L)); ask students to extract τ = 2L/R from the simulation. For critically or overdamped responses, have students instead describe the qualitative shape change (no oscillation, slower approach to zero).",
+      "Resonance hunt: use the At Resonance preset, note R = 100 Ω, L = 50 mH, C = 10 μF, and ask students to calculate f₀ = 1/(2π√(LC)) ≈ 225 Hz before moving the Frequency slider. Then have them sweep Frequency below and above that value to find where current peaks, comparing prediction to observation.",
+      "Impedance vs. frequency sweep: have pairs keep Resistance, Inductance, and Capacitance fixed, then record |Z| at Frequency = 100, 150, 200, 225, 250, 300, 400, and 600 Hz. Students plot Z(f), identify the minimum Z = R near f₀, and connect the curve to Z = √(R² + (ωL − 1/(ωC))²).",
+      "Q-factor investigation: compare the Underdamped, At Resonance, and Overdamped presets while L and C stay fixed. Students should connect lower Resistance with sharper resonance and longer ringing, then explain why higher Resistance lowers current and suppresses transient oscillation.",
+      "Phase angle misconception probe: pause the simulation at a Frequency below resonance and ask students whether current leads or lags voltage. Many will guess lag because inductors lag, but below resonance the capacitive reactance dominates and current leads. Use the phasor display to correct the intuition.",
+      "Transient decay comparison: keep Inductance and Capacitance fixed, then vary only Resistance or switch between Underdamped and Overdamped presets. Students compare how the oscillation envelope collapses faster at higher Resistance and describe the qualitative shift from ringing decay to non-oscillatory return.",
     ],
     faq: [
       {
@@ -218,12 +227,12 @@ export const rlcCircuit: Experiment = {
       {
         question: "Why does current peak at resonance rather than at maximum voltage across L or C?",
         answer:
-          "Current I₀ = V₀/Z is maximized when Z is minimized. Z = √(R² + (X_L − X_C)²) is smallest when X_L = X_C, which cancels the reactive term and leaves Z = R. Voltage across L and C individually can exceed V₀ at resonance (voltage magnification by factor Q), but that is a consequence of high current, not its cause.",
+          "Current amplitude is largest when impedance is smallest. Z = √(R² + (X_L − X_C)²) reaches its minimum when X_L = X_C, which cancels the reactive term and leaves Z = R. The voltages across L and C individually can be large at resonance, but that is a consequence of high current and reactive energy exchange, not the cause of the current peak.",
       },
       {
         question: "What is the quality factor Q and why does it matter?",
         answer:
-          "Q = ω₀L/R = 1/(ω₀RC) = (1/R)√(L/C). It is dimensionless and measures the sharpness of the resonance peak: high Q means a narrow bandwidth and a circuit that selects one frequency tightly — essential for radio tuners and filters. Q also gives the voltage magnification at resonance: V_L = V_C = QV₀. For R = 50 Ω, L = 10 mH, C = 10 μF, Q ≈ 0.63.",
+          "Q = ω₀L/R = 1/(ω₀RC) = (1/R)√(L/C). It is dimensionless and measures the sharpness of the resonance peak: high Q means a narrow bandwidth and a circuit that selects one frequency tightly — essential for radio tuners and filters. Q also describes how lightly damped the circuit is: higher Q circuits ring longer in transient response, while lower Q circuits lose energy more quickly.",
       },
       {
         question: "Below resonance is the RLC circuit capacitive or inductive?",

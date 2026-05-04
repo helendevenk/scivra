@@ -23,44 +23,34 @@ export const naturalSelection: Experiment = {
 
   parameters: [
     {
-      id: "populationSize",
-      label: "Initial Population Size",
-      unit: "individuals",
-      min: 20,
-      max: 500,
-      default: 100,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "selectionCoefficient",
-      label: "Selection Coefficient (s)",
+      id: "selectionPressure",
+      label: "Selection Pressure",
       unit: "",
-      min: 0,
+      min: 0.01,
       max: 1,
-      default: 0.2,
-      step: 0.05,
-      tier: "free",
-    },
-    {
-      id: "initialAlleleFreq",
-      label: "Initial Dominant Allele Frequency (p)",
-      unit: "",
-      min: 0.1,
-      max: 0.9,
-      default: 0.5,
-      step: 0.05,
+      default: 0.3,
+      step: 0.01,
       tier: "free",
     },
     {
       id: "mutationRate",
-      label: "Mutation Rate (μ)",
-      unit: "×10⁻⁵",
+      label: "Mutation Rate",
+      unit: "",
       min: 0,
-      max: 10,
-      default: 1,
-      step: 0.5,
-      tier: "pro",
+      max: 0.1,
+      default: 0.01,
+      step: 0.005,
+      tier: "free",
+    },
+    {
+      id: "populationSize",
+      label: "Population Size",
+      unit: "individuals",
+      min: 20,
+      max: 300,
+      default: 100,
+      step: 10,
+      tier: "free",
     },
   ],
 
@@ -83,7 +73,7 @@ export const naturalSelection: Experiment = {
     "Natural selection is the differential survival and reproduction of individuals with heritable traits better suited to their environment. Darwin's four postulates: variation exists in populations; variation is heritable; more offspring are produced than can survive; individuals with favorable traits survive and reproduce more. Hardy-Weinberg equilibrium describes allele frequencies in a non-evolving population (random mating, no selection, no mutation, no migration, large population). Deviations from H-W indicate evolution is occurring. Selection against recessive alleles is slow because heterozygotes 'hide' the allele. Genetic drift (random fluctuations, stronger in small populations) can fix or eliminate alleles regardless of fitness. Bottleneck and founder effects reduce genetic diversity. Over time, selection + isolation → speciation.",
 
   instructions:
-    "Choose a background environment (green/brown/mixed) and a starting allele frequency. Run the simulation and watch the population evolve — camouflaged beetles survive longer. The allele frequency chart updates each generation. Enable Hardy-Weinberg mode to check if the population is in equilibrium. Try bottleneck events (reduce population suddenly) to see genetic drift.",
+    "Use the Selection Pressure, Mutation Rate, and Population Size sliders to change how strongly the environment favors certain traits, how often new variation appears, and how much random drift affects the population. Try the Peppered Moths (Industrial), Antibiotic Resistance, and Beak Size (Finches) presets to compare three real evolutionary scenarios.",
 
   challenges: [
     {
@@ -117,6 +107,7 @@ export const naturalSelection: Experiment = {
   estimatedTime: 20,
   relatedExperiments: ["meiosis", "dna-double-helix"],
 
+  htmlPath: "/experiments/ap-biology/natural-selection.html",
   seoTitle: "Natural Selection Evolution Simulation | Scivra AP Biology",
   seoKeywords: [
     "natural selection simulation",
@@ -131,18 +122,37 @@ export const naturalSelection: Experiment = {
     educationalLevel: "High School",
     teaches: "Natural Selection and Population Genetics",
   },
+  htmlControlAliases: { selectionPressure: "sl-sel", mutationRate: "sl-mut", populationSize: "sl-popsize" },
+  presets: [
+    {
+      id: "moths",
+      label: "Peppered Moths (Industrial)",
+      description:
+        "Models industrial-era camouflage selection, where environmental color changes make one moth variant more visible to predators and another better hidden.",
+    },
+    {
+      id: "abx",
+      label: "Antibiotic Resistance",
+      description:
+        "Shows how a treatment pressure can favor resistant variants, allowing them to survive and become more common across generations.",
+    },
+    {
+      id: "finch",
+      label: "Beak Size (Finches)",
+      description:
+        "Represents shifting food conditions in finch populations, where beak traits linked to feeding success change in frequency over time.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Natural selection is the process by which heritable traits that improve reproductive success become more common in a population across generations. Darwin identified four conditions: individuals vary in heritable traits, populations overproduce offspring, resources are limited, and certain variants survive and reproduce more. Antibiotic resistance in bacteria, peppered moths during the Industrial Revolution, and beak depth shifts in Galapagos finches during drought years are all the same mechanism operating at different speeds. Selection is not a force that pushes species toward complexity or perfection — it only acts on the variation that already exists, and only favors traits that help right now in the current environment. This simulation tracks allele frequency change as the selection coefficient s moves from 0 (neutral) to 1 (lethal for the disfavored genotype).",
     parameterExplanations: {
-      populationSize:
-        "Sets the number of individuals in the starting population, from 20 to 500. Smaller populations amplify genetic drift — random allele frequency fluctuations — making it harder to isolate the deterministic effect of selection. A population of 500 shows a cleaner, more predictable trajectory; a population of 20 will add substantial noise. Use populationSize = 50 versus populationSize = 500 to demonstrate drift vs. selection as competing mechanisms.",
-      selectionCoefficient:
-        "The selection coefficient s describes the relative reproductive disadvantage of the least-fit genotype, from 0 to 1. At s = 0, there is no selection and allele frequencies follow Hardy-Weinberg expectations. At s = 0.2, the disfavored genotype leaves 20% fewer offspring per generation. At s = 1, the disfavored genotype is lethal. Allele frequency change per generation under selection against a recessive allele is Δp = spq² / (1 − sq²).",
-      initialAlleleFreq:
-        "Sets the starting frequency p of the dominant allele A, from 0.1 to 0.9. Because allele frequency trajectories are nonlinear, starting at p = 0.1 versus p = 0.5 with the same s produces very different rates of change. Start at a low p to observe how selection slowly drives a beneficial allele to fixation when it is rare; start at p = 0.9 to observe the asymptotic slowdown as the disfavored recessive allele becomes rare and hidden in heterozygotes.",
+      selectionPressure:
+        "Selection Pressure controls how strongly the environment rewards one trait over another. At low values, survival differences are subtle, so allele and phenotype frequencies may shift slowly and random drift can remain visible. At high values, poorly matched individuals are removed from the breeding population much faster, producing a steeper evolutionary response. Use this slider to compare weak, moderate, and intense selection while keeping Mutation Rate and Population Size steady. The important idea is that selection does not make individuals change during life; it changes which inherited variants are more likely to appear in the next generation.",
       mutationRate:
-        "Sets the per-generation mutation rate from A to a (in units of ×10⁻⁵), from 0 to 10 ×10⁻⁵. Realistic genomic mutation rates are approximately 1–2 ×10⁻⁸ per base pair per generation, but per-locus rates of 10⁻⁵ are used in population genetics models to show the mutation-selection balance. At equilibrium, the frequency of a deleterious recessive allele is approximately q ≈ √(μ/s) when s is large.",
+        "Mutation Rate controls how often new heritable variation enters the population during the simulation. A low setting makes the run mostly about selection acting on variation that already exists, while a higher setting continually introduces rare variants for selection or drift to act on. Mutation by itself is random with respect to usefulness: it can create helpful, harmful, or neutral changes. Try raising Mutation Rate while using the Antibiotic Resistance preset to see why rare resistant variants can matter when the environment changes. The slider helps separate the origin of variation from the filtering effect of natural selection.",
+      populationSize:
+        "Population Size sets how many individuals are represented in each generation. Larger populations tend to show smoother trends because random sampling errors average out across many births and deaths. Smaller populations make genetic drift more obvious: a trait can become common or disappear by chance, even when selection pressure is unchanged. Use 20 or 30 individuals to show noisy outcomes, then raise the slider toward 300 to show a more stable pattern. This control is useful for comparing deterministic selection with stochastic drift, especially when students repeat the same preset several times and notice that small populations do not always follow the same path.",
     },
     misconceptions: [
       {
@@ -161,7 +171,7 @@ export const naturalSelection: Experiment = {
         wrong:
           "If a trait is selected against, it will quickly disappear from the population.",
         correct:
-          "The speed depends entirely on allele frequency and dominance. Selection against a recessive allele becomes very slow once q drops below 0.1, because most copies of the allele are hidden in heterozygotes that experience no fitness cost. Setting s = 0.5 and watching q fall from 0.3 to 0.05 takes many more generations than the first drop from 0.5 to 0.3.",
+          "The speed depends on how strong the selection pressure is, how common the trait already is, and how much random drift is present. A strongly disfavored visible trait can decline quickly, but rare variants may persist for many generations, especially in larger populations or when they are not always exposed to selection. Use the Selection Pressure slider to test how fast the population changes under weak versus intense pressure.",
       },
       {
         wrong:
@@ -173,26 +183,26 @@ export const naturalSelection: Experiment = {
         wrong:
           "Mutation drives evolution by directly producing the traits that selection then favors.",
         correct:
-          "Mutation generates raw variation at low rates (roughly 10⁻⁵ per locus per generation in models), but mutation pressure alone is far too slow to shift allele frequencies substantially over ecologically relevant timescales. Natural selection amplifies allele frequency change by orders of magnitude faster than mutation. The two processes work together: mutation introduces alleles, selection determines their fate.",
+          "Mutation generates raw variation, but it does not know what the population needs. Most mutations are neutral or harmful in a given environment, and useful variants are usually rare. Natural selection changes how common variants become by filtering survival and reproduction after variation exists. The two processes work together: Mutation Rate affects how often new variants appear, while Selection Pressure affects which variants leave more descendants.",
       },
     ],
     teacherUseCases: [
-      "Selection coefficient sweep: run five simulations with s = 0, 0.1, 0.2, 0.5, and 1.0 using the same starting p = 0.5 and populationSize = 300, then ask students to plot the generation at which p exceeds 0.9 versus s — demonstrating the nonlinear relationship between selection strength and evolutionary rate.",
-      "Drift vs. selection experiment: hold selectionCoefficient = 0.1 and run populationSize = 30 versus 300 ten times each, recording which runs end with fixation vs. loss by generation 100. Students discover that genetic drift can overpower moderate selection in small populations — probing whether they understand s as a probabilistic, not deterministic, force.",
-      "Misconception probe: before running the simulation, ask students 'if s = 0.2, will the disfavored allele disappear by generation 50?' — then run it and compare prediction to result. Most students overestimate selection speed, especially at low q.",
-      "Mutation-selection balance investigation: hold selectionCoefficient = 0.5 and raise mutationRate from 0 to 5 ×10⁻⁵ while running 500 generations, recording equilibrium q. Students can test the q ≈ √(μ/s) prediction and discuss why deleterious alleles persist in real populations at predictable low frequencies.",
-      "AP Free Response prep: provide a scenario where a population is observed with fewer aa individuals than Hardy-Weinberg predicts; ask students to identify which parameter in this simulation is non-zero and what that means for the population — linking simulation behavior directly to NGSS standard HS-LS4-4.",
+      "Selection pressure sweep: run the same preset with Selection Pressure set low, medium, and high, then ask students to compare how quickly trait frequencies shift and connect the pattern to NGSS standard HS-LS4-4.",
+      "Drift vs. selection experiment: keep Selection Pressure moderate and run Population Size near 30 versus near 300 several times each. Students record which outcomes vary most and explain why small populations show stronger genetic drift.",
+      "Preset comparison: assign groups to Peppered Moths, Antibiotic Resistance, and Beak Size (Finches). Each group identifies the environmental pressure, the selected trait, and the evidence that the population changed over generations.",
+      "Mutation investigation: hold Population Size and Selection Pressure steady while raising Mutation Rate. Students distinguish the creation of new variation from the process that makes some variants more common.",
+      "AP Free Response prep: provide a scenario where phenotype frequencies change after an environmental shift; ask students to identify which slider best represents the causal pressure and justify the answer with evidence from the simulation.",
     ],
     faq: [
       {
         question: "What is the selection coefficient and how is it measured?",
         answer:
-          "The selection coefficient s measures the proportional reduction in fitness of the least-fit genotype relative to the most fit. If the fittest genotype leaves an average of 100 offspring and the least-fit leaves 80, then s = (100 − 80) / 100 = 0.2. Values range from 0 (neutral, no selection) to 1 (lethal, zero offspring). In practice, s is estimated by tracking allele frequency change across generations and back-calculating from the selection equation.",
+          "In population genetics, a selection coefficient estimates the fitness difference between variants. In this simulation, the Selection Pressure slider is the classroom-facing way to explore that idea. Low pressure means survival and reproduction differ only slightly between variants; high pressure means the environment filters variants much more strongly. Students do not need to calculate the coefficient to use the model, but they should connect stronger pressure with faster population-level change.",
       },
       {
         question: "How do AP standards 1.A.1 and 1.A.2 map onto this simulation?",
         answer:
-          "AP standard 1.A.1 addresses the concept that natural selection acts on heritable variation in traits, while 1.A.2 covers the four conditions required for natural selection to occur. In this simulation, initialAlleleFreq establishes variation, selectionCoefficient implements differential reproductive success, and the generational time axis demonstrates cumulative heritable change. Running the simulation with s = 0 alongside s = 0.2 directly contrasts a population satisfying H-W equilibrium conditions against one where selection violates them.",
+          "AP standard 1.A.1 addresses the concept that natural selection acts on heritable variation in traits, while 1.A.2 covers the four conditions required for natural selection to occur. In this simulation, Mutation Rate introduces new variation, Selection Pressure represents differential survival or reproduction, and the generational time axis demonstrates cumulative heritable change. Comparing presets helps students identify the environmental condition that makes a trait advantageous.",
       },
       {
         question: "Why does allele frequency change slow down as the favored allele approaches fixation?",
@@ -207,7 +217,7 @@ export const naturalSelection: Experiment = {
       {
         question: "What is AP standard 1.C.1 and how does this experiment address it?",
         answer:
-          "AP standard 1.C.1 states that the distribution of phenotypes in a population can change over time due to natural selection, genetic drift, and other mechanisms. This experiment addresses it directly: the allele frequency graph plots how the phenotype-determining genotype distribution shifts across up to 500 generations in response to the s and populationSize values you set. Comparing runs with and without selection isolates the contribution of each mechanism, which is precisely the type of experimental reasoning 1.C.1 targets.",
+          "AP standard 1.C.1 states that the distribution of phenotypes in a population can change over time due to natural selection, genetic drift, and other mechanisms. This experiment addresses it directly: the frequency graph shows how population traits shift in response to Selection Pressure, Mutation Rate, and Population Size. Comparing repeated runs isolates the contribution of each mechanism, which is precisely the type of experimental reasoning 1.C.1 targets.",
       },
     ],
   },

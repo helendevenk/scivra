@@ -23,54 +23,34 @@ export const waveInterference: Experiment = {
 
   parameters: [
     {
-      id: "wavelength",
-      label: "Wavelength (λ)",
-      unit: "m",
-      min: 0.1,
-      max: 2,
-      default: 0.5,
-      step: 0.05,
-      tier: "free",
-    },
-    {
-      id: "amplitude",
-      label: "Amplitude (A)",
-      unit: "m",
-      min: 0.1,
-      max: 1,
-      default: 0.5,
-      step: 0.05,
+      id: "frequency",
+      label: "Frequency",
+      unit: "Hz",
+      min: 0.5,
+      max: 3,
+      default: 1.2,
+      step: 0.1,
       tier: "free",
     },
     {
       id: "sourceSeparation",
       label: "Source Separation (d)",
       unit: "m",
-      min: 0.5,
-      max: 4,
-      default: 1.5,
-      step: 0.1,
+      min: 1,
+      max: 8,
+      default: 4,
+      step: 0.2,
       tier: "free",
     },
     {
-      id: "phaseDiff",
-      label: "Phase Difference (Δφ)",
-      unit: "π rad",
-      min: 0,
+      id: "amplitude",
+      label: "Amplitude (A)",
+      unit: "m",
+      min: 0.2,
       max: 2,
-      default: 0,
-      step: 0.1,
-      tier: "pro",
-    },
-    {
-      id: "mode",
-      label: "Mode (standing wave harmonics)",
-      unit: "",
-      min: 1,
-      max: 6,
       default: 1,
-      step: 1,
-      tier: "pro",
+      step: 0.05,
+      tier: "free",
     },
   ],
 
@@ -109,7 +89,7 @@ export const waveInterference: Experiment = {
     "When two waves overlap, they superpose: the total displacement at any point is the sum of individual displacements. If two crests meet, they add (constructive interference). If a crest meets a trough, they cancel (destructive interference). Standing waves form when reflected waves superpose with incident waves — nodes (zero displacement) and antinodes (maximum displacement) form at fixed positions. The double-slit experiment demonstrates that light (and matter) behaves as waves, with bright fringes where path lengths differ by whole wavelengths.",
 
   instructions:
-    "Two point sources emit circular waves. Watch the interference pattern emerge — bright lines are constructive, dark lines are destructive. Adjust wavelength and separation to move the pattern. Use the phase difference slider (Pro) to shift between constructive and destructive at center. Switch to standing wave mode to see harmonics.",
+    "Use the Frequency slider to tighten or spread the ripple pattern, the Source Separation slider to move the emitters closer together or farther apart, and the Amplitude slider to change wave strength. Try the Close Sources, Far Sources, and High Frequency presets to compare how spacing and frequency reshape constructive and destructive interference.",
 
   hook: {
     question: "Can two sounds perfectly cancel each other out to create silence?",
@@ -238,21 +218,35 @@ export const waveInterference: Experiment = {
     educationalLevel: "High School",
     teaches: "Wave Interference and Superposition",
   },
+  htmlControlAliases: { frequency: "freqSlider", sourceSeparation: "sepSlider", amplitude: "ampSlider" },
+  presets: [
+    {
+      id: "applyPreset:close",
+      label: "Close Sources",
+      description: "Moves the two coherent sources close together so students can see broad interference bands and compare how overlapping circular waves combine.",
+    },
+    {
+      id: "applyPreset:far",
+      label: "Far Sources",
+      description: "Places the sources farther apart so the nodal and antinodal regions pack more tightly across the viewing area.",
+    },
+    {
+      id: "applyPreset:highfreq",
+      label: "High Frequency",
+      description: "Raises the wave frequency to create shorter apparent spacing between wavefronts and a denser interference pattern.",
+    },
+  ],
 
   contentSections: {
     whatIsIt:
       "Wave interference is what happens when two or more waves overlap in the same place at the same time. The principle of superposition says you just add the displacements together — peak meets peak, you get a bigger peak (constructive); peak meets trough, they cancel (destructive). The exact pattern depends on how far each wave has traveled to reach a given point: a path-length difference of one whole wavelength puts crests on top of crests, while a half-wavelength difference puts crest on trough. It's how noise-canceling headphones work, how thin-film soap bubbles paint themselves with rainbows, and how the double-slit experiment proved light is a wave. In this lab two coherent sources emit ripples; change wavelength, source separation, or relative phase and watch the interference pattern morph in real time across the screen.",
     parameterExplanations: {
-      wavelength:
-        "Distance between consecutive peaks. Shorter wavelength means closer fringes; longer wavelength spreads them out. With two slits, fringe spacing is approximately wavelength × distance / slit separation.",
-      amplitude:
-        "Height of each wave's peaks. Doesn't change where bright/dark fringes land — only how bright the bright fringes are. Doubling amplitude quadruples intensity (intensity scales as amplitude squared).",
+      frequency:
+        "Frequency controls how quickly each source emits wave cycles. Increasing it creates more closely spaced wavefronts, so constructive and destructive regions appear more tightly packed. Lowering it spreads the ripples out, making the broad pattern easier to trace by eye. Ask students to keep Source Separation and Amplitude fixed while changing only Frequency, then describe what moves and what stays consistent. The key observation is that frequency changes the spacing and timing of the waves, but the interference rule is unchanged: overlapping displacements still add at every point.",
       sourceSeparation:
-        "Distance between the two emitting points. Smaller separation spreads the interference pattern out; larger separation packs fringes closer. This is the 'd' in the double-slit equation d sin θ = mλ.",
-      phaseDiff:
-        "Phase offset between the two sources. Zero phase difference (in phase) gives a central bright fringe. A π phase difference (out of phase) flips bright and dark, giving a central dark fringe.",
-      mode:
-        "Switches between two-source interference, single-slit diffraction, and standing-wave modes so you can compare patterns side by side.",
+        "Source Separation sets the distance between the two coherent emitters. When the sources are close together, their circular wavefronts overlap at gentler angles and the visible interference bands spread out. When the sources are far apart, the path-length differences change more quickly across the screen, so nodes and antinodes appear closer together. This slider is useful for isolating geometry: leave Frequency and Amplitude unchanged, move only the sources, and have students predict where strong cancellation lines should become more crowded.",
+      amplitude:
+        "Amplitude controls the strength of the waves emitted by both sources. Raising it makes crests and troughs more pronounced, so constructive regions look stronger and destructive regions are easier to contrast against the surrounding pattern. Lowering it softens the display without changing the basic locations of nodes and antinodes. This is the slider to use when students confuse brightness or height with interference position: the amount of displacement changes, but the geometric pattern is still governed by wave overlap and source spacing.",
     },
     misconceptions: [
       {
@@ -263,29 +257,29 @@ export const waveInterference: Experiment = {
       },
       {
         wrong:
-          "Two waves can only interfere if they're at the exact same frequency.",
+          "Only perfectly identical waves can interfere.",
         correct:
-          "Interference happens whenever waves overlap. Same-frequency coherent sources produce stable, easy-to-see patterns. Different frequencies produce 'beats' — interference patterns that change with time. Both are interference.",
+          "Interference happens whenever waves overlap, because the displacements at each point add. Matching coherent sources produce a stable pattern that is easier to study, but the core idea is still superposition: crests, troughs, and partial displacements combine wherever the waves meet.",
       },
       {
         wrong:
-          "The double-slit experiment shows that light is a particle.",
+          "Moving the sources farther apart makes the waves stronger.",
         correct:
-          "It shows the opposite: light makes a wave-like interference pattern even when sent through one photon at a time. The single-photon interference pattern is one of the central pieces of evidence for wave-particle duality.",
+          "Source separation changes the geometry of the pattern, not the strength of each emitted wave. Farther sources can make the nodal and antinodal regions appear more tightly spaced, but amplitude is the control that changes wave strength.",
       },
       {
         wrong:
           "Bright fringes are where the two waves have the same amplitude.",
         correct:
-          "Bright fringes are where the two waves arrive in phase, no matter what their individual amplitudes are. Dark fringes are where they arrive out of phase. Phase relationship — not amplitude — determines bright vs. dark.",
+          "Bright or strong regions occur where the waves arrive so their displacements reinforce. Dark or quiet regions occur where they cancel. Amplitude affects how intense the contrast looks, but the reinforcement or cancellation comes from how the waves line up in space and time.",
       },
     ],
     teacherUseCases: [
-      "Phase prediction: ask students to predict the central fringe (bright or dark) for phase differences of 0, π/2, π, 3π/2 before running the lab. Verify each.",
-      "Wavelength scan: hold all parameters fixed except wavelength, and have students measure fringe spacing at three different wavelengths. Plot spacing vs. wavelength and discover the linear relationship.",
-      "Beat phenomenon: switch one source to a slightly different frequency and ask students to explain the slowly-varying envelope. Connect to musical instrument tuning.",
-      "Real-world application: discuss how anti-reflective lens coatings use destructive interference at thin-film boundaries to reduce glare.",
-      "Single-source comparison: switch to single-slit diffraction mode and ask students how the pattern differs from two-slit interference. Highlight that single-slit also has minima but with different spacing.",
+      "Start with the Close Sources preset, then have students move only the Source Separation slider and sketch how the nodal regions change.",
+      "Use the Far Sources preset to prompt a prediction about fringe density, then compare it with the Close Sources preset using the same Frequency and Amplitude values.",
+      "Run a Frequency slider investigation: students record observations at low, middle, and high settings while keeping Source Separation and Amplitude fixed.",
+      "Use the High Frequency preset as a quick AP warm-up on why shorter spacing between wavefronts creates a denser interference pattern.",
+      "Have students change only the Amplitude slider and explain why the pattern becomes more or less visible while the node and antinode locations mostly stay put.",
     ],
     faq: [
       {
@@ -294,24 +288,24 @@ export const waveInterference: Experiment = {
           "When two or more waves occupy the same space at the same time, the resulting displacement at each point is the algebraic sum of the displacements from each wave. After the waves pass through each other, they continue unchanged — superposition is temporary, not destructive.",
       },
       {
-        question: "Why do we need coherent sources for stable interference?",
+        question: "What does the Frequency slider change?",
         answer:
-          "Coherent means the sources have a constant phase relationship. If phases drifted randomly, bright fringes would appear and disappear too fast for our eyes (or the camera) to see. Lasers are great for double-slit experiments because their light is highly coherent.",
+          "Frequency changes how quickly the sources emit wave cycles. Higher frequency produces more wavefronts in the same viewing area, so the interference pattern looks tighter and more detailed. Lower frequency spreads the wavefronts out and makes the broad constructive and destructive regions easier to follow. To isolate the effect, keep Source Separation and Amplitude fixed while changing only Frequency.",
       },
       {
-        question: "What's the difference between interference and diffraction?",
+        question: "What does Source Separation change?",
         answer:
-          "Interference is the result of overlapping waves from two or more sources. Diffraction is the spreading of a single wave around an obstacle or through an aperture. The double-slit pattern is technically interference modulated by single-slit diffraction — the envelope you see comes from diffraction at each slit.",
+          "Source Separation changes the distance between the two emitters. Close sources create broader interference regions because the path differences change more gradually across the screen. Farther sources create a tighter pattern because a small move across the screen changes the relative travel distance from each source more quickly. The Close Sources and Far Sources presets are designed for this comparison.",
       },
       {
-        question: "How does this connect to AP Physics 1 and 2?",
+        question: "Why does changing Amplitude not move the nodes much?",
         answer:
-          "AP Physics 1 covers superposition, standing waves, and beats. AP Physics 2 extends to two-source interference and the double-slit experiment. Both expect students to use d sin θ = mλ for path-difference reasoning. This lab supports both courses by letting students change variables and see consequences.",
+          "Amplitude changes the size of the displacement each source contributes, so the pattern becomes more or less visually intense. Node and antinode locations are mainly set by how the waves line up after traveling from the two sources. If you keep Frequency and Source Separation fixed, changing Amplitude should mostly change contrast, not the basic geometry of the interference pattern.",
       },
       {
-        question: "Why are the bright fringes evenly spaced (for small angles)?",
+        question: "How should I use the presets?",
         answer:
-          "Path-difference math. The condition for bright fringe m is d sin θ = mλ. For small angles, sin θ ≈ tan θ ≈ y/L (where y is fringe distance from center, L is screen distance). That gives evenly spaced fringes at y_m = mλL/d. Beyond small angles the spacing stretches, but in most teaching setups the small-angle approximation holds.",
+          "Use Close Sources and Far Sources as a controlled comparison for geometry, then use High Frequency to show how a denser set of wavefronts changes the pattern. After each preset, ask students to name which slider values changed and which interference features they can observe. The presets are starting points, not separate modes, so students should still adjust the three sliders afterward.",
       },
     ],
   },

@@ -16,16 +16,16 @@ export const photosynthesisLightReactions: Experiment = {
   tags: ["photosynthesis", "light reactions", "photosystem", "electron transport", "ATP synthase", "AP Biology"],
   difficulty: "advanced",
   parameters: [
-    { id: "lightIntensity", label: "Light Intensity", unit: "%", min: 0, max: 100, default: 70, step: 5, tier: "free" },
-    { id: "wavelength", label: "Wavelength", unit: "nm", min: 380, max: 750, default: 680, step: 10, tier: "free" },
-    { id: "co2Level", label: "CO₂ Level", unit: "ppm", min: 100, max: 1000, default: 400, step: 50, tier: "free" },
+    { id: "wavelength", label: "Light Wavelength", unit: "nm", min: 400, max: 700, default: 680, step: 10, tier: "free" },
+    { id: "lightIntensity", label: "Light Intensity", unit: "%", min: 0, max: 100, default: 80, step: 5, tier: "free" },
+    { id: "magnesiumConcentration", label: "Mg²⁺ Concentration", unit: "mM", min: 0, max: 20, default: 10, step: 1, tier: "free" },
   ],
   formulas: [
     { latex: "6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{light}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2", description: "Overall photosynthesis equation" },
     { latex: "2\\text{H}_2\\text{O} \\rightarrow 4\\text{H}^+ + 4e^- + \\text{O}_2", description: "Water splitting (photolysis) at Photosystem II" },
   ],
   theory: "The light reactions of photosynthesis occur in the thylakoid membrane. Photosystem II (P680) absorbs photons and splits water, releasing O₂ and electrons. These electrons pass through the electron transport chain (plastoquinone → cytochrome b6f → plastocyanin), pumping H⁺ into the thylakoid lumen. Photosystem I (P700) re-energizes the electrons, which reduce NADP⁺ to NADPH via ferredoxin. The H⁺ gradient drives ATP synthase (chemiosmosis), producing ATP. Red light (680 nm) is most efficiently absorbed by chlorophyll a; action spectra show peaks at ~430 nm (blue) and ~680 nm (red).",
-  instructions: "Adjust light intensity and wavelength to observe their effects on electron flow rate, ATP production, and O₂ evolution. The animation shows electron movement through the thylakoid membrane components.",
+  instructions: "Use the Light Wavelength, Light Intensity, and Mg²⁺ Concentration sliders to test how photon color, photon supply, and pigment-system support affect electron flow, ATP production, NADPH formation, and O₂ evolution. Try the Red Light (680nm), Blue Light (450nm), and Far-Red Only presets to compare strong and weak light-reaction conditions quickly.",
   challenges: [
     { id: "plr-c1", question: "Why does green light produce less ATP than red or blue light?", hint: "Chlorophyll reflects green light — it's not absorbed, so photosystems aren't excited", tier: "free" },
     { id: "plr-c2", question: "What would happen if you block the electron transport chain with DCMU?", hint: "Electrons can't flow from PSII → PSI. Water splitting stops, no O₂ produced, no NADPH made, ATP production drops dramatically", tier: "pro" },
@@ -36,16 +36,41 @@ export const photosynthesisLightReactions: Experiment = {
   seoTitle: "Photosynthesis Light Reactions Simulation | Scivra AP Biology",
   seoKeywords: ["photosynthesis simulation", "light reactions interactive", "electron transport chain", "AP Biology"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Photosynthesis Light Reactions" },
+  htmlControlAliases: {
+    wavelength: "sliderWL",
+    lightIntensity: "sliderInt",
+    magnesiumConcentration: "sliderMg",
+  },
+  presets: [
+    {
+      id: "loadPreset:red",
+      label: "Red Light (680nm)",
+      description:
+        "Sets the simulation to red light near the Photosystem II P680 absorption peak, making it useful for observing strong electron flow, oxygen evolution, and ATP production.",
+    },
+    {
+      id: "loadPreset:blue",
+      label: "Blue Light (450nm)",
+      description:
+        "Sets the simulation to blue light, another highly absorbed region of the chlorophyll action spectrum, so students can compare blue-driven excitation with red-light performance.",
+    },
+    {
+      id: "loadPreset:farred",
+      label: "Far-Red Only",
+      description:
+        "Sets the simulation to far-red illumination, highlighting how weak Photosystem II excitation limits water splitting and reduces the balance of downstream light-reaction outputs.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "The light reactions are the first stage of photosynthesis, converting solar energy into the chemical carriers ATP and NADPH that power sugar synthesis in the Calvin cycle. The action unfolds across the thylakoid membrane of the chloroplast: Photosystem II (P680) absorbs a photon and strips electrons from water molecules, releasing O₂ as a byproduct. Those electrons travel through a chain of carriers — plastoquinone, the cytochrome b6f complex, plastocyanin — to Photosystem I (P700), which re-energizes them and hands them off to reduce NADP⁺ to NADPH. The H⁺ gradient built by this electron flow drives ATP synthase in a process parallel to mitochondrial chemiosmosis. Adjust light intensity and wavelength in the simulation to see exactly how photon input shapes electron flow rate, ATP output, and O₂ evolution.",
     parameterExplanations: {
-      lightIntensity:
-        "The percentage of maximum photon flux hitting the thylakoid membrane, from 0% (darkness) to 100% (saturating light). Increasing intensity raises the rate at which P680 is excited, accelerating electron flow through the Z-scheme and boosting both ATP and NADPH production — until the light-saturation point, above which enzyme-limited Calvin cycle steps become the bottleneck.",
       wavelength:
-        "The wavelength of incident light in nanometers (380–750 nm). Chlorophyll a absorbs most strongly at ~430 nm (violet-blue) and ~680 nm (red), matching the P680 absorption peak. Green wavelengths (~550 nm) are reflected rather than absorbed, so electron flow and O₂ output drop sharply in the green region of the spectrum — the simulation's action spectrum response demonstrates this directly.",
-      co2Level:
-        "Atmospheric CO₂ concentration in ppm, ranging from 100 to 1000 ppm. CO₂ is not consumed by the light reactions, but it indirectly limits the system by determining how quickly the Calvin cycle pulls NADPH and ATP from the light stage. At high CO₂ the cycle accelerates, drawing down NADPH faster and preventing photoinhibition buildup; at very low CO₂ the cycle stalls and ATP/NADPH accumulate.",
+        "Light Wavelength selects the color of incoming photons from 400 to 700 nm. Chlorophyll absorbs blue light around 430-450 nm and red light near 680 nm especially well, so those settings drive strong excitation in the photosystems. Green wavelengths are less effective because much of that light is reflected or transmitted instead of absorbed. Keep Light Intensity and Mg²⁺ Concentration steady while moving this slider to isolate the action spectrum. Then compare the Red Light, Blue Light, and Far-Red Only presets to see how different photon energies change electron flow, O₂ evolution, ATP production, and NADPH formation.",
+      lightIntensity:
+        "Light Intensity controls how many usable photons strike the thylakoid membrane each moment. At low intensity, Photosystem II and Photosystem I are excited less often, so water splitting, electron transport, proton pumping, and ATP synthesis all slow down. Raising the slider usually increases the rate until the downstream carriers and enzymes become saturated. Beyond that point, extra light produces a plateau rather than unlimited output. Use this slider after choosing a wavelength preset: red or blue light at high intensity should give strong light-reaction activity, while far-red light stays limited because Photosystem II is not excited as effectively.",
+      magnesiumConcentration:
+        "Mg²⁺ Concentration represents the magnesium ion environment that supports chlorophyll-centered photosynthesis. Each chlorophyll molecule contains a magnesium ion at its porphyrin center, and magnesium availability also affects several chloroplast processes that help maintain efficient light-reaction chemistry. In the simulation, low Mg²⁺ reduces the ability of the light-harvesting system to convert absorbed light into productive electron flow. Higher Mg²⁺ supports stronger photosystem performance until other limits dominate. Hold Wavelength and Light Intensity constant while changing this slider to separate pigment-system support from photon supply, then test whether the same Mg²⁺ level behaves differently under red, blue, and far-red presets.",
     },
     misconceptions: [
       {
@@ -74,11 +99,11 @@ export const photosynthesisLightReactions: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Action spectrum investigation: have students step the wavelength slider from 380 nm to 750 nm in 30 nm increments, record relative O₂ evolution at each wavelength, and plot the action spectrum. Compare their curve to chlorophyll's absorption spectrum and discuss why they largely match.",
+      "Action spectrum investigation: have students step the wavelength slider from 400 nm to 700 nm in 30 nm increments, record relative O₂ evolution at each wavelength, and plot the action spectrum. Compare their curve to chlorophyll's absorption spectrum and discuss why they largely match.",
+      "Preset comparison: ask students to run Red Light (680nm), Blue Light (450nm), and Far-Red Only with the same light intensity and Mg²⁺ concentration, then rank electron flow, ATP output, and O₂ evolution from strongest to weakest.",
       "Light intensity vs. ATP rate plot: ask pairs to record ATP production rate at 0%, 20%, 40%, 60%, 80%, and 100% light intensity. Graph the data, identify the light-saturation point, and discuss what limits the rate beyond that point — tie to AP Bio 2.A.2.",
       "Z-scheme electron path: pause the simulation and ask students to trace a single electron from water splitting at P680 all the way to NADPH formation at P700. Require them to name every carrier in order (plastoquinone, cytochrome b6f, plastocyanin, ferredoxin, NADP⁺ reductase).",
-      "CO₂ feedback misconception probe: set CO₂ to minimum and ask 'Why does ATP output drop if CO₂ isn't used in the light reactions?' Use responses to reveal whether students understand the Calvin cycle as a consumer of light-reaction products.",
-      "Comparison to cellular respiration ETC: after running this simulation, have students map structural parallels between the thylakoid ETC and the mitochondrial ETC — proton pumping, ATP synthase, electron donors and acceptors — reinforcing Big Idea 2 energetics patterns.",
+      "Magnesium support probe: keep wavelength and light intensity fixed, then move Mg²⁺ concentration from low to high. Ask students to explain why pigment chemistry and chloroplast ion conditions can affect light-reaction output.",
     ],
     faq: [
       {

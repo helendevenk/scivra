@@ -16,15 +16,14 @@ export const waterCycleDetail: Experiment = {
   tags: ["water cycle", "evaporation", "precipitation", "groundwater", "condensation", "Earth science"],
   difficulty: "beginner",
   parameters: [
-    { id: "temperature", label: "Temperature", unit: "°C", min: -10, max: 40, default: 20, step: 1, tier: "free" },
-    { id: "humidity", label: "Humidity", unit: "%", min: 10, max: 100, default: 60, step: 5, tier: "free" },
-    { id: "terrain", label: "Terrain (0=flat, 1=mountain, 2=coastal)", unit: "", min: 0, max: 2, default: 1, step: 1, tier: "free" },
+    { id: "solarIntensity", label: "Solar Intensity", unit: "%", min: 0, max: 200, default: 100, step: 1, tier: "free" },
+    { id: "temperature", label: "Temperature", unit: "°C", min: -10, max: 40, default: 15, step: 1, tier: "free" },
   ],
   formulas: [
     { latex: "E \\propto (e_s - e_a) \\cdot v", description: "Evaporation rate depends on saturation deficit and wind speed" },
   ],
   theory: "The water cycle (hydrological cycle) moves water between atmosphere, land, and oceans. Solar energy drives evaporation from water surfaces and transpiration from plants (evapotranspiration). Water vapor rises, cools adiabatically, and condenses into clouds when reaching the dew point. Precipitation occurs when droplets grow large enough to fall. On land, water follows multiple paths: surface runoff into streams and rivers, infiltration into soil, and percolation into groundwater aquifers. Groundwater slowly flows toward discharge points (springs, rivers, oceans). Temperature increases evaporation rates; mountains force orographic lift causing precipitation on windward slopes.",
-  instructions: "Watch water particles cycle through the atmosphere and landscape. Adjust temperature to change evaporation rates, humidity to affect cloud formation, and terrain to see orographic effects. Track the water budget in real time.",
+  instructions: "Watch water particles cycle through the atmosphere and landscape. Use the Solar Intensity and Temperature sliders to change the energy driving evaporation and the thermal conditions that shape phase changes. Try the four presets — Tropical, Drought, Storm, and Arctic — to compare complete water-cycle scenarios, then track the water budget in real time.",
   challenges: [
     { id: "wcd-c1", question: "Why does it rain more on the windward side of mountains?", hint: "Air is forced upward (orographic lift), cools adiabatically, reaches dew point, and precipitates. The leeward side gets a rain shadow.", tier: "free" },
     { id: "wcd-c2", question: "If temperature increases by 5°C globally, what happens to evaporation?", hint: "Evaporation increases (warmer air holds more moisture), intensifying the water cycle — more evaporation AND more precipitation", tier: "free" },
@@ -35,16 +34,21 @@ export const waterCycleDetail: Experiment = {
   seoTitle: "Water Cycle Detailed Simulation | Scivra Earth Science",
   seoKeywords: ["water cycle simulation", "hydrological cycle interactive", "evaporation condensation", "NGSS Earth science"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Middle School", teaches: "Water Cycle" },
+  htmlControlAliases: { solarIntensity: "sl-solar", temperature: "sl-temp" },
+  presets: [
+    { id: "setPreset:tropical", label: "🌴 Tropical", description: "A warm, high-energy water cycle with strong evaporation, frequent cloud formation, and active precipitation." },
+    { id: "setPreset:drought", label: "☀️ Drought", description: "A dry scenario where limited water return and intense heating show how evaporation can outpace precipitation." },
+    { id: "setPreset:storm", label: "⛈ Storm", description: "A high-moisture, unstable scenario that emphasizes rapid condensation, heavy precipitation, runoff, and recharge." },
+    { id: "setPreset:arctic", label: "❄️ Arctic", description: "A cold scenario where low temperature slows evaporation and shifts more stored water toward snow or ice." },
+  ],
   contentSections: {
     whatIsIt:
       "The water cycle — also called the hydrological cycle — is the continuous journey water takes as it moves between the atmosphere, land surface, and underground. The same water molecules that fall as rain today may have once been part of an ancient ocean, a glacier, a cloud over a rainforest, or a river in a desert. The cycle is powered almost entirely by the Sun, which provides the energy needed to evaporate water from oceans and lakes. Gravity then pulls that water back down as precipitation. This simulation tracks individual water particles through each stage: evaporation from the surface, condensation into clouds, precipitation as rain or snow, surface runoff into streams, infiltration into soil, and slow movement through underground aquifers. Changing temperature, humidity, and terrain type shows how the cycle responds to different environmental conditions — a connection directly relevant to understanding droughts, floods, and how climate change is intensifying the water cycle globally.",
     parameterExplanations: {
+      solarIntensity:
+        "Solar Intensity controls how much incoming energy reaches the water and land surfaces, from 0% to 200% of the baseline. Higher solar intensity gives surface water molecules more energy, so more of them can escape into the air as vapor. That increases evaporation, supplies more moisture for clouds, and can speed up the movement of water through the whole cycle. Lower solar intensity slows evaporation and leaves more water stored on the surface or underground. Compare the Drought, Storm, and Tropical presets after changing only Solar Intensity to separate the role of energy input from temperature.",
       temperature:
-        "Sets the surface air temperature in degrees Celsius (-10 to 40°C). Temperature is the most direct control on evaporation rate — warmer air holds more water vapor (following a relationship called the Clausius-Clapeyron equation, though students need only understand the basic idea: warm air is thirstier). At low temperatures, evaporation slows and precipitation may fall as snow. At high temperatures, evaporation accelerates, moisture builds quickly in the atmosphere, and the water cycle intensifies. A 1°C temperature increase raises the atmosphere's water-holding capacity by about 7%.",
-      humidity:
-        "Sets the relative humidity as a percentage (10–100%). Relative humidity describes how close the air is to being fully saturated with water vapor. At 100% humidity, the air is at its dew point and cannot hold more water — clouds form readily and precipitation follows. At low humidity, evaporated water disperses easily into dry air and clouds form more slowly. High humidity combined with high temperature creates the conditions for intense rainfall events.",
-      terrain:
-        "Selects the landscape type on a scale of 0 to 2. At 0 (flat), water flows slowly across the surface with high infiltration into soil and steady groundwater recharge. At 1 (mountain), air masses are forced upward (orographic lift), cooling rapidly and producing heavy precipitation on the windward side while a rain shadow forms on the leeward side. At 2 (coastal), the proximity of ocean water drives high evaporation rates and frequent onshore precipitation. Each terrain type produces a distinctly different pattern of water movement.",
+        "Temperature sets the air and surface condition in degrees Celsius, from -10°C to 40°C. Warmer conditions generally increase evaporation because water molecules move faster and air can hold more water vapor before reaching saturation. Cold conditions slow evaporation and make snow or ice storage more likely, which delays water returning to rivers, soil, or groundwater. Use the Temperature slider with the Arctic preset to see a slower cycle, then raise it under the Tropical or Storm preset to compare how heat can intensify evaporation, condensation, and precipitation without changing the basic conservation of water.",
     },
     misconceptions: [
       {
@@ -69,10 +73,11 @@ export const waterCycleDetail: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Evaporation rate investigation: set terrain to 0 (flat) and humidity to 60%. Compare evaporation rates at temperature -5°C, 20°C, and 40°C by counting water particles rising from the surface over the same time period. Students graph temperature vs. evaporation rate and describe the relationship (MS-ESS2-4).",
-      "Mountain rain shadow demonstration: set terrain to 1 (mountain) and observe where precipitation is heaviest. Then set terrain to 0 (flat) with the same temperature and humidity settings and compare precipitation distribution. Students draw a labeled diagram of the orographic lift process and explain why deserts often form on the leeward side of mountain ranges.",
-      "Climate change water cycle connection: start at temperature 20°C, run the cycle, and record total evaporation and precipitation. Increase temperature to 35°C and repeat. Students compare the two scenarios and explain how a warmer world intensifies the water cycle — more evaporation, more moisture in the air, and more intense precipitation events when it does rain.",
-      "Groundwater recharge: set terrain to 0 (flat) and compare how much water infiltrates vs. runs off in a dry-cycle scenario (humidity 20%, temperature 10°C, slower evaporation and lighter rain) and a wet-cycle scenario (humidity 90%, temperature 30°C, faster evaporation and heavier rain). Students explain why saturated soils during extended rain events lead to flooding — the ground cannot absorb more water when pore spaces are already full.",
+      "Evaporation rate investigation: keep Temperature at 15°C and compare Solar Intensity at 50%, 100%, and 200%. Students count rising water particles over equal time intervals, graph solar input vs. evaporation rate, and explain how energy from the Sun drives cycling through Earth's systems (MS-ESS2-4).",
+      "Temperature comparison: keep Solar Intensity at 100% and compare Temperature at -5°C, 15°C, and 35°C. Students describe how heating or cooling changes evaporation, condensation, precipitation type, and temporary storage as snow, ice, surface water, soil water, or groundwater.",
+      "Preset scenario stations: assign Tropical, Drought, Storm, and Arctic as four stations. Students record the initial slider values, observe water movement patterns, and write a claim about how energy and temperature shape the speed and pathway of the water cycle.",
+      "Climate change water cycle connection: start with the Tropical preset, record total evaporation and precipitation, then increase Temperature while holding Solar Intensity constant. Students compare the two runs and explain why a warmer atmosphere can intensify evaporation and heavy precipitation while conserving total water.",
+      "Runoff and recharge discussion: use the Storm preset to observe precipitation, surface flow, infiltration, and groundwater recharge. Students connect the visible water-budget changes to flooding risk, groundwater replenishment, and why saturated soils cannot absorb unlimited rainfall.",
     ],
     faq: [
       {
@@ -83,7 +88,7 @@ export const waterCycleDetail: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation directly supports MS-ESS2-4, which asks students to develop a model to describe the cycling of water through Earth's systems driven by energy from the Sun and the force of gravity. It also connects to MS-ESS3-5 on how human activities affect Earth's natural systems — because changes in land use, deforestation, and climate warming all alter the rates and pathways of the water cycle in measurable ways.",
+          "This simulation directly supports MS-ESS2-4, which asks students to develop a model to describe the cycling of water through Earth's systems driven by energy from the Sun and the force of gravity. It also supports HS-ESS2-5, where students plan and conduct investigations about how water's properties and movement affect Earth's surface materials and processes. The sliders and presets let students compare evidence from different water-cycle conditions instead of treating the cycle as a fixed diagram.",
       },
       {
         question: "Why do mountains cause heavy rain on one side but desert on the other?",

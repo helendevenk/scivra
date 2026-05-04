@@ -23,12 +23,22 @@ export const simpleHarmonicMotion: Experiment = {
 
   parameters: [
     {
+      id: "amplitude",
+      label: "Amplitude (A)",
+      unit: "m",
+      min: 0.1,
+      max: 2,
+      default: 1,
+      step: 0.05,
+      tier: "free",
+    },
+    {
       id: "springConstant",
       label: "Spring Constant (k)",
       unit: "N/m",
       min: 1,
       max: 100,
-      default: 20,
+      default: 10,
       step: 1,
       tier: "free",
     },
@@ -37,30 +47,20 @@ export const simpleHarmonicMotion: Experiment = {
       label: "Mass (m)",
       unit: "kg",
       min: 0.1,
-      max: 10,
+      max: 5,
       default: 1,
       step: 0.1,
       tier: "free",
     },
     {
-      id: "amplitude",
-      label: "Amplitude (A)",
-      unit: "m",
-      min: 0.1,
-      max: 2,
-      default: 0.5,
-      step: 0.05,
-      tier: "free",
-    },
-    {
       id: "damping",
       label: "Damping Coefficient (b)",
-      unit: "kg/s",
+      unit: "",
       min: 0,
-      max: 5,
+      max: 0.5,
       default: 0,
-      step: 0.1,
-      tier: "pro",
+      step: 0.01,
+      tier: "free",
     },
   ],
 
@@ -91,7 +91,7 @@ export const simpleHarmonicMotion: Experiment = {
     "Simple Harmonic Motion (SHM) occurs when a restoring force is proportional to displacement: F = -kx. The period depends only on mass and spring constant, not on amplitude — a key insight that confuses many students. Energy constantly transforms between kinetic (maximum at equilibrium) and potential (maximum at extreme positions), with total mechanical energy conserved in the absence of damping.",
 
   instructions:
-    "Adjust the spring constant k and mass m to observe how period changes. Notice that changing amplitude does NOT affect the period — try it. Watch the energy bar at the bottom show Ek and Ep cycling. Use the damping slider (Pro) to explore energy dissipation.",
+    "Use the four sliders to set Amplitude A, Spring Constant k, Mass m, and Damping. Try the three presets — Undamped SHM, Lightly Damped, and Critically Damped — to compare ideal oscillation, gradual energy loss, and the strongest damping case exposed by the HTML simulation. Watch the live data, energy panel, and phase-space plot as you change one control at a time.",
 
   hook: {
     question: "If you double the amplitude of an ideal spring oscillator, does it take longer to complete a cycle?",
@@ -212,19 +212,43 @@ export const simpleHarmonicMotion: Experiment = {
     educationalLevel: "High School",
     teaches: "Simple Harmonic Motion",
   },
+  htmlControlAliases: { amplitude: "sl-A", springConstant: "sl-k", mass: "sl-m", damping: "sl-d" },
+  presets: [
+    {
+      id: "undamped",
+      label: "Undamped SHM",
+      description:
+        "Sets damping to zero so the spring-mass system keeps oscillating with constant total mechanical energy.",
+      paramValues: { amplitude: 1, springConstant: 10, mass: 1, damping: 0 },
+    },
+    {
+      id: "light",
+      label: "Lightly Damped",
+      description:
+        "Adds mild damping so students can see amplitude shrink gradually while the motion still oscillates.",
+      paramValues: { amplitude: 1, springConstant: 10, mass: 1, damping: 0.1 },
+    },
+    {
+      id: "critical",
+      label: "Critically Damped",
+      description:
+        "Uses the strongest available damping preset so students can compare rapid decay against the undamped and lightly damped cases.",
+      paramValues: { amplitude: 1, springConstant: 10, mass: 1, damping: 0.5 },
+    },
+  ],
 
   contentSections: {
     whatIsIt:
       "Pluck a guitar string, push a kid on a swing, watch a tuning fork hum after you tap it on a desk — all of them trace out the same mathematical shape: a smooth sine wave moving back and forth around a balance point. Simple harmonic motion is the physics of any system where the force pulling you back toward equilibrium grows in proportion to how far you've strayed (F = -kx). That single rule produces the cleanest motion in physics: position is sinusoidal, the period is independent of amplitude, and energy sloshes between kinetic and potential without leaking out. This lab gives you a spring-mass system with sliders for k, m, amplitude, and optional damping. Watch the energy bar split between Ek and Ep as the mass races through equilibrium and freezes at the turning points, and try to break the period formula by changing amplitude — you can't.",
     parameterExplanations: {
-      springConstant:
-        "Spring stiffness k in newtons per meter. A bigger k means a sharper restoring pull for the same displacement, which raises the angular frequency ω = √(k/m) and shrinks the period. Stiff springs oscillate fast; soft springs oscillate slowly.",
-      mass:
-        "The oscillating mass m in kilograms. Mass adds inertia, so the same spring takes longer to whip a heavier block back and forth. Period grows as √m: doubling the mass multiplies the period by √2 ≈ 1.41, not by 2.",
       amplitude:
-        "The maximum displacement A from equilibrium in meters. Crucially, amplitude does NOT affect the period — that's the punchline of SHM. It does set the total energy (E = ½kA²) and the maximum speed (v_max = Aω), so larger A means a faster zip through the middle but the same round-trip time.",
+        "Amplitude A is the starting stretch from equilibrium, measured in meters. Increasing it gives the mass farther to travel and stores more elastic potential energy because E = 1/2 kA^2. It also raises maximum speed by the same factor, so the period of an ideal spring does not change when only A changes. Use this slider with damping at 0 first: compare a small and large amplitude while watching the period readout. Then add damping and notice that the amplitude envelope shrinks over time as mechanical energy leaves the visible oscillation.",
+      springConstant:
+        "Spring Constant k controls how strongly the spring pulls back for each meter of displacement. A larger k means a steeper restoring force, so the angular frequency rises as omega = sqrt(k/m) and the period gets shorter. Keep Mass and Amplitude fixed, then move only k to isolate this relationship in the live period readout. This is the cleanest way to connect Hooke's Law, F = -kx, to the motion you see: stiff springs snap the mass back quickly, while soft springs produce slower, wider-looking oscillations.",
+      mass:
+        "Mass m is the inertia attached to the spring. A heavier mass resists acceleration more, so the same spring takes longer to complete each cycle. The period follows T = 2pi sqrt(m/k), which means doubling mass increases period by sqrt(2), not by 2. Hold Spring Constant and Amplitude steady, then move only Mass to make this square-root relationship visible. The gravitational weight of the mass is not what sets the oscillation timing here; the model measures motion around equilibrium, where inertia and spring stiffness dominate.",
       damping:
-        "The damping coefficient b in kg/s (Pro). Linear damping uses a force proportional to velocity, F_d = -bv; the instantaneous power loss is proportional to v². The amplitude envelope decays exponentially as A(t) = A₀ e^(−bt/2m). Critical damping (b² = 4mk) is the fastest return to equilibrium without overshoot.",
+        "Damping sets how strongly the model removes mechanical energy from the oscillator as it moves. At 0, the Undamped SHM preset keeps tracing a steady phase-space ellipse and the total energy stays constant. Higher values oppose motion more strongly, so the amplitude shrinks and the phase path spirals inward. Compare Lightly Damped with the Critically Damped button before changing the slider manually. The HTML control uses a normalized 0 to 0.5 range, so treat it as a visual damping-strength comparison rather than a measured damping coefficient in kg/s.",
     },
     misconceptions: [
       {
@@ -259,11 +283,11 @@ export const simpleHarmonicMotion: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Amplitude-independence test: have pairs predict whether doubling A changes the period, then run two trials at A and 2A and time 10 cycles each. Same period. Many students need to see this with their own measurements before they trust it.",
-      "Energy split lab: pause the simulation at five positions (x = 0, ±A/2, ±A) and ask students to compute Ek and Ep at each point. The two should always sum to ½kA². This makes E_total = constant tactile rather than a textbook claim.",
-      "Critical damping demo (Pro): vary the damping coefficient and watch the response. Have students hunt for the b that returns the system to equilibrium fastest without oscillating. Connect to car suspensions, where engineers tune dampers near critical for the best ride.",
-      "Misconception probe — ask 'when in the cycle is the mass moving fastest?' before they touch the controls. Most students point to the turning points because that's where the spring is most stretched. The velocity readout settles the argument.",
-      "Cross-system bridge: this is the abstract version of masses-springs-basics and pendulum-lab. Run it after both physical labs to show that the same equations describe systems that look completely different in the real world. That's the deep point of SHM.",
+      "Amplitude-independence test: have pairs predict whether doubling A changes the period, then run two trials with the Amplitude slider while keeping Spring Constant, Mass, and Damping fixed. Students compare the live T value and explain why greater distance does not mean a longer ideal-SHM period.",
+      "Mass versus stiffness station: assign one group to vary only Spring Constant and another to vary only Mass. Each group records T values, identifies whether period rises or falls, and connects the evidence to T = 2π√(m/k).",
+      "Energy split lab: use the Undamped SHM preset, pause mentally at x = 0, ±A/2, and ±A, and ask students to predict how KE and PE should trade places while the total energy readout stays constant.",
+      "Damping comparison: run Undamped SHM, Lightly Damped, and Critically Damped in sequence. Students describe the visible motion, energy trend, and phase-space path for each preset, treating the buttons as damping-strength cases before touching the Damping slider.",
+      "Misconception probe: ask when the mass is moving fastest before students touch the controls. Then have them watch the velocity readout and energy panel as the mass crosses equilibrium and reaches each turning point.",
     ],
     faq: [
       {
@@ -274,12 +298,12 @@ export const simpleHarmonicMotion: Experiment = {
       {
         question: "How are kinetic and potential energy related in SHM?",
         answer:
-          "Total mechanical energy E = ½kA² is conserved (in the absence of damping). At maximum displacement, all of E sits as elastic potential energy ½kx² with x = A; the mass is momentarily at rest. At equilibrium (x = 0), all of E sits as kinetic energy ½mv², and v = v_max = Aω. Everywhere in between, the two add to the same total. Watching the energy bar at the bottom of the simulation cycle between blue and red as the mass moves makes this visible in real time.",
+          "Total mechanical energy E = ½kA² is conserved when damping is zero. At maximum displacement, all of E sits as elastic potential energy ½kx² with x = A; the mass is momentarily at rest. At equilibrium (x = 0), all of E sits as kinetic energy ½mv², and v = v_max = Aω. Everywhere in between, the two add to the same total. Watching the energy panel cycle between KE and PE as the mass moves makes this visible in real time.",
       },
       {
         question: "What does damping actually do to the motion?",
         answer:
-          "Damping is a velocity-dependent force F_d = -bv that opposes motion and drains mechanical energy into heat. Three regimes: underdamped (b² < 4mk) gives an oscillation with an exponentially decaying amplitude envelope A(t) = A₀ e^(−bt/2m); critically damped (b² = 4mk) returns to equilibrium fastest without overshooting; overdamped (b² > 4mk) returns slowly without oscillating. Real systems are always somewhere on this scale — only the ideal SHM bounces forever.",
+          "Damping is a velocity-dependent effect that opposes motion and drains mechanical energy into heat. In this HTML simulation, the Damping slider is a normalized visual control from 0 to 0.5, not a lab-measured coefficient in kg/s. At 0, the oscillator keeps cycling with a steady phase-space ellipse. As damping increases, the amplitude decays and the phase path spirals inward. Use the Undamped SHM, Lightly Damped, and Critically Damped buttons as quick comparison cases for increasing damping strength.",
       },
       {
         question: "How does this connect to AP Physics 1 standards 3.B.3 and 5.B.3?",
