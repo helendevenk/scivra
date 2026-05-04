@@ -23,44 +23,24 @@ export const k5FoodChain: Experiment = {
 
   parameters: [
     {
-      id: "producerPop",
+      id: "producerCount",
       label: "Plant Population",
       unit: "",
       min: 10,
       max: 200,
       default: 100,
-      step: 10,
+      step: 5,
       tier: "free",
     },
     {
-      id: "herbivoreRatio",
-      label: "Herbivore Density",
+      id: "predatorCount",
+      label: "Predator Population",
       unit: "",
-      min: 0.05,
-      max: 0.5,
-      default: 0.2,
-      step: 0.05,
-      tier: "free",
-    },
-    {
-      id: "carnivoreRatio",
-      label: "Carnivore Density",
-      unit: "",
-      min: 0.01,
-      max: 0.2,
-      default: 0.05,
-      step: 0.01,
-      tier: "free",
-    },
-    {
-      id: "sunlight",
-      label: "Sunlight Intensity",
-      unit: "%",
-      min: 10,
+      min: 0,
       max: 100,
-      default: 80,
-      step: 10,
-      tier: "pro",
+      default: 50,
+      step: 1,
+      tier: "free",
     },
   ],
 
@@ -79,7 +59,7 @@ export const k5FoodChain: Experiment = {
     "A food chain shows how energy flows from one organism to another through eating. Producers (plants) capture energy from sunlight through photosynthesis. Primary consumers (herbivores) eat plants. Secondary consumers (carnivores) eat herbivores. Decomposers (bacteria, fungi) break down dead organisms and return nutrients to the soil. At each step, about 90% of energy is lost as heat — only 10% passes to the next level. This is why there are always far more plants than rabbits, and more rabbits than foxes. Removing any link from the chain disrupts the whole ecosystem.",
 
   instructions:
-    "Adjust the population sliders and watch the ecosystem animation. Try removing the carnivores — herbivore populations explode! Then plants get eaten faster. Try reducing sunlight — plant populations shrink, and the whole chain collapses. Click organisms to see their energy relationships.",
+    "Use the Plant Population slider to add or remove producers, and use the Predator Population slider to change how many predators are hunting. Try the Balanced Ecosystem, Predator Surge, and Drought Season presets to compare how the food chain changes.",
 
   challenges: [
     {
@@ -127,18 +107,35 @@ export const k5FoodChain: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Food Chains and Ecosystems",
   },
+  htmlControlAliases: { producerCount: "sliderProducers", predatorCount: "sliderPredator" },
+  presets: [
+    {
+      id: "balanced",
+      label: "Balanced Ecosystem",
+      description:
+        "Plants and predators start near the middle, so students can observe a food chain where each group has enough support from the level below.",
+    },
+    {
+      id: "surge",
+      label: "Predator Surge",
+      description:
+        "Predators rise quickly. Students can watch how more hunting pressure can change plant-eater numbers and affect the whole ecosystem.",
+    },
+    {
+      id: "drought",
+      label: "Drought Season",
+      description:
+        "Producer numbers drop, like plants during a dry season. Students can compare how less plant food affects animals higher in the food chain.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "A food chain shows the order of who eats whom in nature. It starts with plants. Plants use sunlight to make their own food. That is why we call them producers — they produce food. Animals that eat plants are called herbivores, or primary consumers. Rabbits, deer, and caterpillars are examples. Animals that eat the plant-eaters are called carnivores, or secondary consumers. Foxes, hawks, and wolves are examples. Then there are decomposers — tiny living things like bacteria and fungi that break down dead plants and animals. Decomposers are nature's recyclers. They send nutrients back into the soil so plants can grow again. In this simulation you can change the number of plants, how many plant-eaters there are, and how many meat-eaters there are. You can also change how much sunlight the plants get. Watch what happens when you take out one part of the chain — the whole ecosystem feels the change!",
     parameterExplanations: {
-      producerPop:
-        "This slider sets the number of plants in the ecosystem, from 10 to 200. More plants means more food for herbivores. Try setting it very low and see how the rest of the food chain is affected when plants are scarce.",
-      herbivoreRatio:
-        "This controls how many plant-eaters there are compared to plants, from 0.05 (very few) to 0.5 (a lot). Herbivores eat plants. If there are too many, they eat all the plants too fast. If there are too few, more plants survive but carnivores may go hungry.",
-      carnivoreRatio:
-        "This controls how many meat-eaters there are compared to plant-eaters, from 0.01 (very few) to 0.2 (a lot). Carnivores eat herbivores. Without carnivores, herbivore numbers can grow too large and wipe out the plants. Watch how changing this number ripples through the whole chain.",
-      sunlight:
-        "This sets how bright the sunlight is, from 10% to 100%. Plants need sunlight to grow and make food. Less sunlight means fewer plants, which means less food for everyone up the chain. This is a pro feature — try it to explore how energy from the sun drives the whole ecosystem.",
+      producerCount:
+        "Plant Population changes how many producers are in the ecosystem. Producers are plants. They make food using sunlight, and many animals depend on them. When you move this slider up, there is more plant food for plant-eaters. When you move it down, food becomes harder to find. Watch what happens to the animals after the plants change. Do they have enough to eat? Try the Balanced Ecosystem preset first, then try Drought Season to see what can happen when there are fewer plants.",
+      predatorCount:
+        "Predator Population changes how many hunters are in the ecosystem. Predators are animals that eat other animals. When this slider is low, plant-eaters may have fewer animals chasing them, so their group can grow. When this slider is high, predators may catch more plant-eaters. That can leave more plants behind, but too many predators can also run out of food. Move only this slider and watch the chain. Then try Predator Surge to compare your own setting with a preset.",
     },
     misconceptions: [
       {
@@ -163,11 +160,11 @@ export const k5FoodChain: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set producerPop to 100, herbivoreRatio to 0.2, and carnivoreRatio to 0.05 as a balanced starting point. Ask students to describe what they see, then predict what will happen if carnivores are reduced to the minimum (carnivoreRatio = 0.01).",
-      "Reduce carnivoreRatio to 0.01 and have students watch what happens to the herbivore and plant populations over time. This demonstrates how predators keep ecosystems in balance.",
-      "Lower sunlight to 20% (pro) and observe how reduced plant growth affects every level of the food chain. Connect to discussions about seasons, forest fires, or drought.",
-      "Start with producerPop at 200 and herbivoreRatio at 0.5 to show overpopulation of plant-eaters. Ask: what usually controls how many rabbits or deer there are in nature?",
-      "Have students build their own food chain on paper (sun, plant, insect, bird, hawk) and then match each level to the sim controls — which slider represents which creature?",
+      "Start with the Balanced Ecosystem preset. Have students record the Plant Population and Predator Population values, then describe how energy moves from producers to consumers in support of NGSS 5-LS2-1.",
+      "Use the Predator Surge preset as a prediction task. Ask students to explain how a sudden increase in predators may affect plant-eaters and producers, then compare their predictions with observations.",
+      "Use the Drought Season preset to model reduced producer availability. Connect student observations to how changes in one part of an ecosystem can affect many organisms.",
+      "Have students change only the Plant Population slider while keeping Predator Population constant. Ask them to identify which changes are direct effects and which are indirect effects.",
+      "Run a quick CER activity: students choose one preset, cite slider values and visible changes as evidence, and make a claim about whether the ecosystem is balanced or stressed.",
     ],
     faq: [
       {

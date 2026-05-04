@@ -36,31 +36,21 @@ export const k5SoundWaves: Experiment = {
       id: "amplitude",
       label: "Amplitude (Volume)",
       unit: "",
-      min: 0,
-      max: 1,
-      default: 0.5,
-      step: 0.05,
+      min: 0.1,
+      max: 3,
+      default: 1.0,
+      step: 0.1,
       tier: "free",
     },
     {
       id: "medium",
-      label: "Medium (0=Air, 1=Water, 2=Vacuum)",
+      label: "Medium (0=Air, 1=Water, 2=Metal)",
       unit: "",
       min: 0,
       max: 2,
       default: 0,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "instrumentType",
-      label: "Instrument (0=Speaker, 1=String, 2=Drum)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -79,7 +69,7 @@ export const k5SoundWaves: Experiment = {
     "Sound is a mechanical wave caused by vibrations. When an object vibrates (like a guitar string or vocal cords), it pushes and pulls on the surrounding air molecules, creating compressions (dense regions) and rarefactions (sparse regions) that travel outward as a sound wave. Frequency (measured in Hertz, Hz) determines pitch — more vibrations per second = higher pitch. Amplitude determines loudness — bigger vibrations = louder sound. Sound needs matter (air, water, solid) to travel — it cannot travel through a vacuum. Sound travels fastest through solids (about 5000 m/s in steel) and slowest through gases (343 m/s in air).",
 
   instructions:
-    "Press Play and adjust the Frequency slider — higher frequency creates higher-pitched sound waves. Move the Amplitude slider to make the wave bigger (louder) or smaller (quieter). Switch the medium to Vacuum — the wave disappears! No matter = no sound.",
+    "Press Play and use the Frequency slider to compare low and high pitch. Move the Amplitude slider to make the wave louder or quieter. Use the Medium slider to compare air, water, and metal. Try the Low Pitch Bass, High Pitch Treble, and Loud vs Quiet presets, then change one slider at a time and describe what changes.",
 
   challenges: [
     {
@@ -127,24 +117,43 @@ export const k5SoundWaves: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Sound Waves and Vibrations",
   },
+  htmlControlAliases: { frequency: "sl-freq", amplitude: "sl-amp", medium: "sl-medium" },
+  presets: [
+    {
+      id: "bass",
+      label: "Low Pitch Bass",
+      description:
+        "A low frequency makes slow back-and-forth motion and a deep bass sound. Compare the wider wave spacing with a higher-pitch setting.",
+    },
+    {
+      id: "treble",
+      label: "High Pitch Treble",
+      description:
+        "A high frequency makes fast back-and-forth motion and a bright treble sound. Notice how more wave peaks fit across the same space.",
+    },
+    {
+      id: "loud",
+      label: "Loud vs Quiet",
+      description:
+        "A larger amplitude makes taller waves and a louder sound. Lower the amplitude to compare the same pitch at a quieter volume.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Tap your desk right now. Did you hear that? Your hand pushed the desk, the desk wiggled, and that wiggle traveled through the air as a sound wave until it reached your ears. Every sound — music, talking, thunder, a dog barking — starts with something wiggling (vibrating) and pushing the air around it. Sound is a wave made of tiny air pushes traveling outward in all directions from the vibrating object. Two things shape what a sound sounds like. How fast the object wiggles (its frequency) decides whether the sound is high-pitched like a flute or whistle, or low-pitched like a foghorn or big bass drum. How much the object wiggles (its amplitude) decides how loud the sound is — a tiny wiggle makes a quiet whisper, and a massive wiggle makes a loud clap. Sound waves need something to push through — air, water, wood, or metal. Without any matter at all, sound simply cannot exist. That is why outer space is completely silent: there is no air or any other material out there to carry the wiggle. This simulation lets you see the invisible — the actual wave pattern — as you change pitch and volume.",
     parameterExplanations: {
       frequency:
-        "Frequency is how many times per second the vibrating object wiggles back and forth. In this simulation it goes from 50 Hz (very slow wiggles — a very deep, rumbling low sound) all the way to 2000 Hz (very fast wiggles — a sharp, piercing high sound). Moving this slider up raises the pitch, just like tightening a guitar string makes it twang higher. Moving it down lowers the pitch. The standard piano note A4 (middle A) is exactly 440 Hz. Watch the wave on screen: higher frequency means more wave peaks packed into the same space.",
+        "Frequency tells how many times each second something makes a back-and-forth motion. A low number, like 50 Hz, makes slow wobbles and a deep sound, like a bass drum. A high number, like 2000 Hz, makes fast wobbles and a high sound, like a whistle. Move this slider up to raise the pitch and down to lower it. Keep the amplitude the same while you test frequency so students can see that pitch changes without making the sound louder. Listen carefully.",
       amplitude:
-        "Amplitude is how big the wiggle is — how far the vibrating surface pushes the air. It goes from 0 (no sound at all) to 1.0 (maximum volume, very loud). A small amplitude means small waves and quiet sound, like a whisper. A large amplitude means tall waves and loud sound, like someone shouting next to you. On screen you can see the wave shape: increasing amplitude makes the peaks taller and the valleys deeper. Amplitude and frequency are completely independent — you can have loud-low or quiet-high sounds.",
+        "Amplitude tells how big the wobble is. A small amplitude makes a small push on the material around the sound source, so the sound is quiet. A large amplitude makes a bigger push, so the sound is louder. This slider goes from 0.1 to 3, letting students compare a soft sound with a strong one. Keep frequency the same while you change amplitude. The pitch should stay the same, but the wave grows taller or shorter, showing that volume and pitch are different properties.",
       medium:
-        "This selector changes what the sound is traveling through. Setting 0 is Air — the most common medium for sound we experience every day, traveling at about 343 m/s. Setting 1 is Water — sound travels through water more than four times faster than through air (about 1480 m/s), which is why dolphins and whales can communicate over long ocean distances. Setting 2 is Vacuum — completely empty space with no matter at all. In a vacuum the wave display disappears because there are no molecules to carry the vibration. This directly shows that sound needs matter to travel.",
-      instrumentType:
-        "This Pro setting switches the source of the sound between different instrument types. Setting 0 is a Speaker — a flat cone pushing air evenly. Setting 1 is a String — like a guitar or violin string; you can visualize how a stretched string vibrates. Setting 2 is a Drum — a stretched skin that vibrates when hit. Each instrument creates the same wave physics, but the visual shape of the source differs, helping students connect real instruments to the abstract wave concept.",
+        "Medium means the material that carries the sound. Setting 0 is air, which is what we hear through most days. Setting 1 is water, where sound can travel faster because the particles are closer together. Setting 2 is metal, where sound can move even faster because the particles are packed tightly and pass the back-and-forth motion along quickly. Change only this slider while leaving frequency and amplitude alone. This makes the same sound a fair comparison. Students can compare how the same sound wave behaves in different materials.",
     },
     misconceptions: [
       {
         wrong: "Sound travels through empty space (vacuum).",
         correct:
-          "Sound is a mechanical wave — it works by pushing molecules together and pulling them apart. In a true vacuum there are no molecules at all, so there is nothing to push, and sound simply cannot exist. The medium selector in the simulation set to Vacuum makes the wave disappear entirely to show this directly. Movies often show loud explosions in space, but in reality those explosions would be completely silent. Astronauts in spacesuits cannot hear each other without a radio even though they are only centimeters apart, because between their suits there is vacuum.",
+          "Sound is a mechanical wave — it works by pushing molecules together and pulling them apart. In a true vacuum there are no molecules at all, so there is nothing to push, and sound simply cannot exist. Movies often show loud explosions in space, but in reality those explosions would be completely silent. Astronauts in spacesuits cannot hear each other without a radio even though they are only centimeters apart, because between their suits there is vacuum.",
       },
       {
         wrong: "Higher pitch means louder sound.",
@@ -154,7 +163,7 @@ export const k5SoundWaves: Experiment = {
       {
         wrong: "Sound travels at the same speed no matter what it is going through.",
         correct:
-          "Sound travels at very different speeds depending on the material. In air at room temperature: about 343 m/s. In water: about 1480 m/s. In this simulation, you can compare Air, Water, and Vacuum. In real solids like steel, sound travels even faster than in water — about 5960 m/s — because steel molecules are extremely tightly packed AND steel is much stiffer (harder to compress) than water or air. Both factors together let vibrations pass along almost instantly. This is why you can sometimes hear a train coming by pressing your ear to the rail long before you hear it through the air.",
+          "Sound travels at very different speeds depending on the material. In air at room temperature: about 343 m/s. In water: about 1480 m/s. In this simulation, you can compare Air, Water, and Metal. In real solids like steel, sound travels even faster than in water — about 5960 m/s — because steel molecules are extremely tightly packed AND steel is much stiffer (harder to compress) than water or air. Both factors together let vibrations pass along almost instantly. This is why you can sometimes hear a train coming by pressing your ear to the rail long before you hear it through the air.",
       },
       {
         wrong: "Sound waves look like up-and-down ripples moving through the air.",
@@ -164,9 +173,9 @@ export const k5SoundWaves: Experiment = {
     ],
     teacherUseCases: [
       "Pitch vs. amplitude independence: set frequency to 440 Hz and amplitude to 0.5. Ask students to predict what changes when you increase frequency to 1000 Hz while leaving amplitude fixed — then observe. Swap: fix frequency and change amplitude. Students confirm the two properties are independent (NGSS 1-PS4-1, 4-PS4-1).",
-      "Vacuum demonstration: set frequency to 440 Hz and amplitude to 1.0 in air so students see a clear wave. Switch medium to Vacuum and ask students to explain why the wave vanishes. Connect to the question 'Can you hear explosions in space?' — this is the scientific answer.",
-      "Water vs. air comparison: keep frequency at 440 Hz, amplitude at 0.7, and switch between Air and Water. Discuss why dolphins can call to each other across entire oceans. Ask students to predict which medium a submarine would use to detect other ships.",
-      "Instrument type exploration (Pro): step through instrumentType 0, 1, and 2 while keeping frequency and amplitude constant. Students sketch each source shape and discuss how different physical objects vibrate but all produce the same kind of pressure wave in air.",
+      "Medium comparison: keep frequency at 440 Hz and amplitude at 1.0, then switch between Air, Water, and Metal. Ask students to explain why sound can travel through each material and why tightly packed materials can carry the back-and-forth motion more quickly.",
+      "Water vs. air comparison: keep frequency at 440 Hz, amplitude at 1.0, and switch between Air and Water. Discuss why dolphins can call to each other across entire oceans. Ask students to predict which medium a submarine would use to detect other ships.",
+      "Preset investigation: have students test Low Pitch Bass, High Pitch Treble, and Loud vs Quiet. Students record which slider values changed, then write a claim about whether frequency, amplitude, or medium caused the observed effect.",
       "Lightning-and-thunder calculation: tell students light is nearly instant and sound travels 343 m/s. Ask them to count seconds between a flash and thunder clap and estimate distance (seconds × 343 m). Then use the frequency slider at 50 Hz to model the deep, low rumble of thunder vs. 1200 Hz for a sharp crack — connecting the sound type to distance from the storm.",
     ],
     faq: [
@@ -183,7 +192,7 @@ export const k5SoundWaves: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation supports NGSS 1-PS4-1 (plan and conduct investigations to provide evidence that vibrating materials create sound and that sound can make materials vibrate) and 4-PS4-1 (develop a model of waves to describe patterns in terms of amplitude and wavelength, and to show that waves can cause objects to move). The frequency slider directly demonstrates wavelength patterns for PS4-1, while the amplitude slider shows amplitude effects. The medium selector provides evidence for the 1-PS4-1 concept that sound requires a medium. Switching to Vacuum shows what happens when there is no medium — the wave disappears entirely.",
+          "This simulation supports NGSS 1-PS4-1 (plan and conduct investigations to provide evidence that vibrating materials create sound and that sound can make materials vibrate) and 4-PS4-1 (develop a model of waves to describe patterns in terms of amplitude and wavelength, and to show that waves can cause objects to move). The frequency slider directly demonstrates wavelength patterns for PS4-1, while the amplitude slider shows amplitude effects. The medium slider supports discussion of the 1-PS4-1 concept that sound needs matter to travel by comparing air, water, and metal.",
       },
       {
         question: "What is the difference between frequency and pitch?",

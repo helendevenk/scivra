@@ -35,44 +35,34 @@ export const immuneSystem: Experiment = {
 
   parameters: [
     {
-      id: "pathogenCount",
-      label: "Pathogen Count",
-      unit: "",
-      min: 5,
-      max: 50,
-      default: 15,
-      step: 5,
+      id: "pathogenLoad",
+      label: "Pathogen Load",
+      unit: "level",
+      min: 1,
+      max: 3,
+      default: 2,
+      step: 1,
       tier: "free",
     },
     {
-      id: "pathogenVirulence",
-      label: "Pathogen Virulence",
-      unit: "%",
-      min: 10,
-      max: 100,
-      default: 50,
-      step: 10,
+      id: "bCellRate",
+      label: "B Cell Rate",
+      unit: "level",
+      min: 1,
+      max: 3,
+      default: 2,
+      step: 1,
       tier: "free",
     },
     {
-      id: "immuneStrength",
-      label: "Immune Strength",
-      unit: "%",
-      min: 20,
-      max: 100,
-      default: 70,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "vaccinated",
-      label: "Vaccinated (0=No, 1=Yes)",
-      unit: "",
+      id: "memoryCells",
+      label: "Memory Cells",
+      unit: "cells",
       min: 0,
-      max: 1,
+      max: 20,
       default: 0,
       step: 1,
-      tier: "pro",
+      tier: "free",
     },
   ],
 
@@ -101,7 +91,7 @@ export const immuneSystem: Experiment = {
     "The immune system has two main branches. Innate immunity provides immediate, non-specific defense through barriers (skin, mucous membranes), phagocytes (macrophages, neutrophils), and inflammation. Adaptive immunity is antigen-specific and develops over days. When antigen-presenting cells (APCs) display pathogen fragments, helper T cells (CD4+) activate. B cells that recognize the antigen differentiate into plasma cells (producing antibodies) and memory B cells. Cytotoxic T cells (CD8+) kill infected host cells. Antibodies (immunoglobulins) bind antigens via complementarity-determining regions, neutralizing pathogens or marking them for destruction (opsonization). Upon re-exposure, memory cells mount a secondary response that is faster (1–3 days vs 7–14 days) and produces 10–100× more antibodies. Vaccination exploits this by introducing weakened or inactivated antigens to generate memory without disease.",
 
   instructions:
-    "Set the pathogen count and virulence, then press 'Infect' to introduce pathogens. Watch innate immune cells respond first, followed by adaptive B cell activation and antibody production. Toggle vaccination to compare primary vs secondary immune responses. The data panel shows antibody titer, active immune cells, and pathogen clearance rate in real time.",
+    "Use the Pathogen Load, B Cell Rate, and Memory Cells sliders to shape the immune challenge and response speed. Try the Primary Immune Response, Secondary Memory, and Autoimmune Attack presets to compare first exposure, memory-assisted clearance, and misdirected immune activity. Watch antibody titer, immune cell activity, and pathogen clearance change as the simulation runs.",
 
   challenges: [
     {
@@ -147,25 +137,48 @@ export const immuneSystem: Experiment = {
     educationalLevel: "High School",
     teaches: "Immune System and Immunological Memory",
   },
+  htmlControlAliases: {
+    pathogenLoad: "sl-load",
+    bCellRate: "sl-bcell",
+    memoryCells: "sl-mem",
+  },
+  presets: [
+    {
+      id: "0",
+      label: "Primary Immune Response",
+      description:
+        "Starts with no memory cells and a moderate pathogen load so students can observe the slower first exposure response.",
+    },
+    {
+      id: "1",
+      label: "Secondary Memory",
+      description:
+        "Adds memory cells before exposure so students can compare faster antibody production and clearance after re-exposure.",
+    },
+    {
+      id: "2",
+      label: "Autoimmune Attack",
+      description:
+        "Shifts the response toward misdirected immune activity, highlighting how immune defenses can damage self tissue when regulation fails.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "The immune system is a coordinated defense network that distinguishes self from non-self and eliminates pathogens, infected cells, and foreign molecules. It operates in two tiers: innate immunity responds within minutes through non-specific mechanisms — physical barriers, phagocytes (macrophages and neutrophils), the complement system, and inflammation. Adaptive immunity develops over 7–14 days and is antigen-specific: B cells differentiate into plasma cells that secrete targeted antibodies (humoral immunity), while cytotoxic T cells (CD8+) kill infected host cells (cellular immunity). The adaptive system's defining feature is memory — after a primary response, long-lived memory B and T cells persist and mount a secondary response 10–100 times stronger within 1–3 days of re-exposure. Vaccination exploits this by introducing harmless antigens to generate memory without disease. The simulation lets you adjust pathogen load, virulence, immune strength, and vaccination status to watch these tiers compete in real time.",
     parameterExplanations: {
-      pathogenCount:
-        "The number of pathogen units introduced at the start of an infection event, from 5 to 50. A low count (5–10) gives innate defenses time to contain the invasion before adaptive immunity activates; a high count (40–50) can overwhelm the innate response and accelerates the timeline for adaptive B cell activation and antibody production — watch the clearance rate drop sharply as pathogen load approaches 50.",
-      pathogenVirulence:
-        "A percentage (10%–100%) representing how aggressively pathogens evade immune defenses and replicate. At low virulence (~10–20%), phagocytes clear pathogens efficiently before antibody production is required. At high virulence (80–100%), pathogens replicate faster than innate cells can destroy them, making adaptive immunity essential for clearance. Combine maximum virulence with minimum immune strength to observe system failure.",
-      immuneStrength:
-        "The overall functional capacity of the immune system, from 20% (severely immunocompromised) to 100% (fully functional). This parameter scales both innate phagocyte activity and adaptive B/T cell activation speed. At 20% immune strength, even a modest pathogen challenge becomes overwhelming — modeling the clinical scenario of immunosuppressed patients, such as those undergoing chemotherapy or with HIV at advanced stages.",
-      vaccinated:
-        "A binary switch: 0 = unvaccinated (primary response only), 1 = vaccinated (memory cells pre-existing). Setting this to 1 simulates the memory cell pool generated by a prior vaccine or infection. The simulation shows the secondary immune response engaging within 1–3 days rather than the 7–14 day primary response timeline, and producing 10–100× more antibodies — the mechanistic basis of vaccine-derived immunity.",
+      pathogenLoad:
+        "Pathogen Load sets the size of the infection challenge on a three-level scale. Level 1 gives innate defenses time to slow the invader before adaptive immunity dominates. Level 2 creates a balanced case where students can see antigen presentation, B cell activation, antibody production, and clearance overlap. Level 3 introduces a heavier burden, so antibody titer must rise quickly or pathogens persist longer. Use this slider with the Primary Immune Response preset to show why first exposure can feel delayed, then compare the same load under Secondary Memory to see how pre-existing immune memory changes the outcome.",
+      bCellRate:
+        "B Cell Rate controls how quickly activated B cells expand and produce antibodies once the immune system recognizes the antigen. At level 1, antibody titer rises slowly, making the delay between infection and adaptive protection easier to observe. At level 2, the response is moderate and useful for baseline comparisons. At level 3, plasma cell production accelerates, so antibodies bind antigens sooner and pathogen clearance improves. This slider helps students connect clonal expansion to measurable antibody titer: the immune system is not just detecting pathogens, it is amplifying the specific cells that can respond.",
+      memoryCells:
+        "Memory Cells represents the pool of antigen-specific immune cells already available before or during a response. A value near 0 models a primary exposure, where the body must identify the antigen and build a response from scratch. Higher values model prior exposure and immunological memory: memory B cells can reactivate quickly, become plasma cells, and produce antibodies much faster than naive cells. Use the Secondary Memory preset, then lower or raise this slider to test how memory changes the response curve. The comparison makes the biological value of memory visible without relying on a separate vaccination switch.",
     },
     misconceptions: [
       {
         wrong:
           "Vaccines weaken the immune system by overloading it with foreign material.",
         correct:
-          "Vaccines train the adaptive immune system by introducing antigens in a controlled, non-infectious form. The result is a pool of memory B and T cells primed to respond within days of real infection. Far from weakening immunity, vaccination strengthens the secondary response — the simulation shows the vaccinated scenario clearing pathogens roughly 5–7 times faster than the unvaccinated primary response.",
+          "Vaccines train the adaptive immune system by introducing antigens in a controlled, non-infectious form. The result is a pool of memory B and T cells primed to respond within days of real infection. Far from weakening immunity, immune memory strengthens the secondary response — compare low and high Memory Cells settings to see how pre-existing memory can clear pathogens much faster than a primary response.",
       },
       {
         wrong:
@@ -187,17 +200,17 @@ export const immuneSystem: Experiment = {
       },
       {
         wrong:
-          "A strong immune response is always better — higher immune strength always leads to better outcomes.",
+          "A faster or larger immune response is always better.",
         correct:
-          "Dysregulated immune responses cause significant damage. Cytokine storms, autoimmune diseases, and severe allergic reactions all arise from immune hyperactivity directed at harmless or self antigens. The simulation's immuneStrength slider models functional capacity, not simply 'stronger is better' — the goal is a calibrated response proportional to the actual threat.",
+          "Dysregulated immune responses cause significant damage. Cytokine storms, autoimmune diseases, and severe allergic reactions all arise from immune hyperactivity directed at harmless or self antigens. The Autoimmune Attack preset helps show that the goal is a calibrated response proportional to the actual threat, not simply a larger or faster immune reaction in every situation.",
       },
     ],
     teacherUseCases: [
-      "Primary vs. secondary response comparison: run the simulation twice with identical pathogen settings — once unvaccinated, once vaccinated — and have students record time to 50% pathogen clearance and peak antibody titer in both runs. Calculate the fold-difference to quantify the memory advantage, directly addressing AP Bio 8.C.1.",
-      "Overwhelm threshold investigation: hold immune strength at 50% and increase pathogen virulence from 10% to 100% in 20% steps. Record whether the pathogen is cleared within the simulation window at each virulence level. Identify the tipping point and discuss how this maps to clinical infection severity and bacterial load thresholds.",
+      "Primary vs. secondary response comparison: run the Primary Immune Response preset, then the Secondary Memory preset with the same Pathogen Load. Have students record time to 50% pathogen clearance and peak antibody titer in both runs. Calculate the fold-difference to quantify the memory advantage, directly addressing AP Bio 8.C.1.",
+      "Overwhelm threshold investigation: keep B Cell Rate at level 2 and increase Pathogen Load from 1 to 3. Record whether the pathogen is cleared within the simulation window at each level. Identify the tipping point and discuss how this maps to clinical infection severity and bacterial load thresholds.",
       "Antibiotic misconception probe: before the simulation, ask students 'Would an antibiotic help a person in this simulation?' Record answers. After the simulation reveals the innate and adaptive mechanisms, return to the question and ask what structural target an antibiotic would need to affect viral pathogens (answer: none exist).",
-      "Immunocompromised patient scenario: set immune strength to 30% with moderate pathogen count and virulence. Observe the outcome, then discuss the clinical relevance to HIV-positive patients, transplant recipients on immunosuppressants, and cancer patients in chemotherapy — ties to AP Bio 8.A.1.",
-      "Herd immunity discussion extension: after running the individual vaccination comparison, present the concept that when the fraction of vaccinated individuals in a population is high enough, unvaccinated individuals are protected because pathogen spread is interrupted. Ask students what immune mechanism makes this possible (answer: rapid antibody production from memory cells limits transmission time per host).",
+      "Immunocompromised patient scenario: set B Cell Rate to level 1 with Pathogen Load at level 2 or 3. Observe the outcome, then discuss the clinical relevance to HIV-positive patients, transplant recipients on immunosuppressants, and cancer patients in chemotherapy — ties to AP Bio 8.A.1.",
+      "Autoimmunity discussion extension: run the Autoimmune Attack preset and ask students to distinguish protective antigen-specific immunity from dysregulated immune activity directed at self tissue. Connect the outcome to why immune responses require checkpoints, tolerance, and proportional feedback.",
     ],
     faq: [
       {
@@ -228,7 +241,7 @@ export const immuneSystem: Experiment = {
       {
         question: "Can the immune system fail even at high immune strength settings?",
         answer:
-          "Yes. At maximum pathogen virulence (100%) and count (50), even high immune strength may not clear the infection within the simulation window, because pathogen replication outpaces immune activation speed. This reflects real biology: some pathogens have evolved mechanisms to evade phagocytosis, suppress cytokine signaling, or mutate surface antigens faster than adaptive immunity can track them.",
+          "Yes. At high Pathogen Load with slow B Cell Rate and few Memory Cells, the immune response may not clear the infection within the simulation window because pathogen growth outpaces immune activation speed. This reflects real biology: some pathogens have evolved mechanisms to evade phagocytosis, suppress cytokine signaling, or mutate surface antigens faster than adaptive immunity can track them.",
       },
     ],
   },

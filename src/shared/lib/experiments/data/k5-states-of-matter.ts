@@ -32,6 +32,16 @@ export const k5StatesOfMatter: Experiment = {
       step: 1,
       tier: "free",
     },
+    {
+      id: "pressure",
+      label: "Pressure",
+      unit: "atm",
+      min: 1,
+      max: 50,
+      default: 10,
+      step: 1,
+      tier: "free",
+    },
   ],
 
   formulas: [
@@ -49,7 +59,7 @@ export const k5StatesOfMatter: Experiment = {
     "Matter exists in three main states: solid, liquid, and gas. In a solid, particles are packed tightly and vibrate in place — the substance has a definite shape and volume. In a liquid, particles can flow past each other — the substance has definite volume but takes the shape of its container. In a gas, particles move freely and fast — the substance has no definite shape or volume. Heating gives particles more energy; cooling takes it away. The temperature at which a solid becomes liquid is the melting point; the temperature at which liquid becomes gas is the boiling point. Different materials have different melting/boiling points.",
 
   instructions:
-    "Drag the Temperature slider (0-500 K) to heat or cool a sample of water, and watch molecules vibrate (solid), flow (liquid), or zoom (gas). Or click one of the three preset buttons — Solid Ice (80 K), Liquid Water (300 K), or Steam Gas (450 K) — to jump straight to that state. Pressure adjusts automatically with the presets to show realistic conditions for each phase.",
+    "Use the Temperature slider (0-500 K) to heat or cool the water. Use the Pressure slider (1-50 atm) to squeeze the sample more or less. Try the three presets: ❄️ Solid Ice, 💧 Liquid Water, and ♨️ Steam Gas.",
 
   challenges: [
     {
@@ -99,28 +109,29 @@ export const k5StatesOfMatter: Experiment = {
   },
   htmlControlAliases: {
     temperature: "tempSlider",
+    pressure: "pressSlider",
   },
   presets: [
     {
       id: "solid",
-      label: "Solid Ice (80 K)",
+      label: "❄️ Solid Ice (80 K)",
       description:
-        "Very cold sample at 80 K — well below water's freezing point. Molecules are locked in a rigid crystal pattern; the substance behaves as a solid.",
-      paramValues: { temperature: 80 },
+        "A very cold sample. The molecules stay close together and mostly wiggle in place, so the water acts like solid ice.",
+      paramValues: { temperature: 80, pressure: 10 },
     },
     {
       id: "liquid",
-      label: "Liquid Water (300 K)",
+      label: "💧 Liquid Water (300 K)",
       description:
-        "Room-temperature sample at 300 K (about 27 °C). Molecules slide past each other with enough energy to flow but still attract each other; the substance behaves as a liquid.",
-      paramValues: { temperature: 300 },
+        "A room-temperature sample. The molecules stay near each other but can slide around, so the water flows as a liquid.",
+      paramValues: { temperature: 300, pressure: 10 },
     },
     {
       id: "gas",
-      label: "Steam Gas (450 K)",
+      label: "♨️ Steam Gas (450 K)",
       description:
-        "Hot sample at 450 K (about 177 °C). Molecules have enough energy to break free of each other and zoom around independently; the substance behaves as a gas.",
-      paramValues: { temperature: 450 },
+        "A hot sample. The molecules move fast and spread out, so the water acts like steam gas.",
+      paramValues: { temperature: 450, pressure: 5 },
     },
   ],
   contentSections: {
@@ -128,7 +139,9 @@ export const k5StatesOfMatter: Experiment = {
       "Everything around you is made of tiny, tiny particles — atoms or molecules — far too small to see. How those molecules behave depends on how much heat energy they have. When they are cold and do not have much energy, they huddle together tightly and barely move. That gives us a solid, like an ice cube. When they warm up and get more energy, they can slide past each other and flow. That gives us a liquid, like the water in your glass. When they get even more energy, they zoom around freely in all directions and spread out to fill whatever space they are in. That gives us a gas, like the steam rising from a hot pot of soup. Matter can change between these three states just by adding or taking away heat. Melting is when a solid warms up and turns into a liquid. Boiling is when a liquid heats up so much it turns into a gas. Freezing is when a liquid cools down and turns into a solid. Every day you see all three states: ice in your freezer is solid water, the water in your cup is liquid, and the water from a hot shower produces both invisible water vapor (true gas) and the white misty cloud you see — which is actually tiny liquid droplets that formed when the hot vapor cooled in the air.",
     parameterExplanations: {
       temperature:
-        "Temperature controls how hot or cold the water sample is, measured in kelvins (K). Kelvin is the science temperature scale where 0 K is the coldest possible — colder than anything in nature. The slider runs from 0 K to 500 K. Important moments for water: 273 K is freezing (water turns to ice), and 373 K is boiling (water turns to steam). Drag below 273 K and watch molecules slow down and lock into a solid pattern; drag above 373 K and watch them break free and zoom around as a gas. The three preset buttons jump you to a Solid (80 K), a Liquid (300 K, about room temperature), or a Gas (450 K, hotter than boiling). On the Celsius scale you may know from weather reports, 0 K = -273 °C and 273 K = 0 °C.",
+        "Temperature tells how hot or cold the water is. It is measured in kelvins, or K. A low temperature gives molecules less energy, so they slow down and stay close together as solid ice. A middle temperature lets molecules slide around as liquid water. A high temperature gives molecules more energy, so they move fast and spread out as steam gas. Try moving the slider slowly from 0 K to 500 K. Watch how the same water molecules change the way they move.",
+      pressure:
+        "Pressure tells how hard the sample is being squeezed. It is measured in atm, short for atmosphere. Low pressure is a gentle squeeze. High pressure is a stronger squeeze. When pressure goes up, molecules are pushed closer together. That can make it harder for them to spread out like a gas. Use the Pressure slider with the Temperature slider: first set a temperature, then change only pressure and look for what changes. The molecules are still water molecules; pressure only changes how crowded they feel.",
     },
     misconceptions: [
       {
@@ -153,11 +166,11 @@ export const k5StatesOfMatter: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Click the Solid Ice preset (80 K), then drag the Temperature slider slowly up to 500 K. Have students call out 'melting' when they see the transition near 273 K and 'boiling' near 373 K. Record both transition temperatures — directly supporting 2-PS1-1 (classify materials by observable properties).",
-      "Cycle through all three preset buttons in order — Solid Ice → Liquid Water → Steam Gas — and have students describe what they see the molecules doing in each state (vibrating in place / sliding past each other / zooming freely). Pair this with vocabulary practice: solid, liquid, gas.",
-      "Use the Solid Ice preset (80 K) to introduce the kelvin scale: 0 K is the coldest possible, water freezes at 273 K, water boils at 373 K. Compare these to Celsius equivalents (-273 °C, 0 °C, 100 °C). This helps 5th graders connect a science temperature scale to the everyday Celsius they know — supporting 5-PS1-3 measurement skills.",
-      "Have students predict the state of water at 200 K, 350 K, and 400 K before dragging the slider, then check their predictions. Discuss why predictions were right or wrong using the freezing point (273 K) and boiling point (373 K) as anchor values.",
-      "After exploring the presets, ask students why each preset uses a different temperature: 80 K for ice (well below freezing), 300 K for liquid (above freezing, below boiling), 450 K for gas (above boiling). Reinforces that the same substance — water — exists in different states based on temperature alone.",
+      "Use the ❄️ Solid Ice, 💧 Liquid Water, and ♨️ Steam Gas presets as a quick compare-and-contrast routine. Students describe particle spacing and motion, then connect observations to solid, liquid, and gas vocabulary.",
+      "Have students keep Pressure at 10 atm while moving Temperature from 0 K to 500 K. Ask them to mark where the model changes state and use evidence from particle motion to support 2-PS1-1 discussion.",
+      "Have students keep Temperature at 300 K while moving Pressure from 1 atm to 50 atm. Students record what stays the same, what changes, and how pressure affects how crowded the molecules appear.",
+      "Run a prediction check at 80 K, 300 K, and 450 K. Before selecting each preset, students predict the state of matter, then revise their explanations after observing the model.",
+      "Use the two sliders for a controlled-variable practice task: change only Temperature first, then change only Pressure. Students explain why changing one variable at a time makes observations easier to trust.",
     ],
     faq: [
       {
@@ -183,7 +196,7 @@ export const k5StatesOfMatter: Experiment = {
       {
         question: "Can something go straight from solid to gas without becoming liquid first?",
         answer:
-          "Yes, and it is called sublimation! Dry ice (solid carbon dioxide) does this at normal air pressure — it turns directly from a solid into carbon dioxide gas without ever becoming liquid. That is why dry ice does not leave a puddle. Snow and ice can also slowly sublimate on a very cold but sunny day, which is why a pile of snow can shrink on a bright winter day even when the temperature never gets above freezing. In the simulation, most substances follow the solid to liquid to gas path, but in real nature sublimation happens whenever the pressure and temperature conditions skip past the liquid range.",
+          "Yes, and it is called sublimation! Dry ice does this at normal air pressure: it turns from a solid into a gas without making a liquid puddle. Snow and ice can also slowly sublimate on a very cold, sunny day. This model focuses on solid, liquid, and gas changes you can compare with the Temperature and Pressure sliders. In nature, pressure and temperature together help decide which state a substance is in.",
       },
     ],
   },

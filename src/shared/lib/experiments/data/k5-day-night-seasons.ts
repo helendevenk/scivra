@@ -23,43 +23,23 @@ export const k5DayNightSeasons: Experiment = {
 
   parameters: [
     {
-      id: "earthTilt",
+      id: "sliderTilt",
       label: "Axial Tilt",
       unit: "°",
       min: 0,
-      max: 45,
+      max: 90,
       default: 23.5,
       step: 0.5,
       tier: "free",
     },
     {
-      id: "orbitPosition",
-      label: "Earth's Position in Orbit",
-      unit: "°",
-      min: 0,
-      max: 360,
-      default: 0,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "latitude",
-      label: "Observer Latitude",
-      unit: "°N",
-      min: -90,
-      max: 90,
-      default: 45,
-      step: 5,
-      tier: "pro",
-    },
-    {
-      id: "rotationSpeed",
+      id: "sliderRotSpeed",
       label: "Rotation Speed",
       unit: "×",
-      min: 1,
-      max: 50,
-      default: 10,
-      step: 1,
+      min: 0.1,
+      max: 5,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
   ],
@@ -75,7 +55,7 @@ export const k5DayNightSeasons: Experiment = {
     "Earth rotates on its axis once every 24 hours, causing day and night. The side facing the Sun experiences day; the opposite side experiences night. Earth also revolves around the Sun once every 365.25 days. Earth's axis is tilted at 23.5° relative to its orbital plane. This tilt causes seasons: when the Northern Hemisphere tilts toward the Sun (summer), it receives more direct sunlight and has longer days. When tilted away (winter), it receives indirect, weaker sunlight and shorter days. At the equinoxes (March and September), day and night are approximately equal everywhere. The distance from the Sun is NOT the primary cause of seasons — Earth is actually closest to the Sun in January (during Northern Hemisphere winter).",
 
   instructions:
-    "Use the orbit position slider to move Earth around the Sun. Watch how the Northern Hemisphere receives more direct sunlight in summer (June position) and less in winter (December). See day and night by watching Earth rotate. Change the axial tilt to 0° — seasons disappear! Increase tilt to see more extreme seasons.",
+    "Use the Axial Tilt slider to lean Earth more or less, and use the Rotation Speed slider to make day and night move slower or faster. Try the Summer Solstice, Winter Solstice, and Equinox presets to compare long days, short days, and nearly even day and night.",
 
   challenges: [
     {
@@ -122,18 +102,35 @@ export const k5DayNightSeasons: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Day, Night, and Seasons",
   },
+  htmlControlAliases: { earthTilt: "sliderTilt", rotationSpeed: "sliderRotSpeed" },
+  presets: [
+    {
+      id: "summer",
+      label: "Summer Solstice",
+      description:
+        "The Summer Solstice shows the Northern Hemisphere leaning toward the Sun. Days are longest there, and sunlight hits more directly.",
+    },
+    {
+      id: "winter",
+      label: "Winter Solstice",
+      description:
+        "The Winter Solstice shows the Northern Hemisphere leaning away from the Sun. Days are shortest there, and sunlight is weaker.",
+    },
+    {
+      id: "equinox",
+      label: "Equinox",
+      description:
+        "The Equinox shows a time when day and night are nearly the same length. The Sun lights the two hemispheres more evenly.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Have you ever wondered why the sky gets dark at night? Or why summer is warm and winter is cold? It all comes down to Earth! Earth is like a giant spinning ball. It spins around once every 24 hours. When your part of Earth faces the Sun, it is daytime. When it spins away from the Sun, it gets dark — that is nighttime. Earth also moves around the Sun in a big circle. That trip takes one whole year. Here is the cool part: Earth tilts a little to one side as it moves. When your part of Earth tilts toward the Sun, the sunlight hits more directly and feels stronger — that is summer! When your part tilts away, the sunlight is weaker and spread out — that is winter. The seasons happen because of this tilt, not because Earth is closer or farther from the Sun. Try the sliders and watch it happen!",
     parameterExplanations: {
-      earthTilt:
-        "This slider changes how much Earth is tilted to one side. Earth usually tilts about 23.5 degrees. When you set the tilt to 0 degrees, the seasons disappear — each place gets about the same yearly sunlight pattern, but the equator still gets more direct light than the poles. Push the tilt higher and the seasons get more extreme — summers get hotter and winters get colder. Try it and see!",
-      orbitPosition:
-        "This slider moves Earth around the Sun. Think of it like moving a ball around a lamp. At 0 degrees, Earth is at one spot in its trip. At 180 degrees, it is on the other side. Watch how the light hitting the Northern Hemisphere changes as you move Earth around — that shows you the seasons changing through the year.",
-      latitude:
-        "This slider (Pro) changes where on Earth you are watching from. Latitude tells us how far north or south of the middle of Earth we are. If you pick a number near 90, you are near the North Pole. Near 0 means you are near the equator, right in the middle. People near the poles notice the biggest difference between summer and winter days.",
-      rotationSpeed:
-        "This slider speeds up how fast Earth spins. In real life, Earth takes 24 hours to spin once. But that would take too long to watch! Turn this up to make Earth spin faster so you can see day and night switching quickly. At speed 10, it is much faster than real life.",
+      sliderTilt:
+        "Axial Tilt means how much Earth leans to one side. Real Earth leans about 23.5 degrees. That lean is why seasons happen. When the top half of Earth leans toward the Sun, that half gets stronger sunlight and longer days, so it is summer there. When it leans away, sunlight spreads out more and days are shorter, so it is winter. Try moving the slider to 0 degrees. The seasons become much weaker because Earth is not leaning toward or away from the Sun. Then move it higher and watch the seasons become stronger.",
+      sliderRotSpeed:
+        "Rotation Speed changes how quickly Earth spins in the model. In real life, Earth takes one full day, or 24 hours, to spin around once. That spin gives us morning, afternoon, evening, and night. A slow setting makes it easier to watch one place move from sunlight into darkness. A faster setting helps you see the day and night pattern repeat again and again. This slider does not make real Earth faster. It only changes the model so you can notice the pattern more easily.",
     },
     misconceptions: [
       {
@@ -158,11 +155,11 @@ export const k5DayNightSeasons: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set orbitPosition to 90 degrees (summer) and show students where the Northern Hemisphere faces the Sun; then move to 270 degrees (winter) and compare the angle of sunlight hitting the same region.",
-      "Set earthTilt to 0 degrees and ask students to predict what seasons would be like — then discuss why tilt matters for life on Earth.",
-      "Use rotationSpeed at 20 to demonstrate a full day-night cycle in class; pause and ask 'What time of day is it on this side of Earth right now?'",
-      "Set latitude to 90 degrees (North Pole) and orbitPosition to 90 degrees to show the Midnight Sun concept — the Sun never sets in polar summer.",
-      "Compare orbitPosition 0 and 180 with earthTilt at 23.5 to discuss how the Southern Hemisphere has opposite seasons to the Northern Hemisphere.",
+      "Use the Summer Solstice and Winter Solstice presets to compare sunlight angle, day length, and seasonal evidence for NGSS 1-ESS1-1 and 5-ESS1-2 discussions.",
+      "Set the Axial Tilt slider to 0 degrees, have students predict what will happen to seasonal differences, then return it to 23.5 degrees and compare observations.",
+      "Use a low Rotation Speed setting to pause during sunrise, noon, sunset, and night, asking students to describe the pattern they observe.",
+      "Use the Equinox preset to support a short claim-evidence-reasoning prompt about why day and night are nearly equal at that time.",
+      "Have students compare the three presets and explain why opposite hemispheres can have opposite seasons using visible tilt and sunlight evidence.",
     ],
     faq: [
       {
@@ -183,7 +180,7 @@ export const k5DayNightSeasons: Experiment = {
       {
         question: "What would happen if Earth did not tilt at all?",
         answer:
-          "If Earth had no tilt, there would be much less seasonal change! There would be no seasons as we know them. There would still be different climates because the equator gets more direct sunlight than the poles, but nothing would change from month to month. We would not have the changes in day length we see through the year either. Many animals and plants depend on seasonal changes to know when to grow, migrate, or hibernate, so life on Earth would look very different. You can try this in the simulation by setting earthTilt to 0 degrees.",
+          "If Earth had no tilt, there would be much less seasonal change! There would be no seasons as we know them. There would still be different climates because the equator gets more direct sunlight than the poles, but the big month-to-month changes would be much smaller. We would not have the same changes in day length through the year either. Many animals and plants depend on seasonal changes to know when to grow, move, or rest, so life on Earth would look very different. You can try this in the simulation by setting the Axial Tilt slider to 0 degrees.",
       },
       {
         question: "Why does the North Pole have months of darkness in winter?",

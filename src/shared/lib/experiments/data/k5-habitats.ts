@@ -15,13 +15,12 @@ export const k5Habitats: Experiment = {
   tags: ["habitats", "ecosystems", "animal adaptations", "desert", "ocean", "forest", "K-5 biology"],
   difficulty: "beginner",
   parameters: [
-    { id: "habitat", label: "Habitat (0=desert, 1=ocean, 2=forest, 3=arctic, 4=grassland)", unit: "", min: 0, max: 4, default: 2, step: 1, tier: "free" },
-    { id: "temperature", label: "Temperature", unit: "°C", min: -30, max: 50, default: 20, step: 5, tier: "free" },
-    { id: "rainfall", label: "Annual Rainfall", unit: "cm", min: 0, max: 300, default: 100, step: 10, tier: "free" },
+    { id: "temperature", label: "Temperature", unit: "°C", min: -40, max: 50, default: 25, step: 1, tier: "free" },
+    { id: "rainfall", label: "Annual Rainfall", unit: "mm", min: 0, max: 4000, default: 1500, step: 1, tier: "free" },
   ],
   formulas: [],
   theory: "A habitat is the natural home of an animal or plant. Different habitats have different conditions: temperature, rainfall, sunlight, and available food. Animals have adaptations that help them survive in their habitat. Desert animals (camel, rattlesnake) conserve water and tolerate heat. Ocean animals (dolphin, clownfish) breathe underwater or hold breath for long periods. Forest animals (deer, owl) use camouflage among trees. Arctic animals (polar bear, penguin) have thick fur/feathers and fat layers for insulation. Grassland animals (zebra, lion) are adapted for open spaces. When habitats change (climate, human activity), animals must adapt, migrate, or face extinction.",
-  instructions: "Select a habitat to see its typical animals, climate, and landscape. Adjust temperature and rainfall to see how animals respond to changing conditions. Drag animals between habitats to learn about adaptations.",
+  instructions: "Use the Temperature and Rainfall sliders to change the climate. Try the Tropical Rainforest, Arctic Tundra, and Sahara Desert presets to compare how heat, cold, dryness, and lots of rain shape animal homes.",
   challenges: [
     { id: "kh-c1", question: "Why can't a polar bear survive in the desert?", hint: "Its thick fur and fat layer (insulation for -40°C) would cause overheating in desert heat. It also can't find seals to eat!", tier: "free" },
     { id: "kh-c2", question: "What adaptation helps a cactus survive in the desert?", hint: "Thick waxy skin to prevent water loss, spines instead of leaves (less surface area), and a large root system to absorb rare rainfall", tier: "free" },
@@ -32,16 +31,20 @@ export const k5Habitats: Experiment = {
   seoTitle: "Animal Habitats for Kids | Scivra K-5 Science",
   seoKeywords: ["animal habitats for kids", "ecosystem simulation", "habitat adaptations interactive", "K-5 biology"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Elementary School", teaches: "Animal Habitats" },
+  htmlControlAliases: { temperature: "tempSlider", rainfall: "rainSlider" },
+  presets: [
+    { id: "rainforest", label: "🌴 Tropical Rainforest", description: "A warm, very rainy biome with tall plants, many insects, birds, and other animals that use trees for food and shelter.", paramValues: { temperature: 28, rainfall: 3000 } },
+    { id: "tundra", label: "🧊 Arctic Tundra", description: "A very cold biome with little rain, frozen ground, low plants, and animals that need warm coats or other cold-weather adaptations.", paramValues: { temperature: -20, rainfall: 250 } },
+    { id: "desert", label: "🏜️ Sahara Desert", description: "A hot, dry biome with very little rain, where plants and animals must save water and handle strong sunlight.", paramValues: { temperature: 38, rainfall: 50 } },
+  ],
   contentSections: {
     whatIsIt:
       "A habitat is the place where an animal lives. It is like the animal's home neighborhood. A habitat gives an animal everything it needs: food, water, shelter, and the right temperature. Different animals need very different kinds of homes. A camel lives in the hot, dry desert and can go many days without water. A polar bear lives in the icy cold of the arctic and has thick blubber and fur to stay warm. An owl lives in the forest where tall trees give it places to nest and hunt. A dolphin lives in the ocean and can hold its breath for a long time. A zebra lives on the grassy open plains of the grassland. Each animal's body and behavior are shaped to fit its habitat. In this simulation you can explore five different habitats — desert, ocean, forest, arctic, and grassland. You can change the temperature and rainfall to see how conditions affect which animals can survive there. You can even try moving animals to the wrong habitat to see why they struggle.",
     parameterExplanations: {
-      habitat:
-        "This control selects which habitat is shown. Choose 0 for desert (hot and dry), 1 for ocean (salty water), 2 for forest (trees and shade), 3 for arctic (freezing cold and icy), or 4 for grassland (open plains with grass). Each habitat shows different animals that are adapted to live there.",
       temperature:
-        "This slider changes the temperature from -30°C (very cold, like the arctic in winter) to 50°C (very hot, like the desert on a summer day). Many animals can only survive in a certain temperature range. Watch what happens to the animals when you make the habitat too hot or too cold for them.",
+        "Temperature means how warm or cold the air is. This slider goes from -40°C, which is colder than most freezers, to 50°C, which is hotter than a very hot desert day. Plants and animals need temperatures their bodies can handle. A polar animal may stay warm in freezing air, but it can get too hot in a desert. A desert animal may save water in heat, but it may not survive deep cold. Try changing only Temperature while Rainfall stays the same. Watch how the habitat begins to feel like a different home for living things.",
       rainfall:
-        "This slider sets how much rain falls each year, from 0 cm (bone dry desert) to 300 cm (very rainy rainforest). Rainfall affects how many plants grow, which in turn affects what animals can find food and shelter. Low rainfall means fewer plants and a tougher life for plant-eaters.",
+        "Rainfall means how much water falls from the sky in a year. This slider goes from 0 mm, which is almost no rain, to 4000 mm, which is very, very rainy. More rain usually helps more plants grow. Plants give animals food, shade, hiding places, and nesting spots. Very little rain makes life harder because there may be fewer plants and less drinking water. A desert can be hot and dry, while a tundra can be cold and dry. Try keeping Temperature the same and changing only Rainfall to see how water changes the habitat.",
     },
     misconceptions: [
       {
@@ -66,11 +69,11 @@ export const k5Habitats: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set habitat to 3 (arctic) and temperature to -20°C. Ask students to name two things a polar bear has that help it survive there, then change temperature to 45°C and discuss why it would struggle.",
-      "Compare habitat 0 (desert) at rainfall 5 cm with habitat 2 (forest) at rainfall 150 cm. Have students list the different plants and animals visible and explain why the plants are so different.",
-      "Challenge students: set habitat to 1 (ocean) and then lower temperature to -2°C (about where polar seawater can freeze). Ask what would happen to ocean animals if the water approached freezing conditions.",
-      "Use rainfall as a drought simulation: start at 200 cm in the grassland (habitat 4), then reduce to 10 cm. Have students predict and then observe which animals and plants are most affected.",
-      "Ask students to pick their favorite animal and find the habitat setting where it appears happiest. They then write one sentence explaining why that habitat suits the animal.",
+      "Use the Tropical Rainforest preset to introduce warm, wet conditions, then have students identify visible evidence of plant growth and animal shelter.",
+      "Compare the Arctic Tundra and Sahara Desert presets to show that low rainfall can occur in both cold and hot environments.",
+      "Keep Rainfall constant while changing Temperature in small steps, and ask students to make claims about which animals seem best suited to the new conditions.",
+      "Keep Temperature constant while lowering Rainfall to model drought, then have students record how plant cover and animal survival cues change.",
+      "Run a three-preset CER discussion where students use Temperature and Rainfall values as evidence for why each biome supports different living things.",
     ],
     faq: [
       {

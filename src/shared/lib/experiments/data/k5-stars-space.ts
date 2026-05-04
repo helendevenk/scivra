@@ -32,23 +32,23 @@ export const k5StarsSpace: Experiment = {
 
   parameters: [
     {
-      id: "starBrightness",
-      label: "Star Brightness",
-      unit: "%",
-      min: 10,
-      max: 100,
-      default: 70,
-      step: 5,
+      id: "starCount",
+      label: "Stars",
+      unit: "stars",
+      min: 100,
+      max: 3000,
+      default: 500,
+      step: 50,
       tier: "free",
     },
     {
-      id: "viewDistance",
-      label: "Viewing Distance",
-      unit: "light-years",
-      min: 1,
-      max: 500,
-      default: 50,
-      step: 10,
+      id: "zoom",
+      label: "Zoom",
+      unit: "x",
+      min: 0.3,
+      max: 5,
+      default: 1,
+      step: 0.1,
       tier: "free",
     },
   ],
@@ -66,7 +66,7 @@ export const k5StarsSpace: Experiment = {
     "Stars are enormous balls of hot gas (mostly hydrogen and helium) that produce light and heat through nuclear fusion. Our Sun is the closest star to Earth. Stars appear as tiny points of light because they are incredibly far away. Some stars look brighter than others — this depends on both their actual size and how far they are from us. A very large star far away might look dimmer than a smaller star that is closer. Groups of stars that form patterns in the sky are called constellations. Ancient people used constellations to navigate and tell stories. Our solar system has eight planets orbiting the Sun, each at a different distance.",
 
   instructions:
-    "Adjust Star Brightness to see how bright different stars appear in the night sky. Change the Viewing Distance to understand why faraway stars look dimmer. Click on constellations to learn their names and stories. Compare the planets in our solar system by size and distance from the Sun.",
+    "Use the Stars slider to choose how many stars fill the sky, and use the Zoom slider to look close up or far out. Try the Night Sky, Milky Way Core, and Nearby Stars presets to compare a calm sky, a crowded galaxy view, and a smaller group of close stars.",
 
   challenges: [
     {
@@ -106,14 +106,35 @@ export const k5StarsSpace: Experiment = {
     educationalLevel: "Elementary School",
     teaches: "Stars, Constellations, and the Solar System",
   },
+  htmlControlAliases: { starCount: "sliderCount", zoom: "sliderZoom" },
+  presets: [
+    {
+      id: "night",
+      label: "Night Sky",
+      description:
+        "A clear night sky with a comfortable number of stars. Use it to start observing star patterns and to compare how the sky changes when more or fewer stars are shown.",
+    },
+    {
+      id: "milkyWay",
+      label: "Milky Way Core",
+      description:
+        "A crowded star field like looking toward the bright center of our galaxy. This preset helps students notice that some parts of space can look much more packed with stars.",
+    },
+    {
+      id: "nearby",
+      label: "Nearby Stars",
+      description:
+        "A closer view with fewer stars, like focusing on stars near our part of space. Use it to talk about how zooming changes what we can observe.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "On a clear night, away from bright city lights, you can look up and see thousands of tiny points of light scattered across the sky. Those are stars! A star is a huge, very hot ball of glowing gas. Our Sun is actually a star — it just looks so much bigger and brighter because it is much closer to us than any other star. All those other stars are so far away that even at the speed of light it would take years to reach the nearest one. Some stars look brighter than others. That can happen for two reasons: the star is really big and powerful, or the star is closer to Earth. A small star close by can look just as bright as a huge star far away. Long ago, people connected the stars into dot-to-dot pictures called constellations. Different cultures around the world made up stories about these star patterns. Today we still use constellations to find our way around the night sky. Our solar system — the Sun and the eight planets that travel around it — is just one tiny part of a galaxy containing hundreds of billions of stars.",
     parameterExplanations: {
-      starBrightness:
-        "This slider changes how bright the stars appear on screen. In real life, star brightness depends on both how big and hot a star is and how far it is from Earth. Set this to a low number like 10 percent to see only the brightest stars — the ones you can spot even near city lights. Turn it up to 100 percent to see many more stars, like being far from any city on a very dark night. Try both and notice how many more stars appear in the darker sky.",
-      viewDistance:
-        "This slider changes how far away from Earth you are looking. When you set a small distance like 1 to 10 light-years, you see only the very nearest stars — just a few. As you increase the distance to 200 or 500 light-years, you see many more stars because you are looking at a bigger region of space. Notice that stars farther away tend to look dimmer, even if some of them are actually larger and hotter than closer stars.",
+      starCount:
+        "Star Count changes how many stars you can see in the sky. A low number shows a quiet sky with only a few bright points. A high number fills the screen with many stars, more like a very dark place far from city lights. Try moving this slider slowly. Ask yourself: does it become easier or harder to find patterns? Then compare the Night Sky and Milky Way Core presets. This helps you notice that space is huge, and some sky views can look much more crowded than others.",
+      zoom:
+        "Zoom changes how close the star view looks. A small zoom number lets you see a wide part of the sky at once. A big zoom number makes the view feel closer, so stars spread out and small groups are easier to study. Try changing only Zoom while leaving Star Count the same. You are not changing the real stars; you are changing your view, like using binoculars or stepping back from a picture. Then try Nearby Stars to focus on a simpler view.",
     },
     misconceptions: [
       {
@@ -138,10 +159,11 @@ export const k5StarsSpace: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set viewDistance to 1 light-year and then slowly increase to 500 light-years; ask students to count roughly how many stars appear and discuss why the number grows so much.",
-      "Set starBrightness to 30 percent to simulate a city sky, then increase to 90 percent to show a dark rural sky; discuss how light pollution affects what we can observe.",
-      "Use the constellation viewer to show Orion and Big Dipper; have students sketch the patterns and make up their own story about the shape they see.",
-      "Set viewDistance to 50 light-years and ask students which stars they think might be nearest to Earth — this leads to a discussion of light-years as a unit of distance.",
+      "Begin with the Night Sky preset and ask students to describe what they observe before changing any controls, building a shared evidence list for NGSS 5-ESS1-1.",
+      "Move the Stars slider from 100 to 3000 while students record how the number of visible stars changes the patterns they can notice.",
+      "Keep Stars at 500 and move the Zoom slider from 0.3 to 5 so students can compare a wide view with a close view using precise observation language.",
+      "Use the Milky Way Core preset to discuss why some sky regions appear crowded, then have students compare it with the Nearby Stars preset.",
+      "Ask students to choose one preset, cite the Star Count and Zoom values as evidence, and explain how the view supports a claim about observing stars from Earth.",
     ],
     faq: [
       {
