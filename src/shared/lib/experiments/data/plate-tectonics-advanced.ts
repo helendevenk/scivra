@@ -31,36 +31,9 @@ export const plateTectonicsAdvanced: Experiment = {
   difficulty: "advanced",
 
   parameters: [
-    {
-      id: "plateSpeed",
-      label: "Plate Speed",
-      unit: "cm/yr",
-      min: 1,
-      max: 20,
-      default: 5,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "boundaryType",
-      label: "Boundary Type",
-      unit: "",
-      min: 1,
-      max: 3,
-      default: 1,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "mantleTemp",
-      label: "Mantle Temp",
-      unit: "°C",
-      min: 1000,
-      max: 4000,
-      default: 2500,
-      step: 100,
-      tier: "free",
-    },
+    { id: "plateSpeed", label: "Plate Speed", unit: "cm/yr", min: 1, max: 20, default: 5, step: 0.5, tier: "free" },
+    { id: "subAngle", label: "Subduction Angle", unit: "°", min: 10, max: 80, default: 45, step: 1, tier: "free" },
+    { id: "crustalAge", label: "Crustal Age", unit: "Ma", min: 0, max: 200, default: 0, step: 1, tier: "free" },
   ],
 
   formulas: [
@@ -108,6 +81,12 @@ export const plateTectonicsAdvanced: Experiment = {
   estimatedTime: 30,
   relatedExperiments: ["seismic-waves", "rock-cycle"],
   htmlPath: "/experiments/earth-science/plate-tectonics-advanced.html",
+  htmlControlAliases: { plateSpeed: "oninput:setPlateSpeed", subAngle: "oninput:setSubAngle", crustalAge: "oninput:setCrustalAge" },
+  presets: [
+    { id: "loadPreset:pacific", label: "Pacific Ring of Fire", description: "Fast-moving Pacific plate (7 cm/yr) with steep 45° subduction angle." },
+    { id: "loadPreset:atlantic", label: "Mid-Atlantic Ridge Spreading", description: "Slow 2.5 cm/yr spreading at mid-ocean ridge, young oceanic crust (0 Ma)." },
+    { id: "loadPreset:india", label: "India-Asia Collision", description: "Continental collision at 5 cm/yr with high crustal age building the Himalayas." },
+  ],
 
   seoTitle: "Plate Tectonics 3D Simulation | Scivra Earth Science",
   seoKeywords: [
@@ -127,12 +106,10 @@ export const plateTectonicsAdvanced: Experiment = {
     whatIsIt:
       "Plate tectonics is the unifying theory of Earth science: Earth's rigid outer shell (the lithosphere) is broken into about a dozen major and minor plates — including seven commonly classified as major plates — that move relative to one another at rates of 1–10 cm/yr — about as fast as a fingernail grows. Where plates pull apart, magma fills the gap and builds new ocean floor at mid-ocean ridges. Where plates converge, the denser oceanic plate dives beneath its neighbor in a subduction zone, forming deep trenches and volcanic arcs. Where plates grind sideways, transform faults like the San Andreas produce frequent earthquakes without volcanism. The simulation shows a 3D cross-section of each boundary type, with adjustable plate speed and mantle temperature to connect surface features — mountains, trenches, volcanoes — to the forces driving them.",
     parameterExplanations: {
+            subAngle: "Angle of subduction in degrees (10°–80°). Shallow subduction (~15°) produces broad mountain belts and back-arc basins far inland (Andes-style); steep subduction (~60–80°) focuses deformation at the arc and creates narrow island chains. Observed angles range from ~10° (flat-slab segments beneath South America) to ~70° (Mariana, Tonga).",
+      crustalAge: "Age of the subducting oceanic crust in million years (0–200 Ma). Old, cold crust (>100 Ma) is denser and subducts more steeply at faster rates due to greater negative buoyancy (slab pull). Young, buoyant crust (<30 Ma) resists subduction and produces flat-slab regions. The oldest active oceanic crust is ~170 Ma in the western Pacific.",
       plateSpeed:
         "Rate at which the simulated plate moves, in cm/yr (range 1–20 cm/yr). Real plates move 1–10 cm/yr: slow plates like the Eurasian at ~2 cm/yr, fast plates like the Pacific at ~7–10 cm/yr. Higher speeds accelerate subduction, ridge spreading, and fault offset in the animation.",
-      boundaryType:
-        "Selects the boundary geometry: 1 = convergent (subduction zone), 2 = divergent (mid-ocean ridge or rift valley), 3 = transform (strike-slip fault). Each setting changes the 3D cross-section, the surface features shown, and the type of seismic and volcanic activity displayed.",
-      mantleTemp:
-        "Temperature of the simulated upper mantle in °C (range 1000–4000°C; default 2500°C). Higher mantle temperatures increase convection vigor and magma generation rate. At convergent boundaries it affects how far the subducting slab must descend before fluids released from the slab lower the melting point of the overlying mantle wedge, producing the magma that feeds arc volcanoes.",
     },
     misconceptions: [
       {

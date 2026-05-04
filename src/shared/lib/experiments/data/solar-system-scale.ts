@@ -28,26 +28,9 @@ export const solarSystemScale: Experiment = {
   difficulty: "beginner",
 
   parameters: [
-    {
-      id: "scaleMode",
-      label: "Scale Mode (0=size, 1=distance, 2=both)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 1,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "zoom",
-      label: "Zoom Level",
-      unit: "x",
-      min: 1,
-      max: 100,
-      default: 1,
-      step: 1,
-      tier: "free",
-    },
+    { id: "orbSpeed", label: "Orbital Speed Multiplier", unit: "×", min: 0.1, max: 10, default: 1, step: 0.1, tier: "free" },
+    { id: "sizeEx", label: "Size Exaggeration", unit: "×", min: 1, max: 5, default: 1, step: 0.1, tier: "free" },
+    { id: "focus", label: "Zoom Focus Planet", unit: "", min: 0, max: 8, default: 0, step: 1, tier: "free" },
   ],
 
   formulas: [
@@ -95,6 +78,12 @@ export const solarSystemScale: Experiment = {
   estimatedTime: 18,
   relatedExperiments: ["atmosphere-layers", "star-life-cycle"],
   htmlPath: "/experiments/earth-science/solar-system-scale.html",
+  htmlControlAliases: { orbSpeed: "oninput:setOrbSpeed", sizeEx: "oninput:setSizeEx", focus: "oninput:setFocus" },
+  presets: [
+    { id: "loadPreset:inner", label: "Inner Planets (to Mars)", description: "Focuses on the 4 rocky inner planets at true proportional distance." },
+    { id: "loadPreset:giants", label: "Gas Giants (Jupiter–Neptune)", description: "Shows the 4 outer gas giant planets and their vast distances." },
+    { id: "loadPreset:full", label: "Full Solar System (compressed)", description: "All 8 planets in a compressed view showing relative positions." },
+  ],
 
   seoTitle: "Solar System Scale Model | Scivra Earth Science",
   seoKeywords: [
@@ -114,10 +103,9 @@ export const solarSystemScale: Experiment = {
     whatIsIt:
       "The solar system is overwhelmingly empty space — yet most textbook diagrams squeeze all eight planets into a single page, making Jupiter look a short drive from the Sun. One astronomical unit (1 AU = 149.6 million km) is the average Earth-Sun distance, and it sets the scale: Mercury orbits at 0.39 AU, Earth at 1 AU, Jupiter at 5.2 AU, and Neptune at 30 AU. If the Sun were a basketball (24 cm across), Earth would be a peppercorn 26 meters away and Neptune would be over 770 meters down the street. The asteroid belt spans 2.2–3.2 AU; the Kuiper belt begins at 30 AU. Sunlight, traveling at 300,000 km/s, takes 8.3 minutes to reach Earth and over 4 hours to reach Neptune. This simulation lets you toggle between size-accurate and distance-accurate views so that both scales become tangible at once.",
     parameterExplanations: {
-      scaleMode:
-        "Switches between three display modes: 0 shows relative planet diameters at true scale against each other, 1 shows true proportional distances between planets, and 2 attempts to display both simultaneously. Mode 1 is the most visually striking because the vast emptiness between worlds becomes apparent.",
-      zoom:
-        "Zoom level from 1× to 100×. At low zoom the full solar system fits in view but inner planets are tiny; increasing zoom lets you examine the inner rocky planets or a single planet's details. Use it alongside scaleMode 1 to appreciate distance versus size together.",
+      orbSpeed: "Controls how fast planets orbit in the animation (0.1×–10×). At 1× the animation matches relative orbital periods; at 10× orbits are 10 times faster. Increase to see outer planets complete orbits in a reasonable time; decrease to observe relative speeds between inner and outer planets.",
+      sizeEx: "Exaggerates planet diameters relative to the distance scale (1×–5×). At 1× planets are at true relative size and are nearly invisible against the vast distances; at 5× planet circles are enlarged to be visible alongside the distance ruler. Use alongside the distance-accurate preset.",
+      focus: "Selects which planet (0 = Sun, 1 = Mercury, … 8 = Neptune) to center the distance zoom on. Use 0 for the full solar system view, or select a specific planet to show its local orbital neighborhood at proportional scale.",
     },
     misconceptions: [
       {

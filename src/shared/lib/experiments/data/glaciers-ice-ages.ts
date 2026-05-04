@@ -30,46 +30,9 @@ export const glaciersIceAges: Experiment = {
   difficulty: "intermediate",
 
   parameters: [
-    {
-      id: "eccentricity",
-      label: "Eccentricity",
-      unit: "",
-      min: 0,
-      max: 0.06,
-      default: 0.017,
-      step: 0.001,
-      tier: "free",
-    },
-    {
-      id: "obliquity",
-      label: "Axial Tilt",
-      unit: "°",
-      min: 22,
-      max: 24.5,
-      default: 23.4,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "timePosition",
-      label: "Time",
-      unit: "kya",
-      min: 0,
-      max: 800,
-      default: 0,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "playbackSpeed",
-      label: "Speed",
-      unit: "×",
-      min: 0,
-      max: 5,
-      default: 1,
-      step: 0.5,
-      tier: "free",
-    },
+    { id: "tempAnomaly", label: "Temperature Anomaly", unit: "°C", min: -8, max: 4, default: 0, step: 0.1, tier: "free" },
+    { id: "accum", label: "Accumulation Rate", unit: "m/yr", min: 0.5, max: 6, default: 2, step: 0.1, tier: "free" },
+    { id: "milTime", label: "Milankovitch Time", unit: "kyr ago", min: 0, max: 800, default: 0, step: 5, tier: "free" },
   ],
 
   formulas: [
@@ -117,6 +80,12 @@ export const glaciersIceAges: Experiment = {
   estimatedTime: 25,
   relatedExperiments: ["climate-change-modeling", "soil-formation"],
   htmlPath: "/experiments/earth-science/glaciers-ice-ages.html",
+  htmlControlAliases: { tempAnomaly: "oninput:setTempAnomaly", accum: "oninput:setAccum", milTime: "oninput:setMilTime" },
+  presets: [
+    { id: "loadPreset:alpine", label: "Alpine Glacier (advancing)", description: "Cold, high-accumulation scenario: temperature –1°C, accumulation 3 m/yr, glacier advances." },
+    { id: "loadPreset:retreat", label: "Ice Sheet Retreat (global warming)", description: "+2°C anomaly, reduced accumulation 1.5 m/yr: glacier retreats rapidly." },
+    { id: "loadPreset:lgm", label: "Last Glacial Maximum (~21 ka)", description: "21,000 years ago: –6°C anomaly, 4 m/yr accumulation, ice sheets at maximum extent." },
+  ],
 
   seoTitle: "Glaciers & Ice Ages Simulation | Scivra Earth Science",
   seoKeywords: [
@@ -136,14 +105,9 @@ export const glaciersIceAges: Experiment = {
     whatIsIt:
       "Glaciers are persistent ice masses that grow when winter snowfall exceeds summer melt year after year, and shrink when the reverse is true. Over the past 2.6 million years, Earth has cycled between frigid glacial periods — when ice sheets a kilometer thick covered Canada and northern Europe — and warmer interglacials like today. The engine behind these cycles is not random: Milankovitch cycles are three slow, predictable changes in Earth's orbit and axial tilt that alter how much sunlight reaches high northern latitudes in summer. Small decreases in summer insolation let winter snow survive into the following year, triggering ice growth and a cascade of feedbacks — more ice means more reflected sunlight, which means more cooling. The simulation lets you adjust orbital parameters and scrub through 800,000 years of glacial history.",
     parameterExplanations: {
-      eccentricity:
-        "How elliptical Earth's orbit is, ranging 0 (perfect circle) to 0.06 (moderately elliptical). Today's value is ~0.017. The eccentricity cycle runs ~100,000 years and modulates total annual solar energy by about 0.2%, but its primary effect is amplifying or dampening the precession signal.",
-      obliquity:
-        "Earth's axial tilt, ranging 22°–24.5° in the simulation (real range: 22.1°–24.5°). Today it is ~23.4°. Tilt cycles over ~41,000 years; lower tilt produces milder summers at high latitudes, which fail to melt winter snow — favoring ice sheet growth.",
-      timePosition:
-        "Position on the 800,000-year timeline, in thousands of years ago (kya). Set to 0 for the present; move toward 800 to step back through past glacial-interglacial cycles. The last glacial maximum was ~20 kya when ice sheets extended to roughly 45°N.",
-      playbackSpeed:
-        "Playback multiplier (0–5×) controlling how fast the timeline animation advances. At 1×, the simulation runs at a moderate pace; at 5×, 800,000 years passes quickly to reveal the full cycle pattern.",
+            tempAnomaly: "Global mean temperature anomaly relative to the modern baseline, in °C (−8 to +4°C). Negative values represent ice-age cooling; positive values represent interglacial warmth. At −6°C (Last Glacial Maximum, ~21 ka) ice sheets covered much of North America and Scandinavia. A +2°C anomaly corresponds roughly to a rapid warming scenario that drives significant glacier retreat.",
+      accum: "Annual snowfall accumulation rate on the glacier in m/yr water equivalent (0.5–6 m/yr). High accumulation rates (>3 m/yr) cause glaciers to advance even under moderate warming; low accumulation (<1.5 m/yr) means even mild warming causes rapid retreat. Real alpine glaciers range 0.5–3 m/yr; polar ice sheets receive far less.",
+      milTime: "Position in Milankovitch time, in thousands of years before present (0–800 kyr). Scrubbing this control plays back 800,000 years of glacial cycles. Major glacial peaks occur roughly every 100 kyr (eccentricity cycle). Set to 0 for the present; 21 for the Last Glacial Maximum; 125 for the last interglacial optimum.",
     },
     misconceptions: [
       {
