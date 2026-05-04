@@ -1,18 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
+import type { LabNotebook } from '@/config/db/schema';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/shared/components/ui/tabs';
-import type { LabNotebook } from '@/config/db/schema';
+import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 
 interface NotebookListProps {
   notebooks: LabNotebook[];
@@ -45,7 +41,7 @@ export function NotebookList({
       const res = await fetch('/api/notebooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Untitled Notebook' }),
+        body: JSON.stringify({ title: t('editor.draft_title') }),
       });
       const json = await res.json();
       if (json.code === 0 && json.data?.id) {
@@ -93,7 +89,7 @@ export function NotebookList({
         </Tabs>
 
         <Button onClick={handleCreate} disabled={creating}>
-          {creating ? '...' : t('list.create')}
+          {creating ? t('list.creating') : t('list.create')}
         </Button>
       </div>
 
@@ -134,8 +130,7 @@ export function NotebookList({
             disabled={page <= 1}
             onClick={() => {
               const params = new URLSearchParams();
-              if (currentStatus !== 'all')
-                params.set('status', currentStatus);
+              if (currentStatus !== 'all') params.set('status', currentStatus);
               params.set('page', String(page - 1));
               router.push(`/notebooks?${params.toString()}`);
             }}
@@ -151,8 +146,7 @@ export function NotebookList({
             disabled={page >= Math.ceil(total / pageSize)}
             onClick={() => {
               const params = new URLSearchParams();
-              if (currentStatus !== 'all')
-                params.set('status', currentStatus);
+              if (currentStatus !== 'all') params.set('status', currentStatus);
               params.set('page', String(page + 1));
               router.push(`/notebooks?${params.toString()}`);
             }}

@@ -15,6 +15,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { useRouter } from '@/core/i18n/navigation';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -27,12 +28,11 @@ import {
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useAppContext } from '@/shared/contexts/app';
-import { useRouter } from '@/core/i18n/navigation';
-import { cn } from '@/shared/lib/utils';
 import {
-  UPG_CREDITS_PER_REGENERATION,
   UPG_CREDITS_PER_REFINEMENT,
+  UPG_CREDITS_PER_REGENERATION,
 } from '@/shared/lib/upg/constants';
+import { cn } from '@/shared/lib/utils';
 
 interface GalleryDetail {
   id: string;
@@ -194,11 +194,28 @@ export function GalleryDetailClient({ id }: { id: string }) {
   const embedCode = detail
     ? `<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/embed/${detail.id}" width="800" height="600" frameborder="0" allowfullscreen></iframe>`
     : '';
+  const validationBadge = detail
+    ? detail.validationScore === null
+      ? {
+          label: t('badge.not_checked'),
+          className: 'bg-muted text-muted-foreground hover:bg-muted',
+        }
+      : detail.validationScore >= 70
+        ? {
+            label: t('badge.verified'),
+            className: 'bg-emerald-600 text-white hover:bg-emerald-700',
+          }
+        : {
+            label: t('badge.needs_review'),
+            className:
+              'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+          }
+    : null;
 
   if (loading) {
     return (
-      <div className="w-full max-w-5xl mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-64 mb-4" />
+      <div className="mx-auto w-full max-w-5xl px-4 py-8">
+        <Skeleton className="mb-4 h-8 w-64" />
         <Skeleton className="h-[500px] rounded-xl" />
       </div>
     );
@@ -206,10 +223,14 @@ export function GalleryDetailClient({ id }: { id: string }) {
 
   if (!detail) {
     return (
-      <div className="text-center py-20">
+      <div className="py-20 text-center">
         <p className="text-lg">{t('errors.load_failed')}</p>
-        <Button variant="ghost" className="mt-4" onClick={() => router.push('/gallery')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+        <Button
+          variant="ghost"
+          className="mt-4"
+          onClick={() => router.push('/gallery')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           {t('page.title')}
         </Button>
       </div>
@@ -217,9 +238,9 @@ export function GalleryDetailClient({ id }: { id: string }) {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 flex items-start justify-between">
         <div>
           <Button
             variant="ghost"
@@ -227,25 +248,37 @@ export function GalleryDetailClient({ id }: { id: string }) {
             className="mb-2"
             onClick={() => router.push('/gallery')}
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="mr-1 h-4 w-4" />
             {t('page.title')}
           </Button>
           <h1 className="text-2xl font-bold">{detail.prompt}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            {detail.validationScore !== null && detail.validationScore >= 70 && (
+          <div className="mt-1 flex items-center gap-2">
+            <Badge variant="outline" className="text-xs uppercase">
+              {t('badge.language', { language: detail.language || 'en' })}
+            </Badge>
+            {validationBadge && (
               <Badge
-                variant="default"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-0.5"
+                variant={
+                  detail.validationScore !== null && detail.validationScore < 70
+                    ? 'outline'
+                    : 'default'
+                }
+                className={cn('gap-0.5', validationBadge.className)}
               >
-                <BadgeCheck className="h-3.5 w-3.5" />
-                {t('badge.verified')}
-                <span className="text-emerald-200 ml-1 text-[10px]">
-                  {detail.validationScore}%
-                </span>
+                {detail.validationScore !== null &&
+                  detail.validationScore >= 70 && (
+                    <BadgeCheck className="h-3.5 w-3.5" />
+                  )}
+                {validationBadge.label}
+                {detail.validationScore !== null && (
+                  <span className="ml-1 text-[10px] opacity-80">
+                    {detail.validationScore}%
+                  </span>
+                )}
               </Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             {detail.userName
               ? t('card.by', { author: detail.userName })
               : t('card.anonymous')}
@@ -255,11 +288,11 @@ export function GalleryDetailClient({ id }: { id: string }) {
             })}
           </p>
           {detail.forkedFrom && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               {t('detail.forked_from')}{' '}
               <a
                 href={`/gallery/${detail.forkedFrom}`}
-                className="underline hover:text-foreground"
+                className="hover:text-foreground underline"
               >
                 {detail.forkedFrom.slice(0, 8)}...
               </a>
@@ -270,7 +303,7 @@ export function GalleryDetailClient({ id }: { id: string }) {
 
       {/* Tags */}
       {detail.tags && detail.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="mb-4 flex flex-wrap gap-1.5">
           {detail.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
               {tag}
@@ -282,9 +315,12 @@ export function GalleryDetailClient({ id }: { id: string }) {
       {/* Visualization iframe */}
       <Card className="mb-6">
         <CardContent className="p-0">
+          <p className="text-muted-foreground border-b px-4 py-2 text-xs">
+            {t('detail.render_hint')}
+          </p>
           <iframe
             srcDoc={detail.htmlContent}
-            className="w-full h-[500px] rounded-xl border-0"
+            className="h-[500px] w-full rounded-xl border-0"
             sandbox="allow-scripts"
             title={detail.prompt}
           />
@@ -299,7 +335,7 @@ export function GalleryDetailClient({ id }: { id: string }) {
           onClick={handleLike}
         >
           <Heart
-            className={cn('h-4 w-4 mr-1', detail.isLiked && 'fill-current')}
+            className={cn('mr-1 h-4 w-4', detail.isLiked && 'fill-current')}
           />
           {detail.likeCount}
         </Button>
@@ -311,30 +347,22 @@ export function GalleryDetailClient({ id }: { id: string }) {
           disabled={forking}
         >
           {forking ? (
-            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
           ) : (
-            <GitFork className="h-4 w-4 mr-1" />
+            <GitFork className="mr-1 h-4 w-4" />
           )}
           {forking
             ? t('actions.forking')
             : t('actions.fork', { credits: UPG_CREDITS_PER_REGENERATION })}
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setRefineOpen(true)}
-        >
-          <Wand2 className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" onClick={() => setRefineOpen(true)}>
+          <Wand2 className="mr-1 h-4 w-4" />
           {t('refine.button', { credits: UPG_CREDITS_PER_REFINEMENT })}
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setEmbedOpen(true)}
-        >
-          <Code className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" onClick={() => setEmbedOpen(true)}>
+          <Code className="mr-1 h-4 w-4" />
           {t('actions.embed')}
         </Button>
 
@@ -346,13 +374,13 @@ export function GalleryDetailClient({ id }: { id: string }) {
             setVersionsOpen(true);
           }}
         >
-          <History className="h-4 w-4 mr-1" />
+          <History className="mr-1 h-4 w-4" />
           {detail.version && detail.version > 1
             ? t('refine.version', { version: detail.version })
             : null}
         </Button>
 
-        <span className="flex items-center gap-1 text-sm text-muted-foreground ml-auto">
+        <span className="text-muted-foreground ml-auto flex items-center gap-1 text-sm">
           <Eye className="h-4 w-4" />
           {detail.viewCount}
         </span>
@@ -364,7 +392,7 @@ export function GalleryDetailClient({ id }: { id: string }) {
           <DialogHeader>
             <DialogTitle>{t('refine.title')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-3">
+          <p className="text-muted-foreground mb-3 text-sm">
             {t('refine.description')}
           </p>
           <Textarea
@@ -374,7 +402,7 @@ export function GalleryDetailClient({ id }: { id: string }) {
             rows={4}
             maxLength={1000}
           />
-          <div className="flex justify-end gap-2 mt-2">
+          <div className="mt-2 flex justify-end gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -389,9 +417,9 @@ export function GalleryDetailClient({ id }: { id: string }) {
               disabled={refining || refinePrompt.trim().length < 2}
             >
               {refining ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
               ) : (
-                <Wand2 className="h-4 w-4 mr-1" />
+                <Wand2 className="mr-1 h-4 w-4" />
               )}
               {refining ? t('refine.refining') : t('refine.submit')}
             </Button>
@@ -406,16 +434,16 @@ export function GalleryDetailClient({ id }: { id: string }) {
             <DialogTitle>{t('refine.version_history')}</DialogTitle>
           </DialogHeader>
           {versions.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <p className="text-muted-foreground py-4 text-center text-sm">
               {t('refine.original')}
             </p>
           ) : (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+            <div className="max-h-80 space-y-2 overflow-y-auto">
               {versions.map((v) => (
                 <button
                   key={v.id}
                   className={cn(
-                    'w-full text-left p-3 rounded-lg border transition-colors',
+                    'w-full rounded-lg border p-3 text-left transition-colors',
                     v.id === id
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:bg-muted/50'
@@ -437,12 +465,12 @@ export function GalleryDetailClient({ id }: { id: string }) {
                         {t('refine.current')}
                       </Badge>
                     )}
-                    <span className="text-xs text-muted-foreground ml-auto">
+                    <span className="text-muted-foreground ml-auto text-xs">
                       {new Date(v.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                   {v.refinementPrompt && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
                       {v.refinementPrompt}
                     </p>
                   )}
@@ -459,10 +487,10 @@ export function GalleryDetailClient({ id }: { id: string }) {
           <DialogHeader>
             <DialogTitle>{t('embed.title')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-3">
+          <p className="text-muted-foreground mb-3 text-sm">
             {t('embed.description')}
           </p>
-          <pre className="bg-muted p-3 rounded-lg text-xs overflow-x-auto">
+          <pre className="bg-muted overflow-x-auto rounded-lg p-3 text-xs">
             {embedCode}
           </pre>
           <Button

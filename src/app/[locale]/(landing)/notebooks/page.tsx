@@ -1,13 +1,14 @@
 import { getTranslations } from 'next-intl/server';
 
 import { Empty } from '@/shared/blocks/common';
-import { getUserInfo } from '@/shared/models/user';
+import { NotebookList } from '@/shared/blocks/notebook/NotebookList';
+import { LandingAppShell } from '@/shared/components/layout/landing-app-shell';
+import { getMetadata } from '@/shared/lib/seo';
 import {
   getNotebooksByUser,
   getNotebooksByUserCount,
 } from '@/shared/models/lab_notebook';
-import { NotebookList } from '@/shared/blocks/notebook/NotebookList';
-import { getMetadata } from '@/shared/lib/seo';
+import { getUserInfo } from '@/shared/models/user';
 
 export const generateMetadata = getMetadata({
   noIndex: true,
@@ -24,7 +25,11 @@ export default async function NotebooksPage({
 
   const user = await getUserInfo();
   if (!user) {
-    return <Empty message="Please sign in to view your lab notebooks" />;
+    return (
+      <LandingAppShell>
+        <Empty message="Please sign in to view your lab notebooks" />
+      </LandingAppShell>
+    );
   }
 
   const t = await getTranslations('notebook');
@@ -37,19 +42,21 @@ export default async function NotebooksPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold">{t('list.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('list.description')}</p>
-      </div>
+    <LandingAppShell>
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-8">
+          <h1 className="font-serif text-3xl font-bold">{t('list.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('list.description')}</p>
+        </div>
 
-      <NotebookList
-        notebooks={notebooks}
-        total={total}
-        page={page}
-        pageSize={pageSize}
-        currentStatus={status || 'all'}
-      />
-    </div>
+        <NotebookList
+          notebooks={notebooks}
+          total={total}
+          page={page}
+          pageSize={pageSize}
+          currentStatus={status || 'all'}
+        />
+      </div>
+    </LandingAppShell>
   );
 }

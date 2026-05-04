@@ -3,11 +3,11 @@
 import { BadgeCheck, Eye, GitFork, Heart } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useRouter } from '@/core/i18n/navigation';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { cn } from '@/shared/lib/utils';
-import { useRouter } from '@/core/i18n/navigation';
 
 interface GalleryItem {
   id: string;
@@ -33,58 +33,79 @@ interface GalleryCardProps {
 export function GalleryCard({ item, onLike, onTagClick }: GalleryCardProps) {
   const t = useTranslations('gallery');
   const router = useRouter();
+  const validationBadge =
+    item.validationScore === null
+      ? {
+          label: t('badge.not_checked'),
+          className: 'bg-muted text-muted-foreground hover:bg-muted',
+        }
+      : item.validationScore >= 70
+        ? {
+            label: t('badge.verified'),
+            className: 'bg-emerald-600 text-white hover:bg-emerald-700',
+          }
+        : {
+            label: t('badge.needs_review'),
+            className:
+              'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+          };
 
   return (
     <Card
-      className="group cursor-pointer hover:shadow-lg transition-shadow"
+      className="group cursor-pointer transition-shadow hover:shadow-lg"
       onClick={() => router.push(`/gallery/${item.id}`)}
     >
       <CardContent className="p-5">
         {/* Prompt as title */}
-        <h3 className="font-medium text-base line-clamp-2 mb-3">
+        <h3 className="mb-3 line-clamp-2 text-base font-medium">
           {item.prompt}
         </h3>
 
-        {/* Tags + Verified badge */}
-        {((item.tags && item.tags.length > 0) || (item.validationScore !== null && item.validationScore >= 70)) && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
+        {/* Tags + quality labels */}
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <Badge variant="outline" className="text-xs uppercase">
+            {t('badge.language', { language: item.language || 'en' })}
+          </Badge>
+          <Badge
+            variant={
+              item.validationScore !== null && item.validationScore < 70
+                ? 'outline'
+                : 'default'
+            }
+            className={cn('gap-0.5 text-xs', validationBadge.className)}
+          >
             {item.validationScore !== null && item.validationScore >= 70 && (
-              <Badge
-                variant="default"
-                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-0.5"
-              >
-                <BadgeCheck className="h-3 w-3" />
-                {t('badge.verified')}
-              </Badge>
+              <BadgeCheck className="h-3 w-3" />
             )}
-            {item.tags?.slice(0, 3).map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="text-xs cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTagClick(tag);
-                }}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+            {validationBadge.label}
+          </Badge>
+          {item.tags?.slice(0, 3).map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="cursor-pointer text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTagClick(tag);
+              }}
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
 
         {/* Author */}
-        <p className="text-sm text-muted-foreground mb-3">
+        <p className="text-muted-foreground mb-3 text-sm">
           {item.userName
             ? t('card.by', { author: item.userName })
             : t('card.anonymous')}
         </p>
 
         {/* Stats row */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-4 text-sm">
           <button
             className={cn(
-              'flex items-center gap-1 hover:text-red-500 transition-colors',
+              'flex items-center gap-1 transition-colors hover:text-red-500',
               item.isLiked && 'text-red-500'
             )}
             onClick={(e) => {
@@ -92,9 +113,7 @@ export function GalleryCard({ item, onLike, onTagClick }: GalleryCardProps) {
               onLike(item.id);
             }}
           >
-            <Heart
-              className={cn('h-4 w-4', item.isLiked && 'fill-current')}
-            />
+            <Heart className={cn('h-4 w-4', item.isLiked && 'fill-current')} />
             <span>{item.likeCount}</span>
           </button>
 

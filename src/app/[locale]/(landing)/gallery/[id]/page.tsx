@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 
 import { GalleryDetailClient } from '@/shared/blocks/gallery/gallery-detail';
+import { LandingAppShell } from '@/shared/components/layout/landing-app-shell';
 import { getMetadata } from '@/shared/lib/seo';
 
 export const generateMetadata = getMetadata({
@@ -15,5 +16,9 @@ export default async function GalleryDetailPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
 
-  return <GalleryDetailClient id={id} />;
+  return (
+    <LandingAppShell>
+      <GalleryDetailClient id={id} />
+    </LandingAppShell>
+  );
 }

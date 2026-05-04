@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/shared/components/ui/button';
 
@@ -62,8 +62,17 @@ export function ApExamList() {
 
   if (exams.length === 0) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="text-muted-foreground">No exams available yet.</div>
+      <div className="mx-auto flex max-w-xl flex-col items-center justify-center gap-4 py-12 text-center">
+        <div>
+          <h2 className="text-lg font-semibold">AP Prep is in preview.</h2>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Full exam sets are still in development. For now, start with the AP
+            science labs that already support concept practice.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/labs?grade=AP">Explore AP labs</Link>
+        </Button>
       </div>
     );
   }
@@ -78,10 +87,10 @@ export function ApExamList() {
           <Link
             key={exam.id}
             href={`/ap-prep/${exam.slug}`}
-            className="group block rounded-xl border bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-primary/40"
+            className="group bg-card hover:border-primary/40 block rounded-xl border p-6 shadow-sm transition-all hover:shadow-md"
           >
             {exam.coverImage && (
-              <div className="mb-4 aspect-video overflow-hidden rounded-lg bg-muted">
+              <div className="bg-muted mb-4 aspect-video overflow-hidden rounded-lg">
                 <img
                   src={exam.coverImage}
                   alt={title}
@@ -93,11 +102,11 @@ export function ApExamList() {
               {title}
             </h3>
             {description && (
-              <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
                 {description}
               </p>
             )}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-4 text-xs">
               <span>
                 {t('exam.unit_count', { count: exam.unitCount ?? 0 })}
               </span>
@@ -107,12 +116,7 @@ export function ApExamList() {
                 })}
               </span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 w-full"
-              asChild
-            >
+            <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
               <span>{t('exam.view_units')}</span>
             </Button>
           </Link>

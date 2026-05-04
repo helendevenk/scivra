@@ -1,8 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 
 import { AITaskStatus } from '@/extensions/ai';
-import { AudioPlayer, Empty, LazyImage } from '@/shared/blocks/common';
+import { Empty } from '@/shared/blocks/common';
 import { TableCard } from '@/shared/blocks/table';
+import { LandingAppShell } from '@/shared/components/layout/landing-app-shell';
 import { AITask, getAITasks, getAITasksCount } from '@/shared/models/ai_task';
 import { getUserInfo } from '@/shared/models/user';
 import { Button, Tab } from '@/shared/types/blocks/common';
@@ -19,7 +20,11 @@ export default async function AiTasksPage({
 
   const user = await getUserInfo();
   if (!user) {
-    return <Empty message="no auth" />;
+    return (
+      <LandingAppShell>
+        <Empty message="no auth" />
+      </LandingAppShell>
+    );
   }
 
   const t = await getTranslations('activity.ai-tasks');
@@ -58,39 +63,8 @@ export default async function AiTasksPage({
                   Failed: {taskInfo.errorMessage}
                 </div>
               );
-            } else if (taskInfo.songs && taskInfo.songs.length > 0) {
-              const songs: any[] = taskInfo.songs.filter(
-                (song: any) => song.audioUrl
-              );
-              if (songs.length > 0) {
-                return (
-                  <div className="flex flex-col gap-2">
-                    {songs.map((song: any) => (
-                      <AudioPlayer
-                        key={song.id}
-                        src={song.audioUrl}
-                        title={song.title}
-                        className="w-80"
-                      />
-                    ))}
-                  </div>
-                );
-              }
-            } else if (taskInfo.images && taskInfo.images.length > 0) {
-              return (
-                <div className="flex flex-col gap-2">
-                  {taskInfo.images.map((image: any, index: number) => (
-                    <LazyImage
-                      key={index}
-                      src={image.imageUrl}
-                      alt="Generated image"
-                      className="h-32 w-auto"
-                    />
-                  ))}
-                </div>
-              );
             } else {
-              return '-';
+              return t('list.result_saved');
             }
           }
 
@@ -137,40 +111,18 @@ export default async function AiTasksPage({
       is_active: !type || type === 'all',
     },
     {
-      name: 'music',
-      title: t('list.tabs.music'),
-      url: '/activity/ai-tasks?type=music',
-      is_active: type === 'music',
-    },
-    {
-      name: 'image',
-      title: t('list.tabs.image'),
-      url: '/activity/ai-tasks?type=image',
-      is_active: type === 'image',
-    },
-    {
-      name: 'video',
-      title: t('list.tabs.video'),
-      url: '/activity/ai-tasks?type=video',
-      is_active: type === 'video',
-    },
-    {
-      name: 'audio',
-      title: t('list.tabs.audio'),
-      url: '/activity/ai-tasks?type=audio',
-      is_active: type === 'audio',
-    },
-    {
-      name: 'text',
-      title: t('list.tabs.text'),
+      name: 'ai_labs',
+      title: t('list.tabs.ai_labs'),
       url: '/activity/ai-tasks?type=text',
       is_active: type === 'text',
     },
   ];
 
   return (
-    <div className="space-y-8">
-      <TableCard title={t('list.title')} tabs={tabs} table={table} />
-    </div>
+    <LandingAppShell className="px-4">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <TableCard title={t('list.title')} tabs={tabs} table={table} />
+      </div>
+    </LandingAppShell>
   );
 }
