@@ -155,10 +155,6 @@ button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
           <span id="zoomVal" class="text-xs text-cyan-400 ml-2">12</span>
         </div>
         <div>
-          <div class="text-xs text-slate-400 mb-1">Labels</div>
-          <button id="btnLabels" class="btn-preset active" onclick="toggleLabels()">Show Labels</button>
-        </div>
-        <div>
           <div class="text-xs text-slate-400 mb-2">Speed</div>
           <div class="flex gap-1">
             <button class="btn-preset" onclick="setSpeed(0.25)">0.25x</button>
@@ -287,7 +283,19 @@ scene.add(keyLight,fillLight,backLight,ambient);
 scene.add(new THREE.GridHelper(20,20,0x334155,0x1e293b));
 
 // ─── Scene Objects ─────────────────────────────────────────────
-const objects = { mrnaStrands:[], ribosome:null, aaBeads:[], arrows:[] };
+const objects = { mrnaStrands:[], ribosome:null, ribosome2:null, aaBeads:[], arrows:[] };
+
+function disposeObject3D(object) {
+  if (!object) return;
+  object.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach(mat => mat.dispose());
+      else child.material.dispose();
+    }
+  });
+  if (object.parent) object.parent.remove(object);
+}
 
 function buildDNA() {
   // DNA double helix
@@ -442,17 +450,13 @@ function setSpeed(v){
   showToast('Speed: '+v+'x');
 }
 
-function toggleLabels(){
-  simState.showLabels = !simState.showLabels;
-  document.getElementById('btnLabels').textContent = simState.showLabels ? 'Show Labels' : 'Hide Labels';
-  showToast('Labels '+(simState.showLabels?'shown':'hidden'));
-}
 
 function loadPreset(p){
   currentSequence = SEQUENCES[p].split('-');
   resetSim();
-  // rebuild mRNA beads
-  objects.mrnaStrands.forEach(o=>scene.remove(o)); objects.mrnaStrands=[];
+  // rebuild tracked scene geometry
+  [...objects.mrnaStrands, ...objects.arrows, objects.ribosome, objects.ribosome2].filter(Boolean).forEach(disposeObject3D);
+  objects.mrnaStrands=[]; objects.arrows=[]; objects.ribosome=null; objects.ribosome2=null;
   buildDNA();
   const names = {start:'Start Codon (AUG)',stop:'Stop Codon Demo',full:'Full Synthesis'};
   showToast('Preset: '+names[p]);
@@ -517,7 +521,7 @@ renderer.setAnimationLoop(()=>{
   // Step timer
   if(simState.playing){
     stepTimer += delta;
-    const interval = stepInterval / speedMultiplier;
+    const interval = stepInterval;
     if(stepTimer >= interval){ stepTimer=0; stepSynthesis(); }
   }
 

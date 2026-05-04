@@ -966,9 +966,20 @@ window.addEventListener('resize', onResize);
 onResize();
 
 // ─── Animation Loop ───────────────────────────────────────────────────────────
-renderer.setAnimationLoop(function () {
+var lastFrameTime = null;
+renderer.setAnimationLoop(function (frameTime) {
+  if (lastFrameTime === null) lastFrameTime = frameTime;
+  var dt = Math.min((frameTime - lastFrameTime) / 1000, 0.05);
+  lastFrameTime = frameTime;
+
   if (simState.running) {
-    simState.time += 0.016 * simState.speed;
+    var currentGen = Math.floor(simState.time);
+    if (currentGen >= simState.gens) {
+      simState.running = false;
+      document.getElementById('btn-play').textContent = '▶ Play';
+    } else {
+      simState.time += dt * simState.speed;
+    }
   }
   var time = simState.time;
 
@@ -986,9 +997,11 @@ renderer.setAnimationLoop(function () {
   var p  = simState.p;
   var mu = simState.mutRate;
   // Mutation shifts p: dominant A→a at rate mu, a→A at rate mu/10
-  p = p * (1 - mu) + (1 - p) * mu * 0.1;
-  p = Math.max(0.01, Math.min(0.99, p));
-  simState.p = p;
+  if (simState.running) {
+    p = p * (1 - mu) + (1 - p) * mu * 0.1;
+    p = Math.max(0.01, Math.min(0.99, p));
+    simState.p = p;
+  }
 
   var q   = 1 - p;
   var p2  = p * p;

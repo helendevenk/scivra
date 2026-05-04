@@ -35,8 +35,8 @@ export const molecularPolarity: Experiment = {
       unit: "°",
       min: 80,
       max: 180,
-      default: 1045,
-      step: 5,
+      default: 104.5,
+      step: 0.5,
       tier: "free",
     },
     {
