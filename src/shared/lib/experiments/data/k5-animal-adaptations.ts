@@ -33,7 +33,7 @@ export const k5AnimalAdaptations: Experiment = {
 
   parameters: [
     {
-      id: "sliderTemp",
+      id: "temperature",
       label: "Temperature",
       unit: "°C",
       min: -40,
@@ -43,7 +43,7 @@ export const k5AnimalAdaptations: Experiment = {
       tier: "free",
     },
     {
-      id: "sliderHabitat",
+      id: "habitat",
       label: "Habitat (0=Arctic, 1=Desert, 2=Rainforest)",
       unit: "",
       min: 0,
@@ -114,30 +114,30 @@ export const k5AnimalAdaptations: Experiment = {
       label: "Arctic Fox",
       description:
         "The Arctic Fox preset shows a cold, snowy home where thick fur, small ears, and pale color can help an animal stay warm and hard to see.",
-      paramValues: { sliderTemp: -20, sliderHabitat: 0 },
+      paramValues: { temperature: -20, habitat: 0 },
     },
     {
       id: "camel",
       label: "Camel Desert",
       description:
         "The Camel Desert preset shows a hot, dry home where stored fat, long legs, and careful water use can help an animal survive.",
-      paramValues: { sliderTemp: 35, sliderHabitat: 1 },
+      paramValues: { temperature: 35, habitat: 1 },
     },
     {
       id: "toucan",
       label: "Toucan Rainforest",
       description:
         "The Toucan Rainforest preset shows a warm, wet home where bright color, a large beak, and tree life can help an animal find food and stay safe.",
-      paramValues: { sliderTemp: 25, sliderHabitat: 2 },
+      paramValues: { temperature: 25, habitat: 2 },
     },
   ],
   contentSections: {
     whatIsIt:
       "Animals have body parts, colors, and behaviors that help them live in their homes. An arctic fox has thick fur that helps it stay warm in snow. A camel can live in hot, dry places because its body helps it save water. A toucan has a large beak that helps it reach and eat fruit in the rainforest. Camouflage means an animal is hard to see because it matches the place around it. Mimicry means one animal looks like another animal that enemies may avoid. In this simulation, use the Temperature slider and Habitat slider to compare Arctic, Desert, and Rainforest homes. Try the three animal presets and ask: What helps this animal live here?",
     parameterExplanations: {
-      sliderTemp:
+      temperature:
         "Temperature tells how cold or warm the animal's home is. Very cold places can be snowy and icy, so animals may need thick fur, small ears, or a round body to help keep heat in. Hot places can be dry and sunny, so animals may need ways to stay cool and save water. Move the Temperature slider while keeping the same habitat. Watch what feels helpful in that place. A body part that helps in cold weather may not help in hot weather, and the other way around.",
-      sliderHabitat:
+      habitat:
         "Habitat means the place where an animal lives. In this simulation, 0 shows the Arctic, 1 shows the Desert, and 2 shows the Rainforest. Each home has different weather, colors, food, and hiding places. An arctic fox fits snowy land, a camel fits hot sand, and a toucan fits warm trees. Move the Habitat slider one step at a time and compare what changes around the animal. Then choose a preset and ask why that animal fits that home better than the other homes.",
     },
     misconceptions: [
