@@ -30,32 +30,22 @@ export const molecularPolarity: Experiment = {
 
   parameters: [
     {
-      id: "moleculeIndex",
-      label: "Molecule",
-      unit: "",
-      min: 0,
-      max: 7,
-      default: 0,
-      step: 1,
+      id: "bondAngle",
+      label: "Bond Angle θ",
+      unit: "°",
+      min: 80,
+      max: 180,
+      default: 1045,
+      step: 5,
       tier: "free",
     },
     {
-      id: "showDipoles",
-      label: "Show Bond Dipoles (0=Off, 1=On)",
+      id: "electronegativityDifference",
+      label: "Electronegativity Difference",
       unit: "",
       min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "showCloud",
-      label: "Show Electron Cloud (0=Off, 1=On)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
+      max: 30,
+      default: 14,
       step: 1,
       tier: "free",
     },
@@ -79,7 +69,7 @@ export const molecularPolarity: Experiment = {
     "A bond is polar when two atoms have different electronegativities — the more electronegative atom pulls electron density toward itself, creating a partial negative charge (δ⁻) and leaving the other end partially positive (δ⁺). Each polar bond has a dipole moment vector pointing from δ⁺ to δ⁻. The net molecular dipole is the vector sum of all bond dipoles. In symmetric molecules like CO₂ or CCl₄, bond dipoles cancel perfectly (net μ = 0, nonpolar). In asymmetric molecules like H₂O or CHCl₃, dipoles add up to a nonzero net moment (polar). Polarity determines solubility, boiling point, and intermolecular forces.",
 
   instructions:
-    "Select a molecule to view its 3D structure with electron density cloud. Blue regions show higher electron density (δ⁻), red regions show electron-poor areas (δ⁺). Bond dipole arrows point from positive to negative. The net dipole arrow (yellow) shows the overall molecular polarity. Toggle dipoles and electron cloud on/off. Rotate the model to see how geometry affects polarity.",
+    "Use the Bond Angle θ slider and ΔEN slider to compare how molecular geometry and electronegativity difference shape polarity. Try the Water (bent), CO₂ (linear), and CHCl₃ (tetrahedral) presets to jump between common AP Chemistry examples, then rotate the model and compare the displayed net dipole and polarity readout.",
 
   challenges: [
     {
@@ -125,23 +115,42 @@ export const molecularPolarity: Experiment = {
     educationalLevel: "High School",
     teaches: "Molecular Polarity and Dipole Moments",
   },
+  htmlControlAliases: { bondAngle: "sl-angle", electronegativityDifference: "sl-den" },
+  presets: [
+    {
+      id: "H2O",
+      label: "Water (bent)",
+      description:
+        "A bent water molecule has two polar O-H bonds whose dipoles do not cancel, producing a strong net dipole toward oxygen.",
+    },
+    {
+      id: "CO2",
+      label: "CO₂ (linear)",
+      description:
+        "A linear carbon dioxide molecule has two polar C=O bonds arranged in opposite directions, so their dipoles cancel to zero.",
+    },
+    {
+      id: "CHCl3",
+      label: "CHCl₃ (tetrahedral)",
+      description:
+        "Chloroform has tetrahedral geometry, but three chlorine atoms and one hydrogen make the substituents asymmetric, leaving a net dipole.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Molecular polarity describes whether a molecule has a net uneven distribution of electron density — a permanent electric dipole. Each polar bond carries a dipole moment vector (μ = q × d, measured in Debye) pointing from the partially positive atom toward the more electronegative one. The key insight tested by AP Chem 2.C.1 and 2.C.4 is that polar bonds do not automatically produce a polar molecule: in CO₂ (linear) or CCl₄ (tetrahedral), bond dipoles cancel by symmetry and the net dipole is zero. In H₂O (bent) or NH₃ (trigonal pyramidal), the geometry is asymmetric so the vectors add to a nonzero resultant. This simulation lets you rotate 3D molecular models, toggle individual bond dipole arrows, and overlay an electron-density cloud to observe exactly where electrons accumulate.",
     parameterExplanations: {
-      moleculeIndex:
-        "Selects which molecule is displayed — the library includes symmetric nonpolar species (CO₂, CCl₄, BF₃) and asymmetric polar ones (H₂O, NH₃, CHCl₃, SO₂). Cycling through contrasting pairs — for example CO₂ vs. SO₂ — is the fastest way to see how geometry, not just bond polarity, determines net dipole.",
-      showDipoles:
-        "Toggles the individual bond-dipole arrow overlays on or off (0 = off, 1 = on). With dipoles visible, each arrow points from the electropositive atom (δ⁺) toward the electronegative one (δ⁻); the yellow net-dipole arrow is the vector sum. Turning dipoles off lets you focus on the raw 3D geometry before reasoning about cancellation.",
-      showCloud:
-        "Toggles the electron-density cloud rendering (0 = off, 1 = on). Blue regions indicate high electron density (δ⁻); red regions indicate electron-poor zones (δ⁺). Compare the cloud for H₂O versus CO₂ to see why one dissolves ionic solutes and the other does not.",
+      bondAngle:
+        "Bond Angle θ represents the angle used to compare molecular shapes. A linear molecule such as CO₂ places bond dipoles 180° apart, so equal vectors point in opposite directions and cancel. A bent molecule such as H₂O uses a smaller angle, so the two O-H dipoles add to a net dipole along the angle bisector. CHCl₃ is tetrahedral, so its three-dimensional bond arrangement must be considered rather than judged from a flat drawing. Use this slider together with the three presets to connect VSEPR geometry with vector addition and the polar/nonpolar readout.",
+      electronegativityDifference:
+        "Electronegativity Difference, shown as ΔEN, represents how unevenly two bonded atoms share electrons. A larger ΔEN means the more electronegative atom pulls electron density more strongly, so that individual bond has a larger dipole contribution. This does not guarantee a polar molecule, because geometry can still cancel equal bond dipoles, as in linear CO₂. Compare Water and Carbon Dioxide to separate bond polarity from molecular polarity, then use CHCl₃ to discuss how unequal substituents prevent complete cancellation even in a roughly tetrahedral arrangement.",
     },
     misconceptions: [
       {
         wrong:
           "Any molecule with polar bonds must be a polar molecule.",
         correct:
-          "Polarity requires both polar bonds AND an asymmetric geometry. CO₂ has two polar C=O bonds, but they point in exactly opposite directions (180° apart), so the vectors cancel and the net dipole is zero. Geometry determines whether cancellation occurs.",
+          "Polarity requires both polar bonds AND a geometry that prevents complete cancellation. CO₂ has two polar C=O bonds, but they point in exactly opposite directions in a linear shape, so the vectors cancel and the net dipole is zero. Water has polar O-H bonds in a bent shape, so those vectors add instead of canceling.",
       },
       {
         wrong:
@@ -151,15 +160,15 @@ export const molecularPolarity: Experiment = {
       },
       {
         wrong:
-          "BF₃ is polar because fluorine is the most electronegative element and there are three polar B–F bonds.",
+          "CO₂ is polar because oxygen is much more electronegative than carbon and there are two polar C=O bonds.",
         correct:
-          "BF₃ is trigonal planar — all three B–F dipoles are arranged symmetrically at 120° in the same plane and cancel exactly, giving net μ = 0. The analogous AX₃E molecule NF₃ is trigonal pyramidal because the central nitrogen carries a lone pair; that lone pair breaks the planar symmetry, the three N–F bond dipoles no longer cancel, and the result is a polar molecule (μ ≈ 0.24 D).",
+          "CO₂ is linear, so the two equal C=O bond dipoles point in opposite directions along the same axis. Their vector sum is zero even though each individual bond is polar. Use the CO₂ preset as the cleanest contrast with bent H₂O, where the same two-bond reasoning gives a nonzero net dipole because the vectors are not opposite.",
       },
       {
         wrong:
           "A larger electronegativity difference between two bonded atoms always means a larger net molecular dipole.",
         correct:
-          "Electronegativity difference governs individual bond dipole magnitude, but the net molecular dipole also depends on the number of bonds and their geometric arrangement. CCl₄ has four very polar C–Cl bonds yet a net dipole of zero because the tetrahedral symmetry makes all four vectors cancel.",
+          "Electronegativity difference governs individual bond dipole magnitude, but the net molecular dipole also depends on the number of bonds and their geometric arrangement. CO₂ can have polar bonds and still be nonpolar because its two vectors cancel. CHCl₃ remains polar because the three C-Cl bonds and one C-H bond do not form a fully symmetric set.",
       },
       {
         wrong:
@@ -169,17 +178,17 @@ export const molecularPolarity: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Pre-lab prediction: before opening the simulation, have students draw Lewis structures and VSEPR geometries for CO₂, H₂O, NH₃, and CCl₄, then predict polar or nonpolar. Use the simulation to confirm or correct, focusing discussion on cases where predictions were wrong.",
-      "Dipole vector addition exercise: display NH₃ with dipoles on and ask students to sketch the three N–H bond vectors plus the lone-pair contribution on paper, then construct the resultant. Compare their hand-drawn vector sum to the yellow net-dipole arrow on screen.",
-      "Misconception probe — 'polar bonds = polar molecule': show BF₃ and CHCl₃ side by side (or in sequence). BF₃ has three identical polar bonds and is nonpolar; CHCl₃ has four different substituents and is polar (μ ≈ 1.04 D). Ask students to explain the discrepancy, then connect to AP Chem 2.C.4.",
-      "Solubility connection data collection: have pairs look up or measure (in a later wet lab) whether CO₂, H₂O, NaCl, and hexane dissolve in each other, then map each result back to polarity data from the simulation. Builds the 'like dissolves like' principle from evidence.",
-      "Exam-prep ranking task: display SO₂, CO₂, H₂O, and CH₄ in sequence, record net dipole magnitude for each, then rank by expected boiling point. Compare to actual boiling-point data and explain anomalies (e.g., H₂O is unusually high because of hydrogen bonding).",
+      "Pre-lab prediction: before opening the simulation, have students draw Lewis structures and VSEPR geometries for H₂O, CO₂, and CHCl₃, then predict polar or nonpolar. Use the three presets to confirm or correct, focusing discussion on cases where bond polarity alone led to the wrong answer.",
+      "Dipole vector addition exercise: display the Water preset and ask students to sketch the two O-H bond vectors, then construct the resultant along the H-O-H angle bisector. Compare their hand-drawn vector sum to the displayed net dipole and polarity readout.",
+      "Misconception probe — 'polar bonds = polar molecule': show Water and CO₂ in sequence. Both contain polar bonds, but Water is bent and polar while CO₂ is linear and nonpolar. Ask students to explain the discrepancy, then connect to AP Chem 2.C.4.",
+      "Electronegativity control check: have pairs keep the same preset visible while changing ΔEN, then explain why changing bond polarity is different from changing molecular geometry. Students should distinguish individual bond dipoles from the net molecular dipole.",
+      "Exam-prep comparison task: use the Water, CO₂, and CHCl₃ presets, record bond angle, ΔEN, net dipole magnitude, and polar/nonpolar status, then write one claim explaining how geometry and electronegativity work together.",
     ],
     faq: [
       {
         question: "Why is CO₂ nonpolar if both C=O bonds are polar?",
         answer:
-          "CO₂ is linear (bond angle 180°), so the two C=O dipole vectors point in exactly opposite directions and cancel to give a net dipole of zero. AP Chem 2.C.4 specifically requires students to use molecular geometry — not just bond polarity — to determine whether a molecule is polar. Toggle dipoles on in the simulation and rotate the model to see the vectors pointing left and right along the same axis.",
+          "CO₂ is linear (bond angle 180°), so the two C=O dipole vectors point in exactly opposite directions and cancel to give a net dipole of zero. AP Chem 2.C.4 specifically requires students to use molecular geometry — not just bond polarity — to determine whether a molecule is polar. Use the CO₂ preset and compare it with bent Water to see why geometry changes the vector sum.",
       },
       {
         question: "How do I find the direction of the net dipole arrow?",
@@ -187,9 +196,9 @@ export const molecularPolarity: Experiment = {
           "Treat each bond dipole as a vector starting at the electropositive atom and pointing toward the electronegative one. Add all vectors tip-to-tail (or using components). The resultant vector is the net molecular dipole. For water, both O–H vectors point toward oxygen, and their vector sum lies along the H–O–H angle bisector pointing toward oxygen — which is why the oxygen end of the molecule is the negative pole.",
       },
       {
-        question: "What does the electron-density cloud color coding mean?",
+        question: "What does the ΔEN slider represent?",
         answer:
-          "Blue indicates regions of higher electron density (partial negative charge, δ⁻) and red indicates electron-deficient regions (δ⁺). These colors map directly onto the ends of polar bonds — the electronegative atom's region appears blue. In a perfectly symmetric molecule like CH₄, the cloud is uniform because all four C–H bonds are identical and the electron density is evenly distributed.",
+          "ΔEN is the electronegativity difference between bonded atoms. A higher value means the bonding electrons are pulled more strongly toward the more electronegative atom, making that individual bond dipole larger. The key AP Chemistry point is that a larger bond dipole does not automatically make the whole molecule polar. The net dipole also depends on geometry: CO₂ cancels because it is linear, while Water remains polar because it is bent.",
       },
       {
         question: "Does a molecule need polar bonds to be polar overall?",
@@ -199,7 +208,7 @@ export const molecularPolarity: Experiment = {
       {
         question: "Which molecules in the simulation are polar, and which are nonpolar?",
         answer:
-          "Among common examples: H₂O (bent, polar, μ ≈ 1.85 D), NH₃ (trigonal pyramidal, polar, μ ≈ 1.47 D), and CHCl₃ (tetrahedral but asymmetric, polar, μ ≈ 1.04 D) are polar. CO₂ (linear), BF₃ (trigonal planar), and CCl₄ (tetrahedral with identical substituents) are nonpolar. Cycle through the molecule selector to verify each case using the net-dipole arrow.",
+          "The current preset set includes H₂O, CO₂, and CHCl₃. H₂O is bent and polar, with a net dipole because the two O-H bond vectors do not cancel. CO₂ is linear and nonpolar because the two C=O bond vectors cancel exactly. CHCl₃ is tetrahedral but asymmetric, so its C-Cl and C-H bond dipoles do not cancel completely and the molecule is polar.",
       },
       {
         question: "How does polarity connect to solubility on the AP Chem exam?",

@@ -23,44 +23,24 @@ export const msEcosystems: Experiment = {
 
   parameters: [
     {
-      id: "producerPop",
-      label: "Plant Population",
+      id: "preyPopulation",
+      label: "Prey Population",
       unit: "",
-      min: 50,
-      max: 500,
-      default: 200,
-      step: 10,
-      tier: "free",
-    },
-    {
-      id: "herbivorePop",
-      label: "Herbivore Population (Rabbits)",
-      unit: "",
-      min: 5,
-      max: 100,
-      default: 30,
+      min: 10,
+      max: 200,
+      default: 80,
       step: 5,
       tier: "free",
     },
     {
-      id: "carnivorePop",
-      label: "Carnivore Population (Foxes)",
+      id: "predatorPopulation",
+      label: "Predator Population",
       unit: "",
       min: 1,
-      max: 30,
-      default: 8,
-      step: 1,
+      max: 10,
+      default: 3,
+      step: 0.5,
       tier: "free",
-    },
-    {
-      id: "invasiveSpecies",
-      label: "Add Invasive Species (0=No, 1=Yes)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -79,7 +59,7 @@ export const msEcosystems: Experiment = {
     "An ecosystem is a community of organisms interacting with each other and their physical environment. Food webs describe who eats whom, showing the flow of energy and matter. Energy flows one-way through a food web (sun → plants → herbivores → carnivores), with 90% lost as heat at each level. Matter cycles continuously: carbon (photosynthesis, respiration, decomposition), nitrogen (fixation, nitrification, denitrification), water (evaporation, precipitation). Populations in ecosystems are interdependent: removing predators causes herbivore populations to explode (trophic cascade). The Lotka-Volterra equations describe predator-prey cycles: when prey are plentiful, predators increase; then prey decline; then predators decline, letting prey recover. Biodiversity increases ecosystem stability — more species means more alternative pathways if one disappears.",
 
   instructions:
-    "Set initial populations and press Play. Watch population graphs evolve — observe the classic predator-prey oscillations. Try removing foxes (carnivores) — what happens to rabbits? Then to plants? Add an invasive species (Pro) to see how it disrupts the food web. Track the carbon cycle overlay to see how carbon moves between organisms.",
+    "Use the Prey Population slider and Predator Population slider to set the starting balance, then press Play. Watch the population graphs evolve and look for predator-prey oscillations. Change one slider at a time to compare how the timing, peak sizes, and recovery patterns shift.",
 
   challenges: [
     {
@@ -126,18 +106,15 @@ export const msEcosystems: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Ecosystems and Food Webs",
   },
+  htmlControlAliases: { preyPopulation: "sl-prey", predatorPopulation: "sl-pred" },
   contentSections: {
     whatIsIt:
       "An ecosystem is a community of living things interacting with each other and with their physical surroundings — soil, water, sunlight, and air. Every organism in an ecosystem plays a role. Producers like plants and algae capture sunlight and convert it to food through photosynthesis. Herbivores eat producers and are in turn eaten by carnivores. This eating order forms a food web — a map of who eats whom. Energy flows through the web in one direction: from the sun through plants to animals. But here is the catch: at every step, about 90% of the energy is lost as heat, leaving only 10% for the next level. This 10% rule means that in many simplified terrestrial food webs, energy and biomass generally decrease at higher trophic levels — which is why there tend to be more producer biomass than herbivore biomass, and more herbivore biomass than top predator biomass. Populations also rise and fall in predictable cycles — when prey multiply, predators follow; when prey crash, predators decline too. This simulation lets you set starting populations, watch cycles unfold over time, and disrupt the system by adding an invasive species to see how the whole ecosystem responds.",
     parameterExplanations: {
-      producerPop:
-        "The starting number of plants (producers), adjustable from 50 to 500 in steps of 10. Plants are the energy base of the ecosystem — they convert sunlight into food via photosynthesis. A high plant population supports more herbivores; a very low plant population can cause the entire ecosystem to collapse because herbivores run out of food before predator populations can adjust.",
-      herbivorePop:
-        "The starting number of herbivores (rabbits), adjustable from 5 to 100 in steps of 5. Herbivores eat plants and are eaten by carnivores. Setting herbivore population too high relative to plants causes overgrazing. Setting it too low gives carnivores an immediate food shortage. Watch how changes here ripple upward to foxes and downward to plant recovery rates.",
-      carnivorePop:
-        "The starting number of carnivores (foxes), adjustable from 1 to 30 in steps of 1. Foxes keep the rabbit population in check. Too many foxes at the start can quickly wipe out rabbits, then starve themselves. Too few foxes lets rabbits multiply unchecked and overgraze plants. Experiment with the ratio of foxes to rabbits to find a stable oscillating cycle.",
-      invasiveSpecies:
-        "Toggles the addition of an invasive species into the ecosystem: 0 = no invasive species, 1 = invasive species introduced. This is a Pro-tier feature. Invasive species often outcompete native organisms for food or space because they have no natural predators in the new environment. Watch how a single introduced species can cascade through the entire food web and reshape population dynamics.",
+      preyPopulation:
+        "Prey Population sets the starting size of the prey group, from 10 to 200 organisms. In a predator-prey model, prey are the food source that allows predators to survive and reproduce. A larger prey population can support more predators for a while, but it can also create a larger crash once predation catches up. A smaller prey population may be easier for predators to overtake, especially if predator numbers begin high. Move this slider by itself first, then watch whether prey peaks come before predator peaks. That delay is the key evidence students use to interpret population cycles.",
+      predatorPopulation:
+        "Predator Population sets the starting size of the predator group, from 1 to 10 organisms. Predators reduce the prey population by feeding, but their own population depends on whether enough prey remain available. Starting with many predators can drive prey down quickly, then cause predator decline when food becomes scarce. Starting with only a few predators gives prey more time to increase before predation pressure grows. Keep Prey Population fixed while changing this slider to isolate how predator pressure changes the height, timing, and stability of the population waves.",
     },
     misconceptions: [
       {
@@ -151,9 +128,9 @@ export const msEcosystems: Experiment = {
           "Matter (atoms like carbon and nitrogen) does cycle through ecosystems via decomposition and nutrient cycling. But energy does not cycle — it flows in one direction. At each trophic level, typically around 90% of energy is lost as heat through metabolism and movement. This is why ecosystems need a continuous input of solar energy and why food chains rarely extend beyond four or five levels.",
       },
       {
-        wrong: "Invasive species are always stronger and will always win.",
+        wrong: "If prey start with a high population, predators will immediately become high too.",
         correct:
-          "Invasive species often succeed initially because they lack natural predators or parasites in their new environment — not because they are inherently superior. In their native ecosystems they are typically kept in balance by co-evolved predators and diseases. Given time, native ecosystems can sometimes adapt, and some invasive species fail when they encounter new limiting factors.",
+          "Predator populations usually lag behind prey populations. Even when prey are abundant, predators need time to find food, survive, reproduce, and add new individuals to the population. That delay is why predator-prey graphs often show prey peaking first, followed by predators. The two populations are connected, but they do not change at exactly the same moment.",
       },
       {
         wrong: "Predator and prey populations reach a steady balance and stay there.",
@@ -162,11 +139,11 @@ export const msEcosystems: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set producerPop to 200, herbivorePop to 30, and carnivorePop to 8. Run the simulation and have students sketch the population graph. Ask: which population peaks first, and which follows? Connect the delay to predator reproduction rates.",
-      "Reduce carnivorePop to 1 while keeping producerPop at 200 and herbivorePop at 50. Ask students to predict what happens to the plant population over time and explain the mechanism (herbivores unchecked, overgrazing).",
-      "Set producerPop to 50, herbivorePop to 60, and carnivorePop to 20. Let the simulation run and discuss why such an imbalanced starting point often leads to population collapse rather than stabilization.",
-      "Enable invasiveSpecies (Pro) with a balanced starting ecosystem. Before enabling it, ask students to predict which native species will be most affected and why. Compare their predictions to the simulation outcome.",
-      "Use the simulation as a data-collection activity: have students try three different starting ratios of herbivores to carnivores, record whether each leads to stable cycles or collapse, and graph their results to discuss carrying capacity concepts aligned with MS-LS2-1.",
+      "Start with Prey Population at 80 and Predator Population at 3. Run the simulation and have students sketch both population curves. Ask which curve peaks first and connect the delay to predator reproduction and food availability.",
+      "Keep Predator Population at 3 while moving Prey Population from 20 to 160. Students predict whether a larger prey base creates larger predator peaks, then compare the graph evidence to their prediction.",
+      "Keep Prey Population at 80 while moving Predator Population from 1 to 8. Students identify when predator pressure becomes strong enough to push prey into a sharp decline.",
+      "Use three starting ratios, such as 40:2, 80:3, and 160:6. Students record peak order, peak height, and whether the cycles appear stable or unstable over time.",
+      "Run a claim-evidence-reasoning discussion aligned with MS-LS2-1: students use slider values and population graph patterns as evidence for how resource availability and organism interactions affect population size.",
     ],
     faq: [
       {
@@ -177,7 +154,7 @@ export const msEcosystems: Experiment = {
       {
         question: "What is a trophic cascade?",
         answer:
-          "A trophic cascade is when a change at one level of a food web — usually the top predator — triggers a chain of population changes all the way down to the producers. Removing wolves from Yellowstone is the most cited real-world example: elk populations exploded, heavily grazed riverside willows and aspens, which destabilized stream banks, which changed river flow patterns. Reintroducing wolves reversed many of these changes. The simulation lets you observe simplified cascades by adjusting carnivore population.",
+          "A trophic cascade is when a change at one level of a food web triggers connected population changes at other levels. Removing wolves from Yellowstone is the most cited real-world example: elk populations grew, heavily grazed riverside willows and aspens, and changed streamside habitats. Reintroducing wolves helped reverse many of those effects. In this simulation, use the predator and prey sliders to study the first link in that kind of interaction: changing one population changes the pressure on the other.",
       },
       {
         question: "Which NGSS standards does this experiment address?",
@@ -192,7 +169,7 @@ export const msEcosystems: Experiment = {
       {
         question: "Why do invasive species often cause so much damage?",
         answer:
-          "Native species and their predators, parasites, and competitors have co-evolved over long time periods, so each species is kept in check by others. An invasive species arriving in a new ecosystem typically leaves those controls behind. Without natural enemies, it can reproduce rapidly, outcompete native species for food and space, and disrupt feeding relationships the ecosystem depends on. The simulation shows this disruption by allowing you to introduce a species that the existing food web was not balanced to include.",
+          "Native species and their predators, parasites, and competitors have co-evolved over long time periods, so each species is often kept in check by others. An invasive species arriving in a new ecosystem may leave those controls behind. Without natural enemies, it can reproduce rapidly, outcompete native species for food and space, and disrupt feeding relationships the ecosystem depends on. That same idea connects to predator-prey models: population balance depends on interactions, not just on how many organisms are present at the start.",
       },
     ],
   },

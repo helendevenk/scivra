@@ -23,44 +23,34 @@ export const membraneTransport: Experiment = {
 
   parameters: [
     {
-      id: "soluteConcInside",
-      label: "Intracellular Solute Concentration",
+      id: "externalConcentration",
+      label: "Extracellular Concentration",
       unit: "mM",
-      min: 10,
-      max: 200,
-      default: 100,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "soluteConcOutside",
-      label: "Extracellular Solute Concentration",
-      unit: "mM",
-      min: 10,
-      max: 200,
-      default: 50,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "temperature",
-      label: "Temperature",
-      unit: "°C",
-      min: 5,
-      max: 45,
-      default: 37,
+      min: 50,
+      max: 400,
+      default: 150,
       step: 1,
-      tier: "pro",
+      tier: "free",
     },
     {
-      id: "channelDensity",
-      label: "Aquaporin Channel Density",
-      unit: "channels/μm²",
+      id: "internalConcentration",
+      label: "Intracellular Concentration",
+      unit: "mM",
+      min: 50,
+      max: 400,
+      default: 150,
+      step: 1,
+      tier: "free",
+    },
+    {
+      id: "pumpRate",
+      label: "Pump Speed",
+      unit: "rate",
       min: 0,
-      max: 100,
-      default: 20,
-      step: 5,
-      tier: "pro",
+      max: 5,
+      default: 1,
+      step: 0.5,
+      tier: "free",
     },
   ],
 
@@ -83,7 +73,7 @@ export const membraneTransport: Experiment = {
     "The plasma membrane is a phospholipid bilayer with embedded proteins — the fluid mosaic model (Singer & Nicolson, 1972). Transport mechanisms: Simple diffusion — small nonpolar molecules (O₂, CO₂, steroids) move down their concentration gradient through the lipid bilayer. Facilitated diffusion — ions and polar molecules use channel proteins (ion channels, aquaporins) or carrier proteins (glucose transporters) to cross the membrane, still down the gradient, no ATP needed. Osmosis — water moves across a semipermeable membrane from low to high solute concentration (high to low water potential). Active transport — the Na⁺/K⁺ ATPase uses ATP to pump 3 Na⁺ out and 2 K⁺ in against their gradients, maintaining electrochemical gradients. Endocytosis and exocytosis move large molecules via vesicles.",
 
   instructions:
-    "Set the intracellular and extracellular solute concentrations and watch particles diffuse. When concentrations differ, the net flux is visible as colored arrows. Switch to Osmosis mode to see water movement. Toggle individual transport proteins (channel, carrier, pump) to compare passive vs active mechanisms. Adjust temperature to observe its effect on membrane fluidity and diffusion rate.",
+    "Use the Extracellular Concentration and Intracellular Concentration sliders to create isotonic, hypertonic, or hypotonic conditions, then adjust Pump Speed to compare passive gradient movement with ATP-driven transport. Try the Isotonic Solution, Hypertonic Solution, and Hypotonic Solution presets, then change one slider at a time and watch osmotic difference, ATP use, molecules moved, and mode labels update.",
 
   challenges: [
     {
@@ -131,18 +121,41 @@ export const membraneTransport: Experiment = {
     educationalLevel: "High School",
     teaches: "Cell Membrane Structure and Transport Mechanisms",
   },
+  htmlControlAliases: {
+    externalConcentration: "sl-ext",
+    internalConcentration: "sl-int",
+    pumpRate: "sl-pump",
+  },
+  presets: [
+    {
+      id: "applyPreset:0",
+      label: "Isotonic Solution",
+      description:
+        "Sets extracellular and intracellular concentrations equal, with a moderate pump speed, so students can observe a balanced baseline with little net osmotic difference.",
+    },
+    {
+      id: "applyPreset:1",
+      label: "Hypertonic Solution",
+      description:
+        "Sets extracellular concentration higher than intracellular concentration and raises pump speed, showing a condition where water tends to leave the cell.",
+    },
+    {
+      id: "applyPreset:2",
+      label: "Hypotonic Solution",
+      description:
+        "Sets extracellular concentration lower than intracellular concentration and lowers pump speed, showing a condition where water tends to enter the cell.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Every cell in your body is surrounded by a phospholipid bilayer — two sheets of fat molecules arranged tail-to-tail — that controls traffic between the inside of the cell and the outside world. Small nonpolar molecules like oxygen and carbon dioxide slip through the bilayer directly; glucose and ions need protein escorts. Osmosis pulls water toward wherever solutes are more concentrated, and active pumps like the Na+/K+ ATPase burn one ATP to eject three sodium ions while pulling in two potassium ions, keeping neurons and muscle cells ready to fire. The concentration gradient is the address label: passive transport follows it for free, while active transport ships cargo against it at ATP cost. Set the intracellular and extracellular solute sliders to opposite extremes and watch net flux reverse direction.",
     parameterExplanations: {
-      soluteConcInside:
-        "The concentration of dissolved solutes inside the cell membrane, in millimoles per liter (mM). A typical mammalian cell cytoplasm holds roughly 100 mM solutes. Raising this value above the outside concentration drives water into the cell by osmosis and creates an outward gradient for solute diffusion.",
-      soluteConcOutside:
-        "The concentration of dissolved solutes in the extracellular fluid, in mM. Blood plasma sits around 290 mOsm (~145 mM NaCl equivalent). When this value exceeds soluteConcInside, the cell is in a hypertonic environment — water exits by osmosis and the cell shrinks.",
-      temperature:
-        "Temperature in degrees Celsius, range 5–45 °C. Higher temperatures increase membrane fluidity and give molecules more kinetic energy, accelerating diffusion rates. At 37 °C (normal body temperature) membrane proteins are optimally flexible; below ~15 °C membrane lipids stiffen and transport slows noticeably.",
-      channelDensity:
-        "The number of aquaporin water channels per square micrometer of membrane surface. Human red blood cells express about 200,000 AQP1 molecules per cell, giving very fast water equilibration. Drag this slider to zero to see how slowly water moves by unaided diffusion through the lipid bilayer alone.",
+      externalConcentration:
+        "Extracellular Concentration sets the solute level outside the membrane, from dilute fluid at 50 mM to a concentrated environment at 400 mM. Compare it with Intracellular Concentration rather than reading it alone: if the outside value is higher, the solution is hypertonic relative to the cell and the osmotic difference favors water leaving. If it is lower, the outside solution is hypotonic and the model favors water entry. Start with the Isotonic Solution preset, then raise only this slider to isolate how the external environment changes net transport direction, osmotic difference, and the displayed mode.",
+      internalConcentration:
+        "Intracellular Concentration sets the solute level inside the cell, using the same 50-400 mM scale as the outside fluid. This value represents the cell's internal dissolved ions and molecules, so it helps determine whether the cell is balanced, losing water, or gaining water. Raising it above the outside concentration creates a hypotonic outside condition and favors water movement into the cell. Lowering it below the outside concentration creates a hypertonic outside condition and favors water movement out. Use the Hypertonic and Hypotonic presets as anchors, then move only this slider to test how internal composition changes the gradient.",
+      pumpRate:
+        "Pump Speed controls how quickly the active transport pump cycles, from 0 rate to 5 rate. Unlike diffusion and osmosis, a pump can move selected particles against a gradient by using ATP, so this slider changes the ATP count and molecules-moved readout rather than just changing concentration labels. A low value lets passive gradient effects dominate the scene; a higher value emphasizes ATP-driven maintenance of unequal internal and external conditions. Compare the three presets at their starting pump speeds, then set Pump Speed to 0 to ask what the membrane would do without active transport supporting homeostasis.",
     },
     misconceptions: [
       {
@@ -171,27 +184,27 @@ export const membraneTransport: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Gradient flip demo: set soluteConcInside to 150 mM and soluteConcOutside to 50 mM, then reverse the values and ask students to predict flux direction before the simulation runs — probes the 'what drives transport' misconception.",
-      "Aquaporin ablation: drag channelDensity to 0 and measure (by counting animation frames) how long water equilibration takes vs. channelDensity at 80 — introduces the concept that protein channels can accelerate passive processes without adding energy.",
-      "Data collection — temperature vs. rate: record diffusion arrow speed at 10 °C, 25 °C, and 37 °C and plot a graph; students extrapolate to 45 °C and discuss why high temperatures eventually denature membrane proteins and stop transport.",
-      "Active vs. passive classification: display each transport protein (channel, carrier, pump) one at a time and ask students to classify it as AP Bio 2.B.1 passive or 2.B.2 active before revealing the answer — connects classification to mechanistic reasoning.",
-      "Misconception probe: ask students to explain in writing why the Na+/K+ ATPase must use ATP even though diffusion alone would push Na+ into the cell and K+ out — those who say 'because it moves fast' are confusing speed with energy; use this to anchor the correct definition.",
+      "Gradient flip demo: set Extracellular Concentration to 300 mM and Intracellular Concentration to 100 mM, then reverse the values and ask students to predict the displayed mode and osmotic difference before the simulation updates.",
+      "Preset comparison: run Isotonic Solution, Hypertonic Solution, and Hypotonic Solution in sequence, recording extracellular concentration, intracellular concentration, pump speed, osmotic difference, and visible particle movement for each case.",
+      "Active transport isolation: hold both concentration sliders at the Isotonic Solution preset values, then move Pump Speed from 0 to 5 and ask students which readouts change because of ATP-driven pumping rather than diffusion.",
+      "One-variable investigation: keep Pump Speed fixed at 1 rate, move only Extracellular Concentration in 50 mM steps, and have students identify where the mode changes from hypotonic to isotonic to hypertonic.",
+      "Misconception probe: ask students to explain why Pump Speed is not the same as passive diffusion speed; students should connect active transport to ATP use and gradient maintenance, not simply to faster particle motion.",
     ],
     faq: [
       {
         question: "What is the difference between facilitated diffusion and active transport?",
         answer:
-          "Both use membrane proteins, but facilitated diffusion moves molecules down their concentration gradient and requires no energy input — glucose transporters (GLUTs) work this way. Active transport moves molecules against their gradient and requires ATP or co-transport coupling. The Na+/K+ ATPase is the classic active transporter, consuming one ATP per cycle to pump 3 Na+ out and 2 K+ in.",
+          "Both can involve membrane proteins, but they differ in energy and direction. Facilitated diffusion moves substances down their concentration gradient and requires no ATP. Active transport moves selected substances against their gradient and requires energy, often from ATP. In this simulation, use Extracellular Concentration and Intracellular Concentration to create the gradient, then change Pump Speed to see how active transport can maintain an unequal internal and external condition instead of simply letting the system drift toward balance.",
       },
       {
-        question: "Why does a cell need aquaporins if water can already cross the lipid bilayer?",
+        question: "How do I tell whether the setup is isotonic, hypertonic, or hypotonic?",
         answer:
-          "Unaided water permeation through a pure lipid bilayer is about 100-fold slower than through an aquaporin channel. Cells with high water-flux demands — kidney tubule cells, red blood cells, plant root cells — would equilibrate too slowly without them. A single AQP1 aquaporin passes roughly 3 × 10^9 water molecules per second.",
+          "Compare the two concentration sliders. If Extracellular Concentration and Intracellular Concentration are equal, the solution is isotonic relative to the cell and there is little net osmotic difference. If the outside concentration is higher, the outside solution is hypertonic and water tends to leave the cell. If the outside concentration is lower, the outside solution is hypotonic and water tends to enter the cell. The three presets give quick reference cases for those comparisons.",
       },
       {
         question: "How does this experiment connect to AP Bio 2.B.2 and HS-LS1-3?",
         answer:
-          "AP Bio 2.B.2 requires students to explain how cells maintain internal environments different from their surroundings through active transport. HS-LS1-3 covers how feedback mechanisms maintain dynamic equilibrium. This simulation lets students observe both: passive gradients can be allowed to equilibrate (HS-LS1-3 feedback) or the pump can be activated to maintain a steady-state difference (AP Bio 2.B.2).",
+          "AP Bio 2.B.2 requires students to explain how cells maintain internal environments different from their surroundings through active transport. HS-LS1-3 covers how feedback mechanisms maintain dynamic equilibrium. This simulation lets students observe both: concentration differences create passive gradient effects, while Pump Speed represents ATP-driven transport that can help maintain a steady-state difference instead of letting gradients simply equilibrate.",
       },
       {
         question: "What happens to a red blood cell placed in pure water?",
