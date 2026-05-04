@@ -36,7 +36,7 @@ export interface HtmlControl {
 const EXCLUDED_ID_PATTERNS: RegExp[] = [
   /^(play|pause|playBtn|playPause|step|reset|resetBtn)$/i,
   /^(speed|playSpeed|playback)/i,
-  /-(speed|playback)$/i,
+  /^(?!sl-).*-(speed|playback)$/i,
   /^(fullscreen|fs-|about|help|info|infoBtn|helpBtn|aboutBtn)/i,
   /^(quiz|q-|question)/i,
   /^(d-|data-|display-|readout|readout-|out-|o-|val-|value-)/i,
