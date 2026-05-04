@@ -16,12 +16,12 @@ export const mineralIdentification: Experiment = {
   tags: ["mineral identification", "Mohs hardness", "luster", "cleavage", "streak test", "Earth science"],
   difficulty: "beginner",
   parameters: [
-    { id: "mineralSample", label: "Mineral Sample (0-9)", unit: "", min: 0, max: 9, default: 0, step: 1, tier: "free" },
-    { id: "testType", label: "Test (0=hardness, 1=luster, 2=streak, 3=cleavage)", unit: "", min: 0, max: 3, default: 0, step: 1, tier: "free" },
+    { id: "sampleSize", label: "Sample Size", unit: "x", min: 0.3, max: 2.5, default: 1, step: 0.1, tier: "free" },
+    { id: "rotationSpeed", label: "Rotation Speed", unit: "x", min: 0, max: 3, default: 1, step: 0.1, tier: "free" },
   ],
   formulas: [],
   theory: "Minerals are identified by physical properties, not appearance alone. Mohs hardness scale (1-10) ranks scratch resistance: talc (1), gypsum (2), calcite (3), fluorite (4), apatite (5), feldspar (6), quartz (7), topaz (8), corundum (9), diamond (10). Luster describes how light reflects: metallic, vitreous (glassy), pearly, silky, or earthy. Streak is the color of powdered mineral on unglazed porcelain — often different from the mineral's apparent color. Cleavage describes how minerals break along flat planes determined by crystal structure; fracture describes irregular breaking. These properties together form a diagnostic fingerprint for each mineral.",
-  instructions: "Select a mineral sample and perform tests. Compare results against the mineral database to identify the unknown. Complete all four tests for the most accurate identification.",
+  instructions: "Use the Sample Size slider to zoom the mineral model larger or smaller, and use the Rotation Speed slider to control how quickly it turns. Try the Quartz, Feldspar, Pyrite, and Biotite Mica presets to compare crystal shape, surface appearance, and identifying visual clues.",
   challenges: [
     { id: "mi-c1", question: "A mineral scratches glass (hardness ~5.5) but not quartz. What is its approximate hardness?", hint: "Between 5.5 and 7 on the Mohs scale — could be feldspar (6) or similar", tier: "free" },
     { id: "mi-c2", question: "A gold-colored mineral has a black streak. Is it gold or pyrite?", hint: "Pyrite — real gold has a golden-yellow streak, while pyrite ('fool's gold') has a dark greenish-black streak", tier: "free" },
@@ -32,20 +32,27 @@ export const mineralIdentification: Experiment = {
   seoTitle: "Mineral Identification Virtual Lab | Scivra Earth Science",
   seoKeywords: ["mineral identification simulation", "Mohs hardness interactive", "streak test virtual lab", "NGSS Earth science"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Middle School", teaches: "Mineral Identification" },
+  htmlControlAliases: { sampleSize: "sizeSlider", rotationSpeed: "rotSlider" },
+  presets: [
+    { id: "setMineral:quartz", label: "Quartz", description: "Quartz is a common hard mineral with a glassy look and clear to milky crystal forms. Use it as a baseline for comparing clean, nonmetallic mineral surfaces." },
+    { id: "setMineral:feldspar", label: "Feldspar", description: "Feldspar is a common rock-forming mineral with blocky crystal habits and lighter colors. Compare it with quartz to notice differences in shape and surface texture." },
+    { id: "setMineral:pyrite", label: "Pyrite (Fool's Gold)", description: "Pyrite has a brassy metallic appearance that can be mistaken for gold. Rotate it slowly to inspect its shiny faces and crystal geometry." },
+    { id: "setMineral:mica", label: "Biotite Mica", description: "Biotite mica appears dark and sheet-like. Use this preset to discuss how mineral structure can create thin layers and directional breakage." }
+  ],
   contentSections: {
     whatIsIt:
       "Minerals are the natural building blocks that make up rocks and much of Earth's crust. Scientists identify minerals not by color alone — which can vary — but by a set of reliable physical properties that stay consistent for each mineral type. The Mohs hardness scale ranks minerals from 1 (talc, the softest, like a bar of soap) to 10 (diamond, the hardest substance in nature). Luster describes the way a mineral's surface reflects light: metallic luster looks shiny like a coin, while vitreous (glassy) luster looks like the surface of a broken bottle. Streak is the color of a mineral's powder, tested by dragging it across unglazed porcelain — and streak can be surprisingly different from the mineral's surface color. Cleavage describes how a mineral breaks along flat, smooth planes; fracture describes a rough or irregular break. Using all four tests together, a scientist can build a diagnostic fingerprint that uniquely identifies almost any common mineral. This simulation lets you practice each test on ten different mineral samples.",
     parameterExplanations: {
-      mineralSample:
-        "Selects one of ten mineral samples to examine, numbered 0 through 9. Each sample has different physical properties — some are soft and waxy, others are glassy and hard. Switch between samples to compare how different minerals respond to the same test.",
-      testType:
-        "Chooses which physical property test to run: 0 runs a scratch test to determine Mohs hardness, 1 examines how light reflects off the surface (luster), 2 drags the sample across porcelain to reveal its streak color, and 3 looks at how the mineral breaks to show cleavage or fracture patterns. Run all four tests on each sample for the most reliable identification.",
+      sampleSize:
+        "Sample Size changes how large the mineral model appears in the viewing area. A smaller size helps students see the whole specimen at once, including the overall crystal habit and outline. A larger size is better for inspecting surface clues such as glassy shine, metallic reflection, sheet-like layering, or blocky faces. Use this slider after choosing a preset so students can zoom into the same mineral without changing which sample they are studying. That separation matters: size is a viewing control, not a mineral property. It supports closer observation while keeping the identification evidence tied to the selected mineral.",
+      rotationSpeed:
+        "Rotation Speed controls how quickly the mineral turns in the 3D viewer. Slow rotation gives students time to compare faces, edges, and reflective surfaces without losing details. Faster rotation is useful for a quick whole-sample scan, especially when comparing quartz, feldspar, pyrite, and biotite mica as a class. Set the speed to zero when students need to sketch or describe a single view, then increase it to reveal features that are hidden from one angle. The slider changes the animation only; it does not change hardness, luster, streak, cleavage, or any other mineral property.",
     },
     misconceptions: [
       {
         wrong: "You can always identify a mineral just by its color.",
         correct:
-          "Color is one of the least reliable mineral properties because impurities can completely change it. Quartz, for example, can appear purple, pink, white, or clear depending on trace elements. Scientists use hardness, streak, cleavage, and luster together because those properties are far more consistent and trustworthy.",
+          "Color is one of the least reliable mineral properties because impurities can completely change it. Quartz, for example, can appear purple, pink, white, or clear depending on trace elements. Scientists compare multiple lines of evidence, including hardness, streak, cleavage, crystal habit, and luster, because those properties are far more consistent and trustworthy than color alone.",
       },
       {
         wrong: "A mineral that looks metallic must contain metal.",
@@ -55,7 +62,7 @@ export const mineralIdentification: Experiment = {
       {
         wrong: "Streak color is always the same as the mineral's visible surface color.",
         correct:
-          "Streak often differs dramatically from surface color. Pyrite looks golden on the outside but leaves a greenish-black streak. Hematite looks silver or reddish on the outside but always leaves a rust-red streak. That contrast is exactly what makes streak such a useful test — it cuts through misleading surface appearances.",
+          "Streak often differs dramatically from surface color. Pyrite looks golden on the outside but leaves a greenish-black streak. Hematite looks silver or reddish on the outside but always leaves a rust-red streak. That contrast is exactly what makes streak useful in a hands-on mineral lab: it cuts through misleading surface appearances.",
       },
       {
         wrong: "Cleavage and fracture are the same thing.",
@@ -69,10 +76,11 @@ export const mineralIdentification: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Select whichever mineralSample the simulation labels as gypsum and set testType to 0 to run the scratch test, then switch to the sample labeled quartz and compare results — students discover that gypsum can be scratched by a fingernail while quartz scratches glass, building intuition for the Mohs scale.",
-      "Cycle testType from 0 to 3 while keeping mineralSample fixed on one sample — students record all four properties and practice filling in a mineral identification table, mirroring real lab data collection.",
-      "Select the mineralSample labeled pyrite and set testType to 2 for the streak test — compare the golden surface color with the dark streak to address the 'fool's gold' misconception before students encounter pyrite in a rock collection.",
-      "Have students guess the mineral using only testType 1 (luster), then reveal the full identity after running all tests — demonstrates why single-property identification is unreliable and why scientists use multiple lines of evidence (MS-ESS2-1).",
+      "Start with the Quartz preset at a slow Rotation Speed and ask students to describe crystal shape, transparency, and luster before changing the Sample Size for a closer inspection.",
+      "Switch between Quartz and Feldspar while keeping the same Sample Size and Rotation Speed so students compare one visual variable at a time and practice evidence-based observation.",
+      "Use the Pyrite preset to discuss why metallic appearance and brassy color can be misleading, then connect the observation to why geologists use additional tests in a real mineral lab.",
+      "Choose the Biotite Mica preset, pause or slow the Rotation Speed, and have students sketch the sheet-like structure as evidence of mineral structure and breakage patterns.",
+      "Run a class comparison across all four presets, asking students to cite one visible feature from each sample and connect those observations to mineral identification practice (MS-ESS2-1).",
     ],
     faq: [
       {
@@ -88,7 +96,7 @@ export const mineralIdentification: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation directly supports MS-ESS2-1, which asks students to develop a model to describe the cycling of Earth's materials and the flow of energy that drives this process. Identifying the minerals that form rocks is a foundational step toward understanding the rock cycle. It also builds the scientific practice of using evidence-based criteria (multiple physical tests) to classify natural objects.",
+          "This simulation supports MS-ESS2-1 by helping students observe the minerals that make up many rocks and connect those observations to Earth's materials. Identifying mineral features is a foundational step toward understanding the rock cycle. It also builds the scientific practice of using evidence-based criteria to compare and classify natural objects.",
       },
       {
         question: "What is the difference between a mineral and a rock?",
@@ -98,7 +106,7 @@ export const mineralIdentification: Experiment = {
       {
         question: "Can two different minerals have exactly the same hardness?",
         answer:
-          "Yes, it is possible for two minerals to scratch each other with roughly equal ease, which means they have similar hardness values. In practice, geologists perform the scratch test in both directions and also compare against known reference minerals and everyday objects (copper coin ~3, glass plate ~5.5, steel file ~6.5) to narrow down the range. When hardness alone is ambiguous, the other three tests — luster, streak, and cleavage — help distinguish them.",
+          "Yes, it is possible for two minerals to scratch each other with roughly equal ease, which means they have similar hardness values. In practice, geologists perform the scratch test in both directions and also compare against known reference minerals and everyday objects (copper coin ~3, glass plate ~5.5, steel file ~6.5) to narrow down the range. When hardness alone is ambiguous, other evidence such as luster, streak, cleavage, crystal habit, and density can help distinguish them.",
       },
     ],
   },

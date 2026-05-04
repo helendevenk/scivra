@@ -23,44 +23,34 @@ export const msPlateTectonics: Experiment = {
 
   parameters: [
     {
-      id: "boundaryType",
-      label: "Boundary (0=Convergent, 1=Divergent, 2=Transform)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
+      id: "convergenceRate",
+      label: "Convergence Rate",
+      unit: "x0.1 cm/yr",
+      min: 1,
+      max: 50,
+      default: 25,
       step: 1,
       tier: "free",
     },
     {
-      id: "plateSpeed",
-      label: "Plate Speed",
-      unit: "cm/yr",
-      min: 0.1,
-      max: 20,
-      default: 2,
-      step: 0.5,
+      id: "densityContrast",
+      label: "Density Contrast",
+      unit: "",
+      min: 1,
+      max: 10,
+      default: 5,
+      step: 1,
       tier: "free",
     },
     {
-      id: "timescale",
-      label: "Time (millions of years)",
-      unit: "Myr",
-      min: 0,
-      max: 250,
-      default: 0,
-      step: 10,
-      tier: "pro",
-    },
-    {
-      id: "showPangaea",
-      label: "Start from Pangaea (0=No, 1=Yes)",
+      id: "viscosity",
+      label: "Mantle Viscosity",
       unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
+      min: 1,
+      max: 5,
+      default: 3,
       step: 1,
-      tier: "pro",
+      tier: "free",
     },
   ],
 
@@ -79,7 +69,7 @@ export const msPlateTectonics: Experiment = {
     "Earth's outer shell (lithosphere) is divided into about 15 major tectonic plates that ride over the mostly solid but slowly flowing, plastic asthenosphere. These plates move 2-10 cm per year driven by convection currents in the mantle. Convergent boundaries (plates collide): continental-continental creates mountain ranges (Himalayas); oceanic-continental creates subduction zones, ocean trenches, and volcanoes; oceanic-oceanic creates island arcs. Divergent boundaries (plates separate): creates rift valleys (East Africa) on land, mid-ocean ridges under the sea (seafloor spreading). Transform boundaries (plates slide past each other): creates strike-slip faults and earthquakes (San Andreas Fault). About 250 million years ago, all continents were joined in one supercontinent called Pangaea, which has since broken apart.",
 
   instructions:
-    "Choose a boundary type and watch the animation. Convergent: watch mountains build or crust subduct into the mantle. Divergent: watch the gap widen and magma fill it. Transform: watch earthquakes occur along the fault line. Use the Timescale slider (Pro) to watch millions of years of plate movement in seconds. Enable Pangaea to watch continental drift.",
+    "Use the Convergence Rate slider to speed up or slow down plate motion, the Density Contrast slider to compare which plate tends to sink, and the Mantle Viscosity slider to set the intended mantle-flow resistance. Try the Mid-Ocean Ridge, Cascadia Subduction, and San Andreas Transform presets to compare divergent, convergent, and transform boundary cases.",
 
   challenges: [
     {
@@ -126,18 +116,37 @@ export const msPlateTectonics: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Plate Tectonics and Earth's Dynamic Systems",
   },
+  htmlControlAliases: { convergenceRate: "sl-conv", densityContrast: "sl-dens", viscosity: "sl-visc" },
+  presets: [
+    {
+      id: "ridge",
+      label: "Mid-Ocean Ridge (Divergent)",
+      description:
+        "Shows plates pulling apart at a ridge, with moderate convection speed and low density contrast to emphasize seafloor spreading and new crust formation.",
+    },
+    {
+      id: "subduct",
+      label: "Cascadia Subduction",
+      description:
+        "Shows a convergent margin with faster plate motion and high density contrast, emphasizing subduction, trench formation, volcanoes, and earthquake hazards.",
+    },
+    {
+      id: "transform",
+      label: "San Andreas Transform",
+      description:
+        "Shows plates sliding past one another with moderate-fast motion and low density contrast, emphasizing transform fault motion and shallow earthquakes.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Earth's outer shell is not one solid piece — it is broken into roughly 15 major sections called tectonic plates, like the cracked shell of a hard-boiled egg. These plates ride over the mostly solid but slowly flowing, plastic asthenosphere, and they move slowly but continuously, driven by slow-churning heat currents deep in the mantle — similar to how heating soup from below causes the liquid to circulate. Most plates move about 2 to 10 centimeters per year, roughly the rate your fingernails grow. Slow as that sounds, over millions of years it is enough to open oceans, build mountain ranges, and carry continents across the globe. Where plates meet, dramatic things happen. Plates colliding head-on build mountains or push ocean floor down into the mantle. Plates pulling apart create rift valleys or mid-ocean ridges where new crust forms. Plates grinding sideways past each other produce faults and earthquakes. About 250 million years ago all the continents were joined into one giant landmass called Pangaea, and the world map you recognize today is simply the result of where those plates have drifted since.",
     parameterExplanations: {
-      boundaryType:
-        "Selects which type of plate boundary to visualize: 0 for convergent (plates moving toward each other), 1 for divergent (plates moving apart), or 2 for transform (plates sliding sideways past each other). Each boundary type produces a distinct set of geological features — mountains and trenches at convergent boundaries, rift valleys and ridges at divergent boundaries, and strike-slip faults at transform boundaries.",
-      plateSpeed:
-        "Sets how fast the plates are moving relative to each other, from a slow 0.1 cm/yr to a geologically rapid 20 cm/yr. Real tectonic plates typically move between 2 and 10 cm/yr. Increasing speed in the simulation compresses the time needed to observe significant geological changes and makes the effects at the boundary more visually obvious.",
-      timescale:
-        "A Pro feature that advances time in millions of years (0 to 250 Myr), allowing you to watch the slow accumulation of continental drift, mountain building, or seafloor spreading over geological timescales. At 250 million years, the simulation can show the breakup of Pangaea and the formation of the modern continents.",
-      showPangaea:
-        "A Pro feature that resets the continental positions to Pangaea when set to 1, allowing you to watch continental drift from the supercontinent configuration forward in time. Set to 0 to start from the present-day arrangement of continents.",
+      convergenceRate:
+        "Convergence Rate maps to the HTML Convection Speed control. The slider stores values from 1 to 50, displayed in the simulation as 0.1 to 5.0 cm/yr. Raising it makes the plates move faster in the visible model, so ridge spreading, subduction motion, or transform offset accumulates more quickly. Use this slider after selecting a preset to isolate rate: keep Density Contrast steady, change only Convergence Rate, and ask students which observations change because the boundary is moving faster rather than because the boundary type changed.",
+      densityContrast:
+        "Density Contrast represents how different the two plates are in density. Low values make the plates behave more similarly, while high values emphasize the idea that a denser plate is more likely to sink beneath a less dense plate at a convergent margin. This is especially useful with the Cascadia Subduction preset, where students can connect oceanic crust, continental crust, trenches, volcanic arcs, and earthquake zones. Compare the ridge, subduction, and transform presets, then move only Density Contrast to separate plate material properties from motion rate.",
+      viscosity:
+        "Mantle Viscosity represents how resistant the mantle is to slow flow. Lower viscosity means material would deform and circulate more easily, while higher viscosity means stronger resistance to motion. In the current HTML control set, this slider is exposed as the Mantle Viscosity setting with five labeled levels from Very Low to Very High. Use it as a conceptual comparison alongside Convergence Rate: students can discuss why real mantle rock can be solid yet still flow over long timescales, and why resistance to flow matters for plate motion.",
     },
     misconceptions: [
       {
@@ -162,10 +171,11 @@ export const msPlateTectonics: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set boundaryType to 0 (convergent) and plateSpeed to 5 cm/yr, then watch the animation and ask students to identify whether it shows an oceanic-continental or continental-continental collision — introduces the idea that the same boundary type produces different outcomes depending on the density of the colliding plates.",
-      "Cycle through all three boundaryType values at a fixed plateSpeed of 2 cm/yr and have students sketch a labeled diagram for each — the three sketches together build a visual comparison chart that directly supports MS-ESS2-2 and MS-ESS2-3.",
-      "Set boundaryType to 1 (divergent) and gradually increase plateSpeed from 0.1 to 15 cm/yr — students observe how faster spreading produces more magma output and discuss the connection between seafloor spreading rate and ocean basin growth over time.",
-      "Before using the simulation, have students lay tracing paper over a world map and cut out continent shapes, then physically try to fit them together — afterwards open the simulation with showPangaea set to 1 and compare their reconstructions to the Pangaea starting position, connecting their hands-on inference to the scientific model.",
+      "Start with the Mid-Ocean Ridge preset, record the Convergence Rate and Density Contrast values, then have students explain how a divergent boundary creates new oceanic crust at a ridge.",
+      "Switch between the Mid-Ocean Ridge, Cascadia Subduction, and San Andreas Transform presets while students sketch one labeled boundary model for each, supporting MS-ESS2-2 and MS-ESS2-3 comparison work.",
+      "Use the Cascadia Subduction preset, then change only Density Contrast from low to high so students can connect plate density, subduction direction, trench formation, volcanic arcs, and earthquake hazards.",
+      "Keep the preset fixed and move only the Convergence Rate slider through low, medium, and high trials; students record plate speed and explain why geological change is slow in real time but visible in a model.",
+      "Use the Mantle Viscosity slider as a discussion prompt: students compare low and high labels, then explain how solid mantle rock can still flow over long timescales under heat and pressure.",
     ],
     faq: [
       {
@@ -174,9 +184,9 @@ export const msPlateTectonics: Experiment = {
           "The main driver is heat from Earth's interior, generated both by leftover heat from the planet's formation and from the ongoing radioactive decay of elements like uranium and thorium in the mantle. This heat drives slow convection currents in the mantle rock — hot material rises, spreads, cools, and sinks in enormous loops that drag the lithospheric plates along. Slab pull — the weight of a dense sinking slab at a subduction zone — is also thought to be a significant force pulling plates apart at mid-ocean ridges.",
       },
       {
-        question: "How do we know Pangaea was real if no one was alive to see it?",
+        question: "What do the three boundary presets show?",
         answer:
-          "Multiple independent lines of evidence support the existence of Pangaea. The coastlines of South America and Africa fit together like puzzle pieces. Identical fossils of the freshwater reptile Mesosaurus are found on both continents — it could not have swum the Atlantic Ocean. Matching geological rock formations and ancient mountain belts line up across the continental gap. Magnetic striping preserved in seafloor rock records the history of seafloor spreading symmetrically away from mid-ocean ridges. Together these lines of evidence converge on the same conclusion.",
+          "The Mid-Ocean Ridge preset represents a divergent boundary where plates move apart and new oceanic crust forms. The Cascadia Subduction preset represents a convergent boundary where a denser plate dives beneath another plate, producing trenches, volcanoes, and earthquake zones. The San Andreas Transform preset represents plates sliding horizontally past each other, where stored stress can be released as earthquakes. Use the presets as starting cases, then change one slider at a time to test which observations come from motion rate, density contrast, or mantle-flow resistance.",
       },
       {
         question: "Which NGSS standards does this experiment address?",
@@ -184,9 +194,9 @@ export const msPlateTectonics: Experiment = {
           "This simulation supports MS-ESS2-2 (construct an explanation based on evidence for how geoscience processes change Earth's surface at varying scales) and MS-ESS2-3 (analyze and interpret data on the distribution of fossils and rocks, continental shapes, and seafloor structures to provide evidence of past plate motions). It also relates to MS-ESS3-2 by connecting plate boundary locations to natural hazard distributions such as earthquakes and volcanoes.",
       },
       {
-        question: "Could a new supercontinent form in the future?",
+        question: "How should students use the Density Contrast slider?",
         answer:
-          "Yes — plate tectonics has produced supercontinents before and will likely do so again. Scientists have proposed several possible future configurations. One scenario, sometimes called Amasia, suggests the Americas may continue drifting westward and eventually collide with Asia across the Pacific. Another scenario, Pangaea Proxima, suggests the Atlantic may close as the Americas drift back toward Europe and Africa. These events would unfold over hundreds of millions of years from now.",
+          "Density Contrast is best used for comparing plate material properties. Set a preset first, then change only Density Contrast while leaving Convergence Rate unchanged. Higher contrast emphasizes why denser oceanic crust is more likely to subduct beneath lighter continental crust at convergent margins. Lower contrast helps students see that not every boundary interaction is controlled by sinking crust. The important classroom move is to isolate one variable at a time: boundary preset for the scenario, Convergence Rate for motion speed, and Density Contrast for relative plate density.",
       },
       {
         question: "Why is the ocean floor younger than the continents?",

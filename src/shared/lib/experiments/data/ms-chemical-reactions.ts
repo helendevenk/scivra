@@ -23,44 +23,24 @@ export const msChemicalReactions: Experiment = {
 
   parameters: [
     {
-      id: "reactionType",
-      label: "Reaction (0=Combustion, 1=Synthesis, 2=Decomposition, 3=Single Displacement)",
-      unit: "",
-      min: 0,
-      max: 3,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
       id: "temperature",
       label: "Temperature",
       unit: "°C",
-      min: 20,
-      max: 500,
+      min: 10,
+      max: 1000,
       default: 25,
-      step: 10,
+      step: 1,
       tier: "free",
     },
     {
       id: "concentration",
       label: "Reactant Concentration",
       unit: "mol/L",
-      min: 0.1,
-      max: 2.0,
+      min: 1,
+      max: 5,
       default: 1.0,
-      step: 0.1,
+      step: 0.5,
       tier: "free",
-    },
-    {
-      id: "catalyst",
-      label: "Add Catalyst (0=No, 1=Yes)",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 0,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -79,7 +59,7 @@ export const msChemicalReactions: Experiment = {
     "A chemical reaction transforms reactants (starting materials) into products (ending materials) by breaking and forming chemical bonds. The atoms themselves are never created or destroyed — they just rearrange. This is the Law of Conservation of Mass: mass of reactants = mass of products. Reactions are classified by type: synthesis (A+B→AB), decomposition (AB→A+B), single displacement (A+BC→AC+B), double displacement (AB+CD→AD+CB), and combustion (fuel+O₂→CO₂+H₂O+heat). Energy changes: exothermic reactions release heat (ΔH<0), endothermic reactions absorb heat (ΔH>0). Reaction rate increases with temperature, concentration, surface area, and catalysts. A catalyst speeds up a reaction without being consumed.",
 
   instructions:
-    "Select a reaction type and press Play to watch atoms rearrange. The molecular model shows bonds breaking and forming. Check the mass balance — left side should equal right side. Increase temperature to speed up the reaction. Add a catalyst (Pro) to lower activation energy and dramatically increase rate.",
+    "Use the Temperature slider to change how energetic the particle collisions are, and use the Reactant Concentration slider to change how crowded the reactants are. Try the Combustion, Synthesis, and Decomposition presets to compare how different reactions rearrange atoms while conserving mass.",
 
   challenges: [
     {
@@ -126,18 +106,20 @@ export const msChemicalReactions: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Chemical Reactions and Conservation of Mass",
   },
+  htmlControlAliases: { temperature: "tempSlider", concentration: "concSlider" },
+  presets: [
+    { id: "combustion", label: "Combustion CH₄+O₂", description: "Methane and oxygen rearrange into carbon dioxide and water, showing a balanced combustion reaction that releases energy." },
+    { id: "synthesis", label: "Synthesis H₂+O₂→H₂O", description: "Hydrogen and oxygen combine to form water, making it easier to see how separate reactants become one product compound." },
+    { id: "decomposition", label: "Decomposition H₂O₂", description: "Hydrogen peroxide breaks apart into simpler substances, showing how one compound can split into multiple products." },
+  ],
   contentSections: {
     whatIsIt:
       "A chemical reaction is one of the most fundamental events in nature: atoms that were bonded in one arrangement break apart and reconnect in a completely new arrangement, forming substances with entirely different properties. When wood burns in a campfire, the carbon and hydrogen in the wood combine with oxygen from the air to produce carbon dioxide, water vapor, and light — a combustion reaction. The wood and oxygen are reactants; the CO2 and water are products. One of the most powerful ideas in science is that no atoms are created or destroyed during this process — they are only rearranged. This is the Law of Conservation of Mass, and it is why balanced chemical equations have equal numbers of each type of atom on both sides. This simulation shows four important reaction types at the molecular level: combustion, synthesis, decomposition, and single displacement. You can control temperature, reactant concentration, and — for Pro users — add a catalyst to see how reaction speed changes without changing the final outcome.",
     parameterExplanations: {
-      reactionType:
-        "Selects the reaction type to simulate (0=Combustion, 1=Synthesis, 2=Decomposition, 3=Single Displacement). Combustion (option 0) shows a fuel reacting with oxygen, releasing energy as heat and light. Synthesis (option 1) shows two or more simple substances combining into a single, more complex product. Decomposition (option 2) shows a single compound breaking apart into simpler substances, often requiring added energy. Single displacement (option 3) shows a more reactive element replacing a less reactive one in a compound. Each type shows distinct molecular rearrangements and different energy profiles.",
       temperature:
-        "Sets the reaction temperature in degrees Celsius (20 to 500°C). Temperature controls how fast molecules move. At higher temperatures, molecules collide more frequently and with more energy, increasing the chance that collisions lead to successful bond breaking and forming — the reaction speeds up. At lower temperatures, collisions are less frequent and weaker, slowing the reaction. This is why food spoils faster at room temperature than in a refrigerator, and why chemical reactions in warm tropical environments often occur faster than in cold polar regions.",
+        "Temperature sets how much kinetic energy the reacting particles have before they collide. When you raise the slider, particles move faster, collide more often, and hit with enough energy to break old bonds and form new ones more frequently. Lower temperatures slow those collisions, so the same reaction pattern can take longer to unfold. Keep the Concentration slider fixed while changing Temperature to isolate this variable. Then compare the Combustion, Synthesis, and Decomposition presets to see that temperature changes the rate of successful collisions, not the rule that atoms must be conserved in the balanced reaction.",
       concentration:
-        "Sets the initial concentration of reactants in moles per liter (0.1 to 2.0 mol/L). Higher concentration means more reactant particles are packed into the same volume, so collisions between reactant molecules happen more frequently. More frequent successful collisions mean a faster reaction rate. Halving the concentration typically slows the reaction rate noticeably. This principle is why concentrated cleaning products work faster than diluted ones, and why increasing the amount of fuel feeds a larger fire.",
-      catalyst:
-        "Toggles the addition of a catalyst (0=No, 1=Yes; Pro feature). A catalyst provides an alternative reaction pathway that requires less energy to get started (lower activation energy). More reactant molecules have enough energy to react, so the reaction runs faster. Importantly, the catalyst is not consumed — it participates in intermediate steps but is regenerated by the end, so it can be used again. The final products and their amounts are the same whether or not a catalyst is present — only the speed changes.",
+        "Concentration controls how many reactant particles are available in the reaction space. A higher value packs more particles into the same volume, which increases the number of collisions per second and usually speeds up product formation. A lower value spreads particles farther apart, so successful collisions are less frequent. Use this slider after choosing a preset: Combustion, Synthesis, and Decomposition each keep their own balanced equation, but concentration changes how quickly the visible reaction proceeds. Students can compare two trials with the same Temperature to explain reaction rate using particle crowding instead of changing the identities of the reactants.",
     },
     misconceptions: [
       {
@@ -151,9 +133,9 @@ export const msChemicalReactions: Experiment = {
           "Exothermic reactions release energy as heat, but only some of them are dramatic enough to produce visible flames or explosions. Hand warmers use an exothermic reaction (iron oxidation) that just produces warmth. Even dissolving some salts in water releases heat. Note: mixing baking soda and vinegar is actually endothermic — the mixture gets slightly cooler, not warmer. The amount and rate of energy release or absorption — not just the sign (exo vs. endo) — determines how dramatic the reaction appears.",
       },
       {
-        wrong: "A catalyst is consumed in the reaction and must be replaced each time.",
+        wrong: "The preset button changes the rules of conservation of mass.",
         correct:
-          "A true catalyst participates in the reaction mechanism but is regenerated at the end of each reaction cycle. It lowers the energy barrier (activation energy) needed to start the reaction without being used up. Catalysts can facilitate millions of reactions without being consumed. Enzymes in your body are biological catalysts — they speed up reactions constantly without being destroyed. Industrial catalysts in car exhaust systems (catalytic converters) work the same way.",
+          "A preset changes which reaction example you are viewing, not the rule that atoms are conserved. Combustion, synthesis, and decomposition have different reactants and products, but each balanced equation still keeps the same number of each atom type before and after the reaction. The preset is a shortcut for comparing reaction patterns. It does not allow atoms to appear, disappear, or change into different elements.",
       },
       {
         wrong: "Balancing chemical equations means changing the formulas of the molecules.",
@@ -167,11 +149,11 @@ export const msChemicalReactions: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Conservation of mass verification: set reactionType to 0 (Combustion) and concentration to 1.0 mol/L. Students count the atoms on each side of the displayed equation, confirm they balance, and then calculate the expected mass of products. Connect to the historical experiment where Lavoisier showed that mass is conserved in combustion by conducting reactions in sealed containers (MS-PS1-2).",
-      "Reaction type classification: run all four reaction types at temperature 25°C and concentration 1.0 mol/L. For each, students record the reactants, products, and molecular animation, then write a general pattern (A+B → AB, AB → A+B, etc.) and classify as synthesis, decomposition, combustion, or single displacement. Students sort real-world examples into each category (MS-PS1-2).",
-      "Temperature as a variable: hold reactionType at 1 (Synthesis), concentration at 1.0 mol/L, and catalyst at 0. Run the reaction at temperature 20°C, 200°C, and 400°C, counting how many product molecules form per unit time shown on screen. Students graph temperature vs. reaction rate and explain the relationship using the idea that higher temperature means more energetic collisions (MS-PS1-5).",
-      "Catalyst effect investigation (Pro): set reactionType to 0 (Combustion), temperature to 25°C, and concentration to 0.5 mol/L. Run without catalyst and record the time to complete. Then run with catalyst at 1 and compare. Students calculate the speed increase and research a real-world catalyst system (car catalytic converter, enzyme in digestion) to connect lab observations to applications.",
-      "Exothermic vs. endothermic sorting: run Combustion (exothermic) and Decomposition (often endothermic) at the same settings. Students observe the temperature change shown in the simulation for each, classify as exo or endothermic, and then sort a list of real reactions (ice pack, hand warmer, photosynthesis, burning toast) into the same categories using evidence from the simulation.",
+      "Conservation of mass verification: choose the Combustion preset and set concentration to 1.0 mol/L. Students count the atoms on each side of the displayed equation, confirm they balance, and then calculate the expected mass of products. Connect to the historical experiment where Lavoisier showed that mass is conserved in combustion by conducting reactions in sealed containers (MS-PS1-2).",
+      "Reaction type classification: run the Combustion, Synthesis, and Decomposition presets at temperature 25°C and concentration 1.0 mol/L. For each, students record the reactants, products, and molecular animation, then write a general pattern such as A+B → AB or AB → A+B. Students sort real-world examples into the matching categories (MS-PS1-2).",
+      "Temperature as a variable: choose the Synthesis preset and hold concentration at 1.0 mol/L. Run the reaction at temperature 20°C, 200°C, and 400°C, counting how many product molecules form per unit time shown on screen. Students graph temperature vs. reaction rate and explain the relationship using the idea that higher temperature means more energetic collisions (MS-PS1-5).",
+      "Concentration as a variable: choose the Combustion preset and hold temperature at 25°C. Run low, medium, and high concentration trials, recording the time needed for visible product formation. Students compare particle crowding across trials and use collision frequency to explain why reaction rate changes while the balanced equation remains the same (MS-PS1-5).",
+      "Exothermic vs. endothermic sorting: run Combustion and Decomposition at the same temperature and concentration settings. Students observe the temperature or energy change shown in the simulation for each, classify as exo or endothermic, and then sort a list of real reactions such as ice packs, hand warmers, photosynthesis, and burning toast into the same categories using evidence from the simulation.",
     ],
     faq: [
       {
@@ -182,7 +164,7 @@ export const msChemicalReactions: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation directly supports MS-PS1-2, which asks students to analyze data on the properties of substances before and after interactions to determine if a chemical reaction has occurred, and MS-PS1-5, which asks students to develop and use a model to describe how total particle number is conserved in a chemical reaction. The energy change component also connects to MS-PS1-6 (energy in chemical processes). The catalyst feature extends to HS-PS1-7 for advanced learners exploring reaction rate and mechanism.",
+          "This simulation directly supports MS-PS1-2, which asks students to analyze data on the properties of substances before and after interactions to determine if a chemical reaction has occurred, and MS-PS1-5, which asks students to develop and use a model to describe how total particle number is conserved in a chemical reaction. The balanced-equation and mass-conservation framing can also support HS-PS1-7 for advanced learners who are ready to reason quantitatively about reactants and products.",
       },
       {
         question: "How do you know when a chemical reaction has happened?",
@@ -192,7 +174,7 @@ export const msChemicalReactions: Experiment = {
       {
         question: "What is activation energy and why does every reaction need it?",
         answer:
-          "Activation energy is the minimum amount of energy that colliding reactant molecules must have to break existing bonds and start forming new ones. Even reactions that release a lot of energy overall — like burning wood — need an initial energy input to get started. This is why you need to light a match to start a fire even though the combustion reaction is highly exothermic. Reactant molecules must collide with enough force to overcome the energy barrier before the reaction proceeds. Catalysts lower this barrier, and higher temperatures give more molecules enough energy to clear it.",
+          "Activation energy is the minimum amount of energy that colliding reactant molecules must have to break existing bonds and start forming new ones. Even reactions that release a lot of energy overall — like burning wood — need an initial energy input to get started. This is why you need to light a match to start a fire even though the combustion reaction is highly exothermic. Reactant molecules must collide with enough force to overcome the energy barrier before the reaction proceeds. Higher temperatures give more molecules enough energy to clear that barrier.",
       },
       {
         question: "Why does increasing concentration speed up a chemical reaction?",

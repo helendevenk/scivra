@@ -22,8 +22,10 @@ export const massesSpringsBasics: Experiment = {
   difficulty: "beginner",
 
   parameters: [
-    { id: "mass", label: "Mass", unit: "kg", min: 0.1, max: 3, default: 1, step: 0.1, tier: "free" },
-    { id: "spring_constant", label: "Spring Constant", unit: "N/m", min: 10, max: 100, default: 40, step: 5, tier: "free" },
+    { id: "springConstant", label: "Spring Constant", unit: "N/m", min: 1, max: 200, default: 40, step: 1, tier: "free" },
+    { id: "mass", label: "Mass", unit: "kg", min: 0.1, max: 10, default: 1, step: 0.1, tier: "free" },
+    { id: "initialDisplacement", label: "Initial Displacement", unit: "m", min: -1, max: 1, default: 0.4, step: 0.02, tier: "free" },
+    { id: "gravity", label: "Gravity", unit: "m/s²", min: 1.6, max: 25, default: 9.8, step: 0.1, tier: "free" },
   ],
 
   formulas: [
@@ -34,7 +36,7 @@ export const massesSpringsBasics: Experiment = {
   theory:
     "A spring exerts a restoring force proportional to its displacement (Hooke's Law). This causes the mass to oscillate back and forth — simple harmonic motion. The period depends only on mass and spring constant, not on amplitude or gravity direction. This is one of the most fundamental forms of oscillatory motion in physics.",
   instructions:
-    "Select a mass from the shelf and hang it on the spring. Pull the mass down and release it. Use the stopwatch to measure the period. Try different masses and spring constants to verify the period formula.",
+    "Use the Spring Constant, Mass, Initial Displacement, and Gravity sliders to change the oscillator, then compare the Earth Default, Moon Gravity, Stiff Spring, and Heavy Mass presets. Watch the measured period, equilibrium line, velocity, and energy readouts as you isolate which controls change timing and which only shift the motion's size or center.",
   challenges: [
     { id: "msb-c1", question: "A 0.5kg mass on a spring (k=50 N/m). What is the period?", hint: "T = 2π√(0.5/50) = 2π√(0.01) ≈ 0.628 s", tier: "free" },
     { id: "msb-c2", question: "Does the period change if you double the initial stretch amplitude?", hint: "No — for ideal springs, period is independent of amplitude", tier: "free" },
@@ -49,15 +51,50 @@ export const massesSpringsBasics: Experiment = {
   seoTitle: "Masses and Springs Basics | Spring Oscillation Intro | Physics Lab",
   seoKeywords: ["masses springs basics", "spring oscillation", "SHM intro", "period mass spring"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "High School", teaches: "Spring Oscillation, Simple Harmonic Motion" },
+  htmlControlAliases: { springConstant: "sl-k", mass: "sl-m", initialDisplacement: "sl-x0", gravity: "sl-g" },
+  presets: [
+    {
+      id: "earth",
+      label: "Earth Default",
+      description:
+        "Standard classroom setup with k = 40 N/m, m = 1.0 kg, initial displacement = 0.40 m, and Earth gravity at 9.8 m/s².",
+      paramValues: { springConstant: 40, mass: 1.0, initialDisplacement: 0.4, gravity: 9.8 },
+    },
+    {
+      id: "moon",
+      label: "Moon Gravity",
+      description:
+        "Keeps the same spring, mass, and starting displacement as Earth Default while lowering gravity to 1.62 m/s² so students can test whether g changes the period.",
+      paramValues: { springConstant: 40, mass: 1.0, initialDisplacement: 0.4, gravity: 1.62 },
+    },
+    {
+      id: "stiff",
+      label: "Stiff Spring",
+      description:
+        "Raises the spring constant to 150 N/m with a smaller 0.20 m initial displacement, making the bounce faster and easier to compare against Earth Default.",
+      paramValues: { springConstant: 150, mass: 1.0, initialDisplacement: 0.2, gravity: 9.8 },
+    },
+    {
+      id: "heavy",
+      label: "Heavy Mass",
+      description:
+        "Increases the mass to 5.0 kg while keeping k = 40 N/m and Earth gravity, showing how inertia slows the spring's oscillation.",
+      paramValues: { springConstant: 40, mass: 5.0, initialDisplacement: 0.4, gravity: 9.8 },
+    },
+  ],
 
   contentSections: {
     whatIsIt:
       "Hang a backpack on a bungee cord and let it bob, watch a pogo stick spring after a kid lands on it, or squeeze the suspension on a mountain bike and let it pop back — each one is a mass tugging on a spring that pulls it back. This introductory lab keeps that picture as clean as possible: an ideal spring, a single mass on the end, no air resistance, no driving force, no damping. Drag the mass down, release, and the system traces out a perfect sinusoidal bounce that just keeps going. Two sliders, mass and spring constant, are all that change the rhythm. Time the period with the stopwatch, swap the mass, swap the spring, and watch how the timing shifts. The goal is to feel the relationship T = 2π√(m/k) before any algebra hits the page, then verify it numerically with a few measurements.",
     parameterExplanations: {
+      springConstant:
+        "Spring Constant controls k, the stiffness of the spring, in newtons per meter. A larger k means the spring pulls back harder for each meter of stretch or compression, so the mass reverses direction sooner and completes each cycle faster. In the period formula T = 2π√(m/k), k sits in the denominator: quadrupling k cuts the period in half when mass stays fixed. Use the Stiff Spring preset, then return to Earth Default and move only this slider to see how a sharper restoring force changes period, peak speed, and elastic potential energy.",
       mass:
-        "The block's mass in kilograms. Inertia means heavier blocks resist acceleration more, so the same spring takes longer to whip them back and forth. Period grows like √m — quadrupling mass doubles the period.",
-      spring_constant:
-        "How stiff the spring is, measured in newtons per meter. A stiffer spring (larger k) yanks harder for the same stretch, so the mass turns around faster and the period shrinks like 1/√k. Soft springs feel lazy; stiff ones feel snappy.",
+        "Mass controls m, the amount of inertia hanging from the spring. A heavier mass is pulled by the same spring force at a lower acceleration, so it takes longer to speed up, slow down, and turn around. The period formula T = 2π√(m/k) shows the square-root relationship: making the mass four times larger doubles the period, not quadruples it. Try the Heavy Mass preset and compare it with Earth Default while leaving spring constant and initial displacement alone. The equilibrium point shifts because weight changes, but the timing change comes from inertia.",
+      initialDisplacement:
+        "Initial Displacement sets how far the mass starts from equilibrium when the simulation resets, in meters. Positive and negative values launch the motion on opposite sides of the resting point, and larger magnitudes create a wider bounce with more stored spring energy. For an ideal Hooke's-law spring, this should not change the period: a larger pull gives the mass farther to travel, but also a stronger restoring force and higher peak speed. Move only this slider after choosing Earth Default to test amplitude independence and connect turn-around points, maximum speed, and energy exchange.",
+      gravity:
+        "Gravity controls g, the gravitational field strength used in the vertical spring setup. Increasing gravity pulls the hanging mass to a lower equilibrium position, while Moon gravity raises that equilibrium closer to the unstretched spring length. For oscillations measured around the new equilibrium, gravity does not appear in T = 2π√(m/k), so the period should stay the same when mass and spring constant stay fixed. Use Earth Default and Moon Gravity as a direct comparison: the center of the bounce shifts, but the measured cycle time remains governed by m and k.",
     },
     misconceptions: [
       {
@@ -70,7 +107,7 @@ export const massesSpringsBasics: Experiment = {
         wrong:
           "A heavier mass bounces faster because gravity pulls it harder.",
         correct:
-          "Heavier mass means slower oscillation. Gravity does pull harder, but it just sets a new resting position. Once the block is bouncing around that resting position, the period is T = 2π√(m/k) and grows with mass.",
+          "Heavier mass means slower oscillation when the spring constant stays fixed. Gravity does pull harder on the heavier object, but in a vertical spring that extra weight mainly lowers the equilibrium position. Once the mass is bouncing around that new center, the period is T = 2π√(m/k) and grows with mass.",
       },
       {
         wrong:
@@ -80,17 +117,17 @@ export const massesSpringsBasics: Experiment = {
       },
       {
         wrong:
-          "Spring oscillation needs gravity, so on the Moon it would slow down.",
+          "Changing the Gravity slider should change the measured period.",
         correct:
-          "The period formula has no g in it. Gravity only chooses where the new equilibrium is. A horizontal spring on a frictionless table oscillates with exactly the same T = 2π√(m/k), and on the Moon the same vertical setup oscillates at the same rate.",
+          "The period formula has no g in it. Gravity chooses where the new equilibrium line sits, but motion around that equilibrium still follows T = 2π√(m/k). Use Earth Default and Moon Gravity to compare: the center of the bounce moves, but the cycle time stays the same when m and k are unchanged.",
       },
     ],
     teacherUseCases: [
-      "First-day discovery: ask students to predict whether a heavier mass bounces faster or slower before they touch the simulation. Show a quick poll, then have them run three masses and a stopwatch to settle it. The contrast between intuition and data is the lesson.",
-      "Amplitude-independence demo: have one partner pull the spring down 5 cm and time 10 cycles, the other partner pull it down 25 cm and time 10 cycles. Same period. This is the hardest result for students to accept on first contact.",
-      "Quick √m relationship plot: collect period at five masses (0.5, 1, 2, 3, 4 kg) at fixed k. Plot T² vs m on graph paper or a spreadsheet. Students should get a straight line through the origin with slope 4π²/k.",
-      "Misconception probe — ask 'where in the cycle is the mass moving fastest?' before running the lab. Most beginners point to the bottom of the bounce. Use the simulation's velocity vector to overturn the wrong answer with visual evidence.",
-      "Bridge to the next lab: once students are comfortable here, run masses-springs-oscillation to add damping and driving force, or jump to pendulum-lab to test whether the same mass-independence story holds for swinging pendulums.",
+      "Preset comparison opener: have students run Earth Default, Moon Gravity, Stiff Spring, and Heavy Mass before touching sliders. They record measured period, equilibrium position, and one visible difference for each case, then identify which presets changed m, k, x0, or g.",
+      "Amplitude-independence demo: keep Spring Constant, Mass, and Gravity fixed while pairs test Initial Displacement values such as 0.10 m, 0.40 m, and 0.80 m. Students should see the bounce size change while measured period stays essentially constant.",
+      "Quick √m relationship plot: hold Spring Constant at 40 N/m and Gravity at 9.8 m/s², then collect period at five masses across the slider range. Plot T² vs m on graph paper or a spreadsheet; students should get a straight line with slope 4π²/k.",
+      "Gravity misconception probe: ask whether Moon Gravity should make the spring slower, then compare Earth Default and Moon Gravity. Students explain why the equilibrium line moves while the measured period remains controlled by mass and spring constant.",
+      "Energy and speed check: use the velocity and energy readouts while changing only Initial Displacement. Students identify where speed is greatest, where spring potential energy is greatest, and why larger amplitude does not imply a longer cycle.",
     ],
     faq: [
       {
@@ -106,7 +143,7 @@ export const massesSpringsBasics: Experiment = {
       {
         question: "Does this experiment satisfy AP Physics 1 standard 3.B.3?",
         answer:
-          "Yes. AP Physics 1 standard 3.B.3 asks students to predict the motion of an object subject to a restoring force proportional to displacement. This basics lab is the cleanest possible setup for that standard: it isolates Hooke's Law (F = -kx) and the resulting simple harmonic motion with no damping, no driving force, no friction. NGSS HS-PS2-1 also fits — students apply Newton's second law to predict the motion of the block under the spring force.",
+          "Yes. AP Physics 1 standard 3.B.3 asks students to predict the motion of an object subject to a restoring force proportional to displacement. This basics lab isolates Hooke's Law (F = -kx) and the resulting simple harmonic motion with no damping, no driving force, and no friction. The four sliders let students separate the variables that change period, mass and spring constant, from variables that change amplitude or equilibrium position. NGSS HS-PS2-1 also fits because students apply Newton's second law to predict the block's motion under the spring force.",
       },
       {
         question: "What's a real-world example of this physics?",
@@ -116,7 +153,7 @@ export const massesSpringsBasics: Experiment = {
       {
         question: "Why does this lab not include damping or a driving force?",
         answer:
-          "Pedagogical isolation. Damping pulls energy out and shifts the frequency slightly; a driving force introduces resonance and steady-state amplitude. Both are interesting physics, but they make it harder to see the simplest result — that mass and spring constant alone set the period. Once you've nailed that here, the masses-springs-oscillation lab adds damping and a tunable driver so you can study them one at a time.",
+          "Pedagogical isolation. Damping pulls energy out and shifts the frequency slightly; a driving force introduces resonance and steady-state amplitude. Both are interesting physics, but they make it harder to see the simplest result: mass and spring constant set the period, while initial displacement changes amplitude and gravity shifts the vertical equilibrium. Once students have nailed that here, the advanced masses-and-springs lab can add damping and a tunable driver so those effects can be studied one at a time.",
       },
     ],
   },

@@ -16,16 +16,16 @@ export const msChemicalStoichiometry: Experiment = {
   tags: ["stoichiometry", "mole ratio", "limiting reagent", "yield", "middle school chemistry"],
   difficulty: "intermediate",
   parameters: [
-    { id: "molesA", label: "Moles of Reactant A", unit: "mol", min: 0.5, max: 10, default: 3, step: 0.5, tier: "free" },
-    { id: "molesB", label: "Moles of Reactant B", unit: "mol", min: 0.5, max: 10, default: 5, step: 0.5, tier: "free" },
-    { id: "reaction", label: "Reaction (0=synthesis, 1=decomposition, 2=combustion)", unit: "", min: 0, max: 2, default: 0, step: 1, tier: "free" },
+    { id: "molesA", label: "Moles A", unit: "mol", min: 0, max: 50, default: 20, step: 1, tier: "free" },
+    { id: "molesB", label: "Moles B", unit: "mol", min: 0, max: 50, default: 30, step: 1, tier: "free" },
+    { id: "reactionProgress", label: "Reaction Progress", unit: "%", min: 0, max: 100, default: 100, step: 1, tier: "free" },
   ],
   formulas: [
     { latex: "\\text{Mole ratio} = \\frac{\\text{coefficient A}}{\\text{coefficient B}}", description: "The ratio of moles in a balanced equation determines how much of each reactant is needed" },
     { latex: "\\text{Yield} = \\frac{\\text{actual}}{\\text{theoretical}} \\times 100\\%", description: "Percent yield compares what you actually get to what the balanced equation predicts" },
   ],
   theory: "Stoichiometry uses the coefficients of a balanced chemical equation to calculate the amounts of reactants consumed and products formed. The mole ratio between any two substances equals the ratio of their coefficients. The limiting reagent is completely consumed first, determining the maximum product. Excess reagent remains after the reaction. Theoretical yield is the maximum possible product mass; actual yield is always less due to incomplete reactions or side reactions.",
-  instructions: "Set the moles of each reactant and select a reaction type. The visualization shows atom models reacting in the correct ratio. Identify which reagent is limiting, how much product forms, and how much excess remains.",
+  instructions: "Use the Moles A, Moles B, and Reaction Progress sliders to change the reactant amounts and scrub through the reaction. Try the H₂O, NH₃, and CO₂ presets to compare different balanced equations. Watch which reagent runs out first, how much product forms, and how much excess remains.",
   challenges: [
     { id: "mcs-c1", question: "In 2H₂ + O₂ → 2H₂O, you have 3 mol H₂ and 2 mol O₂. Which is limiting?", hint: "Need 2 mol H₂ per 1 mol O₂. For 3 mol H₂: need 1.5 mol O₂ (have 2). For 2 mol O₂: need 4 mol H₂ (have 3). H₂ is limiting.", tier: "free" },
     { id: "mcs-c2", question: "How many moles of H₂O form from the above?", hint: "3 mol H₂ × (2 mol H₂O / 2 mol H₂) = 3 mol H₂O", tier: "free" },
@@ -36,16 +36,37 @@ export const msChemicalStoichiometry: Experiment = {
   seoTitle: "Chemical Stoichiometry Simulation | Scivra Middle School",
   seoKeywords: ["stoichiometry simulation", "limiting reagent calculator", "mole ratio interactive", "middle school chemistry"],
   jsonLd: { "@type": "LearningResource", educationalLevel: "Middle School", teaches: "Chemical Stoichiometry" },
+  htmlControlAliases: { molesA: "sl-molesA", molesB: "sl-molesB", reactionProgress: "sl-prog" },
+  presets: [
+    {
+      id: "h2o",
+      label: "H₂ + ½O₂ → H₂O",
+      description: "Sets a water-formation reaction with Reactant A at 2.0 mol and Reactant B at 3.0 mol so students can compare the available amounts with the equation ratio.",
+      paramValues: { molesA: 20, molesB: 30, reactionProgress: 100 },
+    },
+    {
+      id: "nh3",
+      label: "N₂ + 3H₂ → 2NH₃",
+      description: "Sets the ammonia reaction with Reactant A at 1.0 mol and Reactant B at 3.0 mol, matching the 1:3 reactant ratio in the balanced equation.",
+      paramValues: { molesA: 10, molesB: 30, reactionProgress: 100 },
+    },
+    {
+      id: "co2",
+      label: "CH₄ + 2O₂ → CO₂ + 2H₂O",
+      description: "Sets methane combustion with Reactant A at 1.0 mol and Reactant B at 2.0 mol, emphasizing the oxygen demand in the balanced equation.",
+      paramValues: { molesA: 10, molesB: 20, reactionProgress: 100 },
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Chemical stoichiometry is the science of counting particles in chemical reactions. When substances react, atoms rearrange — but atoms are never created or destroyed. A balanced equation shows the exact ratio of particles involved. Think of it like a recipe: to make one batch of cookies you need a specific ratio of flour to eggs. In chemistry, the coefficients in a balanced equation are that recipe — if the equation reads 2A + B → AB₂, you need two parts A for every one part B. When one ingredient runs out first — the limiting reagent — the reaction stops, just like running out of eggs stops cookie-making even if you have plenty of flour. The excess reagent is whatever is left over. This simulation lets you drag atom counters, watch balanced reactions unfold particle-by-particle, and discover firsthand why the coefficient ratio controls how much product you can make. The core skill is reading the balanced equation's ratio, not mole-level calculations.",
     parameterExplanations: {
       molesA:
-        "Moles of Reactant A, adjustable from 0.5 to 10 mol in 0.5 mol steps. In the simulation each 'mol' represents a group of particles of the first substance entering the reaction. Increasing this value adds more of Reactant A. If A is in excess, raising it further beyond the limiting point will not produce more product — the extra particles remain unreacted.",
+        "Moles A controls the amount of the first reactant available before the reaction begins. The HTML slider runs from 0 to 50, and the simulation displays that as 0.0 to 5.0 mol, so each slider step represents 0.1 mol. Increasing Moles A gives the particle model more A units to match against Reactant B according to the current balanced equation preset. If A is limiting, raising it can increase product formation. If B is limiting, raising A only leaves more A particles unreacted, which helps students distinguish total amount from the limiting reagent.",
       molesB:
-        "Moles of Reactant B, adjustable from 0.5 to 10 mol in 0.5 mol steps. This controls the supply of the second substance. Changing the ratio of molesA to molesB lets you explore which reactant becomes the limiting reagent. Try setting one much higher than the other and watch how the excess particles stack up after the reaction ends.",
-      reaction:
-        "Selects which type of chemical reaction to observe: 0 = synthesis (two substances combine into one product), 1 = decomposition (one substance breaks apart into two products), 2 = combustion (a fuel reacts with oxygen to produce carbon dioxide and water). Each reaction type has a different balanced equation and therefore a different mole ratio between reactants.",
+        "Moles B controls the supply of the second reactant. Like Moles A, the slider uses 0 to 50 raw steps and displays them as 0.0 to 5.0 mol, giving fine control over the reactant ratio. Changing Moles B while holding Moles A steady is a direct way to test which substance runs out first. In the NH₃ preset, for example, B represents the reactant needed in a larger coefficient ratio. Students can compare the leftover particles after the reaction to the balanced equation and see why the smaller displayed mole amount is not always the limiting reagent.",
+      reactionProgress:
+        "Reaction Progress scrubs the visualization from 0% to 100% complete without changing the starting amounts. At 0%, students see only the initial reactant particles. As the slider moves upward, matching groups of A and B are consumed and product particles appear according to the selected preset's balanced equation. Near 100%, the limiting reagent is used up and the excess reagent remains visible. This control is useful for pausing the reaction midway, asking students to count what has reacted so far, and connecting particle-level changes to the conservation of atoms across the whole reaction.",
     },
     misconceptions: [
       {
@@ -70,17 +91,17 @@ export const msChemicalStoichiometry: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set molesA to 2, molesB to 4, and reaction to 0 (synthesis). Ask students to predict the limiting reagent before pressing Play, then verify by counting leftover particles in the visualization.",
-      "Set molesA to 3, molesB to 3, and reaction to 2 (combustion). After the reaction, ask students to identify the excess reagent and calculate how many moles remain unreacted using the balanced equation coefficients.",
-      "Compare reaction types by holding molesA and molesB constant at 4 each while cycling through reaction values 0, 1, and 2. Students record which scenario produces the most product and explain the role of the mole ratio.",
+      "Choose the H₂O preset, then set Moles A to 20 and Moles B to 30. Ask students to predict the limiting reagent before moving Reaction Progress, then verify by counting leftover particles in the visualization.",
+      "Choose the CO₂ preset, then set Moles A to 10 and Moles B to 20. After moving Reaction Progress to 100%, ask students to identify the excess reagent and explain how the balanced equation coefficients determine the result.",
+      "Compare the H₂O, NH₃, and CO₂ presets while recording the displayed Moles A and Moles B values. Students explain how changing the equation changes which particle groups can combine, even when the slider controls are the same.",
       "Introduce the limiting reagent concept using the cookie-baking analogy: molesA = flour batches, molesB = egg sets. Set values so one runs out first and have students articulate why the recipe stopped without using chemistry vocabulary initially.",
-      "Have students set molesA to 1 and molesB to 10, observe the excess, then reverse the values. Ask: did the amount of product change? Why or why not? This reinforces that product yield depends on the limiting reagent, not total material.",
+      "Have students set Moles A low and Moles B high, observe the excess at 100% Reaction Progress, then reverse the amounts. Ask whether product amount changed and why. This reinforces that yield depends on the limiting reagent, not total material.",
     ],
     faq: [
       {
         question: "What does 'mole' mean, and why do chemists use it?",
         answer:
-          "A mole is just a very large counting number — about 602 sextillion particles. Chemists use it because individual atoms and molecules are far too small to count one by one or weigh individually. The mole lets scientists connect the measurable mass of a substance in a lab to the number of atoms actually reacting. In this simulation each unit of molesA or molesB represents a proportional group of particles so you can see the ratios without needing the full astronomical number.",
+          "A mole is just a very large counting number — about 602 sextillion particles. Chemists use it because individual atoms and molecules are far too small to count one by one or weigh individually. The mole lets scientists connect the measurable mass of a substance in a lab to the number of atoms actually reacting. In this simulation, Moles A and Moles B represent proportional groups of particles so you can see the ratios without needing the full astronomical number.",
       },
       {
         question: "Why does the reaction stop when the limiting reagent runs out?",

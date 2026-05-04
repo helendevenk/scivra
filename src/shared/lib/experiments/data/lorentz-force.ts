@@ -23,54 +23,44 @@ export const lorentzForce: Experiment = {
 
   parameters: [
     {
-      id: "fieldStrength",
+      id: "charge",
+      label: "Charge (q)",
+      unit: "C",
+      min: 1,
+      max: 10,
+      default: 2,
+      step: 0.5,
+      tier: "free",
+    },
+    {
+      id: "mass",
+      label: "Mass (m)",
+      unit: "kg",
+      min: 1,
+      max: 10,
+      default: 2,
+      step: 0.5,
+      tier: "free",
+    },
+    {
+      id: "velocityX",
+      label: "Velocity X",
+      unit: "m/s",
+      min: 0,
+      max: 5,
+      default: 2,
+      step: 0.1,
+      tier: "free",
+    },
+    {
+      id: "magneticField",
       label: "Magnetic Field B",
       unit: "T",
       min: 0.1,
-      max: 5,
-      default: 1,
-      step: 0.1,
+      max: 2,
+      default: 0.5,
+      step: 0.05,
       tier: "free",
-    },
-    {
-      id: "charge",
-      label: "Charge (q)",
-      unit: "×10⁻¹⁹ C",
-      min: -5,
-      max: 5,
-      default: 1,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "velocityMag",
-      label: "Initial Speed (v)",
-      unit: "×10⁶ m/s",
-      min: 0.1,
-      max: 5,
-      default: 1,
-      step: 0.1,
-      tier: "free",
-    },
-    {
-      id: "fieldDirection",
-      label: "B Field Direction",
-      unit: "°",
-      min: 0,
-      max: 360,
-      default: 0,
-      step: 15,
-      tier: "pro",
-    },
-    {
-      id: "vzComponent",
-      label: "Velocity z-component (creates helix)",
-      unit: "×10⁶ m/s",
-      min: 0,
-      max: 3,
-      default: 0,
-      step: 0.1,
-      tier: "pro",
     },
   ],
 
@@ -101,7 +91,7 @@ export const lorentzForce: Experiment = {
     "The Lorentz force on a moving charge in a magnetic field is always perpendicular to both the velocity and the field (F = qv×B). Since the force is perpendicular to velocity, it does no work — kinetic energy is constant, only direction changes. This produces circular motion in the plane perpendicular to B. If the particle has a velocity component along B, the path becomes a helix. The radius r = mv/(|q|B) is called the cyclotron radius.",
 
   instructions:
-    "The magnetic field B points along the z-axis (blue arrow). The charged particle enters moving in the x-direction. Observe the circular path. Flip the charge sign to reverse the rotation direction. Add a z-velocity component (Pro) to see helical motion. Watch how increasing B tightens the circular orbit.",
+    "Use the Charge, Mass, Velocity X, and Magnetic Field sliders to change q, m, horizontal entry speed, and B while the particle moves through the field. Try the Cyclotron Motion, Helical Path, and Velocity Selector presets to compare circular motion, angled entry, and force-balancing setups.",
 
   challenges: [
     {
@@ -156,20 +146,39 @@ export const lorentzForce: Experiment = {
     educationalLevel: "High School",
     teaches: "Magnetic Force and Lorentz Force",
   },
+  htmlControlAliases: { charge: "sl-q", mass: "sl-m", velocityX: "sl-vx", magneticField: "sl-B" },
+  presets: [
+    {
+      id: "cyclotron",
+      label: "Cyclotron Motion",
+      description:
+        "A charged particle enters perpendicular to the magnetic field so the magnetic force acts as the centripetal force for circular motion.",
+    },
+    {
+      id: "helical",
+      label: "Helical Path",
+      description:
+        "A particle keeps a velocity component along the magnetic field while its perpendicular component circles, producing a helix.",
+    },
+    {
+      id: "selector",
+      label: "Velocity Selector",
+      description:
+        "A comparison setup for discussing how selected particle speeds can pass through crossed-field instruments without deflection.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "The Lorentz force on a moving charge in a magnetic field is F = qv × B — a vector cross product whose direction is always perpendicular to both v and B. Because the force is perpendicular to velocity, it does no work: kinetic energy is conserved and only the direction of motion changes. In a uniform field, a charge with velocity entirely perpendicular to B executes a circle of radius r = mv/(|q|B) called the cyclotron radius; a velocity component along B adds a straight drift, producing a helix. The simulation renders this 3D motion directly: adjust fieldStrength, charge sign, and velocityMag to see how the orbit tightens or expands, then use vzComponent to switch from circular to helical motion.",
     parameterExplanations: {
-      fieldStrength:
-        "Magnitude of the uniform magnetic field B in tesla. The cyclotron radius r = mv/(|q|B) is inversely proportional to B, so increasing fieldStrength tightens the orbit and increases cyclotron frequency ω_c = |q|B/m.",
       charge:
-        "Charge q in units of 10⁻¹⁹ C, ranging from −5 to +5. The sign determines the rotation sense via the cross product: flipping from +q to −q reverses the circular orbit direction. |F| = |q|vB sin θ — the sign of q determines direction, not force magnitude; larger |q| also tightens the cyclotron radius r = mv/(|q|B).",
-      velocityMag:
-        "Initial speed of the particle in units of 10⁶ m/s, in the plane perpendicular to B. Larger velocityMag increases the cyclotron radius linearly (r = mv/(|q|B)) while leaving the period T = 2πm/(|q|B) unchanged — the orbit simply gets bigger at the same rotation rate.",
-      fieldDirection:
-        "Polar angle of B measured from the +z axis, in degrees. At 0° B points along +z (and v_z is parallel to B); larger angles tip B away from the z-axis, so the v_z component is no longer parallel to B and contributes to v × B, altering the orbital plane and helix axis.",
-      vzComponent:
-        "Velocity component along the z-axis (parallel to the default B direction) in units of 10⁶ m/s. This component experiences zero magnetic force since F = qv_∥ × B = 0 for parallel vectors. Adding v_z produces helical motion: the circular orbit in the xy-plane is combined with uniform drift along z.",
+        "Charge sets q, the amount of electric charge carried by the moving particle. In a magnetic field, the force magnitude is |F| = |q|vB sin θ, so increasing Charge makes the magnetic force stronger when speed and field stay fixed. A stronger force bends the same moving particle into a tighter path because the cyclotron radius follows r = mv/(|q|B). Use this slider with Magnetic Field held constant to isolate how charge changes curvature. Then compare the Cyclotron Motion preset to see the clean circular case before changing other sliders.",
+      mass:
+        "Mass sets m, the particle's inertia. A larger mass resists changes in direction, so the same magnetic force bends the particle less sharply. In the circular-motion relationship r = mv/(|q|B), mass is directly proportional to radius: doubling Mass doubles the orbit radius when Charge, Velocity X, and Magnetic Field are unchanged. This slider is useful for comparing light and heavy charged particles under identical field conditions. Keep q and B fixed, then sweep Mass to show why electrons curve much more strongly than heavier ions in magnetic instruments.",
+      velocityX:
+        "Velocity X controls the particle's horizontal entry speed, the velocity component perpendicular to the default magnetic field view. Increasing this speed increases magnetic force because |F| = |q|vB sin θ, but it also increases the required centripetal radius in the same proportion. The result is a larger circular path rather than a faster particle caused by the field. Magnetic force redirects motion without doing work, so the speed you set remains the speed being turned. Compare low and high Velocity X settings in the Cyclotron Motion preset to see the radius expand.",
+      magneticField:
+        "Magnetic Field sets B, the strength of the uniform field in tesla. A stronger field increases the magnetic force on the moving charge and tightens the path, since r = mv/(|q|B). It also raises the cyclotron angular frequency ω_c = |q|B/m, so the particle turns more rapidly for the same Charge and Mass. This is the clearest slider for showing field control: hold Charge, Mass, and Velocity X steady, then increase Magnetic Field and watch the circular arc shrink. Use the Helical Path preset afterward to connect the same rule to 3D motion.",
     },
     misconceptions: [
       {
@@ -204,11 +213,11 @@ export const lorentzForce: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Right-hand rule 3D check: set charge = +1 (10⁻¹⁹ C), fieldStrength = 1 T, velocityMag = 1 (×10⁶ m/s), and pause the simulation at t = 0. Ask students to predict the direction of the initial force using F = qv × B before unpausing. Verify against the first segment of the simulated orbit; then flip charge to −1 and repeat.",
-      "Cyclotron radius data collection: hold fieldStrength = 1 T and charge = 1 fixed; sweep velocityMag from 0.5 to 3.0 (×10⁶ m/s) in 0.5-unit steps and measure the orbit radius from the display. Plot r vs. velocityMag and confirm the linear relationship r = mv/(|q|B), extracting m/|q| from the slope.",
-      "Period independence demonstration: change velocityMag over a wide range while keeping fieldStrength and charge fixed, and time one full orbit in the simulation. Students observe that the period T = 2πm/(|q|B) does not change with speed — a counterintuitive result that underlies how cyclotrons work and directly addresses AP standard 3.C.3.",
-      "Helix construction: set vzComponent to a nonzero value and increase fieldStrength to observe the helix pitch tighten. Ask students to predict which parameter controls the helix radius (v_⊥ and B) vs. which controls the pitch (v_z and the period T). This separates the two independent motions cleanly.",
-      "Misconception probe — stationary charge: set velocityMag to its minimum value and discuss the v → 0 limit, where F = qv × B → 0. Ask students to explain the result using F = qv × B and contrast it with what would happen if an electric field were present instead, connecting to the full Lorentz force F = q(E + v × B).",
+      "Right-hand rule 3D check: start with the Cyclotron Motion preset, then set Charge = 2 C, Mass = 2 kg, Velocity X = 2 m/s, and Magnetic Field = 0.5 T. Ask students to predict the initial force direction using F = qv × B before running the motion.",
+      "Cyclotron radius data collection: keep Charge, Mass, and Magnetic Field fixed while sweeping Velocity X from 1.0 to 5.0 m/s. Students measure or compare the visible orbit radius and test the direct relationship r = mv/(|q|B).",
+      "Mass-versus-charge comparison: hold Velocity X and Magnetic Field constant, then change only Mass and only Charge in separate trials. Students explain why larger Mass broadens the orbit while larger Charge tightens it.",
+      "Field-strength control: use the Magnetic Field slider from 0.1 T to 2 T with the other sliders fixed. Students connect the shrinking radius and faster turning to r = mv/(|q|B) and ω_c = |q|B/m.",
+      "Preset comparison: have students run Cyclotron Motion, Helical Path, and Velocity Selector, record the four slider values after each preset, and write a short claim about which setup best demonstrates circular motion, 3D helical motion, or selected-speed behavior.",
     ],
     faq: [
       {
@@ -234,7 +243,7 @@ export const lorentzForce: Experiment = {
       {
         question: "What happens when a charged particle enters a magnetic field at an angle, not perpendicular to it?",
         answer:
-          "Decompose v into v_⊥ (perpendicular to B) and v_∥ (parallel to B). Only v_⊥ contributes to the Lorentz force, producing circular motion with radius r = mv_⊥/(|q|B). v_∥ drifts unaffected because F = qv_∥ × B = 0. The combination is a helix with radius r and pitch v_∥ T = v_∥ × 2πm/(|q|B). Use the vzComponent slider to explore this directly.",
+          "Decompose v into v_⊥ (perpendicular to B) and v_∥ (parallel to B). Only v_⊥ contributes to the Lorentz force, producing circular motion with radius r = mv_⊥/(|q|B). v_∥ drifts unaffected because F = qv_∥ × B = 0. The combination is a helix with radius r and pitch v_∥ T = v_∥ × 2πm/(|q|B). Use the Helical Path preset to compare this angled-entry behavior with the Cyclotron Motion preset.",
       },
       {
         question: "How does the magnetic force compare to the electric force on the same charge?",

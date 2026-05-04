@@ -23,33 +23,23 @@ export const msAcidBaseReactions: Experiment = {
 
   parameters: [
     {
-      id: "acidType",
-      label: "Acid (0=Hydrochloric, 1=Vinegar, 2=Citric, 3=Sulfuric)",
-      unit: "",
+      id: "acidConcentration",
+      label: "Acid Concentration",
+      unit: "%",
       min: 0,
-      max: 3,
-      default: 0,
+      max: 100,
+      default: 50,
       step: 1,
       tier: "free",
     },
     {
-      id: "baseType",
-      label: "Base (0=Sodium Hydroxide, 1=Baking Soda, 2=Ammonia, 3=Calcium Hydroxide)",
-      unit: "",
+      id: "baseConcentration",
+      label: "Base Concentration",
+      unit: "%",
       min: 0,
-      max: 3,
-      default: 0,
+      max: 100,
+      default: 50,
       step: 1,
-      tier: "free",
-    },
-    {
-      id: "concentration",
-      label: "Solution Concentration",
-      unit: "mol/L",
-      min: 0.01,
-      max: 2.0,
-      default: 0.1,
-      step: 0.01,
       tier: "free",
     },
   ],
@@ -69,7 +59,7 @@ export const msAcidBaseReactions: Experiment = {
     "Acids are substances that release hydrogen ions (H⁺) in water, giving solutions a sour taste and pH below 7. Bases release hydroxide ions (OH⁻), feel slippery, and have pH above 7. The pH scale runs from 0 (extremely acidic) to 14 (extremely basic), with 7 being neutral (pure water). Each step on the pH scale represents a 10-fold change in H⁺ concentration — lemon juice at pH 2 is 100,000 times more acidic than pure water at pH 7. When an acid and base mix, the H⁺ and OH⁻ ions combine to form water (H₂O) in a neutralization reaction. The remaining ions form a salt (like NaCl from HCl + NaOH). Indicators are chemicals that change color at different pH values — universal indicator turns red in strong acid, green at neutral, and purple in strong base. Strong acids (like HCl) fully dissociate in water, while weak acids (like vinegar) only partially release their H⁺ ions.",
 
   instructions:
-    "Choose an acid and a base from the dropdown menus, then adjust the concentration. Press Play to slowly add the base to the acid and watch the pH meter and indicator color change in real time. Try to hit exactly pH 7 for a perfect neutralization. Compare how quickly strong acids neutralize versus weak acids at the same concentration.",
+    "Use the Acid Concentration and Base Concentration sliders to change the relative amounts of acidic and basic solution. Watch the pH meter, ion concentrations, and indicator color respond as you move the sliders. Try balancing the two sliders to reach pH 7, then push one side higher to compare acidic and basic conditions.",
 
   challenges: [
     {
@@ -106,16 +96,15 @@ export const msAcidBaseReactions: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Acid-Base Reactions, pH Scale, and Neutralization",
   },
+  htmlControlAliases: { acidConcentration: "sl-acid", baseConcentration: "sl-base" },
   contentSections: {
     whatIsIt:
       "Acids and bases are two of the most important categories of chemicals in everyday life — from the citric acid in orange juice to the ammonia in cleaning sprays to the hydrochloric acid in your stomach. When an acid meets a base, they react in a process called neutralization, producing a salt and water. This simulation lets you choose different acids and bases, set their concentration, and watch the reaction unfold in real time. The pH meter tracks the hydrogen ion concentration on a scale from 0 (extremely acidic) to 14 (extremely basic), with 7 being neutral. Indicator dyes change color to show where the solution sits on that scale — red for strong acid, green near neutral, blue-purple for strong base. The goal is to understand not just the chemical outcome, but the particle-level reason: when acids release H+ ions and bases release OH- ions into the same solution, those particles find each other and combine into harmless water molecules.",
     parameterExplanations: {
-      acidType:
-        "Selects the acid used in the reaction (0=Hydrochloric, 1=Vinegar, 2=Citric, 3=Sulfuric). Hydrochloric acid (HCl, option 0) is a strong acid that fully releases its hydrogen ion in water. Sulfuric acid (H2SO4, option 3) is strong for its first proton, which fully ionizes, but the second proton dissociates only partially — making it behave as a strong acid at low concentration but less completely at high concentration. Vinegar (acetic acid, option 1) and citric acid (option 2) are weak acids — they only partially release H+ ions, so they reach the same pH change more slowly and the temperature rise during neutralization is gentler.",
-      baseType:
-        "Selects the base used in the reaction (0=Sodium Hydroxide, 1=Baking Soda, 2=Ammonia, 3=Calcium Hydroxide). Sodium hydroxide (NaOH, option 0) is a strong base that fully releases OH- ions. Calcium hydroxide (option 3) is also classified as a strong base but has very low solubility in water, so it cannot form highly concentrated solutions — at high concentration settings it may behave like a saturated suspension rather than a true solution. Baking soda (sodium bicarbonate, option 1) and ammonia (option 2) are weak bases that only partially ionize. Pairing a strong acid with a strong base produces the most vigorous and complete neutralization, while mixing weak acid and weak base produces a more gradual reaction.",
-      concentration:
-        "Sets the concentration of both solutions in moles per liter (mol/L), ranging from 0.01 to 2.0 mol/L. Concentration controls how many acid or base particles are present in a given volume. Higher concentration means more H+ or OH- ions available to react, so the neutralization is faster and the temperature change is larger. Doubling the concentration roughly doubles the rate at which pH shifts toward neutral during the mixing process.",
+      acidConcentration:
+        "Acid Concentration controls how much acidic solution contributes H+ ions to the mixture. Raising this slider increases the acid side of the balance, so the pH drops below 7 and the indicator shifts toward acidic colors. Lowering it reduces the number of acid particles available to neutralize the base. Keep Base Concentration steady while changing this slider to isolate how added acid changes hydrogen ion concentration, pH, and the visual indicator. When both sliders are near balance, the model approaches neutral conditions because H+ and OH- ions combine to form water.",
+      baseConcentration:
+        "Base Concentration controls how much basic solution contributes OH- ions to the mixture. Raising this slider increases the base side of the balance, so the pH rises above 7 and the indicator shifts toward basic colors. Lowering it leaves fewer hydroxide ions available to react with acid. Keep Acid Concentration steady while changing this slider to see how added base changes hydroxide ion concentration, pH, and the status readout. When the base amount matches the acid amount closely, neutralization uses up much of both ion types and the solution moves toward pH 7.",
     },
     misconceptions: [
       {
@@ -140,11 +129,11 @@ export const msAcidBaseReactions: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Strong vs. weak acid comparison: set baseType to 0 (Sodium Hydroxide) and concentration to 0.1 mol/L. Run the reaction with acidType 0 (Hydrochloric), then repeat with acidType 1 (Vinegar) at the same concentration. Students compare the pH change rate and temperature rise, then explain at the particle level why strong acids neutralize more rapidly (MS-PS1-2).",
-      "Concentration effect investigation: hold acidType at 0 (Hydrochloric) and baseType at 0 (Sodium Hydroxide). Run the reaction at concentration 0.1 mol/L, then at 1.0 mol/L. Students observe how initial pH differs based on concentration and record the temperature change during neutralization, connecting concentration to number of reactive particles.",
-      "Real-world neutralization connection: model an effervescent (fizzing) antacid tablet using acidType 2 (Citric) and baseType 1 (Baking Soda). For a closer match to antacids working on stomach acid (which is mainly hydrochloric acid), use acidType 0 (Hydrochloric) with baseType 1 (Baking Soda). In either run, students observe the pH shift and discuss how antacids relieve heartburn through neutralization. As pH rises from 2 to 6, each pH unit represents a 10× decrease in H+ concentration, so going from pH 2 to pH 6 means the H+ concentration drops by a factor of 10,000 — a qualitative way to appreciate just how much acid the antacid is neutralizing.",
-      "Indicator color mapping: before running the simulation, students predict what color the indicator will show at pH 2, 7, and 12. They then verify by running reactions that stop at those pH values. Students create a color chart and compare it to actual universal indicator color cards used in laboratory settings.",
-      "Perfect neutralization challenge: using acidType 0 and baseType 0 at concentration 0.5 mol/L, students try to stop the addition of base at exactly pH 7. They discuss why it is difficult to hit exactly neutral and what happens just past the equivalence point — connecting to the concept of titration used in real analytical chemistry.",
+      "Acid-side investigation: keep Base Concentration at 50 and move Acid Concentration from 20 to 80. Students record pH, indicator color, and status changes, then explain how increasing H+ ions provides evidence for a chemical interaction (MS-PS1-2).",
+      "Base-side investigation: keep Acid Concentration at 50 and move Base Concentration from 20 to 80. Students compare the pH trend with the acid-side run and describe how OH- ions shift the solution toward basic conditions.",
+      "Neutralization balance challenge: students adjust only the Acid Concentration and Base Concentration sliders until the pH meter reaches as close to 7 as possible. They explain why balanced H+ and OH- amounts produce a neutral solution.",
+      "Indicator color mapping: students set acidic, neutral, and basic slider combinations, then create a table linking observed indicator colors to pH ranges and ion dominance.",
+      "Real-world antacid discussion: start with Acid Concentration higher than Base Concentration, then raise Base Concentration until pH moves toward neutral. Students connect the model to how a base can reduce excess stomach acid.",
     ],
     faq: [
       {

@@ -23,44 +23,14 @@ export const meiosis: Experiment = {
 
   parameters: [
     {
-      id: "crossoverFrequency",
-      label: "Crossover Events per Bivalent",
-      unit: "",
-      min: 0,
-      max: 3,
-      default: 1,
-      step: 1,
-      tier: "free",
-    },
-    {
       id: "chromosomePairs",
-      label: "Homologous Pair Count",
+      label: "Chromosome Pairs",
       unit: "",
-      min: 2,
-      max: 6,
-      default: 3,
+      min: 1,
+      max: 4,
+      default: 2,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "nondisjunctionProb",
-      label: "Non-disjunction Probability",
-      unit: "%",
-      min: 0,
-      max: 30,
-      default: 0,
-      step: 5,
-      tier: "pro",
-    },
-    {
-      id: "showCombinations",
-      label: "Show Gamete Combinations",
-      unit: "",
-      min: 0,
-      max: 1,
-      default: 1,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -83,7 +53,7 @@ export const meiosis: Experiment = {
     "Meiosis consists of two sequential divisions (Meiosis I and II) that reduce chromosome number from 2n to n. In Meiosis I (reductive division), homologous chromosomes pair up as bivalents during Prophase I. Crossing over (recombination) at chiasmata shuffles alleles between homologs, creating new gene combinations. During Metaphase I, bivalents align randomly (independent assortment). After Meiosis I, two haploid cells result. Meiosis II (equational division) resembles mitosis — sister chromatids separate, producing 4 haploid gametes. Non-disjunction (failure of chromosomes to separate) causes aneuploidy: trisomy 21 (Down syndrome), monosomy X (Turner syndrome), XXY (Klinefelter syndrome).",
 
   instructions:
-    "Adjust the crossover frequency slider and watch how chiasmata form during Prophase I. After Meiosis I completes, observe independent assortment creating random chromosome combinations. Enable Non-disjunction (Pro) to simulate chromosomal disorders. The gamete combination counter shows how variation increases exponentially with chromosome number.",
+    "Use the Chromosome Pairs slider to change how many homologous pairs appear in the model. Try the Meiosis I Complete, Meiosis II Complete, and Crossing Over Detail presets to compare homolog separation, sister chromatid separation, and recombination.",
 
   challenges: [
     {
@@ -131,18 +101,33 @@ export const meiosis: Experiment = {
     educationalLevel: "High School",
     teaches: "Meiosis and Genetic Variation",
   },
+  htmlControlAliases: { chromosomePairs: "sl-pairs" },
+  presets: [
+    {
+      id: "meiosis1",
+      label: "Meiosis I Complete",
+      description:
+        "Shows the result after homologous chromosome pairs separate during the first meiotic division, reducing the chromosome set from diploid toward haploid.",
+    },
+    {
+      id: "meiosis2",
+      label: "Meiosis II Complete",
+      description:
+        "Shows the result after sister chromatids separate during the second meiotic division, producing haploid gamete products from the earlier division.",
+    },
+    {
+      id: "crossingover",
+      label: "Crossing Over Detail",
+      description:
+        "Focuses on recombination during Prophase I, where homologous chromosomes exchange matching segments and create new allele combinations.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Meiosis is a two-round division process that converts a diploid cell (2n) into four haploid gametes (n), each genetically unique. Every sperm or egg your body produces is the product of meiosis — and so is the genetic distinctiveness that makes you different from any sibling who shares both your parents. The two divisions are mechanistically different: Meiosis I is the reductive division that separates homologous chromosome pairs, while Meiosis II resembles mitosis and separates sister chromatids. Two processes generate variation before the final count: crossing over during Prophase I shuffles alleles between homologs at points called chiasmata, and independent assortment during Metaphase I randomly orients each homologous pair. Together they produce up to 2²³ — roughly 8 million — unique chromosome combinations in humans from independent assortment alone. This simulation lets you control crossing over, chromosome pairs, and non-disjunction to see how each mechanism contributes.",
     parameterExplanations: {
-      crossoverFrequency:
-        "Sets the number of crossover (chiasma) events per bivalent during Prophase I, from 0 to 3. Each crossover exchanges segments between a maternal and paternal chromatid, creating recombinant chromosomes. Setting this to 0 removes all crossing over, allowing you to isolate and measure the contribution of independent assortment alone.",
       chromosomePairs:
-        "Sets how many homologous pairs participate in the simulation (2 to 6). The number of independent assortment combinations scales as 2^n — so 2 pairs give 4 possible gamete types, 3 pairs give 8, and 6 pairs give 64. Use this parameter to demonstrate the exponential relationship between chromosome number and genetic diversity.",
-      nondisjunctionProb:
-        "Sets the probability (0–30%) that homologous chromosomes fail to separate during Meiosis I, or that sister chromatids fail to separate during Meiosis II. When non-disjunction occurs, gametes are aneuploid — carrying an extra chromosome (n+1) or missing one (n-1). Fertilization of an n+1 egg with a normal sperm produces a trisomic zygote; trisomy 21 causes Down syndrome.",
-      showCombinations:
-        "When enabled (1), displays the gamete combination counter after each round of meiosis, making the 2^n independent assortment formula visible as a live count. Toggle it off to have students predict the number before the simulation reveals it — an effective formative assessment move.",
+        "Chromosome Pairs controls how many homologous pairs appear in the model, from 1 to 4. Each pair includes a maternal and paternal homolog that line up during Meiosis I, then separate so each gamete receives one chromosome from the pair. Increasing the value makes independent assortment easier to see: one pair has only two possible orientations, while four pairs can produce many more chromosome combinations. Use this slider before choosing a preset, then compare Meiosis I Complete, Meiosis II Complete, and Crossing Over Detail to connect chromosome number with the visible steps that generate variation.",
     },
     misconceptions: [
       {
@@ -178,10 +163,10 @@ export const meiosis: Experiment = {
     ],
     teacherUseCases: [
       "Meiosis vs. mitosis contrast activity: run both simulations side by side and ask student pairs to record three structural differences they observe — targeting the common misconception that both processes halve chromosome number.",
-      "Crossing over data collection: set crossoverFrequency to 0, 1, 2, and 3 in separate runs, record the gamete combination count each time, and graph results — students should see that recombination increases variation beyond what independent assortment alone produces.",
-      "Non-disjunction consequence probe: raise nondisjunctionProb to 20% and ask students to predict, before running, how many of the four gametes will likely be aneuploid in Meiosis I versus Meiosis II non-disjunction — probing whether they understand the two-stage structure of meiosis.",
-      "2^n prediction exercise: give students a chromosome pair count and have them calculate the expected gamete combinations before sliding chromosomePairs in the simulation — reinforcing AP standard 3.A.4 on the exponential nature of genetic diversity.",
-      "Clinical connection discussion: use the non-disjunction results to discuss trisomy 21, Turner syndrome (45,X), and Klinefelter syndrome (47,XXY) — grounding the chromosome mechanics in real human outcomes and NGSS standard HS-LS3-2.",
+      "Preset sequence walkthrough: move from Crossing Over Detail to Meiosis I Complete to Meiosis II Complete and ask students to identify which chromosome structures separate at each stage.",
+      "2^n prediction exercise: give students a chromosome pair count and have them calculate the expected gamete combinations before moving the Chromosome Pairs slider — reinforcing AP standard 3.A.4 on the exponential nature of genetic diversity.",
+      "Chromosome-count checkpoint: set the slider to 1, then 2, then 4 pairs and have students explain why gametes receive one chromosome from each homologous pair after meiosis.",
+      "Clinical connection discussion: use the normal separation sequence to introduce how segregation errors can lead to trisomy 21, Turner syndrome (45,X), and Klinefelter syndrome (47,XXY) — grounding the chromosome mechanics in real human outcomes and NGSS standard HS-LS3-2.",
     ],
     faq: [
       {
@@ -202,7 +187,7 @@ export const meiosis: Experiment = {
       {
         question: "How many unique gametes can a human theoretically produce?",
         answer:
-          "From independent assortment alone: 2²³ = 8,388,608 combinations. With crossing over at an average of 1–3 events per chromosome pair, the actual number of genetically distinct gametes any one person can produce is estimated at more than 70 trillion (7 × 10¹³). No two gametes a person produces are likely to be identical.",
+          "From independent assortment alone: 2²³ = 8,388,608 combinations. Crossing over increases that number dramatically because recombinant chromatids can carry allele combinations that were not present on either original homolog. With recombination included, the actual number of genetically distinct gametes any one person can produce is estimated at more than 70 trillion (7 × 10¹³). No two gametes a person produces are likely to be identical.",
       },
       {
         question: "Does NGSS standard HS-LS3-1 cover meiosis specifically?",
