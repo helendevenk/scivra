@@ -33,6 +33,16 @@ export const circularMotion: Experiment = {
       tier: "free",
     },
     {
+      id: "speed",
+      label: "Speed",
+      unit: "m/s",
+      min: 0.5,
+      max: 12,
+      default: 4.0,
+      step: 0.1,
+      tier: "free",
+    },
+    {
       id: "radius",
       label: "Radius (r)",
       unit: "m",
@@ -67,7 +77,7 @@ export const circularMotion: Experiment = {
     "Uniform circular motion requires a net inward (centripetal) force to continuously change the direction of velocity. This force is NOT a new type of force — it is provided by tension, gravity, normal force, or friction depending on the situation. The centripetal acceleration always points toward the center, while velocity is always tangential. Remove the centripetal force and the object moves in a straight line (Newton's 1st Law).",
 
   instructions:
-    "Use the 2 sliders + 3 presets to change the circular motion model. Watch the live readouts for period, angular velocity, centripetal acceleration, centripetal force, angle, and energy. Try the Conical Pendulum, Banked Curve, and Vertical Circle presets, then change one slider at a time to compare how the same centripetal-force relationship appears in each scenario.",
+    "Use the 3 sliders + 3 presets to change the circular motion model. Watch the live readouts for period, angular velocity, centripetal acceleration, centripetal force, angle, and energy. Try the Conical Pendulum, Banked Curve, and Vertical Circle presets, then change one slider at a time to compare how the same centripetal-force relationship appears in each scenario.",
 
   hook: {
     question: "Does a ball on a string get pulled outward when you spin it? Hint: there is no centrifugal force!",
@@ -167,7 +177,7 @@ export const circularMotion: Experiment = {
     educationalLevel: "High School",
     teaches: "Circular Motion and Centripetal Force",
   },
-  htmlControlAliases: { mass: "sl-mass", radius: "sl-radius" },
+  htmlControlAliases: { mass: "sl-mass", speed: "sl-speed", radius: "sl-radius" },
   presets: [
     {
       id: "conical",
@@ -195,6 +205,8 @@ export const circularMotion: Experiment = {
     parameterExplanations: {
       mass:
         "Mass changes how much force is needed for the same circular motion. The centripetal acceleration a_c = v²/r depends only on the motion and radius, so changing mass does not change the inward acceleration shown by the model. It does change the net force requirement because F_c = ma_c = mv²/r. A heavier car on the same banked curve, or a heavier bob in the same conical pendulum, needs proportionally more real inward force from normal force, tension, friction, or gravity components. Compare the presets at fixed Radius, then move only Mass to separate force from acceleration.",
+      speed:
+        "Speed sets how fast the object moves along the circular path. It is the most sensitive control because centripetal acceleration depends on v²/r, so doubling Speed requires four times the inward acceleration and four times the inward force at the same Mass and Radius. Increasing Speed also shortens the period, meaning each revolution takes less time even if the path size is unchanged. Use this slider with Radius fixed to see why cars, satellites, and swinging masses need much stronger inward forces at higher speeds. Then compare presets to identify which real force must supply that extra center-directed pull.",
       radius:
         "Radius sets the size of the circular path, from a tight curve to a wider loop. A smaller Radius produces a larger centripetal acceleration because a_c = v²/r; the path must bend the velocity direction more sharply each second. Increasing Radius lowers the inward acceleration and force requirement, but it also lengthens the period because one revolution covers more distance. Use Radius with the Vertical Circle preset to connect loop size with the required inward acceleration, and with the Banked Curve preset to see why broad highway curves can be taken more gently than tight ramps.",
     },

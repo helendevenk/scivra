@@ -23,7 +23,7 @@ export const k5DayNightSeasons: Experiment = {
 
   parameters: [
     {
-      id: "sliderTilt",
+      id: "earthTilt",
       label: "Axial Tilt",
       unit: "°",
       min: 0,
@@ -33,7 +33,7 @@ export const k5DayNightSeasons: Experiment = {
       tier: "free",
     },
     {
-      id: "sliderRotSpeed",
+      id: "rotationSpeed",
       label: "Rotation Speed",
       unit: "×",
       min: 0.1,
@@ -127,9 +127,9 @@ export const k5DayNightSeasons: Experiment = {
     whatIsIt:
       "Have you ever wondered why the sky gets dark at night? Or why summer is warm and winter is cold? It all comes down to Earth! Earth is like a giant spinning ball. It spins around once every 24 hours. When your part of Earth faces the Sun, it is daytime. When it spins away from the Sun, it gets dark — that is nighttime. Earth also moves around the Sun in a big circle. That trip takes one whole year. Here is the cool part: Earth tilts a little to one side as it moves. When your part of Earth tilts toward the Sun, the sunlight hits more directly and feels stronger — that is summer! When your part tilts away, the sunlight is weaker and spread out — that is winter. The seasons happen because of this tilt, not because Earth is closer or farther from the Sun. Try the sliders and watch it happen!",
     parameterExplanations: {
-      sliderTilt:
+      earthTilt:
         "Axial Tilt means how much Earth leans to one side. Real Earth leans about 23.5 degrees. That lean is why seasons happen. When the top half of Earth leans toward the Sun, that half gets stronger sunlight and longer days, so it is summer there. When it leans away, sunlight spreads out more and days are shorter, so it is winter. Try moving the slider to 0 degrees. The seasons become much weaker because Earth is not leaning toward or away from the Sun. Then move it higher and watch the seasons become stronger.",
-      sliderRotSpeed:
+      rotationSpeed:
         "Rotation Speed changes how quickly Earth spins in the model. In real life, Earth takes one full day, or 24 hours, to spin around once. That spin gives us morning, afternoon, evening, and night. A slow setting makes it easier to watch one place move from sunlight into darkness. A faster setting helps you see the day and night pattern repeat again and again. This slider does not make real Earth faster. It only changes the model so you can notice the pattern more easily.",
     },
     misconceptions: [
