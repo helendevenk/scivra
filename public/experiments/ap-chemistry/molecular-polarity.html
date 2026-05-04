@@ -96,7 +96,7 @@ button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
   <div class="flex flex-wrap gap-4 items-end">
     <div class="flex-1 min-w-40">
       <label class="text-xs text-slate-400">Bond Angle θ: <span id="lbl-angle">104.5</span>°</label>
-      <input aria-label="Bond Angle θ" type="range" id="sl-angle" min="80" max="180" value="1045" step="5" oninput="onAngleChange(this.value)"/>
+      <input aria-label="Bond Angle θ" type="range" id="sl-angle" min="80" max="180" value="104.5" step="0.5" oninput="onAngleChange(this.value)"/>
     </div>
     <div class="flex-1 min-w-40">
       <label class="text-xs text-slate-400">ΔEN: <span id="lbl-den">1.4</span></label>
@@ -240,10 +240,10 @@ function buildCylinder(from,to,color,radius=0.12){
 
 function clearMol(){while(molGroup.children.length)molGroup.remove(molGroup.children[0]);}
 
-function buildMolecule(key){
+function buildMolecule(key, angleDeg = PRESETS[key].angle, denValue = PRESETS[key].den){
   clearMol();
   const p=PRESETS[key];
-  const ang=p.angle*Math.PI/180;
+  const ang=angleDeg*Math.PI/180;
 
   if(key==='H2O'){
     const posO=new THREE.Vector3(0,0,0);
@@ -255,7 +255,7 @@ function buildMolecule(key){
     molGroup.add(buildCylinder(posO,posH1,0xd4d4d4));
     molGroup.add(buildCylinder(posO,posH2,0xd4d4d4));
     // Bond dipoles (red arrows pointing toward O)
-    if(p.den>0.3){
+    if(denValue>0.3){
       molGroup.add(buildArrow(posH1,posO.clone().add(posH1.clone().multiplyScalar(-0.3)),0xef4444,0.7));
       molGroup.add(buildArrow(posH2,posO.clone().add(posH2.clone().multiplyScalar(-0.3)),0xef4444,0.7));
     }
@@ -275,8 +275,10 @@ function buildMolecule(key){
       molGroup.add(buildCylinder(posC.clone().add(ov),posO2.clone().add(ov),0xfbbf24,0.09));
     });
     // Bond dipoles cancel — show both pointing inward
-    molGroup.add(buildArrow(posO1,posC.clone().add(new THREE.Vector3(-1,0,0)),0xef4444,0.7));
-    molGroup.add(buildArrow(posO2,posC.clone().add(new THREE.Vector3(1,0,0)),0xef4444,0.7));
+    if(denValue>0.3){
+      molGroup.add(buildArrow(posO1,posC.clone().add(new THREE.Vector3(-1,0,0)),0xef4444,0.7));
+      molGroup.add(buildArrow(posO2,posC.clone().add(new THREE.Vector3(1,0,0)),0xef4444,0.7));
+    }
     // Net dipole = 0: show crossed-out arrow
     const crossGeo=new THREE.SphereGeometry(0.3,12,12);
     const crossMat=new THREE.MeshBasicMaterial({color:0x64748b});
@@ -286,7 +288,7 @@ function buildMolecule(key){
   } else if(key==='CHCl3'){
     const posC=new THREE.Vector3(0,0,0);
     const posH=new THREE.Vector3(0,2.0,0);
-    const tetAngle=109.5*Math.PI/180;
+    const tetAngle=angleDeg*Math.PI/180;
     const r=2.0;
     const posCl1=new THREE.Vector3(r*Math.sin(tetAngle)*Math.cos(0),r*Math.cos(tetAngle),r*Math.sin(tetAngle)*Math.sin(0));
     const posCl2=new THREE.Vector3(r*Math.sin(tetAngle)*Math.cos(2*Math.PI/3),r*Math.cos(tetAngle),r*Math.sin(tetAngle)*Math.sin(2*Math.PI/3));
@@ -298,41 +300,46 @@ function buildMolecule(key){
     molGroup.add(buildSphere(posCl3,0.85,0x84cc16));
     [posH,posCl1,posCl2,posCl3].forEach(p2=>{molGroup.add(buildCylinder(posC,p2,0xd4d4d4));});
     // Bond dipoles toward Cl atoms
-    [posCl1,posCl2,posCl3].forEach(pCl=>{
-      molGroup.add(buildArrow(posC,pCl.clone().multiplyScalar(0.7),0xef4444,0.6));
-    });
+    if(denValue>0.3){
+      [posCl1,posCl2,posCl3].forEach(pCl=>{
+        molGroup.add(buildArrow(posC,pCl.clone().multiplyScalar(0.7),0xef4444,0.6));
+      });
+    }
     // Net dipole pointing down
     molGroup.add(buildArrow(new THREE.Vector3(0,1,0),new THREE.Vector3(0,-2.5,0),0xfbbf24,1.2));
   }
 
   const pr=PRESETS[key];
+  const angleLabel=Number.isInteger(angleDeg)?angleDeg.toFixed(0):angleDeg.toFixed(1);
   document.getElementById('d-mol').textContent=pr.name;
   document.getElementById('d-geo').textContent=pr.geo;
-  document.getElementById('d-angle').textContent=pr.angle+'°';
+  document.getElementById('d-angle').textContent=angleLabel+'°';
   document.getElementById('d-dipole').textContent=pr.dipole+' D';
   document.getElementById('d-polar').textContent=pr.polar?'Yes ✓':'No ✗';
-  document.getElementById('d-den').textContent=pr.den.toFixed(1);
+  document.getElementById('d-den').textContent=denValue.toFixed(1);
 }
 
 function applyPreset(key){
   currentPreset=key;
   const p=PRESETS[key];
   bondAngle=p.angle; den=p.den;
-  document.getElementById('sl-angle').value=bondAngle*10;
+  document.getElementById('sl-angle').value=bondAngle;
   document.getElementById('sl-den').value=Math.round(den*10);
   document.getElementById('lbl-angle').textContent=bondAngle;
   document.getElementById('lbl-den').textContent=den.toFixed(1);
-  buildMolecule(key);
+  buildMolecule(key, bondAngle, den);
   showToast(p.name+': '+(p.polar?'POLAR':'NONPOLAR'));
 }
 
 function onAngleChange(v){
-  bondAngle=v/10;
+  bondAngle=parseFloat(v);
   document.getElementById('lbl-angle').textContent=bondAngle.toFixed(1);
+  buildMolecule(currentPreset, bondAngle, den);
 }
 function onDENChange(v){
-  den=v/10;
+  den=parseFloat(v)/10;
   document.getElementById('lbl-den').textContent=den.toFixed(1);
+  buildMolecule(currentPreset, bondAngle, den);
 }
 function togglePlay(){playing=!playing;document.getElementById('btn-play').textContent=playing?'⏸ Pause':'▶ Play';}
 function resetSim(){playing=true;applyPreset('H2O');showToast('Reset');}
