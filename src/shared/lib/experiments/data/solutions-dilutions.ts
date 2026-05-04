@@ -30,43 +30,23 @@ export const solutionsDilutions: Experiment = {
 
   parameters: [
     {
-      id: "initialConcentration",
-      label: "Initial Concentration (C₁)",
-      unit: "mol/L",
-      min: 0.01,
-      max: 2.0,
-      default: 1.0,
-      step: 0.01,
-      tier: "free",
-    },
-    {
-      id: "initialVolume",
-      label: "Initial Volume (V₁)",
-      unit: "mL",
+      id: "solute",
+      label: "Moles of Solute",
+      unit: "mol",
       min: 1,
-      max: 100,
+      max: 30,
       default: 10,
       step: 1,
       tier: "free",
     },
     {
-      id: "addedWater",
-      label: "Added Water",
+      id: "volume",
+      label: "Volume of Solvent",
       unit: "mL",
-      min: 0,
-      max: 500,
-      default: 0,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "soluteType",
-      label: "Solute (0=CuSO₄, 1=KMnO₄, 2=NaCl)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
+      min: 10,
+      max: 5000,
+      default: 1000,
+      step: 10,
       tier: "free",
     },
   ],
@@ -88,7 +68,7 @@ export const solutionsDilutions: Experiment = {
     "When a solution is diluted by adding solvent, the amount of solute (in moles) remains constant. Only the volume changes, which decreases the concentration proportionally. The dilution equation C₁V₁ = C₂V₂ expresses this conservation: C₁ is the initial molarity, V₁ is the initial volume, C₂ is the final molarity, and V₂ is the final volume (V₁ + added water). Serial dilution is a technique where each step dilutes the previous solution by a fixed ratio, useful for preparing very low concentrations. Color intensity of many solutions is proportional to concentration (Beer-Lambert Law), providing a visual indicator of dilution progress.",
 
   instructions:
-    "Select a solute and set the initial concentration with the slider. The beaker shows the solution color intensity corresponding to molarity. Add water with the slider to dilute — watch the color fade as concentration drops. The readout panel shows both predicted (C₁V₁/V₂) and actual concentration in real time.",
+    "Use the Moles of Solute slider to set how much dissolved material is present, then use the Volume of Solvent slider to change the solution volume and observe the resulting molarity. Try the NaCl 1.0M, CuSO₄ 0.1M (blue), and Dilution Demo (10×) presets to compare common setups before adjusting the two sliders.",
 
   challenges: [
     {
@@ -131,25 +111,42 @@ export const solutionsDilutions: Experiment = {
     educationalLevel: "High School",
     teaches: "Solution Dilution and Molarity",
   },
+  htmlControlAliases: { solute: "sl-mol", volume: "sl-vol" },
+  presets: [
+    {
+      id: "applyPreset:NaCl",
+      label: "NaCl 1.0M",
+      description:
+        "Sets a sodium chloride solution near 1.0 M so students can connect moles, volume, and molarity without color as a visual cue.",
+    },
+    {
+      id: "applyPreset:CuSO4",
+      label: "CuSO₄ 0.1M (blue)",
+      description:
+        "Sets a blue copper(II) sulfate solution near 0.1 M so concentration changes are visible through color intensity as well as the numeric readout.",
+    },
+    {
+      id: "applyPreset:dilution",
+      label: "Dilution Demo (10×)",
+      description:
+        "Sets up a tenfold dilution comparison that shows how increasing volume while conserving solute decreases molarity by the dilution factor.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Molarity quantifies the concentration of a solution as moles of solute per liter of solution (mol/L, abbreviated M). When a lab technician prepares a 0.9% saline IV bag from a concentrated stock, the procedure is a dilution: adding solvent increases the total volume while the moles of NaCl stay exactly the same. The governing relationship is C₁V₁ = C₂V₂ — the product of concentration and volume is conserved before and after dilution. AP Chem 3.A.1 requires quantitative facility with this equation in both directions: solving for an unknown final concentration and solving for the volume of water needed to reach a target molarity. This simulation lets you set an initial molarity and volume, add water in real time, and watch the color intensity of the solution fade as concentration drops.",
     parameterExplanations: {
-      initialConcentration:
-        "The starting molarity (C₁) of the solution before any water is added, in mol/L (range 0.01–2.0 M, default 1.0 M). Higher values produce a more deeply colored solution in the beaker. Increasing C₁ proportionally increases the moles of solute present; adding the same volume of water from a higher starting concentration still gives a proportionally lower final concentration.",
-      initialVolume:
-        "The volume of stock solution you begin with (V₁), in mL (range 1–100 mL, default 10 mL). This determines the total moles present: n = C₁ × V₁ (in liters). A smaller initial volume means fewer total moles of solute; diluting to the same final volume therefore gives a lower final concentration than starting with a larger initial volume at the same molarity.",
-      addedWater:
-        "The volume of pure water added to the solution, in mL (range 0–500 mL, default 0). Final volume V₂ = V₁ + addedWater; the simulation computes C₂ = C₁V₁ / V₂ in real time. Adding 9 × V₁ of water produces a 10-fold dilution (one log unit decrease in concentration).",
-      soluteType:
-        "Selects the dissolved compound: 0 = CuSO₄ (blue), 1 = KMnO₄ (deep purple), 2 = NaCl (colorless in visible light). For the colored solutes (CuSO₄, KMnO₄), color intensity tracks with concentration via the Beer-Lambert law, so the visual fade on dilution is most dramatic; for NaCl, concentration is shown numerically only.",
+      solute:
+        "Moles of Solute controls the amount of dissolved particles in the beaker, from 1 to 30 mol. Holding volume constant, increasing this slider raises molarity because the same solvent volume must contain more solute particles. Lowering it reduces concentration even if the liquid level does not change. This is the numerator of M = n/V, so it is the most direct way to explore how the amount of matter affects concentration. Use the NaCl and CuSO₄ presets to compare colorless and colored examples, then adjust moles to see why concentration depends on quantity, not just the identity of the substance.",
+      volume:
+        "Volume of Solvent controls the solution volume shown in the beaker, from 10 to 5000 mL. The simulation treats this volume as the denominator in M = n/V, converting milliliters to liters for the molarity calculation. When the moles slider stays fixed, increasing volume spreads the same solute through more liquid, so molarity decreases; decreasing volume concentrates the same amount into less space. The Dilution Demo preset highlights this conservation idea: a tenfold increase in volume produces a tenfold drop in molarity when solute moles stay unchanged.",
     },
     misconceptions: [
       {
         wrong:
-          "Adding water to a solution decreases the number of moles of solute.",
+          "Increasing solution volume decreases the number of moles of solute.",
         correct:
-          "Dilution only increases the volume of the solution. The moles of solute are unchanged because no solute is removed or destroyed. Only concentration decreases (fewer moles per liter), not the total amount. This is exactly what C₁V₁ = C₂V₂ encodes: n = CV is constant on both sides.",
+          "Changing volume spreads the same solute through more or less liquid. The moles of solute are controlled separately by the Moles of Solute slider. If that value stays fixed, increasing volume lowers concentration but does not remove or destroy solute. In molarity terms, n stays constant while V changes, so M = n/V decreases.",
       },
       {
         wrong:
@@ -159,9 +156,9 @@ export const solutionsDilutions: Experiment = {
       },
       {
         wrong:
-          "To go from 1.0 M to 0.1 M, you just add 0.9 L of water to 1 L of solution.",
+          "To make a solution 10 times more dilute, you only double the volume.",
         correct:
-          "The target final volume is V₂ = C₁V₁ / C₂ = (1.0)(1.0) / (0.1) = 10 L. The amount of water to add is V₂ − V₁ = 10 − 1 = 9 L, not 0.9 L. A 10-fold dilution requires a 10-fold increase in total volume, meaning you add 9 parts water for every 1 part solution.",
+          "At fixed moles of solute, concentration is inversely proportional to total volume. Doubling the volume halves the molarity. A 10-fold dilution requires a 10-fold increase in total volume, so 1 L must become 10 L. The Volume of Solvent slider makes this relationship visible by changing V while the solute amount stays fixed.",
       },
       {
         wrong:
@@ -173,31 +170,31 @@ export const solutionsDilutions: Experiment = {
         wrong:
           "You can use C₁V₁ = C₂V₂ whenever you mix two solutions together.",
         correct:
-          "C₁V₁ = C₂V₂ applies only when the solute amount is conserved — that is, when you are diluting by adding pure solvent. If you mix two solutions of different concentrations, you must use a mass-balance approach: moles₁ + moles₂ = total moles, then divide by total volume.",
+          "C₁V₁ = C₂V₂ applies only when the solute amount is conserved during dilution. If you mix two solutions of different concentrations, calculate total solute first: moles₁ + moles₂ = total moles, then divide by total volume. This simulation exposes the same mass-balance idea directly with separate moles and volume controls.",
       },
     ],
     teacherUseCases: [
-      "Qualitative color prediction before calculation: have students predict which direction the beaker color changes and approximately how intense it will be after a stated dilution, then verify with the slider. Connects Beer-Lambert visual feedback to quantitative reasoning.",
-      "Quantitative data collection — color vs. concentration: fix soluteType to CuSO₄, perform a sequence of controlled dilutions by adding water in measured increments, and record qualitative color intensity at 5–6 resulting concentrations. Use this as a lead-in to the dedicated Beer's Law Lab experiment, which adds path length and quantitative absorbance measurement.",
-      "Misconception probe — 'dilution removes solute': set C₁ = 1.0 M, V₁ = 10 mL; ask students to state the moles of solute before and after adding 90 mL water. Most predict moles decrease; the real-time mole readout corrects the error immediately.",
-      "Serial dilution exercise: starting from 1.0 M, perform three sequential 1:10 dilutions using the simulation, recording C₂ each time. Students verify the pattern 1.0 → 0.1 → 0.01 → 0.001 M and connect to log-scale concentration used in pH problems.",
-      "Exam-style problem solving: give students a target concentration and final volume, and have them calculate the required initial volume and amount of water to add before touching the sliders. Verify answers against the simulation readout; address discrepancies in the debrief.",
+      "Qualitative color prediction before calculation: choose the CuSO₄ 0.1M preset, have students predict how the beaker should change when volume increases at fixed moles, then verify with the Volume of Solvent slider. Connects Beer-Lambert visual feedback to quantitative reasoning.",
+      "Quantitative data collection — color vs. concentration: use the CuSO₄ preset, keep Moles of Solute constant, change Volume of Solvent through 5–6 measured values, and record qualitative color intensity alongside calculated molarity. Use this as a lead-in to the dedicated Beer's Law Lab experiment.",
+      "Misconception probe — 'dilution removes solute': set a fixed value on the Moles of Solute slider, then increase Volume of Solvent. Ask students to state what happens to moles and molarity separately; the readout reinforces that moles stay constant while concentration changes.",
+      "Tenfold dilution exercise: start with the Dilution Demo (10×) preset, identify the moles and volume values, and have students explain why multiplying volume by 10 divides molarity by 10 when the solute amount is unchanged.",
+      "Exam-style problem solving: give students target moles, volume, or molarity values and have them calculate the missing quantity before touching the sliders. Verify answers against the simulation readout; address discrepancies in the debrief.",
     ],
     faq: [
       {
-        question: "How do I use C₁V₁ = C₂V₂ to find the final concentration after dilution?",
+        question: "How does the simulation calculate molarity from the sliders?",
         answer:
-          "Rearrange to C₂ = C₁V₁ / V₂, where V₂ = V₁ + volume of water added. Units must be consistent — if C₁ is in mol/L, both volumes must be in liters (or both in mL; units cancel). For example, 10 mL of 2.0 M NaCl diluted to 100 mL: C₂ = (2.0)(0.010 L) / (0.100 L) = 0.20 M. AP Chem 3.A.1 expects you to apply this in both directions.",
+          "It uses M = n/V: moles of solute divided by liters of solution. The Moles of Solute slider supplies n, and the Volume of Solvent slider supplies V after converting mL to L. For example, 10 mol in 1000 mL is 10 mol / 1.000 L = 10 M. Keeping moles fixed while increasing volume lowers molarity.",
       },
       {
-        question: "Why does the solution color fade when I add water?",
+        question: "Why does the solution color fade when I increase volume?",
         answer:
-          "Solution color intensity is proportional to concentration via the Beer-Lambert law (A = εbc). As you add water, concentration c decreases while path length b and molar absorptivity ε stay constant, so absorbance — and visible color depth — decrease proportionally. This visual effect is why colored solutions like CuSO₄ and KMnO₄ are used in real dilution labs to give immediate qualitative feedback.",
+          "Solution color intensity is proportional to concentration via the Beer-Lambert law (A = εbc). When the moles of solute stay fixed and volume increases, concentration c decreases while path length b and molar absorptivity ε stay constant, so absorbance and visible color depth decrease proportionally. The CuSO₄ preset makes this qualitative change easy to see.",
       },
       {
-        question: "How many moles of solute are present after I dilute the solution?",
+        question: "How many moles of solute are present after I change volume?",
         answer:
-          "Exactly the same number as before dilution. Moles = C × V (in liters). Before: n = C₁V₁. After: n = C₂V₂ = (C₁V₁/V₂) × V₂ = C₁V₁. The moles are conserved — this is the fundamental reason C₁V₁ = C₂V₂ works.",
+          "Exactly the value shown by the Moles of Solute slider. Changing only the Volume of Solvent slider does not change n; it changes how much liquid those moles are spread through. Moles are conserved during dilution, which is the fundamental reason concentration falls when total volume rises.",
       },
       {
         question: "What is a serial dilution and when is it used?",
@@ -205,14 +202,14 @@ export const solutionsDilutions: Experiment = {
           "A serial dilution performs the same dilution factor repeatedly: each step uses the output of the previous step as input. Three sequential 1:10 dilutions from 1.0 M gives 0.001 M (1 × 10⁻³ M). This technique is used in microbiology (bacterial plate counts), analytical chemistry, and pharmacology whenever concentrations span many orders of magnitude and a single large dilution would be impractical to measure accurately.",
       },
       {
-        question: "Is there a difference between 'adding 90 mL of water' and 'diluting to 100 mL total'?",
+        question: "Why does this simulator use total volume instead of water added?",
         answer:
-          "Yes, and it matters in lab. 'Diluting to 100 mL' means the final volume is exactly 100 mL (use a volumetric flask). 'Adding 90 mL of water to 10 mL of solution' means approximately 100 mL final volume, but volumes of liquids are not perfectly additive when solute is present. For AP-level problems, assume volumes are additive unless told otherwise; in real analytical work, always use a volumetric flask to reach the exact target volume.",
+          "Molarity depends on final solution volume, so the simulator exposes total volume directly. In a lab, 'diluting to 100 mL' means the final volume is exactly 100 mL, usually measured in a volumetric flask. 'Adding 90 mL of water' is an approximate path to that total. AP-level problems often assume volumes are additive unless stated otherwise.",
       },
       {
         question: "How does this topic connect to AP Chem 3.A.1 on the exam?",
         answer:
-          "AP Chem 3.A.1 states that the relationship between solution concentration (molarity) and the amounts of solute and solvent must be quantitatively understood. Exam questions commonly ask you to calculate C₂ from a dilution, determine the volume needed to prepare a given concentration from a stock solution, or identify how moles of solute change during dilution (they don't). Practice C₁V₁ = C₂V₂ in all three algebraic forms: solving for C₂, V₂, and V₁.",
+          "AP Chem 3.A.1 states that the relationship between solution concentration, solute amount, and solvent volume must be quantitatively understood. Exam questions commonly ask you to calculate molarity from moles and volume, determine a final concentration after dilution, or identify whether moles of solute change during dilution. Practice both M = n/V and C₁V₁ = C₂V₂.",
       },
     ],
   },

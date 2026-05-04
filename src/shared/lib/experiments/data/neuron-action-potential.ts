@@ -6,7 +6,7 @@ export const neuronActionPotential: Experiment = {
   title: "Neuron & Action Potential",
   subtitle: "The electrical language of the nervous system",
   description:
-    "Explore the structure of a neuron and fire an action potential. Watch sodium channels open as the membrane depolarizes past threshold, see the rapid voltage spike propagate down the axon, and observe repolarization as potassium channels open. Adjust stimulus strength, ion concentrations, and myelination.",
+    "Explore the structure of a neuron and fire an action potential. Watch sodium channels open as the membrane depolarizes past threshold, see the rapid voltage spike propagate down the axon, and observe repolarization as potassium channels open. Adjust stimulus current, firing rate, and myelination.",
   thumbnail: "/imgs/experiments/neuron-action-potential.png",
 
   standards: {
@@ -23,44 +23,34 @@ export const neuronActionPotential: Experiment = {
 
   parameters: [
     {
-      id: "stimulusStrength",
-      label: "Stimulus Strength",
+      id: "stimulusCurrent",
+      label: "Stimulus Current",
       unit: "mV",
       min: 5,
-      max: 60,
-      default: 25,
-      step: 5,
+      max: 30,
+      default: 15,
+      step: 1,
       tier: "free",
     },
     {
-      id: "sodiumConc",
-      label: "Extracellular Na⁺ Concentration",
-      unit: "mM",
-      min: 50,
-      max: 200,
-      default: 145,
-      step: 5,
+      id: "firingRate",
+      label: "Firing Rate",
+      unit: "Hz",
+      min: 1,
+      max: 8,
+      default: 1,
+      step: 1,
       tier: "free",
     },
     {
       id: "myelination",
-      label: "Myelin Sheath Coverage",
-      unit: "%",
+      label: "Myelination",
+      unit: "level",
       min: 0,
-      max: 100,
-      default: 80,
-      step: 10,
-      tier: "pro",
-    },
-    {
-      id: "channelBlocker",
-      label: "Na⁺ Channel Blocker (tetrodotoxin)",
-      unit: "%",
-      min: 0,
-      max: 100,
-      default: 0,
-      step: 10,
-      tier: "pro",
+      max: 2,
+      default: 2,
+      step: 1,
+      tier: "free",
     },
   ],
 
@@ -83,7 +73,7 @@ export const neuronActionPotential: Experiment = {
     "Neurons maintain a resting membrane potential of −70 mV due to the Na⁺/K⁺ ATPase pump (3 Na⁺ out, 2 K⁺ in) and selective ion permeability. An action potential is triggered when a stimulus depolarizes the membrane to threshold (≈−55 mV). Voltage-gated Na⁺ channels open rapidly → Na⁺ rushes in → membrane depolarizes to +40 mV. Na⁺ channels then inactivate while K⁺ channels open → K⁺ rushes out → repolarization and brief hyperpolarization (refractory period). The action potential propagates down the axon; myelination creates saltatory conduction (jumping between nodes of Ranvier), dramatically increasing speed (up to 120 m/s in myelinated vs 0.5 m/s in unmyelinated). Multiple sclerosis involves myelin sheath degradation.",
 
   instructions:
-    "Set stimulus strength and click 'Stimulate'. Watch the voltage trace build in the oscilloscope-style graph. If the stimulus exceeds threshold, an action potential fires — observe the Na⁺ and K⁺ channel animations. Reduce Na⁺ concentration to see how the amplitude changes. Toggle myelination (Pro) to compare conduction velocities.",
+    "Use the Stimulus Current, Firing Rate, and Myelination sliders to set the input strength, pulse frequency, and conduction condition. Click Stimulate to fire the neuron, then compare the Single Action Potential, Rapid Firing (Tetanus), and Inhibitory (GABA, no AP) presets.",
 
   challenges: [
     {
@@ -131,18 +121,40 @@ export const neuronActionPotential: Experiment = {
     educationalLevel: "High School",
     teaches: "Neuron Structure and Action Potential",
   },
+  htmlControlAliases: { stimulusCurrent: "sl-stim", firingRate: "sl-rate", myelination: "sl-myelin" },
+  presets: [
+    {
+      id: "applyPreset:0",
+      label: "Single Action Potential",
+      description:
+        "A threshold-level stimulus produces one clean action potential, useful for walking through resting state, threshold, depolarization, repolarization, and refractory recovery.",
+      paramValues: { stimulusCurrent: 15, firingRate: 1, myelination: 2 },
+    },
+    {
+      id: "applyPreset:1",
+      label: "Rapid Firing (Tetanus)",
+      description:
+        "A stronger stimulus with a higher firing rate shows repeated action potentials and supports discussion of frequency coding rather than spike-height coding.",
+      paramValues: { stimulusCurrent: 20, firingRate: 5, myelination: 2 },
+    },
+    {
+      id: "applyPreset:2",
+      label: "Inhibitory (GABA, no AP)",
+      description:
+        "An inhibitory setup keeps the membrane below threshold, showing why hyperpolarizing input can block a spike even when the neuron receives stimulation.",
+      paramValues: { stimulusCurrent: 8, firingRate: 1, myelination: 2 },
+    },
+  ],
   contentSections: {
     whatIsIt:
-      "A neuron fires an action potential by rapidly reversing its membrane voltage — from a resting −70 mV to a peak of roughly +30 mV — in about 1–2 milliseconds. The resting potential is maintained by the Na⁺/K⁺ ATPase pump (3 Na⁺ out, 2 K⁺ in) and selective membrane permeability. When a stimulus pushes the membrane past the threshold of approximately −55 mV, voltage-gated Na⁺ channels snap open, flooding the cell with Na⁺ (depolarization). Na⁺ channels then inactivate while K⁺ channels open, driving the membrane back negative (repolarization) through a brief hyperpolarization that marks the refractory period. Critically, this response is all-or-none: a sub-threshold stimulus produces only a decaying graded potential, never a full spike. The simulation lets you adjust stimulus strength, extracellular Na⁺, myelination, and channel blockers to explore every phase of this electrical event.",
+      "A neuron fires an action potential by rapidly reversing its membrane voltage — from a resting −70 mV to a peak of roughly +30 mV — in about 1–2 milliseconds. The resting potential is maintained by the Na⁺/K⁺ ATPase pump (3 Na⁺ out, 2 K⁺ in) and selective membrane permeability. When a stimulus pushes the membrane past the threshold of approximately −55 mV, voltage-gated Na⁺ channels snap open, flooding the cell with Na⁺ (depolarization). Na⁺ channels then inactivate while K⁺ channels open, driving the membrane back negative (repolarization) through a brief hyperpolarization that marks the refractory period. Critically, this response is all-or-none: a sub-threshold stimulus produces only a decaying graded potential, never a full spike. The simulation lets you adjust stimulus current, firing rate, and myelination, then jump between preset firing conditions.",
     parameterExplanations: {
-      stimulusStrength:
-        "The magnitude of the applied depolarizing current in mV equivalent, from 5 to 60 mV. Stimuli below the threshold value (~15–20 mV above resting, reaching approximately −55 mV) produce only a graded potential that decays without firing. Once stimulus strength crosses threshold, the full action potential fires — increasing strength beyond that point changes nothing about the spike shape, only how reliably threshold is reached (all-or-none principle).",
-      sodiumConc:
-        "Extracellular Na⁺ concentration in mM, normally ~145 mM in the human body. Reducing extracellular Na⁺ decreases the electrochemical driving force for Na⁺ influx, lowering the peak depolarization voltage (normally ~+30 mV). Raising it above 145 mM increases the Na⁺ equilibrium potential, pushing the peak higher. This slider directly demonstrates why extracellular Na⁺ determines action potential amplitude.",
+      stimulusCurrent:
+        "Stimulus Current controls how strongly the neuron is depolarized before an action potential can begin. At low values, the membrane voltage moves upward but may stay below threshold, so the change fades as a graded potential. Once the stimulus reaches the threshold region, voltage-gated Na⁺ channels open in a positive feedback loop and the neuron fires a full spike. Raising the current beyond threshold does not make the spike taller because action potentials are all-or-none. Use this slider with the Single Action Potential preset to separate the question “does it fire?” from the mistaken idea that a stronger input creates a larger spike.",
+      firingRate:
+        "Firing Rate sets how often the simulation applies stimulation pulses, measured in hertz. A low rate produces isolated spikes with enough time to see depolarization, repolarization, and refractory recovery after each event. A higher rate creates repeated firing, making it easier to discuss how neurons encode stronger signals by spike frequency rather than spike height. If pulses arrive too close together, the refractory period becomes visible because Na⁺ channels need time to reset before another full action potential can occur. Compare 1 Hz with the Rapid Firing preset to connect the voltage trace to real neural signal coding.",
       myelination:
-        "The percentage of axon length covered by myelin sheath, from 0% (bare unmyelinated axon) to 100% (fully myelinated). Myelin is an electrical insulator that forces ionic current to jump between exposed nodes of Ranvier — saltatory conduction. Full myelination increases conduction velocity from roughly 0.5 m/s to over 100 m/s. Dragging this slider from 0 to 100% shows the dramatic acceleration in signal propagation visible in the simulation timeline.",
-      channelBlocker:
-        "The percentage of voltage-gated Na⁺ channels blocked by tetrodotoxin (TTX), a neurotoxin from puffer fish, from 0% to 100%. As blockade increases, fewer Na⁺ channels can open during a stimulus, reducing depolarization amplitude until, near 100% block, no action potential can fire at all. This slider recreates the pharmacological experiment that proved Na⁺ channels are essential for action potential generation.",
+        "Myelination represents the condition of the insulating myelin sheath around the axon. In the HTML simulation, 0 means demyelinated, 1 means partial myelination, and 2 means normal myelination. Myelin prevents current from leaking across the membrane between nodes of Ranvier, so the action potential appears to jump from node to node in saltatory conduction. Normal myelination produces faster, cleaner propagation, while demyelination slows the signal and can make transmission unreliable. Move this slider after firing a single spike to show why myelin damage in disorders such as multiple sclerosis affects timing and coordination rather than the chemical identity of the ion channels.",
     },
     misconceptions: [
       {
@@ -171,11 +183,11 @@ export const neuronActionPotential: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Threshold demonstration: have students increase stimulus strength in 5 mV steps from minimum and record whether an action potential fires at each level. Plot binary fire/no-fire data against stimulus, identify threshold, and use this as the entry point for all-or-none discussion — directly addresses AP Bio 3.D.2.",
-      "Na⁺ concentration experiment: set channelBlocker to 0%, then have students lower sodiumConc from 145 mM to 70 mM in 15 mM steps, recording peak depolarization voltage each time. Graph peak vs. Na⁺ concentration to observe the Nernst relationship — ties to the Nernst equation formula shown in the simulation.",
-      "Myelination disease modeling: drag myelination from 100% to 0% and ask students to predict what neurological symptoms would result from this loss. Connect to multiple sclerosis and use it as a misconception probe — students often think MS destroys neurons rather than their insulating sheath.",
-      "TTX channel blocker pharmacology: have students apply channelBlocker in 20% increments and record the minimum stimulus needed to fire an action potential (or confirm it cannot fire). Discuss how this models the mechanism of local anesthetics and puffer fish toxin, addressing AP Bio 3.E.2.",
-      "Data collection on conduction velocity: at 0%, 50%, and 100% myelination, record the time between stimulus application and signal arrival at the axon terminal in the simulation. Calculate relative conduction velocity ratios and compare to published values (myelinated ~100 m/s, unmyelinated ~0.5 m/s).",
+      "Threshold demonstration: have students increase Stimulus Current from 5 mV upward and record whether an action potential fires at each value. Plot binary fire/no-fire data against stimulus, identify threshold, and use this as the entry point for all-or-none discussion — directly addresses AP Bio 3.D.2.",
+      "Frequency coding comparison: keep Stimulus Current above threshold, move Firing Rate from 1 Hz to higher values, and have students describe what changes in the voltage trace. Emphasize that signal intensity is represented by firing frequency, not by taller spikes.",
+      "Preset prediction routine: before clicking each preset, ask students to predict whether they will see a single spike, repeated spikes, or no spike. Then use the observed trace to connect excitatory input, inhibitory input, threshold, and refractory recovery.",
+      "Myelination disease modeling: drag Myelination from Normal to Partial to Demyelinated and ask students to predict what neurological symptoms would result from this loss. Connect to multiple sclerosis and use it as a misconception probe — students often think MS destroys neurons rather than their insulating sheath.",
+      "Data collection on conduction timing: at Demyelinated, Partial, and Normal myelination levels, record the time between stimulus application and signal arrival at the axon terminal in the simulation. Calculate relative conduction velocity ratios and compare them to the idea of saltatory conduction.",
     ],
     faq: [
       {
@@ -196,7 +208,7 @@ export const neuronActionPotential: Experiment = {
       {
         question: "What happens if tetrodotoxin blocks all Na⁺ channels?",
         answer:
-          "At 100% channel blockade in the simulation, no action potential can fire regardless of stimulus strength, because the Na⁺ influx required to cross threshold is absent. In biological systems, TTX poisoning paralyzes voluntary muscles and can stop breathing by blocking motor neuron firing. The lethal dose for humans is roughly 1–2 mg, making TTX one of the most potent non-protein toxins known.",
+          "If tetrodotoxin blocks voltage-gated Na⁺ channels, no action potential can fire because the Na⁺ influx required for rapid depolarization is absent. In biological systems, TTX poisoning paralyzes voluntary muscles and can stop breathing by blocking motor neuron firing. The key mechanism is the same one shown during a normal spike: without functioning Na⁺ channels, the membrane cannot enter the positive-feedback depolarization phase that carries the signal down the axon.",
       },
       {
         question: "Does the Na⁺/K⁺ pump fire during every action potential to restore ion balance?",

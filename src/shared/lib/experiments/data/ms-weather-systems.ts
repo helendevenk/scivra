@@ -23,44 +23,24 @@ export const msWeatherSystems: Experiment = {
 
   parameters: [
     {
-      id: "tempDiff",
-      label: "Temperature Difference",
+      id: "windSpeed",
+      label: "Wind Speed",
+      unit: "km/h",
+      min: 0,
+      max: 80,
+      default: 20,
+      step: 1,
+      tier: "free",
+    },
+    {
+      id: "temperatureGradient",
+      label: "Temperature Gradient",
       unit: "°C",
       min: 0,
-      max: 30,
+      max: 40,
       default: 15,
       step: 1,
       tier: "free",
-    },
-    {
-      id: "humidity",
-      label: "Relative Humidity",
-      unit: "%",
-      min: 0,
-      max: 100,
-      default: 60,
-      step: 5,
-      tier: "free",
-    },
-    {
-      id: "frontType",
-      label: "Front Type (0=Cold, 1=Warm, 2=Occluded)",
-      unit: "",
-      min: 0,
-      max: 2,
-      default: 0,
-      step: 1,
-      tier: "free",
-    },
-    {
-      id: "oceanTemp",
-      label: "Ocean Surface Temperature",
-      unit: "°C",
-      min: 20,
-      max: 35,
-      default: 27,
-      step: 1,
-      tier: "pro",
     },
   ],
 
@@ -79,7 +59,7 @@ export const msWeatherSystems: Experiment = {
     "Weather is driven by unequal heating of Earth's surface and atmosphere. Warm air is less dense and rises (low pressure forms); cool air is denser and sinks (high pressure). These pressure differences drive wind from high to low pressure. Fronts are boundaries between air masses: a cold front occurs when cold, dense air pushes under warm air — causes sharp temperature drops, brief heavy rain. A warm front occurs when warm air glides over cold air — brings slow, steady precipitation. Coriolis effect (Earth's rotation) deflects wind paths, creating the large-scale circulation patterns. Hurricanes form over warm ocean water (≥26°C): warm moist air rises rapidly, condenses, releases latent heat, further driving updrafts in a self-reinforcing cycle.",
 
   instructions:
-    "Set the temperature difference between air masses. Watch how the front develops and what type of precipitation forms. Slide to a Warm Front for slower, gentler rain. Raise Ocean Temperature above 27°C (Pro) to watch a tropical cyclone intensify — see the eye form when it reaches hurricane strength.",
+    "Use the Wind Speed slider to strengthen or weaken air movement, and use the Temperature Gradient slider to change how sharply warm and cold air masses contrast. Try the Cold Front, High Pressure, and Hurricane presets to compare stormy lifting, clear sinking air, and rotating tropical storm organization.",
 
   challenges: [
     {
@@ -126,18 +106,35 @@ export const msWeatherSystems: Experiment = {
     educationalLevel: "Middle School",
     teaches: "Weather Systems and Atmosphere",
   },
+  htmlControlAliases: { windSpeed: "windSlider", temperatureGradient: "tempGradSlider" },
+  presets: [
+    {
+      id: "loadPreset:coldfront",
+      label: "Cold Front (thunderstorms)",
+      description:
+        "A cold front pushes dense cold air under warm air, forcing rapid lifting that can build tall clouds, gusty winds, and brief intense thunderstorms.",
+    },
+    {
+      id: "loadPreset:highpressure",
+      label: "High Pressure (clear)",
+      description:
+        "A high-pressure setup shows sinking air, weaker cloud formation, and calmer clear-weather conditions compared with active storm systems.",
+    },
+    {
+      id: "loadPreset:hurricane",
+      label: "Hurricane",
+      description:
+        "A hurricane preset organizes fast-moving air around a low-pressure center, highlighting rotation, inflow, and the storm structure produced by strong atmospheric energy.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Weather is the result of the atmosphere constantly trying to balance out temperature and pressure differences created by unequal heating of Earth's surface. When the Sun warms a patch of land or ocean, the air above it heats up, becomes less dense, and rises — much like a hot air balloon. Cooler, denser air rushes in to fill the gap, creating wind. Where a mass of cold air pushes into a region of warm air, or warm air glides over colder air, the boundary between them is called a front — and fronts are where most of the exciting weather happens. Cold fronts tend to sweep in quickly and produce brief, intense storms. Warm fronts move more slowly and bring steady rain or drizzle that can last for days. When the conditions are just right over warm ocean water — warm moist air rising rapidly, pressure dropping, Earth's rotation imparting a spin — a tropical cyclone can organize and intensify into a hurricane. All of these events are connected through the same basic physics: air moves from high pressure to low pressure, warm air rises while cold air sinks, and moisture rises, cools, and condenses to form clouds and precipitation.",
     parameterExplanations: {
-      tempDiff:
-        "Sets the temperature difference in degrees Celsius between the two colliding air masses, from 0 (no contrast, calm conditions) to 30 degrees (sharp contrast, powerful front). A larger temperature difference means a stronger boundary, more vigorous lifting of warm air over cold air, and generally more intense precipitation. Real cold fronts in winter can involve temperature contrasts of 15 to 25 degrees Celsius across a single day.",
-      humidity:
-        "Sets the relative humidity of the air, from 0 percent (completely dry) to 100 percent (fully saturated). Higher humidity means more water vapor is available to condense into clouds and precipitation when air rises and cools. At 100 percent humidity with a strong front, the simulation typically shows heavy rain or thunderstorms. At low humidity, even a vigorous cold front may produce clouds but little precipitation.",
-      frontType:
-        "Selects the type of weather front to simulate: 0 for a cold front (dense cold air pushing under warm air, producing steep lifting and brief intense rain), 1 for a warm front (warm air gradually gliding over cold air, producing slow steady precipitation over a wide area), or 2 for an occluded front (a cold front has caught up to a warm front, lifting the warm air mass completely off the surface — often associated with mature storm systems).",
-      oceanTemp:
-        "A Pro parameter that sets the ocean surface temperature in degrees Celsius, from 20 to 35 degrees. Ocean surface temperature is the primary fuel source for tropical cyclones. Historically, sustained hurricane development requires ocean temperatures of at least about 26 degrees Celsius. Raising this parameter above 28 to 30 degrees allows the simulation to show rapid intensification, where a storm deepens dramatically within a short time.",
+      windSpeed:
+        "Wind Speed controls how quickly air moves through the weather system, from calm conditions to strong flow. Faster wind shows that larger pressure differences can move air more forcefully from high-pressure regions toward low-pressure regions. In a cold-front setup, increasing wind speed can make the boundary look more active because air is being pushed and lifted more quickly. In a high-pressure setup, lower wind speeds help students see why sinking, spreading air is often connected with calmer weather. Use this slider with one preset at a time so students can connect the visible motion to pressure gradients instead of treating wind as random movement.",
+      temperatureGradient:
+        "Temperature Gradient controls how sharply warm and cold air contrast across the scene. A low gradient means the air masses are more similar, so the model tends to show gentler lifting and less dramatic organization. A high gradient creates a stronger density contrast: warm air rises more readily, cold air undercuts more strongly, and fronts or storms can look more energetic. This slider is useful for comparing cause and effect because students can keep the preset fixed, then change only the gradient and observe how cloud growth, circulation, or front intensity responds. It connects unequal heating directly to the weather patterns described by middle-school Earth science standards.",
     },
     misconceptions: [
       {
@@ -162,10 +159,11 @@ export const msWeatherSystems: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Set frontType to 0 (cold front), tempDiff to 20 degrees, and humidity to 80 percent — observe the storm pattern, then switch frontType to 1 (warm front) and compare the cloud distribution and rain intensity — students document the differences and connect them to real forecast maps (MS-ESS2-5).",
-      "Hold frontType at 0 and humidity at 70 percent, then slide tempDiff from 5 to 25 degrees in increments of 5 — students record precipitation intensity at each setting and graph the relationship, practicing data analysis in an Earth science context.",
-      "Set humidity to 100 percent and cycle through all three frontType values, having students predict the cloud and rain pattern before each switch — the predict-observe-explain cycle reinforces the mechanism rather than rote memorization of front types.",
-      "Use the oceanTemp Pro parameter: set humidity to 90, then raise oceanTemp from 22 to 32 degrees in steps — students observe tropical cyclone intensification and connect it to real-world discussions about how warming ocean temperatures relate to hurricane strength (MS-ESS3-5). Note: this scenario focuses on the ocean-temperature mechanism independently of the frontal system controls.",
+      "Start with the Cold Front preset, set Wind Speed to 20 and Temperature Gradient to 15, then increase one slider at a time so students can collect evidence for how air-mass interactions change weather conditions (MS-ESS2-5).",
+      "Use the High Pressure preset as a contrast case: students record how lower wind and weaker temperature contrast support calmer, clearer conditions, then compare that evidence with the Cold Front preset.",
+      "Have students choose the Hurricane preset, raise Wind Speed in steps, and describe how stronger inflow and rotation change the storm structure while keeping the Temperature Gradient constant.",
+      "Run a predict-observe-explain routine across all three presets: Cold Front, High Pressure, and Hurricane. Students predict the visible air motion first, then cite slider values and observations to revise their explanations.",
+      "Ask students to graph Temperature Gradient against observed storm intensity under the Cold Front preset, then connect the pattern to unequal heating, density differences, and atmospheric circulation (MS-ESS2-6).",
     ],
     faq: [
       {
@@ -181,7 +179,7 @@ export const msWeatherSystems: Experiment = {
       {
         question: "Which NGSS standards does this experiment address?",
         answer:
-          "This simulation supports MS-ESS2-5 (collect data to provide evidence for how the motions and complex interactions of air masses result in changes in weather conditions) and MS-ESS2-6 (develop and use a model to describe how unequal heating and rotation of Earth cause patterns of atmospheric and oceanic circulation that determine regional climates). The hurricane intensification feature also connects to MS-ESS3-5, analyzing and interpreting data on natural hazards to forecast future risks.",
+          "This simulation supports MS-ESS2-5 (collect data to provide evidence for how the motions and complex interactions of air masses result in changes in weather conditions) and MS-ESS2-6 (develop and use a model to describe how unequal heating and rotation of Earth cause patterns of atmospheric and oceanic circulation that determine regional climates). The Hurricane preset also connects to MS-ESS3-5, analyzing and interpreting data on natural hazards to forecast future risks.",
       },
       {
         question: "How does a meteorologist forecast the weather?",

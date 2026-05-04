@@ -30,32 +30,32 @@ export const stoichiometry: Experiment = {
 
   parameters: [
     {
-      id: "molesA",
-      label: "Moles of Reactant A",
-      unit: "mol",
-      min: 0,
-      max: 10,
-      default: 2,
-      step: 0.1,
+      id: "massA",
+      label: "Mass of A",
+      unit: "g",
+      min: 1,
+      max: 100,
+      default: 10,
+      step: 0.5,
       tier: "free",
     },
     {
-      id: "molesB",
-      label: "Moles of Reactant B",
-      unit: "mol",
-      min: 0,
-      max: 10,
-      default: 3,
-      step: 0.1,
+      id: "massB",
+      label: "Mass of B",
+      unit: "g",
+      min: 1,
+      max: 100,
+      default: 10,
+      step: 0.5,
       tier: "free",
     },
     {
-      id: "reaction",
-      label: "Reaction (0=synthesis, 1=decomposition, 2=combustion)",
-      unit: "",
+      id: "actualYield",
+      label: "Actual Yield",
+      unit: "g",
       min: 0,
-      max: 2,
-      default: 0,
+      max: 100,
+      default: 80,
       step: 1,
       tier: "free",
     },
@@ -78,7 +78,7 @@ export const stoichiometry: Experiment = {
     "Stoichiometry uses the coefficients of a balanced chemical equation to relate amounts of reactants and products. The mole ratio (coefficient ratio) converts between moles of different substances. The limiting reagent is the reactant that runs out first, determining the maximum product (theoretical yield). The excess reagent has leftover moles after the reaction completes. For a reaction aA + bB → cC: if (moles A)/a < (moles B)/b, then A is limiting. Theoretical moles of C = (moles of limiting reagent) × (c/a or c/b). Conservation of mass requires that total atoms of each element are equal on both sides.",
 
   instructions:
-    "Choose a reaction type and adjust the moles of each reactant. The simulation displays molecules as colored circles — watch them combine and identify which reactant runs out first (the limiting reagent). The data panel shows mole ratios, theoretical yield, and leftover excess in real time.",
+    "Use the Mass of A, Mass of B, and Actual Yield sliders to compare starting reactant masses, theoretical yield, and percent yield. Try the H₂+O₂→H₂O, Haber Process, and Limiting Reagent Demo presets to switch between representative stoichiometry scenarios, then adjust the three sliders to see how the limiting reagent, excess reactant, and yield calculations respond.",
 
   challenges: [
     {
@@ -121,23 +121,48 @@ export const stoichiometry: Experiment = {
     educationalLevel: "High School",
     teaches: "Stoichiometry and Limiting Reagents",
   },
+  htmlControlAliases: {
+    massA: "sl-massA",
+    massB: "sl-massB",
+    actualYield: "sl-actual",
+  },
+  presets: [
+    {
+      id: "loadPreset:0",
+      label: "💧 H₂+O₂→H₂O",
+      description:
+        "Models water formation from hydrogen and oxygen, a compact example for practicing coefficient ratios and seeing how reactant masses constrain product yield.",
+    },
+    {
+      id: "loadPreset:1",
+      label: "🏭 Haber Process",
+      description:
+        "Uses ammonia synthesis to connect stoichiometric ratios with an industrial reaction where identifying the limiting reagent affects expected product mass.",
+    },
+    {
+      id: "loadPreset:2",
+      label: "⚗️ Limiting Reagent Demo",
+      description:
+        "Sets up a focused limiting-reagent case so students can compare available masses, predict which reactant runs out, and check excess and yield readouts.",
+    },
+  ],
   contentSections: {
     whatIsIt:
       "Stoichiometry is the quantitative accounting of atoms and moles in a chemical reaction. The coefficients in a balanced equation are mole ratios: in 2 H₂ + O₂ → 2 H₂O, two moles of hydrogen react with exactly one mole of oxygen, no more. The limiting reagent is whichever reactant runs out first based on those ratios — it determines the theoretical yield, the maximum product obtainable. Covered under AP Chem 4.A.1 and 4.A.2, stoichiometry underpins every quantitative chemistry problem from percent yield in industrial synthesis to dosing calculations in medicine. This simulation displays reactions at the molecular level: adjust the moles of each reactant, watch molecules combine, and observe which reactant is exhausted first and how many moles of excess remain.",
     parameterExplanations: {
-      molesA:
-        "The initial moles of Reactant A loaded into the virtual reaction vessel (range 0–10 mol, default 2 mol). Reactant A maps to the first species on the left side of the selected balanced equation. Increasing molesA beyond the stoichiometric ratio relative to molesB will shift the limiting reagent from A to B; the simulation identifies and labels the limiting reagent in real time.",
-      molesB:
-        "The initial moles of Reactant B (range 0–10 mol, default 3 mol). To determine the limiting reagent manually, compute molesA / coeffA and molesB / coeffB; the smaller quotient identifies the limiting reagent. The simulation uses this same logic and colors excess reagent molecules gray after the reaction completes.",
-      reaction:
-        "Selects the reaction type: 0 = synthesis (e.g., 2A + B → A₂B with the actual coefficients shown in the simulation), 1 = decomposition (AB → A + B, single reactant — limiting-reagent comparison does not apply because only molesA matters), 2 = combustion (hydrocarbon + O₂ → CO₂ + H₂O, where molesA = hydrocarbon and molesB = O₂). For the two-reactant reactions, the limiting-reagent outcome changes with coefficient ratios; for decomposition, change molesA only and ignore molesB.",
+      massA:
+        "Mass of A sets the starting amount of the first reactant in grams. Stoichiometry problems begin with a mass, but balanced equations compare substances in moles, so this value must be converted through molar mass before the coefficient ratio can be used. Raising Mass of A can increase theoretical product only while A is limiting; once the other reactant becomes limiting, extra A remains as excess. Keep Mass of B fixed and move this slider to see the limiting reagent switch, then explain the result with grams-to-moles conversion rather than comparing raw gram values.",
+      massB:
+        "Mass of B sets the starting amount of the second reactant in grams. It should be interpreted together with Mass of A and the coefficients in the active preset equation. A larger gram value does not automatically mean there are more usable reaction units, because different substances have different molar masses. Convert each reactant mass to moles, divide by the balanced-equation coefficient, and compare those normalized amounts. When Mass of B is below the required ratio, B limits the reaction; when it is above the ratio, some B remains unused after the theoretical yield is reached.",
+      actualYield:
+        "Actual Yield represents the product mass collected from the reaction in grams. Theoretical yield is the maximum predicted by the limiting reagent, assuming complete conversion and no losses. Real experiments often produce less because of incomplete reaction, side reactions, transfer loss, moisture, or measurement error. Use this slider after setting Mass of A and Mass of B: first predict the theoretical yield from stoichiometry, then compare the actual collected mass with that benchmark. The percent yield calculation links the ideal balanced-equation model to what a student might measure in a physical lab.",
     },
     misconceptions: [
       {
         wrong:
           "The limiting reagent is whichever reactant has the smaller mass (or smaller number of moles).",
         correct:
-          "Limiting reagent is determined by mole ratio relative to stoichiometric coefficients, not by raw mass or raw moles. For N₂ + 3 H₂ → 2 NH₃, with 1 mol N₂ and 2 mol H₂: divide each by its coefficient — N₂: 1/1 = 1.0, H₂: 2/3 = 0.67. H₂ is limiting even though N₂ has fewer moles. Always divide moles by the coefficient from the balanced equation before comparing.",
+          "Limiting reagent is determined by mole ratio relative to stoichiometric coefficients, not by raw gram values or raw mole values. In a mass-based setup, convert each reactant from grams to moles using molar mass, then divide by its coefficient in the balanced equation. The smaller normalized amount identifies the limiting reagent. This is why a reactant with more grams can still run out first if its molar mass and coefficient make its usable mole amount smaller.",
       },
       {
         wrong:
@@ -149,7 +174,7 @@ export const stoichiometry: Experiment = {
         wrong:
           "All of the excess reagent gets used up once you add more of the limiting reagent.",
         correct:
-          "Adding more limiting reagent consumes more of the excess reagent, but only up to the point where the new limiting reagent runs out. The role of limiting vs. excess can flip if you add enough. The simulation shows leftover gray molecules updating in real time as you move the sliders to illustrate this.",
+          "Adding more of the limiting reagent consumes more of the excess reagent, but only up to the point where the balance flips and the other reactant becomes limiting. The role of limiting versus excess depends on both reactant masses after conversion to moles and the coefficient ratio. Move one mass slider while holding the other fixed to see why excess is not a permanent label for a substance; it is a relationship created by the current quantities.",
       },
       {
         wrong:
@@ -165,17 +190,17 @@ export const stoichiometry: Experiment = {
       },
     ],
     teacherUseCases: [
-      "Limiting-reagent identification drill: select reaction = synthesis and read the actual coefficients shown in the simulation (e.g., 2A + B → A₂B). Set molesA = 3, molesB = 3, ask students to predict the limiting reagent by hand (divide each by its coefficient), then confirm with the simulation. Repeat with molesA = 1, molesB = 3 to flip the answer.",
-      "Theoretical yield calculation then verification: for the combustion reaction, give students the moles of each reactant, have them calculate theoretical yield of CO₂ on paper, then check against the simulation readout. Any discrepancy forces re-examination of the coefficient ratios used.",
-      "Percent yield lab connection: pair this simulation with a physical experiment (e.g., copper displacement or magnesium combustion) where students record actual yield, then use stoichiometry to compute theoretical yield and calculate percent yield. The simulation provides the ideal benchmark.",
-      "Misconception probe — 'limiting reagent = smaller mass': give students a scenario where the smaller-mass reactant is actually the excess reagent (e.g., 4 g Fe vs. 3 g S in Fe + S → FeS; Fe moles: 4/55.85 = 0.072, S moles: 3/32.06 = 0.094 — Fe is limiting despite having more grams). Use the simulation to confirm.",
-      "Excess reagent calculation challenge: after identifying the limiting reagent in the simulation, have students calculate the moles of excess reagent remaining and verify against the leftover count displayed. Connect to real-world scenarios where excess reagent recovery or disposal matters (industrial scale).",
+      "Limiting-reagent identification drill: use the Limiting Reagent Demo preset, set clear Mass of A and Mass of B values, and ask students to convert grams to moles, divide by coefficients, and predict which reactant limits before checking the simulation readout.",
+      "Theoretical yield calculation then verification: choose the H₂+O₂→H₂O preset, have students calculate theoretical product mass from the limiting reagent on paper, then compare against the displayed result. Any mismatch points to a molar-mass, coefficient, or unit-conversion error.",
+      "Percent yield lab connection: pair this simulation with a physical experiment such as copper displacement or magnesium combustion where students record actual yield, then use the Actual Yield slider to model their collected product mass and calculate percent yield against the ideal benchmark.",
+      "Misconception probe — 'limiting reagent = smaller mass': give students a scenario where the smaller-mass reactant is actually the excess reagent, then use the Mass of A and Mass of B sliders to confirm that coefficient-normalized mole amounts, not raw grams, determine the limiting reagent.",
+      "Preset comparison activity: rotate through the H₂+O₂→H₂O, Haber Process, and Limiting Reagent Demo presets, asking students to record which reactant limits in each case and explain how the balanced-equation coefficients change the yield calculation.",
     ],
     faq: [
       {
         question: "How do I identify the limiting reagent step by step?",
         answer:
-          "Step 1: Convert all reactant masses to moles using molar mass. Step 2: Divide each reactant's moles by its stoichiometric coefficient in the balanced equation. Step 3: The reactant with the smallest quotient is the limiting reagent. For 2 H₂ + O₂ → 2 H₂O with 3 mol H₂ and 2 mol O₂: H₂ gives 3/2 = 1.5, O₂ gives 2/1 = 2.0; H₂ is limiting. This procedure works for any number of reactants.",
+          "Step 1: Convert each reactant mass from grams to moles using molar mass. Step 2: Divide each mole amount by that reactant's coefficient in the balanced equation. Step 3: The reactant with the smallest quotient is the limiting reagent. Step 4: Use that limiting amount and the product coefficient ratio to calculate theoretical yield. The mass sliders are useful because they force the same workflow used in real lab problems: grams first, moles next, coefficient ratio last.",
       },
       {
         question: "What is theoretical yield and how do I calculate it?",
@@ -195,7 +220,7 @@ export const stoichiometry: Experiment = {
       {
         question: "How does AP Chem 4.A.1 connect to this simulation?",
         answer:
-          "AP Chem 4.A.1 states that the amounts of products and reactants in a chemical reaction are determined by the stoichiometry of the balanced equation. The simulation makes this concrete: each molecule displayed is one unit of the mole count you set, the leftover molecules are the excess reagent, and the product count is the theoretical yield in mole units. Work through at least one problem of each reaction type (synthesis, decomposition, combustion) to cover the coefficient variety the AP exam uses.",
+          "AP Chem 4.A.1 states that the amounts of products and reactants in a chemical reaction are determined by the stoichiometry of the balanced equation. The simulation makes this concrete by connecting adjustable reactant masses to coefficient ratios, limiting reagent decisions, theoretical yield, and excess reactant. Work through the H₂+O₂→H₂O, Haber Process, and Limiting Reagent Demo presets to compare how different balanced equations change the same calculation workflow.",
       },
     ],
   },
