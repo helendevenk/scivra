@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { Link } from '@/core/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { LearningPathCard } from './learning-path-card';
 
@@ -97,6 +98,14 @@ export function LearningPathList() {
           <p className="mt-2 text-sm text-muted-foreground">
             {t('empty.description')}
           </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Button asChild>
+              <Link href="/labs">{t('empty.browse_labs')}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/upg">{t('empty.try_upg')}</Link>
+            </Button>
+          </div>
         </div>
       )}
 

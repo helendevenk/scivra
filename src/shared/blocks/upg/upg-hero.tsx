@@ -29,7 +29,7 @@ export function UpgHero() {
         {/* Animated prompt → output demo */}
         <div
           role="img"
-          aria-label="Animated demo: prompt text transforms into a 3D molecule visualization"
+          aria-label="Animated demo: prompt text transforms into a 3D physics visualization"
           className="mx-auto grid max-w-3xl gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center"
         >
           <div className="border-primary/20 bg-card/80 rounded-xl border p-4 text-left backdrop-blur-sm">
@@ -37,7 +37,7 @@ export function UpgHero() {
               Prompt
             </p>
             <p className="text-foreground font-mono text-sm">
-              Build a VSEPR model of methane
+              Build a projectile-motion lab
               <span className="bg-primary ml-0.5 inline-block h-[1em] w-[0.6ch] translate-y-[0.15em] animate-pulse align-middle" />
             </p>
           </div>

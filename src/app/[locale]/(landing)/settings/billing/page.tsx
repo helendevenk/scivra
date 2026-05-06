@@ -143,6 +143,7 @@ export default async function BillingPage({
       },
     ],
     data: subscriptions,
+    emptyMessage: t('list.empty'),
     pagination: {
       total,
       page,

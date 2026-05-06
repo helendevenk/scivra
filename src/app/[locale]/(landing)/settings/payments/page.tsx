@@ -154,6 +154,7 @@ export default async function PaymentsPage({
       },
     ],
     data: orders,
+    emptyMessage: t('list.empty'),
     pagination: {
       total,
       page,
