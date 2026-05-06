@@ -63,7 +63,7 @@ export default async function UpgPage({
   const softwareApplicationJsonLd = buildSoftwareApplicationJsonLd({
     name: 'Scivra UPG — Universal Principle Generator',
     description:
-      'Describe any science concept in plain English. Scivra UPG generates an interactive 3D visualization with formulas, knowledge cards, and quizzes.',
+      'Describe a physics concept in plain English. Scivra UPG generates an interactive 3D visualization with formulas, knowledge cards, and quizzes.',
     url: upgUrl,
     applicationCategory: 'EducationalApplication',
     priceRangeUSD: { low: '0', high: '9.99' },
