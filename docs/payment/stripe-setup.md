@@ -60,7 +60,7 @@ Use explicit event filtering in dev so noisy Stripe events such as `invoice_paym
 pnpm dev
 ```
 
-访问 `http://localhost:3000/admin/settings/payment`，按下表填写：
+访问 `http://localhost:3001/admin/settings/payment`（注：Next.js 默认 3000，本机 3000 被另一项目占用时会回落到 3001；以 `pnpm dev` 启动时输出的端口为准），按下表填写：
 
 | 字段 | 值 |
 |---|---|

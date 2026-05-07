@@ -17,10 +17,19 @@ vi.mock('@/shared/services/payment', () => ({
   handleSubscriptionRenewal: vi.fn().mockResolvedValue(undefined),
   handleSubscriptionUpdated: vi.fn().mockResolvedValue(undefined),
   handleSubscriptionCanceled: vi.fn().mockResolvedValue(undefined),
+  handleSubscriptionPaymentFailed: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/shared/models/order', () => ({
   findOrderByOrderNo: vi.fn(),
+  updateOrderByOrderNo: vi.fn().mockResolvedValue(undefined),
+  OrderStatus: {
+    PENDING: 'pending',
+    CREATED: 'created',
+    COMPLETED: 'completed',
+    PAID: 'paid',
+    FAILED: 'failed',
+  },
 }));
 
 vi.mock('@/shared/models/subscription', () => ({

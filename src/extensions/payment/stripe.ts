@@ -277,7 +277,10 @@ export class StripeProvider implements PaymentProvider {
         paymentSession = await this.buildPaymentSessionFromCheckoutSession(
           event.data.object as Stripe.Response<Stripe.Checkout.Session>
         );
-      } else if (eventType === PaymentEventType.PAYMENT_SUCCESS) {
+      } else if (
+        eventType === PaymentEventType.PAYMENT_SUCCESS ||
+        eventType === PaymentEventType.PAYMENT_FAILED
+      ) {
         paymentSession = await this.buildPaymentSessionFromInvoice(
           event.data.object as Stripe.Response<Stripe.Invoice>
         );
@@ -503,10 +506,23 @@ export class StripeProvider implements PaymentProvider {
       }
     }
 
+    // Derive payment status from invoice.status so the same builder
+    // works for both invoice.payment_succeeded and invoice.payment_failed
+    // events. 'paid' → SUCCESS; 'open' / 'uncollectible' / 'void' → FAILED;
+    // anything else → PROCESSING (treated as in-flight by callers).
+    const paymentStatus: PaymentStatus =
+      invoice.status === 'paid'
+        ? PaymentStatus.SUCCESS
+        : invoice.status === 'open' ||
+            invoice.status === 'uncollectible' ||
+            invoice.status === 'void'
+          ? PaymentStatus.FAILED
+          : PaymentStatus.PROCESSING;
+
     const result: PaymentSession = {
       provider: this.name,
 
-      paymentStatus: PaymentStatus.SUCCESS,
+      paymentStatus,
       paymentInfo: {
         transactionId: invoice.id,
         discountCode: '',

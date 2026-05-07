@@ -13,6 +13,7 @@ import {
 } from 'vitest';
 
 import type { handleSubscriptionPaymentFailed as requiredPaymentFailedHandler } from '@/shared/services/payment';
+import { PaymentInterval, PaymentStatus } from '@/extensions/payment/types';
 
 vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
@@ -119,6 +120,7 @@ function makeOrder(overrides: Row = {}) {
     creditsValidDays: 30,
     planName: 'Pro Monthly',
     paymentProductId: 'price_pro_monthly',
+    transactionId: 'cs_test_race_1',
     ...overrides,
   };
 }
@@ -137,7 +139,7 @@ function makeSubscription(overrides: Row = {}) {
     description: 'Pro subscription',
     amount: 499,
     currency: 'usd',
-    interval: 'month',
+    interval: PaymentInterval.MONTH,
     intervalCount: 1,
     currentPeriodStart: new Date('2026-05-01T00:00:00.000Z'),
     currentPeriodEnd: new Date('2026-06-01T00:00:00.000Z'),
@@ -153,7 +155,7 @@ function makeSubscription(overrides: Row = {}) {
 function makeCheckoutSession(overrides: Row = {}) {
   return {
     provider: 'stripe',
-    paymentStatus: 'paid',
+    paymentStatus: PaymentStatus.SUCCESS,
     paymentInfo: {
       paymentAmount: 499,
       paymentCurrency: 'usd',
@@ -170,7 +172,7 @@ function makeCheckoutSession(overrides: Row = {}) {
       status: 'active',
       amount: 499,
       currency: 'usd',
-      interval: 'month',
+      interval: PaymentInterval.MONTH,
       intervalCount: 1,
       currentPeriodStart: new Date('2026-05-01T00:00:00.000Z'),
       currentPeriodEnd: new Date('2026-06-01T00:00:00.000Z'),
@@ -200,7 +202,7 @@ function makeRenewalSession(overrides: Row = {}) {
       status: 'active',
       amount: 499,
       currency: 'usd',
-      interval: 'month',
+      interval: PaymentInterval.MONTH,
       intervalCount: 1,
       currentPeriodStart: new Date('2026-06-01T00:00:00.000Z'),
       currentPeriodEnd: new Date('2026-07-01T00:00:00.000Z'),
@@ -449,8 +451,8 @@ describe('subscription payment race integration RED suite', () => {
     const { order, session } = await seedCheckoutFixture();
 
     await Promise.all([
-      paymentServices.handlePaymentSuccess({ order: order as never, session }),
-      paymentServices.handlePaymentSuccess({ order: order as never, session }),
+      paymentServices.handlePaymentSuccess({ order: order as never, session: session as never }),
+      paymentServices.handlePaymentSuccess({ order: order as never, session: session as never }),
     ]);
 
     const orders = await readOrders();
@@ -468,11 +470,11 @@ describe('subscription payment race integration RED suite', () => {
 
     await paymentServices.handleCheckoutSuccess({
       order: order as never,
-      session,
+      session: session as never,
     });
     await paymentServices.handleCheckoutSuccess({
       order: order as never,
-      session,
+      session: session as never,
     });
 
     const orders = await readOrders();
@@ -492,11 +494,11 @@ describe('subscription payment race integration RED suite', () => {
     await Promise.all([
       paymentServices.handleSubscriptionRenewal({
         subscription: subscription as never,
-        session,
+        session: session as never,
       }),
       paymentServices.handleSubscriptionRenewal({
         subscription: subscription as never,
-        session,
+        session: session as never,
       }),
     ]);
 
@@ -525,7 +527,7 @@ describe('subscription payment race integration RED suite', () => {
 
     await paymentServices.handlePaymentSuccess({
       order: order as never,
-      session,
+      session: session as never,
     });
 
     const orders = await readOrders();
@@ -554,7 +556,7 @@ describe('subscription payment race integration RED suite', () => {
 
     await paymentServices.handleSubscriptionRenewal({
       subscription: subscription as never,
-      session,
+      session: session as never,
     });
 
     const orders = await readOrders();
@@ -591,13 +593,13 @@ describe('subscription payment race integration RED suite', () => {
   it('Failed-payment: subscription payment failure sets subscription.status to past_due', async () => {
     const { subscription } = await seedRenewalFixture();
     const session = makeRenewalSession({
-      paymentStatus: 'failed',
+      paymentStatus: PaymentStatus.FAILED,
       paymentResult: { id: 'in_failed_race_1' },
     });
 
     await paymentServices.handleSubscriptionPaymentFailed({
       subscription: subscription as never,
-      session,
+      session: session as never,
     });
 
     const subscriptions = await readSubscriptions();
