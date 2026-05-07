@@ -37,8 +37,12 @@
 新开一个终端，保持运行：
 
 ```bash
-stripe listen --forward-to localhost:3000/api/payment/notify/stripe
+stripe listen \
+  --events checkout.session.completed,invoice.payment_succeeded,invoice.payment_failed,customer.subscription.updated,customer.subscription.deleted \
+  --forward-to localhost:3001/api/payment/notify/stripe
 ```
+
+Use explicit event filtering in dev so noisy Stripe events such as `invoice_payment.paid` and `payment_intent.created` do not trigger unknown-event warnings during webhook testing.
 
 输出会包含：
 
@@ -118,9 +122,10 @@ DB 侧（推荐用 `pnpm db:studio`）：
 
 1. [Live Webhooks](https://dashboard.stripe.com/webhooks) → Add endpoint
 2. URL：`https://YOUR_DOMAIN/api/payment/notify/stripe`
-3. Events to send（**仅勾这 4 个**，多余的会被代码当作未知事件抛错）：
+3. Events to send（**select only these 5 events**，extra events can be treated as unknown by the webhook handler）：
    - `checkout.session.completed`
    - `invoice.payment_succeeded`
+   - `invoice.payment_failed`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
 4. 创建后点 endpoint 详情，"Signing secret" 处 reveal，得到 live `whsec_...`
@@ -134,6 +139,40 @@ DB 侧（推荐用 `pnpm db:studio`）：
 1. 用一张真实卡（小金额，比如 Pro $4.99）走一笔，确认订阅创建成功
 2. 在 Stripe Dashboard 退款这笔订单
 3. 取消订阅、确认 `subscription.canceled` 事件能正确写入 DB
+
+### 2.5 Stripe Race Cleanup
+
+Before deploying `fix/stripe-webhook-canonical-rows`, run the v3 plan §9.5 errata preflight SQL in production:
+
+```sql
+SELECT count(*) AS consumed_duplicate_grant_count
+FROM credit c1
+WHERE c1.order_no IS NOT NULL
+  AND c1.transaction_type = 'grant'
+  AND c1.remaining_credits < c1.credits
+  AND EXISTS (
+    SELECT 1 FROM credit c2
+    WHERE c2.order_no = c1.order_no
+      AND c2.transaction_type = 'grant'
+      AND c2.id != c1.id
+  );
+```
+
+If `consumed_duplicate_grant_count > 0`, cancel the deployment and reconcile manually first. Mark extra grant rows with `status = 'canceled'`, or merge `remaining_credits` into the canonical grant row before retrying deployment.
+
+After `consumed_duplicate_grant_count = 0`, run:
+
+```bash
+# backup
+pg_dump $DATABASE_URL --table=subscription --table='"order"' --table=credit > backup-pre-stripe-race-fix-$(date +%Y%m%d).sql
+
+# cleanup
+pnpm tsx scripts/cleanup-stripe-race.ts --dry-run
+pnpm tsx scripts/cleanup-stripe-race.ts
+
+# apply schema
+pnpm db:push
+```
 
 ## 三、套餐与 pricing.json
 

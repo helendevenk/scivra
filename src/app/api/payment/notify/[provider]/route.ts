@@ -31,8 +31,8 @@ export async function POST(
 
     // get payment event from webhook notification
     const event = await paymentProvider.getPaymentEvent({ req });
-    if (!event) {
-      throw new Error('payment event not found');
+    if (event === null) {
+      return Response.json({ code: 0, message: 'ignored' });
     }
 
     const eventType = event.eventType;

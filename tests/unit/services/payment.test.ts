@@ -32,6 +32,10 @@ vi.mock('@/shared/models/subscription', () => ({
     TRIALING: 'trialing',
     EXPIRED: 'expired',
     PAUSED: 'paused',
+    PAST_DUE: 'past_due',
+    UNPAID: 'unpaid',
+    INCOMPLETE: 'incomplete',
+    INCOMPLETE_EXPIRED: 'incomplete_expired',
   },
 }));
 

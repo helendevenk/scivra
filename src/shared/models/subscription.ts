@@ -21,6 +21,10 @@ export enum SubscriptionStatus {
   TRIALING = 'trialing',
   EXPIRED = 'expired',
   PAUSED = 'paused',
+  PAST_DUE = 'past_due',
+  UNPAID = 'unpaid',
+  INCOMPLETE = 'incomplete',
+  INCOMPLETE_EXPIRED = 'incomplete_expired',
 }
 
 /**
@@ -159,6 +163,7 @@ export async function getCurrentSubscription(userId: string) {
           SubscriptionStatus.ACTIVE,
           SubscriptionStatus.PENDING_CANCEL,
           SubscriptionStatus.TRIALING,
+          // TODO: Decide whether PAST_DUE keeps access as a grace state.
         ])
       )
     )
