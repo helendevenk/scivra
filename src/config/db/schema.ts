@@ -42,6 +42,7 @@ export const session = pgTable(
     token: text('token').notNull().unique(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     ipAddress: text('ip_address'),
@@ -75,6 +76,7 @@ export const account = pgTable(
     password: text('password'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
@@ -128,6 +130,7 @@ export const taxonomy = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -161,6 +164,7 @@ export const post = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -202,6 +206,7 @@ export const order = pgTable(
     paidAt: timestamp('paid_at'), // paid at
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -266,6 +271,7 @@ export const subscription = pgTable(
     currentPeriodEnd: timestamp('current_period_end'), // subscription current period end
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -321,6 +327,7 @@ export const credit = pgTable(
     status: text('status').notNull(), // transaction status
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -366,6 +373,7 @@ export const apikey = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -391,6 +399,7 @@ export const role = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     sort: integer('sort').default(0).notNull(),
@@ -412,6 +421,7 @@ export const permission = pgTable(
     description: text('description'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
@@ -434,6 +444,7 @@ export const rolePermission = pgTable(
       .references(() => permission.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -460,6 +471,7 @@ export const userRole = pgTable(
       .references(() => role.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     expiresAt: timestamp('expires_at'),
@@ -486,6 +498,7 @@ export const aiTask = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -516,6 +529,7 @@ export const chat = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     model: text('model').notNull(),

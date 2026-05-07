@@ -27,7 +27,9 @@ export default defineConfig({
             'tests/migrations/**/*.test.{ts,tsx}',
           ],
           globalSetup: ['./tests/setup/testcontainers-postgres.ts'],
-          hookTimeout: 120_000,
+          // db:push can take 30-60s per file when files run sequentially;
+          // raise hookTimeout to give 4-5 files headroom.
+          hookTimeout: 300_000,
           testTimeout: 60_000,
         },
       },

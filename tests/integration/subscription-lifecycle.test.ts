@@ -66,6 +66,12 @@ vi.mock('@/core/db', () => {
     self.for = () => self;
     self.from = () => self;
     self.onConflictDoUpdate = () => self;
+    // For wave 4 onConflictDoNothing: simulate "if duplicate, return []"
+    // by checking the in-memory store for a row matching the target columns.
+    // Tests that drive race scenarios should use the real PG container in
+    // subscription-race.test.ts; this mock only needs to keep the chain
+    // callable without runtime error.
+    self.onConflictDoNothing = (_opts?: unknown) => self;
 
     self.returning = () => {
       const store = (globalThis as any).__testStore;
