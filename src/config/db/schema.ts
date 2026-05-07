@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   foreignKey,
@@ -7,6 +8,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/pg-core';
 
@@ -228,9 +230,10 @@ export const order = pgTable(
       table.status,
       table.paymentType
     ),
-    // Composite: Prevent duplicate payments
-    // Can also be used for: WHERE transactionId = ? (left-prefix)
-    index('idx_order_transaction_provider').on(
+    // Idempotency key for renewal/webhook race: ensures one local order row
+    // per (provider, transaction_id). NULL-safe: pending orders without
+    // transaction_id never collide because PG UNIQUE allows multiple NULLs.
+    unique('uq_order_provider_transaction_id').on(
       table.transactionId,
       table.paymentProvider
     ),
@@ -286,9 +289,10 @@ export const subscription = pgTable(
       table.status,
       table.interval
     ),
-    // Composite: Prevent duplicate subscriptions
-    // Can also be used for: WHERE paymentProvider = ? (left-prefix)
-    index('idx_subscription_provider_id').on(
+    // Idempotency key for webhook race: ensures one local subscription row
+    // per (provider, subscription_id). Replaces previous non-unique index;
+    // serves both query optimization and uniqueness enforcement.
+    unique('uq_subscription_provider_subscription_id').on(
       table.subscriptionId,
       table.paymentProvider
     ),
@@ -339,6 +343,14 @@ export const credit = pgTable(
     index('idx_credit_order_no').on(table.orderNo),
     // Query credits by subscription number
     index('idx_credit_subscription_no').on(table.subscriptionNo),
+    // Idempotency key for grant credits tied to an order. Partial: only
+    // applies when order_no is set AND transactionType is 'grant', so
+    // gift/refund credits (orderNo NULL) and consume rows are unaffected.
+    uniqueIndex('uq_credit_grant_per_order')
+      .on(table.orderNo, table.transactionType)
+      .where(
+        sql`${table.orderNo} IS NOT NULL AND ${table.transactionType} = 'grant'`
+      ),
   ]
 );
 

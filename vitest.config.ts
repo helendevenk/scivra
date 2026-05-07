@@ -1,21 +1,39 @@
-import { defineConfig } from "vitest/config";
-import path from "path";
+import path from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    environment: "jsdom",
-    setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.{ts,tsx}"],
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
     coverage: {
-      provider: "v8",
-      include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.d.ts", "src/app/**"],
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/app/**'],
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['tests/unit/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          include: ['tests/integration/**/*.test.{ts,tsx}'],
+          globalSetup: ['./tests/setup/testcontainers-postgres.ts'],
+          hookTimeout: 120_000,
+          testTimeout: 60_000,
+        },
+      },
+    ],
   },
   resolve: {
     alias: {
-      "@/.source": path.resolve(__dirname, "./tests/helpers/stub-source.ts"),
-      "@": path.resolve(__dirname, "./src"),
+      '@/.source': path.resolve(__dirname, './tests/helpers/stub-source.ts'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 });
