@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   foreignKey,
@@ -7,6 +8,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/pg-core';
 
@@ -40,6 +42,7 @@ export const session = pgTable(
     token: text('token').notNull().unique(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     ipAddress: text('ip_address'),
@@ -73,6 +76,7 @@ export const account = pgTable(
     password: text('password'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
@@ -126,6 +130,7 @@ export const taxonomy = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -159,6 +164,7 @@ export const post = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -200,6 +206,7 @@ export const order = pgTable(
     paidAt: timestamp('paid_at'), // paid at
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -228,9 +235,10 @@ export const order = pgTable(
       table.status,
       table.paymentType
     ),
-    // Composite: Prevent duplicate payments
-    // Can also be used for: WHERE transactionId = ? (left-prefix)
-    index('idx_order_transaction_provider').on(
+    // Idempotency key for renewal/webhook race: ensures one local order row
+    // per (provider, transaction_id). NULL-safe: pending orders without
+    // transaction_id never collide because PG UNIQUE allows multiple NULLs.
+    unique('uq_order_provider_transaction_id').on(
       table.transactionId,
       table.paymentProvider
     ),
@@ -263,6 +271,7 @@ export const subscription = pgTable(
     currentPeriodEnd: timestamp('current_period_end'), // subscription current period end
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -286,9 +295,10 @@ export const subscription = pgTable(
       table.status,
       table.interval
     ),
-    // Composite: Prevent duplicate subscriptions
-    // Can also be used for: WHERE paymentProvider = ? (left-prefix)
-    index('idx_subscription_provider_id').on(
+    // Idempotency key for webhook race: ensures one local subscription row
+    // per (provider, subscription_id). Replaces previous non-unique index;
+    // serves both query optimization and uniqueness enforcement.
+    unique('uq_subscription_provider_subscription_id').on(
       table.subscriptionId,
       table.paymentProvider
     ),
@@ -317,6 +327,7 @@ export const credit = pgTable(
     status: text('status').notNull(), // transaction status
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -339,6 +350,14 @@ export const credit = pgTable(
     index('idx_credit_order_no').on(table.orderNo),
     // Query credits by subscription number
     index('idx_credit_subscription_no').on(table.subscriptionNo),
+    // Idempotency key for grant credits tied to an order. Partial: only
+    // applies when order_no is set AND transactionType is 'grant', so
+    // gift/refund credits (orderNo NULL) and consume rows are unaffected.
+    uniqueIndex('uq_credit_grant_per_order')
+      .on(table.orderNo, table.transactionType)
+      .where(
+        sql`${table.orderNo} IS NOT NULL AND ${table.transactionType} = 'grant'`
+      ),
   ]
 );
 
@@ -354,6 +373,7 @@ export const apikey = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -379,6 +399,7 @@ export const role = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     sort: integer('sort').default(0).notNull(),
@@ -400,6 +421,7 @@ export const permission = pgTable(
     description: text('description'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
@@ -422,6 +444,7 @@ export const rolePermission = pgTable(
       .references(() => permission.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -448,6 +471,7 @@ export const userRole = pgTable(
       .references(() => role.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     expiresAt: timestamp('expires_at'),
@@ -474,6 +498,7 @@ export const aiTask = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -504,6 +529,7 @@ export const chat = pgTable(
     status: text('status').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
+      .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     model: text('model').notNull(),

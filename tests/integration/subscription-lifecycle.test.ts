@@ -4,7 +4,32 @@
  * Tests the full subscription flow: checkout → order → subscription → credits.
  * Mocks @/core/db, tests real service/model functions.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  SubscriptionStatus as ExtSubStatus,
+  PaymentInterval,
+  PaymentStatus,
+  PaymentType,
+} from '@/extensions/payment/types';
+import { subscriptionToTier } from '@/shared/lib/experiments/access';
+import {
+  calculateCreditExpirationTime,
+  CreditStatus,
+  CreditTransactionScene,
+  CreditTransactionType,
+} from '@/shared/models/credit';
+import { OrderStatus } from '@/shared/models/order';
+import { SubscriptionStatus } from '@/shared/models/subscription';
+// ─── Imports ───────────────────────────────────────────────────────
+
+import {
+  handleCheckoutSuccess,
+  handlePaymentSuccess,
+  handleSubscriptionCanceled,
+  handleSubscriptionRenewal,
+  handleSubscriptionUpdated,
+} from '@/shared/services/payment';
 
 // ─── DB Mock ───────────────────────────────────────────────────────
 
@@ -26,8 +51,14 @@ vi.mock('@/core/db', () => {
   function _chain(op: string, tableName: string) {
     const ctx: any = { op, table: tableName, insertRow: null, updateSet: null };
     const self: any = {};
-    self.values = (r: any) => { ctx.insertRow = r; return self; };
-    self.set = (s: any) => { ctx.updateSet = s; return self; };
+    self.values = (r: any) => {
+      ctx.insertRow = r;
+      return self;
+    };
+    self.set = (s: any) => {
+      ctx.updateSet = s;
+      return self;
+    };
     self.where = () => self;
     self.orderBy = () => self;
     self.limit = () => self;
@@ -35,6 +66,12 @@ vi.mock('@/core/db', () => {
     self.for = () => self;
     self.from = () => self;
     self.onConflictDoUpdate = () => self;
+    // For wave 4 onConflictDoNothing: simulate "if duplicate, return []"
+    // by checking the in-memory store for a row matching the target columns.
+    // Tests that drive race scenarios should use the real PG container in
+    // subscription-race.test.ts; this mock only needs to keep the chain
+    // callable without runtime error.
+    self.onConflictDoNothing = (_opts?: unknown) => self;
 
     self.returning = () => {
       const store = (globalThis as any).__testStore;
@@ -120,30 +157,6 @@ vi.mock('@/shared/models/user', () => ({
   appendUserToResult: (rows: any[]) => rows,
 }));
 
-// ─── Imports ───────────────────────────────────────────────────────
-
-import {
-  handleCheckoutSuccess,
-  handlePaymentSuccess,
-  handleSubscriptionRenewal,
-  handleSubscriptionCanceled,
-  handleSubscriptionUpdated,
-} from '@/shared/services/payment';
-import { OrderStatus } from '@/shared/models/order';
-import { SubscriptionStatus } from '@/shared/models/subscription';
-import {
-  CreditTransactionScene,
-  CreditTransactionType,
-  calculateCreditExpirationTime,
-} from '@/shared/models/credit';
-import {
-  PaymentStatus,
-  PaymentType,
-  PaymentInterval,
-  SubscriptionStatus as ExtSubStatus,
-} from '@/extensions/payment/types';
-import { subscriptionToTier } from '@/shared/lib/experiments/access';
-
 // ─── Helpers ───────────────────────────────────────────────────────
 
 function makeOrder(overrides: Record<string, unknown> = {}) {
@@ -228,35 +241,130 @@ describe('Subscription Lifecycle Integration', () => {
   it('should set order to PAID and create subscription + credits on checkout success', async () => {
     const order = makeOrder();
     const session = makeSession();
+    _store.order.push(order);
 
     await handleCheckoutSuccess({ order, session });
 
-    // Order updated to PAID
-    expect(_store.order.length).toBeGreaterThanOrEqual(0);
-    // Subscription created
-    expect(_store.subscription.length).toBeGreaterThanOrEqual(0);
-    // Credit granted
-    expect(_store.credit.length).toBeGreaterThanOrEqual(0);
+    expect(_store.order).toHaveLength(1);
+    expect(_store.order[0]).toMatchObject({
+      orderNo: 'ON-001',
+      status: OrderStatus.PAID,
+      paymentResult: JSON.stringify({ id: 'pi_123' }),
+      transactionId: 'tx-stripe-1',
+      subscriptionId: 'sub_stripe_1',
+    });
+
+    expect(_store.subscription).toHaveLength(1);
+    expect(_store.subscription[0]).toMatchObject({
+      userId: 'user-1',
+      userEmail: 'user@example.com',
+      status: SubscriptionStatus.ACTIVE,
+      paymentProvider: 'stripe',
+      subscriptionId: 'sub_stripe_1',
+      productId: 'prod-1',
+      planName: 'Pro Monthly',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: new Date('2026-04-01'),
+    });
+    expect(_store.subscription[0]?.subscriptionNo).toEqual(
+      expect.stringMatching(/^snow-\d+$/)
+    );
+
+    expect(_store.credit).toHaveLength(1);
+    expect(_store.credit[0]).toMatchObject({
+      userId: 'user-1',
+      orderNo: 'ON-001',
+      subscriptionNo: _store.subscription[0]?.subscriptionNo,
+      transactionType: CreditTransactionType.GRANT,
+      transactionScene: CreditTransactionScene.SUBSCRIPTION,
+      credits: 100,
+      remainingCredits: 100,
+      expiresAt: new Date('2026-04-01'),
+      status: CreditStatus.ACTIVE,
+    });
   });
 
   it('should handle payment webhook success same as checkout', async () => {
     const order = makeOrder();
     const session = makeSession();
+    _store.order.push(order);
 
     await handlePaymentSuccess({ order, session });
 
-    // Should not throw - completes successfully
-    expect(true).toBe(true);
+    expect(_store.order).toHaveLength(1);
+    expect(_store.order[0]).toMatchObject({
+      orderNo: 'ON-001',
+      status: OrderStatus.PAID,
+      paymentResult: JSON.stringify({ id: 'pi_123' }),
+      transactionId: 'tx-stripe-1',
+      subscriptionId: 'sub_stripe_1',
+    });
+    expect(_store.subscription).toHaveLength(1);
+    expect(_store.subscription[0]).toMatchObject({
+      subscriptionId: 'sub_stripe_1',
+      status: SubscriptionStatus.ACTIVE,
+      planName: 'Pro Monthly',
+    });
+    expect(_store.subscription[0]?.subscriptionNo).toEqual(
+      expect.stringMatching(/^snow-\d+$/)
+    );
+    expect(_store.credit).toHaveLength(1);
+    expect(_store.credit[0]).toMatchObject({
+      orderNo: 'ON-001',
+      subscriptionNo: _store.subscription[0]?.subscriptionNo,
+      transactionType: CreditTransactionType.GRANT,
+      transactionScene: CreditTransactionScene.SUBSCRIPTION,
+      credits: 100,
+      remainingCredits: 100,
+      expiresAt: new Date('2026-04-01'),
+      status: CreditStatus.ACTIVE,
+    });
   });
 
   it('should create new order and credits on subscription renewal', async () => {
     const sub = makeSubscription();
     const session = makeSession();
+    _store.subscription.push(sub);
 
     await handleSubscriptionRenewal({ subscription: sub, session });
 
-    // Renewal creates a new order + grants credits + updates subscription period
-    expect(_store.order.length).toBeGreaterThanOrEqual(0);
+    expect(_store.order).toHaveLength(1);
+    expect(_store.order[0]).toMatchObject({
+      userId: 'user-1',
+      userEmail: 'user@example.com',
+      status: OrderStatus.PAID,
+      amount: 499,
+      currency: 'usd',
+      productId: 'prod-1',
+      paymentType: PaymentType.RENEW,
+      paymentInterval: PaymentInterval.MONTH,
+      subscriptionNo: 'SN-001',
+      transactionId: 'tx-stripe-1',
+      subscriptionId: 'sub_stripe_1',
+      description: 'Subscription Renewal',
+    });
+    expect(_store.order[0]?.orderNo).toEqual(
+      expect.stringMatching(/^snow-\d+$/)
+    );
+
+    expect(_store.subscription).toHaveLength(1);
+    expect(_store.subscription[0]).toMatchObject({
+      subscriptionNo: 'SN-001',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: new Date('2026-04-01'),
+    });
+
+    expect(_store.credit).toHaveLength(1);
+    expect(_store.credit[0]).toMatchObject({
+      userId: 'user-1',
+      subscriptionNo: 'SN-001',
+      transactionType: CreditTransactionType.GRANT,
+      transactionScene: CreditTransactionScene.PAYMENT,
+      credits: 100,
+      remainingCredits: 100,
+      expiresAt: new Date('2026-04-01'),
+      status: CreditStatus.ACTIVE,
+    });
   });
 
   it('should set subscription to CANCELED with canceledAt on cancellation', async () => {
@@ -278,9 +386,15 @@ describe('Subscription Lifecycle Integration', () => {
 
     await handleSubscriptionCanceled({ subscription: sub, session });
 
-    // Verify the subscription update was called (store may or may not reflect
-    // depending on mock precision, but no error means success)
-    expect(true).toBe(true);
+    expect(_store.subscription).toHaveLength(1);
+    expect(_store.subscription[0]).toMatchObject({
+      subscriptionNo: 'SN-001',
+      status: SubscriptionStatus.CANCELED,
+      canceledAt: new Date('2026-03-15'),
+      canceledEndAt: new Date('2026-04-01'),
+      canceledReason: 'Too expensive',
+      canceledReasonType: 'customer',
+    });
   });
 
   it('should update subscription status on subscription updated event', async () => {
@@ -297,7 +411,17 @@ describe('Subscription Lifecycle Integration', () => {
     });
 
     await handleSubscriptionUpdated({ subscription: sub, session });
-    expect(true).toBe(true);
+    expect(_store.subscription).toHaveLength(1);
+    expect(_store.subscription[0]).toMatchObject({
+      subscriptionNo: 'SN-001',
+      status: SubscriptionStatus.ACTIVE,
+      currentPeriodStart: new Date('2026-04-01'),
+      currentPeriodEnd: new Date('2026-05-01'),
+      canceledAt: null,
+      canceledEndAt: null,
+      canceledReason: '',
+      canceledReasonType: '',
+    });
   });
 
   it('should reflect Pro tier in subscription plan name', () => {
@@ -316,19 +440,35 @@ describe('Subscription Lifecycle Integration', () => {
   it('should fail order when payment status is FAILED', async () => {
     const order = makeOrder();
     const session = makeSession({ paymentStatus: PaymentStatus.FAILED });
+    _store.order.push(order);
 
     await handleCheckoutSuccess({ order, session });
-    // Should complete without error — order status set to FAILED
-    expect(true).toBe(true);
+
+    expect(_store.order).toHaveLength(1);
+    expect(_store.order[0]).toMatchObject({
+      orderNo: 'ON-001',
+      status: OrderStatus.FAILED,
+      paymentResult: JSON.stringify({ id: 'pi_123' }),
+    });
+    expect(_store.subscription).toHaveLength(0);
+    expect(_store.credit).toHaveLength(0);
   });
 
   it('should not modify order status when payment is PROCESSING', async () => {
     const order = makeOrder();
     const session = makeSession({ paymentStatus: PaymentStatus.PROCESSING });
+    _store.order.push(order);
 
     await handleCheckoutSuccess({ order, session });
-    // Should update paymentResult only, not status
-    expect(true).toBe(true);
+
+    expect(_store.order).toHaveLength(1);
+    expect(_store.order[0]).toMatchObject({
+      orderNo: 'ON-001',
+      status: OrderStatus.CREATED,
+      paymentResult: JSON.stringify({ id: 'pi_123' }),
+    });
+    expect(_store.subscription).toHaveLength(0);
+    expect(_store.credit).toHaveLength(0);
   });
 
   it('should grant SUBSCRIPTION scene credits and set expiration to period end', () => {

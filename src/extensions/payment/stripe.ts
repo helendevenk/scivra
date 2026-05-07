@@ -4,6 +4,7 @@ import {
   CheckoutSession,
   PaymentBilling,
   PaymentEventType,
+  PaymentSignatureError,
   PaymentInterval,
   PaymentInvoice,
   PaymentStatus,
@@ -231,34 +232,55 @@ export class StripeProvider implements PaymentProvider {
   /**
    * Get payment event from webhook notification
    */
-  async getPaymentEvent({ req }: { req: Request }): Promise<PaymentEvent> {
+  async getPaymentEvent({
+    req,
+  }: {
+    req: Request;
+  }): Promise<PaymentEvent | null> {
     try {
       const rawBody = await req.text();
       const signature = req.headers.get('stripe-signature') as string;
 
       if (!rawBody || !signature) {
-        throw new Error('Invalid webhook request');
+        throw new PaymentSignatureError(
+          'Invalid webhook request: missing body or signature'
+        );
       }
 
       if (!this.configs.signingSecret) {
         throw new Error('Signing Secret not configured');
       }
 
-      const event = this.client.webhooks.constructEvent(
-        rawBody,
-        signature,
-        this.configs.signingSecret
-      );
+      let event: Stripe.Event;
+      try {
+        event = this.client.webhooks.constructEvent(
+          rawBody,
+          signature,
+          this.configs.signingSecret
+        );
+      } catch (err) {
+        throw new PaymentSignatureError(
+          err instanceof Error
+            ? err.message
+            : 'Stripe signature verification failed'
+        );
+      }
 
       let paymentSession: PaymentSession | undefined = undefined;
 
       const eventType = this.mapStripeEventType(event.type);
+      if (eventType === null) {
+        return null;
+      }
 
       if (eventType === PaymentEventType.CHECKOUT_SUCCESS) {
         paymentSession = await this.buildPaymentSessionFromCheckoutSession(
           event.data.object as Stripe.Response<Stripe.Checkout.Session>
         );
-      } else if (eventType === PaymentEventType.PAYMENT_SUCCESS) {
+      } else if (
+        eventType === PaymentEventType.PAYMENT_SUCCESS ||
+        eventType === PaymentEventType.PAYMENT_FAILED
+      ) {
         paymentSession = await this.buildPaymentSessionFromInvoice(
           event.data.object as Stripe.Response<Stripe.Invoice>
         );
@@ -356,7 +378,7 @@ export class StripeProvider implements PaymentProvider {
     }
   }
 
-  private mapStripeEventType(eventType: string): PaymentEventType {
+  mapStripeEventType(eventType: string): PaymentEventType | null {
     switch (eventType) {
       case 'checkout.session.completed':
         return PaymentEventType.CHECKOUT_SUCCESS;
@@ -369,7 +391,7 @@ export class StripeProvider implements PaymentProvider {
       case 'customer.subscription.deleted':
         return PaymentEventType.SUBSCRIBE_CANCELED;
       default:
-        throw new Error(`Unknown Stripe event type: ${eventType}`);
+        return null;
     }
   }
 
@@ -484,16 +506,27 @@ export class StripeProvider implements PaymentProvider {
       }
     }
 
+    // Derive payment status from invoice.status so the same builder
+    // works for both invoice.payment_succeeded and invoice.payment_failed
+    // events. 'paid' → SUCCESS; 'open' / 'uncollectible' / 'void' → FAILED;
+    // anything else → PROCESSING (treated as in-flight by callers).
+    const paymentStatus: PaymentStatus =
+      invoice.status === 'paid'
+        ? PaymentStatus.SUCCESS
+        : invoice.status === 'open' ||
+            invoice.status === 'uncollectible' ||
+            invoice.status === 'void'
+          ? PaymentStatus.FAILED
+          : PaymentStatus.PROCESSING;
+
     const result: PaymentSession = {
       provider: this.name,
 
-      paymentStatus: PaymentStatus.SUCCESS,
+      paymentStatus,
       paymentInfo: {
         transactionId: invoice.id,
         discountCode: '',
-        discountAmount: invoice.total_discount_amounts
-          ? invoice.total_discount_amounts[0].amount
-          : 0,
+        discountAmount: invoice.total_discount_amounts?.[0]?.amount ?? 0,
         discountCurrency: invoice.currency || '',
         paymentAmount: invoice.amount_paid,
         paymentCurrency: invoice.currency,
@@ -563,38 +596,59 @@ export class StripeProvider implements PaymentProvider {
       metadata: subscription.metadata,
     };
 
-    if (subscription.status === 'active') {
-      if (subscription.cancel_at) {
-        subscriptionInfo.status = SubscriptionStatus.PENDING_CANCEL;
-        // cancel apply at
+    switch (subscription.status) {
+      case 'active':
+        if (subscription.cancel_at) {
+          subscriptionInfo.status = SubscriptionStatus.PENDING_CANCEL;
+          // cancel apply at
+          subscriptionInfo.canceledAt = new Date(
+            (subscription.canceled_at || 0) * 1000
+          );
+          // cancel end date
+          subscriptionInfo.canceledEndAt = new Date(
+            subscription.cancel_at * 1000
+          );
+          subscriptionInfo.canceledReason =
+            subscription.cancellation_details?.comment || '';
+          subscriptionInfo.canceledReasonType =
+            subscription.cancellation_details?.feedback || '';
+        } else {
+          subscriptionInfo.status = SubscriptionStatus.ACTIVE;
+        }
+        break;
+      case 'trialing':
+        subscriptionInfo.status = SubscriptionStatus.TRIALING;
+        break;
+      case 'canceled':
+        // subscription canceled
+        subscriptionInfo.status = SubscriptionStatus.CANCELED;
         subscriptionInfo.canceledAt = new Date(
           (subscription.canceled_at || 0) * 1000
-        );
-        // cancel end date
-        subscriptionInfo.canceledEndAt = new Date(
-          subscription.cancel_at * 1000
         );
         subscriptionInfo.canceledReason =
           subscription.cancellation_details?.comment || '';
         subscriptionInfo.canceledReasonType =
           subscription.cancellation_details?.feedback || '';
-      } else {
-        subscriptionInfo.status = SubscriptionStatus.ACTIVE;
-      }
-    } else if (subscription.status === 'canceled') {
-      // subscription canceled
-      subscriptionInfo.status = SubscriptionStatus.CANCELED;
-      subscriptionInfo.canceledAt = new Date(
-        (subscription.canceled_at || 0) * 1000
-      );
-      subscriptionInfo.canceledReason =
-        subscription.cancellation_details?.comment || '';
-      subscriptionInfo.canceledReasonType =
-        subscription.cancellation_details?.feedback || '';
-    } else {
-      throw new Error(
-        `Unknown Stripe subscription status: ${subscription.status}`
-      );
+        break;
+      case 'past_due':
+        subscriptionInfo.status = SubscriptionStatus.PAST_DUE;
+        break;
+      case 'unpaid':
+        subscriptionInfo.status = SubscriptionStatus.UNPAID;
+        break;
+      case 'incomplete':
+        subscriptionInfo.status = SubscriptionStatus.INCOMPLETE;
+        break;
+      case 'incomplete_expired':
+        subscriptionInfo.status = SubscriptionStatus.INCOMPLETE_EXPIRED;
+        break;
+      case 'paused':
+        subscriptionInfo.status = SubscriptionStatus.PAUSED;
+        break;
+      default:
+        throw new Error(
+          `Unknown Stripe subscription status: ${subscription.status}`
+        );
     }
 
     return subscriptionInfo;

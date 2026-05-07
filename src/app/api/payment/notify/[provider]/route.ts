@@ -1,13 +1,23 @@
 import {
   PaymentEventType,
+  PaymentSignatureError,
   SubscriptionCycleType,
 } from '@/extensions/payment/types';
-import { findOrderByOrderNo } from '@/shared/models/order';
+import type {
+  PaymentEvent,
+  PaymentSession,
+} from '@/extensions/payment/types';
+import {
+  findOrderByOrderNo,
+  OrderStatus,
+  updateOrderByOrderNo,
+} from '@/shared/models/order';
 import { findSubscriptionByProviderSubscriptionId } from '@/shared/models/subscription';
 import {
   getPaymentService,
   handleCheckoutSuccess,
   handleSubscriptionCanceled,
+  handleSubscriptionPaymentFailed,
   handleSubscriptionRenewal,
   handleSubscriptionUpdated,
 } from '@/shared/services/payment';
@@ -16,8 +26,12 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ provider: string }> }
 ) {
+  let provider: string | undefined;
+  let event: PaymentEvent | null | undefined;
+  let session: PaymentSession | undefined;
+
   try {
-    const { provider } = await params;
+    ({ provider } = await params);
 
     if (!provider) {
       throw new Error('provider is required');
@@ -30,9 +44,9 @@ export async function POST(
     }
 
     // get payment event from webhook notification
-    const event = await paymentProvider.getPaymentEvent({ req });
-    if (!event) {
-      throw new Error('payment event not found');
+    event = await paymentProvider.getPaymentEvent({ req });
+    if (event === null) {
+      return Response.json({ code: 0, message: 'ignored' });
     }
 
     const eventType = event.eventType;
@@ -41,7 +55,7 @@ export async function POST(
     }
 
     // payment session
-    const session = event.paymentSession;
+    session = event.paymentSession;
     if (!session) {
       throw new Error('payment session not found');
     }
@@ -131,6 +145,31 @@ export async function POST(
         subscription: existingSubscription,
         session,
       });
+    } else if (eventType === PaymentEventType.PAYMENT_FAILED) {
+      if (session.subscriptionId) {
+        const existingSubscription =
+          await findSubscriptionByProviderSubscriptionId({
+            provider: provider,
+            subscriptionId: session.subscriptionId,
+          });
+        if (!existingSubscription) {
+          console.log('payment_failed for unknown subscription, skipping');
+        } else {
+          await handleSubscriptionPaymentFailed({
+            subscription: existingSubscription,
+            session,
+          });
+        }
+      } else if (session.metadata?.order_no) {
+        const orderNo = session.metadata.order_no;
+        const order = await findOrderByOrderNo(orderNo);
+        if (order) {
+          await updateOrderByOrderNo(order.orderNo, {
+            status: OrderStatus.FAILED,
+            paymentResult: JSON.stringify(session.paymentResult),
+          });
+        }
+      }
     } else {
       console.log('not handle other event type: ' + eventType);
     }
@@ -138,9 +177,50 @@ export async function POST(
     // Webhook response: providers (Stripe/PayPal/Creem) expect 200 with any JSON body
     return Response.json({ code: 0, message: 'success' });
   } catch (err: unknown) {
+    // Signature verification failed: client error, Stripe should not retry.
+    if (err instanceof PaymentSignatureError) {
+      console.error('webhook signature verification failed', err);
+      return Response.json(
+        { code: -1, message: 'invalid signature' },
+        { status: 400 }
+      );
+    }
+
+    // Business or unknown errors: server error, let Stripe retry.
+    // Idempotency is enforced at the DB layer with UNIQUE constraints and
+    // onConflictDoNothing in updateOrderInTransaction.
     console.error('handle payment notify failed', err);
-    // Return 200 even on error to prevent provider retries flooding the system.
-    // Errors are logged and monitored via Sentry.
-    return Response.json({ code: -1, message: `handle payment notify failed: ${(err instanceof Error ? err.message : String(err))}` });
+
+    const context: Record<string, unknown> = {
+      provider,
+      eventType:
+        event?.eventType ?? (err instanceof Error ? err.name : 'unknown'),
+      orderNo: session?.metadata?.order_no,
+      subscriptionId: session?.subscriptionId,
+    };
+
+    try {
+      type SentryModule = {
+        captureException?: (
+          exception: unknown,
+          context?: { extra?: Record<string, unknown> }
+        ) => void;
+      };
+
+      const sentryModuleName = '@sentry/nextjs';
+      const Sentry = (await import(sentryModuleName).catch(
+        () => null
+      )) as SentryModule | null;
+      if (Sentry && typeof Sentry.captureException === 'function') {
+        Sentry.captureException(err, { extra: context });
+      }
+    } catch {
+      // Sentry import failed, already logged above.
+    }
+
+    return Response.json(
+      { code: -1, message: 'internal error' },
+      { status: 500 }
+    );
   }
 }

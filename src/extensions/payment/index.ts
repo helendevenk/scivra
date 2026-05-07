@@ -102,7 +102,7 @@ export class PaymentManager {
   }: {
     req: Request;
     provider?: string;
-  }): Promise<PaymentEvent> {
+  }): Promise<PaymentEvent | null> {
     if (provider) {
       const providerInstance = this.getProvider(provider);
       if (!providerInstance) {

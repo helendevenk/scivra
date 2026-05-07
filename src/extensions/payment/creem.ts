@@ -130,7 +130,11 @@ export class CreemProvider implements PaymentProvider {
     }
   }
 
-  async getPaymentEvent({ req }: { req: Request }): Promise<PaymentEvent> {
+  async getPaymentEvent({
+    req,
+  }: {
+    req: Request;
+  }): Promise<PaymentEvent | null> {
     try {
       const rawBody = await req.text();
       const signature = req.headers.get('creem-signature') as string;

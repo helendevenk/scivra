@@ -139,6 +139,10 @@ export enum SubscriptionStatus {
   TRIALING = 'trialing',
   EXPIRED = 'expired',
   PAUSED = 'paused',
+  PAST_DUE = 'past_due',
+  UNPAID = 'unpaid',
+  INCOMPLETE = 'incomplete',
+  INCOMPLETE_EXPIRED = 'incomplete_expired',
 }
 
 export interface SubscriptionInfo {
@@ -254,7 +258,7 @@ export interface PaymentProvider {
   }): Promise<PaymentSession>;
 
   // get payment event from webhook notification
-  getPaymentEvent({ req }: { req: Request }): Promise<PaymentEvent>;
+  getPaymentEvent({ req }: { req: Request }): Promise<PaymentEvent | null>;
 
   // get payment invoice
   getPaymentInvoice?({
@@ -278,4 +282,8 @@ export interface PaymentProvider {
   }: {
     subscriptionId: string;
   }): Promise<PaymentSession>;
+}
+
+export class PaymentSignatureError extends Error {
+  override readonly name = 'PaymentSignatureError';
 }

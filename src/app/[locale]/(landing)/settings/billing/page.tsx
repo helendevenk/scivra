@@ -32,6 +32,21 @@ export default async function BillingPage({
 
   const t = await getTranslations('settings.billing');
 
+  const subscriptionStatusLabels: Record<string, string> = {
+    past_due: t('status_labels.past_due'),
+    unpaid: t('status_labels.unpaid'),
+    incomplete: t('status_labels.incomplete'),
+    incomplete_expired: t('status_labels.incomplete_expired'),
+  };
+
+  const getSubscriptionStatusLabel = (status?: string | null) => {
+    if (!status) {
+      return undefined;
+    }
+
+    return subscriptionStatusLabels[status] ?? status;
+  };
+
   const currentSubscription = await getCurrentSubscription(user.id);
 
   const total = await getSubscriptionsCount({
@@ -45,6 +60,11 @@ export default async function BillingPage({
     page,
     limit,
   });
+
+  const subscriptionsWithStatusLabels = subscriptions.map((subscription) => ({
+    ...subscription,
+    statusLabel: getSubscriptionStatusLabel(subscription.status),
+  }));
 
   const table: Table = {
     title: t('list.title'),
@@ -65,7 +85,7 @@ export default async function BillingPage({
         },
       },
       {
-        name: 'status',
+        name: 'statusLabel',
         title: t('fields.status'),
         type: 'label',
         metadata: { variant: 'outline' },
@@ -142,7 +162,7 @@ export default async function BillingPage({
         },
       },
     ],
-    data: subscriptions,
+    data: subscriptionsWithStatusLabels,
     emptyMessage: t('list.empty'),
     pagination: {
       total,
@@ -232,7 +252,7 @@ export default async function BillingPage({
   return (
     <div className="space-y-8">
       <PanelCard
-        label={currentSubscription?.status}
+        label={getSubscriptionStatusLabel(currentSubscription?.status)}
         title={t('view.title')}
         buttons={buttons}
         className="max-w-md"
