@@ -503,3 +503,22 @@ export async function handleSubscriptionCanceled({
 
   // console.log('handle subscription canceled', subscriptionInfo);
 }
+
+export async function handleSubscriptionPaymentFailed({
+  subscription,
+  session,
+}: {
+  subscription: Subscription;
+  session: PaymentSession;
+}) {
+  const subscriptionNo = subscription.subscriptionNo;
+  if (!subscriptionNo) {
+    throw new Error('invalid subscription');
+  }
+
+  // Stripe past_due: payment failed but Stripe will retry per the
+  // subscription's retry policy. Don't cancel, just mark overdue.
+  await updateSubscriptionBySubscriptionNo(subscriptionNo, {
+    status: SubscriptionStatus.PAST_DUE,
+  });
+}
