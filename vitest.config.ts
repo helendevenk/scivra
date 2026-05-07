@@ -22,7 +22,10 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'integration',
-          include: ['tests/integration/**/*.test.{ts,tsx}'],
+          include: [
+            'tests/integration/**/*.test.{ts,tsx}',
+            'tests/migrations/**/*.test.{ts,tsx}',
+          ],
           globalSetup: ['./tests/setup/testcontainers-postgres.ts'],
           hookTimeout: 120_000,
           testTimeout: 60_000,
