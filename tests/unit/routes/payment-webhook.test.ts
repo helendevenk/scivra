@@ -120,20 +120,21 @@ describe('POST /api/payment/notify/[provider]', () => {
     expect(mockGetProvider).toHaveBeenCalledWith('paypal');
   });
 
-  // Webhook errors return 200 to prevent payment providers from retrying endlessly.
-  // Errors are logged and monitored via Sentry instead.
-  it('should return 200 with error message for unknown provider', async () => {
+  // Error code policy after Bug 6 fix:
+  //   - Unknown event (provider returns null) → 200 ignored (silent skip)
+  //   - Signature failure (PaymentSignatureError) → 400 (Stripe stops retry)
+  //   - Business / unknown error → 500 (Stripe retries; idempotent via DB UNIQUEs)
+  it('should return 500 when payment provider is not registered', async () => {
     mockGetProvider.mockReturnValue(null);
 
     const res = await POST(makeRequest(), makeParams('unknown'));
     const json = await res.json();
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(500);
     expect(json.code).toBe(-1);
-    expect(json.message).toContain('payment provider not found');
   });
 
-  it('should return 200 with error when getPaymentEvent returns null (invalid signature)', async () => {
+  it('should return 200 ignored when getPaymentEvent returns null (unknown event)', async () => {
     const provider = {
       getPaymentEvent: vi.fn().mockResolvedValue(null),
     };
@@ -143,11 +144,11 @@ describe('POST /api/payment/notify/[provider]', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.code).toBe(-1);
-    expect(json.message).toContain('payment event not found');
+    expect(json.code).toBe(0);
+    expect(json.message).toBe('ignored');
   });
 
-  it('should return 200 with error when order not found for checkout event', async () => {
+  it('should return 500 when order is not found for checkout event', async () => {
     const session = makePaymentSession();
     const provider = makeProviderMock(
       PaymentEventType.CHECKOUT_SUCCESS,
@@ -159,9 +160,8 @@ describe('POST /api/payment/notify/[provider]', () => {
     const res = await POST(makeRequest(), makeParams('stripe'));
     const json = await res.json();
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(500);
     expect(json.code).toBe(-1);
-    expect(json.message).toContain('order not found');
   });
 
   it('should handle subscription renewal payment', async () => {
@@ -241,7 +241,7 @@ describe('POST /api/payment/notify/[provider]', () => {
     });
   });
 
-  it('should return 500 with error message when handler throws', async () => {
+  it('should return 500 when downstream handler throws (Stripe will retry)', async () => {
     const session = makePaymentSession();
     const provider = makeProviderMock(
       PaymentEventType.CHECKOUT_SUCCESS,
@@ -259,9 +259,30 @@ describe('POST /api/payment/notify/[provider]', () => {
     const res = await POST(makeRequest(), makeParams('stripe'));
     const json = await res.json();
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(500);
     expect(json.code).toBe(-1);
-    expect(json.message).toContain('DB connection failed');
+    // Generic message, not the raw error string — keeps internals out of
+    // the webhook response while Sentry context captures the detail.
+    expect(json.message).toBe('internal error');
+  });
+
+  it('should return 400 when stripe webhook signature verification fails', async () => {
+    const { PaymentSignatureError } = await import(
+      '@/extensions/payment/types'
+    );
+    const provider = {
+      getPaymentEvent: vi
+        .fn()
+        .mockRejectedValue(new PaymentSignatureError('bad sig')),
+    };
+    mockGetProvider.mockReturnValue(provider);
+
+    const res = await POST(makeRequest(), makeParams('stripe'));
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.code).toBe(-1);
+    expect(json.message).toBe('invalid signature');
   });
 
   it('should succeed idempotently for duplicate checkout events', async () => {
