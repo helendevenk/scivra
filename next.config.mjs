@@ -1,4 +1,5 @@
 import bundleAnalyzer from '@next/bundle-analyzer';
+import { withSentryConfig } from '@sentry/nextjs';
 import { createMDX } from 'fumadocs-mdx/next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -69,4 +70,14 @@ const nextConfig = {
   reactCompiler: true,
 };
 
-export default withBundleAnalyzer(withNextIntl(withMDX(nextConfig)));
+export default withSentryConfig(
+  withBundleAnalyzer(withNextIntl(withMDX(nextConfig))),
+  {
+    org: 'scivra',
+    project: 'scivra-prod',
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+    disableLogger: true,
+    automaticVercelMonitors: false,
+  }
+);

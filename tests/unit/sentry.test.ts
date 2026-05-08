@@ -1,11 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as Sentry from '@sentry/nextjs';
 import { captureServerError, captureClientError } from '@/extensions/monitoring/sentry';
+
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+}));
 
 describe('sentry monitoring', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  const captureExceptionMock = vi.mocked(Sentry.captureException);
 
   beforeEach(() => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    captureExceptionMock.mockClear();
   });
 
   afterEach(() => {
@@ -22,26 +29,23 @@ describe('sentry monitoring', () => {
         { route: '/api/test' },
         expect.any(Error)
       );
+      expect(captureExceptionMock).not.toHaveBeenCalled();
     });
 
-    it('logs sentry-placeholder when DSN is set', () => {
+    it('captures exception when SENTRY_DSN is set', () => {
+      const error = new Error('test');
       process.env.SENTRY_DSN = 'https://fake@sentry.io/123';
-      captureServerError(new Error('test'));
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[sentry-placeholder]',
-        {},
-        expect.any(Error)
-      );
+      captureServerError(error);
+      expect(captureExceptionMock).toHaveBeenCalledWith(error, { extra: {} });
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
     it('uses NEXT_PUBLIC_SENTRY_DSN as fallback', () => {
+      const error = new Error('test');
       process.env.NEXT_PUBLIC_SENTRY_DSN = 'https://fake@sentry.io/456';
-      captureServerError(new Error('test'));
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[sentry-placeholder]',
-        {},
-        expect.any(Error)
-      );
+      captureServerError(error);
+      expect(captureExceptionMock).toHaveBeenCalledWith(error, { extra: {} });
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
     it('never throws', () => {
@@ -59,6 +63,7 @@ describe('sentry monitoring', () => {
         { component: 'App' },
         expect.any(Error)
       );
+      expect(captureExceptionMock).not.toHaveBeenCalled();
     });
 
     it('never throws', () => {
