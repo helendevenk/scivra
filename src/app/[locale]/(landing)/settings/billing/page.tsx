@@ -251,6 +251,16 @@ export default async function BillingPage({
 
   return (
     <div className="space-y-8">
+      {currentSubscription?.status === SubscriptionStatus.PAST_DUE && (
+        <div className="mb-6 rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-200">
+          <p className="font-medium">Your last payment failed.</p>
+          <p className="mt-1">
+            Your subscription is in a grace period. Please update your payment
+            method via &quot;Manage subscription&quot; below to avoid losing
+            access.
+          </p>
+        </div>
+      )}
       <PanelCard
         label={getSubscriptionStatusLabel(currentSubscription?.status)}
         title={t('view.title')}
@@ -263,7 +273,8 @@ export default async function BillingPage({
         {currentSubscription ? (
           <>
             {currentSubscription?.status === SubscriptionStatus.ACTIVE ||
-            currentSubscription?.status === SubscriptionStatus.TRIALING ? (
+            currentSubscription?.status === SubscriptionStatus.TRIALING ||
+            currentSubscription?.status === SubscriptionStatus.PAST_DUE ? (
               <div className="text-muted-foreground mt-4 text-sm font-normal">
                 {t('view.tip', {
                   date: moment(currentSubscription?.currentPeriodEnd).format(

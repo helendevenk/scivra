@@ -20,6 +20,7 @@ export interface PricingCurrency {
 export interface PricingItem {
   title?: string;
   description?: string;
+  billing_disclaimer?: string; // Optional disclaimer shown below the price (e.g. "Billed annually as $X.XX")
   label?: string;
 
   currency: string; // default currency

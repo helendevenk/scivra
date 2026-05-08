@@ -163,7 +163,7 @@ export async function getCurrentSubscription(userId: string) {
           SubscriptionStatus.ACTIVE,
           SubscriptionStatus.PENDING_CANCEL,
           SubscriptionStatus.TRIALING,
-          // TODO: Decide whether PAST_DUE keeps access as a grace state.
+          SubscriptionStatus.PAST_DUE,
         ])
       )
     )

@@ -113,6 +113,7 @@ function makeOrder(overrides: Record<string, any> = {}) {
     paymentEmail: 'pay@test.com',
     paymentProvider: 'stripe',
     paymentType: PaymentType.ONE_TIME,
+    paymentMode: 'test',
     productId: 'prod-1',
     productName: 'Pro Plan',
     planName: 'Pro',
@@ -151,6 +152,7 @@ function makeSubscription(overrides: Record<string, any> = {}) {
     userId: 'user-1',
     userEmail: 'user@test.com',
     paymentProvider: 'stripe',
+    paymentMode: 'test',
     amount: 499,
     currency: 'usd',
     productId: 'prod-1',
@@ -275,7 +277,10 @@ describe('payment service', () => {
     });
 
     it('should create newSubscription when subscriptionInfo present', async () => {
-      const order = makeOrder({ paymentType: PaymentType.SUBSCRIPTION });
+      const order = makeOrder({
+        paymentType: PaymentType.SUBSCRIPTION,
+        paymentMode: 'live',
+      });
       const session = makeSession({
         subscriptionId: 'sub_1',
         subscriptionInfo: {
@@ -294,6 +299,7 @@ describe('payment service', () => {
       const callArg = vi.mocked(updateOrderInTransaction).mock.calls[0][0];
       expect(callArg.newSubscription).toBeDefined();
       expect(callArg.newSubscription!.subscriptionId).toBe('sub_1');
+      expect(callArg.newSubscription!.paymentMode).toBe('live');
     });
 
     it('should create newCredit when order has creditsAmount > 0', async () => {
@@ -326,7 +332,7 @@ describe('payment service', () => {
   // --- handleSubscriptionRenewal ---
   describe('handleSubscriptionRenewal', () => {
     it('should create renewal order and update subscription on valid renewal', async () => {
-      const sub = makeSubscription();
+      const sub = makeSubscription({ paymentMode: 'live' });
       const session = makeSession({
         paymentStatus: PaymentStatus.SUCCESS,
         subscriptionId: 'sub_stripe_1',
@@ -341,6 +347,7 @@ describe('payment service', () => {
       const callArg = vi.mocked(updateSubscriptionInTransaction).mock.calls[0][0];
       expect(callArg.subscriptionNo).toBe('SUB-001');
       expect(callArg.newOrder).toBeDefined();
+      expect(callArg.newOrder!.paymentMode).toBe('live');
       expect(callArg.newCredit).toBeDefined();
     });
 

@@ -226,6 +226,7 @@ export const order = pgTable(
     transactionId: text('transaction_id'), // payment transaction id
     paymentUserName: text('payment_user_name'), // payment user name
     paymentUserId: text('payment_user_id'), // payment user id
+    paymentMode: text('payment_mode').default('test').notNull(), // 'test' | 'live' — set per checkout from stripe key prefix
   },
   (table) => [
     // Composite: Query user orders by status (most common)
@@ -286,6 +287,7 @@ export const subscription = pgTable(
     canceledEndAt: timestamp('canceled_end_at'), // subscription canceled end at
     canceledReason: text('canceled_reason'), // subscription canceled reason
     canceledReasonType: text('canceled_reason_type'), // subscription canceled reason type
+    paymentMode: text('payment_mode').default('test').notNull(), // 'test' | 'live' — inherited from checkout order
   },
   (table) => [
     // Composite: Query user's subscriptions by status (most common)

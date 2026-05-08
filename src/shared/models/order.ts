@@ -28,6 +28,7 @@ export enum OrderStatus {
   COMPLETED = 'completed', // checkout completed, but failed
   PAID = 'paid', // order paid success
   FAILED = 'failed', // order paid, but failed
+  REFUNDED = 'refunded', // order refunded
 }
 
 /**
@@ -135,6 +136,24 @@ export async function findOrderByOrderNo(orderNo: string) {
     .where(eq(order.orderNo, orderNo));
 
   return result;
+}
+
+export async function findOrderByTransactionId(params: {
+  transactionId: string;
+  paymentProvider: string;
+}): Promise<Order | null> {
+  const [result] = await db()
+    .select()
+    .from(order)
+    .where(
+      and(
+        eq(order.transactionId, params.transactionId),
+        eq(order.paymentProvider, params.paymentProvider)
+      )
+    )
+    .limit(1);
+
+  return result ?? null;
 }
 
 /**

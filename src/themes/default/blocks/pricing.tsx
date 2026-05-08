@@ -470,6 +470,11 @@ export function Pricing({
                   <CardDescription className="text-sm">
                     {item.description}
                   </CardDescription>
+                  {item.billing_disclaimer && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {item.billing_disclaimer}
+                    </p>
+                  )}
                   {item.tip && (
                     <span className="text-muted-foreground text-sm">
                       {item.tip}

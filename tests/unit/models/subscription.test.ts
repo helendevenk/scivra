@@ -9,7 +9,29 @@ vi.mock('@/shared/models/user', () => ({
   appendUserToResult: vi.fn((result: unknown[]) => result),
 }));
 
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('drizzle-orm')>();
+
+  return {
+    ...actual,
+    and: vi.fn((...conditions: unknown[]) => ({ conditions, op: 'and' })),
+    count: vi.fn(() => ({ op: 'count' })),
+    desc: vi.fn((column: unknown) => ({ column, op: 'desc' })),
+    eq: vi.fn((column: unknown, value: unknown) => ({
+      column,
+      op: 'eq',
+      value,
+    })),
+    inArray: vi.fn((column: unknown, values: unknown[]) => ({
+      column,
+      op: 'inArray',
+      values,
+    })),
+  };
+});
+
 import { db } from '@/core/db';
+import { inArray } from 'drizzle-orm';
 import { createMockDb } from '../../helpers/mock-db';
 import {
   createSubscription,
@@ -132,6 +154,19 @@ describe('getCurrentSubscription', () => {
     expect(mockDb.orderBy).toHaveBeenCalled();
     expect(mockDb.limit).toHaveBeenCalledWith(1);
     expect(result).toEqual(sub);
+  });
+
+  it('treats past due as a current subscription during dunning', async () => {
+    mockDb._resolveSelect([]);
+
+    await getCurrentSubscription('u1');
+
+    expect(inArray).toHaveBeenCalledWith(expect.anything(), [
+      SubscriptionStatus.ACTIVE,
+      SubscriptionStatus.PENDING_CANCEL,
+      SubscriptionStatus.TRIALING,
+      SubscriptionStatus.PAST_DUE,
+    ]);
   });
 
   it('returns undefined when no active subscription', async () => {

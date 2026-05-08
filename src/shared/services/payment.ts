@@ -1,3 +1,8 @@
+import { and, eq } from 'drizzle-orm';
+
+import { credit as creditTable } from '@/config/db/schema';
+import { db } from '@/core/db';
+import { captureServerError } from '@/extensions/monitoring/sentry';
 import {
   CreemProvider,
   PaymentManager,
@@ -159,6 +164,7 @@ function buildNewSubscription(
     userEmail: order.paymentEmail || order.userEmail,
     status: subscriptionInfo.status || SubscriptionStatus.ACTIVE,
     paymentProvider: order.paymentProvider,
+    paymentMode: order.paymentMode,
     subscriptionId: subscriptionInfo.subscriptionId,
     subscriptionResult: JSON.stringify(session.subscriptionResult),
     productId: order.productId,
@@ -370,6 +376,7 @@ export async function handleSubscriptionRenewal({
       paymentType: PaymentType.RENEW,
       paymentInterval: subscription.interval,
       paymentProvider: session.provider || subscription.paymentProvider,
+      paymentMode: subscription.paymentMode,
       checkoutInfo: '',
       createdAt: currentTime,
       productName: subscription.productName,
@@ -521,4 +528,70 @@ export async function handleSubscriptionPaymentFailed({
   await updateSubscriptionBySubscriptionNo(subscriptionNo, {
     status: SubscriptionStatus.PAST_DUE,
   });
+}
+
+export async function handleRefund({
+  order,
+  session,
+}: {
+  order: Order;
+  session: PaymentSession;
+}): Promise<void> {
+  // Partial refunds need manual admin credit adjustment; full refunds are safe to automate.
+  const meta = (session.metadata ?? {}) as {
+    charge_amount?: number;
+    charge_amount_refunded?: number;
+  };
+  if (
+    typeof meta.charge_amount === 'number' &&
+    typeof meta.charge_amount_refunded === 'number' &&
+    meta.charge_amount_refunded < meta.charge_amount
+  ) {
+    captureServerError(new Error('partial_refund_received'), {
+      orderNo: order.orderNo,
+      chargeAmount: meta.charge_amount,
+      refundedAmount: meta.charge_amount_refunded,
+    });
+    return;
+  }
+
+  await updateOrderInTransaction({
+    orderNo: order.orderNo,
+    updateOrder: {
+      status: OrderStatus.REFUNDED,
+      paymentResult: JSON.stringify(session.paymentResult),
+    },
+  });
+
+  await db()
+    .update(creditTable)
+    .set({
+      status: CreditStatus.EXPIRED,
+      remainingCredits: 0,
+    })
+    .where(
+      and(
+        eq(creditTable.orderNo, order.orderNo),
+        eq(creditTable.transactionType, CreditTransactionType.GRANT)
+      )
+    );
+
+  if (order.subscriptionNo && order.subscriptionId && order.paymentProvider) {
+    const paymentService = await getPaymentService();
+    const provider = paymentService.getProvider(order.paymentProvider);
+    if (provider?.cancelSubscription) {
+      try {
+        await provider.cancelSubscription({
+          subscriptionId: order.subscriptionId,
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Idempotent: Stripe may already have canceled before this webhook arrives.
+        if (msg.includes('No such subscription') || msg.includes('canceled')) {
+          return;
+        }
+        throw err;
+      }
+    }
+  }
 }
