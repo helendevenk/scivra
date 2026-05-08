@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const stripeMocks = vi.hoisted(() => ({
   createFetchHttpClient: vi.fn(() => ({})),
   chargesRetrieve: vi.fn(),
+  subscriptionsList: vi.fn().mockResolvedValue({ data: [] }),
 }));
 
 vi.mock('stripe', () => {
@@ -12,6 +13,10 @@ vi.mock('stripe', () => {
 
     charges = {
       retrieve: stripeMocks.chargesRetrieve,
+    };
+
+    subscriptions = {
+      list: stripeMocks.subscriptionsList,
     };
   }
 
@@ -159,10 +164,49 @@ describe('StripeProvider refund session builder', () => {
     expect(session.metadata?.order_no_from_sub).toBeUndefined();
   });
 
+  it('path 4: customer -> subscriptions list when invoice/PI are not exposed (Stripe API 2025-08-27.basil)', async () => {
+    // Real-world bug from D.3 smoke: Stripe stopped exposing charge.invoice
+    // and PaymentIntent.invoice in newer API versions. Subscription refunds
+    // fall through to listing subs by customer.
+    const provider = createProvider();
+    const inputCharge = createCharge({ customer: 'cus_test' });
+    stripeMocks.chargesRetrieve.mockResolvedValue(
+      createCharge({
+        metadata: {},
+        payment_intent: { id: 'pi_test', metadata: {} } as unknown as Stripe.PaymentIntent,
+        invoice: null,
+        customer: 'cus_test',
+      })
+    );
+    stripeMocks.subscriptionsList.mockResolvedValueOnce({
+      data: [
+        {
+          id: 'sub_canceled',
+          metadata: { order_no: 'ORD_FROM_CUSTOMER_LOOKUP' },
+        },
+        {
+          id: 'sub_other',
+          metadata: { order_no: 'ORD_OTHER' },
+        },
+      ],
+    });
+
+    const session = await buildPaymentSessionFromCharge(provider, inputCharge);
+
+    expect(session.metadata?.order_no_from_sub).toBe('ORD_FROM_CUSTOMER_LOOKUP');
+    expect(session.metadata?.subscription_id).toBe('sub_canceled');
+    expect(stripeMocks.subscriptionsList).toHaveBeenCalledWith({
+      customer: 'cus_test',
+      status: 'all',
+      limit: 5,
+    });
+  });
+
   it('all paths empty: every candidate is undefined (forces webhook route to alert)', async () => {
     const provider = createProvider();
     const inputCharge = createCharge({});
     stripeMocks.chargesRetrieve.mockResolvedValue(createCharge({}));
+    stripeMocks.subscriptionsList.mockResolvedValueOnce({ data: [] });
 
     const session = await buildPaymentSessionFromCharge(provider, inputCharge);
 

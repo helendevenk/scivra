@@ -657,6 +657,35 @@ export class StripeProvider implements PaymentProvider {
       }
     }
 
+    // Path 4: customer -> subscriptions. Stripe API 2025-08-27.basil and later
+    // dropped `invoice` from both Charge and PaymentIntent, so paths 2/3 yield
+    // nothing for subscription refunds. Fall back to listing the customer's
+    // subscriptions and reading metadata.order_no from the most recent one.
+    // This is reliable because subscription_data.metadata is set at checkout
+    // and persists on the Subscription object indefinitely.
+    if (
+      !orderNoFromPi &&
+      !orderNoFromSub &&
+      fullCharge.customer
+    ) {
+      const customerId =
+        typeof fullCharge.customer === 'string'
+          ? fullCharge.customer
+          : fullCharge.customer.id;
+      const subs = await this.client.subscriptions.list({
+        customer: customerId,
+        status: 'all',
+        limit: 5,
+      });
+      for (const sub of subs.data) {
+        if (sub.metadata?.order_no) {
+          orderNoFromSub = sub.metadata.order_no;
+          if (!subscriptionId) subscriptionId = sub.id;
+          break;
+        }
+      }
+    }
+
     return {
       provider: this.name,
       paymentStatus: PaymentStatus.REFUNDED,
