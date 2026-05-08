@@ -600,60 +600,60 @@ export class StripeProvider implements PaymentProvider {
   private async buildPaymentSessionFromCharge(
     charge: Stripe.Charge
   ): Promise<PaymentSession> {
-    // Refund pipeline. The local order_no can come from 3 sources, depending
-    // on whether the charge is a one-time payment, first-invoice subscription,
-    // or renewal. Surface all candidates; the webhook route tries them in
-    // priority order.
+    // Refund pipeline. order_no can live in 3 sources depending on whether
+    // the charge is one-time, first-invoice subscription, or renewal. Stripe
+    // API 2025-11-17.clover stopped including `invoice` on the charge.refunded
+    // webhook payload, so we re-fetch the charge with `invoice.subscription`
+    // and `payment_intent` expanded to recover all metadata in one round-trip.
     let orderNoFromPi: string | undefined;
     let invoiceId: string | undefined;
     let subscriptionId: string | undefined;
     let orderNoFromSub: string | undefined;
-    const chargeInvoice = (
-      charge as Stripe.Charge & {
-        invoice?: string | Stripe.Invoice | null;
-      }
-    ).invoice;
+
+    const fullCharge = (await this.client.charges.retrieve(charge.id, {
+      expand: ['payment_intent', 'invoice.subscription'],
+    })) as Stripe.Response<Stripe.Charge> & {
+      invoice?: string | (Stripe.Invoice & {
+        subscription?: string | Stripe.Subscription | null;
+      }) | null;
+      payment_intent?: string | Stripe.PaymentIntent | null;
+    };
 
     // Path 1: charge.metadata (rare for subscription, common for one-time)
-    if (charge.metadata?.order_no) {
-      orderNoFromPi = charge.metadata.order_no;
+    if (fullCharge.metadata?.order_no) {
+      orderNoFromPi = fullCharge.metadata.order_no;
     }
 
-    // Path 2: payment_intent.metadata.order_no (set in checkout for one-time)
-    if (!orderNoFromPi && charge.payment_intent) {
-      const pi = await this.client.paymentIntents.retrieve(
-        typeof charge.payment_intent === 'string'
-          ? charge.payment_intent
-          : charge.payment_intent.id
-      );
-      orderNoFromPi = pi.metadata?.order_no || undefined;
+    // Path 2: payment_intent.metadata.order_no (set in checkout for one-time
+    // via payment_intent_data.metadata; subscription mode uses
+    // subscription_data.metadata instead, so this is the one-time path)
+    if (!orderNoFromPi && fullCharge.payment_intent) {
+      const pi =
+        typeof fullCharge.payment_intent === 'object'
+          ? fullCharge.payment_intent
+          : null;
+      if (pi?.metadata?.order_no) {
+        orderNoFromPi = pi.metadata.order_no;
+      }
     }
 
-    // Path 3: invoice -> subscription. invoice.id is the canonical key
-    // for renewal orders (we store invoice.id in order.transaction_id when
-    // a renewal invoice succeeds). subscription.metadata.order_no only
-    // points at the FIRST order, so it's a fallback for first-invoice
-    // refund edge cases.
-    if (chargeInvoice) {
-      const chargeInvoiceId =
-        typeof chargeInvoice === 'string' ? chargeInvoice : chargeInvoice.id;
-
-      if (chargeInvoiceId) {
-        const invoice = (await this.client.invoices.retrieve(chargeInvoiceId, {
-          expand: ['subscription'],
-        })) as Stripe.Response<Stripe.Invoice> & {
-          subscription?: string | Stripe.Subscription | null;
-        };
-        invoiceId = invoice.id;
-        if (invoice.subscription) {
-          if (typeof invoice.subscription === 'string') {
-            subscriptionId = invoice.subscription;
-          } else {
-            subscriptionId = invoice.subscription.id;
-            orderNoFromSub =
-              invoice.subscription.metadata?.order_no || undefined;
-          }
-        }
+    // Path 3: invoice -> subscription. invoice.id is the canonical key for
+    // renewal orders (renewal handler stores invoice.id in
+    // order.transaction_id). subscription.metadata.order_no points at the
+    // FIRST order, so it's the fallback for first-invoice subscription refund.
+    const invoiceObj =
+      typeof fullCharge.invoice === 'object' ? fullCharge.invoice : null;
+    if (invoiceObj) {
+      invoiceId = invoiceObj.id;
+      const subObj =
+        typeof invoiceObj.subscription === 'object'
+          ? invoiceObj.subscription
+          : null;
+      if (subObj) {
+        subscriptionId = subObj.id;
+        orderNoFromSub = subObj.metadata?.order_no || undefined;
+      } else if (typeof invoiceObj.subscription === 'string') {
+        subscriptionId = invoiceObj.subscription;
       }
     }
 
