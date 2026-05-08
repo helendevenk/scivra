@@ -258,6 +258,9 @@ export async function POST(req: Request) {
       paymentType: paymentType,
       paymentInterval: paymentInterval,
       paymentProvider: paymentProvider.name,
+      paymentMode: configs.stripe_secret_key?.startsWith('sk_live_')
+        ? 'live'
+        : 'test',
       checkoutInfo: JSON.stringify(checkoutOrder),
       createdAt: currentTime,
       productName: pricingItem.product_name,
