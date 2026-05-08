@@ -81,6 +81,7 @@ async function postCheckoutWithStripeKey(stripeSecretKey: string) {
     default_locale: 'en',
     default_payment_provider: 'stripe',
     stripe_secret_key: stripeSecretKey,
+    stripe_checkout_mode: 'enabled',
   });
   mocks.getTranslations.mockResolvedValue({
     raw: vi.fn(() => makePricing()),
@@ -109,6 +110,47 @@ async function postCheckoutWithStripeKey(stripeSecretKey: string) {
   await POST(makeCheckoutRequest());
 }
 
+function mockCheckoutDependencies({
+  configs = {},
+  user = {},
+}: {
+  configs?: Record<string, string>;
+  user?: Record<string, string>;
+}) {
+  mocks.getAllConfigs.mockResolvedValue({
+    app_name: 'Scivra',
+    app_url: 'http://localhost',
+    default_locale: 'en',
+    default_payment_provider: 'stripe',
+    stripe_secret_key: 'sk_live_123',
+    ...configs,
+  });
+  mocks.getTranslations.mockResolvedValue({
+    raw: vi.fn(() => makePricing()),
+  });
+  mocks.getUserInfo.mockResolvedValue({
+    id: 'user-1',
+    email: 'helendevenk@gmail.com',
+    name: 'Test User',
+    ...user,
+  });
+  mocks.createPayment.mockResolvedValue({
+    provider: 'stripe',
+    checkoutParams: {},
+    checkoutResult: {},
+    checkoutInfo: {
+      checkoutUrl: 'https://checkout.stripe.test/session',
+      sessionId: 'cs_test_123',
+    },
+  });
+  mocks.getPaymentService.mockResolvedValue({
+    getProvider: vi.fn(() => ({
+      name: 'stripe',
+      createPayment: mocks.createPayment,
+    })),
+  });
+}
+
 describe('POST /api/payment/checkout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -126,5 +168,59 @@ describe('POST /api/payment/checkout', () => {
 
     const order = mocks.createOrder.mock.calls[0][0] as Record<string, unknown>;
     expect(order.paymentMode).toBe('test');
+  });
+
+  it('returns an error when Stripe checkout mode is disabled', async () => {
+    mockCheckoutDependencies({
+      configs: {
+        stripe_checkout_mode: 'disabled',
+      },
+    });
+
+    const response = await POST(makeCheckoutRequest());
+    const json = await response.json();
+
+    expect(json.code).toBe(-1);
+    expect(json.message).toBe(
+      'Checkout is temporarily disabled. Please try again later.'
+    );
+    expect(mocks.createOrder).not.toHaveBeenCalled();
+    expect(mocks.createPayment).not.toHaveBeenCalled();
+  });
+
+  it('returns an error in smoke mode when user email is not allowlisted', async () => {
+    mockCheckoutDependencies({
+      configs: {
+        stripe_checkout_mode: 'smoke',
+        stripe_smoke_user_emails: 'other@example.com',
+      },
+    });
+
+    const response = await POST(makeCheckoutRequest());
+    const json = await response.json();
+
+    expect(json.code).toBe(-1);
+    expect(json.message).toBe(
+      'Checkout is temporarily limited to smoke testers.'
+    );
+    expect(mocks.createOrder).not.toHaveBeenCalled();
+    expect(mocks.createPayment).not.toHaveBeenCalled();
+  });
+
+  it('falls through in smoke mode when user email is allowlisted', async () => {
+    mockCheckoutDependencies({
+      configs: {
+        stripe_checkout_mode: 'smoke',
+        stripe_smoke_user_emails: 'helendevenk@gmail.com,foo@example.com',
+      },
+    });
+
+    const response = await POST(makeCheckoutRequest());
+    const json = await response.json();
+
+    expect(json.code).toBe(0);
+    expect(json.data.checkoutUrl).toBe('https://checkout.stripe.test/session');
+    expect(mocks.createOrder).toHaveBeenCalledOnce();
+    expect(mocks.createPayment).toHaveBeenCalledOnce();
   });
 });

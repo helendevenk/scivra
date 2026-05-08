@@ -54,6 +54,20 @@ export async function POST(req: Request) {
     // get configs
     const configs = await getAllConfigs();
 
+    const checkoutMode = configs.stripe_checkout_mode || 'disabled';
+    if (checkoutMode === 'disabled') {
+      return respErr('Checkout is temporarily disabled. Please try again later.');
+    }
+    if (checkoutMode === 'smoke') {
+      const allowlist = (configs.stripe_smoke_user_emails || '')
+        .split(/[,\n]/)
+        .map((e: string) => e.trim().toLowerCase())
+        .filter(Boolean);
+      if (!allowlist.includes(user.email.toLowerCase())) {
+        return respErr('Checkout is temporarily limited to smoke testers.');
+      }
+    }
+
     // choose payment provider
     let paymentProviderName = payment_provider || '';
     if (!paymentProviderName) {
