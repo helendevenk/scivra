@@ -10,12 +10,18 @@ import { getPaymentService } from '@/shared/services/payment';
 export async function GET() {
   const user = await getSignUser();
   if (!user) {
-    return Response.json({ error: 'forbidden' }, { status: 403 });
+    return Response.json(
+      { error: 'forbidden' },
+      { status: 403, headers: { 'Cache-Control': 'no-store' } }
+    );
   }
 
   const allowed = await canAccessAdmin(user.id);
   if (!allowed) {
-    return Response.json({ error: 'forbidden' }, { status: 403 });
+    return Response.json(
+      { error: 'forbidden' },
+      { status: 403, headers: { 'Cache-Control': 'no-store' } }
+    );
   }
 
   const configs = await getAllConfigs();

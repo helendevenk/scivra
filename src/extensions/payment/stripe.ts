@@ -178,6 +178,22 @@ export class StripeProvider implements PaymentProvider {
 
       if (order.metadata) {
         sessionParams.metadata = order.metadata;
+        // Stripe does NOT propagate session metadata to PaymentIntent or
+        // Subscription objects. We must explicitly set them so the refund
+        // webhook (charge.refunded) can read order_no from
+        // charge.payment_intent.metadata (one-time) or
+        // charge.invoice.subscription.metadata (subscription).
+        if (order.type === PaymentType.SUBSCRIPTION) {
+          sessionParams.subscription_data = {
+            ...sessionParams.subscription_data,
+            metadata: order.metadata,
+          };
+        } else {
+          sessionParams.payment_intent_data = {
+            ...sessionParams.payment_intent_data,
+            metadata: order.metadata,
+          };
+        }
       }
 
       if (order.successUrl) {
