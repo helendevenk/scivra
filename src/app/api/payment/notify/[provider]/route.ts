@@ -7,15 +7,19 @@ import type {
   PaymentEvent,
   PaymentSession,
 } from '@/extensions/payment/types';
+import { captureServerError } from '@/extensions/monitoring/sentry';
 import {
+  findOrderByTransactionId,
   findOrderByOrderNo,
   OrderStatus,
   updateOrderByOrderNo,
 } from '@/shared/models/order';
+import type { Order } from '@/shared/models/order';
 import { findSubscriptionByProviderSubscriptionId } from '@/shared/models/subscription';
 import {
   getPaymentService,
   handleCheckoutSuccess,
+  handleRefund,
   handleSubscriptionCanceled,
   handleSubscriptionPaymentFailed,
   handleSubscriptionRenewal,
@@ -169,6 +173,48 @@ export async function POST(
             paymentResult: JSON.stringify(session.paymentResult),
           });
         }
+      }
+    } else if (eventType === PaymentEventType.PAYMENT_REFUNDED) {
+      // Refund pipeline. buildPaymentSessionFromCharge surfaces 3 candidates
+      // because the order_no can live in different places depending on whether
+      // the charge is one-time, first-invoice subscription, or renewal.
+      const meta = (session.metadata ?? {}) as {
+        order_no_from_pi?: string;
+        invoice_id?: string;
+        subscription_id?: string;
+        order_no_from_sub?: string;
+      };
+
+      let order: Order | null | undefined;
+
+      // Try 1: payment_intent / charge metadata.order_no (one-time + first-invoice)
+      if (meta.order_no_from_pi) {
+        order = await findOrderByOrderNo(meta.order_no_from_pi);
+      }
+
+      // Try 2: invoice.id matched against local order.transaction_id (renewal canonical key)
+      if (!order && meta.invoice_id) {
+        order = await findOrderByTransactionId({
+          transactionId: meta.invoice_id,
+          paymentProvider: provider,
+        });
+      }
+
+      // Try 3: subscription.metadata.order_no (only points at first invoice - fallback)
+      if (!order && meta.order_no_from_sub) {
+        order = await findOrderByOrderNo(meta.order_no_from_sub);
+      }
+
+      if (order) {
+        await handleRefund({ order, session });
+      } else {
+        console.log('refund for unknown order, skipping', meta);
+        captureServerError(new Error('refund_no_order_match'), {
+          route: '/api/payment/notify/[provider]',
+          provider,
+          eventType: 'PAYMENT_REFUNDED',
+          meta,
+        });
       }
     } else {
       console.log('not handle other event type: ' + eventType);
