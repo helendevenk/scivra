@@ -657,15 +657,53 @@ export class StripeProvider implements PaymentProvider {
       }
     }
 
-    // Path 4: customer -> subscriptions. Stripe API 2025-08-27.basil and later
-    // dropped `invoice` from both Charge and PaymentIntent, so paths 2/3 yield
-    // nothing for subscription refunds. Fall back to listing the customer's
-    // subscriptions and reading metadata.order_no from the most recent one.
-    // This is reliable because subscription_data.metadata is set at checkout
-    // and persists on the Subscription object indefinitely.
+    // Path 5: PaymentIntent -> invoicePayments to recover invoice.id. Stripe
+    // API 2025-08-27.basil dropped `invoice` from Charge and PaymentIntent;
+    // invoicePayments is the documented mapping from PI to Invoice. The
+    // resulting invoice.id is the canonical key for renewal refunds via the
+    // webhook route's findOrderByTransactionId path. limit=2 lets us detect
+    // ambiguity; only an unambiguous single match is safe to bind.
+    if (!invoiceId && fullCharge.payment_intent) {
+      const piId =
+        typeof fullCharge.payment_intent === 'string'
+          ? fullCharge.payment_intent
+          : fullCharge.payment_intent.id;
+      try {
+        const invPayments = await this.client.invoicePayments.list({
+          payment: { type: 'payment_intent', payment_intent: piId },
+          status: 'paid',
+          limit: 2,
+        });
+        if (invPayments.data.length === 1) {
+          const ip = invPayments.data[0] as Stripe.InvoicePayment & {
+            invoice?: string | Stripe.Invoice;
+          };
+          if (typeof ip.invoice === 'string') {
+            invoiceId = ip.invoice;
+          } else if (ip.invoice?.id) {
+            invoiceId = ip.invoice.id;
+          }
+        }
+      } catch {
+        // invoicePayments unavailable in older API/SDK — silently fall through
+      }
+    }
+
+    // Path 4: customer -> subscriptions. ONLY runs when we already have an
+    // invoice link (= this charge belongs to a subscription). Without that
+    // guard, a legacy one-time charge from a customer who later subscribed
+    // would falsely bind to an unrelated subscription's order_no.
+    //
+    // For renewal refunds the webhook route prefers `invoice_id` (set above)
+    // over `order_no_from_sub` (set here), so wrong-order binding does not
+    // occur. Path 4 surfaces order_no_from_sub for first-charge subscription
+    // refunds where invoice_id won't match any local renewal order
+    // (first-charge orders store checkout_session.id in transaction_id, not
+    // invoice.id).
     if (
       !orderNoFromPi &&
       !orderNoFromSub &&
+      invoiceId &&
       fullCharge.customer
     ) {
       const customerId =
