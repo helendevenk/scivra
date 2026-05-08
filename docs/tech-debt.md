@@ -130,9 +130,30 @@ D4 Phase D close-out 后，以下项已知但本周期未做：
 - TD-D4-07 = P2（影响 drift 监控准确性，但不阻塞功能）
 - TD-D4-04, 05, 06 = P2/P3
 
+## Stripe Live-Mode Cutover — 显式延后项 (2026-05-08)
+
+Live-mode cutover feature branch (`feat/stripe-live-mode-cutover`, 16 commits) merged with the following coverage gaps acknowledged. Codex C.1 review flagged these as non-blockers; deferred to follow-up PR.
+
+| 项目 | 范围 | 来源 | 状态 |
+|---|---|---|---|
+| TD-STRIPE-01: smoke allowlist newline-split test | `tests/unit/routes/payment-checkout.test.ts` | Codex C.1 review | 🟡 unit test only covers comma-split; production code handles `/[,\n]/` but no test pins the contract |
+| TD-STRIPE-02: smoke allowlist case-insensitive test | `tests/unit/routes/payment-checkout.test.ts` | Codex C.1 review | 🟡 production code does `toLowerCase()` on both sides; no test pins it |
+| TD-STRIPE-03: handleRefund `'canceled'` error branch test | `tests/unit/payment/handle-refund.test.ts` | Codex C.1 review | 🟡 test covers `'No such subscription'` only; the `'canceled'` branch in idempotent catch is untested |
+| TD-STRIPE-04: webhook receiver-side metadata propagation contract test | `tests/unit/routes/payment-webhook.test.ts` | Codex C.1 review | 🟡 producer side (createPayment) tested via stripe-checkout-metadata.test.ts; consumer side (webhook reading payment_intent.metadata) only tested through unit `buildPaymentSessionFromCharge`, not the integration through route handler |
+| TD-STRIPE-05: B5.2 Terms refund policy section | `src/app/[locale]/(landing)/terms/page.tsx` | v3 plan §4.5 | 🟡 deferred — Stripe Customer Portal 7-day refund is the operative policy; Terms only has termination-context "no refunds" line at 148 (kept). New "Refund Policy" section is a nice-to-have copy update |
+| TD-STRIPE-06: admin UI `payment_mode` column + filter | `src/themes/default/blocks/admin/` | v3 plan §4.4.6 | 🟡 schema column exists + propagated to all order/sub creation paths; admin `/admin/subscriptions` and `/admin/payments` tables still don't surface the column or offer live/test filter |
+| TD-STRIPE-07: prod `payment_mode` schema migration | prod Neon `ep-delicate-tree-...` | A.4 dev applied only | 🔴 **MUST DO during Phase C.2 deploy** — script is `scripts/migration-add-payment-mode.ts`, must run with prod `DATABASE_URL` after deploy ready |
+| TD-STRIPE-08: Sentry alert rule + Vercel logs grep watcher | sentry.io / Vercel | Phase D.4 | 🔴 **MUST DO during Phase D smoke** — webhook 5xx alert email rule, 1h log watcher post-cutover |
+
+**优先级**：
+- 🔴 TD-STRIPE-07, TD-STRIPE-08：阻塞 cutover，必须在对应 phase 做
+- 🟡 TD-STRIPE-01..04：测试覆盖率 gaps，下一个 PR 即可补全
+- 🟡 TD-STRIPE-05, 06：cosmetic / legal 文案，独立周期
+
 ## 更新日志
 
 - 2026-03-09：创建文档，记录 4 项技术债务
 - 2026-05-04：追加 D4 Phase D 显式延后项（6 条 TD-D4-*）
 - 2026-05-04：Phase E + F P1 周期完成 — TD-D4-01 RESOLVED；TD-D4-02 / TD-D4-03 标记 PARTIAL；新增 TD-D4-07（audit script slider parser gap）
 - 2026-05-04：TD-D4-07 RESOLVED via PR #49 — audit exclusion regex tightened + 清除全部 7 条残留 drift；drift **8 → 0**，所有 115 个 html-backed slugs 完全 clean
+- 2026-05-08：追加 Stripe live-mode cutover 8 条 TD-STRIPE-* 延后项（feat/stripe-live-mode-cutover 合并前记录）
