@@ -292,6 +292,10 @@ export class StripeProvider implements PaymentProvider {
         paymentSession = await this.buildPaymentSessionFromSubscription(
           event.data.object as Stripe.Response<Stripe.Subscription>
         );
+      } else if (eventType === PaymentEventType.PAYMENT_REFUNDED) {
+        paymentSession = await this.buildPaymentSessionFromCharge(
+          event.data.object as Stripe.Charge
+        );
       }
 
       if (!paymentSession) {
@@ -575,6 +579,93 @@ export class StripeProvider implements PaymentProvider {
     }
 
     return result;
+  }
+
+  private async buildPaymentSessionFromCharge(
+    charge: Stripe.Charge
+  ): Promise<PaymentSession> {
+    // Refund pipeline. The local order_no can come from 3 sources, depending
+    // on whether the charge is a one-time payment, first-invoice subscription,
+    // or renewal. Surface all candidates; the webhook route tries them in
+    // priority order.
+    let orderNoFromPi: string | undefined;
+    let invoiceId: string | undefined;
+    let subscriptionId: string | undefined;
+    let orderNoFromSub: string | undefined;
+    const chargeInvoice = (
+      charge as Stripe.Charge & {
+        invoice?: string | Stripe.Invoice | null;
+      }
+    ).invoice;
+
+    // Path 1: charge.metadata (rare for subscription, common for one-time)
+    if (charge.metadata?.order_no) {
+      orderNoFromPi = charge.metadata.order_no;
+    }
+
+    // Path 2: payment_intent.metadata.order_no (set in checkout for one-time)
+    if (!orderNoFromPi && charge.payment_intent) {
+      const pi = await this.client.paymentIntents.retrieve(
+        typeof charge.payment_intent === 'string'
+          ? charge.payment_intent
+          : charge.payment_intent.id
+      );
+      orderNoFromPi = pi.metadata?.order_no || undefined;
+    }
+
+    // Path 3: invoice -> subscription. invoice.id is the canonical key
+    // for renewal orders (we store invoice.id in order.transaction_id when
+    // a renewal invoice succeeds). subscription.metadata.order_no only
+    // points at the FIRST order, so it's a fallback for first-invoice
+    // refund edge cases.
+    if (chargeInvoice) {
+      const chargeInvoiceId =
+        typeof chargeInvoice === 'string' ? chargeInvoice : chargeInvoice.id;
+
+      if (chargeInvoiceId) {
+        const invoice = (await this.client.invoices.retrieve(chargeInvoiceId, {
+          expand: ['subscription'],
+        })) as Stripe.Response<Stripe.Invoice> & {
+          subscription?: string | Stripe.Subscription | null;
+        };
+        invoiceId = invoice.id;
+        if (invoice.subscription) {
+          if (typeof invoice.subscription === 'string') {
+            subscriptionId = invoice.subscription;
+          } else {
+            subscriptionId = invoice.subscription.id;
+            orderNoFromSub =
+              invoice.subscription.metadata?.order_no || undefined;
+          }
+        }
+      }
+    }
+
+    return {
+      provider: this.name,
+      paymentStatus: PaymentStatus.REFUNDED,
+      paymentInfo: {
+        transactionId: charge.id,
+        paymentAmount: charge.amount_refunded,
+        paymentCurrency: charge.currency,
+        paymentEmail: charge.billing_details?.email || '',
+        paymentUserName: charge.billing_details?.name || '',
+        paymentUserId:
+          typeof charge.customer === 'string'
+            ? charge.customer
+            : charge.customer?.id,
+      },
+      paymentResult: charge,
+      metadata: {
+        order_no_from_pi: orderNoFromPi,
+        invoice_id: invoiceId,
+        subscription_id: subscriptionId,
+        order_no_from_sub: orderNoFromSub,
+        // Surface refund completeness so the webhook route can detect partial refund
+        charge_amount: charge.amount,
+        charge_amount_refunded: charge.amount_refunded,
+      },
+    };
   }
 
   // build subscription info from subscription
