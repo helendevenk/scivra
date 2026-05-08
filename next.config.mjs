@@ -73,8 +73,11 @@ const nextConfig = {
 export default withSentryConfig(
   withBundleAnalyzer(withNextIntl(withMDX(nextConfig))),
   {
-    org: 'scivra',
-    project: 'scivra-prod',
+    // org / project intentionally omitted — actual Sentry org slug under
+    // helendevenk@gmail.com differs from project display name 'scivra'. Until
+    // the correct slug is set (via SENTRY_ORG / SENTRY_PROJECT env vars),
+    // the build plugin skips release creation + sourcemap upload (warns) and
+    // runtime error capture via DSN remains unaffected.
     silent: !process.env.CI,
     widenClientFileUpload: true,
     disableLogger: true,
