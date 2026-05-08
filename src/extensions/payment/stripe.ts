@@ -390,6 +390,8 @@ export class StripeProvider implements PaymentProvider {
         return PaymentEventType.SUBSCRIBE_UPDATED;
       case 'customer.subscription.deleted':
         return PaymentEventType.SUBSCRIBE_CANCELED;
+      case 'charge.refunded':
+        return PaymentEventType.PAYMENT_REFUNDED;
       default:
         return null;
     }
