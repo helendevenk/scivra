@@ -132,7 +132,7 @@ D4 Phase D close-out 后，以下项已知但本周期未做：
 
 ## Stripe Live-Mode Cutover — 显式延后项 (2026-05-08)
 
-Live-mode cutover feature branch (`feat/stripe-live-mode-cutover`, 16 commits) merged with the following coverage gaps acknowledged. Codex C.1 review flagged these as non-blockers; deferred to follow-up PR.
+Live-mode cutover feature branch (`feat/stripe-live-mode-cutover`, 15 commits ahead of main) is being merged with the following coverage gaps acknowledged. Codex C.1 review flagged these as non-blockers; deferred to follow-up PR.
 
 | 项目 | 范围 | 来源 | 状态 |
 |---|---|---|---|
