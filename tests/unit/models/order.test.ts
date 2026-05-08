@@ -23,6 +23,7 @@ import {
   createOrder,
   findOrderById,
   findOrderByOrderNo,
+  findOrderByTransactionId,
   updateOrderByOrderNo,
   updateOrderByOrderId,
   getOrders,
@@ -33,6 +34,45 @@ import {
 } from '@/shared/models/order';
 
 let mockDb: ReturnType<typeof createMockDb>;
+
+function collectSqlQueryParts(
+  value: unknown,
+  parts = { columns: [] as string[], params: [] as unknown[] },
+  seen = new Set<unknown>()
+) {
+  if (!value || typeof value !== 'object' || seen.has(value)) {
+    return parts;
+  }
+
+  seen.add(value);
+  const record = value as Record<string | symbol, unknown>;
+
+  if (typeof record.name === 'string') {
+    parts.columns.push(record.name);
+  }
+  if ('value' in record && 'encoder' in record) {
+    parts.params.push(record.value);
+  }
+
+  for (const key of Reflect.ownKeys(record)) {
+    collectSqlQueryParts(record[key], parts, seen);
+  }
+
+  return parts;
+}
+
+function expectWhereFiltersTransactionAndProvider(
+  transactionId: string,
+  paymentProvider: string
+) {
+  const whereClause = mockDb.where.mock.calls.at(-1)?.[0];
+  const queryParts = collectSqlQueryParts(whereClause);
+
+  expect(queryParts.columns).toContain('transaction_id');
+  expect(queryParts.columns).toContain('payment_provider');
+  expect(queryParts.params).toContain(transactionId);
+  expect(queryParts.params).toContain(paymentProvider);
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -84,6 +124,53 @@ describe('findOrderByOrderNo', () => {
     const result = await findOrderByOrderNo('NONEXISTENT');
 
     expect(result).toBeUndefined();
+  });
+});
+
+describe('findOrderByTransactionId', () => {
+  it('returns the order when (transactionId, paymentProvider) match', async () => {
+    const order = {
+      id: 'o1',
+      orderNo: 'ON-001',
+      transactionId: 'in_renewal_001',
+      paymentProvider: 'stripe',
+    };
+    mockDb._resolveSelect([order]);
+
+    const result = await findOrderByTransactionId({
+      transactionId: 'in_renewal_001',
+      paymentProvider: 'stripe',
+    });
+
+    expect(result).toEqual(order);
+    expect(mockDb.limit).toHaveBeenCalledWith(1);
+    expectWhereFiltersTransactionAndProvider('in_renewal_001', 'stripe');
+  });
+
+  it('returns null when transactionId does not match', async () => {
+    mockDb._resolveSelect([]);
+
+    const result = await findOrderByTransactionId({
+      transactionId: 'in_missing',
+      paymentProvider: 'stripe',
+    });
+
+    expect(result).toBeNull();
+    expect(mockDb.limit).toHaveBeenCalledWith(1);
+    expectWhereFiltersTransactionAndProvider('in_missing', 'stripe');
+  });
+
+  it('returns null when transactionId matches but paymentProvider differs', async () => {
+    mockDb._resolveSelect([]);
+
+    const result = await findOrderByTransactionId({
+      transactionId: 'in_renewal_001',
+      paymentProvider: 'paypal',
+    });
+
+    expect(result).toBeNull();
+    expect(mockDb.limit).toHaveBeenCalledWith(1);
+    expectWhereFiltersTransactionAndProvider('in_renewal_001', 'paypal');
   });
 });
 
